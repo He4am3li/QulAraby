@@ -1,0 +1,401 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: /users/{userId}
+    // Document ID: userId (from Auth)
+    // Fields:
+    //   - uid: string (required, immutable)
+    //   - email: string (required, format: email)
+    //   - displayName: string (optional)
+    //   - role: string (required, enum: ["admin", "teacher", "student"])
+    //   - photoURL: string (optional, format: uri)
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // Collection: /worksheets/{worksheetId}
+    // Document ID: auto-generated
+    // Fields:
+    //   - title_ar: string (required)
+    //   - content_ar: string (optional)
+    //   - content_en: string (optional)
+    //   - vocabulary: array of objects (optional)
+    //   - sections: array of objects (optional)
+    //   - authorId: string (required, immutable)
+    //   - type: string (required, enum: ["reading", "grammar", "vocabulary", "writing"])
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // Collection: /interactive_worksheets/{worksheetId}
+    // Document ID: auto-generated
+    // Fields:
+    //   - id: string (required, immutable)
+    //   - title: string (required)
+    //   - description: string (optional)
+    //   - sections: array of objects (optional)
+    //   - authorId: string (required, immutable)
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // Collection: /users/{userId}/vocabulary/{vocabId}
+    // Document ID: auto-generated
+    // Fields:
+    //   - word: string (required)
+    //   - meaning_ar: string (required)
+    //   - meaning_en: string (required)
+    //   - userId: string (required, immutable)
+    //   - source: string (optional)
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // ===============================================================
+
+    // Collection: /users/{userId}/mistakes/{mistakeId}
+    // Document ID: auto-generated
+    // Fields:
+    //   - type: string (required, enum: ["grammar", "spelling", "pronunciation", "vocabulary"])
+    //   - content: string (required)
+    //   - correction: string (optional)
+    //   - explanation: string (optional)
+    //   - userId: string (required, immutable)
+    //   - source: string (optional)
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // Collection: /users/{userId}/interests/{interestId}
+    // Document ID: auto-generated
+    // Fields:
+    //   - topic: string (required)
+    //   - userId: string (required, immutable)
+    //   - frequency: number (required)
+    //   - lastSeen: timestamp (required)
+    //
+    // Collection: /users/{userId}/progress/{progressId}
+    // Document ID: auto-generated
+    // Fields:
+    //   - skill: string (required, enum: ["reading", "writing", "speaking", "listening", "vocabulary", "grammar"])
+    //   - level: number (required)
+    //   - userId: string (required, immutable)
+    //   - updatedAt: timestamp (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.email == "he4amali22@gmail.com" || 
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+
+    function isTeacher() {
+      return isAuthenticated() &&
+        (isAdmin() || 
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher'));
+    }
+
+    function isAuthor(data) {
+      return isAuthenticated() && (isAdmin() || data.authorId == request.auth.uid);
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUrl(url) {
+      return url is string && (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasRequiredFields(['uid', 'email', 'role', 'createdAt']) &&
+             hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'photoURL', 'createdAt']) &&
+             data.uid is string && data.uid.size() > 0 &&
+             data.email is string && isValidEmail(data.email) &&
+             data.role in ['admin', 'teacher', 'student'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidWorksheet(data) {
+      return hasRequiredFields(['title_ar', 'authorId', 'type', 'createdAt']) &&
+             data.title_ar is string && data.title_ar.size() > 0 && data.title_ar.size() < 200 &&
+             data.authorId is string &&
+             data.type in ['reading', 'grammar', 'vocabulary', 'writing'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidVocabularyItem(data) {
+      return (hasRequiredFields(['word', 'meaning_ar', 'meaning_en', 'userId', 'createdAt']) || 
+              hasRequiredFields(['original_word', 'translation', 'userId', 'createdAt'])) &&
+             data.userId is string &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidMistake(data) {
+      return hasRequiredFields(['type', 'content', 'userId', 'createdAt']) &&
+             data.type in ['grammar', 'spelling', 'pronunciation', 'vocabulary', 'speaking', 'writing'] &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 1000 &&
+             data.userId is string &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidMemoryItem(data) {
+      return hasRequiredFields(['type', 'content', 'userId', 'timestamp']) &&
+             data.type in ['writing', 'reading', 'speaking', 'vocabulary'] &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 5000 &&
+             data.userId is string &&
+             data.timestamp is timestamp &&
+             (!('correction' in data) || data.correction is string) &&
+             (!('explanation' in data) || data.explanation is string) &&
+             (!('difficulty' in data) || data.difficulty in ['easy', 'medium', 'hard']);
+    }
+
+    function isValidInterest(data) {
+      return hasRequiredFields(['topic', 'userId', 'frequency', 'lastSeen']) &&
+             data.topic is string && data.topic.size() > 0 && data.topic.size() < 100 &&
+             data.userId is string &&
+             data.frequency is number &&
+             data.lastSeen is timestamp;
+    }
+
+    function isValidProgress(data) {
+      return hasRequiredFields(['skill', 'level', 'userId', 'updatedAt']) &&
+             data.skill in ['reading', 'writing', 'speaking', 'listening', 'vocabulary', 'grammar'] &&
+             data.level is number && data.level >= 0 && data.level <= 100 &&
+             data.userId is string &&
+             data.updatedAt is timestamp;
+    }
+
+    function isValidBoard(data) {
+      return hasRequiredFields(['title', 'teacherId', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 100 &&
+             data.teacherId is string &&
+             data.createdAt is timestamp &&
+             (!('description' in data) || data.description is string) &&
+             (!('settings' in data) || data.settings is map) &&
+             (!('template' in data) || data.template in ['brainstorm', 'debate', 'story', 'custom']) &&
+             (!('isPublic' in data) || data.isPublic is bool) &&
+             (!('requireApproval' in data) || data.requireApproval is bool) &&
+             (!('isActive' in data) || data.isActive is bool);
+    }
+
+    function isValidPost(data) {
+      return hasRequiredFields(['authorId', 'authorName', 'content', 'createdAt']) &&
+             data.authorId is string &&
+             data.authorName is string && data.authorName.size() > 0 &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 5000 &&
+             data.createdAt is timestamp &&
+             (!('title' in data) || data.title is string) &&
+             (!('authorPhoto' in data) || data.authorPhoto is string) &&
+             (!('imageUrl' in data) || data.imageUrl is string) &&
+             (!('isApproved' in data) || data.isApproved is bool) &&
+             (!('reactions' in data) || data.reactions is map) &&
+             (!('likedBy' in data) || data.likedBy is list) &&
+             (!('feedback' in data) || data.feedback is string);
+    }
+
+    function isValidQuiz(data) {
+      return hasRequiredFields(['title', 'authorId', 'status']) &&
+             data.title is string && data.authorId is string &&
+             data.status in ['active', 'draft', 'archived'] &&
+             (!('titleEn' in data) || data.titleEn is string) &&
+             (!('quizType' in data) || data.quizType is string) &&
+             (!('quizTypeEn' in data) || data.quizTypeEn is string) &&
+             (!('studyMaterial' in data) || data.studyMaterial is string) &&
+             (!('grade' in data) || data.grade is string) &&
+             (!('difficulty' in data) || data.difficulty in ['easy', 'medium', 'hard']) &&
+             (!('questionsCount' in data) || data.questionsCount is number) &&
+             (!('duration' in data) || data.duration is number) &&
+             (!('assignedCount' in data) || data.assignedCount is number) &&
+             (!('code' in data) || data.code is string) &&
+             (!('created_at' in data) || data.created_at is number) &&
+             (!('maxAttempts' in data) || data.maxAttempts is number);
+    }
+
+    function isValidQuestion(data) {
+      return hasRequiredFields(['text', 'type', 'correctAnswer', 'points', 'order']) &&
+             data.text is string &&
+             data.type in ['mcq', 'true_false', 'short_answer', 'fill_blank', 'ordering', 'drag_drop', 'matching'] &&
+             data.points is number && data.order is number &&
+             (!('options' in data) || data.options is list) &&
+             (!('feedback' in data) || data.feedback is string);
+    }
+
+    function isValidResult(data) {
+      return hasRequiredFields(['userId', 'userEmail', 'score', 'totalPoints', 'timeTaken', 'completedAt']) &&
+             data.userId is string && data.userEmail is string &&
+             data.score is number && data.totalPoints is number &&
+             data.timeTaken is number && data.completedAt is timestamp;
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // Connection Test Rule
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // Quizzes Collection
+    match /quizzes/{quizId} {
+      allow list: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isAdmin());
+      allow get: if isAuthenticated();
+      allow create: if isTeacher() && isValidQuiz(request.resource.data) && isAuthor(request.resource.data);
+      allow update: if (isAdmin() || (isTeacher() && isAuthor(resource.data))) && isValidQuiz(request.resource.data);
+      allow delete: if request.auth.token.email == "he4amali22@gmail.com" || (isAuthenticated() && isAuthor(resource.data));
+
+      match /questions/{questionId} {
+        allow read: if isAuthenticated();
+        allow create: if isTeacher() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid && isValidQuestion(request.resource.data);
+        allow update: if (isAdmin() || (isTeacher() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid)) && isValidQuestion(request.resource.data);
+        allow delete: if request.auth.token.email == "he4amali22@gmail.com" || (isAuthenticated() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
+      }
+
+      match /results/{resultId} {
+        allow read: if isAuthenticated() && (isAdmin() || get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid || isOwner(resource.data.userId));
+        allow create: if isAuthenticated() && isValidResult(request.resource.data) && request.resource.data.userId == request.auth.uid;
+        allow delete: if request.auth.token.email == "he4amali22@gmail.com" || (isAuthenticated() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
+      }
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && 
+                      (request.resource.data.role == 'student' || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
+                      ((isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin());
+      allow delete: if isAdmin();
+
+      // Vocabulary Subcollection
+      match /vocabulary/{vocabId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidVocabularyItem(request.resource.data);
+        allow update: if isOwner(userId) && isValidVocabularyItem(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      // Mistakes Subcollection
+      match /mistakes/{mistakeId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidMistake(request.resource.data);
+        allow update: if isOwner(userId) && isValidMistake(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      // Memory Subcollection (Mistakes & Learning Log)
+      match /memory/{memoryId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidMemoryItem(request.resource.data);
+        allow update: if isOwner(userId) && isValidMemoryItem(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      // Interests Subcollection
+      match /interests/{interestId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidInterest(request.resource.data);
+        allow update: if isOwner(userId) && isValidInterest(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      // Progress Subcollection
+      match /progress/{progressId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidProgress(request.resource.data);
+        allow update: if isOwner(userId) && isValidProgress(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // Worksheets Collection
+    match /worksheets/{worksheetId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher() && isValidWorksheet(request.resource.data) && 
+                      request.resource.data.authorId == request.auth.uid;
+      allow update: if isTeacher() && isValidWorksheet(request.resource.data) && 
+                      resource.data.authorId == request.auth.uid;
+      allow delete: if isTeacher() && resource.data.authorId == request.auth.uid;
+    }
+
+    // Interactive Worksheets Collection
+    match /interactive_worksheets/{worksheetId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isTeacher() && resource.data.authorId == request.auth.uid;
+      allow delete: if isTeacher() && resource.data.authorId == request.auth.uid;
+    }
+
+    // Writing Boards Collection
+    match /writing_boards/{boardId} {
+      allow read: if isAuthenticated() || (exists(/databases/$(database)/documents/writing_boards/$(boardId)) && get(/databases/$(database)/documents/writing_boards/$(boardId)).data.isPublic == true);
+      allow create: if isTeacher() && isValidBoard(request.resource.data) && 
+                      request.resource.data.teacherId == request.auth.uid;
+      allow update: if isTeacher() && isValidBoard(request.resource.data) && 
+                      resource.data.teacherId == request.auth.uid;
+      allow delete: if isTeacher() && resource.data.teacherId == request.auth.uid;
+
+      // Posts Subcollection
+      match /posts/{postId} {
+        allow read: if isAuthenticated() || (get(/databases/$(database)/documents/writing_boards/$(boardId)).data.isPublic == true);
+        allow create: if (isAuthenticated() || get(/databases/$(database)/documents/writing_boards/$(boardId)).data.isPublic == true) && 
+                        isValidPost(request.resource.data) &&
+                        (request.auth != null ? request.resource.data.authorId == request.auth.uid : request.resource.data.authorId == 'anonymous') &&
+                        (request.resource.data.isApproved == false || isTeacher());
+        allow update: if (isAuthenticated() || get(/databases/$(database)/documents/writing_boards/$(boardId)).data.isPublic == true) && 
+                        isValidPost(request.resource.data) &&
+                        (
+                          // Owner or teacher can update anything (like content/approval/feedback)
+                          (request.auth != null && resource.data.authorId == request.auth.uid) || isTeacher() ||
+                          // Others can ONLY update the likedBy array (for likes)
+                          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy']))
+                        ) &&
+                        (request.resource.data.isApproved == resource.data.isApproved || isTeacher());
+        allow delete: if isAuthenticated() && 
+                        (resource.data.authorId == request.auth.uid || isTeacher());
+      }
+    }
+
+    // Live Sessions Collection
+    match /live_sessions/{sessionId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher();
+      allow update: if isAuthenticated() && (
+        isTeacher() || 
+        // Allow students to interact with specific session features
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasAny(['poll', 'exercise', 'reaction', 'stickyNotes'])
+        )
+      );
+      allow delete: if isTeacher();
+    }
+
+    // Default Deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

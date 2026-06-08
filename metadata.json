@@ -1,0 +1,7 @@
+{
+  "name": "قُل",
+  "description": "قُل (QUL) is an AI-powered Arabic learning arcade. A cinematic platform for students to learn through games and for teachers to create interactive worksheets and live challenges.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

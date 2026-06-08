@@ -1,0 +1,253 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user profile information and roles.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique identifier for the user." },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "teacher", "student"] },
+        "photoURL": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Worksheet": {
+      "title": "Printable Worksheet",
+      "description": "Stores AI-generated worksheet data.",
+      "type": "object",
+      "properties": {
+        "title_ar": { "type": "string" },
+        "content_ar": { "type": "string" },
+        "content_en": { "type": "string" },
+        "vocabulary": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "word": { "type": "string" },
+              "meaning_ar": { "type": "string" },
+              "meaning_en": { "type": "string" }
+            }
+          }
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "skill_ar": { "type": "string" },
+              "skill_en": { "type": "string" },
+              "questions": { "type": "array" }
+            }
+          }
+        },
+        "authorId": { "type": "string" },
+        "type": { "type": "string", "enum": ["reading", "grammar", "vocabulary", "writing"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title_ar", "authorId", "createdAt"]
+    },
+    "InteractiveWorksheet": {
+      "title": "Interactive Worksheet",
+      "description": "Stores interactive worksheet templates created by teachers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "sections": { "type": "array" },
+        "authorId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "authorId", "createdAt"]
+    },
+    "VocabularyItem": {
+      "title": "Vocabulary Item",
+      "description": "A word saved by a student to their personal bank.",
+      "type": "object",
+      "properties": {
+        "word": { "type": "string" },
+        "meaning_ar": { "type": "string" },
+        "meaning_en": { "type": "string" },
+        "original_word": { "type": "string" },
+        "translation": { "type": "string" },
+        "userId": { "type": "string" },
+        "source": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["word", "userId", "createdAt"]
+    },
+    "Mistake": {
+      "title": "Learning Mistake",
+      "description": "A mistake made by the student in writing, reading, or speaking.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["grammar", "spelling", "pronunciation", "vocabulary"] },
+        "content": { "type": "string", "description": "The incorrect text or word." },
+        "correction": { "type": "string", "description": "The correct version." },
+        "explanation": { "type": "string" },
+        "userId": { "type": "string" },
+        "source": { "type": "string", "description": "The module where the mistake occurred (e.g., 'Writing', 'Reading')." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "content", "userId", "createdAt"]
+    },
+    "Interest": {
+      "title": "User Interest",
+      "description": "A topic or theme the user is interested in.",
+      "type": "object",
+      "properties": {
+        "topic": { "type": "string" },
+        "userId": { "type": "string" },
+        "frequency": { "type": "number" },
+        "lastSeen": { "type": "string", "format": "date-time" }
+      },
+      "required": ["topic", "userId"]
+    },
+    "Progress": {
+      "title": "Skill Progress",
+      "description": "Mastery levels for different language skills.",
+      "type": "object",
+      "properties": {
+        "skill": { "type": "string", "enum": ["reading", "writing", "speaking", "listening", "vocabulary", "grammar"] },
+        "level": { "type": "number", "description": "0 to 100 mastery score." },
+        "userId": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["skill", "level", "userId"]
+    },
+    "WritingBoard": {
+      "title": "Writing Board",
+      "description": "A collaborative board for writing activities.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string", "description": "The prompt or question for the board." },
+        "teacherId": { "type": "string" },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "background": { "type": "string" },
+            "fontFamily": { "type": "string" },
+            "fontSize": { "type": "string" },
+            "fontColor": { "type": "string" },
+            "layout": { "type": "string", "enum": ["grid", "stream", "columns"] }
+          }
+        },
+        "template": { "type": "string", "enum": ["brainstorm", "debate", "story", "custom"] },
+        "isPublic": { "type": "boolean" },
+        "requireApproval": { "type": "boolean" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "teacherId", "createdAt"]
+    },
+    "CollaborativePost": {
+      "title": "Collaborative Writing Post",
+      "description": "A post shared by a student on the collaborative writing board.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorPhoto": { "type": "string", "format": "uri" },
+        "content": { "type": "string" },
+        "title": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "reactions": { "type": "object" },
+        "likedBy": { "type": "array", "items": { "type": "string" } },
+        "feedback": { "type": "string", "description": "Teacher or AI feedback." },
+        "isApproved": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["authorId", "authorName", "content", "createdAt"]
+    },
+    "Quiz": {
+      "title": "Smart Quiz",
+      "description": "An interactive quiz created by a teacher.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "titleEn": { "type": "string" },
+        "quizType": { "type": "string" },
+        "quizTypeEn": { "type": "string" },
+        "studyMaterial": { "type": "string", "description": "Base64 encoded image of study material." },
+        "questionsCount": { "type": "number" },
+        "duration": { "type": "number", "description": "Duration in minutes." },
+        "assignedCount": { "type": "number" },
+        "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] },
+        "status": { "type": "string", "enum": ["active", "draft", "archived"] },
+        "authorId": { "type": "string" },
+        "grade": { "type": "string" },
+        "created_at": { "type": "number", "description": "Timestamp in milliseconds." },
+        "maxAttempts": { "type": "number", "description": "Maximum number of attempts allowed for this quiz." }
+      },
+      "required": ["title", "authorId", "status"]
+    },
+    "Question": {
+      "title": "Quiz Question",
+      "description": "A single question in a quiz.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "type": { "type": "string", "enum": ["mcq", "true_false", "short_answer", "fill_blank", "ordering", "drag_drop", "matching"] },
+        "options": { "type": "array", "items": { "type": "string" } },
+        "correctAnswer": { "type": "string" },
+        "points": { "type": "number" },
+        "order": { "type": "number" }
+      },
+      "required": ["text", "type", "correctAnswer", "points", "order"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents."
+    },
+    "/quizzes/{quizId}": {
+      "schema": "Quiz",
+      "description": "Interactive smart quizzes."
+    },
+    "/quizzes/{quizId}/questions/{questionId}": {
+      "schema": "Question",
+      "description": "Individual questions within a quiz."
+    },
+    "/worksheets/{worksheetId}": {
+      "schema": "Worksheet",
+      "description": "AI-generated printable worksheets."
+    },
+    "/interactive_worksheets/{worksheetId}": {
+      "schema": "InteractiveWorksheet",
+      "description": "Interactive worksheets for students."
+    },
+    "/writing_boards/{boardId}": {
+      "schema": "WritingBoard",
+      "description": "Collaborative writing boards."
+    },
+    "/writing_boards/{boardId}/posts/{postId}": {
+      "schema": "CollaborativePost",
+      "description": "Posts within a collaborative writing board."
+    },
+    "/users/{userId}/vocabulary/{vocabId}": {
+      "schema": "VocabularyItem",
+      "description": "Personal vocabulary bank for each user."
+    },
+    "/users/{userId}/mistakes/{mistakeId}": {
+      "schema": "Mistake",
+      "description": "Tracked mistakes for personalized review."
+    },
+    "/users/{userId}/interests/{interestId}": {
+      "schema": "Interest",
+      "description": "Topics of interest for the user."
+    },
+    "/users/{userId}/progress/{progressId}": {
+      "schema": "Progress",
+      "description": "Skill-based progress tracking."
+    }
+  }
+}
