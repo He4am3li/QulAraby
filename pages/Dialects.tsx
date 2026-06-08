@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
 import { 
-  Globe, MessageSquare, ChevronRight, ChevronLeft, 
-  Volume2, Info, ArrowRight, ArrowLeft, Sparkles, Map as MapIcon,
-  Gamepad2, Trophy, Star, Mic, MicOff, Play, Square, Loader2,
-  MessageCircle, Send, Zap, Plane
+  MessageSquare, Volume2, Info, Sparkles, Map as MapIcon,
+  Trophy, Mic, MicOff, MessageCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LanguageToggle } from '../components/LanguageToggle';
 import { PageHeader } from '../components/PageHeader';
-import { FallingLetters } from '../components/Layout';
-import { generateSpeech, decodeAudioData, evaluatePronunciation } from '../services/gemini';
 
 declare global {
   interface Window {
@@ -18,7 +13,7 @@ declare global {
   }
 }
 
-// --- Country Journey Data (v4 - Verified Strategic Landmarks) ---
+// --- Country Journey Data ---
 const COUNTRY_DATA = [
   {
     id: 'uae',
@@ -59,16 +54,12 @@ const COUNTRY_DATA = [
       ]
     },
     vocab: [
-      { fusha: 'كيف حالك؟', dialect: 'شلونك؟', roman: 'Shlonak?', en: 'How are you?' },
+      { fusha: 'كيف حالك？', dialect: 'شلونك؟', roman: 'Shlonak?', en: 'How are you?' },
       { fusha: 'كثيراً', dialect: 'وايد', roman: 'Wayed', en: 'A lot' },
       { fusha: 'ماذا تريد؟', dialect: 'شو تبي؟', roman: 'Sho tabi?', en: 'What do you want?' },
       { fusha: 'الآن', dialect: 'الحين', roman: 'Al-heen', en: 'Now' },
       { fusha: 'جميل', dialect: 'حلو / زين', roman: 'Helou / Zein', en: 'Beautiful / Good' },
-      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
-      { fusha: 'انظر', dialect: 'طالع', roman: 'Talae', en: 'Look' },
-      { fusha: 'تعال', dialect: 'تعال', roman: 'Ta\'al', en: 'Come' },
-      { fusha: 'اذهب', dialect: 'روح', roman: 'Rouh', en: 'Go' },
-      { fusha: 'بسرعة', dialect: 'بسرعة', roman: 'B-sur\'a', en: 'Fast' }
+      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' }
     ],
     dialogue: {
       title: 'الترحيب بالضيف',
@@ -110,28 +101,18 @@ const COUNTRY_DATA = [
       items: [
         { nameAr: 'الكشري', nameEn: 'Koshary', icon: '🥣', descAr: 'الأكلة الشعبية الأكثر شهرة في مصر وتتكون من الأرز والعدس والمعكرونة.', descEn: 'The most famous popular dish in Egypt, consisting of rice, lentils, and pasta.' },
         { nameAr: 'الفانوس', nameEn: 'Fanous', icon: '🏮', descAr: 'رمز تقليدي للاحتفال بشهر رمضان المبارك في مصر.', descEn: 'A traditional symbol for celebrating the holy month of Ramadan in Egypt.' },
-        { nameAr: 'النيل', nameEn: 'The Nile', icon: '⛵', descAr: 'شريان الحياة في مصر وأطول نهر في العالم.', descEn: 'The lifeline of Egypt and the longest river in the world.' },
-        { nameAr: 'الأهرامات', nameEn: 'Pyramids', icon: '📐', descAr: 'بناها الفراعنة كقبور ملكية وتعتبر إعجازاً هندسياً.', descEn: 'Built by Pharaohs as royal tombs and considered an engineering marvel.' },
-        { nameAr: 'البردي', nameEn: 'Papyrus', icon: '📜', descAr: 'أول ورق في التاريخ ابتكره المصريون القدماء.', descEn: 'The first paper in history invented by the Ancient Egyptians.' },
-        { nameAr: 'الفلوكة', nameEn: 'Felucca', icon: '🛶', descAr: 'مركب شراعي تقليدي يبحر في مياه النيل.', descEn: 'A traditional sailing boat that sails in the Nile waters.' }
+        { nameAr: 'النيل', nameEn: 'The Nile', icon: '⛵', descAr: 'شريان الحياة في مصر وأطول نهر في العالم.', descEn: 'The lifeline of Egypt and the longest river in the world.' }
       ]
     },
     vocab: [
       { fusha: 'كيف حالك؟', dialect: 'إزيك؟', roman: 'Ezayyak?', en: 'How are you?' },
       { fusha: 'الآن', dialect: 'دلوقتي', roman: 'Delwa\'ti', en: 'Now' },
-      { fusha: 'جيد جداً', dialect: 'كويس قوي', roman: 'Kwayyes awi', en: 'Very good' },
-      { fusha: 'ماذا؟', dialect: 'إيه؟', roman: 'Eih?', en: 'What?' },
-      { fusha: 'لماذا؟', dialect: 'ليه؟', roman: 'Leih?', en: 'Why?' },
-      { fusha: 'هنا', dialect: 'هنا / هناهو', roman: 'Hena / Henaho', en: 'Here' },
-      { fusha: 'هناك', dialect: 'هناك', roman: 'Honak', en: 'There' },
-      { fusha: 'بسرعة', dialect: 'قوام / بسرعة', roman: 'Awam / B-sur\'a', en: 'Fast' },
-      { fusha: 'ببطء', dialect: 'براحة', roman: 'B-raha', en: 'Slowly' },
-      { fusha: 'كثيراً', dialect: 'كتير', roman: 'Kteer', en: 'A lot' }
+      { fusha: 'جيد جداً', dialect: 'كويس قوي', roman: 'Kwayyes awi', en: 'Very good' }
     ],
     dialogue: {
       title: 'في السوق',
       lines: [
-        { role: 'Buyer', ar: 'بكم هذا القميص？', dialect: 'بكام القميص ده يا باشا؟', en: 'How much is this shirt?' },
+        { role: 'Buyer', ar: 'بكم هذا القميص؟', dialect: 'بكام القميص ده يا باشا؟', en: 'How much is this shirt?' },
         { role: 'Seller', ar: 'ثمنه مائة جنيه.', dialect: 'ده بمية جنيه بس عشان خاطرك.', en: 'It is 100 pounds, just for you.' }
       ]
     }
@@ -167,21 +148,12 @@ const COUNTRY_DATA = [
       factEn: 'Baghdad was the capital of the Abbasid Caliphate and a global center for science and culture.',
       items: [
         { nameAr: 'السمك المسكوف', nameEn: 'Masgouf Fish', icon: '🐟', descAr: 'الأكلة العراقية الأكثر شهرة وتطبخ على حطب أشجار المشمش.', descEn: 'The most famous Iraqi dish, grilled uniquely over apricot woodfires.' },
-        { nameAr: 'شاي أبو الهيل', nameEn: 'Cardamom Tea', icon: '🫖', descAr: 'الشاي العراقي الثقيل المعطر بالهيل ويقدم في "الاستكان".', descEn: 'Strong Iraqi tea flavored with cardamom and served in a traditional Istikan glass.' },
-        { nameAr: 'النخيل', nameEn: 'Palm Trees', icon: '🌴', descAr: 'يضم العراق ملايين أشجار النخيل التي تنتج التمور الفاخرة مثل البرحي.', descEn: 'Iraq is home to millions of date palms producing luxury varieties like Barhi.' },
-        { nameAr: 'الملوية', nameEn: 'Malwiya Minaret', icon: '🕌', descAr: 'مئذنة مسجد سامراء الفريدة بشكلها الحلزوني المذهل.', descEn: 'The unique spiral minaret of Samarra, an architectural icon of Islamic heritage.' },
-        { nameAr: 'بوابة عشتار', nameEn: 'Ishtar Gate', icon: '🏛️', descAr: 'البوابة الثامنة لمدينة بابل التاريخية القديمة.', descEn: 'The grand eighth gate to the inner city of ancient Babylon.' }
+        { nameAr: 'شاي أبو الهيل', nameEn: 'Cardamom Tea', icon: '🫖', descAr: 'الشاي العراقي الثقيل المعطر بالهيل ويقدم في "الاستكان".', descEn: 'Strong Iraqi tea flavored with cardamom and served in a traditional Istikan glass.' }
       ]
     },
     vocab: [
       { fusha: 'كيف حالك؟', dialect: 'شلونك؟ / شكو ماكو؟', roman: 'Shlonak? / Shako Mako?', en: 'How are you? / What\'s up?' },
-      { fusha: 'أنا بخير', dialect: 'زين / تمام', roman: 'Zein / Tamam', en: 'I am good' },
-      { fusha: 'كثيراً', dialect: 'كلش', roman: 'Kullish', en: 'A lot' },
-      { fusha: 'الآن', dialect: 'هسه', roman: 'Hassa', en: 'Now' },
-      { fusha: 'جميل', dialect: 'حلو / فد شيء', roman: 'Helou / Fad Shi', en: 'Beautiful / Something special' },
-      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
-      { fusha: 'ماذا؟', dialect: 'شنو؟', roman: 'Shno?', en: 'What?' },
-      { fusha: 'بسرعة', dialect: 'على السريع / استعجل', roman: 'Ala Saree / Istajil', en: 'Fast' }
+      { fusha: 'الآن', dialect: 'هسه', roman: 'Hassa', en: 'Now' }
     ],
     dialogue: {
       title: 'في المقهى التراثي',
@@ -199,15 +171,12 @@ export default function CountryJourney() {
   const [isRecording, setIsRecording] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 dir-rtl p-3 sm:p-4 md:p-6 lg:p-8">
-      {/* الهيدر المتجاوب */}
+    <div className="min-h-screen bg-slate-50 text-slate-800 p-3 sm:p-4 md:p-6 lg:p-8" dir="rtl">
       <div className="max-w-7xl mx-auto mb-6">
         <PageHeader title="رحلة اللهجات العربية" description="اكتشف الثقافات وتحدث مثل أهل البلد" />
       </div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
-        
-        {/* شريط اختيار الدول المتجاوب (أفقي في الموبايل، عمودي في الشاشات الكبيرة) */}
         <div className="lg:col-span-3 flex lg:flex-col overflow-x-auto lg:overflow-x-visible gap-2 pb-3 lg:pb-0 scrollbar-none snap-x">
           {COUNTRY_DATA.map((country) => (
             <button
@@ -230,16 +199,9 @@ export default function CountryJourney() {
           ))}
         </div>
 
-        {/* منطقة المحتوى الرئيسية */}
         <div className="lg:col-span-9 space-y-4 md:space-y-6">
-          
-          {/* بانر الدولة مع المؤثرات البصرية */}
           <div className="relative h-48 sm:h-64 rounded-2xl overflow-hidden shadow-lg">
-            <img 
-              src={selectedCountry.image} 
-              alt={selectedCountry.nameAr} 
-              className="w-full h-full object-cover"
-            />
+            <img src={selectedCountry.image} alt={selectedCountry.nameAr} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
             <div className="absolute bottom-4 right-4 text-white p-2">
               <h2 className="text-2xl sm:text-3xl font-black flex items-center gap-2">
@@ -249,7 +211,6 @@ export default function CountryJourney() {
             </div>
           </div>
 
-          {/* استعراض الشخصيات الكرتونية بشكل متجاوب */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               { type: 'male', data: selectedCountry.characterMale },
@@ -270,7 +231,6 @@ export default function CountryJourney() {
             ))}
           </div>
 
-          {/* التبويبات الداخلية المتجاوبة تفاعلياً */}
           <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm overflow-hidden">
             <div className="flex border-b border-slate-200 overflow-x-auto scrollbar-none bg-slate-50/50">
               {[
@@ -297,7 +257,6 @@ export default function CountryJourney() {
               })}
             </div>
 
-            {/* عرض محتوى التبويبات مع معالجة أحجام الشاشات */}
             <div className="p-4 sm:p-6">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -307,7 +266,6 @@ export default function CountryJourney() {
                   exit={{ opacity: 0, y: -5 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {/* تـبـويب الـمـهـمـات */}
                   {activeTab === 'missions' && (
                     <div className="space-y-3">
                       {Object.entries(selectedCountry.missions).map(([level, mission]) => (
@@ -324,7 +282,6 @@ export default function CountryJourney() {
                     </div>
                   )}
 
-                  {/* تـبـويب الـثـقـافـة */}
                   {activeTab === 'culture' && (
                     <div className="space-y-4">
                       <div className="p-3 bg-amber-50 rounded-lg text-amber-900 border border-amber-100 flex items-center gap-2 text-xs sm:text-sm">
@@ -345,7 +302,6 @@ export default function CountryJourney() {
                     </div>
                   )}
 
-                  {/* تـبـويب الـمـفـردات */}
                   {activeTab === 'vocab' && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {selectedCountry.vocab.map((v, idx) => (
@@ -365,7 +321,6 @@ export default function CountryJourney() {
                     </div>
                   )}
 
-                  {/* تـبـويب الـمـحـادثـة المطور */}
                   {activeTab === 'dialogue' && (
                     <div className="space-y-4">
                       <h4 className="font-bold text-slate-700 text-sm border-r-4 border-amber-500 pr-2">
@@ -389,7 +344,6 @@ export default function CountryJourney() {
                         ))}
                       </div>
                       
-                      {/* واجهة النطق والتفاعل مع الهاتف المحمول */}
                       <div className="flex flex-col sm:flex-row gap-2 items-center justify-between p-3 border border-dashed border-slate-200 rounded-xl">
                         <span className="text-xs text-slate-500 text-center sm:text-right">اضغط وتدرب على نطق العبارة السابقة بنفس اللهجة:</span>
                         <button 
