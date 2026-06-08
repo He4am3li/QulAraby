@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, useLocation } from 'react-router-dom'; // التعديل هنا ليتوافق مع Vite
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Home as HomeIcon, Languages, BookText, Library, BookOpen, Globe, 
@@ -108,13 +107,13 @@ const LogoArt = () => (
 );
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const pathname = usePathname();
+  const location = useLocation(); // جلب مسار الصفحة الحالي في Vite
+  const pathname = location.pathname;
   const { profile } = useAuth();
   const [collapsed, setCollapsed] = useState(true);
   const [lang, setLang] = useState<'ar' | 'en'>('ar');
 
   useEffect(() => {
-    // آمن تماماً للتشغيل على المتصفح فقط بعد اكتمال الـ الـ Mount
     const savedLang = (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar';
     setLang(savedLang);
 
@@ -220,7 +219,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   transition={{ duration: 0.4 }}
                 >
                   <Link
-                    href={path}
+                    to={path} // تعديل الخاصية هنا من href إلى to لتلائم ريأكت راوتر
                     id={`nav-${path === '/' ? 'home' : path.substring(1)}`}
                     className={`flex items-center rounded-2xl transition-all duration-300 border relative group/item nav-line-hover ${
                       collapsed ? 'justify-center p-3' : 'px-4 py-3 gap-4 mx-1'
@@ -278,7 +277,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           return (
             <Link
               key={path}
-              href={path}
+              to={path} // تعديل الخاصية هنا أيضاً من href إلى to
               id={`mobile-nav-${path === '/' ? 'home' : path.substring(1)}`}
               className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
                 isActive ? 'text-blue-600' : 'text-slate-400'
