@@ -202,9 +202,36 @@
         "order": { "type": "number" }
       },
       "required": ["text", "type", "correctAnswer", "points", "order"]
+    },
+    "LetterSubmission": {
+      "title": "Letter Homework Submission",
+      "description": "Student homework submission for letter handwriting worksheets.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "char": { "type": "string" },
+        "charName": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentEmail": { "type": "string" },
+        "studentPhoto": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "reviewed"] },
+        "aiFeedback": { "type": "object" },
+        "teacherGrade": { "type": "number" },
+        "teacherNotes": { "type": "string" },
+        "badge": { "type": "string" },
+        "reviewedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["char", "studentId", "status"]
     }
   },
   "firestore": {
+    "/letter_submissions/{submissionId}": {
+      "schema": "LetterSubmission",
+      "description": "Student handwriting worksheet submissions for teachers to review and grade."
+    },
     "/users/{userId}": {
       "schema": "User",
       "description": "User profile documents."

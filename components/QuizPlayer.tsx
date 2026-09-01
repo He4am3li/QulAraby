@@ -9,7 +9,7 @@ import {
   collection, query, orderBy, onSnapshot, addDoc, doc, 
   getDoc, updateDoc, serverTimestamp, getDocs, where
 } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { db, handleFirestoreError, OperationType, safeStringify } from '../firebase';
 import { useAuth } from './AuthProvider';
 import { WordChessGame } from './WordChessGame';
 
@@ -238,7 +238,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
     if (q.type === 'mcq' || q.type === 'true_false' || q.type === 'short_answer' || q.type === 'fill_blank') {
       isCorrect = val?.toString().trim().toLowerCase() === q.correctAnswer.toString().trim().toLowerCase();
     } else if (q.type === 'ordering' || q.type === 'drag_drop' || q.type === 'matching') {
-      isCorrect = JSON.stringify(val) === JSON.stringify(q.options);
+      isCorrect = safeStringify(val) === safeStringify(q.options);
     }
 
     if (isCorrect) {
@@ -355,7 +355,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
       if (q.type === 'mcq' || q.type === 'true_false' || q.type === 'short_answer' || q.type === 'fill_blank') {
         isCorrect = userAnswer?.toString().trim().toLowerCase() === q.correctAnswer.toString().trim().toLowerCase();
       } else if (q.type === 'ordering' || q.type === 'drag_drop' || q.type === 'matching') {
-        isCorrect = JSON.stringify(userAnswer) === JSON.stringify(q.options);
+        isCorrect = safeStringify(userAnswer) === safeStringify(q.options);
       } else if (q.type === 'chess_puzzle') {
         isCorrect = userAnswer === 'CHESS_MASTERED';
       }

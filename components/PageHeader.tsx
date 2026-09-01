@@ -5,7 +5,7 @@ import { LanguageToggle } from './LanguageToggle';
 
 interface PageHeaderProps {
   title: string;
-  icon: LucideIcon;
+  icon: React.ComponentType<{ size?: number | string; className?: string }> | LucideIcon;
   lang: 'ar' | 'en';
   children?: React.ReactNode;
   rightContent?: React.ReactNode;

@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom'; // التعديل هنا ليتوافق مع Vite
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Home as HomeIcon, Languages, BookText, Library, BookOpen, Globe, 
-  Type, Mic, Ear, PenTool, Gamepad2, Trophy, FileText, 
-  ClipboardList, GraduationCap, TrendingUp 
-} from 'lucide-react';
+import { Home as HomeIcon, Languages, BookText, Library, BookOpen, Globe, Type, Mic, Ear, PenTool, Rocket, Gamepad2, Trophy, FileText, ClipboardList, ClipboardCheck, GraduationCap, TrendingUp, Presentation } from 'lucide-react';
 import { OnboardingTour } from './OnboardingTour';
 import { useAuth } from './AuthProvider';
 
 const navTranslations: Record<string, { en: string, ar: string }> = {
   '/': { en: 'Home', ar: 'الرئيسية' },
+  '/whiteboard': { en: 'Whiteboard', ar: 'السبورة' },
   '/test': { en: 'Test Yourself', ar: 'اختبر نفسك' },
   '/letters': { en: 'Letters', ar: 'الحروف' },
   '/vocabulary': { en: 'Vocab', ar: 'المفردات' },
@@ -30,6 +27,7 @@ const navTranslations: Record<string, { en: string, ar: string }> = {
 
 const navIcons: Record<string, any> = {
   '/': HomeIcon,
+  '/whiteboard': Presentation,
   '/test': TrendingUp,
   '/letters': Type,
   '/vocabulary': BookText,
@@ -47,7 +45,7 @@ const navIcons: Record<string, any> = {
   '/achievements': Trophy,
 };
 
-const navPaths = ['/', '/test', '/letters', '/vocabulary', '/quizzes', '/translator', '/listening', '/speak', '/reading', '/writing', '/assistant', '/games', '/dialects', '/worksheets', '/preparation', '/achievements'];
+const navPaths = ['/', '/whiteboard', '/test', '/letters', '/vocabulary', '/quizzes', '/translator', '/listening', '/speak', '/reading', '/writing', '/assistant', '/games', '/dialects', '/worksheets', '/preparation', '/achievements'];
 
 const ARABIC_CHARS = ['ق', 'ل', 'ع', 'ر', 'ب', 'ي', 'أ', 'ن', 'ا', 'ح', 'ب', 'س', 'د', 'و', 'ك'];
 
@@ -92,11 +90,18 @@ export const FallingLetters = ({ mode = 'tall' }: { mode?: 'tall' | 'compact' })
 
 const LogoArt = () => (
   <div className="relative w-10 h-10 group">
+    {/* Arcade Cabinet Frame */}
     <div className="absolute inset-0 bg-slate-900 rounded-xl border-2 border-slate-700 shadow-2xl overflow-hidden">
+      {/* Screen Area */}
       <div className="absolute inset-1 bg-black rounded-lg border border-slate-800 flex items-center justify-center overflow-hidden">
+        {/* Scanlines Effect */}
         <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
+        
+        {/* Neon Glows */}
         <div className="absolute -inset-4 bg-blue-500/20 blur-xl group-hover:bg-blue-400/30 transition-all duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent" />
+        
+        {/* Logo Text */}
         <div className="relative flex flex-col items-center justify-center leading-none">
           <span className="text-[8px] font-black text-blue-400 tracking-tighter drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]">QUL</span>
           <span className="text-[10px] font-black text-emerald-400 arabic-font drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]">قُل</span>
@@ -107,16 +112,14 @@ const LogoArt = () => (
 );
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const location = useLocation(); // جلب مسار الصفحة الحالي في Vite
-  const pathname = location.pathname;
+  const location = useLocation();
   const { profile } = useAuth();
-  const [collapsed, setCollapsed] = useState(true);
-  const [lang, setLang] = useState<'ar' | 'en'>('ar');
+  const [collapsed, setCollapsed] = React.useState(true);
+  const [lang, setLang] = React.useState<'ar' | 'en'>(
+    (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar'
+  );
 
-  useEffect(() => {
-    const savedLang = (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar';
-    setLang(savedLang);
-
+  React.useEffect(() => {
     const handleLangChange = () => {
       const currentLang = (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar';
       setLang(currentLang);
@@ -133,17 +136,20 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     <div className={`h-full flex flex-col md:flex-row bg-slate-950 ${lang === 'ar' ? 'font-arabic' : ''}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <OnboardingTour lang={lang} />
       
+      {/* Dynamic Desktop Sidebar */}
       <motion.aside 
         initial={false}
         animate={{ width: collapsed ? 80 : 240 }}
         onMouseEnter={() => setCollapsed(false)}
         onMouseLeave={() => setCollapsed(true)}
         transition={{ type: 'spring', stiffness: 300, damping: 35 }}
-        className="hidden md:flex flex-col text-white sticky top-0 h-screen shadow-[20px_0_40px_rgba(0,0,0,0.3)] overflow-hidden z-40" 
+        className="hidden md:flex flex-col text-white sticky top-0 h-screen shadow-[20px_0_40px_rgba(0,0,0,0.3)] relative overflow-hidden z-40" 
         style={{ background: 'linear-gradient(to left, #0f172a 0%, #064e3b 100%)' }}
       >
+        {/* Falling Letters Layer */}
         <FallingLetters />
 
+        {/* Header Section */}
         <div 
           onClick={() => setCollapsed(!collapsed)}
           className="relative z-10 flex flex-col items-center pt-8 pb-4 cursor-pointer group min-h-[140px] justify-start"
@@ -170,6 +176,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
              </AnimatePresence>
           </div>
 
+          {/* Minimal "MENU" Indicator - Now with stability */}
           <div className="h-6 flex items-center justify-center">
             <AnimatePresence mode="wait">
               {collapsed ? (
@@ -208,18 +215,29 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             return true;
           }).map((path, i) => {
             const Icon = navIcons[path];
-            const label = navTranslations[path][lang];
-            const isActive = pathname === path;
+            const isTeacher = profile?.role === 'teacher' || profile?.role === 'admin';
+            let label = navTranslations[path][lang];
+            if (path === '/test') {
+              label = isTeacher 
+                ? (lang === 'ar' ? 'مستويات الطلاب' : 'Student Levels')
+                : (lang === 'ar' ? 'تحديد المستوى' : 'Placement Test');
+            }
+            const isActive = location.pathname === path;
 
             return (
               <div key={path} className="overflow-hidden">
                 <motion.div
                   initial={false}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.4 }}
+                  animate={{ 
+                    y: collapsed ? 0 : 0, 
+                    opacity: 1 
+                  }}
+                  transition={{ 
+                    duration: 0.4
+                  }}
                 >
                   <Link
-                    to={path} // تعديل الخاصية هنا من href إلى to لتلائم ريأكت راوتر
+                    to={path}
                     id={`nav-${path === '/' ? 'home' : path.substring(1)}`}
                     className={`flex items-center rounded-2xl transition-all duration-300 border relative group/item nav-line-hover ${
                       collapsed ? 'justify-center p-3' : 'px-4 py-3 gap-4 mx-1'
@@ -262,22 +280,31 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             );
           })}
         </nav>
+
       </motion.aside>
 
+      {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center h-16 px-2 z-50 shadow-2xl">
         {navPaths.filter(path => {
           if (path === '/preparation' && profile?.role !== 'teacher') return false;
+          // Hide some items on mobile to save space
           const mobileHiddenPaths = ['/translator', '/worksheets', '/dialects'];
           if (mobileHiddenPaths.includes(path) && !['/preparation'].includes(path)) return false;
           return true;
         }).map((path) => {
           const Icon = navIcons[path];
-          const label = navTranslations[path][lang];
-          const isActive = pathname === path;
+          const isTeacher = profile?.role === 'teacher' || profile?.role === 'admin';
+          let label = navTranslations[path][lang];
+          if (path === '/test') {
+            label = isTeacher 
+              ? (lang === 'ar' ? 'مستويات الطلاب' : 'Student Levels')
+              : (lang === 'ar' ? 'تحديد المستوى' : 'Placement Test');
+          }
+          const isActive = location.pathname === path;
           return (
             <Link
               key={path}
-              to={path} // تعديل الخاصية هنا أيضاً من href إلى to
+              to={path}
               id={`mobile-nav-${path === '/' ? 'home' : path.substring(1)}`}
               className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
                 isActive ? 'text-blue-600' : 'text-slate-400'
@@ -290,8 +317,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         })}
       </nav>
 
-      <main className="flex-1 bg-[#f8fafc] p-2 md:p-4 lg:p-6 overflow-hidden h-screen">
-        <div className="w-full h-full bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-y-auto relative custom-scroll">
+      <main className={`flex-1 bg-[#f8fafc] overflow-hidden h-screen ${location.pathname === '/whiteboard' ? 'p-1 md:p-2' : 'p-2 md:p-4 lg:p-6'}`}>
+        <div className={`w-full h-full bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 relative ${location.pathname === '/whiteboard' ? 'overflow-hidden' : 'overflow-y-auto custom-scroll'}`}>
           {children}
         </div>
       </main>

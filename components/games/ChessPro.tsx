@@ -465,28 +465,28 @@ export const ChessPro: React.FC<ChessProProps> = ({ onBack }) => {
   };
 
   const handleQuestionAnswer = (answer: string) => {
+    const targetMove = pendingMove;
+    setIsQuestionModalOpen(false);
+    setPendingMove(null);
+
     if (currentQuestion && answer === currentQuestion.a) {
-      if (pendingMove) {
-        executeMove(pendingMove.from, pendingMove.to);
+      if (targetMove) {
+        executeMove(targetMove.from, targetMove.to);
       }
-      setIsQuestionModalOpen(false);
-      setPendingMove(null);
     } else {
-      // Wrong answer penalty: skip turn or just close?
-      // Let's just close and reset selection for now
-      setIsQuestionModalOpen(false);
+      // Wrong answer penalty: close modal and reset selection
       setSelectedSquare(null);
       setValidMoves([]);
-      setPendingMove(null);
     }
   };
 
   const executeMove = (from: string, to: string, promotion?: string) => {
     try {
+      const gameCopy = new Chess(game.fen());
       const moveOptions: any = { from, to };
       if (promotion) moveOptions.promotion = promotion;
 
-      const move = game.move(moveOptions);
+      const move = gameCopy.move(moveOptions);
 
       if (move) {
         if (move.captured) {
@@ -499,18 +499,18 @@ export const ChessPro: React.FC<ChessProProps> = ({ onBack }) => {
           playSound('move');
         }
 
-        setGame(new Chess(game.fen()));
+        setGame(gameCopy);
         setLastMove({ from: move.from, to: move.to });
         setHistory(prev => [...prev, move.san]);
         setSelectedSquare(null);
         setValidMoves([]);
         setPromotionPending(null);
 
-        if (game.isCheck()) playSound('check');
-        if (game.isGameOver()) handleGameOver();
+        if (gameCopy.isCheck()) playSound('check');
+        if (gameCopy.isGameOver()) handleGameOver();
       }
     } catch (e) {
-      console.error("Invalid move", e);
+      console.warn("Move execution skipped or invalid:", from, to);
     }
   };
 

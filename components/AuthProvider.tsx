@@ -64,6 +64,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } catch (error) {
           handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+          // Ensure profile fallback so application works seamlessly in offline mode
+          setProfile({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            displayName: firebaseUser.displayName || '',
+            role: firebaseUser.email === 'he4amali22@gmail.com' ? 'admin' : 'student',
+            photoURL: firebaseUser.photoURL || '',
+            createdAt: new Date(),
+          });
         }
       } else {
         setProfile(null);

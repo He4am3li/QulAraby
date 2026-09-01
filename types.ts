@@ -181,3 +181,65 @@ export interface WritingBoard {
   teacherComments: { id: string; x: number; y: number; text: string; authorId: string; timestamp: any }[];
   lastUpdate: any;
 }
+
+export interface IrabAnalysisResult {
+  sentence: string;
+  meaningEn: string;
+  arabicBreakdown: Array<{
+    word: string;
+    irab: string;
+  }>;
+  englishBreakdown: Array<{
+    word: string;
+    roman?: string;
+    irabEn: string;
+  }>;
+}
+
+export interface TranslatorPuzzleWord {
+  id: string;
+  arabic: string;
+  transliteration: string;
+  meaningEn: string;
+}
+
+export interface TranslatorChallenge {
+  id: string;
+  level: 1 | 2 | 3;
+  type: 'puzzle' | 'gap' | 'scenario';
+  promptEn: string;
+  promptAr?: string;
+  scenarioContext?: string;
+  
+  // Level 1: Sentence Puzzle
+  puzzleWords?: TranslatorPuzzleWord[];
+  correctOrderIds?: string[];
+  targetArabic?: string;
+  targetTransliteration?: string;
+  
+  // Level 2: Fill in the Gap
+  sentenceWithBlank?: {
+    arabic: string;
+    transliteration: string;
+    blankTranslation: string;
+  };
+  options?: Array<{
+    id: string;
+    arabic: string;
+    transliteration: string;
+    meaningEn: string;
+    isCorrect: boolean;
+    explanation: string;
+  }>;
+
+  // Level 3: Smart Assisted Translation
+  scenarioHint?: string;
+  vocabularyClues?: Array<{
+    arabic: string;
+    transliteration: string;
+    meaningEn: string;
+  }>;
+  referenceTranslation?: string;
+  grammarNote?: string;
+}
+

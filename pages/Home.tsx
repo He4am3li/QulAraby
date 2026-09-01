@@ -146,7 +146,17 @@ export const Home: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
-  const t = HOME_STRINGS[lang];
+  const isTeacher = profile?.role === 'teacher' || profile?.role === 'admin';
+  const rawT = HOME_STRINGS[lang];
+  const t = {
+    ...rawT,
+    testTitle: isTeacher 
+      ? (lang === 'ar' ? 'مستويات الطلاب' : 'Student Levels')
+      : (lang === 'ar' ? 'تحديد المستوى' : 'Placement Test'),
+    testDesc: isTeacher 
+      ? (lang === 'ar' ? 'تقارير الطلاب والخطط العلاجية والإثرائية' : 'Student Reports & Remedial Plans')
+      : (lang === 'ar' ? 'تحديد مستوى شامل وممتع' : 'Fun level assessment'),
+  };
 
   // Load stats from Firestore if logged in
   React.useEffect(() => {
@@ -367,11 +377,11 @@ export const Home: React.FC = () => {
                       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", repeatDelay: 3 }}
                     />
 
-                    <span className="relative z-10 text-white/80 text-[8px] md:text-[10px] font-black tracking-[0.3em] md:tracking-[0.4em] uppercase drop-shadow-md select-none opacity-80 whitespace-nowrap">
+                    <span className="relative z-10 text-white font-black text-[8px] md:text-[10px] tracking-[0.3em] md:tracking-[0.4em] uppercase drop-shadow-[0_0_15px_rgba(255,255,255,0.9)] select-none whitespace-nowrap">
                       Learn Arabic until you can say
                     </span>
                     <div className="relative z-10 leading-none">
-                      <span className="text-2xl md:text-3xl font-bold text-white handwritten-font drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] select-none">
+                      <span className="text-2xl md:text-3xl font-bold text-white handwritten-font drop-shadow-[0_0_15px_rgba(255,255,255,0.9)] select-none">
                         أنا عربي
                       </span>
                     </div>
@@ -389,15 +399,6 @@ export const Home: React.FC = () => {
               >
                 {user ? (
                   <div className="flex items-center gap-3">
-                    <div className="flex flex-col items-end">
-                      <div className="flex items-center gap-1.5">
-                        <RoleSwitcher />
-                      </div>
-                      <p className="text-xs font-bold text-white leading-none mt-1">
-                        {user.displayName?.split(' ').slice(0, 2).join(' ') || user.email?.split('@')[0]}
-                      </p>
-                    </div>
-                    
                     <div className="relative w-10 h-10">
                       <div className="absolute inset-0 bg-blue-500 rounded-xl blur-lg opacity-20" />
                       <div className="relative w-full h-full bg-white/10 rounded-xl border border-white/20 flex items-center justify-center overflow-hidden">
@@ -407,6 +408,15 @@ export const Home: React.FC = () => {
                           <UserIcon size={18} className="text-white/60" />
                         )}
                       </div>
+                    </div>
+
+                    <div className="flex flex-col items-start">
+                      <div className="flex items-center gap-1.5">
+                        <RoleSwitcher />
+                      </div>
+                      <p className="text-xs font-bold text-white leading-none mt-1">
+                        {user.displayName?.split(' ').slice(0, 2).join(' ') || user.email?.split('@')[0]}
+                      </p>
                     </div>
 
                     <div className="w-px h-6 bg-white/10 mx-1" />

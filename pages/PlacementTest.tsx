@@ -9,14 +9,18 @@ import {
   Award, ChevronLeft, Globe, Lightbulb, BarChart3,
   Calendar, Map, Flag, Compass, Check, Home, ClipboardList,
   UserCheck, LineChart, Stethoscope, Gem, TrendingUp, AlertCircle,
-  HelpCircle, Users, GraduationCap, ClipboardCheck
+  HelpCircle, Users, GraduationCap, ClipboardCheck, Printer, Search, FileText, Download
 } from 'lucide-react';
-import { LanguageToggle } from '../components/LanguageToggle';
+import { useAuth } from '../components/AuthProvider';
+import { db } from '../firebase';
+import { collection, doc, setDoc, getDocs, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateSpeech, decodeAudioData, getAI, safeJSONParse, generateContentWithRetry, speak as globalSpeak } from '../services/gemini';
 import { Type as GenType } from "@google/genai";
+import { downloadPlacementTestPDF } from '../services/placementTestPdf';
+import { PlacementTestPreviewModal } from '../components/PlacementTestPreviewModal';
 
 const PLACEMENT_STRINGS = {
   ar: {
@@ -108,6 +112,9 @@ const SKILLS_ORDER = [
 
 export const PlacementTest: React.FC = () => {
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const isTeacherOrAdmin = profile?.role === 'teacher' || profile?.role === 'admin';
+
   const [step, setStep] = React.useState<'welcome' | 'testing' | 'results' | 'plan'>('welcome');
   const [currentIdx, setCurrentIdx] = React.useState(0);
   const [questions, setQuestions] = React.useState<any[]>([]);
@@ -121,7 +128,13 @@ export const PlacementTest: React.FC = () => {
   const [selectedOption, setSelectedOption] = React.useState<string | null>(null);
   const [lang, setLang] = React.useState<'ar' | 'en'>(localStorage.getItem('hub_lang') as 'ar' | 'en' || 'ar');
   const [studyPlan, setStudyPlan] = React.useState<any>(null);
-  const [celebrationPillar, setCelebrationPillar] = React.useState<string | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = React.useState(false);
+
+  // Teacher State for viewing all student reports
+  const [allStudentResults, setAllStudentResults] = React.useState<any[]>([]);
+  const [selectedStudentResult, setSelectedStudentResult] = React.useState<any>(null);
+  const [fetchingReports, setFetchingReports] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   React.useEffect(() => {
     const handleLangChange = () => {
@@ -131,6 +144,27 @@ export const PlacementTest: React.FC = () => {
     window.addEventListener('langChanged', handleLangChange);
     return () => window.removeEventListener('langChanged', handleLangChange);
   }, []);
+
+  // Fetch student placement results if teacher/admin
+  React.useEffect(() => {
+    if (isTeacherOrAdmin) {
+      setFetchingReports(true);
+      const q = collection(db, 'placement_results');
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const results: any[] = [];
+        snapshot.forEach((doc) => {
+          results.push({ id: doc.id, ...doc.data() });
+        });
+        results.sort((a, b) => (b.completedAt?.seconds || 0) - (a.completedAt?.seconds || 0));
+        setAllStudentResults(results);
+        setFetchingReports(false);
+      }, (err) => {
+        console.error("Error fetching placement results:", err);
+        setFetchingReports(false);
+      });
+      return () => unsubscribe();
+    }
+  }, [isTeacherOrAdmin]);
   const audioContextRef = React.useRef<AudioContext | null>(null);
 
   const t = PLACEMENT_STRINGS[lang];
@@ -139,12 +173,75 @@ export const PlacementTest: React.FC = () => {
     if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
   };
 
+  const sanitizeQuestion = (q: any, expectedSkill: string, subSkillName: string, idx: number) => {
+    if (!q || typeof q !== 'object') {
+      return getFallbackQuestion(expectedSkill, subSkillName, idx);
+    }
+    const skillKey = (q.skill || expectedSkill).toLowerCase();
+    q.skill = skillKey;
+    q.subSkill = q.subSkill || subSkillName;
+
+    // Strict constraint: translation_instruction only allowed for 'letters' skill
+    if (skillKey !== 'letters') {
+      q.translation_instruction = '';
+    } else if (q.translation_instruction && q.translation_instruction.length > 150) {
+      q.translation_instruction = q.translation_instruction.slice(0, 150);
+    }
+
+    if (q.question && q.question.length > 250) {
+      q.question = q.question.slice(0, 250);
+    }
+
+    if (!Array.isArray(q.options) || q.options.length === 0) {
+      return getFallbackQuestion(expectedSkill, subSkillName, idx);
+    }
+
+    // Ensure 4 options
+    while (q.options.length < 4) {
+      q.options.push(`Option ${q.options.length + 1}`);
+    }
+
+    if (!q.correctAnswer || !q.options.includes(q.correctAnswer)) {
+      q.correctAnswer = q.options[0];
+    }
+
+    return q;
+  };
+
+  const getFallbackQuestion = (skill: string, subSkill: string, idx: number) => {
+    const fallbacks: Record<string, any[]> = {
+      letters: [
+        { skill: 'letters', subSkill: 'Sound Recognition', difficulty: 1, question: 'اختر الصوت المطابق لحرف (أ)', options: ['أَ', 'بَ', 'تَ', 'ثَ'], correctAnswer: 'أَ', translation_instruction: 'Choose the sound' },
+        { skill: 'letters', subSkill: 'Letter Shape Recognition', difficulty: 1, question: 'ما هو الشكل المناسب لحرف الباء في أول الكلمة؟', options: ['بـ', 'ـبـ', 'ـب', 'ب'], correctAnswer: 'بـ', translation_instruction: 'Select the correct letter form' }
+      ],
+      vocab: [
+        { skill: 'vocab', subSkill: 'Word Meaning', difficulty: 2, question: 'ما معنى كلمة "كِتَاب"؟', options: ['Book', 'Pen', 'School', 'Teacher'], correctAnswer: 'Book', translation_instruction: '' },
+        { skill: 'vocab', subSkill: 'Word Meaning', difficulty: 2, question: 'ما معنى كلمة "مَدْرَسَة"؟', options: ['School', 'House', 'Market', 'Hospital'], correctAnswer: 'School', translation_instruction: '' }
+      ],
+      grammar: [
+        { skill: 'grammar', subSkill: 'Pronouns', difficulty: 2, question: 'اختر الضمير المناسب: (...) طَالِبٌ مجتهدٌ.', options: ['هُوَ', 'هِيَ', 'هُمْ', 'أَنْتُنَّ'], correctAnswer: 'هُوَ', translation_instruction: '' },
+        { skill: 'grammar', subSkill: 'Verb Conjugation', difficulty: 3, question: 'اختر التصريف الصحيح: الطَّالِبُ (...) الدَّرْسَ.', options: ['يَكْتُبُ', 'تَكْتُبُ', 'يَكْتُبُونَ', 'تَكْتُبْنَ'], correctAnswer: 'يَكْتُبُ', translation_instruction: '' }
+      ],
+      translator: [
+        { skill: 'translator', subSkill: 'Word Translation', difficulty: 2, question: 'اختر الترجمة الصحيحة لكلمة: "House"', options: ['بَيْت', 'مَدْرَسَة', 'شَارِع', 'سَيَّارَة'], correctAnswer: 'بَيْت', translation_instruction: '' },
+        { skill: 'translator', subSkill: 'Simple Sentence Translation', difficulty: 3, question: 'اختر الترجمة الصحيحة لجملة: "I read a book"', options: ['أَقْرَأُ كِتَاباً', 'أَكْتُبُ كِتَاباً', 'أَشْتَرِي كِتَاباً', 'أَحْمِلُ كِتَاباً'], correctAnswer: 'أَقْرَأُ كِتَاباً', translation_instruction: '' }
+      ]
+    };
+
+    const key = (skill || 'vocab').toLowerCase();
+    const list = fallbacks[key] || fallbacks.vocab;
+    const item = list[(idx || 0) % list.length];
+    return {
+      ...item,
+      translation_instruction: key === 'letters' ? (item.translation_instruction || 'Choose the correct answer') : ''
+    };
+  };
+
   const startTest = async () => {
     setLoading(true);
     setStep('testing');
     try {
       setRetries(0);
-      const ai = getAI();
       const schema = {
         type: GenType.OBJECT,
         properties: {
@@ -152,7 +249,7 @@ export const PlacementTest: React.FC = () => {
           subSkill: { type: GenType.STRING },
           difficulty: { type: GenType.INTEGER, description: "1 to 10" },
           question: { type: GenType.STRING },
-          translation_instruction: { type: GenType.STRING, description: "Only for Letters skill: explain what to do in English. Empty for others." },
+          translation_instruction: { type: GenType.STRING, description: "ONLY for Letters skill. Keep empty or omitted for all other skills." },
           options: { type: GenType.ARRAY, items: { type: GenType.STRING } },
           correctAnswer: { type: GenType.STRING },
           audioPrompt: { type: GenType.STRING },
@@ -176,18 +273,16 @@ export const PlacementTest: React.FC = () => {
         contents: `Generate question #1 (Skill: Letters, Sub-Skill: Sound Recognition) for an adaptive Arabic diagnostic test.
         MANDATORY RULES:
         1. FOR LETTERS: Visual & simple. Audio allowed ONLY for Sound Recognition. 
-        2. TRANSLATION: English instruction ALLOWED for letters only. 
-           - Put instructional part (e.g. "Choose the sound") in 'translation_instruction' and keep 'question' EMPTY if the task is to identify a sound. NEVER include the target letter/word in the question text.
-        3. FORMAT: 4 options, 1 correct.
+        2. TRANSLATION: English instruction ALLOWED for letters only (max 10 words in 'translation_instruction').
+           - Keep 'translation_instruction' brief and keep 'question' EMPTY if the task is to identify a sound. NEVER include target letter/word in the question text.
+        3. FORMAT: Exactly 4 distinct options, 1 correct.
         4. CEFR: A1 difficulty.
         5. Return JSON.`,
         config: { responseMimeType: "application/json", responseSchema: schema }
       });
       
-      const firstQ = safeJSONParse(response.text);
-      // Data Validation & Sanitization
-      if (!firstQ || !firstQ.options || firstQ.options.length === 0) throw new Error("Invalid question generated");
-      if ((firstQ.question?.length || 0) > 250 || (firstQ.translation_instruction?.length || 0) > 250) throw new Error("Question text too long");
+      const parsedQ = safeJSONParse(response.text, {});
+      const firstQ = sanitizeQuestion(parsedQ, 'letters', 'Sound Recognition', 0);
       
       setQuestions([firstQ]);
       setRetries(0);
@@ -198,10 +293,11 @@ export const PlacementTest: React.FC = () => {
         setTimeout(startTest, 1000);
         return;
       }
-      alert("Error generating assessment.");
-      setStep('welcome');
+      // Fallback question if API fails
+      const fallbackQ = getFallbackQuestion('letters', 'Sound Recognition', 0);
+      setQuestions([fallbackQ]);
     } finally {
-      if (retries >= 2 || questions.length > 0) setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -233,7 +329,7 @@ export const PlacementTest: React.FC = () => {
 
     // Determine skill (10 questions per skill)
     const skillIdx = Math.floor(nextIdx / 10);
-    const skillObj = SKILLS_ORDER[skillIdx];
+    const skillObj = SKILLS_ORDER[skillIdx] || SKILLS_ORDER[0];
     const skill = skillObj.id;
     const qInSkill = (nextIdx % 10) + 1;
 
@@ -271,7 +367,6 @@ export const PlacementTest: React.FC = () => {
     }
 
     try {
-      const ai = getAI();
       const schema = {
         type: GenType.OBJECT,
         properties: {
@@ -279,7 +374,7 @@ export const PlacementTest: React.FC = () => {
           subSkill: { type: GenType.STRING },
           difficulty: { type: GenType.INTEGER, description: "1 to 10" },
           question: { type: GenType.STRING },
-          translation_instruction: { type: GenType.STRING },
+          translation_instruction: { type: GenType.STRING, description: "ONLY for Letters skill. MUST BE EMPTY STRING for all other skills (translator, vocab, grammar)." },
           options: { type: GenType.ARRAY, items: { type: GenType.STRING } },
           correctAnswer: { type: GenType.STRING },
           audioPrompt: { type: GenType.STRING },
@@ -307,30 +402,23 @@ export const PlacementTest: React.FC = () => {
         - DIFFICULTY: ${nextDifficulty}/10 (CEFR Mapping: 1-2=A1, 3-4=A2, 5-6=B1, 7-8=B2).
         
         MANDATORY TEMPLATES & RULES:
-        - You act as a dynamic question generator with an internal bank of 200+ elements.
-        - LETTERS (10 qs): Sound Rec, Shape, Position, Fill-blank, Word Formation. Use visual/audio prompts.
+        - You act as a dynamic question generator.
+        - LETTERS (10 qs): Sound Rec, Shape, Position, Fill-blank, Word Formation.
         - VOCAB (10 qs): Meaning, Context, Syn/Ant, Choice, Semantic Domain.
         - GRAMMAR (10 qs): Verb Conjugation, Pronouns, Tenses, Syntax, I'rab (Analysis), Counting/Tarakib.
         - TRANSLATION (10 qs): Word, Sentence, Choice, Contextual, Paraphrase. (STRICTLY WRITTEN, NO AUDIO).
         - COMMUNICATIVE (Listening, Reading, Writing, Speaking): Follow CEFR Can-do statements for A1-B2 levels.
         
-        CONSTRAINTS:
-        1. NO TRIVIAL REPETITION: Use diverse nouns/verbs from your 200+ element bank.
-        2. OPTIONS: Exactly 4 distinct options. One valid answer.
-        3. TRANSLATION & INTEGRITY: English only in instructions for 'Letters'. Pure Arabic for all other content. 
-        4. ADAPTATION: Difficulty ${nextDifficulty} means:
-           - 1-2 (A1): Simple, concrete, common words.
-           - 3-4 (A2): Daily life, basic info.
-           - 5-6 (B1): Connected text, opinions, abstract.
-           - 7-8 (B2): Analytical, technical, detailed.
-        5. Return JSON.`,
+        CRITICAL FIELD RULES:
+        1. 'translation_instruction': MUST BE EMPTY string ("") for 'translator', 'vocab', 'grammar', and communicative skills! DO NOT fill 'translation_instruction' for 'translator' skill.
+        2. Keep 'question' text clear and concise under 150 characters.
+        3. OPTIONS: Exactly 4 distinct options. One valid answer in 'correctAnswer'.
+        4. Return JSON matching schema.`,
         config: { responseMimeType: "application/json", responseSchema: schema }
       });
       
-      const nextQ = safeJSONParse(response.text);
-      // Data Validation & Sanitization
-      if (!nextQ || !nextQ.options || nextQ.options.length === 0) throw new Error("Question generation failed");
-      if ((nextQ.question?.length || 0) > 250 || (nextQ.translation_instruction?.length || 0) > 250) throw new Error("Question text too long");
+      const rawQ = safeJSONParse(response.text, {});
+      const nextQ = sanitizeQuestion(rawQ, skill, subSkill, nextIdx);
       
       setQuestions(prev => [...prev, nextQ]);
       setCurrentIdx(nextIdx);
@@ -338,11 +426,15 @@ export const PlacementTest: React.FC = () => {
       setSelectedOption(null);
     } catch (e) {
       console.error("Error generating next question:", e);
-      // Fallback: Retry silenty up to 3 times for transient errors
-      if (retryCount < 3) {
+      if (retryCount < 2) {
         setTimeout(() => generateNextQuestion(prevCorrect, errorNature, retryCount + 1), 1000);
       } else {
-        alert("There was a connection issue. Please check your internet and try again.");
+        // Fallback question gracefully
+        const fallbackQ = getFallbackQuestion(skill, subSkill, nextIdx);
+        setQuestions(prev => [...prev, fallbackQ]);
+        setCurrentIdx(nextIdx);
+        setIsAnswered(false);
+        setSelectedOption(null);
       }
     }
   };
@@ -372,14 +464,6 @@ export const PlacementTest: React.FC = () => {
       };
     });
 
-    // Check for skill completion (every 10 questions)
-    const isSkillComplete = (currentIdx + 1) % 10 === 0;
-    if (isSkillComplete) {
-      const skillName = lang === 'ar' ? SKILLS_ORDER[Math.floor(currentIdx / 10)].label.ar : SKILLS_ORDER[Math.floor(currentIdx / 10)].label.en;
-      setCelebrationPillar(skillName);
-      setTimeout(() => setCelebrationPillar(null), 2500);
-    }
-    
     // Smooth transition
     setTimeout(() => {
       generateNextQuestion(isCorrect, errorMeta?.diagnosticIndication);
@@ -470,7 +554,30 @@ export const PlacementTest: React.FC = () => {
 
       const planData = safeJSONParse(response.text);
       setStudyPlan(planData);
-      setStep('plan');
+
+      // Save to Firestore
+      if (user && planData) {
+        try {
+          const totalScoreVal = Object.keys(skillStats).reduce((acc: number, key: string) => acc + (skillStats[key]?.correct || 0), 0);
+          await setDoc(doc(db, 'placement_results', `${user.uid}_${Date.now()}`), {
+            userId: user.uid,
+            studentName: user.displayName || profile?.displayName || user.email?.split('@')[0] || 'طالب',
+            studentEmail: user.email || '',
+            totalScore: totalScoreVal,
+            skillStats,
+            studyPlan: planData,
+            completedAt: serverTimestamp()
+          });
+        } catch (err) {
+          console.error("Error saving placement result:", err);
+        }
+      }
+
+      if (isTeacherOrAdmin) {
+        setStep('plan');
+      } else {
+        setStep('results');
+      }
     } catch (e) {
       console.error("Report generation failed:", e);
       alert("Error generating report.");
@@ -496,7 +603,11 @@ export const PlacementTest: React.FC = () => {
       
       {/* Brand Header */}
       <PageHeader
-        title={step === 'plan' ? t.planTitle : t.welcomeTitle}
+        title={
+          isTeacherOrAdmin
+            ? (lang === 'ar' ? 'مستويات الطلاب' : 'Student Levels')
+            : (step === 'plan' ? t.planTitle : (lang === 'ar' ? 'تحديد المستوى' : 'Placement Test'))
+        }
         icon={TrendingUp}
         lang={lang}
         onToggle={() => {
@@ -592,7 +703,279 @@ export const PlacementTest: React.FC = () => {
            ))}
         </div>
 
-        <div className="flex-1 p-6 flex flex-col items-center justify-center relative z-10 overflow-hidden">
+        <div className="flex-1 p-6 flex flex-col items-center justify-start relative z-10 overflow-y-auto custom-scroll w-full">
+          
+          {/* Teacher Student Reports & Levels View */}
+          {isTeacherOrAdmin ? (
+            <div className="w-full max-w-6xl mx-auto space-y-6">
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-center">
+                <div className="text-center flex flex-col items-center justify-center">
+                  <h2 className="text-xl md:text-2xl font-black text-slate-800 arabic-font">
+                    {lang === 'ar' ? 'مستويات الطلاب والتقارير العلاجية والإثرائية' : 'Student Levels & Remedial Reports'}
+                  </h2>
+                  <p className="text-xs text-slate-400 font-bold arabic-font mt-1.5 max-w-2xl mx-auto">
+                    {lang === 'ar' ? 'متابعة تفصيلية لنتائج اختبار تحديد المستوى والخطط العلاجية والإثرائية المخصصة لكل طالب' : 'Detailed individual student diagnostic results and personalized plans'}
+                  </p>
+                </div>
+
+                {/* Exclusive Teacher Action: Preview Full Placement Test */}
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-3 border-t border-slate-100">
+                  <button
+                    onClick={() => setShowPreviewModal(true)}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 hover:from-blue-700 hover:to-purple-800 text-white rounded-2xl text-xs font-black arabic-font flex items-center gap-2.5 shadow-md hover:shadow-lg transition-all transform active:scale-95 cursor-pointer border border-blue-500/20"
+                    title={lang === 'ar' ? 'معاينة ورقة اختبار تحديد المستوى الشامل' : 'Preview full placement test paper'}
+                  >
+                    <FileText size={18} className="text-amber-300" />
+                    <span>{lang === 'ar' ? 'معاينة اختبار تحديد المستوى' : 'Preview Placement Test'}</span>
+                  </button>
+                </div>
+
+                {selectedStudentResult && (
+                  <div className="flex items-center justify-center gap-3 pt-2">
+                    <button 
+                      onClick={() => window.print()}
+                      className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-black arabic-font flex items-center gap-2 transition-all border border-blue-200"
+                    >
+                      <Printer size={16} />
+                      {lang === 'ar' ? 'طباعة التقرير' : 'Print Report'}
+                    </button>
+                    <button 
+                      onClick={() => setSelectedStudentResult(null)}
+                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black arabic-font flex items-center gap-2 transition-all"
+                    >
+                      <ChevronLeft size={16} className={lang === 'ar' ? 'rotate-180' : ''} />
+                      {lang === 'ar' ? 'العودة لكافة نتائج الطلاب' : 'Back to All Students'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {!selectedStudentResult && (
+                <>
+                  {/* Summary Metric Cards */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
+                      <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black border border-blue-100 shrink-0">
+                        <Users size={22} />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{lang === 'ar' ? 'إجمالي الطلاب' : 'Total Students'}</span>
+                        <span className="text-2xl font-black text-slate-900">{allStudentResults.length}</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
+                      <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center font-black border border-emerald-100 shrink-0">
+                        <BarChart3 size={22} />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{lang === 'ar' ? 'متوسط التحصيل' : 'Average Score'}</span>
+                        <span className="text-2xl font-black text-slate-900">
+                          {allStudentResults.length > 0 
+                            ? Math.round(allStudentResults.reduce((acc, r) => acc + (r.totalScore || 0), 0) / allStudentResults.length) 
+                            : 0} / 80
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
+                      <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center font-black border border-rose-100 shrink-0">
+                        <Stethoscope size={22} />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{lang === 'ar' ? 'خطط علاجية' : 'Remedial Plans'}</span>
+                        <span className="text-2xl font-black text-rose-600">
+                          {allStudentResults.filter(r => (r.totalScore || 0) < 50).length}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
+                      <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center font-black border border-amber-100 shrink-0">
+                        <Gem size={22} />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{lang === 'ar' ? 'خطط إثرائية' : 'Enrichment Plans'}</span>
+                        <span className="text-2xl font-black text-amber-600">
+                          {allStudentResults.filter(r => (r.totalScore || 0) >= 50).length}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Compact Search Bar for Searching Student by Name */}
+                  <div className="flex justify-center w-full">
+                    <div className="bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 w-full max-w-md focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                      <Search size={18} className="text-slate-400 shrink-0" />
+                      <input 
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder={lang === 'ar' ? 'البحث عن طالب باسمه أو بريده الإلكتروني...' : 'Search student by name or email...'}
+                        className="w-full bg-transparent border-none text-xs font-black text-slate-800 placeholder-slate-400 focus:outline-none arabic-font"
+                      />
+                      {searchQuery && (
+                        <button 
+                          onClick={() => setSearchQuery('')} 
+                          className="w-5 h-5 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-[10px] text-slate-500 font-bold transition-colors"
+                          title={lang === 'ar' ? 'مسح البحث' : 'Clear search'}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {selectedStudentResult ? (
+                <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-lg space-y-8 animate-in fade-in">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between border-b pb-6 border-slate-100 gap-4">
+                    <div>
+                      <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase border border-blue-100">
+                        {lang === 'ar' ? 'تقرير طالب تفصيلي' : 'Student Report'}
+                      </span>
+                      <h3 className="text-2xl font-black text-slate-900 arabic-font mt-2">
+                        {selectedStudentResult.studentName}
+                      </h3>
+                      <p className="text-xs text-slate-400 font-bold">{selectedStudentResult.studentEmail || 'طالب'}</p>
+                    </div>
+                    <div className="text-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">{t.finalScore}</span>
+                      <div className="text-3xl font-black text-blue-600">{selectedStudentResult.totalScore} / 80</div>
+                    </div>
+                  </div>
+
+                  {/* CEFR Levels */}
+                  {selectedStudentResult.studyPlan?.cefrLevels && (
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">{lang === 'ar' ? 'مستويات Mapped CEFR' : 'CEFR Levels'}</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {Object.entries(selectedStudentResult.studyPlan.cefrLevels).map(([skill, lvl]: any) => (
+                          <div key={skill} className="bg-blue-50/50 p-4 rounded-2xl text-center border border-blue-100">
+                            <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest block mb-1">{skill}</span>
+                            <span className="text-2xl font-black text-blue-700">{lvl}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Remedial & Enrichment Plans */}
+                  {selectedStudentResult.studyPlan && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4 border-t border-slate-100">
+                      {/* Remedial Plan */}
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center">
+                            <Stethoscope size={18} />
+                          </div>
+                          <h4 className="text-lg font-black text-rose-700 arabic-font">{t.remedialTitle}</h4>
+                        </div>
+                        {selectedStudentResult.studyPlan.remedialPlan?.map((item: any, i: number) => (
+                          <div key={i} className="p-5 bg-white rounded-2xl border-r-[6px] border-rose-500 border border-slate-100 shadow-sm space-y-3">
+                            <h5 className="font-black text-slate-800 text-sm arabic-font">{item.skillName}</h5>
+                            <p className="text-xs text-slate-600 font-bold arabic-font bg-slate-50 p-3 rounded-xl">{item.strategy}</p>
+                            <div className="space-y-1">
+                              {item.activities?.map((act: string, idx: number) => (
+                                <div key={idx} className="text-xs text-rose-900 bg-rose-50/50 p-2.5 rounded-xl border border-rose-100/50 flex items-center gap-2 font-bold arabic-font">
+                                  <CheckCircle2 size={14} className="text-rose-500 shrink-0" />
+                                  <span>{act}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Enrichment Plan */}
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
+                            <Gem size={18} />
+                          </div>
+                          <h4 className="text-lg font-black text-emerald-700 arabic-font">{t.enrichTitle}</h4>
+                        </div>
+                        {selectedStudentResult.studyPlan.enrichmentPlan?.map((item: any, i: number) => (
+                          <div key={i} className="p-5 bg-white rounded-2xl border-r-[6px] border-emerald-500 border border-slate-100 shadow-sm space-y-3">
+                            <h5 className="font-black text-slate-800 text-sm arabic-font">{item.skillName}</h5>
+                            <p className="text-xs text-slate-600 font-bold arabic-font bg-slate-50 p-3 rounded-xl">{item.strategy}</p>
+                            <div className="space-y-1">
+                              {item.activities?.map((act: string, idx: number) => (
+                                <div key={idx} className="text-xs text-emerald-900 bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-100/50 flex items-center gap-2 font-bold arabic-font">
+                                  <TrendingUp size={14} className="text-emerald-500 shrink-0" />
+                                  <span>{act}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {fetchingReports ? (
+                    <div className="py-20 flex justify-center">
+                      <Loader2 className="animate-spin text-blue-500" size={32} />
+                    </div>
+                  ) : allStudentResults.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {allStudentResults
+                        .filter(res => {
+                          if (!searchQuery.trim()) return true;
+                          const q = searchQuery.toLowerCase();
+                          return (res.studentName || '').toLowerCase().includes(q) || (res.studentEmail || '').toLowerCase().includes(q);
+                        })
+                        .map((res) => (
+                          <div 
+                            key={res.id} 
+                            onClick={() => setSelectedStudentResult(res)}
+                            className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-blue-300 transition-all cursor-pointer group flex flex-col justify-between space-y-4"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="font-black text-slate-900 arabic-font text-base group-hover:text-blue-600 transition-colors">
+                                  {res.studentName}
+                                </h3>
+                                <p className="text-xs text-slate-400 font-bold mt-1">{res.studentEmail || 'طالب'}</p>
+                              </div>
+                              <div className="w-12 h-12 bg-blue-50 text-blue-600 font-black rounded-2xl flex items-center justify-center text-sm shadow-inner border border-blue-100 shrink-0">
+                                {res.totalScore}/80
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs text-slate-500 pt-4 border-t border-slate-100 font-bold">
+                              <span className="flex items-center gap-1 text-emerald-600">
+                                <CheckCircle2 size={14} />
+                                {lang === 'ar' ? 'الخطة العلاجية جاهزة' : 'Plan Ready'}
+                              </span>
+                              <span>
+                                {res.completedAt?.seconds 
+                                  ? new Date(res.completedAt.seconds * 1000).toLocaleDateString('ar-EG')
+                                  : 'مؤخراً'}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="bg-white p-16 rounded-3xl text-center border border-slate-200 space-y-3">
+                      <Users size={40} className="mx-auto text-slate-300" />
+                      <h3 className="text-lg font-black text-slate-700 arabic-font">
+                        {lang === 'ar' ? 'لا توجد تقارير طلاب حتى الآن' : 'No Student Reports Yet'}
+                      </h3>
+                      <p className="text-xs text-slate-400 font-bold arabic-font">
+                        {lang === 'ar' ? 'عندما ينهي أي طالب اختبار تحديد المستوى، ستظهر نتائجه وخطته العلاجية والإثرائية هنا تلقائياً.' : 'Results will appear automatically here once students complete the test.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
           
           {step === 'welcome' && (
             <div className="w-full max-w-2xl space-y-6 animate-in zoom-in-95 fade-in duration-700 text-center relative z-10">
@@ -619,15 +1002,27 @@ export const PlacementTest: React.FC = () => {
                     </div>
                  </div>
 
-                 <button 
-                  onClick={startTest} 
-                  className="group relative px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-sm transition-all mx-auto block overflow-hidden border border-white/5 shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <span className="relative z-10 flex items-center justify-center px-4">
-                    <span className="arabic-font">{t.startBtn}</span>
-                  </span>
-                </button>
+                 <div className="flex flex-wrap items-center justify-center gap-4">
+                   <button 
+                    onClick={startTest} 
+                    className="group relative px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-sm transition-all overflow-hidden border border-white/5 shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <span className="relative z-10 flex items-center justify-center px-4">
+                      <span className="arabic-font">{t.startBtn}</span>
+                    </span>
+                  </button>
+
+                  {isTeacherOrAdmin && (
+                    <button
+                      onClick={() => setShowPreviewModal(true)}
+                      className="px-8 py-3.5 bg-white hover:bg-slate-50 text-slate-900 rounded-2xl font-black text-sm border border-slate-200/80 shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2.5"
+                    >
+                      <FileText size={18} className="text-blue-600" />
+                      <span className="arabic-font">{lang === 'ar' ? 'معاينة اختبار تحديد المستوى' : 'Preview Placement Test'}</span>
+                    </button>
+                  )}
+                 </div>
               </div>
             </div>
           )}
@@ -771,38 +1166,7 @@ export const PlacementTest: React.FC = () => {
                  </div>
               </div>
               
-              {/* Pillar Completion Celebration Overlay */}
-              <AnimatePresence>
-                {celebrationPillar && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
-                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                    exit={{ opacity: 0, scale: 1.2, filter: 'blur(20px)' }}
-                    className="absolute inset-x-0 -top-24 z-50 flex flex-col items-center justify-center pointer-events-none"
-                  >
-                    <div className="bg-white/80 backdrop-blur-xl border border-blue-100 px-8 py-4 rounded-[2.5rem] shadow-2xl flex flex-col items-center gap-2">
-                       <div className="flex gap-1">
-                         {[...Array(5)].map((_, i) => (
-                           <motion.div
-                             key={i}
-                             animate={{ y: [0, -10, 0], rotate: [0, 15, -15, 0] }}
-                             transition={{ delay: i * 0.1, repeat: Infinity, duration: 1.5 }}
-                           >
-                             <Sparkles className="text-amber-400" size={20} />
-                           </motion.div>
-                         ))}
-                       </div>
-                       <h2 className="text-2xl font-black text-slate-800 arabic-font">
-                         {lang === 'ar' ? `تم إكمال ${celebrationPillar}!` : `${celebrationPillar} Complete!`}
-                       </h2>
-                       <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-4 py-1 rounded-full">
-                         {lang === 'ar' ? 'رحلة مذهلة' : 'Amazing Progress'}
-                       </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
+              {/* Question Card */}
               <div className={`bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_32px_64px_rgba(37,99,235,0.08)] border border-white/50 p-8 md:p-12 flex flex-col items-center text-center relative overflow-hidden transition-all h-[460px] w-full max-w-2xl justify-center no-print ${isAnswered ? 'scale-[0.98] opacity-60' : 'scale-100'}`}>
                 
                 {questions[currentIdx].translation_instruction && (
@@ -956,22 +1320,51 @@ export const PlacementTest: React.FC = () => {
                   </div>
 
                   <div className="w-full max-w-5xl bg-slate-900/90 backdrop-blur-2xl rounded-[2.5rem] p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl relative overflow-hidden border border-white/10 group/mastery">
-                <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-blue-500 via-emerald-500 to-blue-500 opacity-50" />
+                    <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-blue-500 via-emerald-500 to-blue-500 opacity-50" />
                      <div className="flex items-center gap-8 z-10">
                         <div className="flex flex-col items-center bg-white/5 px-10 py-6 rounded-3xl border border-white/10 shadow-inner group-hover/mastery:scale-105 transition-transform">
                            <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.4em] mb-2">{t.masteryBadge}</span>
-                           <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-emerald-400">?%</span>
+                           <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-emerald-400">
+                             {Math.round((totalScore / 80) * 100)}%
+                           </span>
                         </div>
                         <div className="text-right">
                            <h3 className="text-2xl font-black text-white arabic-font leading-none mb-3">{t.masteryLabel}</h3>
-                           <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em]">{t.finalScore} <span className="text-blue-400">Analysis Pending...</span></p>
+                           <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em]">{t.finalScore} <span className="text-blue-400">{totalScore} / 80</span></p>
                         </div>
                      </div>
-                     <div className="flex gap-4 z-10 w-full md:w-auto">
-                        <button onClick={generatePlan} className="flex-1 md:flex-none px-8 py-4 bg-white text-black rounded-xl font-black text-xs flex items-center justify-center gap-3 shadow-lg hover:bg-emerald-500 hover:text-white transition-all active:scale-95 border-b-4 border-slate-200"><UserCheck size={18} /> <span className="arabic-font uppercase">{t.viewPlan}</span></button>
-                        <button onClick={() => navigate('/')} className="flex-1 md:flex-none px-6 py-4 bg-white/5 hover:bg-white/10 text-white rounded-xl font-black text-xs flex items-center justify-center gap-3 border border-white/10 transition-all active:scale-95"><Home size={18} /> <span className="arabic-font uppercase">{t.goHome}</span></button>
+                     <div className="flex flex-wrap gap-4 z-10 w-full md:w-auto">
+                        {isTeacherOrAdmin ? (
+                          <button onClick={generatePlan} className="flex-1 md:flex-none px-6 py-4 bg-white text-black rounded-xl font-black text-xs flex items-center justify-center gap-3 shadow-lg hover:bg-emerald-500 hover:text-white transition-all active:scale-95 border-b-4 border-slate-200">
+                            <UserCheck size={18} /> <span className="arabic-font uppercase">{t.viewPlan}</span>
+                          </button>
+                        ) : null}
+                        {isTeacherOrAdmin && (
+                          <button onClick={() => setShowPreviewModal(true)} className="flex-1 md:flex-none px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-black text-xs flex items-center justify-center gap-3 shadow-lg transition-all active:scale-95 border-b-4 border-blue-800">
+                            <FileText size={18} /> <span className="arabic-font uppercase">{lang === 'ar' ? 'معاينة اختبار تحديد المستوى' : 'Preview Placement Test'}</span>
+                          </button>
+                        )}
+                        <button onClick={() => navigate('/')} className="flex-1 md:flex-none px-6 py-4 bg-white/5 hover:bg-white/10 text-white rounded-xl font-black text-xs flex items-center justify-center gap-3 border border-white/10 transition-all active:scale-95">
+                          <Home size={18} /> <span className="arabic-font uppercase">{t.goHome}</span>
+                        </button>
                      </div>
                   </div>
+
+                  {!isTeacherOrAdmin && (
+                    <div className="w-full max-w-5xl bg-emerald-500/10 border border-emerald-500/20 p-8 rounded-[2.5rem] text-center space-y-3 mt-6">
+                      <div className="w-14 h-14 bg-emerald-500 text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                        <ShieldCheck size={28} />
+                      </div>
+                      <h4 className="text-xl font-black text-emerald-400 arabic-font">
+                        {lang === 'ar' ? 'تم تسليم اختبارك وحفظ نتيجتك بنجاح' : 'Test Submitted and Saved Successfully'}
+                      </h4>
+                      <p className="text-xs text-slate-300 font-bold arabic-font leading-relaxed max-w-xl mx-auto">
+                        {lang === 'ar' 
+                          ? 'تم حفظ تقريرك التشخيصي والخطط العلاجية والإثرائية المخصصة وإرسالها لمعلمك لمتابعتك وتوجيهك بشكل فردي.' 
+                          : 'Your diagnostic report, remedial and enrichment plans have been saved and sent to your teacher.'}
+                      </p>
+                    </div>
+                  )}
                </div>
             </div>
           )}
@@ -1141,9 +1534,18 @@ export const PlacementTest: React.FC = () => {
                </div>
             </div>
           )}
+          </>
+          )}
 
         </div>
       </div>
+
+      <PlacementTestPreviewModal
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        teacherName={profile?.displayName || 'المعلم'}
+        lang={lang}
+      />
     </div>
   );
 };

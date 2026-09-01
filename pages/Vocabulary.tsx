@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Search, BookText, Trash2, Volume2, Sparkles, X, Lightbulb,
-  BookOpen, Info, Loader2, Trees as TreeIcon, Compass, 
+  Search, BookText, Trash2, Volume2, Sparkles, X, Lightbulb, Download,
+  BookOpen, Info, Loader2, Trees as TreeIcon, Compass, FileText, Eye,
   CheckCircle2, XCircle, ArrowRight, MousePointer2, 
   Layers, Star, BrainCircuit, Zap, Globe2, ChevronRight, Hash, Users, Home, School, Hotel, Plane, Calendar, CloudSun, Palette, Utensils, Activity, Leaf, Apple, Bird, Fish, Bug, Clock, Briefcase, MapPin, Sparkle, Flag, HelpCircle, Navigation, Car, Gamepad2, Trophy, Scale, Globe, Wrench, Languages, LayoutGrid, GraduationCap, ChevronLeft, ArrowUpRight, Monitor, Laptop, BriefcaseIcon, Heart, Waves, Tent, Palmtree, Fingerprint, RefreshCcw, HelpCircle as HelpIcon, Calculator, ListChecks, MessageSquare, Image as ImageIcon
 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { LanguageToggle } from '../components/LanguageToggle';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
@@ -789,7 +791,7 @@ export const VocabularyPage: React.FC = () => {
              </div>
            )}
 
-           <div id="vocab-scroll-container" style={{ overscrollBehaviorY: 'contain', scrollBehavior: 'auto', touchAction: selectedTopic ? 'none' : 'auto' }} className={`flex-1 ${selectedTopic ? 'overflow-hidden flex items-center justify-center p-6 h-full' : 'overflow-y-auto custom-scroll px-8 pb-8'} relative z-10 ${activeTab === 'discovery' && !selectedTopic ? 'pt-8' : ''}`}>
+           <div id="vocab-scroll-container" style={{ overscrollBehaviorY: 'contain', scrollBehavior: 'auto', touchAction: selectedTopic ? 'pan-y' : 'auto' }} className={`flex-1 ${selectedTopic ? 'overflow-y-auto custom-scroll flex items-start justify-center p-3 md:p-6 h-full' : 'overflow-y-auto custom-scroll px-8 pb-8'} relative z-10 ${activeTab === 'discovery' && !selectedTopic ? 'pt-8' : ''}`}>
               
               {activeTab === 'discovery' && !selectedTopic && (
                 <div className="animate-in fade-in duration-700">
@@ -1627,6 +1629,587 @@ const MONTH_EMOJIS_MAP: Record<string, string> = {
   'سنوات / أعوام': '🕰️'
 };
 
+const TOPIC_STORIES: Record<string, { ar: string, en: string }> = {
+  about_me: {
+    ar: "عِنْدَمَا أَلْتَقِي بِأَحَدٍ أَقُولُ: مرحبًا و أهلاً و صباح الخير أَوْ مساء الخير. أَقُولُ لَهُ أهلاً وسهلاً وَأَسْأَلُهُ: كيف حالك؟ فَيُجِيبُ: أنا بخير. ثُمَّ أَقُولُ: سعيد بلقائك ، ما اسمك؟ فَيَقُولُ: اسمي... وَأَسْأَلُهُ: من أين أنت؟ فَيَرُدُّ: أنا من الإمارات. فِي النِّهَايَةِ أَقُولُ شكرًا، فَيُجِيبُ: على الرحب والسعة ، ثُمَّ أُوَدِّعُهُ: مع السلامة و أراك لاحقًا.",
+    en: "When I meet someone I say: Hello, Hi, Good morning or Good evening. I say Welcome and ask: How are you? He answers: I am fine. Then I say: Nice to meet you, What is your name? He says: My name is... and I ask: Where are you from? He replies: I am from the UAE. Finally I say Thank you, he answers: You are welcome, then I bid farewell: Goodbye and See you later."
+  },
+  family_hobbies: {
+    ar: "تَتَكُوَّنُ أسرة السَّعِيدَةِ مِنْ الوالدان ؛ أب و أم ، وَتَضُمُّ ابن و ابنة و أخ و أخت و طفل رضيع. نَزُورُ جد و جدة بِاسْتِمْرَارٍ، وَنَلْتَقِي بِـ عم / خال وَ عمة / خالة وَ ابن العم / ابن الخال. لِكُلِّ زوج و زوجة دَوْرٌ عَظِيمٌ فِي بِنَاءِ العَائِلَةِ.",
+    en: "The happy family consists of parents; father and mother, and includes son, daughter, brother, sister, and baby. We visit grandfather and grandmother regularly, and meet uncle, aunt, and cousin. Every husband and wife have a great role in building the family."
+  },
+  feelings: {
+    ar: "أَشْعُرُ بِأَنِّي سعيد و متحمس عِنْدَ النَّجَاحِ، وَأَكُونُ فخور بِنَفْسِي. لَكِنْ قَدْ أَشْعُرُ بِـ حزين أَوْ غاضب أَوْ منزعج عِنْدَ المَشَاكِلِ. عِنْدَمَا أَرَى مُفَاجَأَةً أَكُونُ متفاجئ و مذهول ، وَحِينَ أَكُونُ مريض أَوْ متعب أَحْتَاجُ لِلرَّاحَةِ. قَدْ أَصِيرُ قلق أَوْ متوتر أَوْ حائر أَوْ مُحرج أَوْ وحيد ، لَكِنِّي لاَ أَبْقَى كسول أَبَدًا.",
+    en: "I feel happy and excited when succeeding, and I am proud of myself. But I may feel sad, angry, or annoyed during problems. When I see a surprise I am surprised and amazed, and when sick or tired I need rest. I might become worried, nervous, confused, embarrassed, or lonely, but I never stay lazy."
+  },
+  body_parts: {
+    ar: "جِسْمُ الإِنْسَانِ يَتَكُوَّنُ مِنَ الرَّأْسِ وَفِيهِ الشَّعْرُ وَ العَيْنُ وَ الأُذُنُ وَ الأَنْفُ وَ الفَمُ وَ الأَسْنَانُ وَ اللِّسَانُ. يَتَّصِلُ الرَّأْسُ بِـ الرَّقَبَةِ وَ الْكَتِفِ ، وَتَمْتَدُّ الذِّرَاعُ وَ الْيَدُ مَعَ الأَصَابِعِ. كَمَا نَسْتَخْدِمُ الصَّدْرَ وَ البَطْنَ وَ الظَّهْرَ ، وَنَمْشِي عَلَى السَّاقِ وَ القَدَمِ وَ الرُّكْبَةِ.",
+    en: "The human body consists of the head containing hair, eye, ear, nose, mouth, teeth, and tongue. The head connects to the neck and shoulder, extending into the arm and hand with fingers. We also use the chest, stomach, and back, and walk on the leg, foot, and knee."
+  },
+  clothing: {
+    ar: "فِي الصَّيْفِ أَرْتَدِي قميص و شورت أَوْ فستان خَفِيفًا، أَمَّا فِي الشِّتَاءِ فَأَلْبَسُ معطف ثَقِيلًا وَ سِتْرَةً وَ وشاح وَ قُفَّازَاتٍ وَ قُبَّعَةً. عِنْدَ الرِّيَاضَةِ أَلْبَسُ بنطال وَ حِذَاءً رِيَاضِيًّا وَ جَوْرَبًا، وَفِي المُنَاسَبَاتِ أَرْتَدِي بلوزة أَوْ ربطة عنق أَوْ تنورة.",
+    en: "In summer I wear a t-shirt and shorts or a light dress, while in winter I put on a heavy coat, sweater, scarf, gloves, and hat. When playing sports I wear pants, sneakers, and socks, and for formal events I wear a blouse, necktie, or skirt."
+  },
+  living: {
+    ar: "فِي بَيْتِنَا غرفة النوم بِـ سرير وَ دولاب وَ مرآة ، وَ غرفة المعيشة بِـ أريكة وَ سجادة وَ تلفاز. فِي مطبخ نُعِدُّ الطَّعَامَ عَلَى طاولة ، وَنَسْتَخْدِمُ حمام لِلنَّظَافَةِ. نَفْتَحُ شباك وَ ستارة وَنَخْرُجُ إِلَى شرفة ، وَنَدْخُلُ مِنْ بوابة وَنَصْعَدُ بِـ سلم.",
+    en: "In our home, the bedroom has a bed, wardrobe, and mirror, and the living room has a sofa, carpet, and TV. In the kitchen we prepare food on the table, and use the bathroom for hygiene. We open the window and curtain and go out to the balcony, entering through the gate and going up the ladder."
+  },
+  routine: {
+    ar: "يَوْمِي يَبْدَأُ عِنْدَمَا أستيقظ وَ أرتب سريري ، ثُمَّ أستحم وَ أنظف أسناني وَ أرتدي ملابسي. أتناول الإفطار ثُمَّ أذهب إلى المدرسة لِكَيْ أدرس. بَعْدَ ذَلِك أعود للمنزل ، أتناول الغداء ، أمارس الرياضة وَ ألعب ، ثُمَّ أسترخي ، أتناول العشاء ، أصلي وَ أنام.",
+    en: "My day starts when I wake up and make my bed, then shower, brush my teeth, and get dressed. I eat breakfast then go to school to study. After that I return home, eat lunch, exercise, play, then relax, eat dinner, pray, and sleep."
+  },
+  food_drink: {
+    ar: "نَتَنَاوَلُ فِي الوَجَبَاتِ أرز مَعَ لحم أَوْ دجاج أَوْ سمك. فِي الصَّبَاحِ نَأْكُلُ بيض مسلوق أَوْ بيض مقلي مَعَ خبز ، وَفِي العَشَاءِ نَسْتَمْتِعُ بِـ نودلز أَوْ بيتزا وَ سلطة وَ بطاطس مقلية. نَشْرَبُ حليب وَ عصير أَوْ شاي وَ قهوة ، وَنَبْتَعِدُ عَنِ مشروب غازي.",
+    en: "In meals we eat rice with meat, chicken, or fish. In the morning we eat boiled egg or fried egg with bread, and for dinner we enjoy noodles or pizza with salad and fries. We drink milk, juice, tea, or coffee, and avoid soda."
+  },
+  fruits: {
+    ar: "الْفَوَاكِهُ لَذِيذَةٌ وَصِحِّيَّةٌ! نُحِبُّ أَكْلَ تفاح وَ موز وَ برتقال وَ بطيخ فِي الصَّيْفِ، كَمَا نَسْتَمْتِعُ بِـ عنب وَ فراولة وَ مانجو وَ أناناس. كَمَا نَأْكُلُ خوخ وَ كمثرى وَ كرز وَ كيوى وَ تين وَ رمان وَ تمر.",
+    en: "Fruits are delicious and healthy! We love eating apple, banana, orange, and watermelon in summer, and enjoy grapes, strawberry, mango, and pineapple. We also eat peach, pear, cherry, kiwi, fig, pomegranate, and dates."
+  },
+  vegetables: {
+    ar: "الْخَضْرَاوَاتُ تُقَوِّي المَنَاعَةَ! نَضَعُ فِي السَّلَطَةِ طماطم وَ خيار وَ خس وَ جزر وَ فلفل رومي وَ زيتون. فِي الطَّبْخِ نَسْتَخْدِمُ بصل وَ ثوم وَ بطاطس وَ باذنجان وَ قرنبيط وَ عيش الغراب ، وَنُحِبُّ أَيْضًا ذرة وَ بطاطا حلوة وَ شطة وَ ليمون.",
+    en: "Vegetables strengthen immunity! In salad we put tomatoes, cucumber, lettuce, carrots, bell pepper, and olives. In cooking we use onions, garlic, potatoes, eggplant, cauliflower, and mushrooms, and we also love corn, sweet potato, chili, and lemon."
+  },
+  key_phrases: {
+    ar: "فِي الفَصْلِ يَسْتَخْدِمُ طالب قلم وَ قلم رصاص وَ قلم ألوان فِي دفتر وَ كتاب. عِنْدَ الخَطَأِ نَسْتَعْمِلُ ممحاة وَ مبراة. يَشْرَحُ معلم عَلَى سبورة وَنَضَعُ الأَغْرَاضَ عَلَى طاولة. يَقُولُ لَنَا المعلم: قف ثُمَّ اجلس ، وَيُشَجِّعُنَا بِكَلِمَاتِ أحسنت وَ رائع. عِنْدَ الحَاجَةِ نَسْأَلُ عَنْ الحمّام.",
+    en: "In class the student uses a pen, pencil, and color pencil in notebook and book. When making a mistake we use eraser and sharpener. The teacher explains on the whiteboard and we put items on the table. The teacher tells us: Stand up then Sit down, encouraging us with Well done and Wonderful. When needed we ask for The bathroom."
+  },
+  survival: {
+    ar: "فِي المَدْرَسَةِ نَدْرُسُ اللغة العربية وَ اللغة الإنجليزية وَ اللغة الفرنسية. فِي مَعْمَلِ العلوم نُجْرِي التَّجَارِبَ، وَفِي الرياضيات نَحْسُبُ. نَتَعَلَّمُ القِيَمَ فِي التربية الإسلامية وَ التربية الأخلاقية ، وَنَقْرَأُ فِي دراسات اجتماعية. نَسْتَمْتِعُ بِـ الفن وَ الموسيقى وَ التربية الرياضية وَ الحاسب الآلي ، وَنَقِفُ فِي طابور الصباح لِنُنَشِّدَ النشيد الوطني وَنَسْتَمِعَ لِلـ الإذاعة المدرسية قَبْلَ الاستراحة.",
+    en: "At school we study Arabic, English, and French. In Science lab we do experiments, and in Mathematics we calculate. We learn values in Islamic Education and Moral Education, and read in Social Studies. We enjoy Art, Music, PE, and Computer Studies, standing in Morning Assembly to recite the National Anthem and listen to School Broadcast before Break."
+  },
+  time: {
+    ar: "مَعْرِفَةُ الوَقْتِ مُهِمَّةٌ! نَسْتَخْدِمُ الساعة لِنَعْرِفَ الوقت. هَلْ هِيَ الساعة الواحدة أَوْ الثانية أَوْ الثالثة أَوْ الرابعة أَوْ الخامسة أَوْ السادسة أَوْ السابعة أَوْ الثامنة أَوْ التاسعة أَوْ العاشرة أَوْ الحادية عشرة أَوْ الثانية عشرة؟ كَمَا نُمَيِّزُ عِنْدَمَا تَكُونُ تماماً أَوْ والنصف أَوْ والربع أَوْ إلا ربعاً.",
+    en: "Knowing time is important! We use the clock to know the time. Is it 1 o'clock, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, or 12 o'clock? We also distinguish when it is sharp/exactly, half past, quarter past, or quarter to."
+  },
+  weather: {
+    ar: "تَتَكُوَّنُ السَّنَةُ مِنْ فصول : الربيع وَ الصيف وَ الخريف وَ الشتاء. يَكُونُ الجَوُّ حار فِي الصَّيْفِ وَ بارد أَوْ ممطر فِي الشِّتَاءِ كَمَا يَنْزِلُ ثلج. فِي الرَّبِيعِ يَكُونُ معتدل ، وَقَدْ يَكُونُ عاصف أَوْ غائم أَوْ ضبابي أَوْ رطب. أنا أفضل الجَوَّ الجَمِيلَ.",
+    en: "The year consists of seasons: Spring, Summer, Autumn, and Winter. Weather is hot in summer, cold or rainy in winter with snow falling. In spring it is mild climate, and it can be windy, cloudy, foggy, or wet. I prefer beautiful weather."
+  },
+  instructions: {
+    ar: "تَتَكُوَّنُ سنة / عام مِنْ اثْنَيْ عَشَرَ شهر : يناير ، فبراير ، مارس ، أبريل ، مايو ، يونيو ، يوليو ، أغسطس ، سبتمبر ، أكتوبر ، نوفمبر ، وَ ديسمبر. تَمُرُّ شهور وَ سنين / أعوام وَنَحْنُ نَتَعَلَّمُ وَنَنْمُو.",
+    en: "A year consists of twelve months: January, February, March, April, May, June, July, August, September, October, November, and December. Months and years pass as we learn and grow."
+  },
+  colours: {
+    ar: "عَالَمُنَا ملون وَجَمِيلٌ! هذا اللون ... مِثْلُ أحمر ، برتقالي ، أصفر ، أخضر ، أزرق ، بنفسجي ، وردي ، وَ أزرق فاتح. كَمَا نَجِدُ أسود ، أبيض ، بني ، وَ رمادي. بَعْضُ الأَلْوَانِ فاتح وَبَعْضُهَا غامق.",
+    en: "Our world is colorful and beautiful! This color is... like red, orange, yellow, green, blue, purple, pink, and light blue. We also find black, white, brown, and grey. Some colors are light and some are dark."
+  },
+  animals: {
+    ar: "نَرَى فِي المَزْرَعَةِ قطة وَ كلب وَ أرنب وَ حصان وَ حمار وَ بقرة وَ خروف وَ ماعز. وَفِي الغَابَةِ وَالصَّحْرَاءِ نَجِدُ أسد وَ نمر وَ فيل وَ زرافة وَ قرد وَ دب وَ جمل وَ غزال.",
+    en: "On the farm we see cat, dog, rabbit, horse, donkey, cow, sheep, and goat. In the forest and desert we find lion, tiger, elephant, giraffe, monkey, bear, camel, and deer."
+  },
+  birds: {
+    ar: "تُحَلِّقُ الطُّيُورُ! نَشُودُ عصفور وَ حمامة وَ ببغاء وَ يمامة ، وَنَرَى دجاجة وَ ديك وَ بطة وَ إوَّزة. كَمَا نَجِدُ نسر وَ صقر وَ بومة وَ نعامة وَ بطريق وَ طاووس وَ بجعة.",
+    en: "Birds fly! We listen to sparrow, pigeon, parrot, and dove, seeing hen, rooster, duck, and goose. We also find eagle, falcon, owl, ostrich, penguin, peacock, and swan."
+  },
+  fish_creatures: {
+    ar: "تَعِيشُ الكَائِنَاتُ فِي البَحْرِ! نَجِدُ سمك وَ قنديل البحر وَ نجم البحر وَ سلحفاة وَ سرطان. كَمَا نَرَى دلفين وَ حوت وَ قرش وَ أخطبوط وَ سبع البحر وَ حصان البحر وَ تمساح.",
+    en: "Sea creatures live in the ocean! We find fish, jellyfish, starfish, turtle, and crab. We also see dolphin, whale, shark, octopus, sea lion, seahorse, and crocodile."
+  },
+  insects_reptiles: {
+    ar: "فِي الطَّبِيعَةِ نَجِدُ حشرات وَ زواحف: فراشة ، نحلة ، نملة ، ذبابة ، بعوضة ، دعسوقة ، صرصور ، وَ عنكبوت. كَمَا نَجِدُ ثعبان ، سلحفاة ، تمساح ، حرباء ، وَ ضفدع.",
+    en: "In nature we find insects and reptiles: butterfly, bee, ant, fly, mosquito, ladybug, cockroach, and spider. We also find snake, turtle, crocodile, chameleon, and frog."
+  },
+  places: {
+    ar: "فِي المَدِينَةِ نَزُورُ مدرسة وَ مستشفى وَ مطعم وَ فندق وَ صيدلية وَ مطار. نَتَسَوَّقُ فِي محل وَ سوبر ماركت ، وَنَسْتَمْتِعُ فِي مسرح وَ سينما وَ سيرك وَ شاطئ وَ مدينة ألعاب وَ استاد وَ حديقة حيوان وَ متحف.",
+    en: "In the city we visit school, hospital, restaurant, hotel, pharmacy, and airport. We shop in shop and supermarket, enjoying theatre, cinema, circus, beach, amusement park, stadium, zoo, and museum."
+  },
+  sports: {
+    ar: "الرِّيَاضَةُ مُمْتِعَةٌ! نَلْعَبُ كرة قدم وَ كرة سلة وَ بيسبول وَ تنس وَ كرة طائرة وَ تنس طاولة وَ ريشة طائرة. كَمَا نُمَارِسُ ملاكمة وَ مصارعة وَ رفع أثقال وَ دراجات وَ سباحة وَ تزلج وَ سباق الخيل وَ جمباز وَ تسلق.",
+    en: "Sports are fun! We play football, basketball, baseball, tennis, volleyball, table tennis, and badminton. We also practice boxing, wrestling, weightlifting, cycling, swimming, skiing, horse racing, gymnastics, and climbing."
+  },
+  transport: {
+    ar: "تَتَنَوَّعُ وَسَائِلُ النَّقْلِ: فِي الشَّارِعِ نَرَى سيارة وَ سيارة أجرة وَ حافلة وَ شاحنة وَ دراجة وَ سكوتر. نَجِدُ سيارة شرطة وَ سيارة إسعاف وَ سيارة إطفاء. وَلِلْمَسَافَاتِ البَعِيدَةِ نَسْتَخْدِمُ قطار وَ مترو وَ تلفريك وَ سفينة وَ طائرة وَ قارب شراعي.",
+    en: "Means of transport vary: on the street we see car, taxi, bus, truck, bicycle, and scooter. We find police car, ambulance, and fire engine. For long distances we use train, metro, cableway, ship, airplane, and sailboat."
+  },
+  jobs: {
+    ar: "تَتَنَوَّعُ المِهَنُ: نَجِدُ طبيب وَ ممرضة لِعِلَاجِ المَرْضَى، وَ معلم لِلتَّعْلِيمِ. يَعْمَلُ مهندس وَ نجار وَ رسام / دهان ، وَفِي الأَمْنِ شرطي وَ إطفائي. نَجِدُ مزارع وَ طباخ وَ سائق وَ طيار وَ رجل أعمال وَ عالم وَ قاضي وَ مصور.",
+    en: "Jobs vary: we find doctor and nurse for treating patients, and teacher for teaching. Engineer, carpenter, and painter work in construction, and police and firefighter in security. We find farmer, chef, driver, pilot, businessman, scientist, judge, and photographer."
+  },
+  shopping: {
+    ar: "فِي مول نَأْخُذُ عربة تسوق أَوْ سلة تسوق وَنَضَعُ البَضَائِعَ فِي أكياس تسوق أَوْ صندوق. نَسْتَفِيدُ مِنْ تخفيضات وَنَسْأَلُ موظف المبيعات ، أَوْ نَقُومُ بِـ تسوق إلكتروني. نَدْفَعُ بِـ نقود أَوْ بطاقة دفع وَنَأْخُذُ إيصال ، ثُمَّ نَمُرُّ مِنْ مدخل لِنَصْعَدَ بِـ مصعد وَنَصِلَ إِلَى موقف سيارات.",
+    en: "In mall we take shopping cart or shopping basket and put goods in shopping bags or box. We benefit from discount and ask sales assistant, or do online shopping. We pay in cash or payment card and take receipt, passing entrance to ride elevator to parking."
+  },
+  health: {
+    ar: "لِلْمُحَافَظَةِ عَلَى الصِّحَّةِ، يَصِفُ الطَّبِيبُ دواء أَوْ إبرة وَيَسْتَخْدِمُ سماعة طبيب وَ ميزان حرارة. نَضَعُ لاصق طبي وَنَسْتَخْدِمُ معقم لِقَتْلِ جرثومة. نَهْتَمُّ بِـ قلب وَ رئتان وَ دماغ وَ عظم وَ سن ، وَعِنْدَ الطَّوَارِئِ نَتَّصِلُ بِـ إسعاف.",
+    en: "To maintain health, doctor prescribes medicine or injection, using stethoscope and thermometer. We place bandage and use sanitizer to kill germ. We care for heart, lungs, brain, bone, and tooth, calling ambulance in emergency."
+  },
+  tech: {
+    ar: "التَّكْنُولُوجْيَا هَامَّةٌ! نَسْتَخْدِمُ هاتف ذكي وَ حاسوب وَ لابتوب مَعَ لوحة مفاتيح وَ فأرة وَ طابعة. نَتَّصِلُ بِـ واي فاي لِنَقْلِ إشارة ، وَنَحْتَاجُ شاحن لِشَحْنِ بطارية. نَضْبِطُ إعدادات وَنَسْتَفِيدُ مِنْ ذكاء اصطناعي.",
+    en: "Technology is important! We use smartphone, computer, and laptop with keyboard, mouse, and printer. We connect to Wi-Fi for signal, needing charger to charge battery. We adjust settings and benefit from Artificial Intelligence."
+  },
+  nature: {
+    ar: "الطَّبِيعَةُ سَاحِرَةٌ! نَرَى شجرة وَ نخلة وَ صبار وَ نبات وَ ورقة شجر وَ قمح وَ زهرة وَ دوّار الشمس. نَتَسَلَّقُ جبل وَ تلة وَنُشَاهِدُ جبل بركاني وَ وادٍ / طبيعة وَ جزيرة وَ بحر وَ شاطئ.",
+    en: "Nature is magical! We see tree, palm tree, cactus, plant, leaf, wheat, flower, and sunflower. We climb mountain and hill, viewing volcano, landscape, island, sea, and beach."
+  },
+  music: {
+    ar: "المُوسِيقَى جَمِيلَةٌ! نَعْزِفُ عَلَى بيانو وَ غيتار وَ كمان وَ طبول وَ ساكسفون وَ ترومبيت وَ أكورديون وَ ناي. نَقْرَأُ نوتة موسيقية وَنَسْتَخْدِمُ ميكروفون وَ مكبر صوت لِنَشْرِ الأَلْحَانِ.",
+    en: "Music is beautiful! We play piano, guitar, violin, drums, saxophone, trumpet, accordion, and flute. We read music notes and use microphone and speaker to spread tunes."
+  },
+  travel: {
+    ar: "عِنْدَ السَّفَرِ نَحْجِزُ تذكرة وَنَحْمِلُ جواز سفر وَ حقيبة سفر أَوْ حقيبة ظهر. فِي المَطَارِ نَمُرُّ عَبْرَ الجمارك وَ أمتعة لِنَصْعَدَ إِلَى طائرة وَنَجْلِسَ فِي مقعد الطائرة. يَقُودُ طيار بِمُسَاعَدَةِ مضيفة طيران عِنْدَ إقلاع وَ هبوط.",
+    en: "When traveling we book ticket and carry passport and suitcase or backpack. At airport we pass customs and baggage to board airplane and sit in seat. Pilot flies with flight attendant's help during departure and arrival."
+  }
+};
+
+const renderInteractiveStory = (
+  text: string, 
+  vocabWords: Partial<Vocabulary>[], 
+  onSelectWord: (word: Partial<Vocabulary>) => void,
+  selectedWord: Partial<Vocabulary> | null
+) => {
+  if (!text) return text;
+
+  const vocabMap = new Map<string, Partial<Vocabulary>>();
+
+  vocabWords.forEach(w => {
+    if (w.original_word) {
+      vocabMap.set(w.original_word.toLowerCase(), w);
+      if (w.original_word.includes('/')) {
+        w.original_word.split('/').forEach(part => {
+          vocabMap.set(part.trim().toLowerCase(), w);
+        });
+      }
+    }
+  });
+
+  const sortedKeys = Array.from(vocabMap.keys()).sort((a, b) => b.length - a.length);
+  if (sortedKeys.length === 0) return text;
+
+  const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(`(${sortedKeys.map(escapeRegExp).join('|')})`, 'gi');
+  const parts = text.split(pattern);
+
+  return (
+    <>
+      {parts.map((part, index) => {
+        const lowerPart = part.toLowerCase();
+        const matchedVocab = vocabMap.get(lowerPart);
+        if (matchedVocab) {
+          const isSelected = selectedWord && (
+            selectedWord.original_word?.toLowerCase() === matchedVocab.original_word?.toLowerCase() ||
+            selectedWord.original_word?.toLowerCase().includes(lowerPart)
+          );
+
+          return (
+            <span
+              key={index}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectWord(matchedVocab);
+              }}
+              className={`cursor-pointer transition-all duration-150 inline-block px-1 py-0.5 my-0.5 mx-0.5 rounded-md font-bold ${
+                isSelected
+                  ? 'bg-amber-500 text-white shadow-xs scale-105'
+                  : 'text-amber-950 hover:text-amber-700 hover:bg-amber-100/60'
+              }`}
+              title="اضغط لكشف الترجمة والنطق"
+            >
+              {part}
+            </span>
+          );
+        }
+        return <span key={index}>{part}</span>;
+      })}
+    </>
+  );
+};
+
+const TopicStoryBox: React.FC<{
+  topicId: string,
+  topicAr: string,
+  topicEn: string,
+  words: Partial<Vocabulary>[],
+  lang: 'ar' | 'en',
+  onSpeak: (text: string, lang: 'ar' | 'en') => void
+}> = ({ topicId, topicAr, topicEn, words, lang, onSpeak }) => {
+  const [showEnglish, setShowEnglish] = React.useState(false);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [selectedWord, setSelectedWord] = React.useState<Partial<Vocabulary> | null>(null);
+
+  const storyObj = TOPIC_STORIES[topicId];
+  const storyTextAr = storyObj ? storyObj.ar : `فِي مَوْضُوعِ ${topicAr}، نَتَعَرَّفُ عَلَى المَفْرَدَاتِ التَّالِيَةِ فِي سِيَاقٍ مُتَكَامِلٍ: ${words.map(w => w.original_word).filter(Boolean).join('، ')}.`;
+  const storyTextEn = storyObj ? storyObj.en : `In the topic ${topicEn}, we learn the following vocabulary in context: ${words.map(w => w.translation).filter(Boolean).join(', ')}.`;
+
+  const currentText = showEnglish ? storyTextEn : storyTextAr;
+  const speakLang = showEnglish ? 'en' : 'ar';
+
+  const handleSpeak = () => {
+    setIsPlaying(true);
+    onSpeak(currentText, speakLang);
+    setTimeout(() => setIsPlaying(false), 6000);
+  };
+
+  return (
+    <div 
+      onClick={() => setSelectedWord(null)}
+      className="w-full mb-6 bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 md:p-5 shadow-2xs relative text-right transition-all"
+    >
+      <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-200/60">
+        <div className="flex items-center gap-2 text-slate-500 text-xs font-bold arabic-font">
+          <BookOpen size={15} className="text-amber-600" />
+          <span className="text-slate-600">{lang === 'ar' ? 'النص السياقي' : 'Context Paragraph'}</span>
+          <span className="text-[10px] text-slate-400 font-normal hidden sm:inline-block">
+            {lang === 'ar' ? '(💡 اضغط على أي كلمة مفتاحية لكشف معناها)' : '(💡 Tap any key word to reveal meaning)'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowEnglish(!showEnglish);
+              setSelectedWord(null);
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-white text-slate-700 hover:bg-slate-100 rounded-lg text-[10px] font-bold border border-slate-200 shadow-2xs transition-all active:scale-95"
+            title={showEnglish ? "عرض النص العربي" : "Show English Translation"}
+          >
+            <Languages size={12} className="text-amber-600" />
+            <span>{showEnglish ? 'العربية' : 'English'}</span>
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSpeak();
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-bold shadow-2xs transition-all active:scale-95 ${
+              isPlaying 
+                ? 'bg-amber-600 text-white animate-pulse' 
+                : 'bg-amber-500 hover:bg-amber-600 text-white'
+            }`}
+          >
+            <Volume2 size={13} />
+            <span>{lang === 'ar' ? 'استمع' : 'Listen'}</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="relative text-slate-800 text-xs md:text-sm leading-relaxed md:leading-loose font-medium arabic-font">
+        {showEnglish ? (
+          <p className="font-sans text-xs md:text-sm text-slate-700 leading-relaxed text-left dir-ltr">
+            {storyTextEn}
+          </p>
+        ) : (
+          <p className="arabic-font text-xs md:text-sm text-slate-800 leading-loose text-justify dir-rtl">
+            {renderInteractiveStory(storyTextAr, words, (w) => setSelectedWord(w), selectedWord)}
+          </p>
+        )}
+      </div>
+
+      {/* Lightbulb-Style Floating Pop-up Card */}
+      <AnimatePresence>
+        {selectedWord && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            onClick={(e) => e.stopPropagation()}
+            className="absolute top-12 left-3 sm:left-6 z-[100] p-3 bg-white border border-amber-100 rounded-2xl shadow-xl text-right pointer-events-auto"
+          >
+            {/* Arrow Pointer Tab */}
+            <div className="absolute -top-2 left-6 w-3.5 h-3.5 bg-white border-t border-l border-amber-100 rotate-45" />
+
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-amber-500 text-white font-bold text-sm flex items-center justify-center shadow-xs shrink-0">
+                  {(selectedWord as any).emoji || MONTH_EMOJIS_MAP[selectedWord.original_word || ''] || '💡'}
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h5 className="font-black text-slate-900 text-sm md:text-base arabic-font leading-none">
+                      {selectedWord.original_word}
+                    </h5>
+                    {(selectedWord as any).phonetic && (
+                      <span className="text-[9px] text-amber-800/80 font-mono bg-amber-50 px-1 py-0.5 rounded border border-amber-100">
+                        [{(selectedWord as any).phonetic}]
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs font-bold text-amber-700 font-sans mt-0.5 leading-none">
+                    {selectedWord.translation}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={() => onSpeak(selectedWord.original_word || '', 'ar')}
+                  className="w-7 h-7 rounded-lg bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center transition-all shadow-2xs active:scale-95"
+                  title="استمع للكلمة"
+                >
+                  <Volume2 size={15} />
+                </button>
+
+                <button
+                  onClick={() => setSelectedWord(null)}
+                  className="w-7 h-7 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-400 border border-slate-100 flex items-center justify-center transition-all active:scale-95"
+                  title="إغلاق"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const WorksheetContent: React.FC<{
+  topic: any;
+  words: Partial<Vocabulary>[];
+  worksheetRef?: React.RefObject<HTMLDivElement>;
+  isPreview?: boolean;
+}> = ({ topic, words, worksheetRef, isPreview = false }) => {
+  const validWords = React.useMemo(() => {
+    return words.filter(w => w.original_word && w.original_word.trim().length > 0);
+  }, [words]);
+
+  // Q1: Matching words to emojis/pictures (5 words)
+  const q1Words = React.useMemo(() => {
+    const subset = validWords.slice(0, 5);
+    const emojis = subset.map((w, idx) => ({
+      emoji: w.emoji || '✨',
+      translation: w.translation || '',
+      id: idx
+    }));
+    const shuffledEmojis = [...emojis].reverse();
+    return { subset, shuffledEmojis };
+  }, [validWords]);
+
+  // Q2: Sentences (5 words)
+  const q2Words = React.useMemo(() => {
+    return validWords.slice(5, 10);
+  }, [validWords]);
+
+  // Q3: Paragraph word bank (6 words)
+  const q3Bank = React.useMemo(() => {
+    return validWords.slice(10, 16);
+  }, [validWords]);
+
+  return (
+    <div
+      ref={worksheetRef}
+      className={`w-full ${isPreview ? 'max-w-[540px] p-3 sm:p-4 text-[10px]' : 'w-[800px] min-h-[1130px] p-8 text-slate-900 flex flex-col justify-between'} bg-white arabic-font shadow-none mx-auto text-right`}
+      dir="rtl"
+    >
+      {/* Container for content */}
+      <div className="flex-1 flex flex-col justify-between">
+        {/* Top Section */}
+        <div>
+          {/* Header */}
+          <div className={`border-b-2 border-slate-900 ${isPreview ? 'pb-1 mb-1.5' : 'pb-3 mb-3'} flex justify-between items-center`}>
+            <div className="w-1/3 text-right">
+              <h1 className={`${isPreview ? 'text-xs font-bold' : 'text-lg font-black'} leading-tight`}>{topic?.ar || 'الموضوع'}</h1>
+              <p className={`text-slate-400 ${isPreview ? 'text-[8px]' : 'text-[10px]'} uppercase font-bold font-sans tracking-wide`}>{topic?.en || 'Vocabulary Lesson'}</p>
+            </div>
+            <div className="w-1/3 text-center">
+              <span className={isPreview ? 'text-lg' : 'text-2xl'}>{topic?.icon || '📝'}</span>
+              <h2 className={`${isPreview ? 'text-[11px] font-black' : 'text-base font-black'} leading-tight mt-0.5`}>ورقة عمل المفردات</h2>
+            </div>
+            <div className="w-1/3 text-left">
+              <div className={`${isPreview ? 'text-xs font-black' : 'text-lg font-black'} tracking-tighter text-slate-900 mb-0.5 leading-tight`} dir="ltr">
+                QUL / قُل
+              </div>
+              <div className={`${isPreview ? 'text-[7px]' : 'text-[9px]'} font-bold text-slate-400 uppercase tracking-widest font-sans`}>Interactive Learning</div>
+            </div>
+          </div>
+
+          {/* Student Info Bar */}
+          <div className={`flex gap-3 sm:gap-6 ${isPreview ? 'mb-1.5 pb-1 text-[9px]' : 'mb-3 pb-2 text-xs'} border-b border-slate-200`}>
+            <div className="flex-1 flex items-center gap-2">
+              <span className="font-bold text-slate-500">اسم الطالب:</span>
+              <div className={`flex-1 border-b border-slate-300 ${isPreview ? 'h-3' : 'h-4'}`}></div>
+            </div>
+            <div className="w-1/4 flex items-center gap-2">
+              <span className="font-bold text-slate-500">الصف:</span>
+              <div className={`flex-1 border-b border-slate-300 ${isPreview ? 'h-3' : 'h-4'}`}></div>
+            </div>
+            <div className="w-1/4 flex items-center gap-2">
+              <span className="font-bold text-slate-500">التاريخ:</span>
+              <div className={`flex-1 border-b border-slate-300 ${isPreview ? 'h-3' : 'h-4'} ${isPreview ? 'text-[9px]' : 'text-xs'} font-sans flex items-end`}>
+                {new Date().toLocaleDateString('en-GB')}
+              </div>
+            </div>
+          </div>
+
+          {/* Question 1: Match word to picture */}
+          <div className={isPreview ? 'mb-1.5' : 'mb-3.5'}>
+            <div className={`bg-slate-100 ${isPreview ? 'p-0.5 px-1 mb-1' : 'p-1.5 px-2.5 mb-2'} rounded-lg border-r-4 border-slate-900 flex justify-between items-center`}>
+              <h3 className={`${isPreview ? 'text-[10px]' : 'text-xs sm:text-sm'} font-bold text-slate-800`}>السؤال الأول: صل الكلمة بالصورة المناسبة</h3>
+              <span className={`${isPreview ? 'text-[7px]' : 'text-[9px]'} font-bold text-slate-400 uppercase tracking-wider font-sans`} dir="ltr">Level 1: Match Word to Picture</span>
+            </div>
+            <div className={`border border-slate-200 rounded-xl ${isPreview ? 'p-1.5' : 'p-3'} bg-slate-50/50`}>
+              <div className={`grid grid-cols-2 ${isPreview ? 'gap-x-4 gap-y-1' : 'gap-x-8 gap-y-2'}`}>
+                {q1Words.subset.map((item, idx) => {
+                  const rightEmoji = q1Words.shuffledEmojis[idx];
+                  return (
+                    <React.Fragment key={idx}>
+                      <div className={`flex items-center justify-between bg-white ${isPreview ? 'px-2 py-0.5' : 'px-3 py-1.5'} rounded-lg border border-slate-200 shadow-2xs`}>
+                        <span className={`${isPreview ? 'text-[10px]' : 'text-xs'} font-bold text-slate-800`}>
+                          {idx + 1}. {item.original_word}
+                        </span>
+                        <span className={`${isPreview ? 'w-2 h-2' : 'w-2.5 h-2.5'} rounded-full bg-amber-500 inline-block border border-amber-600`}></span>
+                      </div>
+                      <div className={`flex items-center justify-between bg-white ${isPreview ? 'px-2 py-0.5' : 'px-3 py-1.5'} rounded-lg border border-slate-200 shadow-2xs`}>
+                        <span className={`${isPreview ? 'w-2 h-2' : 'w-2.5 h-2.5'} rounded-full bg-amber-500 inline-block border border-amber-600`}></span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={isPreview ? 'text-xs' : 'text-base'}>{rightEmoji?.emoji}</span>
+                          <span className={`${isPreview ? 'text-[8px]' : 'text-xs'} font-sans text-slate-500 font-bold`}>({rightEmoji?.translation})</span>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Question 2: Form Sentences */}
+          <div className={isPreview ? 'mb-1.5' : 'mb-3.5'}>
+            <div className={`bg-slate-100 ${isPreview ? 'p-0.5 px-1 mb-1' : 'p-1.5 px-2.5 mb-2'} rounded-lg border-r-4 border-slate-900 flex justify-between items-center`}>
+              <h3 className={`${isPreview ? 'text-[10px]' : 'text-xs sm:text-sm'} font-bold text-slate-800`}>السؤال الثاني: ضع الكلمات في جمل من تعبيرك</h3>
+              <span className={`${isPreview ? 'text-[7px]' : 'text-[9px]'} font-bold text-slate-400 uppercase tracking-wider font-sans`} dir="ltr">Level 2: Form Sentences</span>
+            </div>
+            <div className={isPreview ? 'space-y-1' : 'space-y-2'}>
+              {q2Words.map((item, idx) => (
+                <div key={idx} className={`border border-slate-200 rounded-lg ${isPreview ? 'p-1' : 'p-2'} bg-white`}>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className={`font-black ${isPreview ? 'text-[10px]' : 'text-xs'} text-amber-900 bg-amber-100 px-2 py-0.5 rounded`}>
+                      {idx + 1}) {item.original_word} ({item.translation}):
+                    </span>
+                  </div>
+                  <div className={`w-full border-b border-slate-300 border-dashed ${isPreview ? 'h-3' : 'h-5'}`}></div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Question 3: Write Paragraph */}
+          <div>
+            <div className={`bg-slate-100 ${isPreview ? 'p-0.5 px-1 mb-1' : 'p-1.5 px-2.5 mb-2'} rounded-lg border-r-4 border-slate-900 flex justify-between items-center`}>
+              <h3 className={`${isPreview ? 'text-[10px]' : 'text-xs sm:text-sm'} font-bold text-slate-800`}>السؤال الثالث: ضع المفردات الآتية في فقرة من تعبيرك</h3>
+              <span className={`${isPreview ? 'text-[7px]' : 'text-[9px]'} font-bold text-slate-400 uppercase tracking-wider font-sans`} dir="ltr">Use vocabulary in paragraph</span>
+            </div>
+            <div className={`border border-slate-200 rounded-lg ${isPreview ? 'p-1.5' : 'p-2.5'} bg-white`}>
+              <div className={`mb-1.5 bg-amber-50/80 border border-amber-200 ${isPreview ? 'p-1' : 'p-2'} rounded-lg ${isPreview ? 'text-[10px]' : 'text-xs'}`}>
+                <span className="font-black text-amber-950">بنك المفردات: </span>
+                <span className="font-bold text-amber-800">
+                  [ {q3Bank.map(w => w.original_word).join('  •  ')} ]
+                </span>
+                <p className={`${isPreview ? 'text-[8px]' : 'text-[10px]'} text-slate-500 font-bold mt-0.5`}>
+                  * اكتب فقرة قصيرة موظفاً المفردات أعلاه:
+                </p>
+              </div>
+              <div className={`space-y-2 ${isPreview ? 'pt-0' : 'pt-1'}`}>
+                <div className={`w-full border-b border-slate-300 border-dashed ${isPreview ? 'h-3' : 'h-5'}`}></div>
+                <div className={`w-full border-b border-slate-300 border-dashed ${isPreview ? 'h-3' : 'h-5'}`}></div>
+                <div className={`w-full border-b border-slate-300 border-dashed ${isPreview ? 'h-3' : 'h-5'}`}></div>
+                <div className={`w-full border-b border-slate-300 border-dashed ${isPreview ? 'h-3' : 'h-5'}`}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Worksheet Footer */}
+        <div className={`${isPreview ? 'mt-1.5 pt-1 text-[7px]' : 'mt-4 pt-2 text-xs'} border-t border-slate-200 flex justify-between items-center text-slate-400 font-bold`}>
+          <span>منصة قُل التعليمية - أوراق عمل المفردات التفاعلية</span>
+          <span>صفحة ١ من ١</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TopicWorksheet: React.FC<{
+  topic: any;
+  words: Partial<Vocabulary>[];
+  worksheetRef: React.RefObject<HTMLDivElement>;
+}> = ({ topic, words, worksheetRef }) => {
+  return (
+    <div className="fixed top-0 left-0 -z-50 pointer-events-none opacity-0 overflow-hidden w-[800px] bg-white">
+      <WorksheetContent topic={topic} words={words} worksheetRef={worksheetRef} isPreview={false} />
+    </div>
+  );
+};
+
+const WorksheetPreviewModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  topic: any;
+  words: Partial<Vocabulary>[];
+  onDownload: () => void;
+  isGenerating: boolean;
+}> = ({ isOpen, onClose, topic, words, onDownload, isGenerating }) => {
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <div
+        onClick={onClose}
+        className="fixed inset-0 z-[300] bg-slate-900/80 backdrop-blur-xs flex flex-col items-center justify-start sm:justify-center p-2 sm:p-4 overflow-y-auto cursor-pointer"
+      >
+        <motion.div
+          onClick={(e) => e.stopPropagation()}
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          className="bg-slate-100 rounded-2xl max-w-2xl w-full max-h-[96vh] my-auto flex flex-col overflow-hidden shadow-2xl border border-slate-300/80 cursor-default"
+        >
+          {/* Modal Header */}
+          <div className="bg-white px-4 py-2.5 md:px-5 md:py-3 border-b border-slate-200 flex items-center justify-between shrink-0 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+                <FileText size={18} />
+              </div>
+              <div>
+                <h3 className="text-xs md:text-sm font-black text-slate-800 arabic-font">معاينة ورقة عمل: {topic?.ar}</h3>
+                <p className="text-[10px] text-slate-400 font-bold arabic-font">ورقة عمل تفاعلية للطباعة والتنزيل</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-all"
+              title="إغلاق"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Modal Body - Whole Sheet Displayed Directly */}
+          <div className="flex-1 overflow-y-auto p-2 sm:p-4 bg-slate-200/90 flex items-center justify-center custom-scroll min-h-0">
+            <div className="relative bg-white shadow-xl rounded-xl overflow-hidden w-full max-w-[500px] border border-slate-300 p-0.5">
+              <WorksheetContent topic={topic} words={words} isPreview={true} />
+
+              {/* Simple Download Button at Bottom-Left of the Preview Worksheet */}
+              <button
+                onClick={onDownload}
+                disabled={isGenerating}
+                className="absolute bottom-2.5 left-2.5 w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-lg flex items-center justify-center transition-all active:scale-95 disabled:opacity-50 border border-white/50"
+                title="تحميل PDF"
+              >
+                {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+};
+
 const TopicInterface: React.FC<{ 
   topic: any, 
   lang: 'ar' | 'en', 
@@ -1639,13 +2222,60 @@ const TopicInterface: React.FC<{
   currentHint: string
 }> = ({ topic, lang, words, onBack, onSpeak, onAction, showHint, setShowHint, currentHint }) => {
   const [flippedIndex, setFlippedIndex] = React.useState<number | null>(null);
+  const [isGeneratingWorksheet, setIsGeneratingWorksheet] = React.useState(false);
+  const [showWorksheetPreview, setShowWorksheetPreview] = React.useState(false);
+  const worksheetRef = React.useRef<HTMLDivElement>(null);
+
+  const generateWorksheet = async () => {
+    if (!worksheetRef.current) return;
+    setIsGeneratingWorksheet(true);
+    try {
+      const canvas = await html2canvas(worksheetRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 800
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfPageWidth = pdf.internal.pageSize.getWidth();
+      const pdfPageHeight = pdf.internal.pageSize.getHeight();
+
+      let printWidth = pdfPageWidth;
+      let printHeight = (imgProps.height * pdfPageWidth) / imgProps.width;
+
+      if (printHeight > pdfPageHeight) {
+        printHeight = pdfPageHeight;
+        printWidth = (imgProps.width * printHeight) / imgProps.height;
+      }
+
+      const xOffset = Math.max(0, (pdfPageWidth - printWidth) / 2);
+      const yOffset = Math.max(0, (pdfPageHeight - printHeight) / 2);
+
+      pdf.addImage(imgData, 'PNG', xOffset, yOffset, printWidth, printHeight);
+      let topicName = 'Lesson';
+      if (topic && typeof topic.en === 'string' && topic.en.trim().length > 0) {
+        topicName = topic.en.trim().replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+      } else if (topic && typeof topic.ar === 'string' && topic.ar.trim().length > 0) {
+        topicName = topic.ar.trim().replace(/\s+/g, '_');
+      }
+      pdf.save(`Qul_Vocab_${topicName || 'Lesson'}.pdf`);
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+    } finally {
+      setIsGeneratingWorksheet(false);
+    }
+  };
 
   return (
-    <div className="w-full max-w-5xl mx-auto flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 overflow-hidden select-none touch-none" style={{ touchAction: 'none', overscrollBehavior: 'none' }}>
-      <div className="bg-white rounded-[2.5rem] p-12 lg:p-14 shadow-2xl border border-slate-100 relative overflow-hidden w-full max-h-[92vh] flex flex-col justify-center shrink-0">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 to-orange-500" />
+    <div className="w-full max-w-5xl mx-auto flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 select-none" style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}>
+      <div className="bg-white rounded-3xl md:rounded-[2.5rem] shadow-lg border border-slate-100 relative max-h-[88vh] w-full flex flex-col shrink-0 overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 to-orange-500 z-20 pointer-events-none" />
         
-        <div className="flex justify-between items-center mb-8 relative z-50 px-1">
+        <div className="p-6 md:p-8 lg:p-10 overflow-y-auto custom-scroll w-full flex-1 flex flex-col">
+          <div className="flex justify-between items-center mb-6 relative z-50 px-1">
           <button onClick={onBack} className="w-8 h-8 flex items-center justify-center hover:bg-slate-50 rounded-lg text-slate-400 transition-all border border-slate-50 shadow-sm active:scale-95">
              {lang === 'ar' ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
@@ -1653,7 +2283,18 @@ const TopicInterface: React.FC<{
             <h2 className="text-xl md:text-2xl font-black text-slate-800 arabic-font leading-relaxed pt-1">{lang === 'ar' ? topic.ar : topic.en}</h2>
             <p className="text-[7px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">{lang === 'ar' ? topic.en : topic.ar}</p>
           </div>
-          <div className="relative">
+          <div className="flex items-center gap-2 relative">
+             <button
+                onClick={() => setShowWorksheetPreview(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all active:scale-95"
+                title={lang === 'ar' ? 'معاينة ورقة العمل' : 'Preview Worksheet'}
+             >
+                <FileText size={15} />
+                <span className="arabic-font">
+                  {lang === 'ar' ? 'معاينة ورقة العمل' : 'Worksheet Preview'}
+                </span>
+             </button>
+
              <button 
                 onClick={() => setShowHint(!showHint)}
                 className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all border shadow-sm active:scale-95 ${showHint ? 'bg-amber-100 border-amber-200 text-amber-600' : 'bg-white border-slate-50 text-slate-400 hover:bg-slate-50'}`}
@@ -1677,6 +2318,16 @@ const TopicInterface: React.FC<{
              </AnimatePresence>
           </div>
         </div>
+
+        {/* Topic Story Box combining vocabulary in context */}
+        <TopicStoryBox 
+          topicId={topic.id || ''}
+          topicAr={topic.ar || ''}
+          topicEn={topic.en || ''}
+          words={words}
+          lang={lang}
+          onSpeak={onSpeak}
+        />
 
         <div className="grid grid-cols-4 md:grid-cols-8 gap-2.5 md:gap-3.5 relative z-10">
            {words.map((f, i) => (
@@ -1786,7 +2437,25 @@ const TopicInterface: React.FC<{
           .backface-hidden { backface-visibility: hidden; }
           .rotate-y-180 { transform: rotateY(180deg); }
         `}</style>
+        </div>
       </div>
+
+      {/* Printable Topic Worksheet (Hidden in UI) */}
+      <TopicWorksheet
+        topic={topic}
+        words={words}
+        worksheetRef={worksheetRef}
+      />
+
+      {/* Interactive Worksheet Preview Modal */}
+      <WorksheetPreviewModal
+        isOpen={showWorksheetPreview}
+        onClose={() => setShowWorksheetPreview(false)}
+        topic={topic}
+        words={words}
+        onDownload={generateWorksheet}
+        isGenerating={isGeneratingWorksheet}
+      />
     </div>
   );
 };

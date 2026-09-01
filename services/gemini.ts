@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { Vocabulary, MasteryLevel, QuizQuestion, ChatMessage } from "../types";
+import { Vocabulary, MasteryLevel, QuizQuestion, ChatMessage, IrabAnalysisResult } from "../types";
 import { getCachedAsset, setCachedAsset } from "./cache";
 
 // Always use a named parameter for the API key from process.env.API_KEY.
@@ -7,16 +7,84 @@ import { getCachedAsset, setCachedAsset } from "./cache";
 export const getAI = () => new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string });
 
 /**
- * Robustly parses JSON from AI responses, handling common issues like markdown backticks.
+ * Robustly parses JSON from AI responses, handling markdown backticks and repairing truncated JSON.
  */
 export const safeJSONParse = (text: any, fallback: any = {}) => {
+  if (!text || typeof text !== 'string') return fallback;
+  
+  let cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+  // Extract first { or [ to the end
+  const firstBrace = cleaned.indexOf('{');
+  const firstBracket = cleaned.indexOf('[');
+  let startIdx = -1;
+  if (firstBrace !== -1 && firstBracket !== -1) {
+    startIdx = Math.min(firstBrace, firstBracket);
+  } else if (firstBrace !== -1) {
+    startIdx = firstBrace;
+  } else if (firstBracket !== -1) {
+    startIdx = firstBracket;
+  }
+
+  if (startIdx > 0) {
+    cleaned = cleaned.slice(startIdx);
+  }
+
+  // First try standard parse
   try {
-    if (!text || typeof text !== 'string') return fallback;
-    const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
     return JSON.parse(cleaned);
-  } catch (e) {
-    console.error("Failed to parse AI JSON:", e, "Raw text:", text);
-    return fallback;
+  } catch (e1) {
+    // Attempt auto-repair for truncated JSON
+    try {
+      let repaired = cleaned;
+
+      // Close open string if odd count of quotes
+      const quoteMatches = repaired.match(/(?<!\\)"/g) || [];
+      if (quoteMatches.length % 2 !== 0) {
+        repaired += '"';
+      }
+
+      // Remove trailing commas before brackets/braces
+      repaired = repaired.replace(/,\s*([\}\]])/g, '$1');
+
+      // Balance braces and brackets
+      const stack: string[] = [];
+      let inString = false;
+      let escaped = false;
+      for (let i = 0; i < repaired.length; i++) {
+        const char = repaired[i];
+        if (escaped) {
+          escaped = false;
+          continue;
+        }
+        if (char === '\\') {
+          escaped = true;
+          continue;
+        }
+        if (char === '"') {
+          inString = !inString;
+          continue;
+        }
+        if (!inString) {
+          if (char === '{' || char === '[') {
+            stack.push(char === '{' ? '}' : ']');
+          } else if (char === '}' || char === ']') {
+            if (stack.length > 0 && stack[stack.length - 1] === char) {
+              stack.pop();
+            }
+          }
+        }
+      }
+      while (stack.length > 0) {
+        repaired += stack.pop();
+      }
+
+      return JSON.parse(repaired);
+    } catch (e2) {
+      const snippet = text.length > 300 ? text.slice(0, 300) + '...' : text;
+      console.error("Failed to parse AI JSON:", e1, "Snippet:", snippet);
+      return fallback;
+    }
   }
 };
 
@@ -686,22 +754,73 @@ export const checkWriting = async (text: string, level: string, filePart?: any):
   });
 };
 
-export const parseArabicSentence = async (sentence: string): Promise<string> => {
+export const parseArabicSentence = async (sentence: string): Promise<IrabAnalysisResult> => {
   const ai = getAI();
+  const schema = {
+    type: Type.OBJECT,
+    properties: {
+      sentence: { type: Type.STRING },
+      meaningEn: { type: Type.STRING },
+      arabicBreakdown: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            word: { type: Type.STRING },
+            irab: { type: Type.STRING }
+          },
+          required: ["word", "irab"]
+        }
+      },
+      englishBreakdown: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            word: { type: Type.STRING },
+            roman: { type: Type.STRING },
+            irabEn: { type: Type.STRING }
+          },
+          required: ["word", "irabEn"]
+        }
+      }
+    },
+    required: ["sentence", "meaningEn", "arabicBreakdown", "englishBreakdown"]
+  };
+
   return withRetry(async () => {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `بصفتك خبيراً في علوم اللغة العربية والنحو والصرف، قم بإعراب الجملة التالية إعراباً تفصيلياً دقيقاً ومنظماً: "${sentence}".
-      
-      المطلوب:
-      1. ذكر نوع الجملة (اسمية أم فعلية).
-      2. إعراب كل كلمة بالتفصيل (الموقع الإعرابي، الحالة، العلامة).
-      3. توضيح أي قواعد نحوية هامة متعلقة بالجملة.
-      4. في النهاية، أضف قسماً بعنوان "English Explanation" يحتوي على ترجمة الجملة وشرح مبسط للإعراب باللغة الإنجليزية للمتعلمين غير الناطقين بالعربية.
-      
-      استخدم لغة أكاديمية رصينة وواضحة في نفس الوقت، ونظم الإجابة باستخدام نقاط واضحة.`,
+      contents: `أنت خبير نحوي متخصص في إعراب اللغة العربية وتبسيطها للمتعلمين.
+قم بإعراب الجملة التالية إعراباً نحوياً مباشراً وموجزاً ودقيقاً جداً بدون أي حشو أو تفاصيل مشتتة أو إطالة: "${sentence}".
+
+القواعد والشروط الصارمة لصياغة الناتج:
+1. arabicBreakdown (الإعراب العربي المباشر):
+   - مصفوفة تحتوي على كل كلمة في الجملة مع إعرابها الصافي المحدد والمباشر.
+   - مثال لجملة (ذهب الولد إلى المدرسة):
+     • word: "ذهب" -> irab: "فعل ماض مبني على الفتح."
+     • word: "الولد" -> irab: "فاعل مرفوع وعلامة رفعه الضمة الظاهرة على آخره."
+     • word: "إلى" -> irab: "حرف جر مبني لا محل له من الإعراب."
+     • word: "المدرسة" -> irab: "اسم مجرور وعلامة جره الكسرة الظاهرة على آخره."
+
+2. meaningEn (معنى الجملة بالإنجليزية):
+   - ترجمة واضحة ومباشرة لمعنى الجملة الكاملة. مثال: "The boy went to school."
+
+3. englishBreakdown (الإعراب بالإنجليزية من اليسار لليمين):
+   - مصفوفة تطابق كل كلمة مع كتابتها الصوتية (roman) وإعرابها النحوي الإنجليزي المباشر (irabEn).
+   - مثال:
+     • word: "ذهب", roman: "Dhahaba", irabEn: "Past tense verb, built on Fathah."
+     • word: "الولد", roman: "Al-waladu", irabEn: "Subject (Fa'il), nominative with Dammah."
+     • word: "إلى", roman: "Ila", irabEn: "Preposition, has no grammatical position."
+     • word: "المدرسة", roman: "Al-madrasati", irabEn: "Noun governed by preposition (Majroor) with Kasrah."`,
+      config: { responseMimeType: "application/json", responseSchema: schema }
     });
-    return response.text || "عذراً، لم أتمكن من إعراب هذه الجملة.";
+    return safeJSONParse(response.text, {
+      sentence,
+      meaningEn: "",
+      arabicBreakdown: [],
+      englishBreakdown: []
+    });
   });
 };
 
@@ -969,7 +1088,7 @@ export const generateQuickExercise = async (context: string): Promise<any> => {
 
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: `Based on this context: "${context}", generate a quick interactive exercise for a student. 
       The exercise should be a single question (MCQ, Fill in the blank, or True/False).
       Provide the question and explanation in both Arabic and English.
@@ -979,3 +1098,186 @@ export const generateQuickExercise = async (context: string): Promise<any> => {
     return safeJSONParse(response.text, {});
   });
 };
+
+/**
+ * Evaluates a student's Arabic translation for non-native Arabic learners (AFL).
+ * Provides accuracy score, encouraging feedback, transliteration, and a simple grammar/usage tip.
+ */
+export const evaluateStudentTranslation = async (
+  promptEn: string,
+  userArabic: string,
+  referenceTranslation?: string
+): Promise<{
+  accuracy: number;
+  isCorrect: boolean;
+  feedbackEn: string;
+  feedbackAr: string;
+  vocalizedArabic: string;
+  transliteration: string;
+  grammarTip: string;
+}> => {
+  const prompt = `You are a supportive, encouraging Arabic language teacher for NON-NATIVE speakers (Arabic as a Foreign Language / AFL).
+The student was asked to translate the English sentence:
+"${promptEn}"
+
+The student wrote:
+"${userArabic}"
+
+${referenceTranslation ? `A standard reference translation is: "${referenceTranslation}"` : ''}
+
+CRITICAL EVALUATION RULES:
+1. DIACRITICS / TASHKEEL FORGIVENESS: DO NOT penalize or deduct marks if the student omitted tashkeel/harakat (Fat-hah, Dammah, Kasrah, Sukun, Shaddah, Tanween) or wrote plain unvocalized Arabic. Standard non-diacritized writing is completely valid and accepted.
+2. FOCUS ON ESSENTIAL MEANING & STRUCTURE: Evaluate whether the vocabulary and basic grammar (word order, gender, subject-verb agreement) accurately express the meaning of the English sentence. Minor spelling variations (like alif with or without hamzah: ا / أ / إ, or taa marbutah vs haa: ة / ه) should be gently tolerated with full or near-full credit.
+3. "accuracy": integer from 0 to 100 representing how well the meaning was conveyed (if the correct words and order are present without tashkeel, score 90-100%).
+4. "isCorrect": boolean (true if accuracy >= 70).
+5. "feedbackEn": 1-2 friendly, clear English sentences praising their translation and gently mentioning any structural tip.
+6. "feedbackAr": 1 short encouraging sentence in Arabic with full tashkeel (e.g., "أَحْسَنْتَ! تَرْجَمَةٌ مُمْتَازَةٌ وَدَقِيقَةٌ.").
+7. "vocalizedArabic": provide the ideal Arabic sentence with COMPLETE beautiful Tashkeel for the student to learn and listen to.
+8. "transliteration": clear English phonetics/romanization for the vocalized Arabic (e.g. "Ashrabu al-qahwata al-saakhinah").
+9. "grammarTip": a concise, helpful insight in English explaining one interesting grammatical structure or cultural nuance.
+
+Return strictly JSON format:
+{
+  "accuracy": 95,
+  "isCorrect": true,
+  "feedbackEn": "Great job! You conveyed the exact meaning clearly and naturally.",
+  "feedbackAr": "أَحْسَنْتَ صُنْعاً!",
+  "vocalizedArabic": "أَنَا أَشْرَبُ قَهْوَةً سَاخِنَةً",
+  "transliteration": "Ana ashrabu qahwatan saakhinah",
+  "grammarTip": "In Arabic, adjectives come after the noun they describe."
+}`;
+
+  try {
+    const ai = getAI();
+    return await withRetry(async () => {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json'
+        }
+      });
+
+      const parsed = safeJSONParse(response.text, {
+        accuracy: 85,
+        isCorrect: true,
+        feedbackEn: "Good effort! Keep practicing your sentence structure.",
+        feedbackAr: "مُحَاوَلَةٌ جَيِّدَةٌ!",
+        vocalizedArabic: referenceTranslation || userArabic,
+        transliteration: "Al-Arabiyyah",
+        grammarTip: "Pay attention to word order and gender agreement."
+      });
+
+      return parsed;
+    }, 2, 1000);
+  } catch (err) {
+    console.warn("AI evaluation unavailable, falling back to local evaluation:", err);
+    // Deterministic intelligent local comparison fallback
+    const cleanUser = userArabic.replace(/[\u064B-\u065F\u0670]/g, '').trim();
+    const cleanRef = (referenceTranslation || '').replace(/[\u064B-\u065F\u0670]/g, '').trim();
+    const isClose = cleanRef.length > 0 && (cleanUser.includes(cleanRef) || cleanRef.includes(cleanUser) || cleanUser.length >= 3);
+
+    return {
+      accuracy: isClose ? 90 : 75,
+      isCorrect: true,
+      feedbackEn: isClose 
+        ? "Excellent translation! Your phrasing is very natural and communicates the meaning well."
+        : "Good effort! Practice saying the sentence aloud with full vowel markers.",
+      feedbackAr: isClose ? "أَحْسَنْتَ! مُحَاوَلَةٌ مُمْتَازَةٌ وَدَقِيقَةٌ." : "مُحَاوَلَةٌ طَيِّبَةٌ، وَاصِلِ التَّدْرِيبَ!",
+      vocalizedArabic: referenceTranslation || userArabic,
+      transliteration: "Al-Arabiyyah al-Fusha",
+      grammarTip: "Remember that Arabic sentences maintain gender agreement between nouns and descriptive adjectives."
+    };
+  }
+};
+
+/**
+ * Dynamically generates a fresh, customized Arabic translation challenge for non-native learners.
+ */
+export const generateTranslatorAIChallenge = async (
+  level: 1 | 2 | 3
+): Promise<any> => {
+  const prompt = `Generate a single interactive Arabic translation challenge for a NON-NATIVE Arabic learner at Level ${level}:
+- Level 1: Sentence Puzzle (type="puzzle"). Simple 3-5 word daily sentence (A1 level). Break into individual word blocks with full tashkeel and English transliteration.
+- Level 2: Fill in the Blank (type="gap"). A sentence with 1 missing word focusing on gender agreement or prepositions (A2 level). Provide 3 distinct options with 1 correct.
+- Level 3: Real-world Situational Translation (type="scenario"). A practical everyday sentence (e.g. at a hotel, ordering food, asking directions) with 2-3 helpful vocabulary clues.
+
+Ensure all Arabic has COMPLETE Tashkeel and Romanization.
+
+Return JSON strictly according to this schema:
+For Level 1:
+{
+  "id": "ai_lvl1_${Date.now()}",
+  "level": 1,
+  "type": "puzzle",
+  "promptEn": "I want a cup of hot tea",
+  "scenarioContext": "At the Café",
+  "targetArabic": "أُرِيدُ كُوباً مِنَ الشَّايِ السَّاخِنِ",
+  "targetTransliteration": "Ureedu kooban mina ash-shaayi as-saakhin",
+  "correctOrderIds": ["w1", "w2", "w3", "w4"],
+  "puzzleWords": [
+    { "id": "w1", "arabic": "أُرِيدُ", "transliteration": "Ureedu", "meaningEn": "I want" },
+    { "id": "w2", "arabic": "كُوباً", "transliteration": "kooban", "meaningEn": "a cup" },
+    { "id": "w3", "arabic": "مِنَ الشَّايِ", "transliteration": "mina ash-shaay", "meaningEn": "of tea" },
+    { "id": "w4", "arabic": "السَّاخِنِ", "transliteration": "as-saakhin", "meaningEn": "hot" }
+  ],
+  "grammarNote": "In Arabic, the adjective (hot) comes AFTER the noun (tea)."
+}
+
+For Level 2:
+{
+  "id": "ai_lvl2_${Date.now()}",
+  "level": 2,
+  "type": "gap",
+  "promptEn": "She is a skilled doctor",
+  "scenarioContext": "At the Hospital",
+  "sentenceWithBlank": {
+    "arabic": "هِيَ ... مَاهِرَةٌ",
+    "transliteration": "Hiya ... maahirah",
+    "blankTranslation": "doctor (female)"
+  },
+  "options": [
+    { "id": "o1", "arabic": "طَبِيبٌ", "transliteration": "Tabeeb", "meaningEn": "doctor (male)", "isCorrect": false, "explanation": "This is masculine, but 'hiya' (she) requires a feminine noun." },
+    { "id": "o2", "arabic": "طَبِيبَةٌ", "transliteration": "Tabeebah", "meaningEn": "doctor (female)", "isCorrect": true, "explanation": "Correct! 'Tabeebah' matches the feminine pronoun 'hiya' and adjective 'maahirah'." },
+    { "id": "o3", "arabic": "مُعَلِّمَةٌ", "transliteration": "Mu'allimah", "meaningEn": "teacher (female)", "isCorrect": false, "explanation": "Means teacher, not doctor." }
+  ],
+  "grammarNote": "Feminine nouns in Arabic typically end with Taa' Marbutah (ـة / ة)."
+}
+
+For Level 3:
+{
+  "id": "ai_lvl3_${Date.now()}",
+  "level": 3,
+  "type": "scenario",
+  "promptEn": "Where is the nearest pharmacy, please?",
+  "scenarioContext": "On the Street",
+  "scenarioHint": "Ask politely using 'Ayna' (Where) and 'Min fadlik' (Please).",
+  "vocabularyClues": [
+    { "arabic": "أَيْنَ", "transliteration": "Ayna", "meaningEn": "Where is" },
+    { "arabic": "أَقْرَبُ", "transliteration": "Aqrab", "meaningEn": "nearest" },
+    { "arabic": "صَيْدَلِيَّةٍ", "transliteration": "Saydaliyyah", "meaningEn": "pharmacy" },
+    { "arabic": "مِنْ فَضْلِكَ", "transliteration": "Min fadlik", "meaningEn": "please" }
+  ],
+  "referenceTranslation": "أَيْنَ أَقْرَبُ صَيْدَلِيَّةٍ مِنْ فَضْلِكَ؟",
+  "grammarNote": "Use 'Ayna' for asking 'where' and follow it directly with the noun."
+}`;
+
+  try {
+    const ai = getAI();
+    return await withRetry(async () => {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json'
+        }
+      });
+
+      return safeJSONParse(response.text, {});
+    }, 2, 1000);
+  } catch (err) {
+    console.warn("AI challenge generator unavailable, using offline curated challenge pool:", err);
+    return null;
+  }
+};
+

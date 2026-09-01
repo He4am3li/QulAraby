@@ -52,7 +52,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ lang }) => {
       content: (
         <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
           <h3 className="text-lg font-bold mb-2">
-            {lang === 'ar' ? 'اختبر نفسك' : 'Test Yourself'}
+            {lang === 'ar' ? 'تحديد المستوى / مستويات الطلاب' : 'Placement Test / Student Levels'}
           </h3>
           <p>
             {lang === 'ar' 

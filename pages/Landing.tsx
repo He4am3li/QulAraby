@@ -253,7 +253,7 @@ const StatItem = ({ value, label, icon: Icon }: any) => (
 );
 
 export const Landing = ({ onSignInStart }: { onSignInStart?: () => void }) => {
-  const { signIn } = useAuth();
+  const { signIn, signOut, user, profile } = useAuth();
   const [lang, setLang] = useState(localStorage.getItem('hub_lang') || 'ar');
 
   useEffect(() => {
@@ -344,13 +344,13 @@ export const Landing = ({ onSignInStart }: { onSignInStart?: () => void }) => {
       {/* Side Rails - Fills the empty side space */}
       <SideRail 
         side="left" 
-        text={lang === 'ar' ? 'نظام قُل للأركيد' : 'QUL ARCADE SYSTEM'} 
-        subtext="STATUS: ONLINE // AI ACTIVE" 
+        text={lang === 'ar' ? 'تعلم اللغة العربية' : 'LEARN ARABIC'} 
+        subtext="POWERED BY GEMINI 3.1" 
       />
       <SideRail 
         side="right" 
-        text={lang === 'ar' ? 'تعلم اللغة العربية' : 'LEARN ARABIC'} 
-        subtext="POWERED BY GEMINI 3.1" 
+        text={lang === 'ar' ? 'نظام قُل للأركيد' : 'QUL ARCADE SYSTEM'} 
+        subtext="STATUS: ONLINE // AI ACTIVE" 
       />
 
       {/* Atmospheric Particles in the sides */}
@@ -423,8 +423,39 @@ export const Landing = ({ onSignInStart }: { onSignInStart?: () => void }) => {
               {t.tagline}
             </div>
 
-            {/* Slogan Design - Luxury Cinematic Card */}
-            <div className="flex justify-center py-4">
+            {/* Slogan Design - Luxury Cinematic Card flanked by Account & Language Cards */}
+            <div className="flex items-center justify-center gap-4 py-4 w-full">
+              {/* Account Holder Rectangle - Right in Arabic (RTL), Left in English (LTR) */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                onClick={() => {
+                  if (user) {
+                    signOut();
+                  } else {
+                    onSignInStart?.();
+                    signIn();
+                  }
+                }}
+                className="hidden lg:flex flex-col items-center justify-center px-6 py-8 rounded-[2rem] bg-black/40 border border-white/10 hover:border-blue-500/50 backdrop-blur-3xl w-56 text-center gap-3 shrink-0 shadow-2xl cursor-pointer group transition-all"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform overflow-hidden">
+                  {user?.photoURL ? (
+                    <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover rounded-2xl" />
+                  ) : (
+                    <Users size={22} />
+                  )}
+                </div>
+                <span className="text-xs font-black text-white/90 truncate max-w-[180px]">
+                  {profile?.displayName || user?.displayName || (user ? user.email?.split('@')[0] : (lang === 'ar' ? 'صاحب الحساب' : 'Account Holder'))}
+                </span>
+                <span className="text-[9px] font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 px-3.5 py-1 rounded-full border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                  {user ? (lang === 'ar' ? 'مسجل الدخول' : 'Logged In') : (lang === 'ar' ? 'دخول المنصة' : 'Sign In')}
+                </span>
+              </motion.div>
+
+              {/* Main "أنا عربي" Rectangle */}
               <motion.div 
                 initial={{ scale: 0.98, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -441,7 +472,7 @@ export const Landing = ({ onSignInStart }: { onSignInStart?: () => void }) => {
                   
                   <div className="flex items-center gap-6 w-full">
                     <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                    <p className="text-white/40 text-[10px] md:text-[16px] font-black uppercase text-center whitespace-nowrap tracking-widest">
+                    <p className="text-white font-black text-[10px] md:text-[16px] uppercase text-center whitespace-nowrap tracking-widest drop-shadow-[0_0_20px_rgba(255,255,255,0.9)]">
                       {t.sloganPrefix}
                     </p>
                     <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
@@ -460,6 +491,25 @@ export const Landing = ({ onSignInStart }: { onSignInStart?: () => void }) => {
                     />
                   </h1>
                 </div>
+              </motion.div>
+
+              {/* Language Switcher Rectangle - Left in Arabic (RTL), Right in English (LTR) */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
+                className="hidden lg:flex flex-col items-center justify-center px-6 py-8 rounded-[2rem] bg-black/40 border border-white/10 hover:border-emerald-500/50 backdrop-blur-3xl w-56 text-center gap-3 shrink-0 shadow-2xl cursor-pointer group transition-all"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                  <Globe size={22} />
+                </div>
+                <span className="text-xs font-black text-white/90">
+                  {lang === 'ar' ? 'تغيير اللغة' : 'Change Language'}
+                </span>
+                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3.5 py-1 rounded-full border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                  {lang === 'ar' ? 'English (EN)' : 'العربية (AR)'}
+                </span>
               </motion.div>
             </div>
 

@@ -1,13 +1,18 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp, getDocFromServer } from 'firebase/firestore';
+import { initializeFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp, setLogLevel } from 'firebase/firestore';
+
+// Set Firestore log level to silent to avoid connection retry warnings
+setLogLevel('silent');
 
 // Import the Firebase configuration
 import firebaseConfig from './firebase-applet-config.json';
 
-// Initialize Firebase SDK
+// Initialize Firebase SDK with forced long-polling to prevent WebChannel stream timeouts
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+}, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
@@ -55,9 +60,45 @@ export interface FirestoreErrorInfo {
   }
 }
 
+export function safeStringify(obj: any): string {
+  try {
+    const seen = new WeakSet();
+    return JSON.stringify(obj, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (typeof Node !== 'undefined' && value instanceof Node) {
+          return `[Element: ${value.nodeName}]`;
+        }
+        if (seen.has(value)) {
+          return '[Circular]';
+        }
+        seen.add(value);
+      }
+      return value;
+    });
+  } catch {
+    return String(obj);
+  }
+}
+
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  let errorMessage = 'Unknown error';
+  let errorCode = '';
+  if (error instanceof Error) {
+    errorMessage = error.message;
+    errorCode = (error as any).code || '';
+  } else if (typeof error === 'string') {
+    errorMessage = error;
+  } else if (error && typeof error === 'object') {
+    try {
+      errorMessage = (error as any).message || String(error);
+      errorCode = (error as any).code || '';
+    } catch {
+      errorMessage = 'Unserializable error object';
+    }
+  }
+
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errorMessage,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -73,22 +114,24 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     },
     operationType,
     path
-  }
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}
+  };
 
-// --- Connection Test ---
+  const formattedLog = safeStringify(errInfo);
+  console.warn('Firestore Operation Status: ', formattedLog);
 
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if(error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. ");
-    }
+  // If error indicates offline status or network connection issues, log gracefully
+  if (
+    errorCode === 'unavailable' ||
+    errorCode === 'failed-precondition' ||
+    errorMessage.includes('offline') ||
+    errorMessage.includes('Could not reach Cloud Firestore') ||
+    errorMessage.includes('operation could not be completed')
+  ) {
+    console.warn(`Firestore ${operationType} on ${path} is operating in offline mode or waiting for backend connection.`);
+    return;
   }
+
+  throw new Error(`Firestore ${operationType} failed on ${path}: ${errorMessage}`);
 }
-testConnection();
 
 export { serverTimestamp };

@@ -18,6 +18,7 @@ import Preparation from './pages/Preparation';
 import Quizzes from './pages/Quizzes';
 import { StudentMemory } from './pages/StudentMemory';
 import { PlacementTest } from './pages/PlacementTest';
+import { WhiteboardPage } from './pages/Whiteboard';
 import { SplashScreen } from './components/SplashScreen';
 import { AuthProvider } from './components/AuthProvider';
 import { TeacherToolbar } from './components/TeacherToolbar';
@@ -73,6 +74,7 @@ const AppContent: React.FC = () => {
   }
 
   const isTeacher = profile?.role === 'teacher' || profile?.role === 'admin';
+  const isWhiteboard = location.pathname.startsWith('/whiteboard');
 
   return (
     <div className="animate-app-reveal min-h-screen bg-slate-50">
@@ -80,6 +82,7 @@ const AppContent: React.FC = () => {
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             <Route path="/" element={<Home />} />
+            <Route path="/whiteboard" element={<WhiteboardPage />} />
             <Route path="/test" element={<PlacementTest />} />
             <Route path="/letters" element={<Letters />} />
             <Route path="/vocabulary" element={<VocabularyPage />} />
@@ -101,7 +104,9 @@ const AppContent: React.FC = () => {
           </Routes>
         </AnimatePresence>
       </Layout>
-      {isTeacher ? <TeacherToolbar /> : <StudentToolbar onAction={(action) => console.log('Student action:', action)} />}
+      {isWhiteboard && (
+        isTeacher ? <TeacherToolbar /> : <StudentToolbar onAction={(action) => console.log('Student action:', action)} />
+      )}
       <LiveInteractionLayer />
       <QuotaWarning />
 

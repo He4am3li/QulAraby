@@ -393,6 +393,21 @@ service cloud.firestore {
       allow delete: if isTeacher();
     }
 
+    // Placement Results Collection
+    match /placement_results/{resultId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin() || isTeacher();
+    }
+
+    // Letter Homework Submissions Collection
+    match /letter_submissions/{submissionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin() || isTeacher();
+    }
+
     // Default Deny
     match /{path=**} {
       allow read, write: if false;

@@ -173,6 +173,8 @@ export const LiveInteractionLayer: React.FC = () => {
     }
   };
 
+  const generateLayerId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
   const handlePaste = async () => {
     if (!clipboard || !isTeacher) return;
     pushToHistory();
@@ -182,16 +184,16 @@ export const LiveInteractionLayer: React.FC = () => {
     let newElement: any;
     if (clipboard.type === 'highlight') {
       // Shift points to new location
-      const firstPoint = clipboard.points[0];
+      const firstPoint = clipboard.points?.[0] || { x: 0, y: 0 };
       const dx = pasteX - firstPoint.x;
       const dy = pasteY - firstPoint.y;
       newElement = {
         ...clipboard,
-        id: Date.now().toString(),
-        points: clipboard.points.map((p: any) => ({ x: p.x + dx, y: p.y + dy }))
+        id: generateLayerId('hl'),
+        points: (clipboard.points || []).map((p: any) => ({ x: p.x + dx, y: p.y + dy }))
       };
     } else {
-      newElement = { ...clipboard, id: Date.now().toString(), x: pasteX, y: pasteY };
+      newElement = { ...clipboard, id: generateLayerId(clipboard.type || 'el'), x: pasteX, y: pasteY };
     }
 
     const targetKey = clipboard.type === 'text' ? 'texts' : clipboard.type === 'sticky' ? 'stickyNotes' : clipboard.type === 'sticker' ? 'stickers' : 'highlights';
@@ -378,11 +380,11 @@ export const LiveInteractionLayer: React.FC = () => {
         if (type === 'highlight') {
           newElement = { 
             ...element, 
-            id: Date.now().toString(), 
+            id: generateLayerId('hl'), 
             points: (element.points || []).map((p: any) => ({ x: p.x + 2, y: p.y + 2 })) 
           };
         } else {
-          newElement = { ...element, id: Date.now().toString(), x: (element.x || 0) + 2, y: (element.y || 0) + 2 };
+          newElement = { ...element, id: generateLayerId(type || 'el'), x: (element.x || 0) + 2, y: (element.y || 0) + 2 };
         }
         await updateDoc(doc(db, 'live_sessions', 'global'), { [arrayKey]: [...(session[arrayKey] || []), newElement] });
       } else if (action === 'freeze') {
@@ -478,29 +480,34 @@ export const LiveInteractionLayer: React.FC = () => {
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               
               <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/5">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-red-500" />
-                  <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  <span className="ml-4 text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Cinematic Board</span>
-                </div>
+                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.3em]">
+                  {session.sharedFile?.url?.startsWith('data:application/pdf') || session.sharedFile?.url?.includes('.pdf') ? 'عرض ملف PDF المشترك' : 'عرض الصورة المشتركة'}
+                </span>
                 {profile?.role === 'teacher' && (
                   <button 
                     onClick={() => updateDoc(doc(db, 'live_sessions', 'global'), { 'sharedFile.isActive': false })}
-                    className="p-2 hover:bg-white/10 rounded-full text-white/40 hover:text-white transition-all"
+                    className="px-3 py-1 bg-white/10 hover:bg-rose-500 text-white text-xs font-bold rounded-lg transition-all"
                   >
-                    <X size={20} />
+                    إنهاء العرض
                   </button>
                 )}
               </div>
 
-              <div className="relative flex-1 bg-black/40 flex items-center justify-center p-4">
-                <img 
-                  src={session.sharedFile.url} 
-                  className="max-w-full max-h-[70vh] object-contain shadow-2xl rounded-lg"
-                  referrerPolicy="no-referrer"
-                  alt="Shared resource"
-                />
+              <div className="relative flex-1 bg-black/40 flex items-center justify-center p-4 min-h-[400px]">
+                {session.sharedFile?.url?.startsWith('data:application/pdf') || session.sharedFile?.url?.includes('.pdf') ? (
+                  <iframe 
+                    src={session.sharedFile.url} 
+                    className="w-full h-[70vh] rounded-xl border border-white/10 shadow-2xl bg-white"
+                    title="Shared PDF"
+                  />
+                ) : (
+                  <img 
+                    src={session.sharedFile.url} 
+                    className="max-w-full max-h-[70vh] object-contain shadow-2xl rounded-lg"
+                    referrerPolicy="no-referrer"
+                    alt="Shared resource"
+                  />
+                )}
               </div>
 
               <div className="p-4 bg-white/5 border-t border-white/5 text-center">
@@ -514,34 +521,37 @@ export const LiveInteractionLayer: React.FC = () => {
       {/* 2. Annotations Layer (Highlights, Texts, Sticky Notes, Stickers) */}
       <div className="absolute inset-0 z-[9995] pointer-events-none">
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
-          {session.highlights?.map((h: any) => (
-            <polyline
-              key={h.id}
-              points={(h.points || []).map((p: any) => `${(p.x * window.innerWidth) / 100},${(p.y * window.innerHeight) / 100}`).join(' ')}
-              fill="none"
-              stroke={h.color || "rgba(255, 255, 0, 0.4)"}
-              strokeWidth={h.width || (h.mode === 'pen' ? 4 : 20)}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity={h.mode === 'pen' ? 1 : 0.4}
-              className="pointer-events-auto cursor-pointer selectable-element"
-              onClick={(e) => {
-                if (!isTeacher) return;
-                e.stopPropagation();
-                setSelectedElements([{ id: h.id, type: 'highlight' }]);
-              }}
-              onContextMenu={(e) => {
-                if (!isTeacher) return;
-                e.preventDefault();
-                e.stopPropagation();
-                setSelectedElements([{ id: h.id, type: 'highlight' }]);
-                setContextMenu({ x: e.clientX, y: e.clientY, elementId: h.id, type: 'highlight' });
-              }}
-              style={{
-                filter: selectedElements.some(el => el.id === h.id) ? 'drop-shadow(0 0 4px white)' : 'none'
-              }}
-            />
-          ))}
+          {session.highlights?.map((h: any, idx: number) => {
+            const hId = h.id || `hl_${h.timestamp || idx}_${idx}`;
+            return (
+              <polyline
+                key={hId}
+                points={(h.points || []).map((p: any) => `${(p.x * window.innerWidth) / 100},${(p.y * window.innerHeight) / 100}`).join(' ')}
+                fill="none"
+                stroke={h.color || "rgba(255, 255, 0, 0.4)"}
+                strokeWidth={h.width || (h.mode === 'pen' ? 4 : 20)}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={h.mode === 'pen' ? 1 : 0.4}
+                className="pointer-events-auto cursor-pointer selectable-element"
+                onClick={(e) => {
+                  if (!isTeacher) return;
+                  e.stopPropagation();
+                  setSelectedElements([{ id: hId, type: 'highlight' }]);
+                }}
+                onContextMenu={(e) => {
+                  if (!isTeacher) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSelectedElements([{ id: hId, type: 'highlight' }]);
+                  setContextMenu({ x: e.clientX, y: e.clientY, elementId: hId, type: 'highlight' });
+                }}
+                style={{
+                  filter: selectedElements.some(el => el.id === hId) ? 'drop-shadow(0 0 4px white)' : 'none'
+                }}
+              />
+            );
+          })}
           {session.currentStroke && (
             <polyline
               points={(session.currentStroke.points || []).map((p: any) => `${(p.x * window.innerWidth) / 100},${(p.y * window.innerHeight) / 100}`).join(' ')}
@@ -555,200 +565,212 @@ export const LiveInteractionLayer: React.FC = () => {
           )}
         </svg>
 
-        {session.texts?.map((t: any) => (
-          <motion.div
-            key={t.id}
-            drag={!t.isFrozen}
-            dragMomentum={false}
-            onDragEnd={(_, info) => {
-              const newX = t.x + (info.offset.x / window.innerWidth) * 100;
-              const newY = t.y + (info.offset.y / window.innerHeight) * 100;
-              updateElement('text', t.id, { x: newX, y: newY });
-            }}
-            onClick={(e) => {
-              if (!isTeacher) return;
-              e.stopPropagation();
-              setSelectedElements([{ id: t.id, type: 'text' }]);
-            }}
-            onContextMenu={(e) => {
-              if (!isTeacher) return;
-              e.preventDefault();
-              e.stopPropagation();
-              setSelectedElements([{ id: t.id, type: 'text' }]);
-              setContextMenu({ x: e.clientX, y: e.clientY, elementId: t.id, type: 'text' });
-            }}
-            className={`absolute bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-lg border font-bold arabic-font pointer-events-auto selectable-element ${t.isFrozen ? 'cursor-default' : 'cursor-move'} ${selectedElements.some(el => el.id === t.id) ? 'border-blue-500 ring-2 ring-blue-500/50' : 'border-white/20'}`}
-            style={{ 
-              left: `${t.x}%`, 
-              top: `${t.y}%`, 
-              color: t.color || '#ffffff',
-              fontSize: t.fontSize ? `${t.fontSize}px` : '16px',
-              width: (resizing?.id === t.id ? localSize?.width : t.width) || 'auto',
-              height: (resizing?.id === t.id ? localSize?.height : t.height) || 'auto'
-            }}
-          >
-            {editingElement?.id === t.id ? (
-              <input 
-                autoFocus
-                className="bg-transparent border-none outline-none w-full h-full"
-                value={editingElement.content}
-                onChange={(e) => setEditingElement({ ...editingElement, content: e.target.value })}
-                onBlur={async () => {
-                  await updateElement('text', t.id, { content: editingElement.content });
-                  setEditingElement(null);
-                }}
-                onKeyDown={async (e) => {
-                  if (e.key === 'Enter') {
-                    await updateElement('text', t.id, { content: editingElement.content });
+        {session.texts?.map((t: any, idx: number) => {
+          const tId = t.id || `txt_${t.timestamp || idx}_${idx}`;
+          const textContent = t.content !== undefined ? t.content : (t.text || '');
+          return (
+            <motion.div
+              key={tId}
+              drag={!t.isFrozen}
+              dragMomentum={false}
+              onDragEnd={(_, info) => {
+                const newX = (t.x || 0) + (info.offset.x / window.innerWidth) * 100;
+                const newY = (t.y || 0) + (info.offset.y / window.innerHeight) * 100;
+                updateElement('text', tId, { x: newX, y: newY });
+              }}
+              onClick={(e) => {
+                if (!isTeacher) return;
+                e.stopPropagation();
+                setSelectedElements([{ id: tId, type: 'text' }]);
+              }}
+              onContextMenu={(e) => {
+                if (!isTeacher) return;
+                e.preventDefault();
+                e.stopPropagation();
+                setSelectedElements([{ id: tId, type: 'text' }]);
+                setContextMenu({ x: e.clientX, y: e.clientY, elementId: tId, type: 'text' });
+              }}
+              className={`absolute bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-lg border font-bold arabic-font pointer-events-auto selectable-element ${t.isFrozen ? 'cursor-default' : 'cursor-move'} ${selectedElements.some(el => el.id === tId) ? 'border-blue-500 ring-2 ring-blue-500/50' : 'border-white/20'}`}
+              style={{ 
+                left: `${t.x || 0}%`, 
+                top: `${t.y || 0}%`, 
+                color: t.color || '#ffffff',
+                fontSize: t.fontSize || t.size ? `${t.fontSize || t.size}px` : '16px',
+                width: (resizing?.id === tId ? localSize?.width : t.width) || 'auto',
+                height: (resizing?.id === tId ? localSize?.height : t.height) || 'auto'
+              }}
+            >
+              {editingElement?.id === tId ? (
+                <input 
+                  autoFocus
+                  className="bg-transparent border-none outline-none w-full h-full"
+                  value={editingElement.content}
+                  onChange={(e) => setEditingElement({ ...editingElement, content: e.target.value })}
+                  onBlur={async () => {
+                    await updateElement('text', tId, { content: editingElement.content, text: editingElement.content });
                     setEditingElement(null);
-                  }
-                }}
-              />
-            ) : t.content}
-            {!t.isFrozen && (
-              <div 
-                className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize bg-white/20 rounded-tl-sm"
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  setResizing({
-                    id: t.id,
-                    type: 'text',
-                    startX: e.clientX,
-                    startY: e.clientY,
-                    startWidth: t.width || 150,
-                    startHeight: t.height || 40
-                  });
-                }}
-              />
-            )}
-          </motion.div>
-        ))}
+                  }}
+                  onKeyDown={async (e) => {
+                    if (e.key === 'Enter') {
+                      await updateElement('text', tId, { content: editingElement.content, text: editingElement.content });
+                      setEditingElement(null);
+                    }
+                  }}
+                />
+              ) : textContent}
+              {!t.isFrozen && (
+                <div 
+                  className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize bg-white/20 rounded-tl-sm"
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    setResizing({
+                      id: tId,
+                      type: 'text',
+                      startX: e.clientX,
+                      startY: e.clientY,
+                      startWidth: t.width || 150,
+                      startHeight: t.height || 40
+                    });
+                  }}
+                />
+              )}
+            </motion.div>
+          );
+        })}
 
-        {session.stickyNotes?.map((s: any) => (
-          <motion.div
-            key={s.id}
-            drag={!s.isFrozen}
-            dragMomentum={false}
-            onDragEnd={(_, info) => {
-              const newX = s.x + (info.offset.x / window.innerWidth) * 100;
-              const newY = s.y + (info.offset.y / window.innerHeight) * 100;
-              updateElement('sticky', s.id, { x: newX, y: newY });
-            }}
-            onClick={(e) => {
-              if (!isTeacher) return;
-              e.stopPropagation();
-              setSelectedElements([{ id: s.id, type: 'sticky' }]);
-            }}
-            onContextMenu={(e) => {
-              if (!isTeacher) return;
-              e.preventDefault();
-              e.stopPropagation();
-              setSelectedElements([{ id: s.id, type: 'sticky' }]);
-              setContextMenu({ x: e.clientX, y: e.clientY, elementId: s.id, type: 'sticky' });
-            }}
-            initial={{ scale: 0, opacity: 0, rotate: -5 }}
-            animate={{ scale: 1, opacity: 1, rotate: s.isFrozen ? 0 : (parseInt(s.id) % 10) - 5 }}
-            className={`absolute p-4 rounded-xl shadow-xl pointer-events-auto selectable-element ${s.isFrozen ? 'cursor-default' : 'cursor-move'} ${selectedElements.some(el => el.id === s.id) ? 'ring-4 ring-blue-500/50' : ''}`}
-            style={{ 
-              left: `${s.x}%`, 
-              top: `${s.y}%`, 
-              width: (resizing?.id === s.id ? localSize?.width : s.width) || 180,
-              height: (resizing?.id === s.id ? localSize?.height : s.height) || 180,
-              backgroundColor: s.color || '#fef08a',
-              color: '#1e293b'
-            }}
-          >
-            {editingElement?.id === s.id ? (
-              <textarea 
-                autoFocus
-                className="bg-transparent border-none outline-none w-full h-full resize-none arabic-font"
-                value={editingElement.content}
-                onChange={(e) => setEditingElement({ ...editingElement, content: e.target.value })}
-                onBlur={async () => {
-                  await updateElement('sticky', s.id, { content: editingElement.content });
-                  setEditingElement(null);
-                }}
-              />
-            ) : (
-              <p className="text-sm arabic-font leading-relaxed mb-2">{s.content}</p>
-            )}
-            <div className="flex justify-between items-center opacity-40">
-              <span className="text-[8px] font-black uppercase tracking-tighter">{s.authorName}</span>
-              {s.isFrozen && <Lock size={10} />}
-            </div>
-            {!s.isFrozen && (
-              <div 
-                className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize bg-black/5 rounded-tl-md"
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  setResizing({
-                    id: s.id,
-                    type: 'sticky',
-                    startX: e.clientX,
-                    startY: e.clientY,
-                    startWidth: s.width || 180,
-                    startHeight: s.height || 180
-                  });
-                }}
-              />
-            )}
-          </motion.div>
-        ))}
+        {session.stickyNotes?.map((s: any, idx: number) => {
+          const sId = s.id || `sticky_${s.timestamp || idx}_${idx}`;
+          const noteContent = s.content !== undefined ? s.content : (s.text || '');
+          return (
+            <motion.div
+              key={sId}
+              drag={!s.isFrozen}
+              dragMomentum={false}
+              onDragEnd={(_, info) => {
+                const newX = (s.x || 0) + (info.offset.x / window.innerWidth) * 100;
+                const newY = (s.y || 0) + (info.offset.y / window.innerHeight) * 100;
+                updateElement('sticky', sId, { x: newX, y: newY });
+              }}
+              onClick={(e) => {
+                if (!isTeacher) return;
+                e.stopPropagation();
+                setSelectedElements([{ id: sId, type: 'sticky' }]);
+              }}
+              onContextMenu={(e) => {
+                if (!isTeacher) return;
+                e.preventDefault();
+                e.stopPropagation();
+                setSelectedElements([{ id: sId, type: 'sticky' }]);
+                setContextMenu({ x: e.clientX, y: e.clientY, elementId: sId, type: 'sticky' });
+              }}
+              initial={{ scale: 0, opacity: 0, rotate: -5 }}
+              animate={{ scale: 1, opacity: 1, rotate: s.isFrozen ? 0 : (parseInt(sId) % 10 || 0) - 5 }}
+              className={`absolute p-4 rounded-xl shadow-xl pointer-events-auto selectable-element ${s.isFrozen ? 'cursor-default' : 'cursor-move'} ${selectedElements.some(el => el.id === sId) ? 'ring-4 ring-blue-500/50' : ''}`}
+              style={{ 
+                left: `${s.x || 0}%`, 
+                top: `${s.y || 0}%`, 
+                width: (resizing?.id === sId ? localSize?.width : s.width) || 180,
+                height: (resizing?.id === sId ? localSize?.height : s.height) || 180,
+                backgroundColor: s.color || '#fef08a',
+                color: '#1e293b'
+              }}
+            >
+              {editingElement?.id === sId ? (
+                <textarea 
+                  autoFocus
+                  className="bg-transparent border-none outline-none w-full h-full resize-none arabic-font"
+                  value={editingElement.content}
+                  onChange={(e) => setEditingElement({ ...editingElement, content: e.target.value })}
+                  onBlur={async () => {
+                    await updateElement('sticky', sId, { content: editingElement.content, text: editingElement.content });
+                    setEditingElement(null);
+                  }}
+                />
+              ) : (
+                <p className="text-sm arabic-font leading-relaxed mb-2">{noteContent}</p>
+              )}
+              <div className="flex justify-between items-center opacity-40">
+                <span className="text-[8px] font-black uppercase tracking-tighter">{s.authorName || 'المعلم'}</span>
+                {s.isFrozen && <Lock size={10} />}
+              </div>
+              {!s.isFrozen && (
+                <div 
+                  className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize bg-black/5 rounded-tl-md"
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    setResizing({
+                      id: sId,
+                      type: 'sticky',
+                      startX: e.clientX,
+                      startY: e.clientY,
+                      startWidth: s.width || 180,
+                      startHeight: s.height || 180
+                    });
+                  }}
+                />
+              )}
+            </motion.div>
+          );
+        })}
 
-        {session.stickers?.map((st: any) => (
-          <motion.div
-            key={st.id}
-            drag={!st.isFrozen}
-            dragMomentum={false}
-            onDragEnd={(_, info) => {
-              const newX = st.x + (info.offset.x / window.innerWidth) * 100;
-              const newY = st.y + (info.offset.y / window.innerHeight) * 100;
-              updateElement('sticker', st.id, { x: newX, y: newY });
-            }}
-            onClick={(e) => {
-              if (!isTeacher) return;
-              e.stopPropagation();
-              setSelectedElements([{ id: st.id, type: 'sticker' }]);
-            }}
-            onContextMenu={(e) => {
-              if (!isTeacher) return;
-              e.preventDefault();
-              e.stopPropagation();
-              setSelectedElements([{ id: st.id, type: 'sticker' }]);
-              setContextMenu({ x: e.clientX, y: e.clientY, elementId: st.id, type: 'sticker' });
-            }}
-            className={`absolute pointer-events-auto selectable-element ${st.isFrozen ? 'cursor-default' : 'cursor-move'} ${selectedElements.some(el => el.id === st.id) ? 'ring-4 ring-blue-500/30 rounded-full' : ''}`}
-            style={{ 
-              left: `${st.x}%`, 
-              top: `${st.y}%`,
-              width: (resizing?.id === st.id ? localSize?.width : st.width) || 80,
-              height: (resizing?.id === st.id ? localSize?.height : st.height) || 80,
-              fontSize: `${((resizing?.id === st.id ? localSize?.width : st.width) || 80) * 0.8}px`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            {st.content}
-            {st.isFrozen && <div className="absolute top-0 right-0 text-black/20"><Lock size={12} /></div>}
-            {!st.isFrozen && (
-              <div 
-                className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize bg-black/5 rounded-tl-md"
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  setResizing({
-                    id: st.id,
-                    type: 'sticker',
-                    startX: e.clientX,
-                    startY: e.clientY,
-                    startWidth: st.width || 80,
-                    startHeight: st.height || 80
-                  });
-                }}
-              />
-            )}
-          </motion.div>
-        ))}
+        {session.stickers?.map((st: any, idx: number) => {
+          const stId = st.id || `stk_${st.timestamp || idx}_${idx}`;
+          const stickerEmoji = st.content || st.emoji || '⭐';
+          return (
+            <motion.div
+              key={stId}
+              drag={!st.isFrozen}
+              dragMomentum={false}
+              onDragEnd={(_, info) => {
+                const newX = (st.x || 0) + (info.offset.x / window.innerWidth) * 100;
+                const newY = (st.y || 0) + (info.offset.y / window.innerHeight) * 100;
+                updateElement('sticker', stId, { x: newX, y: newY });
+              }}
+              onClick={(e) => {
+                if (!isTeacher) return;
+                e.stopPropagation();
+                setSelectedElements([{ id: stId, type: 'sticker' }]);
+              }}
+              onContextMenu={(e) => {
+                if (!isTeacher) return;
+                e.preventDefault();
+                e.stopPropagation();
+                setSelectedElements([{ id: stId, type: 'sticker' }]);
+                setContextMenu({ x: e.clientX, y: e.clientY, elementId: stId, type: 'sticker' });
+              }}
+              className={`absolute pointer-events-auto selectable-element ${st.isFrozen ? 'cursor-default' : 'cursor-move'} ${selectedElements.some(el => el.id === stId) ? 'ring-4 ring-blue-500/30 rounded-full' : ''}`}
+              style={{ 
+                left: `${st.x || 0}%`, 
+                top: `${st.y || 0}%`, 
+                width: (resizing?.id === stId ? localSize?.width : st.width) || 80,
+                height: (resizing?.id === stId ? localSize?.height : st.height) || 80,
+                fontSize: `${((resizing?.id === stId ? localSize?.width : st.width) || 80) * 0.8}px`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {stickerEmoji}
+              {st.isFrozen && <div className="absolute top-0 right-0 text-black/20"><Lock size={12} /></div>}
+              {!st.isFrozen && (
+                <div 
+                  className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize bg-black/5 rounded-tl-md"
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    setResizing({
+                      id: stId,
+                      type: 'sticker',
+                      startX: e.clientX,
+                      startY: e.clientY,
+                      startWidth: st.width || 80,
+                      startHeight: st.height || 80
+                    });
+                  }}
+                />
+              )}
+            </motion.div>
+          );
+        })}
       </div>
 
       <AnimatePresence>
@@ -817,7 +839,8 @@ export const LiveInteractionLayer: React.FC = () => {
                 {profile?.role === 'teacher' && (
                   <button 
                     onClick={() => updateDoc(doc(db, 'live_sessions', 'global'), { 'poll.isActive': false })}
-                    className="text-white/10 hover:text-white transition-colors"
+                    className="p-1.5 rounded-full bg-white/10 hover:bg-rose-500 text-white/90 hover:text-white transition-all shadow border border-white/10 flex items-center justify-center"
+                    title="إغلاق التصويت"
                   >
                     <X size={16} />
                   </button>
@@ -827,7 +850,7 @@ export const LiveInteractionLayer: React.FC = () => {
               <h3 className="text-sm font-bold text-white/90 arabic-font leading-relaxed mb-4 text-center">{session.poll.question}</h3>
 
               <div className="space-y-2">
-                {session.poll.options.map((option: string, idx: number) => {
+                {session.poll.options?.map((option: string, idx: number) => {
                   const votes = Object.values(session.poll?.votes || {}).filter((v: any) => v.option === idx);
                   const voteCount = votes.length;
                   const totalVotes = Object.keys(session.poll?.votes || {}).length;
@@ -835,7 +858,7 @@ export const LiveInteractionLayer: React.FC = () => {
                   const hasVoted = user && session.poll?.votes?.[user.uid] !== undefined;
 
                   return (
-                    <div key={idx} className="space-y-1">
+                    <div key={`poll_opt_${idx}_${option}`} className="space-y-1">
                       <button
                         disabled={hasVoted && profile?.role !== 'teacher'}
                         onClick={() => handleVote(idx)}
@@ -862,11 +885,11 @@ export const LiveInteractionLayer: React.FC = () => {
                         <div className="flex -space-x-1.5 px-1 overflow-hidden">
                           {votes.slice(0, 5).map((v: any, i: number) => (
                             <div 
-                              key={i} 
+                              key={v.uid || v.name || `voter_${idx}_${i}`} 
                               title={v.name}
                               className="w-4 h-4 rounded-full border border-slate-900 bg-indigo-500 flex items-center justify-center text-[6px] text-white font-bold uppercase overflow-hidden"
                             >
-                              {v.photo ? <img src={v.photo} className="w-full h-full object-cover" /> : v.name[0]}
+                              {v.photo ? <img src={v.photo} className="w-full h-full object-cover" /> : (v.name?.[0] || 'S')}
                             </div>
                           ))}
                           {voteCount > 5 && (
@@ -931,7 +954,7 @@ export const LiveInteractionLayer: React.FC = () => {
                 ) : (
                   session.exercise.options?.map((opt: string, idx: number) => (
                     <button
-                      key={idx}
+                      key={`exercise_opt_${idx}_${opt}`}
                       onClick={() => checkExercise(opt)}
                       className="w-full p-3 text-right bg-white/5 hover:bg-pink-500/5 border border-white/5 hover:border-pink-500/20 rounded-xl transition-all arabic-font text-xs font-medium text-white/50 hover:text-white"
                     >
@@ -949,11 +972,13 @@ export const LiveInteractionLayer: React.FC = () => {
                     <span className="text-[8px] font-black text-white/30 uppercase tracking-tighter">Correct Answers</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {Object.values(session.exercise.answers).filter((a: any) => a.isCorrect).map((a: any, i: number) => (
-                      <span key={i} className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full text-[8px] font-bold arabic-font">
-                        {a.name}
-                      </span>
-                    ))}
+                    {Object.entries(session.exercise.answers)
+                      .filter(([_, a]: [string, any]) => a?.isCorrect)
+                      .map(([uid, a]: [string, any], i: number) => (
+                        <span key={uid || `ans_${i}`} className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full text-[8px] font-bold arabic-font">
+                          {a.name || 'طالب'}
+                        </span>
+                      ))}
                   </div>
                 </div>
               )}

@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Mic, MicOff, Volume2, Globe, Sparkles, Loader2, Activity, AlertCircle, RefreshCw, 
   ChevronRight, UserCircle2, MessageCircle, FileText, Download, X, Lightbulb, 
-  BookmarkPlus, CheckCircle2, History, Brain, PenTool
+  BookmarkPlus, CheckCircle2, History, Brain, PenTool, Podcast
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PageHeader } from '../components/PageHeader';
+import { StudioMicIcon } from '../components/StudioMicIcon';
 import { FallingLetters } from '../components/Layout';
 import { GoogleGenAI, Modality, Type } from '@google/genai';
 import { generateSessionInsights, translateAndExpand, generateSpeech, decodeAudioData, speak as globalSpeak } from '../services/gemini';
@@ -62,7 +64,7 @@ const TOPICS = [
   { id: 'tech', ar: 'التقنية', en: 'Tech', icon: '💻', color: 'slate' },
   { id: 'culture', ar: 'الثقافة', en: 'Culture', icon: '🕌', color: 'amber' },
   { id: 'dreams', ar: 'الأحلام', en: 'Dreams', icon: '🚀', color: 'indigo' },
-  { id: 'free', ar: 'حر', en: 'Free', icon: '✨', color: 'cyan' },
+  { id: 'free', ar: 'حر', en: 'Free', icon: '🎙️', color: 'cyan' },
 ];
 
 const TOPIC_COLORS: Record<string, { bg: string, border: string, text: string, light: string }> = {
@@ -172,6 +174,8 @@ export const Speak: React.FC = () => {
       saved: 'تم الحفظ',
       selectTopic: 'اختر موضوعاً للمحادثة',
       selectLevel: 'اختر مستواك اللغوي',
+      selectLevelFirst: 'اختر المستوى أولاً',
+      chooseTopic: 'اختر موضوعاً للبدء',
       pleaseSelect: 'يرجى اختيار الموضوع والمستوى للبدء',
       historyTitle: 'سجل الحوار الكامل'
     },
@@ -201,6 +205,8 @@ export const Speak: React.FC = () => {
       saved: 'Saved',
       selectTopic: 'Select a topic',
       selectLevel: 'Select your level',
+      selectLevelFirst: 'Select Level First',
+      chooseTopic: 'Choose a topic to start',
       pleaseSelect: 'Please select topic and level to start',
       historyTitle: 'Full Transcript'
     }
@@ -737,7 +743,7 @@ export const Speak: React.FC = () => {
       {/* Header Bar */}
       <PageHeader
         title={t.title}
-        icon={Mic}
+        icon={StudioMicIcon}
         lang={lang}
         onToggle={toggleLang}
       />
@@ -754,14 +760,14 @@ export const Speak: React.FC = () => {
                         return (
                           <button 
                               key={topic.id} 
+                              disabled={isActive || !selectedLevel}
                               onClick={() => {
                                   if (isActive) return;
                                   setSelectedTopic(topic);
                                   setSetupMode(true);
                                   setShowSummary(false);
                               }}
-                              disabled={isActive}
-                              className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-4 text-right group ${selectedTopic?.id === topic.id ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-md' : 'border-slate-50 bg-slate-50/50 hover:border-slate-200 text-slate-500'} ${isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-4 text-right group ${selectedTopic?.id === topic.id ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-md' : 'border-slate-50 bg-slate-50/50 hover:border-slate-200 text-slate-500'} ${isActive || !selectedLevel ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
                           >
                               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm border transition-all group-hover:scale-110 group-hover:rotate-6 ${selectedTopic?.id === topic.id ? 'bg-blue-500 text-white' : `${color.bg} ${color.border} ${color.text}`}`}>
                                   <span className="text-2xl">{topic.icon}</span>
@@ -915,48 +921,88 @@ export const Speak: React.FC = () => {
           )}
 
           {setupMode ? (
-            <div className="h-full flex flex-col items-center justify-center p-10 space-y-8 animate-in slide-in-from-bottom-5 duration-500">
-              
-              <div className="text-center space-y-4">
-                <div className="w-24 h-24 bg-blue-50 rounded-[2rem] flex items-center justify-center text-[#2563eb] shadow-sm mx-auto">
-                  <span className="text-5xl">{selectedTopic ? selectedTopic.icon : '✨'}</span>
-                </div>
-                <div>
-                  <h2 className="text-3xl font-black text-slate-800 arabic-font leading-none">
-                    {selectedTopic ? selectedTopic.ar : t.selectTopic}
-                  </h2>
-                  <p className="text-slate-400 text-sm font-bold mt-2 uppercase tracking-widest">
-                    {selectedTopic ? selectedTopic.en : 'Choose a topic'} • {selectedLevel ? selectedLevel.ar : t.selectLevel}
-                  </p>
-                </div>
-              </div>
-
-              <div className="max-w-md w-full bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl space-y-6">
-                <div className="space-y-2">
-                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest text-center">{t.setupTitle}</p>
-                  <p className="text-sm text-slate-500 text-center arabic-font">
-                    {selectedLevel ? selectedLevel.prompt : t.pleaseSelect}
-                  </p>
-                </div>
-
-                {error && (
-                  <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-center gap-3 text-red-600 animate-in fade-in">
-                    <AlertCircle size={16} />
-                    <p className="text-xs font-bold">{error}</p>
-                    <button onClick={() => startSession()} className="mr-auto bg-red-600 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase"><RefreshCw size={10} className="inline mr-1" /> Retry</button>
-                  </div>
-                )}
-
-                <button
-                  onClick={() => startSession()}
-                  disabled={loading || !selectedTopic || !selectedLevel}
-                  className="w-full py-5 bg-gradient-to-r from-[#2563eb] to-[#059669] text-white rounded-2xl font-black text-xl shadow-xl shadow-blue-500/30 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+            <AnimatePresence mode="wait">
+              {!selectedLevel ? (
+                <motion.div 
+                  key="no-level"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="h-full flex flex-col items-center justify-center text-center space-y-6 p-6"
                 >
-                  {loading ? <Loader2 size={28} className="animate-spin" /> : <Mic size={28} />}
-                  <span className="arabic-font">{t.start}</span>
-                </button>
-              </div>
-            </div>
+                  <div className="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
+                    <StudioMicIcon size={64} strokeWidth={2.4} />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-black text-slate-800 arabic-font mb-2">{t.selectLevelFirst}</h2>
+                    <p className="text-slate-400 font-bold max-w-sm mx-auto">{t.subtitle}</p>
+                  </div>
+                </motion.div>
+              ) : !selectedTopic ? (
+                <motion.div 
+                  key="empty"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="h-full flex flex-col items-center justify-center text-center space-y-6 p-6"
+                >
+                  <div className="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center text-[#2563eb] animate-pulse">
+                    <StudioMicIcon size={64} strokeWidth={2.4} />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-black text-slate-800 arabic-font mb-2">{t.chooseTopic}</h2>
+                    <p className="text-slate-400 font-bold max-w-sm mx-auto">{t.subtitle}</p>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="setup"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="h-full flex flex-col items-center justify-center p-6 space-y-8"
+                >
+                  <div className="text-center space-y-4">
+                    <div className="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center text-[#2563eb] shadow-sm mx-auto">
+                      <span className="text-5xl">{selectedTopic.icon}</span>
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-black text-slate-800 arabic-font leading-none">
+                        {selectedTopic.ar}
+                      </h2>
+                      <p className="text-slate-400 text-sm font-bold mt-2 uppercase tracking-widest">
+                        {selectedTopic.en} • {selectedLevel.ar}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="max-w-md w-full bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl space-y-6">
+                    <div className="space-y-2">
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest text-center">{t.setupTitle}</p>
+                      <p className="text-sm text-slate-500 text-center arabic-font leading-relaxed">
+                        {selectedLevel.prompt}
+                      </p>
+                    </div>
+
+                    {error && (
+                      <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-center gap-3 text-red-600 animate-in fade-in">
+                        <AlertCircle size={16} />
+                        <p className="text-xs font-bold">{error}</p>
+                        <button onClick={() => startSession()} className="mr-auto bg-red-600 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase"><RefreshCw size={10} className="inline mr-1" /> Retry</button>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => startSession()}
+                      disabled={loading}
+                      className="w-full py-5 bg-gradient-to-r from-[#2563eb] to-[#059669] text-white rounded-2xl font-black text-xl shadow-xl shadow-blue-500/30 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+                    >
+                      {loading ? <Loader2 size={28} className="animate-spin" /> : <StudioMicIcon size={28} strokeWidth={2.5} />}
+                      <span className="arabic-font">{t.start}</span>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           ) : (
             <div className="h-full flex flex-col items-center justify-center p-6 relative">
               <div className="absolute top-6 flex items-center gap-2">
