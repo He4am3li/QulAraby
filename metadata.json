@@ -1,0 +1,10 @@
+{
+  "name": "قُل",
+  "description": "قُل (QUL) is an AI-powered Arabic learning arcade and interactive pedagogical whiteboard platform for students and teachers.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
