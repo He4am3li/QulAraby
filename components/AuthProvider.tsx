@@ -19,6 +19,9 @@ interface AuthContextType {
   profile: UserProfile | null;
   isAuthReady: boolean;
   loading: boolean;
+  isSigningIn: boolean;
+  authError: string | null;
+  clearAuthError: () => void;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   updateRole: (role: UserRole) => Promise<void>;
@@ -31,18 +34,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     // Handle redirect sign-in result if returning from signInWithRedirect
-    getRedirectResult(auth).catch((error) => {
-      if (error && error.code !== 'auth/null-user') {
-        console.warn('Redirect sign-in notice:', error);
-      }
-    });
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          console.log("Logged in successfully via redirect:", result.user.email);
+        }
+      })
+      .catch((error) => {
+        if (error && error.code !== 'auth/null-user') {
+          console.warn('Redirect sign-in notice:', error);
+          if (error.code === 'auth/unauthorized-domain') {
+            setAuthError('النطاق الحالي غير مضاف في Authorized Domains في Firebase Console.');
+          }
+        }
+      });
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
+        setAuthError(null);
         try {
           const userDocRef = doc(db, 'users', currentUser.uid);
           const docSnap = await getDoc(userDocRef);
@@ -79,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       setIsAuthReady(true);
       setLoading(false);
+      setIsSigningIn(false);
     });
 
     return () => unsubscribe();
@@ -86,13 +102,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleSignIn = async () => {
     try {
-      setLoading(true);
+      setAuthError(null);
+      setIsSigningIn(true);
       await signInWithGoogle();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign-in failed:', error);
+      let message = 'تعذر تسجيل الدخول، يرجى المحاولة مرة أخرى.';
+      if (error?.code === 'auth/unauthorized-domain') {
+        message = 'النطاق الحالي (Domain) غير مصرح به في Firebase Console. يرجى إضافته إلى Authorized Domains.';
+      } else if (error?.code === 'auth/popup-blocked') {
+        message = 'قام المتصفح بحظر النافذة المنبثقة، يرجى السماح بالنوافذ المنبثقة للموقع أو استخدام متصفح قياسي.';
+      } else if (error?.code === 'auth/popup-closed-by-user') {
+        message = 'تم إغلاق نافذة الدخول قبل إتمامها. يمكنك النقر مجدداً للدخول.';
+      } else if (error?.message) {
+        message = error.message;
+      }
+      setAuthError(message);
+      setIsSigningIn(false);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -129,6 +156,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profile,
         isAuthReady,
         loading,
+        isSigningIn,
+        authError,
+        clearAuthError: () => setAuthError(null),
         signIn: handleSignIn,
         signOut: handleSignOut,
         updateRole,

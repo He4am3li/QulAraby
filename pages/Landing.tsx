@@ -5,7 +5,8 @@ import {
   Gamepad2, Mic, BookOpen, PenTool, Brain, 
   ArrowRight, CheckCircle2, Trophy, Zap, 
   Search, Languages, FileText, LayoutDashboard,
-  Play, Star, ShieldCheck, Clock, Award, Ear, Library
+  Play, Star, ShieldCheck, Clock, Award, Ear, Library,
+  AlertCircle, Loader2, X
 } from 'lucide-react';
 import { useAuth } from '../components/AuthProvider';
 import { translateAndExpand } from '../services/gemini';
@@ -239,8 +240,8 @@ const StatItem = ({ value, label, icon: Icon }: any) => (
   </div>
 );
 
-export const Landing = ({ onSignInStart }: { onSignInStart?: () => void }) => {
-  const { signIn, signOut, user, profile } = useAuth();
+export const Landing = () => {
+  const { signIn, signOut, user, profile, isSigningIn, authError, clearAuthError } = useAuth();
   const [lang, setLang] = useState(localStorage.getItem('hub_lang') || 'ar');
 
   useEffect(() => {
@@ -385,17 +386,40 @@ export const Landing = ({ onSignInStart }: { onSignInStart?: () => void }) => {
             {lang === 'ar' ? 'English' : 'العربية'}
           </button>
           <button 
-            onClick={() => {
-              onSignInStart?.();
-              signIn();
-            }}
-            className="flex items-center gap-3 bg-white text-black px-6 py-2 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all shadow-lg"
+            onClick={() => signIn()}
+            disabled={isSigningIn}
+            className="flex items-center gap-3 bg-white text-black px-6 py-2 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all shadow-lg disabled:opacity-50"
           >
-            <LogIn size={14} />
-            {t.login}
+            {isSigningIn ? <Loader2 size={14} className="animate-spin text-blue-500" /> : <LogIn size={14} />}
+            {isSigningIn ? (lang === 'ar' ? 'جاري الاتصال...' : 'Connecting...') : t.login}
           </button>
         </div>
       </nav>
+
+      {/* Auth Error Banner if login issue occurred */}
+      <AnimatePresence>
+        {authError && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="relative z-50 max-w-4xl mx-auto px-6 pt-4"
+          >
+            <div className="bg-red-950/80 border border-red-500/50 rounded-2xl p-4 flex items-center justify-between gap-4 text-red-200 shadow-2xl backdrop-blur-xl">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+                <span className="text-xs md:text-sm font-semibold">{authError}</span>
+              </div>
+              <button
+                onClick={clearAuthError}
+                className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-red-300 hover:text-white"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Hero Section */}
       <main className="relative z-10 pt-12 pb-20 px-6">
@@ -421,14 +445,15 @@ export const Landing = ({ onSignInStart }: { onSignInStart?: () => void }) => {
                   if (user) {
                     signOut();
                   } else {
-                    onSignInStart?.();
                     signIn();
                   }
                 }}
                 className="hidden lg:flex flex-col items-center justify-center px-6 py-8 rounded-[2rem] bg-black/40 border border-white/10 hover:border-blue-500/50 backdrop-blur-3xl w-56 text-center gap-3 shrink-0 shadow-2xl cursor-pointer group transition-all"
               >
                 <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform overflow-hidden">
-                  {user?.photoURL ? (
+                  {isSigningIn ? (
+                    <Loader2 size={22} className="animate-spin text-blue-400" />
+                  ) : user?.photoURL ? (
                     <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover rounded-2xl" />
                   ) : (
                     <Users size={22} />
@@ -438,7 +463,7 @@ export const Landing = ({ onSignInStart }: { onSignInStart?: () => void }) => {
                   {profile?.displayName || user?.displayName || (user ? user.email?.split('@')[0] : (lang === 'ar' ? 'صاحب الحساب' : 'Account Holder'))}
                 </span>
                 <span className="text-[9px] font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 px-3.5 py-1 rounded-full border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all">
-                  {user ? (lang === 'ar' ? 'مسجل الدخول' : 'Logged In') : (lang === 'ar' ? 'دخول المنصة' : 'Sign In')}
+                  {isSigningIn ? (lang === 'ar' ? 'جاري الاتصال...' : 'Connecting...') : user ? (lang === 'ar' ? 'مسجل الدخول' : 'Logged In') : (lang === 'ar' ? 'دخول المنصة' : 'Sign In')}
                 </span>
               </motion.div>
 

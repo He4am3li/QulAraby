@@ -34,13 +34,11 @@ const AppContent: React.FC = () => {
   const location = useLocation();
   const { user, profile, isAuthReady, loading } = useAuth();
   const [splashCompleted, setSplashCompleted] = React.useState(false);
-  const [isLoggingIn, setIsLoggingIn] = React.useState(false);
 
   // Sync splash state with auth session
   React.useEffect(() => {
     if (!user && isAuthReady) {
       setSplashCompleted(false);
-      setIsLoggingIn(false);
       sessionStorage.removeItem('qul_splash_seen');
     } else if (user) {
       const seen = sessionStorage.getItem('qul_splash_seen') === 'true';
@@ -56,14 +54,13 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // If user is logged in but splash hasn't finished, OR if we just started logging in
-  if ((user && !splashCompleted) || isLoggingIn) {
+  // If user is logged in but splash hasn't finished, show cinematic splash once
+  if (user && !splashCompleted) {
     return (
       <SplashScreen 
         onComplete={() => {
           sessionStorage.setItem('qul_splash_seen', 'true');
           setSplashCompleted(true);
-          setIsLoggingIn(false);
         }} 
       />
     );
@@ -71,7 +68,7 @@ const AppContent: React.FC = () => {
 
   // If user is not logged in, show landing
   if (!user) {
-    return <Landing onSignInStart={() => setIsLoggingIn(true)} />;
+    return <Landing />;
   }
 
   const isTeacher = profile?.role === 'teacher' || profile?.role === 'admin';
