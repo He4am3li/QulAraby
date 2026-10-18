@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
+import { User, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, signInWithGoogle, logout } from '../firebase';
 
@@ -33,6 +33,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Handle redirect sign-in result if returning from signInWithRedirect
+    getRedirectResult(auth).catch((error) => {
+      if (error && error.code !== 'auth/null-user') {
+        console.warn('Redirect sign-in notice:', error);
+      }
+    });
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {

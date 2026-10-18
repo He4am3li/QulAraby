@@ -1,5 +1,14 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signInWithRedirect, 
+  getRedirectResult, 
+  signOut, 
+  onAuthStateChanged, 
+  User 
+} from 'firebase/auth';
 import { initializeFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp, setLogLevel } from 'firebase/firestore';
 
 // Set Firestore log level to silent to avoid connection retry warnings
@@ -15,6 +24,9 @@ export const db = initializeFirestore(app, {
 }, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 // --- Auth Helpers ---
 
@@ -22,7 +34,16 @@ export const signInWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
-  } catch (error) {
+  } catch (error: any) {
+    // If popup is blocked by the browser or ad-blocker, seamlessly fallback to redirect
+    if (
+      error?.code === 'auth/popup-blocked' ||
+      error?.code === 'auth/cancelled-popup-request'
+    ) {
+      console.warn("Popup blocked by browser. Falling back to signInWithRedirect...", error);
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    }
     console.error("Error signing in with Google", error);
     throw error;
   }
