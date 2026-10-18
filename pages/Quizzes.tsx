@@ -255,7 +255,7 @@ export default function Quizzes() {
       `});
 
       const result = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.8-flash",
         contents: { parts: contents },
         config: { responseMimeType: "application/json" }
       });

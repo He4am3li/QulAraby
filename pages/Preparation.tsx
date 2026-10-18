@@ -581,7 +581,7 @@ const Preparation: React.FC = () => {
       const textPart = { text: promptString };
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-3.8-flash",
         contents: { parts: [imagePart, textPart] }
       });
 

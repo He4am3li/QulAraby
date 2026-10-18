@@ -334,7 +334,7 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
       const base64Data = dataUrl.split(',')[1];
 
       const response = await generateContentWithRetry({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.8-flash",
         contents: [
           {
             parts: [

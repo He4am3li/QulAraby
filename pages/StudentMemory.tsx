@@ -161,7 +161,7 @@ export const StudentMemory: React.FC = () => {
       const mistakesContext = memoryItems.map(m => `${m.type}: ${m.content} -> ${m.correction || ''}`).join('\n');
       
       const response = await generateContentWithRetry({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3.8-flash',
         contents: `Create a personalized review session for a student based on these recent mistakes in Arabic learning. Focus on the patterns of errors. 
         Mistakes:
         ${mistakesContext}

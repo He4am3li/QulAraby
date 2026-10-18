@@ -316,7 +316,7 @@ export const Speak: React.FC = () => {
       }
       
       const sessionPromise = ai.live.connect({
-        model: 'gemini-3.1-flash-live-preview',
+        model: 'gemini-3.8-live',
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
@@ -531,7 +531,7 @@ export const Speak: React.FC = () => {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3.8-flash',
         contents: `Extract 3 meaningful Arabic words from this text for a spelling challenge. Return them as a JSON array of strings. Text: "${text}"`,
         config: { responseMimeType: 'application/json' }
       });

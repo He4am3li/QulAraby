@@ -4,6 +4,11 @@ import { getCachedAsset, setCachedAsset } from "./cache";
 
 // Always use a named parameter for the API key from process.env.API_KEY.
 // Exported to be used across the application for direct Gemini API access.
+export const DEFAULT_TEXT_MODEL = 'gemini-3.8-flash';
+export const DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-lite-image';
+export const DEFAULT_TTS_MODEL = 'gemini-3.8-flash-lite-tts';
+export const DEFAULT_LIVE_MODEL = 'gemini-3.8-live';
+
 export const getAI = () => new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string });
 
 /**
@@ -95,11 +100,24 @@ export async function generateContentWithRetry(params: any) {
   return withRetry(() => getAI().models.generateContent(params));
 }
 
-export async function withRetry<T>(fn: () => Promise<T>, maxRetries = 5, delay = 2000): Promise<T> {
+export async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, delay = 1500): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {
     const errorMsg = error?.message?.toLowerCase() || '';
+    const isPermanent = error?.status === 402 ||
+                        error?.status === 403 ||
+                        error?.status === 404 ||
+                        errorMsg.includes('402') ||
+                        errorMsg.includes('403') ||
+                        errorMsg.includes('404') ||
+                        errorMsg.includes('permission_denied') ||
+                        errorMsg.includes('depleted') ||
+                        errorMsg.includes('not have permission');
+    if (isPermanent) {
+      throw error;
+    }
+
     const isQuotaError = error?.status === 429 || 
                          error?.status === 503 ||
                          error?.status === 504 ||
@@ -112,7 +130,6 @@ export async function withRetry<T>(fn: () => Promise<T>, maxRetries = 5, delay =
                          errorMsg.includes('overloaded');
     
     if (maxRetries > 0 && isQuotaError) {
-      // Exponential backoff
       const nextDelay = delay * 2;
       console.warn(`Gemini service issue (${errorMsg}). Retrying in ${Math.round(delay/1000)}s... (${maxRetries} retries left)`);
       await new Promise(resolve => setTimeout(resolve, delay));
@@ -141,7 +158,7 @@ export const generateWordIllustration = async (word: string, customPrompt?: stri
     try {
       return await withRetry(async () => {
         const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash-image',
+          model: DEFAULT_IMAGE_MODEL,
           contents: {
             parts: [{ text: promptText }],
           },
@@ -200,7 +217,7 @@ export const verifyLetterWorksheet = async (filePart: any, char: string, charNam
 
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: {
         parts: [
           filePart,
@@ -217,7 +234,7 @@ export const diacritizeText = async (text: string): Promise<string> => {
   const ai = getAI();
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Add full Arabic diacritics (Tashkeel) to the following text. 
       CRITICAL RULES:
       1. DO NOT add any spaces between letters.
@@ -261,7 +278,7 @@ export const getWordDeepAnalysis = async (word: string): Promise<any> => {
   };
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Deep analysis for: "${word}". CRITICAL: Return the root letters in "root_letters" in the correct sequential order as they appear in the word (index 0 is the first letter of the root).`,
       config: { responseMimeType: "application/json", responseSchema: schema }
     });
@@ -310,7 +327,7 @@ export const generateGrammarLesson = async (topic: string, vocabWords: string[],
   };
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Teach Arabic grammar topic: "${topic}". Bilingual.`,
       config: { responseMimeType: "application/json", responseSchema: schema }
     });
@@ -330,7 +347,7 @@ export const generateAssistantQuiz = async (topic: string, vocabWords: string[])
   };
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `10 MCQ for topic: "${topic}". Bilingual.`,
       config: { responseMimeType: "application/json", responseSchema: schema }
     });
@@ -350,7 +367,7 @@ export const generateSpeech = async (text: string, lang: 'ar' | 'en'): Promise<U
   try {
     return await withRetry(async () => {
       const response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-tts-preview",
+        model: DEFAULT_TTS_MODEL,
         contents: [{ parts: [{ text }] }],
         config: {
           responseModalities: [Modality.AUDIO],
@@ -498,7 +515,7 @@ export const translateAndExpand = async (word: string, isFromArabic: boolean, ot
     const source = isFromArabic ? "Arabic" : otherLang;
     const target = isFromArabic ? otherLang : "Arabic";
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Analyze and translate the word/phrase "${word}" from ${source} to ${target}. 
       Provide a deep linguistic analysis. 
       The "other_lang_definition" and "details_other" should be in ${otherLang}.
@@ -546,7 +563,7 @@ export const generateThemedVocabulary = async (topic: string): Promise<Partial<V
   };
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Generate 10 common Arabic words related to the topic: "${topic}". For each word provide its english translation, definitions, and linguistic analysis.`,
       config: { responseMimeType: "application/json", responseSchema: vocabSchema }
     });
@@ -567,7 +584,7 @@ export const generatePracticeQuestions = async (vocab: Vocabulary): Promise<Quiz
   };
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `3 practice questions for: "${vocab.original_word}".`,
       config: { responseMimeType: "application/json", responseSchema: schema }
     });
@@ -587,7 +604,7 @@ export const extractKeywordsFromTranscript = async (transcript: string): Promise
   };
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Extract 3 key Arabic words from: "${transcript}".`,
       config: { responseMimeType: "application/json", responseSchema: schema }
     });
@@ -599,7 +616,7 @@ export const askAIAboutText = async (text: string, question: string): Promise<st
   const ai = getAI();
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Based on this text: "${text}", answer this: "${question}". Be extremely direct, concise, and answer in the same language as the question. No introductory phrases.`,
     });
     return response.text || "";
@@ -638,7 +655,7 @@ export const generateListeningExercise = async (level: string, topic: string, la
   };
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Create a listening exercise. Level: ${level}, Topic: ${topic}. 
       Include a "wordMap" which is an array of objects mapping EVERY unique Arabic word in the transcript to its English meaning (meaningEn) and a simple Arabic explanation/synonym (meaningAr).`,
       config: { responseMimeType: "application/json", responseSchema: schema }
@@ -673,7 +690,7 @@ export const evaluateCallIn = async (audioBase64: string, transcript: string): P
 
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: [
         {
           inlineData: {
@@ -693,22 +710,45 @@ export const evaluateCallIn = async (audioBase64: string, transcript: string): P
 };
 
 export const generateSessionInsights = async (history: any[], topic: string): Promise<any> => {
-  const ai = getAI();
-  const schema = {
-    type: Type.OBJECT,
-    properties: {
-      summary: { type: Type.STRING },
-      key_vocabulary: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { word: { type: Type.STRING }, translation: { type: Type.STRING } }, required: ["word", "translation"] } },
-      corrections: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { original: { type: Type.STRING }, correction: { type: Type.STRING }, explanation: { type: Type.STRING } }, required: ["original", "correction", "explanation"] } },
-      tutor_tip_ar: { type: Type.STRING },
-      tutor_tip_en: { type: Type.STRING }
-    },
-    required: ["summary", "key_vocabulary", "tutor_tip_ar", "tutor_tip_en"]
+  const historyText = (history || []).map(h => `${h.role === 'user' ? 'Learner' : 'Tutor'}: ${h.text || ''}`).join('\n');
+  
+  const createFallbackInsights = () => {
+    const rawWords = historyText
+      .replace(/[^\u0600-\u06FF\s]/g, ' ')
+      .split(/\s+/)
+      .map(w => w.trim())
+      .filter(w => w.length >= 3 && !['هذا', 'هذه', 'ذلك', 'تلك', 'التي', 'الذي', 'على', 'إلى', 'نعم', 'شكرا', 'أنا', 'أنت', 'كان', 'يكون'].includes(w));
+    
+    const uniqueWords = Array.from(new Set(rawWords)).slice(0, 5);
+    const key_vocabulary = uniqueWords.length > 0
+      ? uniqueWords.map(w => ({ word: w, translation: `مفردة من الحوار: ${w}` }))
+      : [{ word: topic || 'محادثة', translation: 'Conversation' }];
+
+    return {
+      summary: `جلسة محادثة تفاعلية تركزت حول موضوع "${topic || 'محادثة عامة'}". تم خلالها ممارسة مهارات التحدث والتعبير باللغة العربية.`,
+      key_vocabulary,
+      corrections: [],
+      tutor_tip_ar: "أحسنت في خوض التجربة والتحدث باللغة العربية! الاستمرار في الممارسة اليومية هو المفتاح لاكتساب الطلاقة والجرأة في الحوار.",
+      tutor_tip_en: "Great job speaking in Arabic! Consistent daily practice will boost your vocabulary and conversational ease."
+    };
   };
-  return withRetry(async () => {
-    const historyText = history.map(h => `${h.role === 'user' ? 'Learner' : 'Tutor'}: ${h.text}`).join('\n');
+
+  try {
+    const ai = getAI();
+    const schema = {
+      type: Type.OBJECT,
+      properties: {
+        summary: { type: Type.STRING },
+        key_vocabulary: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { word: { type: Type.STRING }, translation: { type: Type.STRING } }, required: ["word", "translation"] } },
+        corrections: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { original: { type: Type.STRING }, correction: { type: Type.STRING }, explanation: { type: Type.STRING } }, required: ["original", "correction", "explanation"] } },
+        tutor_tip_ar: { type: Type.STRING },
+        tutor_tip_en: { type: Type.STRING }
+      },
+      required: ["summary", "key_vocabulary", "tutor_tip_ar", "tutor_tip_en"]
+    };
+
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Analyze this conversation session about ${topic}.
       
       Conversation History:
@@ -717,8 +757,16 @@ export const generateSessionInsights = async (history: any[], topic: string): Pr
       Provide a summary, extract key vocabulary (with translations), and identify any corrections needed for the learner's Arabic.`,
       config: { responseMimeType: "application/json", responseSchema: schema }
     });
-    return safeJSONParse(response.text, {});
-  });
+    
+    const parsed = safeJSONParse(response.text, null);
+    if (parsed && parsed.summary && parsed.key_vocabulary) {
+      return parsed;
+    }
+    return createFallbackInsights();
+  } catch (err) {
+    console.warn("Could not generate AI insights from API, providing session-based fallback summary:", err);
+    return createFallbackInsights();
+  }
 };
 
 export const checkWriting = async (text: string, level: string, filePart?: any): Promise<any> => {
@@ -746,7 +794,7 @@ export const checkWriting = async (text: string, level: string, filePart?: any):
     if (filePart) parts.unshift(filePart);
     if (text) parts.push({ text: `Text provided: "${text}"` });
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: { parts },
       config: { responseMimeType: "application/json", responseSchema: schema }
     });
@@ -790,7 +838,7 @@ export const parseArabicSentence = async (sentence: string): Promise<IrabAnalysi
 
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `أنت خبير نحوي متخصص في إعراب اللغة العربية وتبسيطها للمتعلمين.
 قم بإعراب الجملة التالية إعراباً نحوياً مباشراً وموجزاً ودقيقاً جداً بدون أي حشو أو تفاصيل مشتتة أو إطالة: "${sentence}".
 
@@ -837,7 +885,7 @@ export const generateWritingPrompt = async (level: string, topic: string): Promi
   };
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Create writing task for Level: ${level}, Topic: ${topic}.`,
       config: { responseMimeType: "application/json", responseSchema: schema }
     });
@@ -871,7 +919,7 @@ export const evaluatePronunciation = async (audioBase64: string, targetText: str
 
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: {
         parts: [
           {
@@ -893,7 +941,7 @@ export const generateReadingText = async (type: string, level: string = "interme
   const ai = getAI();
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Generate a high-quality ${type} in Arabic suitable for a ${level} level student. 
       The content should be engaging, educational, and use natural language. 
       Return ONLY the text of the ${type}.`,
@@ -906,7 +954,7 @@ export const generateStory = async (topic: string = "general"): Promise<string> 
   const ai = getAI();
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Write a short, engaging story in Arabic about "${topic}". The story should be suitable for language learners, with clear vocabulary and a meaningful message. Return ONLY the story text.`,
     });
     return response.text || "";
@@ -917,7 +965,7 @@ export const fetchDailyNews = async (): Promise<string> => {
   const ai = getAI();
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Generate a summary of today's top news in Arabic. Focus on positive or educational topics. The summary should be written in a way that is easy for Arabic learners to read. Return ONLY the news summary.`,
     });
     return response.text || "";
@@ -929,7 +977,7 @@ export const extractTextFromImage = async (file: File): Promise<string> => {
   const filePart = await fileToGenerativePart(file);
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: {
         parts: [
           filePart,
@@ -991,7 +1039,7 @@ export const generateWorksheet = async (topic: string, level: string, type: 'gra
 
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Create a professional Arabic worksheet for the topic: "${topic}". 
       Level: ${level}. 
       
@@ -1057,7 +1105,7 @@ export const analyzeWorksheetImage = async (file: File): Promise<any> => {
 
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: DEFAULT_TEXT_MODEL,
       contents: {
         parts: [
           filePart,
@@ -1088,7 +1136,7 @@ export const generateQuickExercise = async (context: string): Promise<any> => {
 
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: DEFAULT_TEXT_MODEL,
       contents: `Based on this context: "${context}", generate a quick interactive exercise for a student. 
       The exercise should be a single question (MCQ, Fill in the blank, or True/False).
       Provide the question and explanation in both Arabic and English.
@@ -1151,7 +1199,7 @@ Return strictly JSON format:
     const ai = getAI();
     return await withRetry(async () => {
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: DEFAULT_TEXT_MODEL,
         contents: prompt,
         config: {
           responseMimeType: 'application/json'
@@ -1266,7 +1314,7 @@ For Level 3:
     const ai = getAI();
     return await withRetry(async () => {
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: DEFAULT_TEXT_MODEL,
         contents: prompt,
         config: {
           responseMimeType: 'application/json'

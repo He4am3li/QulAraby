@@ -210,7 +210,7 @@ export const Writing: React.FC = () => {
       };
       
       const response = await generateContentWithRetry({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3.8-flash',
         contents: `Analyze this Arabic text and suggest 3-5 improvements to make it more literary, professional, or use stronger vocabulary. Return as a JSON array of objects with 'original', 'improved', and 'reason' (in Arabic). Text: "${text}"`,
         config: { responseMimeType: 'application/json', responseSchema: schema }
       });

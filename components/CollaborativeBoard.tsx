@@ -171,7 +171,7 @@ export const CollaborativeBoard: React.FC<CollaborativeBoardProps> = ({ lang, bo
       const prompt = `Analyze this Arabic student writing and provide a short, encouraging feedback (2-3 sentences) in Arabic. Focus on grammar, vocabulary, and style. Text: "${post.content}"`;
       
       const result = await generateContentWithRetry({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3.8-flash',
         contents: prompt
       });
       const feedback = result.text;

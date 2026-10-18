@@ -269,7 +269,7 @@ export const PlacementTest: React.FC = () => {
       
       const skill = SKILLS_ORDER[0].id; // letters
       const response = await generateContentWithRetry({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.8-flash",
         contents: `Generate question #1 (Skill: Letters, Sub-Skill: Sound Recognition) for an adaptive Arabic diagnostic test.
         MANDATORY RULES:
         1. FOR LETTERS: Visual & simple. Audio allowed ONLY for Sound Recognition. 
@@ -393,7 +393,7 @@ export const PlacementTest: React.FC = () => {
       };
       
       const response = await generateContentWithRetry({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.8-flash",
         contents: `Generate diagnostic question #${nextIdx + 1} for an Arabic Placement Test (Non-Native).
         
         CONTEXT:
@@ -547,7 +547,7 @@ export const PlacementTest: React.FC = () => {
            5. Create precise Enrichment & Remedial tracks with actionable activities.`;
 
       const response = await generateContentWithRetry({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.8-flash",
         contents: systemPrompt,
         config: { responseMimeType: "application/json", responseSchema: schema }
       });

@@ -1565,7 +1565,7 @@ export const Dialects: React.FC = () => {
       If this is the first message, introduce yourself briefly in the dialect and ask a simple question to start the mission.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.8-flash",
         contents: [
           { role: 'user', parts: [{ text: systemPrompt }] },
           ...chatMessages.map(m => ({ role: m.role as any, parts: [{ text: m.text }] })),
@@ -1616,7 +1616,7 @@ export const Dialects: React.FC = () => {
       const currentMission = missions ? (rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar) : "Learn the dialect";
 
       const sessionPromise = ai.live.connect({
-        model: "gemini-3.1-flash-live-preview",
+        model: "gemini-3.8-live",
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
