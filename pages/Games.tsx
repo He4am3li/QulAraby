@@ -27,8 +27,9 @@ import { MemoryMatch } from '../components/games/MemoryMatch';
 import { ArabicSpaceJourney } from '../components/games/ArabicSpaceJourney';
 import { KnowledgeSupermarket } from '../components/games/KnowledgeSupermarket';
 import { DetectiveMystery } from '../components/games/DetectiveMystery';
-import supermarketParkingImg from '../assets/images/supermarket_parking_intro_1791186344934.jpg';
-import vibrantSpaceNebula from '../assets/images/vibrant_cinematic_space_nebula_1790179537071.jpg';
+import supermarketParkingImg from '../src/assets/images/supermarket_parking_intro_1791186344934.jpg';
+import supermarketAisleImg from '../src/assets/images/supermarket_aisle_hall_1791186364722.jpg';
+import vibrantSpaceNebula from '../src/assets/images/vibrant_cinematic_space_nebula_1790179537071.jpg';
 import { useAuth } from '../components/AuthProvider';
 import { db } from '../firebase';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
@@ -96,7 +97,7 @@ const CONSOLE_GAMES: GameDef[] = [
     detailsEn: '4 full cinematic scenes: car parking arrival, supermarket aisle tour, interactive wooden grocery shelves with shopping cart, and cashier checkout with laser barcode scanner and receipt printout!',
     samples: [],
     cover: supermarketParkingImg,
-    hero: supermarketParkingImg,
+    hero: supermarketAisleImg,
     color: 'from-amber-600 via-yellow-700 to-amber-950',
     icon: <ShoppingCart size={32} />
   },
