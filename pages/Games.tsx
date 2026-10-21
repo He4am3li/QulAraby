@@ -29,7 +29,6 @@ import { KnowledgeSupermarket } from '../components/games/KnowledgeSupermarket';
 import { DetectiveMystery } from '../components/games/DetectiveMystery';
 import supermarketParkingImg from '../assets/images/supermarket_parking_intro_1791186344934.jpg';
 import vibrantSpaceNebula from '../assets/images/vibrant_cinematic_space_nebula_1790179537071.jpg';
-import detectiveCoverImg from '../assets/images/detective_and_dog_1791891636723.jpg';
 import { useAuth } from '../components/AuthProvider';
 import { db } from '../firebase';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
