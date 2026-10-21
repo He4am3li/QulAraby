@@ -27,10 +27,10 @@ import { MemoryMatch } from '../components/games/MemoryMatch';
 import { ArabicSpaceJourney } from '../components/games/ArabicSpaceJourney';
 import { KnowledgeSupermarket } from '../components/games/KnowledgeSupermarket';
 import { DetectiveMystery } from '../components/games/DetectiveMystery';
-import supermarketParkingImg from '/src/assets/images/supermarket_parking_intro_1791186344934.jpg';
-import supermarketAisleImg from '/src/assets/images/supermarket_aisle_hall_1791186364722.jpg';
-import vibrantSpaceNebula from '/src/assets/images/vibrant_cinematic_space_nebula_1790179537071.jpg';
-import detectiveCoverImg from '/src/assets/images/detective_and_dog_1791891636723.jpg';
+import supermarketParkingImg from '../assets/images/supermarket_parking_intro_1791186344934.jpg';
+import supermarketAisleImg from '../assets/images/supermarket_aisle_hall_1791186364722.jpg';
+import vibrantSpaceNebula from '../assets/images/vibrant_cinematic_space_nebula_1790179537071.jpg';
+import detectiveCoverImg from '../assets/images/detective_and_dog_1791891636723.jpg';
 import { useAuth } from '../components/AuthProvider';
 import { db } from '../firebase';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
@@ -194,7 +194,7 @@ const CONSOLE_GAMES: GameDef[] = [
     categoryEn: 'Sports',
     titleAr: 'ركلات الترجيح', 
     titleEn: 'Penalty Shootout',
-    descriptionAr: 'تجربة ركلات ترجيح واقعية بنمط ألعاب الكونسول؛ سدد وتصدَّ للكرات باحترافية.',
+    descriptionAr: 'تجربة ركلات ترجيح واقعية بنمط ألعاب الكونسول؛ سدد وتصدَّ للكرات باحترافية.',
     descriptionEn: 'Realistic console-style penalty shootout; shoot and save like a pro.',
     detailsAr: 'تحدي ركلات الترجيح. اختر زاوية التسديد بدقة، ثم حاول التصدي لركلات الخصم كحارس مرمى.',
     detailsEn: 'Penalty shootout challenge. Choose the shooting angle accurately, then try to block the opponent\'s kicks as a goalkeeper.',
@@ -213,7 +213,7 @@ const CONSOLE_GAMES: GameDef[] = [
     titleEn: 'Memora',
     descriptionAr: 'تحدي الذاكرة الثنائي؛ طابق الكلمات بمعانيها في تجربة سينمائية.',
     descriptionEn: 'Dual memory challenge; match words with their meanings in a cinematic experience.',
-    detailsAr: 'اقلب الكروت وحاول مطابقة الكلمة العربية بترجمتها الإنجليزية. تحدَّ صديقك في اختبار للذاكرة والسرعة.',
+    detailsAr: 'اقلب الكروت وحاول مطابقة الكلمة العربية بترجمتها الإنجليزية. تحدَّ صديقك في اختبار للذاكرة والسرعة.',
     detailsEn: 'Flip the cards and try to match the Arabic word with its English translation. Challenge your friend in a test of memory and speed.',
     samples: [],
     cover: 'https://images.unsplash.com/photo-1632829882891-5047ccc421bc?q=80&w=1000&auto=format&fit=crop',
