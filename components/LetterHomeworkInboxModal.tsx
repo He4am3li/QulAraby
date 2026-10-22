@@ -124,7 +124,9 @@ export const LetterHomeworkInboxModal: React.FC<LetterHomeworkInboxModalProps> =
   isOpen,
   onClose,
   selectedChar,
-  lang
+  lang,
+  schoolId,
+  isPlatformAdmin = false
 }) => {
   const [submissions, setSubmissions] = useState<LetterSubmission[]>([]);
   const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
@@ -237,6 +239,7 @@ export const LetterHomeworkInboxModal: React.FC<LetterHomeworkInboxModalProps> =
     const randomName = names[Math.floor(Math.random() * names.length)];
     
     const newSample: Omit<LetterSubmission, 'id'> = {
+      schoolId: schoolId || 'independent',
       char: targetChar,
       charName: targetName,
       studentId: `student-${Date.now()}`,
