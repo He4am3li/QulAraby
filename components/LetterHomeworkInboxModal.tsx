@@ -17,6 +17,7 @@ export interface LetterSubmission {
   char: string;
   charName: string;
   studentId: string;
+  schoolId?: string;
   studentName: string;
   studentEmail?: string;
   studentPhoto?: string;
