@@ -45,6 +45,7 @@ export const AdminConsole: React.FC = () => {
   const [users, setUsers] = React.useState<UserRecord[]>([]);
   const [drafts, setDrafts] = React.useState<Record<string, { role: string; schoolId: string }>>({});
   const [loading, setLoading] = React.useState(true);
+  const [dataLoadFailed, setDataLoadFailed] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [notice, setNotice] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [schoolName, setSchoolName] = React.useState('');
@@ -64,6 +65,7 @@ export const AdminConsole: React.FC = () => {
 
   const loadData = React.useCallback(async () => {
     setLoading(true);
+    setDataLoadFailed(false);
     try {
       const [schoolSnap, planSnap, userSnap] = await Promise.all([
         getDocs(collection(db, 'schools')),
@@ -78,9 +80,12 @@ export const AdminConsole: React.FC = () => {
       setUsers(nextUsers.sort((a, b) => (a.displayName || a.email).localeCompare(b.displayName || b.email, 'ar')));
       setDrafts(Object.fromEntries(nextUsers.map((u) => [u.uid, { role: u.role || 'student', schoolId: u.schoolId || '' }])));
       setSchoolPlanId((current) => current || nextPlans.find((plan) => plan.isActive !== false)?.id || '');
+      setDataLoadFailed(false);
+      setNotice(null);
     } catch (error) {
       console.error('Admin data load failed:', error);
-      setNotice({ type: 'error', text: 'تعذر تحميل البيانات. تحقق من صلاحيات Firestore المنشورة.' });
+      setDataLoadFailed(true);
+      setNotice({ type: 'error', text: 'تعذر تحميل البيانات من Firestore. الأرقام غير متاحة حتى تُنشر قواعد Firestore الصحيحة على قاعدة بيانات المشروع.' });
     } finally {
       setLoading(false);
     }
@@ -386,10 +391,10 @@ export const AdminConsole: React.FC = () => {
             {tab === 'overview' && <section className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  { label: 'المدارس المسجلة', value: schools.length, icon: Building2, tone: 'bg-blue-50 text-blue-700' },
-                  { label: 'المدارس الفعّالة والتجريبية', value: schools.filter(s => s.status === 'active' || s.status === 'trial').length, icon: School, tone: 'bg-emerald-50 text-emerald-700' },
-                  { label: 'الباقات المعرّفة', value: plans.length, icon: Layers3, tone: 'bg-violet-50 text-violet-700' },
-                  { label: 'الحسابات المسجلة', value: users.length, icon: Users, tone: 'bg-amber-50 text-amber-700' },
+                  { label: 'المدارس المسجلة', value: dataLoadFailed ? '—' : schools.length, icon: Building2, tone: 'bg-blue-50 text-blue-700' },
+                  { label: 'المدارس الفعّالة والتجريبية', value: dataLoadFailed ? '—' : schools.filter(s => s.status === 'active' || s.status === 'trial').length, icon: School, tone: 'bg-emerald-50 text-emerald-700' },
+                  { label: 'الباقات المعرّفة', value: dataLoadFailed ? '—' : plans.length, icon: Layers3, tone: 'bg-violet-50 text-violet-700' },
+                  { label: 'الحسابات المسجلة', value: dataLoadFailed ? '—' : users.length, icon: Users, tone: 'bg-amber-50 text-amber-700' },
                 ].map((item) => <div key={item.label} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="flex items-center justify-between"><span className="text-sm font-bold text-slate-500">{item.label}</span><span className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.tone}`}><item.icon size={21} /></span></div>
                   <div className="mt-4 text-3xl font-black tabular-nums">{item.value}</div>
@@ -398,11 +403,11 @@ export const AdminConsole: React.FC = () => {
               <div className="grid gap-5 xl:grid-cols-2">
                 <div className="rounded-2xl border border-slate-200 bg-white p-5">
                   <div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-black">أحدث المدارس المسجلة</h2><button className="text-sm font-bold text-emerald-800" onClick={() => setTab('schools')}>إدارة المدارس</button></div>
-                  {schools.length ? <div className="space-y-3">{schools.slice(0, 5).map(school => <div key={school.id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3"><div className="min-w-0"><div className="truncate font-bold">{school.name}</div><div className="mt-1 text-xs text-slate-500">{currentPlanName(school.planId)} · {userCountForSchool(school.id)} مستخدم</div></div><span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${school.status === 'active' ? 'bg-emerald-100 text-emerald-800' : school.status === 'trial' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700'}`}>{school.status === 'active' ? 'فعّالة' : school.status === 'trial' ? 'تجريبية' : school.status === 'suspended' ? 'موقوفة' : 'غير محددة'}</span></div>)}</div> : <EmptyState message="لم تُضف مدارس بعد. ابدأ بإنشاء أول مدرسة." />}
+                  {dataLoadFailed ? <EmptyState message="تعذر تحميل بيانات المدارس. انشر قواعد Firestore ثم أعد المحاولة." /> : schools.length ? <div className="space-y-3">{schools.slice(0, 5).map(school => <div key={school.id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3"><div className="min-w-0"><div className="truncate font-bold">{school.name}</div><div className="mt-1 text-xs text-slate-500">{currentPlanName(school.planId)} · {userCountForSchool(school.id)} مستخدم</div></div><span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${school.status === 'active' ? 'bg-emerald-100 text-emerald-800' : school.status === 'trial' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700'}`}>{school.status === 'active' ? 'فعّالة' : school.status === 'trial' ? 'تجريبية' : school.status === 'suspended' ? 'موقوفة' : 'غير محددة'}</span></div>)}</div> : <EmptyState message="لم تُضف مدارس بعد. ابدأ بإنشاء أول مدرسة." />}
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-white p-5">
                   <div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-black">الباقات والأقسام</h2><button className="text-sm font-bold text-emerald-800" onClick={() => setTab('plans')}>إدارة الباقات</button></div>
-                  {plans.length ? <div className="space-y-3">{plans.map(plan => <div key={plan.id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3"><div className="min-w-0"><div className="font-bold">{plan.name}</div><div className="mt-1 text-xs text-slate-500">{(plan.includedModules || []).length} قسم · {schools.filter(s => s.planId === plan.id).length} مدرسة</div></div><button onClick={() => editPlan(plan)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold hover:border-emerald-400">تعديل</button></div>)}</div> : <div className="space-y-3"><EmptyState message="لم تُنشأ باقات بعد." /><button onClick={() => void seedPlans()} disabled={saving} className={`${buttonClass} bg-emerald-800 text-white hover:bg-emerald-900`}><Plus size={16}/> إنشاء الباقات المقترحة</button></div>}
+                  {dataLoadFailed ? <EmptyState message="تعذر تحميل الباقات من قاعدة البيانات." /> : plans.length ? <div className="space-y-3">{plans.map(plan => <div key={plan.id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3"><div className="min-w-0"><div className="font-bold">{plan.name}</div><div className="mt-1 text-xs text-slate-500">{(plan.includedModules || []).length} قسم · {schools.filter(s => s.planId === plan.id).length} مدرسة</div></div><button onClick={() => editPlan(plan)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold hover:border-emerald-400">تعديل</button></div>)}</div> : <div className="space-y-3"><EmptyState message="لم تُنشأ باقات بعد." /><button onClick={() => void seedPlans()} disabled={saving} className={`${buttonClass} bg-emerald-800 text-white hover:bg-emerald-900`}><Plus size={16}/> إنشاء الباقات المقترحة</button></div>}
                 </div>
               </div>
             </section>}
