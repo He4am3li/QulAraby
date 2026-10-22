@@ -172,7 +172,7 @@ export const AdminConsole: React.FC = () => {
         updatedAt: serverTimestamp(),
       };
       if (planPrice.trim() !== '') payload.price = Math.max(0, Number(planPrice) || 0);
-      else payload.price = deleteField();
+      else if (editingPlanId) payload.price = deleteField();
       if (editingPlanId) {
         await updateDoc(doc(db, 'plans', editingPlanId), payload);
         flash('success', 'تم تحديث الباقة، وستنعكس الأقسام الجديدة على المدارس المرتبطة بها.');
@@ -198,11 +198,19 @@ export const AdminConsole: React.FC = () => {
     }
     setSaving(true);
     try {
+      const selectedPlan = plans.find((item) => item.id === schoolPlanId);
+      if (!selectedPlan || selectedPlan.isActive === false) {
+        flash('error', 'اختر باقة متاحة للاشتراكات الجديدة.');
+        return;
+      }
       await addDoc(collection(db, 'schools'), {
         name: schoolName.trim(),
         contactEmail: schoolEmail.trim(),
         planId: schoolPlanId,
         status: schoolStatus,
+        ...(selectedPlan.durationDays && selectedPlan.durationDays > 0
+          ? { expiresAt: new Date(Date.now() + selectedPlan.durationDays * 24 * 60 * 60 * 1000) }
+          : {}),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -220,9 +228,24 @@ export const AdminConsole: React.FC = () => {
   };
 
   const saveSchool = async (school: SchoolRecord, planId: string, status: string) => {
+    const selectedPlan = plans.find((item) => item.id === planId);
+    if (!selectedPlan || selectedPlan.isActive === false) {
+      flash('error', 'اختر باقة متاحة للاشتراكات الجديدة.');
+      return;
+    }
     setSaving(true);
     try {
-      await updateDoc(doc(db, 'schools', school.id), { planId, status, updatedAt: serverTimestamp() });
+      const expiry = school.expiresAt?.toDate ? school.expiresAt.toDate() : null;
+      const renewalNeeded = planId !== school.planId || ((status === 'active' || status === 'trial') && !!expiry && expiry.getTime() < Date.now());
+      const updatePayload: Record<string, any> = { planId, status, updatedAt: serverTimestamp() };
+      if (renewalNeeded) {
+        if (selectedPlan.durationDays && selectedPlan.durationDays > 0) {
+          updatePayload.expiresAt = new Date(Date.now() + selectedPlan.durationDays * 24 * 60 * 60 * 1000);
+        } else {
+          updatePayload.expiresAt = deleteField();
+        }
+      }
+      await updateDoc(doc(db, 'schools', school.id), updatePayload);
       await loadData();
       flash('success', `تم تحديث اشتراك مدرسة «${school.name}».`);
     } catch (error) {
@@ -239,6 +262,27 @@ export const AdminConsole: React.FC = () => {
     if (draft.role === 'schoolAdmin' && !draft.schoolId) {
       flash('error', 'يجب ربط مدير المدرسة بمدرسة محددة.');
       return;
+    }
+    if (draft.schoolId) {
+      const targetSchool = schools.find((item) => item.id === draft.schoolId);
+      if (!targetSchool || !['active', 'trial'].includes(targetSchool.status || '')) {
+        flash('error', 'لا يمكن إسناد حساب إلى مدرسة موقوفة أو غير موجودة.');
+        return;
+      }
+      const targetPlan = plans.find((item) => item.id === targetSchool.planId);
+      if (!targetPlan || targetPlan.isActive === false) {
+        flash('error', 'مدرسة المستخدم غير مرتبطة بباقة متاحة.');
+        return;
+      }
+      const limit = draft.role === 'teacher' ? (targetPlan.maxTeachers || 0)
+        : draft.role === 'student' ? (targetPlan.maxStudents || 0) : 0;
+      if (limit > 0) {
+        const sameTypeCount = users.filter((item) => item.uid !== userRecord.uid && item.schoolId === draft.schoolId && item.role === draft.role).length;
+        if (sameTypeCount >= limit) {
+          flash('error', `وصلت المدرسة إلى الحد الأقصى المسموح به لهذه الفئة في الباقة (${limit}).`);
+          return;
+        }
+      }
     }
     setSaving(true);
     try {
