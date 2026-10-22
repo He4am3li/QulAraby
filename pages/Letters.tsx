@@ -2370,6 +2370,8 @@ export const Letters: React.FC = () => {
         onClose={() => setShowTeacherInbox(false)}
         selectedChar={selectedChar}
         lang={lang}
+        schoolId={profile?.schoolId || 'independent'}
+        isPlatformAdmin={profile?.role === 'admin' || user?.email === 'he4amali22@gmail.com'}
       />
 
       {/* Verification Modal */}
