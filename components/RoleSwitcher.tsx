@@ -1,81 +1,76 @@
 import React from 'react';
-import { useAuth } from './AuthProvider';
-import { motion, AnimatePresence } from 'framer-motion';
-import { UserCog, ShieldCheck, GraduationCap, UserCircle } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Building2, ChevronDown, GraduationCap, ShieldCheck, UserCircle, X } from 'lucide-react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth, UserRole } from './AuthProvider';
+
+type SchoolOption = { id: string; name: string };
+const OPTIONS: { id: UserRole; label: string; icon: React.ElementType }[] = [
+  { id: 'admin', label: 'الأدمن العام', icon: ShieldCheck },
+  { id: 'schoolAdmin', label: 'مدير المدرسة', icon: Building2 },
+  { id: 'teacher', label: 'المعلم', icon: GraduationCap },
+  { id: 'student', label: 'الطالب', icon: UserCircle },
+];
 
 export const RoleSwitcher: React.FC = () => {
   const { user, profile, updateRole } = useAuth();
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+  const [role, setRole] = React.useState<UserRole>(profile?.role || 'admin');
+  const [schoolId, setSchoolId] = React.useState(profile?.schoolId || '');
+  const [schools, setSchools] = React.useState<SchoolOption[]>([]);
+  const [saving, setSaving] = React.useState(false);
+  const [message, setMessage] = React.useState('');
+  const enabled = user?.email === 'he4amali22@gmail.com';
 
-  // Only allow specifically the main user or current admins to switch roles for testing
-  if (user?.email !== 'he4amali22@gmail.com' && profile?.role !== 'admin') {
-    return <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{profile?.role}</span>;
-  }
+  React.useEffect(() => {
+    if (!enabled) return;
+    let live = true;
+    getDocs(collection(db, 'schools')).then(snap => {
+      if (live) setSchools(snap.docs.map(d => ({ id: d.id, name: String(d.data().name || 'مدرسة') })));
+    }).catch(() => {
+      if (live) setMessage('تعذر تحميل أسماء المدارس، لكن يمكنك معاينة الطالب والمعلم دون اختيار مدرسة.');
+    });
+    return () => { live = false; };
+  }, [enabled]);
 
-  const roles = [
-    { id: 'admin', label: 'Admin', labelAr: 'آدمن', icon: ShieldCheck, color: 'bg-red-500' },
-    { id: 'teacher', label: 'Teacher', labelAr: 'معلم', icon: GraduationCap, color: 'bg-blue-500' },
-    { id: 'student', label: 'Student', labelAr: 'طالب', icon: UserCircle, color: 'bg-emerald-500' },
-  ] as const;
+  React.useEffect(() => {
+    setRole(profile?.role || 'admin');
+    setSchoolId(profile?.schoolId || '');
+  }, [profile?.role, profile?.schoolId]);
 
-  const isAr = typeof window !== 'undefined' && localStorage.getItem('hub_lang') === 'ar';
+  if (!enabled) return null;
+  const ActiveIcon = OPTIONS.find(o => o.id === profile?.role)?.icon || ShieldCheck;
 
-  return (
-    <div className="relative inline-block">
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 cursor-pointer group bg-slate-800/80 hover:bg-slate-800 px-2 py-0.5 rounded-full border border-white/20 transition-all"
-      >
-        <span className="text-[9px] font-black text-white uppercase tracking-widest leading-none">
-          {profile?.role || 'Guest'}
-        </span>
-        <UserCog size={8} className="text-emerald-400 opacity-80 group-hover:opacity-100" />
-      </motion.button>
+  const apply = async () => {
+    if (role === 'schoolAdmin' && !schoolId) {
+      setMessage('للمعاينة كمدير مدرسة، اختر مدرسة أولًا. إذا لم تظهر مدرسة، أنشئها من الأدمن بعد حل اتصال البيانات.');
+      return;
+    }
+    setSaving(true);
+    setMessage('');
+    try {
+      await updateRole(role, role === 'admin' ? null : schoolId || null);
+      setMessage(`تم التبديل إلى وضع ${OPTIONS.find(o => o.id === role)?.label}. هذا وضع معاينة محلي.`);
+      setOpen(false);
+      window.location.assign(role === 'admin' ? '/admin' : role === 'schoolAdmin' ? '/school' : '/');
+    } catch (err) {
+      console.error(err);
+      setMessage('تعذّر تغيير وضع المعاينة. أعد تحميل الصفحة وجرب مرة أخرى.');
+    } finally { setSaving(false); }
+  };
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: isAr ? -20 : 20, scale: 0.95 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: isAr ? -20 : 20, scale: 0.95 }}
-            onClick={(e) => e.stopPropagation()}
-            className={`absolute top-1/2 -translate-y-1/2 bg-slate-800 border-2 border-slate-400 rounded-xl p-2 shadow-[0_20px_50px_rgba(0,0,0,0.6)] min-w-[130px] z-[10000] ${
-              isAr ? 'left-full ml-2' : 'right-full mr-2'
-            }`}
-          >
-            <div className="px-2 py-1 mb-1 border-b border-white/10 flex items-center justify-between">
-              <p className="text-[7px] font-black text-white/60 uppercase tracking-widest">Select Role</p>
-              <UserCog size={8} className="text-emerald-400 opacity-50" />
-            </div>
-            <div className="space-y-0.5">
-              {roles.map((role) => (
-                <button
-                  key={role.id}
-                  onClick={() => {
-                    updateRole(role.id);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg transition-all ${
-                    profile?.role === role.id 
-                      ? 'bg-emerald-600 text-white shadow-lg' 
-                      : 'text-slate-300 hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <role.icon size={11} className={profile?.role === role.id ? 'text-white' : 'text-emerald-400'} />
-                    <span className="text-[10px] font-bold">{role.label}</span>
-                  </div>
-                  {profile?.role === role.id && (
-                    <div className="w-1 h-1 rounded-full bg-white" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+  return <div className="fixed bottom-5 left-4 z-[1000]" dir="rtl">
+    <AnimatePresence>
+      {open && <motion.div initial={{opacity:0,y:10,scale:.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:10,scale:.98}} className="mb-3 w-[min(350px,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-2xl">
+        <div className="mb-3 flex items-start justify-between gap-2"><div><h3 className="font-black">التنقل بين واجهات قُل</h3><p className="mt-1 text-xs leading-5 text-slate-500">هذه معاينة محلية لا تغيّر دورك الحقيقي في قاعدة البيانات.</p></div><button onClick={()=>setOpen(false)} aria-label="إغلاق" className="rounded-lg p-1 hover:bg-slate-100"><X size={18}/></button></div>
+        <div className="grid grid-cols-2 gap-2">{OPTIONS.map(o=>{const Icon=o.icon;return <button key={o.id} onClick={()=>setRole(o.id)} className={`flex items-center gap-2 rounded-xl border px-3 py-3 text-sm font-bold ${role===o.id?'border-emerald-700 bg-emerald-50 text-emerald-900':'border-slate-200 text-slate-600 hover:bg-slate-50'}`}><Icon size={17}/>{o.label}</button>})}</div>
+        {role==='schoolAdmin' && <label className="mt-3 block text-xs font-bold text-slate-600">المدرسة<select value={schoolId} onChange={e=>setSchoolId(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"><option value="">اختر مدرسة</option>{schools.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>}
+        {message && <p role="status" className="mt-3 rounded-lg bg-amber-50 p-2 text-xs leading-5 text-amber-900">{message}</p>}
+        <button disabled={saving} onClick={()=>void apply()} className="mt-3 w-full rounded-xl bg-emerald-800 px-4 py-3 text-sm font-black text-white hover:bg-emerald-900 disabled:opacity-50">{saving?'جارٍ التبديل...':'فتح هذه الواجهة'}</button>
+        <button onClick={()=>{localStorage.removeItem('qul_dev_preview_role');localStorage.removeItem('qul_dev_preview_school_id');window.location.assign('/admin');}} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">إعادة الوضع الحقيقي للأدمن</button>
+      </motion.div>}
+    </AnimatePresence>
+    <button onClick={()=>setOpen(v=>!v)} className="flex items-center gap-2 rounded-full border border-white/20 bg-slate-900 px-4 py-3 text-sm font-black text-white shadow-xl hover:bg-emerald-900"><ActiveIcon size={18}/><span>معاينة: {OPTIONS.find(o=>o.id===profile?.role)?.label || 'الأدمن العام'}</span><ChevronDown size={16}/></button>
+  </div>;
 };
