@@ -273,7 +273,7 @@ export const Landing = () => {
       studentDesc: 'تعلم من خلال ألعاب الأركيد، وتحدث مع رفيقك الذكي، وحطم الأرقام القياسية.',
       featuresTitle: 'مختبرات الإتقان الذكية',
       demoTitle: 'جرب ذكاء "قُل" الآن',
-      statsTitle: 'نبض المنصة المباشر',
+      statsTitle: 'إمكانات منصة قُل',
       hallOfFame: 'جدار الإنجازات',
       feature1: 'التحدث الذكي',
       feature1Desc: 'محادثات صوتية مباشرة مع رفيق ذكي يصحح نطقك ببراعة.',
@@ -285,10 +285,10 @@ export const Landing = () => {
       feature4Desc: 'وثق تقدمك بشهادات رقمية فاخرة تعكس مهاراتك الحقيقية.',
       teacherSectionTitle: 'مختبر المعلم الذكي',
       teacherSectionDesc: 'وداعاً لساعات التحضير الطويلة. "قُل" هو مساعدك الذي لا ينام.',
-      wordsLearned: 'كلمة متعلمة',
-      liveChallenges: 'تحدي مباشر',
-      activeUsers: 'مستخدم نشط',
-      aiResponse: 'استجابة ذكية',
+      vocabularyTools: 'ترجمة وتحليل المفردات',
+      learningActivities: 'ألعاب وأنشطة تعليمية',
+      learnerTools: 'أدوات للطلاب والمعلمين',
+      aiTools: 'مساعدات لغوية بالذكاء الاصطناعي',
       cta: 'ابدأ رحلتك الآن'
     },
     en: {
@@ -303,7 +303,7 @@ export const Landing = () => {
       studentDesc: 'Learn through arcade games, chat with your smart companion, and break records.',
       featuresTitle: 'Smart Mastery Labs',
       demoTitle: 'Test Qul AI Now',
-      statsTitle: 'Live Platform Pulse',
+      statsTitle: 'What QUL Offers',
       hallOfFame: 'Hall of Fame',
       feature1: 'Smart Speech',
       feature1Desc: 'Real-time voice chats with a smart companion who corrects your pronunciation.',
@@ -315,10 +315,10 @@ export const Landing = () => {
       feature4Desc: 'Document your progress with luxury digital certificates reflecting your skills.',
       teacherSectionTitle: "The Teacher's Smart Lab",
       teacherSectionDesc: 'Goodbye to long preparation hours. "Qul" is your assistant that never sleeps.',
-      wordsLearned: 'Words Learned',
-      liveChallenges: 'Live Challenges',
-      activeUsers: 'Active Users',
-      aiResponse: 'AI Responses',
+      vocabularyTools: 'Vocabulary translation and analysis',
+      learningActivities: 'Educational games and activities',
+      learnerTools: 'Tools for students and teachers',
+      aiTools: 'AI-assisted language tools',
       cta: 'Start Your Journey'
     }
   }[lang as 'ar' | 'en'];
@@ -741,15 +741,19 @@ export const Landing = () => {
             </div>
           </motion.div>
 
-          {/* Live Pulse Section */}
+          {/* Platform Capabilities Section */}
           <div className="pt-32 pb-12">
             <div className="p-8 md:p-12 rounded-[3rem] bg-white/5 border border-white/10 backdrop-blur-2xl relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.05)_0%,_transparent_70%)]" />
+              <div className="relative mb-8 text-center">
+                <h2 className="text-2xl md:text-3xl font-black arabic-font text-white/90">{t.statsTitle}</h2>
+                <div className="w-16 h-1 bg-blue-500 rounded-full mx-auto mt-3" />
+              </div>
               <div className="relative grid grid-cols-2 md:grid-cols-4 gap-8">
-                <StatItem icon={Languages} value="10K+" label={t.wordsLearned} />
-                <StatItem icon={Zap} value="500+" label={t.liveChallenges} />
-                <StatItem icon={Users} value="2K+" label={t.activeUsers} />
-                <StatItem icon={Sparkles} value="50K+" label={t.aiResponse} />
+                <StatItem icon={Languages} value={lang === 'ar' ? 'مفردات' : 'Vocabulary'} label={t.vocabularyTools} />
+                <StatItem icon={Zap} value={lang === 'ar' ? 'أنشطة' : 'Activities'} label={t.learningActivities} />
+                <StatItem icon={Users} value={lang === 'ar' ? 'تعليم' : 'Learning'} label={t.learnerTools} />
+                <StatItem icon={Sparkles} value={lang === 'ar' ? 'مساعد' : 'AI Tools'} label={t.aiTools} />
               </div>
             </div>
           </div>
