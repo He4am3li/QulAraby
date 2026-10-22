@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home as HomeIcon, Languages, BookText, Library, BookOpen, Globe, Type, Mic, Ear, PenTool, Rocket, Gamepad2, Trophy, FileText, ClipboardList, ClipboardCheck, GraduationCap, TrendingUp, Presentation, Feather } from 'lucide-react';
+import { Home as HomeIcon, Languages, BookText, Library, BookOpen, Globe, Type, Mic, Ear, PenTool, Rocket, Gamepad2, Trophy, FileText, ClipboardList, ClipboardCheck, GraduationCap, TrendingUp, Presentation, Feather, ShieldCheck, Building2 } from 'lucide-react';
 import { OnboardingTour } from './OnboardingTour';
 import { useAuth } from './AuthProvider';
+import { useSchoolAccess } from './SchoolAccessProvider';
+import { ROUTE_MODULES } from '../config/schoolPlans';
 
 const navTranslations: Record<string, { en: string, ar: string }> = {
   '/': { en: 'Home', ar: 'الرئيسية' },
@@ -24,6 +26,8 @@ const navTranslations: Record<string, { en: string, ar: string }> = {
   '/quizzes': { en: 'Quizzes', ar: 'الاختبارات' },
   '/preparation': { en: 'Preparation', ar: 'التحضير' },
   '/achievements': { en: 'Achievements', ar: 'إنجازاتي' },
+  '/admin': { en: 'Platform Admin', ar: 'إدارة المنصة' },
+  '/school': { en: 'School Portal', ar: 'إدارة المدرسة' },
 };
 
 const navIcons: Record<string, any> = {
@@ -45,9 +49,11 @@ const navIcons: Record<string, any> = {
   '/quizzes': GraduationCap,
   '/preparation': ClipboardList,
   '/achievements': Trophy,
+  '/admin': ShieldCheck,
+  '/school': Building2,
 };
 
-const navPaths = ['/', '/whiteboard', '/calligraphy', '/test', '/letters', '/vocabulary', '/quizzes', '/translator', '/listening', '/speak', '/reading', '/writing', '/assistant', '/games', '/dialects', '/worksheets', '/preparation', '/achievements'];
+const navPaths = ['/', '/admin', '/school', '/whiteboard', '/calligraphy', '/test', '/letters', '/vocabulary', '/quizzes', '/translator', '/listening', '/speak', '/reading', '/writing', '/assistant', '/games', '/dialects', '/worksheets', '/preparation', '/achievements'];
 
 const ARABIC_CHARS = ['ق', 'ل', 'ع', 'ر', 'ب', 'ي', 'أ', 'ن', 'ا', 'ح', 'ب', 'س', 'د', 'و', 'ك'];
 
@@ -112,6 +118,7 @@ const LogoArt: React.FC<{ isExpanded?: boolean }> = ({ isExpanded = false }) => 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const { profile } = useAuth();
+  const schoolAccess = useSchoolAccess();
   const [collapsed, setCollapsed] = React.useState(true);
   const [lang, setLang] = React.useState<'ar' | 'en'>(
     (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar'
@@ -192,7 +199,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         
         <nav className="relative z-10 flex-1 space-y-1 overflow-y-auto custom-scroll px-3 py-2">
           {navPaths.filter(path => {
-            if (path === '/preparation' && profile?.role !== 'teacher') return false;
+            if (path === '/admin' && profile?.role !== 'admin') return false;
+            if (path === '/school' && profile?.role !== 'schoolAdmin') return false;
+            if (path === '/preparation' && profile?.role !== 'teacher' && profile?.role !== 'admin') return false;
+            const moduleId = ROUTE_MODULES[path];
+            if (moduleId && !schoolAccess.canAccess(moduleId)) return false;
             return true;
           }).map((path, i) => {
             const Icon = navIcons[path];
@@ -267,10 +278,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center h-16 px-2 z-50 shadow-2xl">
         {navPaths.filter(path => {
-          if (path === '/preparation' && profile?.role !== 'teacher') return false;
+          if (path === '/admin' && profile?.role !== 'admin') return false;
+          if (path === '/school' && profile?.role !== 'schoolAdmin') return false;
+          if (path === '/preparation' && profile?.role !== 'teacher' && profile?.role !== 'admin') return false;
+          const moduleId = ROUTE_MODULES[path];
+          if (moduleId && !schoolAccess.canAccess(moduleId)) return false;
           // Hide some items on mobile to save space
           const mobileHiddenPaths = ['/translator', '/worksheets', '/dialects'];
-          if (mobileHiddenPaths.includes(path) && !['/preparation'].includes(path)) return false;
+          if (mobileHiddenPaths.includes(path) && path !== '/preparation') return false;
           return true;
         }).map((path) => {
           const Icon = navIcons[path];

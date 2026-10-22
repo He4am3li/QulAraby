@@ -3,7 +3,7 @@ import { User, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, signInWithGoogle, logout } from '../firebase';
 
-export type UserRole = 'admin' | 'teacher' | 'student';
+export type UserRole = 'admin' | 'schoolAdmin' | 'teacher' | 'student';
 
 export interface UserProfile {
   uid: string;
@@ -12,6 +12,8 @@ export interface UserProfile {
   role: UserRole;
   photoURL?: string;
   createdAt?: any;
+  schoolId?: string;
+  updatedAt?: any;
 }
 
 interface AuthContextType {
@@ -85,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             uid: currentUser.uid,
             email: currentUser.email || '',
             displayName: currentUser.displayName || 'مستخدم قُل',
-            role: currentUser.email === 'he4amali22@gmail.com' ? 'admin' : 'teacher',
+            role: currentUser.email === 'he4amali22@gmail.com' ? 'admin' : 'student',
             photoURL: currentUser.photoURL || '',
           });
         }
@@ -144,8 +146,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(prev => prev ? { ...prev, role: newRole } : null);
     } catch (error) {
       console.error('Error updating role:', error);
-      // Still update locally for user convenience
-      setProfile(prev => prev ? { ...prev, role: newRole } : null);
+      // Never grant a role locally when Firestore rejected the role update.
+      throw error;
     }
   };
 

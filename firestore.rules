@@ -105,6 +105,19 @@ service cloud.firestore {
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher'));
     }
 
+    function isSchoolAdmin() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'schoolAdmin' &&
+        ('schoolId' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data);
+    }
+
+    function belongsToSchool(schoolId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId == schoolId;
+    }
+
     function isAuthor(data) {
       return isAuthenticated() && (isAdmin() || data.authorId == request.auth.uid);
     }
@@ -131,11 +144,13 @@ service cloud.firestore {
 
     function isValidUser(data) {
       return hasRequiredFields(['uid', 'email', 'role', 'createdAt']) &&
-             hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'photoURL', 'createdAt']) &&
+             hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'photoURL', 'createdAt', 'schoolId', 'updatedAt']) &&
              data.uid is string && data.uid.size() > 0 &&
              data.email is string && isValidEmail(data.email) &&
-             data.role in ['admin', 'teacher', 'student'] &&
-             data.createdAt is timestamp;
+             data.role in ['admin', 'schoolAdmin', 'teacher', 'student'] &&
+             data.createdAt is timestamp &&
+             (!('schoolId' in data) || data.schoolId is string) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp);
     }
 
     function isValidWorksheet(data) {
@@ -281,13 +296,30 @@ service cloud.firestore {
       }
     }
 
+    // Platform subscription collections
+    match /schools/{schoolId} {
+      allow get: if isAdmin() || belongsToSchool(schoolId);
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /plans/{planId} {
+      allow get: if isAuthenticated();
+      allow list, create, update, delete: if isAdmin();
+    }
+
     // Users Collection
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if isOwner(userId) && isValidUser(request.resource.data) && 
+      allow get: if isAdmin() || isOwner(userId) ||
+        (isSchoolAdmin() && resource.data.schoolId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId);
+      allow list: if isAdmin() ||
+        (isSchoolAdmin() && resource.data.schoolId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) &&
                       (request.resource.data.role == 'student' || isAdmin());
-      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
-                      ((isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin());
+      allow update: if isAdmin() ||
+        (isOwner(userId) && isValidUser(request.resource.data) &&
+         request.resource.data.role == resource.data.role &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL']));
       allow delete: if isAdmin();
 
       // Vocabulary Subcollection
@@ -393,11 +425,24 @@ service cloud.firestore {
       allow delete: if isTeacher();
     }
 
-    // Placement Results Collection
+    // Placement Results: students see their own reports, teachers see their school only.
     match /placement_results/{resultId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAdmin() || isTeacher();
+      allow read: if isAdmin() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid) ||
+        (isTeacher() && ('schoolId' in resource.data) && belongsToSchool(resource.data.schoolId));
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        (
+          ('schoolId' in request.resource.data &&
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId == request.resource.data.schoolId) ||
+          (!('schoolId' in request.resource.data) &&
+            !('schoolId' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data))
+        );
+      allow update: if isAdmin() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid &&
+         request.resource.data.userId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studyPlan']));
+      allow delete: if isAdmin();
     }
 
     // Letter Homework Submissions Collection

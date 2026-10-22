@@ -29,6 +29,10 @@ import { QuotaWarning } from './components/QuotaWarning';
 import { Landing } from './pages/Landing';
 import { useAuth } from './components/AuthProvider';
 import { RoleSwitcher } from './components/RoleSwitcher';
+import { SchoolAccessProvider } from './components/SchoolAccessProvider';
+import { FeatureGate } from './components/FeatureGate';
+import { AdminConsole } from './pages/AdminConsole';
+import { SchoolDashboard } from './pages/SchoolDashboard';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -79,26 +83,28 @@ const AppContent: React.FC = () => {
       <Layout>
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
-            <Route path="/" element={<Home />} />
-            <Route path="/whiteboard" element={<WhiteboardPage />} />
-            <Route path="/calligraphy" element={<Calligraphy />} />
-            <Route path="/test" element={<PlacementTest />} />
-            <Route path="/letters" element={<Letters />} />
-            <Route path="/vocabulary" element={<VocabularyPage />} />
-            <Route path="/listening" element={<Listening />} />
-            <Route path="/speak" element={<Speak />} />
-            <Route path="/reading" element={<Reading />} />
-            <Route path="/writing" element={<Writing />} />
-            <Route path="/writing/board/:boardId" element={<Writing />} />
-            <Route path="/translator" element={<Translator />} />
-            <Route path="/assistant" element={<AIStudyMate />} />
-            <Route path="/games" element={<Games />} />
-            <Route path="/dialects" element={<Dialects />} />
-            <Route path="/quizzes" element={<Quizzes />} />
-            <Route path="/worksheets" element={<Worksheets />} />
-            <Route path="/preparation" element={<Preparation />} />
-            <Route path="/memory" element={<StudentMemory />} />
-            <Route path="/achievements" element={<Home />} />
+            <Route path="/" element={profile?.role === 'admin' ? <Navigate to="/admin" replace /> : profile?.role === 'schoolAdmin' ? <Navigate to="/school" replace /> : <Home />} />
+            <Route path="/admin" element={profile?.role === 'admin' ? <AdminConsole /> : <Navigate to="/" replace />} />
+            <Route path="/school" element={profile?.role === 'schoolAdmin' ? <SchoolDashboard /> : <Navigate to="/" replace />} />
+            <Route path="/whiteboard" element={<FeatureGate moduleId="whiteboard"><WhiteboardPage /></FeatureGate>} />
+            <Route path="/calligraphy" element={<FeatureGate moduleId="calligraphy"><Calligraphy /></FeatureGate>} />
+            <Route path="/test" element={<FeatureGate moduleId="placement"><PlacementTest /></FeatureGate>} />
+            <Route path="/letters" element={<FeatureGate moduleId="letters"><Letters /></FeatureGate>} />
+            <Route path="/vocabulary" element={<FeatureGate moduleId="vocabulary"><VocabularyPage /></FeatureGate>} />
+            <Route path="/listening" element={<FeatureGate moduleId="listening"><Listening /></FeatureGate>} />
+            <Route path="/speak" element={<FeatureGate moduleId="speaking"><Speak /></FeatureGate>} />
+            <Route path="/reading" element={<FeatureGate moduleId="reading"><Reading /></FeatureGate>} />
+            <Route path="/writing" element={<FeatureGate moduleId="writing"><Writing /></FeatureGate>} />
+            <Route path="/writing/board/:boardId" element={<FeatureGate moduleId="writing"><Writing /></FeatureGate>} />
+            <Route path="/translator" element={<FeatureGate moduleId="translator"><Translator /></FeatureGate>} />
+            <Route path="/assistant" element={<FeatureGate moduleId="grammar"><AIStudyMate /></FeatureGate>} />
+            <Route path="/games" element={<FeatureGate moduleId="games"><Games /></FeatureGate>} />
+            <Route path="/dialects" element={<FeatureGate moduleId="dialects"><Dialects /></FeatureGate>} />
+            <Route path="/quizzes" element={<FeatureGate moduleId="quizzes"><Quizzes /></FeatureGate>} />
+            <Route path="/worksheets" element={<FeatureGate moduleId="worksheets"><Worksheets /></FeatureGate>} />
+            <Route path="/preparation" element={<FeatureGate moduleId="preparation"><Preparation /></FeatureGate>} />
+            <Route path="/memory" element={<FeatureGate moduleId="memory"><StudentMemory /></FeatureGate>} />
+            <Route path="/achievements" element={<FeatureGate moduleId="achievements"><Home /></FeatureGate>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AnimatePresence>
@@ -134,7 +140,9 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
-        <AppContent />
+        <SchoolAccessProvider>
+          <AppContent />
+        </SchoolAccessProvider>
       </Router>
     </AuthProvider>
   );
