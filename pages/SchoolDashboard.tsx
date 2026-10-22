@@ -96,6 +96,7 @@ export const SchoolDashboard: React.FC = () => {
           <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5 text-sm leading-6 text-blue-900"><strong>هل تحتاج إلى تغيير الباقة؟</strong><p className="mt-2">أرسل طلبك إلى مسؤول منصة قُل لإضافة أقسام أو زيادة السعة المخصصة لمدرستك. تعديل الباقات متاح فقط لأدمن المنصة.</p></div>
         </div>
       </section>
+      </div>
     </div>
   </div>;
 };
