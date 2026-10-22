@@ -429,7 +429,7 @@ service cloud.firestore {
     match /placement_results/{resultId} {
       allow read: if isAdmin() ||
         (isAuthenticated() && resource.data.userId == request.auth.uid) ||
-        (isTeacher() && 'schoolId' in resource.data && belongsToSchool(resource.data.schoolId));
+        (isTeacher() && ('schoolId' in resource.data) && belongsToSchool(resource.data.schoolId));
       allow create: if isAuthenticated() &&
         request.resource.data.userId == request.auth.uid &&
         (
