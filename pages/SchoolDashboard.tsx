@@ -4,6 +4,7 @@ import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firesto
 import { db } from '../firebase';
 import { useAuth } from '../components/AuthProvider';
 import { SCHOOL_MODULES } from '../config/schoolPlans';
+import { FallingLetters } from '../components/Layout';
 
 type SchoolRecord = { name: string; status?: string; planId?: string; contactEmail?: string; expiresAt?: any; enabledModules?: string[] };
 type PlanRecord = { name: string; description?: string; includedModules?: string[]; price?: number; currency?: string; maxTeachers?: number; maxStudents?: number; durationDays?: number };
@@ -57,18 +58,27 @@ export const SchoolDashboard: React.FC = () => {
   }, [profile?.schoolId]);
 
   if (loading) return <div className="flex min-h-80 items-center justify-center gap-3 text-slate-500"><LoaderCircle className="animate-spin"/> جارٍ تحميل لوحة المدرسة...</div>;
-  if (error) return <div dir="rtl" className="p-6"><div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 font-bold text-amber-900">{error}</div></div>;
+  if (error) return <div dir="rtl" className="p-4 md:p-6"><div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 font-bold text-amber-900">{error}</div></div>;
   const modules = (school?.enabledModules || plan?.includedModules || []).map(id => SCHOOL_MODULES.find(module => module.id === id)).filter(Boolean);
   const status = school?.status === 'active' ? 'فعّال' : school?.status === 'trial' ? 'فترة تجريبية' : 'موقوف';
   const expiresAt = school?.expiresAt?.toDate ? school.expiresAt.toDate().toLocaleDateString('ar-AE') : null;
 
-  return <div dir="rtl" className="min-h-full bg-slate-50 p-4 md:p-7 lg:p-9 text-slate-900">
-    <div className="mx-auto max-w-7xl space-y-6">
-      <header className="rounded-3xl bg-gradient-to-l from-slate-950 via-blue-950 to-emerald-800 p-6 text-white md:p-8">
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold"><Building2 size={15}/> بوابة المدرسة</div>
-        <h1 className="mt-4 text-3xl font-black md:text-4xl">{school?.name || 'لوحة المدرسة'}</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-white/75">متابعة اشتراك المدرسة وأقسام منصة قُل المتاحة، مع نظرة عامة على حسابات المتعلمين والمعلمين المرتبطة بها.</p>
-      </header>
+  return <div dir="rtl" className="min-h-full bg-white text-slate-900 flex flex-col">
+    <header className="bg-gradient-to-l from-[#0f172a]/95 to-[#064e3b]/95 backdrop-blur-lg px-6 md:px-8 py-5 md:py-6 flex items-center justify-between shrink-0 shadow-lg relative z-10 overflow-hidden border-b border-white/20 text-white">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <FallingLetters mode="compact" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-[80px]" />
+      </div>
+      <div className="relative z-10 flex items-center gap-3 min-w-0">
+        <div className="w-9 h-9 shrink-0 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md border border-white/20"><Building2 size={20}/></div>
+        <div className="min-w-0">
+          <span className="block text-lg font-bold arabic-font tracking-wide">{school?.name || 'لوحة المدرسة'}</span>
+          <span className="block mt-1 text-xs text-white/65">بوابة المدرسة · منصة قُل</span>
+        </div>
+      </div>
+    </header>
+    <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="mx-auto max-w-7xl space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Metric icon={Layers3} label="الباقة الحالية" value={plan?.name || 'غير محددة'}/>
         <Metric icon={Users} label="إجمالي الحسابات" value={memberCount}/>
@@ -76,7 +86,7 @@ export const SchoolDashboard: React.FC = () => {
         <Metric icon={Users} label="الطلاب" value={studentCount}/>
       </div>
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.75fr)]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 md:p-6">
           <h2 className="mb-1 text-xl font-black">الأقسام المتاحة لمدرستك</h2>
           <p className="mb-5 text-sm leading-6 text-slate-500">تتحدد هذه القائمة وفق الباقة المخصصة لمدرستك. تواصل مع إدارة قُل لطلب إضافة أقسام أو ترقية الاشتراك.</p>
           {modules.length ? <div className="grid gap-3 sm:grid-cols-2">{modules.map(module => <div key={module!.id} className="flex items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3"><span className="mt-0.5 text-emerald-700"><CheckCircle2 size={18}/></span><div><div className="font-bold">{module!.label}</div><div className="mt-1 text-xs leading-5 text-slate-500">{module!.description}</div></div></div>)}</div> : <div className="rounded-xl bg-slate-50 p-5 text-sm text-slate-500">لا توجد أقسام مفعّلة حاليًا. يرجى التواصل مع أدمن المنصة.</div>}
