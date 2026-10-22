@@ -31,6 +31,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const applyDeveloperPreview = (profile: UserProfile, currentUser: User | null): UserProfile => {
+  if (currentUser?.email !== 'he4amali22@gmail.com' || typeof window === 'undefined') return profile;
+  const previewRole = localStorage.getItem('qul_dev_preview_role') as UserRole | null;
+  const schoolId = localStorage.getItem('qul_dev_preview_school_id');
+  if (!previewRole || !['admin', 'schoolAdmin', 'teacher', 'student'].includes(previewRole)) return profile;
+  return {
+    ...profile,
+    role: previewRole,
+    ...(previewRole !== 'admin' && schoolId ? { schoolId } : { schoolId: undefined }),
+  };
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -65,7 +77,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const docSnap = await getDoc(userDocRef);
           
           if (docSnap.exists()) {
-            setProfile(docSnap.data() as UserProfile);
+            const storedProfile = docSnap.data() as UserProfile;
+            setProfile(applyDeveloperPreview(storedProfile, currentUser));
           } else {
             // Determine default role
             const role: UserRole = currentUser.email === 'he4amali22@gmail.com' ? 'admin' : 'student';
@@ -78,18 +91,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               createdAt: serverTimestamp(),
             };
             await setDoc(userDocRef, newProfile);
-            setProfile(newProfile);
+            setProfile(applyDeveloperPreview(newProfile, currentUser));
           }
         } catch (error) {
           console.error('Error fetching or creating user profile:', error);
           // Fallback profile
-          setProfile({
+          setProfile(applyDeveloperPreview({
             uid: currentUser.uid,
             email: currentUser.email || '',
             displayName: currentUser.displayName || 'مستخدم قُل',
             role: currentUser.email === 'he4amali22@gmail.com' ? 'admin' : 'student',
             photoURL: currentUser.photoURL || '',
-          });
+          }, currentUser));
         }
       } else {
         setProfile(null);
@@ -139,16 +152,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateRole = async (newRole: UserRole, schoolId?: string | null) => {
-    if (!user) return;
-    try {
-      const userDocRef = doc(db, 'users', user.uid);
-      await setDoc(userDocRef, { role: newRole, schoolId: schoolId ? schoolId : deleteField(), updatedAt: serverTimestamp() }, { merge: true });
-      setProfile(prev => prev ? { ...prev, role: newRole, ...(schoolId ? { schoolId } : { schoolId: undefined }) } : null);
-    } catch (error) {
-      console.error('Error updating role:', error);
-      // Never grant a role locally when Firestore rejected the role update.
-      throw error;
+    if (!user || user.email !== 'he4amali22@gmail.com') {
+      throw new Error('Role preview is available only to the platform owner account.');
     }
+    // Developer preview is local-only. It must never change the real role stored in Firestore.
+    localStorage.setItem('qul_dev_preview_role', newRole);
+    if (schoolId) localStorage.setItem('qul_dev_preview_school_id', schoolId);
+    else localStorage.removeItem('qul_dev_preview_school_id');
+    setProfile(prev => prev ? {
+      ...prev,
+      role: newRole,
+      ...(schoolId ? { schoolId } : { schoolId: undefined }),
+    } : null);
   };
 
   return (
