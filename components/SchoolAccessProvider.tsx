@@ -91,14 +91,13 @@ export const SchoolAccessProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
 
         const school = schoolSnapshot.data();
-        let includedModules: string[] = Array.isArray(school.enabledModules) ? school.enabledModules : [];
-        let planIsActive = true;
-        if (!Array.isArray(school.enabledModules)) {
-          if (!school.planId) {
-            planIsActive = false;
-          } else {
-            const planSnapshot = await getDoc(doc(db, 'plans', String(school.planId)));
-            planIsActive = planSnapshot.exists() && planSnapshot.data().isActive !== false;
+        const hasSchoolOverride = Array.isArray(school.enabledModules);
+        let includedModules: string[] = hasSchoolOverride ? school.enabledModules : [];
+        let planIsActive = false;
+        if (school.planId) {
+          const planSnapshot = await getDoc(doc(db, 'plans', String(school.planId)));
+          planIsActive = planSnapshot.exists() && planSnapshot.data().isActive !== false;
+          if (!hasSchoolOverride) {
             includedModules = planSnapshot.exists() && Array.isArray(planSnapshot.data().includedModules)
               ? planSnapshot.data().includedModules
               : [];
