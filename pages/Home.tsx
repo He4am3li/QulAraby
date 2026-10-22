@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import { Vocabulary, CertificateData } from '../types';
 import { useAuth } from '../components/AuthProvider';
+import { useSchoolAccess } from '../components/SchoolAccessProvider';
+import { ROUTE_MODULES } from '../config/schoolPlans';
 import { RoleSwitcher } from '../components/RoleSwitcher';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
@@ -126,6 +128,7 @@ export const Home: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, signIn, signOut, isAuthReady } = useAuth();
+  const schoolAccess = useSchoolAccess();
   const [lang, setLang] = React.useState<'ar' | 'en'>(
     (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar'
   );
@@ -472,25 +475,25 @@ export const Home: React.FC = () => {
 
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-8 animate-in fade-in duration-500">
               {/* 0. WHITEBOARD */}
-              <ModuleCard 
+              {schoolAccess.canAccess('whiteboard') && <ModuleCard 
                 icon={<Presentation size={24}/>} arTitle={t.whiteboardTitle} title="Whiteboard" 
                 description={t.whiteboardDesc} color="from-emerald-700 to-teal-900" 
                 onClick={() => navigate('/whiteboard')} enterLabel={t.enter} lang={lang} 
-              />
+              />}
 
               {/* 0.5 CALLIGRAPHY */}
-              <ModuleCard 
+              {schoolAccess.canAccess('calligraphy') && <ModuleCard 
                 icon={<Feather size={24}/>} arTitle={t.calligraphyTitle} title="Calligraphy" 
                 description={t.calligraphyDesc} color="from-amber-900 via-stone-900 to-amber-950" 
                 onClick={() => navigate('/calligraphy')} enterLabel={t.enter} lang={lang} 
-              />
+              />}
 
               {/* 1. TEST YOURSELF / STUDENT LEVELS */}
-              <ModuleCard 
+              {schoolAccess.canAccess('placement') && <ModuleCard 
                 icon={<TrendingUp size={24}/>} arTitle={t.testTitle} title="Assessment" 
                 description={t.testDesc} color="from-slate-900 to-black" 
                 onClick={() => navigate('/test')} enterLabel={t.enter} lang={lang} 
-              />
+              />}
 
               {[
                 { id: '/letters', icon: <Type size={24}/>, ar: t.lettersTitle, en: "Alphabet", color: "from-blue-600 to-indigo-700" },
@@ -508,7 +511,10 @@ export const Home: React.FC = () => {
                 ...(profile?.role === 'teacher' ? [
                   { id: '/preparation', icon: <ClipboardList size={24} />, ar: t.prepTitle, en: "Preparation", color: "from-emerald-500 to-teal-700" }
                 ] : []),
-              ].map((m) => (
+              ].filter((m) => {
+                const moduleId = ROUTE_MODULES[m.id];
+                return !moduleId || schoolAccess.canAccess(moduleId);
+              }).map((m) => (
                 <ModuleCard key={m.id} icon={m.icon} title={m.en} arTitle={m.ar} description="" color={m.color} onClick={() => navigate(m.id)} enterLabel={t.enter} lang={lang} />
               ))}
             </section>
