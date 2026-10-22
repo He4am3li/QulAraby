@@ -53,7 +53,14 @@ const navIcons: Record<string, any> = {
   '/school': Building2,
 };
 
-const navPaths = ['/', '/admin', '/school', '/whiteboard', '/calligraphy', '/test', '/letters', '/vocabulary', '/quizzes', '/translator', '/listening', '/speak', '/reading', '/writing', '/assistant', '/games', '/dialects', '/worksheets', '/preparation', '/achievements'];
+const learnerNavPaths = ['/', '/whiteboard', '/calligraphy', '/test', '/letters', '/vocabulary', '/quizzes', '/translator', '/listening', '/speak', '/reading', '/writing', '/assistant', '/games', '/dialects', '/worksheets', '/preparation', '/achievements'];
+
+const getNavPathsForRole = (role?: string) => {
+  if (role === 'admin') return ['/admin'];
+  if (role === 'schoolAdmin') return ['/school'];
+  if (role === 'teacher') return learnerNavPaths;
+  return learnerNavPaths.filter(path => !['/whiteboard', '/calligraphy', '/preparation'].includes(path));
+};
 
 const ARABIC_CHARS = ['ق', 'ل', 'ع', 'ر', 'ب', 'ي', 'أ', 'ن', 'ا', 'ح', 'ب', 'س', 'د', 'و', 'ك'];
 
@@ -119,6 +126,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const location = useLocation();
   const { profile } = useAuth();
   const schoolAccess = useSchoolAccess();
+  const navPaths = getNavPathsForRole(profile?.role);
   const [collapsed, setCollapsed] = React.useState(true);
   const [lang, setLang] = React.useState<'ar' | 'en'>(
     (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar'
