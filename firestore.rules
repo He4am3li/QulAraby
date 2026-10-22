@@ -425,11 +425,24 @@ service cloud.firestore {
       allow delete: if isTeacher();
     }
 
-    // Placement Results Collection
+    // Placement Results: students see their own reports, teachers see their school only.
     match /placement_results/{resultId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAdmin() || isTeacher();
+      allow read: if isAdmin() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid) ||
+        (isTeacher() && 'schoolId' in resource.data && belongsToSchool(resource.data.schoolId));
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        (
+          ('schoolId' in request.resource.data &&
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId == request.resource.data.schoolId) ||
+          (!('schoolId' in request.resource.data) &&
+            !('schoolId' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data))
+        );
+      allow update: if isAdmin() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid &&
+         request.resource.data.userId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studyPlan']));
+      allow delete: if isAdmin();
     }
 
     // Letter Homework Submissions Collection
