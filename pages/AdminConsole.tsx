@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Activity, Building2, Check, ChevronDown, CircleDollarSign, GraduationCap, Layers3,
   LoaderCircle, Plus, RefreshCw, School, Settings2, ShieldCheck, Users, X
@@ -37,6 +38,7 @@ const inputClass = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2
 
 export const AdminConsole: React.FC = () => {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [tab, setTab] = React.useState<TabKey>('overview');
   const [schools, setSchools] = React.useState<SchoolRecord[]>([]);
   const [plans, setPlans] = React.useState<PlanRecord[]>([]);
@@ -342,6 +344,34 @@ export const AdminConsole: React.FC = () => {
         {notice && <div role="status" className={`flex items-center gap-3 rounded-2xl border p-4 text-sm font-bold ${notice.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-rose-200 bg-rose-50 text-rose-800'}`}>
           {notice.type === 'success' ? <Check size={18} /> : <X size={18} />}{notice.text}
         </div>}
+
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm">
+          <div className="mb-4">
+            <h2 className="text-lg font-black">معاينة التجربة التعليمية</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-500">افتح واجهات الطالب أو المعلم لاختبار التجربة الفعلية، دون تغيير دور حساب الأدمن أو صلاحياته.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
+              <div className="mb-2 flex items-center gap-2 font-black text-emerald-900"><GraduationCap size={20}/> معاينة واجهة الطالب</div>
+              <p className="mb-4 text-sm leading-6 text-slate-600">اختبر أدوات تعلم العربية كما تظهر للمتعلم.</p>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => navigate('/letters')} className={`${buttonClass} bg-emerald-800 text-white hover:bg-emerald-900`}>الحروف</button>
+                <button onClick={() => navigate('/reading')} className={`${buttonClass} border border-emerald-200 bg-white text-emerald-900 hover:bg-emerald-50`}>القراءة</button>
+                <button onClick={() => navigate('/games')} className={`${buttonClass} border border-emerald-200 bg-white text-emerald-900 hover:bg-emerald-50`}>الألعاب</button>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4">
+              <div className="mb-2 flex items-center gap-2 font-black text-blue-900"><School size={20}/> معاينة واجهة المعلم</div>
+              <p className="mb-4 text-sm leading-6 text-slate-600">اختبر أدوات التحضير والاختبارات والسبورة التفاعلية.</p>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => navigate('/preparation')} className={`${buttonClass} bg-blue-700 text-white hover:bg-blue-800`}>التحضير</button>
+                <button onClick={() => navigate('/quizzes')} className={`${buttonClass} border border-blue-200 bg-white text-blue-900 hover:bg-blue-50`}>الاختبارات</button>
+                <button onClick={() => navigate('/whiteboard')} className={`${buttonClass} border border-blue-200 bg-white text-blue-900 hover:bg-blue-50`}>السبورة</button>
+              </div>
+            </div>
+          </div>
+          <p className="mt-3 text-xs leading-5 text-slate-400">المعاينة تفتح القسم الحقيقي داخل المنصة، وتبقي صلاحية الحساب «أدمن». اختبر بيانات المدارس الفعلية بحسابات مستقلة قبل الإطلاق.</p>
+        </section>
 
         <div className="flex gap-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
           {tabs.map(({ id, label, icon: Icon }) => (
