@@ -9,7 +9,7 @@ import {
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { 
   collection, query, onSnapshot, doc, 
-  updateDoc, deleteDoc, addDoc, serverTimestamp, getDocs, orderBy 
+  updateDoc, deleteDoc, addDoc, serverTimestamp, getDocs, orderBy, where 
 } from 'firebase/firestore';
 
 export interface LetterSubmission {
@@ -41,6 +41,8 @@ interface LetterHomeworkInboxModalProps {
   onClose: () => void;
   selectedChar: { char: string; name: string } | null;
   lang: 'ar' | 'en';
+  schoolId?: string;
+  isPlatformAdmin?: boolean;
 }
 
 const SAMPLE_SUBMISSIONS: Omit<LetterSubmission, 'id'>[] = [
@@ -156,7 +158,10 @@ export const LetterHomeworkInboxModal: React.FC<LetterHomeworkInboxModalProps> =
     let unsubscribe = () => {};
     try {
       const colRef = collection(db, 'letter_submissions');
-      unsubscribe = onSnapshot(colRef, (snapshot) => {
+      const scopedQuery = isPlatformAdmin
+        ? colRef
+        : query(colRef, where('schoolId', '==', schoolId || 'independent'));
+      unsubscribe = onSnapshot(scopedQuery, (snapshot) => {
         if (!snapshot.empty) {
           const items: LetterSubmission[] = [];
           snapshot.forEach((docSnap) => {
@@ -212,7 +217,7 @@ export const LetterHomeworkInboxModal: React.FC<LetterHomeworkInboxModalProps> =
     }
 
     return () => unsubscribe();
-  }, [isOpen]);
+  }, [isOpen, schoolId, isPlatformAdmin]);
 
   // When selected submission changes, fill the teacher form
   const currentSub = submissions.find((s) => s.id === selectedSubId);
