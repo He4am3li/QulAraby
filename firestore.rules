@@ -118,6 +118,18 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId == schoolId;
     }
 
+    function submissionBelongsToCurrentScope(data) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        (
+          (('schoolId' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) &&
+           ('schoolId' in data) &&
+           data.schoolId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId) ||
+          (!('schoolId' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) &&
+           ('schoolId' in data) && data.schoolId == 'independent')
+        );
+    }
+
     function isAuthor(data) {
       return isAuthenticated() && (isAdmin() || data.authorId == request.auth.uid);
     }
@@ -445,12 +457,20 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Letter Homework Submissions Collection
+    // Letter Homework Submissions: isolate school inboxes and student submissions.
     match /letter_submissions/{submissionId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if isAdmin() || isTeacher();
+      allow read: if isAdmin() ||
+        (isAuthenticated() && resource.data.studentId == request.auth.uid) ||
+        (isTeacher() && submissionBelongsToCurrentScope(resource.data));
+      allow create: if isAdmin() ||
+        (isTeacher() && submissionBelongsToCurrentScope(request.resource.data)) ||
+        (isAuthenticated() && request.resource.data.studentId == request.auth.uid &&
+         submissionBelongsToCurrentScope(request.resource.data));
+      allow update: if isAdmin() ||
+        (isTeacher() && submissionBelongsToCurrentScope(resource.data) &&
+         submissionBelongsToCurrentScope(request.resource.data));
+      allow delete: if isAdmin() ||
+        (isTeacher() && submissionBelongsToCurrentScope(resource.data));
     }
 
     // Default Deny
