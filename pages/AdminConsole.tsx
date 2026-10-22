@@ -9,6 +9,7 @@ import {
 import { db } from '../firebase';
 import { ALL_SCHOOL_MODULE_IDS, SCHOOL_MODULES } from '../config/schoolPlans';
 import { useAuth } from '../components/AuthProvider';
+import { FallingLetters } from '../components/Layout';
 
 type PlanRecord = {
   id: string; name: string; description?: string; price?: number; currency?: string;
@@ -316,23 +317,27 @@ export const AdminConsole: React.FC = () => {
   ];
 
   return (
-    <div dir="rtl" className="min-h-full bg-slate-50 p-4 md:p-7 lg:p-9 text-slate-900">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <header className="relative overflow-hidden rounded-3xl bg-gradient-to-l from-slate-950 via-emerald-950 to-emerald-800 p-6 text-white md:p-8">
-          <div className="absolute -left-10 -top-12 h-48 w-48 rounded-full bg-emerald-400/10 blur-3xl" />
-          <div className="relative flex flex-col justify-between gap-5 md:flex-row md:items-center">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold text-emerald-100">
-                <ShieldCheck size={15} /> الإدارة العامة لمنصة قُل
-              </div>
-              <h1 className="text-3xl font-black tracking-tight md:text-4xl">مركز إدارة المنصة</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-emerald-50/80 md:text-base">إدارة المدارس والاشتراكات والأقسام والحسابات من مكان واحد، مع إعداد الباقات بما يناسب تعليم العربية للناطقين بلغات أخرى.</p>
-            </div>
-            <button onClick={() => void loadData()} disabled={loading} className={`${buttonClass} border border-white/20 bg-white/10 text-white hover:bg-white/20`}>
-              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> تحديث البيانات
-            </button>
+    <div dir="rtl" className="min-h-full bg-white text-slate-900 flex flex-col">
+      <header className="bg-gradient-to-l from-[#0f172a]/95 to-[#064e3b]/95 backdrop-blur-lg px-6 md:px-8 py-5 md:py-6 flex items-center justify-between shrink-0 shadow-lg relative z-10 overflow-hidden border-b border-white/20 text-white">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <FallingLetters mode="compact" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-[80px]" />
+        </div>
+        <div className="relative z-10 flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 shrink-0 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md border border-white/20">
+            <ShieldCheck size={20} />
           </div>
-        </header>
+          <div className="min-w-0">
+            <span className="block text-lg font-bold arabic-font tracking-wide">مركز إدارة المنصة</span>
+            <span className="block mt-1 text-xs text-white/65">الإدارة العامة لمنصة قُل</span>
+          </div>
+        </div>
+        <button onClick={() => void loadData()} disabled={loading} className={`${buttonClass} relative z-10 shrink-0 border border-white/20 bg-white/10 text-white hover:bg-white/20`}>
+          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> تحديث البيانات
+        </button>
+      </header>
+      <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8">
+        <div className="mx-auto max-w-7xl space-y-6">
 
         {notice && <div role="status" className={`flex items-center gap-3 rounded-2xl border p-4 text-sm font-bold ${notice.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-rose-200 bg-rose-50 text-rose-800'}`}>
           {notice.type === 'success' ? <Check size={18} /> : <X size={18} />}{notice.text}
@@ -355,7 +360,7 @@ export const AdminConsole: React.FC = () => {
                   { label: 'المدارس الفعّالة والتجريبية', value: schools.filter(s => s.status === 'active' || s.status === 'trial').length, icon: School, tone: 'bg-emerald-50 text-emerald-700' },
                   { label: 'الباقات المعرّفة', value: plans.length, icon: Layers3, tone: 'bg-violet-50 text-violet-700' },
                   { label: 'الحسابات المسجلة', value: users.length, icon: Users, tone: 'bg-amber-50 text-amber-700' },
-                ].map((item) => <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                ].map((item) => <div key={item.label} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="flex items-center justify-between"><span className="text-sm font-bold text-slate-500">{item.label}</span><span className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.tone}`}><item.icon size={21} /></span></div>
                   <div className="mt-4 text-3xl font-black tabular-nums">{item.value}</div>
                 </div>)}
