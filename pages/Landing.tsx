@@ -325,9 +325,11 @@ export const Landing = () => {
 
   return (
     <div 
-      className={`min-h-screen text-white overflow-x-hidden selection:bg-blue-500/30 relative ${lang === 'ar' ? 'arabic-font' : 'font-sans'}`} 
+      tabIndex={0}
+      aria-label={lang === 'ar' ? 'محتوى صفحة الهبوط' : 'Landing page content'}
+      className={`h-screen min-h-screen w-full overflow-y-auto overflow-x-hidden overscroll-y-contain text-white selection:bg-blue-500/30 relative focus:outline-none ${lang === 'ar' ? 'arabic-font' : 'font-sans'}`} 
       dir={lang === 'ar' ? 'rtl' : 'ltr'}
-      style={{ background: 'linear-gradient(to left, #0f172a 0%, #064e3b 100%)' }}
+      style={{ background: 'linear-gradient(to left, #0f172a 0%, #064e3b 100%)', WebkitOverflowScrolling: 'touch' }}
     >
       {/* Side Rails - Fills the empty side space */}
       <SideRail 
