@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, deleteField } from 'firebase/firestore';
 import { auth, db, signInWithGoogle, logout } from '../firebase';
 
 export type UserRole = 'admin' | 'schoolAdmin' | 'teacher' | 'student';
@@ -26,7 +26,7 @@ interface AuthContextType {
   clearAuthError: () => void;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
-  updateRole: (role: UserRole) => Promise<void>;
+  updateRole: (role: UserRole, schoolId?: string | null) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -138,12 +138,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateRole = async (newRole: UserRole) => {
+  const updateRole = async (newRole: UserRole, schoolId?: string | null) => {
     if (!user) return;
     try {
       const userDocRef = doc(db, 'users', user.uid);
-      await setDoc(userDocRef, { role: newRole }, { merge: true });
-      setProfile(prev => prev ? { ...prev, role: newRole } : null);
+      await setDoc(userDocRef, { role: newRole, schoolId: schoolId ? schoolId : deleteField(), updatedAt: serverTimestamp() }, { merge: true });
+      setProfile(prev => prev ? { ...prev, role: newRole, ...(schoolId ? { schoolId } : { schoolId: undefined }) } : null);
     } catch (error) {
       console.error('Error updating role:', error);
       // Never grant a role locally when Firestore rejected the role update.
