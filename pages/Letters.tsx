@@ -10,7 +10,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { useAuth } from '../components/AuthProvider';
 import { LetterHomeworkInboxModal } from '../components/LetterHomeworkInboxModal';
 import { db } from '../firebase';
-import { collection, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, serverTimestamp, query, where } from 'firebase/firestore';
 
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -2147,7 +2147,12 @@ export const Letters: React.FC = () => {
   React.useEffect(() => {
     try {
       const colRef = collection(db, 'letter_submissions');
-      const unsubscribe = onSnapshot(colRef, (snapshot) => {
+      const scopedQuery = profile?.role === 'admin'
+        ? colRef
+        : profile?.role === 'teacher'
+          ? query(colRef, where('schoolId', '==', profile.schoolId || 'independent'))
+          : query(colRef, where('studentId', '==', user?.uid || ''));
+      const unsubscribe = onSnapshot(scopedQuery, (snapshot) => {
         let count = 0;
         snapshot.forEach((docSnap) => {
           if (docSnap.data().status === 'pending') count++;
@@ -2164,7 +2169,7 @@ export const Letters: React.FC = () => {
       });
       return () => unsubscribe();
     } catch (_) {}
-  }, []);
+  }, [profile?.role, profile?.schoolId, user?.uid]);
 
   const generateWorksheet = async () => {
     if (!worksheetRef.current) return;
@@ -2279,6 +2284,7 @@ export const Letters: React.FC = () => {
             char: selectedChar.char,
             charName: selectedChar.name,
             studentId: user?.uid || `guest-${Date.now()}`,
+            schoolId: profile?.schoolId || 'independent',
             studentName: user?.displayName || profile?.displayName || (lang === 'ar' ? 'طالب متميز' : 'Student'),
             studentEmail: user?.email || '',
             studentPhoto: user?.photoURL || '',
