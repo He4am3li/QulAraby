@@ -29,16 +29,14 @@ import { QuotaWarning } from './components/QuotaWarning';
 import { Landing } from './pages/Landing';
 import { useAuth } from './components/AuthProvider';
 import { RoleSwitcher } from './components/RoleSwitcher';
-import { SchoolAccessProvider, useSchoolAccess } from './components/SchoolAccessProvider';
+import { SchoolAccessProvider } from './components/SchoolAccessProvider';
 import { FeatureGate } from './components/FeatureGate';
 import { AdminConsole } from './pages/AdminConsole';
 import { SchoolDashboard } from './pages/SchoolDashboard';
-import { ROUTE_MODULES } from './config/schoolPlans';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
   const { user, profile, isAuthReady, loading } = useAuth();
-  const schoolAccess = useSchoolAccess();
   const [splashCompleted, setSplashCompleted] = React.useState(false);
 
   // Sync splash state with auth session
@@ -85,7 +83,7 @@ const AppContent: React.FC = () => {
       <Layout>
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={profile?.role === 'admin' ? <Navigate to="/admin" replace /> : profile?.role === 'schoolAdmin' ? <Navigate to="/school" replace /> : <Home />} />
             <Route path="/admin" element={profile?.role === 'admin' ? <AdminConsole /> : <Navigate to="/" replace />} />
             <Route path="/school" element={profile?.role === 'schoolAdmin' ? <SchoolDashboard /> : <Navigate to="/" replace />} />
             <Route path="/whiteboard" element={<FeatureGate moduleId="whiteboard"><WhiteboardPage /></FeatureGate>} />
