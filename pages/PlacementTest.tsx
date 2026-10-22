@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../components/AuthProvider';
 import { db } from '../firebase';
-import { collection, doc, setDoc, getDocs, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, onSnapshot, serverTimestamp, query, where } from 'firebase/firestore';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -149,7 +149,12 @@ export const PlacementTest: React.FC = () => {
   React.useEffect(() => {
     if (isTeacherOrAdmin) {
       setFetchingReports(true);
-      const q = collection(db, 'placement_results');
+      const resultsRef = collection(db, 'placement_results');
+      const q = profile?.role === 'admin'
+        ? resultsRef
+        : profile?.schoolId
+          ? query(resultsRef, where('schoolId', '==', profile.schoolId))
+          : query(resultsRef, where('userId', '==', user?.uid || ''));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const results: any[] = [];
         snapshot.forEach((doc) => {
@@ -566,6 +571,7 @@ export const PlacementTest: React.FC = () => {
             totalScore: totalScoreVal,
             skillStats,
             studyPlan: planData,
+            ...(profile?.schoolId ? { schoolId: profile.schoolId } : {}),
             completedAt: serverTimestamp()
           });
         } catch (err) {
