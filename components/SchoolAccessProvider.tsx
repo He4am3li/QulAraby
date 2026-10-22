@@ -92,17 +92,23 @@ export const SchoolAccessProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         const school = schoolSnapshot.data();
         let includedModules: string[] = Array.isArray(school.enabledModules) ? school.enabledModules : [];
-        if (!Array.isArray(school.enabledModules) && school.planId) {
-          const planSnapshot = await getDoc(doc(db, 'plans', String(school.planId)));
-          includedModules = planSnapshot.exists() && Array.isArray(planSnapshot.data().includedModules)
-            ? planSnapshot.data().includedModules
-            : [];
+        let planIsActive = true;
+        if (!Array.isArray(school.enabledModules)) {
+          if (!school.planId) {
+            planIsActive = false;
+          } else {
+            const planSnapshot = await getDoc(doc(db, 'plans', String(school.planId)));
+            planIsActive = planSnapshot.exists() && planSnapshot.data().isActive !== false;
+            includedModules = planSnapshot.exists() && Array.isArray(planSnapshot.data().includedModules)
+              ? planSnapshot.data().includedModules
+              : [];
+          }
         }
 
         const expiresAt = school.expiresAt?.toDate ? school.expiresAt.toDate() : null;
         const expired = expiresAt ? expiresAt.getTime() < Date.now() : false;
         const activeStatus = school.status === 'active' || school.status === 'trial';
-        const permitted = activeStatus && !expired && school.planStatus !== 'inactive';
+        const permitted = activeStatus && !expired && school.planStatus !== 'inactive' && planIsActive;
 
         if (active) setState({
           loading: false,
@@ -111,7 +117,7 @@ export const SchoolAccessProvider: React.FC<{ children: React.ReactNode }> = ({ 
           schoolName: typeof school.name === 'string' ? school.name : null,
           schoolStatus: expired ? 'expired' : String(school.status || 'inactive'),
           accessError: !permitted
-            ? (expired ? 'انتهت مدة اشتراك المدرسة.' : 'اشتراك المدرسة غير مفعّل حاليًا.')
+            ? (expired ? 'انتهت مدة اشتراك المدرسة.' : !planIsActive ? 'الباقة غير متاحة أو لم يتم إعدادها.' : 'اشتراك المدرسة غير مفعّل حاليًا.')
             : null,
         });
       } catch (error) {
