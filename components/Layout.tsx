@@ -127,6 +127,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const { profile } = useAuth();
   const schoolAccess = useSchoolAccess();
   const navPaths = getNavPathsForRole(profile?.role);
+  const navPaths = getNavPathsForRole(profile?.role);
   const [collapsed, setCollapsed] = React.useState(true);
   const [lang, setLang] = React.useState<'ar' | 'en'>(
     (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar'
