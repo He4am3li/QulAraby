@@ -53,7 +53,7 @@ export const RoleSwitcher: React.FC = () => {
       await updateRole(role, role === 'admin' || (role !== 'schoolAdmin' && schoolId === '__demo__') ? null : schoolId || null);
       setMessage(`تم التبديل إلى وضع ${OPTIONS.find(o => o.id === role)?.label}. هذا وضع معاينة محلي.`);
       setOpen(false);
-      window.location.assign(role === 'admin' ? '/admin?tab=overview' : role === 'schoolAdmin' ? '/school?tab=overview' : '/');
+      window.location.assign('/');
     } catch (err) {
       console.error(err);
       setMessage('تعذّر تغيير وضع المعاينة. أعد تحميل الصفحة وجرب مرة أخرى.');
@@ -68,7 +68,7 @@ export const RoleSwitcher: React.FC = () => {
         {role==='schoolAdmin' && <label className="mt-3 block text-xs font-bold text-slate-600">المدرسة<select value={schoolId} onChange={e=>setSchoolId(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"><option value="">اختر مدرسة</option><option value="__demo__">معاينة تجريبية ببيانات وهمية</option>{schools.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select><span className="mt-1 block font-normal text-slate-400">اختر المعاينة التجريبية إذا لم تكن قاعدة البيانات مهيأة بعد.</span></label>}
         {message && <p role="status" className="mt-3 rounded-lg bg-amber-50 p-2 text-xs leading-5 text-amber-900">{message}</p>}
         <button disabled={saving} onClick={()=>void apply()} className="mt-3 w-full rounded-xl bg-emerald-800 px-4 py-3 text-sm font-black text-white hover:bg-emerald-900 disabled:opacity-50">{saving?'جارٍ التبديل...':'فتح هذه الواجهة'}</button>
-        <button onClick={()=>{localStorage.removeItem('qul_dev_preview_role');localStorage.removeItem('qul_dev_preview_school_id');window.location.assign('/admin?tab=overview');}} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">إعادة الوضع الحقيقي للأدمن</button>
+        <button onClick={()=>{localStorage.removeItem('qul_dev_preview_role');localStorage.removeItem('qul_dev_preview_school_id');window.location.assign('/');}} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">إعادة الوضع الحقيقي للأدمن</button>
       </motion.div>}
     </AnimatePresence>
     <button onClick={()=>setOpen(v=>!v)} className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800 shadow-md transition hover:border-emerald-700 hover:text-emerald-900"><ActiveIcon size={18}/><span>معاينة: {OPTIONS.find(o=>o.id===profile?.role)?.label || 'الأدمن العام'}</span><ChevronDown size={16}/></button>
