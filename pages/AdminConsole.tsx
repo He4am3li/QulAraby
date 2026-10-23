@@ -13,6 +13,7 @@ import { db } from '../firebase';
 import { ALL_SCHOOL_MODULE_IDS, SCHOOL_MODULES } from '../config/schoolPlans';
 import { useAuth } from '../components/AuthProvider';
 import { PlatformTopBar } from '../components/PlatformTopBar';
+import { RoleLocalizer, useRoleLanguage } from '../components/RoleLocalizer';
 import { ModuleCard } from './Home';
 
 type PlanRecord = {
@@ -43,6 +44,7 @@ const buttonClass = 'inline-flex items-center justify-center gap-2 rounded-xl px
 const inputClass = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100';
 
 export const AdminConsole: React.FC = () => {
+  const { lang, isEnglish } = useRoleLanguage();
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -484,11 +486,12 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
   };
 
   if (profile?.role !== 'admin') {
-    return <div dir="rtl" className="p-8 text-center font-bold text-red-700">هذه الصفحة مخصصة لأدمن منصة قُل.</div>;
+    return <RoleLocalizer lang={lang}><div dir={isEnglish ? 'ltr' : 'rtl'} className="p-8 text-center font-bold text-red-700">هذه الصفحة مخصصة لأدمن منصة قُل.</div></RoleLocalizer>;
   }
 
   return (
-    <div dir="rtl" className="h-full min-h-0 overflow-hidden bg-[#f7f8f6] text-slate-900 flex flex-col">
+    <RoleLocalizer lang={lang}>
+    <div dir={isEnglish ? 'ltr' : 'rtl'} className={'h-full min-h-0 overflow-hidden bg-[#f7f8f6] text-slate-900 flex flex-col '+(isEnglish?'font-sans':'')}>
       <PlatformTopBar />
 
       <div className={`flex-1 min-h-0 ${tab === 'plans' ? 'overflow-hidden p-2 sm:p-3' : tab === 'analytics' ? 'overflow-y-auto p-2 sm:p-3 xl:overflow-hidden' : 'overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8'}`}>
@@ -523,7 +526,7 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
                   { title: 'سجل العمليات', english: 'AUDIT LOG', icon: History, color: 'from-slate-600 to-slate-800', tab: 'audit' as TabKey },
                   { title: 'الدعم الفني', english: 'SUPPORT', icon: Headphones, color: 'from-rose-500 to-pink-700', tab: 'support' as TabKey },
                   { title: 'إعدادات المنصة', english: 'PLATFORM SETTINGS', icon: SlidersHorizontal, color: 'from-teal-600 to-emerald-800', tab: 'settings' as TabKey },
-                ].map(item => <ModuleCard key={item.tab} icon={<item.icon />} title={item.english} arTitle={item.title} description="" color={item.color} onClick={() => setTab(item.tab)} enterLabel="فتح القسم" lang="ar" />)}
+                ].map(item => <ModuleCard key={item.tab} icon={<item.icon />} title={item.english} arTitle={item.title} description="" color={item.color} onClick={() => setTab(item.tab)} enterLabel={isEnglish ? 'Open section' : 'فتح القسم'} lang={lang} />)}
               </div>
             </section>}
 
@@ -780,6 +783,7 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
         </div>
       </div>
     </div>
+    </RoleLocalizer>
   );
 };
 
