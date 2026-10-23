@@ -10,7 +10,6 @@ import {
 import { db } from '../firebase';
 import { ALL_SCHOOL_MODULE_IDS, SCHOOL_MODULES } from '../config/schoolPlans';
 import { useAuth } from '../components/AuthProvider';
-import { FallingLetters } from '../components/Layout';
 
 type PlanRecord = {
   id: string; name: string; description?: string; price?: number; currency?: string;
@@ -324,22 +323,19 @@ export const AdminConsole: React.FC = () => {
   ];
 
   return (
-    <div dir="rtl" className="min-h-full bg-white text-slate-900 flex flex-col">
-      <header className="bg-gradient-to-l from-[#0f172a]/95 to-[#064e3b]/95 backdrop-blur-lg px-6 md:px-8 py-5 md:py-6 flex items-center justify-between shrink-0 shadow-lg relative z-10 overflow-hidden border-b border-white/20 text-white">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <FallingLetters mode="compact" />
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-[80px]" />
-        </div>
-        <div className="relative z-10 flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 shrink-0 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md border border-white/20">
-            <ShieldCheck size={20} />
+    <div dir="rtl" className="min-h-full bg-[#f7f8f6] text-slate-900 flex flex-col">
+      <header className="flex flex-col gap-4 border-b border-slate-200 bg-white px-4 py-5 sm:flex-row sm:items-center sm:justify-between md:px-7">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-800">
+            <ShieldCheck size={21} strokeWidth={1.8} />
           </div>
-          <div className="min-w-0">
-            <span className="block text-lg font-bold arabic-font tracking-wide">مركز إدارة المنصة</span>
-            <span className="block mt-1 text-xs text-white/65">الإدارة العامة لمنصة قُل</span>
+          <div>
+            <p className="text-xs font-bold tracking-wide text-emerald-800">قُل · الإدارة العامة</p>
+            <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900 md:text-2xl">مركز إدارة المنصة</h1>
+            <p className="mt-1 text-sm text-slate-500">المدارس، الاشتراكات، والأقسام التعليمية</p>
           </div>
         </div>
-        <button onClick={() => void loadData()} disabled={loading} className={`${buttonClass} relative z-10 shrink-0 border border-white/20 bg-white/10 text-white hover:bg-white/20`}>
+        <button onClick={() => void loadData()} disabled={loading} className={`${buttonClass} self-start border border-slate-300 bg-white text-slate-700 hover:border-emerald-700 hover:text-emerald-800 sm:self-auto`}>
           <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> تحديث البيانات
         </button>
       </header>
@@ -355,9 +351,9 @@ export const AdminConsole: React.FC = () => {
           <button onClick={() => setNotice(null)} aria-label="إغلاق التنبيه" className="rounded-lg p-1 text-current/70 hover:bg-black/5"><X size={16}/></button>
         </div>}
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-800 shadow-sm"><GraduationCap size={19}/></div>
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700"><GraduationCap size={19}/></div>
             <div>
               <h2 className="text-sm font-black text-slate-900">تطوير وتجربة الواجهات</h2>
               <p className="mt-1 text-xs leading-5 text-slate-600">للتنقل بين الأدمن العام ومدير المدرسة والمعلم والطالب، استخدم زر «معاينة» الثابت أسفل يسار الشاشة.</p>
@@ -366,9 +362,9 @@ export const AdminConsole: React.FC = () => {
           <span className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs font-bold text-emerald-900"><span className="h-2 w-2 rounded-full bg-emerald-500"/> أداة المعاينة جاهزة</span>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+        <div className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-transparent px-1">
           {tabs.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setTab(id)} className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${tab === id ? 'bg-emerald-800 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}`}>
+            <button key={id} onClick={() => setTab(id)} className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${tab === id ? 'border-b-2 border-emerald-800 text-emerald-900' : 'border-b-2 border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800'}`}>
               <Icon size={17} />{label}
             </button>
           ))}
@@ -383,13 +379,13 @@ export const AdminConsole: React.FC = () => {
                   { label: 'المدارس الفعّالة والتجريبية', value: dataLoadFailed ? '—' : schools.filter(s => s.status === 'active' || s.status === 'trial').length, icon: School, tone: 'bg-emerald-50 text-emerald-700' },
                   { label: 'الباقات المعرّفة', value: dataLoadFailed ? '—' : plans.length, icon: Layers3, tone: 'bg-violet-50 text-violet-700' },
                   { label: 'الحسابات المسجلة', value: dataLoadFailed ? '—' : users.length, icon: Users, tone: 'bg-amber-50 text-amber-700' },
-                ].map((item) => <div key={item.label} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                ].map((item) => <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-5">
                   <div className="flex items-center justify-between"><span className="text-sm font-bold text-slate-500">{item.label}</span><span className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.tone}`}><item.icon size={21} /></span></div>
-                  <div className="mt-4 text-3xl font-black tabular-nums">{item.value}</div>
+                  <div className="mt-3 text-2xl font-semibold tabular-nums tracking-tight">{item.value}</div>
                 </div>)}
               </div>
               <div className="grid gap-5 xl:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="rounded-xl border border-slate-200 bg-white p-5">
                   <div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-black">أحدث المدارس المسجلة</h2><button className="text-sm font-bold text-emerald-800" onClick={() => setTab('schools')}>إدارة المدارس</button></div>
                   {dataLoadFailed ? <EmptyState message="تعذر تحميل بيانات المدارس. انشر قواعد Firestore ثم أعد المحاولة." /> : schools.length ? <div className="space-y-3">{schools.slice(0, 5).map(school => <div key={school.id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3"><div className="min-w-0"><div className="truncate font-bold">{school.name}</div><div className="mt-1 text-xs text-slate-500">{currentPlanName(school.planId)} · {userCountForSchool(school.id)} مستخدم</div></div><span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${school.status === 'active' ? 'bg-emerald-100 text-emerald-800' : school.status === 'trial' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700'}`}>{school.status === 'active' ? 'فعّالة' : school.status === 'trial' ? 'تجريبية' : school.status === 'suspended' ? 'موقوفة' : 'غير محددة'}</span></div>)}</div> : <EmptyState message="لم تُضف مدارس بعد. ابدأ بإنشاء أول مدرسة." />}
                 </div>
@@ -401,7 +397,7 @@ export const AdminConsole: React.FC = () => {
             </section>}
 
             {tab === 'schools' && <section className="space-y-5">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
+              <div className="rounded-xl border border-slate-200 bg-white p-5 md:p-6">
                 <h2 className="mb-1 flex items-center gap-2 text-xl font-black"><Plus size={20} className="text-emerald-700"/> إضافة مدرسة</h2>
                 <p className="mb-5 text-sm leading-6 text-slate-500">يُنشأ سجل المدرسة ويُربط بالباقة، ثم يمكن إسناد مدير المدرسة من قسم الحسابات.</p>
                 <form onSubmit={createSchool} className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
