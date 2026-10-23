@@ -74,7 +74,8 @@ export const SchoolDashboard: React.FC = () => {
   const requestedTab = searchParams.get('tab');
   const activeTab: SchoolTab =
     requestedTab === 'teachers' || requestedTab === 'students' || requestedTab === 'classes' ||
-    requestedTab === 'settings' || requestedTab === 'subscription'
+    requestedTab === 'settings' || requestedTab === 'subscription' ||
+    requestedTab === 'reports' || requestedTab === 'support'
       ? requestedTab
       : requestedTab === 'team' ? 'teachers' : 'overview';
 
