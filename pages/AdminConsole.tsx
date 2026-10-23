@@ -584,10 +584,10 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
               <header className="flex min-w-0 items-center justify-between gap-3 border-b border-emerald-900/60 pb-2">
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-400/40 bg-emerald-400/10 text-emerald-300 shadow-[0_0_22px_rgba(52,211,153,0.12)]"><Activity size={19}/></div>
-                  <div className="min-w-0"><h2 className="truncate text-base font-black tracking-wide sm:text-lg">مركز التحليلات</h2><p className="truncate text-[10px] text-slate-400 sm:text-xs">منظور تشغيلي مباشر من سجلات المدارس والحسابات والباقات</p></div>
+                  <div className="min-w-0"><h2 className="truncate text-base font-black tracking-wide sm:text-lg">مركز التحليلات</h2><p className="truncate text-[10px] text-slate-400 sm:text-xs">معاينة تطويرية لعرض شكل التحليلات بعد إدخال بيانات المدارس والحسابات</p></div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="hidden items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-1 text-[9px] text-emerald-300 sm:inline-flex"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]"/>بيانات Firestore</span>
+                  <span className="hidden items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-[9px] text-amber-200 sm:inline-flex"><span className="h-1.5 w-1.5 rounded-full bg-amber-300"/>معاينة أثناء التطوير</span>
                   <button onClick={exportAnalyticsReport} title="تصدير CSV" className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/80 px-2 text-[10px] font-bold text-slate-200 transition hover:border-emerald-500/60 hover:text-emerald-200 sm:px-3 sm:text-xs"><Activity size={13}/> تصدير</button>
                   <button onClick={() => void loadData()} disabled={loading} title="تحديث البيانات" className="flex h-8 items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 text-[10px] font-bold text-emerald-200 transition hover:bg-emerald-500/20 disabled:opacity-50 sm:px-3 sm:text-xs"><RefreshCw size={13} className={loading ? 'animate-spin' : ''}/> تحديث</button>
                 </div>
@@ -608,18 +608,18 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
 
               <div className="grid min-h-0 grid-cols-1 gap-2 xl:grid-cols-[1.03fr_1.12fr_0.85fr]">
                 <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-emerald-900/60 bg-[#0a1921] p-3">
-                  <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">حالة المدارس</h3><p className="mt-0.5 text-[9px] text-slate-500 sm:text-[10px]">حالة الاشتراك المسجلة</p></div><span className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-1 text-[9px] text-emerald-300">التوزيع</span></div>
+                  <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">حالة المدارس</h3><p className="mt-0.5 text-[9px] text-slate-500 sm:text-[10px]">معاينة لحالات الاشتراك</p></div><span className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-1 text-[9px] text-emerald-300">التوزيع</span></div>
                   <div className="flex min-h-0 flex-1 items-center justify-center gap-3">
                     <div className="relative flex aspect-square max-h-full w-[42%] max-w-[142px] items-center justify-center rounded-full p-2" style={{ background: `conic-gradient(${schoolStatusStats.map((item, index) => { const before = schoolStatusStats.slice(0, index).reduce((sum, part) => sum + part.count, 0); const after = before + item.count; const total = schools.length || 1; return `${item.color} ${before / total * 100}% ${after / total * 100}%`; }).join(', ')})` }}>
                       <div className="flex h-full w-full flex-col items-center justify-center rounded-full border border-slate-700 bg-[#0a1921]"><span className="text-2xl font-black tabular-nums sm:text-3xl">{schools.length.toLocaleString('ar-AE')}</span><span className="text-center text-[8px] text-slate-500 sm:text-[9px]">إجمالي المدارس</span></div>
                     </div>
                     <div className="min-w-0 flex-1 space-y-2">{schoolStatusStats.map(item=><div key={item.key} className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-1.5"><span className="h-2 w-2 shrink-0 rounded-[2px]" style={{backgroundColor:item.color}}/><span className="truncate text-[10px] text-slate-300">{item.label}</span></div><div className="text-left"><span className="text-xs font-bold tabular-nums">{item.count}</span><span className="mr-1 text-[9px] text-slate-500">{schools.length?Math.round(item.count/schools.length*100):0}%</span></div></div>)}</div>
                   </div>
-                  <div className="mt-1 border-t border-white/[0.06] pt-2 text-[9px] text-slate-500">التصنيفات حسب البيانات المسجلة فقط.</div>
+                  <div className="mt-1 border-t border-white/[0.06] pt-2 text-[9px] text-slate-500">التصنيفات ستعكس بيانات المدارس المدخلة لاحقًا.</div>
                 </section>
 
                 <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-cyan-900/50 bg-[#0a1921] p-3">
-                  <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">نمو تسجيل المدارس</h3><p className="mt-0.5 text-[9px] text-slate-500 sm:text-[10px]">آخر ستة أشهر وفق تاريخ الإنشاء</p></div><span className="text-[9px] text-cyan-300">6 أشهر</span></div>
+                  <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">نمو تسجيل المدارس</h3><p className="mt-0.5 text-[9px] text-slate-500 sm:text-[10px]">مثال يتحدّث حسب تواريخ إنشاء المدارس</p></div><span className="text-[9px] text-cyan-300">6 أشهر</span></div>
                   <div className="mt-2 flex min-h-0 flex-1 items-end gap-2 border-b border-slate-700/80 px-1">
                     {recentRegistrationStats.map((item,index)=>{const max=Math.max(1,...recentRegistrationStats.map(x=>x.count));const height=item.count?Math.max(7,item.count/max*100):3;return <div key={item.label+index} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"><span className="text-[9px] font-bold tabular-nums text-slate-300">{item.count}</span><div title={`${item.label}: ${item.count} مدرسة`} className={`w-full max-w-9 rounded-t-md border-t border-cyan-200/70 transition-all ${index===recentRegistrationStats.length-1?'bg-gradient-to-t from-emerald-600 to-cyan-300 shadow-[0_0_13px_rgba(34,211,238,0.18)]':'bg-gradient-to-t from-emerald-950 to-emerald-500/70 hover:to-cyan-300'}`} style={{height:`${height}%`}}/></div>;})}
                   </div>
@@ -627,7 +627,7 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
                 </section>
 
                 <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-violet-900/50 bg-[#0a1921] p-3">
-                  <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">تركيبة المستخدمين</h3><p className="mt-0.5 text-[9px] text-slate-500">حسب الدور</p></div><Users size={16} className="text-violet-300"/></div>
+                  <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">تركيبة المستخدمين</h3><p className="mt-0.5 text-[9px] text-slate-500">معاينة تركيبة الحسابات حسب الدور</p></div><Users size={16} className="text-violet-300"/></div>
                   <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-slate-800">
                     {roleStats.filter(item=>item.count>0).map(item=><div key={item.label} title={`${item.label}: ${item.count}`} style={{width:`${users.length?item.count/users.length*100:0}%`,backgroundColor:item.color}}/>)}
                   </div>
@@ -638,7 +638,7 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
 
               <div className="grid min-h-0 grid-cols-1 gap-2 xl:grid-cols-[1.05fr_1fr_0.95fr]">
                 <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-700/70 bg-[#0a1921] p-3">
-                  <div className="mb-2 flex items-center justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">المدارس حسب الباقة</h3><p className="mt-0.5 text-[9px] text-slate-500">حجم الارتباط لكل باقة</p></div><Layers3 size={16} className="text-emerald-300"/></div>
+                  <div className="mb-2 flex items-center justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">المدارس حسب الباقة</h3><p className="mt-0.5 text-[9px] text-slate-500">مثال على عدد المدارس المرتبطة بكل باقة</p></div><Layers3 size={16} className="text-emerald-300"/></div>
                   {schoolPlanStats.length ? <div className="min-h-0 flex-1 space-y-2 overflow-hidden">{schoolPlanStats.slice(0,4).map(item=>{const percent=schools.length?Math.round(item.count/schools.length*100):0;return <div key={item.id} className="space-y-1"><div className="flex items-center justify-between gap-2"><span className="truncate text-[10px] text-slate-300">{item.name}{!item.active?' · موقوفة':''}</span><span className="shrink-0 text-[9px] tabular-nums text-slate-400">{item.count}</span></div><div className="h-1.5 overflow-hidden rounded-full bg-slate-800"><div className="h-full rounded-full bg-gradient-to-l from-emerald-400 via-cyan-400 to-blue-500 shadow-[0_0_8px_rgba(52,211,153,0.22)]" style={{width:`${percent}%`}}/></div></div>;})}</div> : <div className="flex flex-1 items-center justify-center text-xs text-slate-500">لا توجد باقات مسجلة بعد.</div>}
                   <div className="mt-2 border-t border-white/[0.06] pt-2 text-[9px] text-slate-500">{schools.filter(s=>!s.planId).length} مدرسة دون باقة</div>
                 </section>
@@ -658,7 +658,7 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
                     <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-400">الباقات المسجلة</span><span className="text-sm font-black text-emerald-200">{plans.length}</span></div>
                     <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-400">مديرو المدارس</span><span className="text-sm font-black text-violet-200">{users.filter(u=>u.role==='schoolAdmin').length}</span></div>
                   </div>
-                  <div className="mt-auto rounded-lg border border-emerald-500/20 bg-emerald-500/[0.07] p-2"><p className="text-[10px] leading-4 text-emerald-100">تُعرض الإحصاءات من السجلات المتاحة فقط. لا توجد مؤشرات للأرباح أو الزيارات ما لم تُربط مصادرها.</p></div>
+                  <div className="mt-auto rounded-lg border border-emerald-500/20 bg-emerald-500/[0.07] p-2"><p className="text-[10px] leading-4 text-emerald-100">تُعرض الإحصاءات من السجلات المتاحة فقط. هذه معاينة تطويرية. مؤشرات الأرباح والزيارات ستُضاف عند ربط مصادر بياناتها.</p></div>
                 </section>
               </div>
             </section>}
