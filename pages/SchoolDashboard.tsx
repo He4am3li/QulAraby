@@ -5,6 +5,7 @@ import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firesto
 import { db } from '../firebase';
 import { useAuth } from '../components/AuthProvider';
 import { SCHOOL_MODULES } from '../config/schoolPlans';
+import { PlatformTopBar } from '../components/PlatformTopBar';
 
 type SchoolRecord = { name: string; status?: string; planId?: string; contactEmail?: string; expiresAt?: any; enabledModules?: string[] };
 type MemberRecord = { uid: string; displayName?: string; email?: string; role?: string };
@@ -99,6 +100,7 @@ export const SchoolDashboard: React.FC = () => {
   const expiresAt = school?.expiresAt?.toDate ? school.expiresAt.toDate().toLocaleDateString('ar-AE') : null;
 
   return <div dir="rtl" className="min-h-full bg-[#f7f8f6] text-slate-900 flex flex-col">
+    <PlatformTopBar />
     {profile?.schoolId === '__demo__' && <div className="mx-4 mt-4 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-5 text-amber-900"><CheckCircle2 size={17} className="shrink-0"/> وضع معاينة تجريبي. الأعداد وبيانات المدرسة الظاهرة أمثلة توضيحية وليست بيانات حقيقية.</div>}
     <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-5 md:px-7">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-800"><Building2 size={21} strokeWidth={1.8}/></div>
