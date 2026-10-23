@@ -192,7 +192,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {/* Dynamic Desktop Sidebar */}
       <motion.aside 
         initial={false}
-        animate={{ width: collapsed ? 80 : 240 }}
+        animate={{ width: collapsed ? 72 : 264 }}
         onMouseEnter={() => setCollapsed(false)}
         onMouseLeave={() => setCollapsed(true)}
         transition={{ type: 'spring', stiffness: 300, damping: 35 }}
@@ -268,19 +268,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             const expectedSearch = path.includes('?') ? `?${path.split('?')[1]}` : '';
             const isDefaultOverview = path.endsWith('tab=overview') && (location.search === '' || location.search === '?tab=overview');
             const isActive = location.pathname === routePath && (location.search === expectedSearch || isDefaultOverview);
-            const sectionHeading = profile?.role === 'admin'
-              ? (path === '/admin?tab=schools' ? (lang === 'ar' ? 'إدارة المنصة' : 'Platform') : path === '/admin?tab=users' ? (lang === 'ar' ? 'المستخدمون والصلاحيات' : 'Access') : '')
-              : profile?.role === 'schoolAdmin'
-                ? (path === '/school?tab=team' ? (lang === 'ar' ? 'شؤون المدرسة' : 'School') : path === '/school?tab=subscription' ? (lang === 'ar' ? 'الاشتراك' : 'Subscription') : '')
-                : '';
-
             return (
               <div key={path} className="overflow-hidden">
-                {sectionHeading && !collapsed && (
-                  <div className="px-4 pb-1 pt-4 text-[10px] font-semibold tracking-wide text-white/45">
-                    {sectionHeading}
-                  </div>
-                )}
                 <motion.div
                   initial={false}
                   animate={{ 
@@ -295,7 +284,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     to={path}
                     id={`nav-${(path.split('?')[0] === '/' ? 'home' : path.split('?')[0].substring(1))}-${path.includes('?') ? path.split('=')[1] : 'main'}`}
                     className={`flex items-center rounded-2xl transition-all duration-300 border relative group/item nav-line-hover ${
-                      collapsed ? 'justify-center p-3' : 'px-4 py-3 gap-4 mx-1'
+                      collapsed ? 'justify-center p-3' : 'px-3 py-2.5 gap-3 mx-1'
                     } ${
                       isActive 
                         ? 'bg-white/10 text-white border-white/20 shadow-lg' 
@@ -306,7 +295,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     <Icon size={20} className={`shrink-0 transition-transform ${isActive ? 'text-emerald-400' : 'text-white/40 group-hover/item:text-emerald-400 group-hover/item:scale-110'}`} />
                     
                     {!collapsed && (
-                      <div className="overflow-hidden">
+                      <div className="min-w-0 flex-1">
                         <motion.span 
                           initial={{ y: "100%" }}
                           animate={{ y: 0 }}
@@ -316,7 +305,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                             duration: 0.6,
                             ease: [0.785, 0.135, 0.15, 0.86]
                           }}
-                          className={`font-bold arabic-font whitespace-nowrap block transition-colors ${isActive ? 'text-white' : ''}`}
+                          className={`block whitespace-normal break-words text-xs leading-5 font-semibold arabic-font transition-colors ${isActive ? 'text-white' : ''}`}
                         >
                           {label}
                         </motion.span>
