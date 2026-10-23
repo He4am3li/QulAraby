@@ -201,6 +201,16 @@ export function translateRoleText(value: string, lang: RoleLanguage): string {
   for (const [ar,en] of dictionaryEntries) {
     if (ar.length > 8 && result.includes(ar)) result = result.split(ar).join(en);
   }
+  for (const [ar,en] of dictionaryEntries) {
+    if (ar.length > 2 && ar.length <= 8) {
+      const escaped = ar.replace(/[.*+?^${}()|[\]\\]/g, '\\  for (const [ar,en] of dictionaryEntries) {
+    if (ar.length > 8 && result.includes(ar)) result = result.split(ar).join(en);
+  }
+  return result;');
+      const boundary = new RegExp('(^|[^\\u0600-\\u06FF])' + escaped + '(?=$|[^\\u0600-\\u06FF])', 'g');
+      result = result.replace(boundary, (_match, prefix) => prefix + en);
+    }
+  }
   return result;
 }
 
