@@ -50,7 +50,7 @@ export const RoleSwitcher: React.FC = () => {
     setSaving(true);
     setMessage('');
     try {
-      await updateRole(role, role === 'admin' ? null : schoolId || null);
+      await updateRole(role, role === 'admin' || (role !== 'schoolAdmin' && schoolId === '__demo__') ? null : schoolId || null);
       setMessage(`تم التبديل إلى وضع ${OPTIONS.find(o => o.id === role)?.label}. هذا وضع معاينة محلي.`);
       setOpen(false);
       window.location.assign(role === 'admin' ? '/admin' : role === 'schoolAdmin' ? '/school' : '/');
