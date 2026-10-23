@@ -400,7 +400,7 @@ export const Home: React.FC = () => {
       </AnimatePresence>
     )}
 
-      <div className="flex-1 min-h-0 overflow-hidden p-6 bg-slate-50/20 custom-scroll">
+      <div className={`flex-1 p-6 bg-slate-50/20 custom-scroll ${showTeacherCenter && profile?.role === 'teacher' ? 'min-h-0 overflow-hidden' : 'overflow-y-auto'}`}>
         {showTeacherCenter && profile?.role === 'teacher' ? <RoleActionPanel
           lang={lang}
           title={lang === 'ar' ? 'مركز التدريس' : 'Teaching Center'}
