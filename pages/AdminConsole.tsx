@@ -370,7 +370,58 @@ export const AdminConsole: React.FC = () => {
   };
 
   const currentPlanName = (planId?: string) => plans.find((plan) => plan.id === planId)?.name || 'بلا باقة';
-  const userCountForSchool = (schoolId: string) => users.filter((item) => item.schoolId === schoolId).length;
+const userCountForSchool = (schoolId: string) => users.filter((item) => item.schoolId === schoolId).length;
+  const schoolStatusStats = [
+    { key: 'active', label: 'فعّالة', color: '#059669', barClass: 'bg-emerald-500', count: schools.filter(s => s.status === 'active').length },
+    { key: 'trial', label: 'تجريبية', color: '#F59E0B', barClass: 'bg-amber-500', count: schools.filter(s => s.status === 'trial').length },
+    { key: 'suspended', label: 'موقوفة', color: '#F43F5E', barClass: 'bg-rose-500', count: schools.filter(s => s.status === 'suspended').length },
+    { key: 'other', label: 'غير محددة', color: '#94A3B8', barClass: 'bg-slate-400', count: schools.filter(s => !['active', 'trial', 'suspended'].includes(s.status || '')).length },
+  ];
+  const roleStats = [
+    { label: 'الطلاب', color: '#2563EB', count: users.filter(u => u.role === 'student').length },
+    { label: 'المعلمون', color: '#7C3AED', count: users.filter(u => u.role === 'teacher').length },
+    { label: 'مديرو المدارس', color: '#059669', count: users.filter(u => u.role === 'schoolAdmin').length },
+    { label: 'الأدمن', color: '#D97706', count: users.filter(u => u.role === 'admin').length },
+    { label: 'أدوار أخرى', color: '#94A3B8', count: users.filter(u => !['student', 'teacher', 'schoolAdmin', 'admin'].includes(u.role)).length },
+  ];
+  const schoolPlanStats = plans.map(plan => ({
+    id: plan.id,
+    name: plan.name,
+    count: schools.filter(school => school.planId === plan.id).length,
+    active: plan.isActive !== false,
+  })).sort((a, b) => b.count - a.count);
+  const recentRegistrationStats = Array.from({ length: 6 }, (_, index) => {
+    const start = new Date();
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+    start.setMonth(start.getMonth() - (5 - index));
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+    const count = schools.filter(school => {
+      const raw = school.createdAt;
+      const created = raw?.toDate ? raw.toDate() : raw instanceof Date ? raw : raw ? new Date(raw) : null;
+      return created instanceof Date && !Number.isNaN(created.getTime()) && created >= start && created < end;
+    }).length;
+    return { label: start.toLocaleDateString('ar-AE', { month: 'short' }), count };
+  });
+  const exportAnalyticsReport = () => {
+    const csv = [
+      ['المؤشر', 'القيمة'],
+      ['المدارس المسجلة', String(schools.length)],
+      ['الاشتراكات الفعّالة', String(schoolStatusStats.find(x => x.key === 'active')?.count || 0)],
+      ['الفترات التجريبية', String(schoolStatusStats.find(x => x.key === 'trial')?.count || 0)],
+      ['الاشتراكات الموقوفة', String(schoolStatusStats.find(x => x.key === 'suspended')?.count || 0)],
+      ['إجمالي الحسابات', String(users.length)],
+      ...roleStats.map(item => [item.label, String(item.count)]),
+      ...schoolPlanStats.map(item => [`مدارس باقة ${item.name}`, String(item.count)]),
+    ].map(row => row.map(value => '"' + value.replace(/"/g, '""') + '"').join(',')).join('\\r\\n');
+    const url = URL.createObjectURL(new Blob(['\\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `QUL-platform-analytics-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
 
   if (profile?.role !== 'admin') {
     return <div dir="rtl" className="p-8 text-center font-bold text-red-700">هذه الصفحة مخصصة لأدمن منصة قُل.</div>;
@@ -529,21 +580,67 @@ export const AdminConsole: React.FC = () => {
               <div className="space-y-3">{schools.length ? schools.map(school => <SchoolSubscriptionRow key={school.id} school={school} plans={plans} usersCount={userCountForSchool(school.id)} disabled={saving} onSave={saveSchool}/>) : <EmptyState message="لا توجد مدارس مسجلة."/>}</div>
             </section>}
 
-            {tab === 'analytics' && <section className="space-y-4">
-              <div><h2 className="text-xl font-black">تحليلات المنصة</h2><p className="mt-1 text-sm text-slate-500">أرقام محسوبة من السجلات المحمّلة من Firestore، وليست تقديرات.</p></div>
+            {tab === 'analytics' && <section className="space-y-4 pb-2">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div><h2 className="text-xl font-black">تحليلات المنصة</h2><p className="mt-1 text-sm text-slate-500">لوحة تشغيلية مبنية على سجلات المدارس والحسابات والباقات الفعلية في Firestore.</p></div>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={exportAnalyticsReport} className={`${buttonClass} border border-slate-200 bg-white text-slate-700`}><Activity size={15}/> تصدير التقرير CSV</button>
+                  <button onClick={() => void loadData()} disabled={loading} className={`${buttonClass} bg-emerald-800 text-white hover:bg-emerald-900`}><RefreshCw size={15} className={loading ? 'animate-spin' : ''}/> تحديث البيانات</button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  { label: 'المدارس', value: schools.length, icon: Building2 },
-                  { label: 'المستخدمون', value: users.length, icon: Users },
-                  { label: 'المعلمون', value: users.filter(u => u.role === 'teacher').length, icon: GraduationCap },
-                  { label: 'الطلاب', value: users.filter(u => u.role === 'student').length, icon: School },
-                  { label: 'مديرو المدارس', value: users.filter(u => u.role === 'schoolAdmin').length, icon: ShieldCheck },
-                  { label: 'الباقات المتاحة', value: plans.filter(p => p.isActive !== false).length, icon: Layers3 },
-                  { label: 'الأقسام التعليمية', value: SCHOOL_MODULES.length, icon: Activity },
-                  { label: 'مدارس دون باقة', value: schools.filter(s => !s.planId).length, icon: CircleDollarSign },
-                ].map(item => <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-4"><div className="flex items-center justify-between text-sm text-slate-500"><span>{item.label}</span><item.icon size={18}/></div><div className="mt-3 text-2xl font-bold">{item.value}</div></div>)}
+                  { label: 'المدارس المسجلة', value: schools.length, note: `${schoolStatusStats.find(x => x.key === 'active')?.count || 0} اشتراك فعّال`, icon: Building2, accent: 'from-blue-600 to-indigo-700' },
+                  { label: 'حسابات المنصة', value: users.length, note: `${roleStats.find(x => x.label === 'المعلمون')?.count || 0} معلم`, icon: Users, accent: 'from-emerald-600 to-teal-700' },
+                  { label: 'الطلاب', value: roleStats.find(x => x.label === 'الطلاب')?.count || 0, note: 'حسابات مسجلة بدور طالب', icon: GraduationCap, accent: 'from-violet-600 to-purple-700' },
+                  { label: 'الباقات المتاحة', value: plans.filter(p => p.isActive !== false).length, note: `${schoolPlanStats.filter(x => x.count > 0).length} باقة مستخدمة حاليًا`, icon: Layers3, accent: 'from-amber-500 to-orange-600' },
+                ].map(item => <div key={item.label} className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold text-slate-500">{item.label}</p><p className="mt-2 text-3xl font-black tracking-tight text-slate-900 tabular-nums">{item.value.toLocaleString('ar-AE')}</p><p className="mt-1 text-[11px] text-slate-500">{item.note}</p></div><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${item.accent} text-white shadow-sm`}><item.icon size={19}/></span></div>
+                  <div className={`absolute bottom-0 right-0 h-1 w-full bg-gradient-to-l ${item.accent} opacity-80`}/>
+                </div>)}
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="mb-3 font-bold">المدارس حسب حالة الاشتراك</h3><div className="space-y-3">{[{label:'فعّالة',count:schools.filter(s=>s.status==='active').length,color:'bg-emerald-600'},{label:'تجريبية',count:schools.filter(s=>s.status==='trial').length,color:'bg-amber-500'},{label:'موقوفة',count:schools.filter(s=>s.status==='suspended').length,color:'bg-rose-600'}].map(item=><div key={item.label} className="grid grid-cols-[100px_minmax(0,1fr)_40px] items-center gap-3 text-sm"><span>{item.label}</span><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full ${item.color}`} style={{width:schools.length?`${item.count/schools.length*100}%`:'0%'}}/></div><span className="text-left tabular-nums">{item.count}</span></div>)}</div></div>
+
+              <div className="grid grid-cols-1 items-stretch gap-3 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+                <section className="overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-4 text-white shadow-sm">
+                  <div className="flex items-start justify-between gap-3"><div><h3 className="font-bold">حالة المدارس والاشتراكات</h3><p className="mt-1 text-xs text-slate-400">توزيع المدارس حسب الحالة المسجلة</p></div><span className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[10px] text-emerald-200">بيانات حقيقية</span></div>
+                  <div className="mt-4 grid grid-cols-1 items-center gap-4 sm:grid-cols-[minmax(150px,0.75fr)_minmax(0,1fr)]">
+                    <div className="flex items-center justify-center">
+                      <div className="relative flex h-40 w-40 items-center justify-center rounded-full" style={{ background: `conic-gradient(${schoolStatusStats.map((item, index) => { const before = schoolStatusStats.slice(0, index).reduce((sum, part) => sum + part.count, 0); const after = before + item.count; const total = schools.length || 1; return `${item.color} ${before / total * 100}% ${after / total * 100}%`; }).join(', ')})` }}>
+                        <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full border border-slate-700 bg-slate-950"><span className="text-3xl font-black tabular-nums">{schools.length.toLocaleString('ar-AE')}</span><span className="mt-1 text-[10px] text-slate-400">إجمالي المدارس</span></div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">{schoolStatusStats.map(item => <div key={item.key} className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-2"><span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: item.color }}/><span className="text-sm text-slate-200">{item.label}</span></div><div className="text-left"><span className="font-bold tabular-nums">{item.count.toLocaleString('ar-AE')}</span><span className="mr-2 text-[10px] text-slate-400">{schools.length ? Math.round(item.count / schools.length * 100) : 0}%</span></div></div>)}</div>
+                  </div>
+                  <div className="mt-4 border-t border-white/10 pt-3 text-[11px] text-slate-400">لا توجد قيم مالية هنا، لأن بيانات التحصيل والمدفوعات لم تُربط بعد بنظام فوترة فعلي.</div>
+                </section>
+
+                <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3"><div><h3 className="font-bold">تسجيل المدارس خلال آخر 6 أشهر</h3><p className="mt-1 text-xs text-slate-500">محسوب من تاريخ إنشاء المدرسة المحفوظ في السجل</p></div><span className="rounded-lg bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-800">اتجاه التسجيل</span></div>
+                  <div className="mt-5 flex h-40 items-end gap-2 border-b border-slate-200 px-1">
+                    {recentRegistrationStats.map((item, index) => { const max = Math.max(1, ...recentRegistrationStats.map(x => x.count)); const height = item.count ? Math.max(12, item.count / max * 100) : 4; return <div key={item.label + index} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"><span className="text-[10px] font-bold tabular-nums text-slate-600">{item.count}</span><div title={`${item.label}: ${item.count} مدرسة`} className={`w-full max-w-10 rounded-t-md transition-all ${index === recentRegistrationStats.length - 1 ? 'bg-emerald-600' : 'bg-emerald-200 hover:bg-emerald-400'}`} style={{ height: `${height}%` }}/><span className="pb-2 text-[10px] text-slate-500">{item.label}</span></div>; })}
+                  </div>
+                  <p className="mt-3 text-[10px] leading-4 text-slate-400">الشهور التي لا يظهر فيها عمود قد لا تحتوي على تسجيلات، أو قد تكون سجلات بعض المدارس بلا تاريخ إنشاء.</p>
+                </section>
+              </div>
+
+              <div className="grid grid-cols-1 items-stretch gap-3 xl:grid-cols-2">
+                <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="mb-4 flex items-start justify-between gap-3"><div><h3 className="font-bold">تركيبة حسابات المنصة</h3><p className="mt-1 text-xs text-slate-500">توزيع حسب الدور المسجل لكل حساب</p></div><Users size={18} className="text-slate-400"/></div>
+                  <div className="space-y-4">{roleStats.map(item => { const percent = users.length ? Math.round(item.count / users.length * 100) : 0; return <div key={item.label} className="space-y-1.5"><div className="flex items-center justify-between gap-3 text-sm"><span className="font-medium text-slate-700">{item.label}</span><span className="text-xs tabular-nums text-slate-500">{item.count.toLocaleString('ar-AE')} <span className="mr-1 text-slate-400">({percent}%)</span></span></div><div className="h-2.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full transition-all" style={{ width: `${percent}%`, backgroundColor: item.color }}/></div></div>; })}</div>
+                  <div className="mt-4 flex flex-wrap gap-2">{roleStats.filter(item => item.count > 0).map(item => <span key={item.label} className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2 py-1 text-[10px] text-slate-600"><span className="h-2 w-2 rounded-sm" style={{ backgroundColor: item.color }}/>{item.label}</span>)}</div>
+                </section>
+                <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="mb-4 flex items-start justify-between gap-3"><div><h3 className="font-bold">المدارس حسب الباقة</h3><p className="mt-1 text-xs text-slate-500">عدد المدارس المرتبطة بكل باقة</p></div><Layers3 size={18} className="text-slate-400"/></div>
+                  {schoolPlanStats.length ? <div className="space-y-3">{schoolPlanStats.slice(0, 6).map(item => { const percent = schools.length ? Math.round(item.count / schools.length * 100) : 0; return <div key={item.id} className="space-y-1.5"><div className="flex items-center justify-between gap-3 text-sm"><span className="truncate font-medium text-slate-700">{item.name}{!item.active && <span className="mr-2 text-[10px] font-normal text-rose-600">موقوفة</span>}</span><span className="text-xs tabular-nums text-slate-500">{item.count} مدرسة</span></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-l from-blue-600 to-emerald-500" style={{ width: `${percent}%` }}/></div></div>; })}</div> : <EmptyState message="أنشئ باقة لتظهر مقارنة الاستخدام هنا."/>}
+                  {schools.filter(s => !s.planId).length > 0 && <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">{schools.filter(s => !s.planId).length} مدرسة دون باقة مرتبطة، راجعها في قسم المدارس.</div>}
+                </section>
+              </div>
+
+              <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3"><div><h3 className="font-bold">المدارس التي تحتاج إلى مراجعة</h3><p className="mt-1 text-xs text-slate-500">قائمة عملية مستخرجة من حالة الاشتراك والربط المسجل</p></div><button onClick={() => setTab('schools')} className="text-xs font-bold text-emerald-800 hover:underline">إدارة المدارس ←</button></div>
+                {schools.filter(s => s.status === 'suspended' || !s.planId || s.status === 'trial').length ? <div className="divide-y divide-slate-100">{schools.filter(s => s.status === 'suspended' || !s.planId || s.status === 'trial').slice(0, 6).map(school => <div key={school.id} className="grid items-center gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_120px_120px]"><div className="min-w-0"><p className="truncate text-sm font-semibold">{school.name}</p><p className="mt-0.5 truncate text-xs text-slate-500">{school.contactEmail || 'لا يوجد بريد تواصل'}</p></div><span className={`text-xs font-semibold ${school.status === 'suspended' ? 'text-rose-700' : school.status === 'trial' ? 'text-amber-700' : 'text-slate-500'}`}>{school.status === 'suspended' ? 'موقوفة' : school.status === 'trial' ? 'فترة تجريبية' : 'دون باقة'}</span><span className="text-xs text-slate-500">{currentPlanName(school.planId)}</span></div>)}</div> : <div className="px-4 py-5 text-sm text-emerald-800">لا توجد مدارس تستدعي المراجعة وفق البيانات المسجلة.</div>}
+              </section>
             </section>}
 
             {tab === 'audit' && <section className="space-y-3"><div><h2 className="text-xl font-black">سجل العمليات الإدارية</h2><p className="mt-1 text-sm text-slate-500">يحتوي على العمليات المسجلة بعد تفعيل السجل، ولا يتضمن التغييرات السابقة.</p></div>{auditLogs.length ? <div className="overflow-hidden rounded-xl border border-slate-200 bg-white"><div className="divide-y divide-slate-100">{auditLogs.map(log=><div key={log.id} className="grid gap-1 px-4 py-3 sm:grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)]"><div className="text-xs text-slate-500">{log.createdAt?.toDate ? log.createdAt.toDate().toLocaleString('ar-AE') : 'وقت غير متاح'}</div><div className="text-sm font-semibold">{log.action || 'عملية إدارية'}</div><div className="text-xs text-slate-500">{log.details || log.target || ''} · {log.actorEmail || ''}</div></div>)}</div></div>:<EmptyState message="لا توجد سجلات عمليات متاحة بعد. ستظهر العمليات المسجلة بعد نشر قواعد سجل التدقيق."/>}</section>}
