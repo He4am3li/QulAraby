@@ -1,17 +1,18 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Activity, Building2, Check, ChevronDown, ChevronLeft, CircleDollarSign, GraduationCap, Layers3,
-  LoaderCircle, Plus, RefreshCw, School, Settings2, ShieldCheck, Users, X
+  LoaderCircle, Plus, RefreshCw, School, Settings2, ShieldCheck, Users, X, BarChart3,
+  Receipt, Headphones, History, SlidersHorizontal, ExternalLink
 } from 'lucide-react';
 import {
-  addDoc, collection, deleteField, doc, getDocs, serverTimestamp, setDoc, updateDoc
+  addDoc, collection, deleteField, doc, getDocs, serverTimestamp, setDoc, updateDoc, limit, query
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { ALL_SCHOOL_MODULE_IDS, SCHOOL_MODULES } from '../config/schoolPlans';
 import { useAuth } from '../components/AuthProvider';
 import { PlatformTopBar } from '../components/PlatformTopBar';
+import { ModuleCard } from './Home';
 
 type PlanRecord = {
   id: string; name: string; description?: string; price?: number; currency?: string;
@@ -25,7 +26,9 @@ type SchoolRecord = {
 type UserRecord = {
   uid: string; email: string; displayName?: string; role: string; schoolId?: string;
 };
-type TabKey = 'overview' | 'schools' | 'plans' | 'users';
+type TabKey = 'overview' | 'schools' | 'plans' | 'users' | 'subscriptions' | 'analytics' | 'audit' | 'support' | 'settings';
+type AdminLogRecord = { id: string; action?: string; target?: string; details?: string; actorEmail?: string; createdAt?: any };
+type SupportTicketRecord = { id: string; title?: string; description?: string; category?: string; status?: string; schoolId?: string; schoolName?: string; createdAt?: any; contactEmail?: string };
 
 const roleLabels: Record<string, string> = {
   admin: 'أدمن المنصة',
@@ -42,11 +45,15 @@ export const AdminConsole: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
-  const tab: TabKey = requestedTab === 'schools' || requestedTab === 'plans' || requestedTab === 'users' ? requestedTab : 'overview';
+  const tab: TabKey = ['schools','plans','users','subscriptions','analytics','audit','support','settings'].includes(requestedTab || '') ? requestedTab as TabKey : 'overview';
   const setTab = (nextTab: TabKey) => navigate(nextTab === 'overview' ? '/' : `/admin?tab=${nextTab}`);
   const [schools, setSchools] = React.useState<SchoolRecord[]>([]);
   const [plans, setPlans] = React.useState<PlanRecord[]>([]);
   const [users, setUsers] = React.useState<UserRecord[]>([]);
+  const [auditLogs, setAuditLogs] = React.useState<AdminLogRecord[]>([]);
+  const [supportTickets, setSupportTickets] = React.useState<SupportTicketRecord[]>([]);
+  const [ticketFilter, setTicketFilter] = React.useState('all');
+  const [ticketStatusDrafts, setTicketStatusDrafts] = React.useState<Record<string, string>>({});
   const [drafts, setDrafts] = React.useState<Record<string, { role: string; schoolId: string }>>({});
   const [loading, setLoading] = React.useState(true);
   const [dataLoadFailed, setDataLoadFailed] = React.useState(false);
@@ -79,9 +86,24 @@ export const AdminConsole: React.FC = () => {
       const nextSchools = schoolSnap.docs.map((item) => ({ id: item.id, ...item.data() } as SchoolRecord));
       const nextPlans = planSnap.docs.map((item) => ({ id: item.id, ...item.data() } as PlanRecord));
       const nextUsers = userSnap.docs.map((item) => ({ uid: item.id, ...item.data() } as UserRecord));
+      let nextLogs: AdminLogRecord[] = [];
+      let nextTickets: SupportTicketRecord[] = [];
+      try {
+        const snap = await getDocs(query(collection(db, 'admin_audit_logs'), limit(100)));
+        nextLogs = snap.docs.map(item => ({ id: item.id, ...item.data() } as AdminLogRecord))
+          .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      } catch (optionalError) { console.info('Audit log collection is not available yet.', optionalError); }
+      try {
+        const snap = await getDocs(query(collection(db, 'support_tickets'), limit(200)));
+        nextTickets = snap.docs.map(item => ({ id: item.id, ...item.data() } as SupportTicketRecord))
+          .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      } catch (optionalError) { console.info('Support ticket collection is not available yet.', optionalError); }
       setSchools(nextSchools.sort((a, b) => a.name.localeCompare(b.name, 'ar')));
       setPlans(nextPlans.sort((a, b) => a.name.localeCompare(b.name, 'ar')));
       setUsers(nextUsers.sort((a, b) => (a.displayName || a.email).localeCompare(b.displayName || b.email, 'ar')));
+      setAuditLogs(nextLogs);
+      setSupportTickets(nextTickets);
+      setTicketStatusDrafts(Object.fromEntries(nextTickets.map(ticket => [ticket.id, ticket.status || 'open'])));
       setDrafts(Object.fromEntries(nextUsers.map((u) => [u.uid, { role: u.role || 'student', schoolId: u.schoolId || '' }])));
       setSchoolPlanId((current) => current || nextPlans.find((plan) => plan.isActive !== false)?.id || '');
       setDataLoadFailed(false);
@@ -237,6 +259,7 @@ export const AdminConsole: React.FC = () => {
       setSchoolName('');
       setSchoolEmail('');
       setSchoolStatus('trial');
+      await recordAdminEvent('إنشاء مدرسة', schoolName.trim(), `الباقة: ${currentPlanName(schoolPlanId)}، الحالة: ${schoolStatus}`);
       await loadData();
       flash('success', 'تمت إضافة المدرسة وربطها بالباقة المحددة.');
     } catch (error) {
@@ -266,6 +289,7 @@ export const AdminConsole: React.FC = () => {
         }
       }
       await updateDoc(doc(db, 'schools', school.id), updatePayload);
+      await recordAdminEvent('تحديث اشتراك', school.id, `المدرسة: ${school.name}، الباقة: ${currentPlanName(planId)}، الحالة: ${status}`);
       await loadData();
       flash('success', `تم تحديث اشتراك مدرسة «${school.name}».`);
     } catch (error) {
@@ -311,6 +335,7 @@ export const AdminConsole: React.FC = () => {
         schoolId: draft.schoolId || deleteField(),
         updatedAt: serverTimestamp(),
       });
+      await recordAdminEvent('تحديث صلاحيات حساب', userRecord.uid, `الحساب: ${userRecord.email}، الدور: ${roleLabels[draft.role] || draft.role}`);
       await loadData();
       flash('success', `تم تحديث صلاحيات ${userRecord.displayName || userRecord.email}.`);
     } catch (error) {
@@ -319,6 +344,28 @@ export const AdminConsole: React.FC = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const recordAdminEvent = async (action: string, target: string, details: string) => {
+    try {
+      await addDoc(collection(db, 'admin_audit_logs'), {
+        action, target, details, actorUid: profile?.uid || '', actorEmail: profile?.email || '',
+        createdAt: serverTimestamp(),
+      });
+    } catch (error) { console.warn('Admin event log was not stored; publish admin_audit_logs rules.', error); }
+  };
+
+  const updateTicketStatus = async (ticket: SupportTicketRecord) => {
+    const nextStatus = ticketStatusDrafts[ticket.id] || 'open';
+    setSaving(true);
+    try {
+      await updateDoc(doc(db, 'support_tickets', ticket.id), { status: nextStatus, updatedAt: serverTimestamp() });
+      await loadData();
+      flash('success', 'تم تحديث حالة طلب الدعم.');
+    } catch (error) {
+      console.error('Support ticket update failed:', error);
+      flash('error', 'تعذر تحديث حالة الطلب. تحقق من نشر قواعد support_tickets.');
+    } finally { setSaving(false); }
   };
 
   const currentPlanName = (planId?: string) => plans.find((plan) => plan.id === planId)?.name || 'بلا باقة';
@@ -356,19 +403,15 @@ export const AdminConsole: React.FC = () => {
             {tab === 'overview' && <section>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
                 {[
-                  { title: 'المدارس', english: 'SCHOOLS', icon: Building2, color: 'from-blue-600 to-indigo-700', href: '/admin?tab=schools' },
-                  { title: 'الباقات والأقسام', english: 'PLANS', icon: Layers3, color: 'from-emerald-600 to-emerald-800', href: '/admin?tab=plans' },
-                  { title: 'الحسابات والصلاحيات', english: 'ACCOUNTS', icon: Users, color: 'from-violet-600 to-purple-800', href: '/admin?tab=users' },
-                ].map((item) => (
-                  <motion.button key={item.href} whileHover={{ y: -8, scale: 1.02, boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }} whileTap={{ scale: 0.98 }} layout onClick={() => navigate(item.href)} className="relative group p-3 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm hover:border-blue-200 transition-colors text-right">
-                    <div className={`w-8 h-8 bg-gradient-to-br ${item.color} rounded-full flex items-center justify-center text-white mb-2 shadow-md mr-0 ml-auto`}><item.icon size={18}/></div>
-                    <div className="text-right">
-                      <h4 className="text-[8px] font-black text-slate-400 uppercase mb-0.5">{item.english}</h4>
-                      <h3 className="text-base font-black text-slate-800 mb-0.5 arabic-font leading-normal pb-1">{item.title}</h3>
-                    </div>
-                    <div className="mt-2 flex items-center justify-end gap-1 text-[8px] font-black text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">فتح القسم <ChevronLeft size={8}/></div>
-                  </motion.button>
-                ))}
+                  { title: 'المدارس', english: 'SCHOOLS', icon: Building2, color: 'from-blue-600 to-indigo-700', tab: 'schools' as TabKey },
+                  { title: 'الباقات والأقسام', english: 'PLANS', icon: Layers3, color: 'from-emerald-600 to-emerald-800', tab: 'plans' as TabKey },
+                  { title: 'الحسابات والصلاحيات', english: 'ACCOUNTS', icon: Users, color: 'from-violet-600 to-purple-800', tab: 'users' as TabKey },
+                  { title: 'الاشتراكات والتجديدات', english: 'SUBSCRIPTIONS', icon: Receipt, color: 'from-amber-500 to-orange-600', tab: 'subscriptions' as TabKey },
+                  { title: 'التحليلات', english: 'ANALYTICS', icon: BarChart3, color: 'from-cyan-600 to-blue-700', tab: 'analytics' as TabKey },
+                  { title: 'سجل العمليات', english: 'AUDIT LOG', icon: History, color: 'from-slate-600 to-slate-800', tab: 'audit' as TabKey },
+                  { title: 'الدعم الفني', english: 'SUPPORT', icon: Headphones, color: 'from-rose-500 to-pink-700', tab: 'support' as TabKey },
+                  { title: 'إعدادات المنصة', english: 'PLATFORM SETTINGS', icon: SlidersHorizontal, color: 'from-teal-600 to-emerald-800', tab: 'settings' as TabKey },
+                ].map(item => <ModuleCard key={item.tab} icon={<item.icon />} title={item.english} arTitle={item.title} description="" color={item.color} onClick={() => setTab(item.tab)} enterLabel="فتح القسم" lang="ar" />)}
               </div>
             </section>}
 
@@ -473,6 +516,41 @@ export const AdminConsole: React.FC = () => {
                 </div>;
               })}</div>}
             </section>}
+            {tab === 'subscriptions' && <section className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-black">الاشتراكات والتجديدات ({schools.length})</h2><p className="mt-1 text-sm text-slate-500">إدارة الباقة والحالة وتجديد المدة من سجل كل مدرسة.</p></div><button onClick={() => void loadData()} className={`${buttonClass} border border-slate-200 bg-white text-slate-700`}><RefreshCw size={15}/> تحديث البيانات</button></div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                {[
+                  { label: 'اشتراكات فعّالة', value: schools.filter(s => s.status === 'active').length },
+                  { label: 'فترات تجريبية', value: schools.filter(s => s.status === 'trial').length },
+                  { label: 'اشتراكات موقوفة', value: schools.filter(s => s.status === 'suspended').length },
+                ].map(item => <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-4"><div className="text-sm text-slate-500">{item.label}</div><div className="mt-2 text-2xl font-bold">{item.value}</div></div>)}
+              </div>
+              <div className="space-y-3">{schools.length ? schools.map(school => <SchoolSubscriptionRow key={school.id} school={school} plans={plans} usersCount={userCountForSchool(school.id)} disabled={saving} onSave={saveSchool}/>) : <EmptyState message="لا توجد مدارس مسجلة."/>}</div>
+            </section>}
+
+            {tab === 'analytics' && <section className="space-y-4">
+              <div><h2 className="text-xl font-black">تحليلات المنصة</h2><p className="mt-1 text-sm text-slate-500">أرقام محسوبة من السجلات المحمّلة من Firestore، وليست تقديرات.</p></div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  { label: 'المدارس', value: schools.length, icon: Building2 },
+                  { label: 'المستخدمون', value: users.length, icon: Users },
+                  { label: 'المعلمون', value: users.filter(u => u.role === 'teacher').length, icon: GraduationCap },
+                  { label: 'الطلاب', value: users.filter(u => u.role === 'student').length, icon: School },
+                  { label: 'مديرو المدارس', value: users.filter(u => u.role === 'schoolAdmin').length, icon: ShieldCheck },
+                  { label: 'الباقات المتاحة', value: plans.filter(p => p.isActive !== false).length, icon: Layers3 },
+                  { label: 'الأقسام التعليمية', value: SCHOOL_MODULES.length, icon: Activity },
+                  { label: 'مدارس دون باقة', value: schools.filter(s => !s.planId).length, icon: CircleDollarSign },
+                ].map(item => <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-4"><div className="flex items-center justify-between text-sm text-slate-500"><span>{item.label}</span><item.icon size={18}/></div><div className="mt-3 text-2xl font-bold">{item.value}</div></div>)}
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="mb-3 font-bold">المدارس حسب حالة الاشتراك</h3><div className="space-y-3">{[{label:'فعّالة',count:schools.filter(s=>s.status==='active').length,color:'bg-emerald-600'},{label:'تجريبية',count:schools.filter(s=>s.status==='trial').length,color:'bg-amber-500'},{label:'موقوفة',count:schools.filter(s=>s.status==='suspended').length,color:'bg-rose-600'}].map(item=><div key={item.label} className="grid grid-cols-[100px_minmax(0,1fr)_40px] items-center gap-3 text-sm"><span>{item.label}</span><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full ${item.color}`} style={{width:schools.length?`${item.count/schools.length*100}%`:'0%'}}/></div><span className="text-left tabular-nums">{item.count}</span></div>)}</div></div>
+            </section>}
+
+            {tab === 'audit' && <section className="space-y-3"><div><h2 className="text-xl font-black">سجل العمليات الإدارية</h2><p className="mt-1 text-sm text-slate-500">يحتوي على العمليات المسجلة بعد تفعيل السجل، ولا يتضمن التغييرات السابقة.</p></div>{auditLogs.length ? <div className="overflow-hidden rounded-xl border border-slate-200 bg-white"><div className="divide-y divide-slate-100">{auditLogs.map(log=><div key={log.id} className="grid gap-1 px-4 py-3 sm:grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)]"><div className="text-xs text-slate-500">{log.createdAt?.toDate ? log.createdAt.toDate().toLocaleString('ar-AE') : 'وقت غير متاح'}</div><div className="text-sm font-semibold">{log.action || 'عملية إدارية'}</div><div className="text-xs text-slate-500">{log.details || log.target || ''} · {log.actorEmail || ''}</div></div>)}</div></div>:<EmptyState message="لا توجد سجلات عمليات متاحة بعد. ستظهر العمليات المسجلة بعد نشر قواعد سجل التدقيق."/>}</section>}
+
+            {tab === 'support' && <section className="space-y-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="text-xl font-black">مركز الدعم الفني</h2><p className="mt-1 text-sm text-slate-500">طلبات المساعدة التي ترسلها المدارس من حساباتها.</p></div><button onClick={() => void loadData()} className={`${buttonClass} border border-slate-200 bg-white text-slate-700`}><RefreshCw size={15}/> تحديث الطلبات</button></div><div className="flex flex-wrap items-center gap-2"><label className="text-sm font-semibold">تصفية الطلبات</label><select value={ticketFilter} onChange={e=>setTicketFilter(e.target.value)} className={inputClass + ' max-w-56'}><option value="all">كل الحالات</option><option value="open">جديد</option><option value="in_progress">قيد المعالجة</option><option value="resolved">تم الحل</option></select></div>{supportTickets.filter(t=>ticketFilter==='all'||(t.status||'open')===ticketFilter).length ? <div className="space-y-3">{supportTickets.filter(t=>ticketFilter==='all'||(t.status||'open')===ticketFilter).map(ticket=><div key={ticket.id} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,1fr)_180px_auto] md:items-center"><div className="min-w-0"><div className="font-bold">{ticket.title || 'طلب دعم'}</div><div className="mt-1 text-xs text-slate-500">{ticket.schoolName || ticket.schoolId || 'مدرسة غير محددة'} · {ticket.contactEmail || ''} · {ticket.createdAt?.toDate ? ticket.createdAt.toDate().toLocaleString('ar-AE') : 'تاريخ غير متاح'}</div><p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{ticket.description || ''}</p></div><select value={ticketStatusDrafts[ticket.id] || ticket.status || 'open'} onChange={e=>setTicketStatusDrafts(old=>({...old,[ticket.id]:e.target.value}))} className={inputClass}><option value="open">جديد</option><option value="in_progress">قيد المعالجة</option><option value="resolved">تم الحل</option></select><button disabled={saving || (ticketStatusDrafts[ticket.id] || ticket.status || 'open')===(ticket.status||'open')} onClick={()=>void updateTicketStatus(ticket)} className={`${buttonClass} bg-emerald-800 text-white`}><Check size={15}/> حفظ الحالة</button></div>)}</div>:<EmptyState message="لا توجد طلبات دعم بهذه الحالة."/>}</section>}
+
+            {tab === 'settings' && <section className="space-y-4"><div><h2 className="text-xl font-black">إعدادات المنصة</h2><p className="mt-1 text-sm text-slate-500">معلومات تشغيلية مرجعية. لا تُعرض مفاتيح أو أسرار الاتصال في واجهة الإدارة.</p></div><div className="grid gap-3 md:grid-cols-2"><div className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold">قاعدة البيانات</h3><p className="mt-2 text-xs text-slate-500">قاعدة Firestore المستخدمة في تطبيق قُل</p><code dir="ltr" className="mt-2 block break-all text-xs">ai-studio-d8ed89a2-6662-4aa5-9cc7-1e8d0693722e</code></div><div className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold">الوحدات التعليمية</h3><p className="mt-2 text-xs text-slate-500">{SCHOOL_MODULES.length} قسمًا معرّفًا في إعدادات المنصة.</p><p className="mt-2 text-xs text-slate-500">تعديل تعريف الأقسام يتم من إعدادات المشروع، ثم اختبار توافق الباقات القائمة.</p></div><div className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold">الأمان</h3><p className="mt-2 text-sm text-slate-600">الأدوار وحدود الوصول تُفرض في Firestore Rules. إخفاء قسم من القائمة ليس بديلًا عن قواعد الأمان.</p><a className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-emerald-800" href="https://console.cloud.google.com/firestore/databases/ai-studio-d8ed89a2-6662-4aa5-9cc7-1e8d0693722e/security?project=gen-lang-client-0558881211" target="_blank" rel="noreferrer">فتح قواعد الأمان <ExternalLink size={14}/></a></div><div className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold">التكاملات التجارية</h3><p className="mt-2 text-sm text-slate-600">بوابة الدفع والفوترة الآلية وإرسال دعوات تسجيل الدخول تحتاج إلى تهيئة خدمات خلفية منفصلة قبل تفعيلها.</p></div></div></section>}
+
           </>
         )}
 
