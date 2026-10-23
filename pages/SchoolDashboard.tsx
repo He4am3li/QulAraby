@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Users, GraduationCap, BookOpenCheck, Layers3, Settings2, Building2, Search,
@@ -14,6 +13,7 @@ import { db } from '../firebase';
 import { useAuth } from '../components/AuthProvider';
 import { SCHOOL_MODULES } from '../config/schoolPlans';
 import { PlatformTopBar } from '../components/PlatformTopBar';
+import { ModuleCard } from './Home';
 
 type SchoolRecord = {
   name: string;
@@ -389,11 +389,18 @@ export const SchoolDashboard: React.FC = () => {
       <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col gap-3">
         {notice && <div role="status" className="flex shrink-0 items-start justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="إغلاق الرسالة"><X size={14}/></button></div>}
 
-        {activeTab === 'overview' && <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {tabCards.map(item => <motion.button key={item.id} whileHover={{ y: -2 }} whileTap={{ scale: 0.99 }} onClick={() => navigate('/school?tab=' + item.id)} className="group flex min-h-28 items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 text-right transition-colors hover:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-700/20">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition-colors group-hover:border-emerald-200 group-hover:bg-emerald-50 group-hover:text-emerald-800"><item.icon size={19} strokeWidth={1.8}/></span>
-            <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{item.title}</span><span className="mt-1.5 block text-xs leading-5 text-slate-500">{item.description}</span><span className="mt-2 block text-[11px] font-semibold text-emerald-800">فتح القسم ←</span></span>
-          </motion.button>)}
+        {activeTab === 'overview' && <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          {tabCards.map(item => <ModuleCard
+            key={item.id}
+            icon={<item.icon />}
+            title={item.english}
+            arTitle={item.title}
+            description=""
+            color={item.id === 'teachers' ? 'from-blue-600 to-indigo-700' : item.id === 'students' ? 'from-violet-600 to-purple-800' : item.id === 'classes' ? 'from-emerald-600 to-emerald-800' : item.id === 'settings' ? 'from-slate-600 to-slate-800' : 'from-orange-500 to-amber-600'}
+            onClick={() => navigate('/school?tab=' + item.id)}
+            enterLabel="فتح القسم"
+            lang="ar"
+          />)}
         </section>}
 
         {activeTab === 'teachers' && <div className="flex min-h-0 flex-1 flex-col gap-2"><div className="flex items-center justify-between gap-2"><h1 className="text-lg font-bold">المعلمون</h1><button onClick={() => exportMembers(filteredMembers(teachers), 'teachers')} className={secondaryButton}><Download size={15}/> تصدير القائمة</button></div>{renderMemberTable(teachers, 'teacher')}</div>}
