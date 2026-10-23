@@ -42,7 +42,7 @@ const navTranslations: Record<string, { en: string, ar: string }> = {
   '/admin?tab=analytics': { en: 'Analytics', ar: 'التحليلات' },
   '/admin?tab=audit': { en: 'Audit Log', ar: 'سجل العمليات' },
   '/admin?tab=support': { en: 'Support', ar: 'الدعم الفني' },
-  '/admin?tab=settings': { en: 'Platform Settings', ar: 'إعدادات المنصة' },
+
   '/school?tab=overview': { en: 'Overview', ar: 'نظرة عامة' },
   '/school?tab=teachers': { en: 'Teachers', ar: 'المعلمون' },
   '/school?tab=students': { en: 'Students', ar: 'الطلاب' },
@@ -51,8 +51,8 @@ const navTranslations: Record<string, { en: string, ar: string }> = {
   '/school?tab=subscription': { en: 'Subscription & Modules', ar: 'الاشتراك والأقسام' },
   '/school?tab=reports': { en: 'School Reports', ar: 'التقارير المدرسية' },
   '/school?tab=support': { en: 'School Support', ar: 'الدعم الفني' },
-  '/school?tab=reports': { en: 'School Reports', ar: 'التقارير المدرسية' },
-  '/school?tab=support': { en: 'School Support', ar: 'الدعم الفني' },
+
+
   '/school?tab=team': { en: 'School Team', ar: 'فريق المدرسة' },
 };
 
@@ -86,10 +86,10 @@ const navIcons: Record<string, any> = {
   '/admin?tab=audit': History,
   '/admin?tab=support': Headphones,
   '/admin?tab=settings': Settings2,
-  '/admin?tab=subscriptions': Receipt,
-  '/admin?tab=analytics': BarChart3,
-  '/admin?tab=audit': History,
-  '/admin?tab=support': Headphones,
+
+
+
+
   '/admin?tab=settings': Settings2,
   '/school?tab=overview': Activity,
   '/school?tab=teachers': GraduationCap,
@@ -99,8 +99,8 @@ const navIcons: Record<string, any> = {
   '/school?tab=subscription': Layers,
   '/school?tab=reports': BarChart3,
   '/school?tab=support': Headphones,
-  '/school?tab=reports': BarChart3,
-  '/school?tab=support': Headphones,
+
+
   '/school?tab=team': Users,
 };
 
