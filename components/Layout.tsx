@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home as HomeIcon, Languages, BookText, Library, BookOpen, Globe, Type, Mic, Ear, PenTool, Rocket, Gamepad2, Trophy, FileText, ClipboardList, ClipboardCheck, GraduationCap, TrendingUp, Presentation, Feather, ShieldCheck, Building2 } from 'lucide-react';
 import { OnboardingTour } from './OnboardingTour';
+import { RoleSwitcher } from './RoleSwitcher';
 import { useAuth } from './AuthProvider';
 import { useSchoolAccess } from './SchoolAccessProvider';
 import { ROUTE_MODULES } from '../config/schoolPlans';
@@ -148,6 +149,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   return (
     <div className={`h-full flex flex-col md:flex-row bg-slate-950 ${lang === 'ar' ? 'font-arabic' : ''}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <OnboardingTour lang={lang} />
+      <RoleSwitcher />
       
       {/* Dynamic Desktop Sidebar */}
       <motion.aside 
