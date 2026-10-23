@@ -102,6 +102,7 @@ export const SchoolDashboard: React.FC = () => {
   const [appointmentSlots, setAppointmentSlots] = React.useState<AppointmentSlotRecord[]>([]);
   const [selectedAppointmentDate, setSelectedAppointmentDate] = React.useState(() => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dubai' }));
   const [calendarMonth, setCalendarMonth] = React.useState(() => { const now = new Date(); return new Date(now.getFullYear(), now.getMonth(), 1); });
+  const [appointmentKind, setAppointmentKind] = React.useState<'training' | 'support'>('training');
 
   const schoolId = profile?.schoolId || '';
   const isDemo = schoolId === '__demo__';
@@ -375,7 +376,7 @@ export const SchoolDashboard: React.FC = () => {
   };
   const availableAppointmentDates = Array.from(new Set(appointmentSlots.filter(slot => slot.status === 'available' && slot.startsAt && new Date(slot.startsAt?.toDate ? slot.startsAt.toDate() : slot.startsAt).getTime() > Date.now()).map(appointmentDateKey).filter(Boolean))).sort();
   const currentAppointmentDate = selectedAppointmentDate || availableAppointmentDates[0] || '';
-  const availableAppointmentSlots = appointmentSlots.filter(slot => slot.status === 'available' && appointmentDateKey(slot) === currentAppointmentDate && new Date(slot.startsAt?.toDate ? slot.startsAt.toDate() : slot.startsAt).getTime() > Date.now())
+  const availableAppointmentSlots = appointmentSlots.filter(slot => slot.status === 'available' && (slot.kind || 'training') === appointmentKind && appointmentDateKey(slot) === currentAppointmentDate && new Date(slot.startsAt?.toDate ? slot.startsAt.toDate() : slot.startsAt).getTime() > Date.now())
     .sort((x, y) => new Date(x.startsAt?.toDate ? x.startsAt.toDate() : x.startsAt).getTime() - new Date(y.startsAt?.toDate ? y.startsAt.toDate() : y.startsAt).getTime());
   const calendarYear = calendarMonth.getFullYear();
   const calendarMonthIndex = calendarMonth.getMonth();
@@ -620,7 +621,7 @@ export const SchoolDashboard: React.FC = () => {
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div><h1 className="text-base font-bold text-slate-900">حجز موعد</h1><p className="mt-1 text-xs text-slate-500">الدعم الفني أو التدريب على المنصة</p></div>
               <div className="flex items-center gap-2">
-                <select value={appointmentKind} onChange={e=>setBookingTypeDraft(e.target.value as 'training'|'support')} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"><option value="training">تدريب على المنصة</option><option value="support">دعم فني</option></select>
+                <select value={appointmentKind} onChange={e=>setAppointmentKind(e.target.value as 'training'|'support')} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"><option value="training">تدريب على المنصة</option><option value="support">دعم فني</option></select>
                 {isDemo && <span className="rounded-full bg-amber-50 px-2.5 py-1.5 text-[10px] font-semibold text-amber-800">معاينة</span>}
               </div>
             </div>
