@@ -13,6 +13,7 @@ import { db } from '../firebase';
 import { useAuth } from '../components/AuthProvider';
 import { SCHOOL_MODULES } from '../config/schoolPlans';
 import { PlatformTopBar } from '../components/PlatformTopBar';
+import { RoleLocalizer, useRoleLanguage } from '../components/RoleLocalizer';
 import { ModuleCard } from './Home';
 
 type SchoolRecord = {
@@ -69,6 +70,7 @@ const primaryButton = 'inline-flex items-center justify-center gap-2 rounded-lg 
 const secondaryButton = 'inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-emerald-700 hover:text-emerald-900 disabled:opacity-50';
 
 export const SchoolDashboard: React.FC = () => {
+  const { lang, isEnglish } = useRoleLanguage();
   const { profile } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -521,7 +523,7 @@ export const SchoolDashboard: React.FC = () => {
   };
 
   if (loading) return <div className="flex h-full min-h-80 items-center justify-center gap-3 text-slate-500"><LoaderCircle className="animate-spin"/> جارٍ تحميل لوحة المدرسة...</div>;
-  if (error) return <div dir="rtl" className="p-4 md:p-6"><div className="rounded-xl border border-amber-200 bg-amber-50 p-5 font-semibold text-amber-900"><p>{error}</p><button onClick={() => void loadData()} className={secondaryButton + ' mt-3'}><RefreshCw size={15}/> إعادة المحاولة</button></div></div>;
+  if (error) return <RoleLocalizer lang={lang}><div dir={isEnglish ? 'ltr' : 'rtl'} className="p-4 md:p-6"><div className="rounded-xl border border-amber-200 bg-amber-50 p-5 font-semibold text-amber-900"><p>{error}</p><button onClick={() => void loadData()} className={secondaryButton + ' mt-3'}><RefreshCw size={15}/> إعادة المحاولة</button></div></div></RoleLocalizer>;
 
   const renderMemberTable = (list: MemberRecord[], kind: 'teacher' | 'student') => {
     const visibleMembers = filteredMembers(list);
@@ -548,7 +550,7 @@ export const SchoolDashboard: React.FC = () => {
     </section>;
   };
 
-  return <div dir="rtl" className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f7f8f6] text-slate-900">
+  return <RoleLocalizer lang={lang}><div dir={isEnglish ? 'ltr' : 'rtl'} className={'flex h-full min-h-0 flex-col overflow-hidden bg-[#f7f8f6] text-slate-900 '+(isEnglish?'font-sans':'')}>
     <PlatformTopBar />
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-3 sm:p-4">
       <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col gap-3">
@@ -563,8 +565,8 @@ export const SchoolDashboard: React.FC = () => {
             description=""
             color={item.id === 'teachers' ? 'from-blue-600 to-indigo-700' : item.id === 'students' ? 'from-violet-600 to-purple-800' : item.id === 'classes' ? 'from-emerald-600 to-emerald-800' : item.id === 'settings' ? 'from-slate-600 to-slate-800' : 'from-orange-500 to-amber-600'}
             onClick={() => navigate('/school?tab=' + item.id)}
-            enterLabel="فتح القسم"
-            lang="ar"
+            enterLabel={isEnglish ? 'Open section' : 'فتح القسم'}
+            lang={lang}
           />)}
         </section>}
 
@@ -693,5 +695,5 @@ export const SchoolDashboard: React.FC = () => {
         </div>}
       </div>
     </div>
-  </div>;
+  </div></RoleLocalizer>;
 };
