@@ -48,9 +48,10 @@ export const SchoolDashboard: React.FC = () => {
           maxStudents: 0,
           durationDays: 30,
         });
-        setMemberCount(27);
-        setTeacherCount(3);
-        setStudentCount(24);
+        // Demo preview uses clearly synthetic member identities, not fabricated summary counts.
+        setMemberCount(0);
+        setTeacherCount(0);
+        setStudentCount(0);
         setMembers([
           { uid: 'demo-t1', displayName: 'معلم تجريبي 1', email: 'teacher1@example.com', role: 'teacher' },
           { uid: 'demo-t2', displayName: 'معلم تجريبي 2', email: 'teacher2@example.com', role: 'teacher' },
@@ -118,25 +119,12 @@ export const SchoolDashboard: React.FC = () => {
             </button>
           ))}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Metric icon={Layers3} label="الباقة الحالية" value={plan?.name || 'غير محددة'}/>
-          <Metric icon={Users} label="إجمالي الحسابات" value={memberCount}/>
-          <Metric icon={Users} label="المعلمون" value={teacherCount}/>
-          <Metric icon={Users} label="الطلاب" value={studentCount}/>
-        </div>
         <section className="rounded-xl border border-slate-200 bg-white p-5 md:p-6">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-bold">ملخص الاشتراك</h2>
-              {profile?.schoolId === '__demo__' && <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">بيانات تجريبية</span>}
-            </div>
-            <button onClick={() => navigate('/school?tab=subscription')} className="text-sm font-semibold text-emerald-800 hover:text-emerald-950">عرض التفاصيل</button>
+          <div className="mb-3 flex items-center gap-2">
+            <h2 className="text-base font-bold">نظرة سريعة</h2>
+            {profile?.schoolId === '__demo__' && <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">وضع معاينة</span>}
           </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg bg-slate-50 p-4"><p className="text-xs text-slate-500">الباقة</p><p className="mt-1 font-semibold">{plan?.name || 'غير محددة'}</p></div>
-            <div className="rounded-lg bg-slate-50 p-4"><p className="text-xs text-slate-500">حالة الاشتراك</p><p className="mt-1 font-semibold">{status}</p></div>
-            <div className="rounded-lg bg-slate-50 p-4"><p className="text-xs text-slate-500">انتهاء الاشتراك</p><p className="mt-1 font-semibold">{expiresAt || 'غير محدد'}</p></div>
-          </div>
+          <p className="text-sm leading-6 text-slate-600">استخدم البطاقات أعلاه للوصول إلى فريق المدرسة أو تفاصيل الاشتراك. ستظهر أعداد المستخدمين بعد ربط حسابات المدرسة الفعلية.</p>
         </section>
       </>}
       {activeTab === 'team' && <section className="rounded-xl border border-slate-200 bg-white">
@@ -160,7 +148,7 @@ export const SchoolDashboard: React.FC = () => {
             <div className="flex justify-between gap-3 py-3"><dt className="text-slate-500">تاريخ الانتهاء</dt><dd className="font-semibold">{expiresAt || 'غير محدد'}</dd></div>
             <div className="flex justify-between gap-3 py-3"><dt className="text-slate-500">بريد التواصل</dt><dd className="font-semibold">{school?.contactEmail || 'غير متوفر'}</dd></div>
           </dl>
-          <div className="mt-4 rounded-lg border border-slate-200 p-4 text-sm leading-6 text-slate-600">لطلب تغيير الباقة أو إضافة أقسام، تواصل مع إدارة منصة قُل. إدارة الاشتراكات متاحة للأدمن العام.</div>
+          {profile?.schoolId === '__demo__' && <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">هذه تفاصيل توضيحية للمعاينة وليست اشتراكًا حقيقيًا.</p>}
         </div>
       </section>}
       </div>
