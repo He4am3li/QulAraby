@@ -15,7 +15,7 @@ import { useAuth } from '../components/AuthProvider';
 import { PlatformTopBar } from '../components/PlatformTopBar';
 import { RoleLocalizer, useRoleLanguage } from '../components/RoleLocalizer';
 import { ModuleCard } from './Home';
-import { RoleActionPanel, RoleActionItem } from '../components/RoleActionPanel';
+import { RoleActionPanel } from '../components/RoleActionPanel';
 
 type PlanRecord = {
   id: string; name: string; description?: string; price?: number; currency?: string;
