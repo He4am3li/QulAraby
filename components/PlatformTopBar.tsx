@@ -1,7 +1,7 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { HelpCircle, LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import { LanguageToggle } from './LanguageToggle';
+import { BrandSlogan } from './BrandSlogan';
 import { FallingLetters } from './Layout';
 import { useAuth } from './AuthProvider';
 
@@ -51,12 +51,7 @@ export const PlatformTopBar: React.FC = () => {
             </button>
           </div>
         </div>
-        <div className="flex flex-col items-center justify-center text-center">
-          <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="flex min-w-[210px] flex-col items-center rounded-2xl border border-white/15 bg-white/[0.08] px-6 py-2.5 shadow-lg backdrop-blur-xl sm:px-8">
-            <span className="whitespace-nowrap text-[8px] font-black uppercase tracking-[0.18em] text-white/85 sm:text-[10px]">Learn Arabic until you can say</span>
-            <span className="handwritten-font mt-1 text-2xl font-bold leading-tight text-white sm:text-3xl">أنا عربي</span>
-          </motion.div>
-        </div>
+        <BrandSlogan />
         <div className="flex items-center justify-center md:justify-end">
           <div className="flex max-w-full items-center gap-2 rounded-xl border border-white/15 bg-white/[0.08] p-2 shadow-sm backdrop-blur-md sm:gap-3">
             {user ? (
