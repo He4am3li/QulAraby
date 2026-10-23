@@ -346,6 +346,32 @@ service cloud.firestore {
       }
     }
 
+    match /admin_audit_logs/{logId} {
+      allow create: if isAdmin() &&
+        request.resource.data.actorUid == request.auth.uid &&
+        request.resource.data.action is string &&
+        request.resource.data.createdAt is timestamp;
+      allow get, list: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    match /support_tickets/{ticketId} {
+      allow create: if isSchoolAdmin() &&
+        request.resource.data.schoolId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId &&
+        request.resource.data.title is string && request.resource.data.title.size() > 0 &&
+        request.resource.data.title.size() <= 160 &&
+        request.resource.data.description is string && request.resource.data.description.size() > 0 &&
+        request.resource.data.description.size() <= 5000 &&
+        request.resource.data.status == 'open' &&
+        request.resource.data.createdAt is timestamp;
+      allow get, list: if isAdmin() ||
+        (isSchoolAdmin() && resource.data.schoolId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId);
+      allow update: if isAdmin() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+        request.resource.data.status in ['open', 'in_progress', 'resolved'];
+      allow delete: if isAdmin();
+    }
+
     match /plans/{planId} {
       allow get: if isAuthenticated();
       allow list, create, update, delete: if isAdmin();
