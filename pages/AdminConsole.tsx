@@ -322,21 +322,7 @@ export const AdminConsole: React.FC = () => {
   return (
     <div dir="rtl" className="min-h-full bg-[#f7f8f6] text-slate-900 flex flex-col">
       <PlatformTopBar />
-      <header className="flex flex-col gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between md:px-7">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-800">
-            <ShieldCheck size={21} strokeWidth={1.8} />
-          </div>
-          <div>
-            <p className="text-xs font-bold tracking-wide text-emerald-800">قُل · الإدارة العامة</p>
-            <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900 md:text-2xl">مركز إدارة المنصة</h1>
-            <p className="mt-1 text-sm text-slate-500">المدارس، الاشتراكات، والأقسام التعليمية</p>
-          </div>
-        </div>
-        <button onClick={() => void loadData()} disabled={loading} className={`${buttonClass} self-start border border-slate-300 bg-white text-slate-700 hover:border-emerald-700 hover:text-emerald-800 sm:self-auto`}>
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> تحديث البيانات
-        </button>
-      </header>
+
       <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8">
         <div className="mx-auto max-w-7xl space-y-6">
 
@@ -352,12 +338,10 @@ export const AdminConsole: React.FC = () => {
         {loading ? <div className="flex min-h-64 items-center justify-center gap-3 text-slate-500"><LoaderCircle className="animate-spin" /> جارٍ تحميل بيانات المنصة...</div> : (
           <>
             {tab === 'overview' && <section className="space-y-6">
-              <div className="flex items-end justify-between gap-3">
-                <div>
-                  <p className="text-xs font-bold text-emerald-800">قُل · الإدارة العامة</p>
-                  <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">الرئيسية</h2>
-                  <p className="mt-1 text-sm text-slate-500">اختر أحد أقسام الإدارة للوصول مباشرة إلى مهامه.</p>
-                </div>
+              <div className="flex justify-end">
+                <button onClick={() => void loadData()} disabled={loading} className={`${buttonClass} border border-slate-300 bg-white text-slate-700 hover:border-emerald-700 hover:text-emerald-800`}>
+                  <RefreshCw size={15} className={loading ? 'animate-spin' : ''} /> تحديث البيانات
+                </button>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4 animate-in fade-in duration-500">
                 {[
