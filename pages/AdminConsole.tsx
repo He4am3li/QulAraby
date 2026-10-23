@@ -339,7 +339,14 @@ export const AdminConsole: React.FC = () => {
           {notice.type === 'success' ? <Check size={18} /> : <Settings2 size={18} className="mt-0.5 shrink-0" />}
           <div className="flex-1 leading-6">
             {notice.text}
-            {notice.type === 'error' && <div className="mt-1 font-normal text-amber-800">لم يتم حذف أي بيانات. لوحة الإدارة لا تستطيع عرض الأعداد أو تعديل سجلات المدارس حتى تُراجع صلاحيات قاعدة البيانات.</div>}
+            {notice.type === 'error' && <div className="mt-2 space-y-2 font-normal text-amber-900">
+              <p>لم يتم حذف أي بيانات. يحتاج حسابك إلى صلاحية قراءة قاعدة بيانات Firestore المستخدمة في قُل.</p>
+              <p className="text-xs leading-5 text-amber-800">قاعدة البيانات المطلوبة: <code dir="ltr" className="rounded bg-amber-100 px-1 py-0.5">ai-studio-d8ed89a2-6662-4aa5-9cc7-1e8d0693722e</code></p>
+              <a href="https://console.firebase.google.com/project/gen-lang-client-0558881211/firestore" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-bold text-amber-950 transition hover:bg-amber-100">
+                فتح إعدادات قاعدة البيانات <span aria-hidden="true">↗</span>
+              </a>
+              <p className="text-xs leading-5 text-amber-800">في Firebase، اختر قاعدة البيانات المذكورة، ثم Rules، وانشر محتوى ملف <code dir="ltr">firestore.rules</code> من GitHub. بعدها ارجع إلى هنا واضغط «تحديث البيانات».</p>
+            </div>}
           </div>
           <button onClick={() => setNotice(null)} aria-label="إغلاق التنبيه" className="rounded-lg p-1 text-current/70 hover:bg-black/5"><X size={16}/></button>
         </div>}
