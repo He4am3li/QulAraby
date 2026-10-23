@@ -38,10 +38,6 @@ const navTranslations: Record<string, { en: string, ar: string }> = {
   '/admin?tab=audit': { en: 'Audit Log', ar: 'سجل العمليات' },
   '/admin?tab=support': { en: 'Support', ar: 'الدعم الفني' },
   '/admin?tab=settings': { en: 'Platform Settings', ar: 'إعدادات المنصة' },
-  '/admin?tab=subscriptions': { en: 'Subscriptions', ar: 'الاشتراكات والتجديدات' },
-  '/admin?tab=analytics': { en: 'Analytics', ar: 'التحليلات' },
-  '/admin?tab=audit': { en: 'Audit Log', ar: 'سجل العمليات' },
-  '/admin?tab=support': { en: 'Support', ar: 'الدعم الفني' },
 
   '/school?tab=overview': { en: 'Overview', ar: 'نظرة عامة' },
   '/school?tab=teachers': { en: 'Teachers', ar: 'المعلمون' },
@@ -90,7 +86,6 @@ const navIcons: Record<string, any> = {
 
 
 
-  '/admin?tab=settings': Settings2,
   '/school?tab=overview': Activity,
   '/school?tab=teachers': GraduationCap,
   '/school?tab=students': Users,
