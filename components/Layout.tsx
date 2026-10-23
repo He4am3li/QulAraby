@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home as HomeIcon, Languages, BookText, Library, BookOpen, Globe, Type, Mic, Ear, PenTool, Rocket, Gamepad2, Trophy, FileText, ClipboardList, ClipboardCheck, GraduationCap, TrendingUp, Presentation, Feather, ShieldCheck, Building2 } from 'lucide-react';
+import { Home as HomeIcon, Languages, BookText, Library, BookOpen, Globe, Type, Mic, Ear, PenTool, Rocket, Gamepad2, Trophy, FileText, ClipboardList, ClipboardCheck, GraduationCap, TrendingUp, Presentation, Feather, ShieldCheck, Building2, Activity, Layers, Users } from 'lucide-react';
 import { OnboardingTour } from './OnboardingTour';
 import { RoleSwitcher } from './RoleSwitcher';
 import { useAuth } from './AuthProvider';
@@ -29,6 +29,13 @@ const navTranslations: Record<string, { en: string, ar: string }> = {
   '/achievements': { en: 'Achievements', ar: 'إنجازاتي' },
   '/admin': { en: 'Platform Admin', ar: 'إدارة المنصة' },
   '/school': { en: 'School Portal', ar: 'إدارة المدرسة' },
+  '/admin?tab=overview': { en: 'Overview', ar: 'نظرة عامة' },
+  '/admin?tab=schools': { en: 'Schools', ar: 'المدارس' },
+  '/admin?tab=plans': { en: 'Plans & Modules', ar: 'الباقات والأقسام' },
+  '/admin?tab=users': { en: 'Accounts & Roles', ar: 'الحسابات والصلاحيات' },
+  '/school?tab=overview': { en: 'Overview', ar: 'نظرة عامة' },
+  '/school?tab=team': { en: 'School Team', ar: 'المعلمون والطلاب' },
+  '/school?tab=subscription': { en: 'Subscription & Modules', ar: 'الاشتراك والأقسام' },
 };
 
 const navIcons: Record<string, any> = {
@@ -52,13 +59,29 @@ const navIcons: Record<string, any> = {
   '/achievements': Trophy,
   '/admin': ShieldCheck,
   '/school': Building2,
+  '/admin?tab=overview': Activity,
+  '/admin?tab=schools': Building2,
+  '/admin?tab=plans': Layers,
+  '/admin?tab=users': Users,
+  '/school?tab=overview': Activity,
+  '/school?tab=team': Users,
+  '/school?tab=subscription': Layers,
 };
 
 const learnerNavPaths = ['/', '/whiteboard', '/calligraphy', '/test', '/letters', '/vocabulary', '/quizzes', '/translator', '/listening', '/speak', '/reading', '/writing', '/assistant', '/games', '/dialects', '/worksheets', '/preparation', '/achievements'];
 
 const getNavPathsForRole = (role?: string) => {
-  if (role === 'admin') return ['/admin'];
-  if (role === 'schoolAdmin') return ['/school'];
+  if (role === 'admin') return [
+    '/admin?tab=overview',
+    '/admin?tab=schools',
+    '/admin?tab=plans',
+    '/admin?tab=users',
+  ];
+  if (role === 'schoolAdmin') return [
+    '/school?tab=overview',
+    '/school?tab=team',
+    '/school?tab=subscription',
+  ];
   if (role === 'teacher') return learnerNavPaths;
   return learnerNavPaths.filter(path => !['/whiteboard', '/calligraphy', '/preparation'].includes(path));
 };
@@ -209,22 +232,23 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         
         <nav className="relative z-10 flex-1 space-y-1 overflow-y-auto custom-scroll px-3 py-2">
           {navPaths.filter(path => {
-            if (path === '/admin' && profile?.role !== 'admin') return false;
-            if (path === '/school' && profile?.role !== 'schoolAdmin') return false;
+            if (path.split('?')[0] === '/admin' && profile?.role !== 'admin') return false;
+            if (path.split('?')[0] === '/school' && profile?.role !== 'schoolAdmin') return false;
             if (path === '/preparation' && profile?.role !== 'teacher' && profile?.role !== 'admin') return false;
-            const moduleId = ROUTE_MODULES[path];
+            const moduleId = ROUTE_MODULES[path.split('?')[0]];
             if (moduleId && !schoolAccess.canAccess(moduleId)) return false;
             return true;
           }).map((path, i) => {
-            const Icon = navIcons[path];
+            const routePath = path.split('?')[0];
+            const Icon = navIcons[path] || navIcons[routePath];
             const isTeacher = profile?.role === 'teacher' || profile?.role === 'admin';
-            let label = navTranslations[path][lang];
+            let label = (navTranslations[path] || navTranslations[routePath])[lang];
             if (path === '/test') {
               label = isTeacher 
                 ? (lang === 'ar' ? 'مستويات الطلاب' : 'Student Levels')
                 : (lang === 'ar' ? 'تحديد المستوى' : 'Placement Test');
             }
-            const isActive = location.pathname === path;
+            const isActive = location.pathname === routePath && (!path.includes('?') || location.search === `?${path.split('?')[1]}`);
 
             return (
               <div key={path} className="overflow-hidden">
@@ -240,7 +264,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 >
                   <Link
                     to={path}
-                    id={`nav-${path === '/' ? 'home' : path.substring(1)}`}
+                    id={`nav-${(path.split('?')[0] === '/' ? 'home' : path.split('?')[0].substring(1))}-${path.includes('?') ? path.split('=')[1] : 'main'}`}
                     className={`flex items-center rounded-2xl transition-all duration-300 border relative group/item nav-line-hover ${
                       collapsed ? 'justify-center p-3' : 'px-4 py-3 gap-4 mx-1'
                     } ${
@@ -288,30 +312,31 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center h-16 px-2 z-50 shadow-2xl">
         {navPaths.filter(path => {
-          if (path === '/admin' && profile?.role !== 'admin') return false;
-          if (path === '/school' && profile?.role !== 'schoolAdmin') return false;
+          if (path.split('?')[0] === '/admin' && profile?.role !== 'admin') return false;
+          if (path.split('?')[0] === '/school' && profile?.role !== 'schoolAdmin') return false;
           if (path === '/preparation' && profile?.role !== 'teacher' && profile?.role !== 'admin') return false;
-          const moduleId = ROUTE_MODULES[path];
+          const moduleId = ROUTE_MODULES[path.split('?')[0]];
           if (moduleId && !schoolAccess.canAccess(moduleId)) return false;
           // Hide some items on mobile to save space
           const mobileHiddenPaths = ['/translator', '/worksheets', '/dialects'];
           if (mobileHiddenPaths.includes(path) && path !== '/preparation') return false;
           return true;
         }).map((path) => {
-          const Icon = navIcons[path];
+          const routePath = path.split('?')[0];
+            const Icon = navIcons[path] || navIcons[routePath];
           const isTeacher = profile?.role === 'teacher' || profile?.role === 'admin';
-          let label = navTranslations[path][lang];
+          let label = (navTranslations[path] || navTranslations[routePath])[lang];
           if (path === '/test') {
             label = isTeacher 
               ? (lang === 'ar' ? 'مستويات الطلاب' : 'Student Levels')
               : (lang === 'ar' ? 'تحديد المستوى' : 'Placement Test');
           }
-          const isActive = location.pathname === path;
+          const isActive = location.pathname === routePath && (!path.includes('?') || location.search === `?${path.split('?')[1]}`);
           return (
             <Link
               key={path}
               to={path}
-              id={`mobile-nav-${path === '/' ? 'home' : path.substring(1)}`}
+              id={`mobile-nav-${(path.split('?')[0] === '/' ? 'home' : path.split('?')[0].substring(1))}-${path.includes('?') ? path.split('=')[1] : 'main'}`}
               className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
                 isActive ? 'text-blue-600' : 'text-slate-400'
               }`}
