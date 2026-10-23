@@ -1,7 +1,8 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  Activity, Building2, Check, ChevronDown, CircleDollarSign, GraduationCap, Layers3,
+  Activity, Building2, Check, ChevronDown, ChevronLeft, CircleDollarSign, GraduationCap, Layers3,
   LoaderCircle, Plus, RefreshCw, School, Settings2, ShieldCheck, Users, X
 } from 'lucide-react';
 import {
@@ -338,20 +339,20 @@ export const AdminConsole: React.FC = () => {
         {loading ? <div className="flex min-h-64 items-center justify-center gap-3 text-slate-500"><LoaderCircle className="animate-spin" /> جارٍ تحميل بيانات المنصة...</div> : (
           <>
             {tab === 'overview' && <section>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
                 {[
-                  { title: 'المدارس', description: 'إدارة المدارس واشتراكاتها.', icon: Building2, href: '/admin?tab=schools' },
-                  { title: 'الباقات والأقسام', description: 'تحديد الباقات والأقسام المشمولة.', icon: Layers3, href: '/admin?tab=plans' },
-                  { title: 'الحسابات والصلاحيات', description: 'إدارة الأدوار وربط الحسابات بالمدارس.', icon: Users, href: '/admin?tab=users' },
+                  { title: 'المدارس', english: 'SCHOOLS', icon: Building2, color: 'from-blue-600 to-indigo-700', href: '/admin?tab=schools' },
+                  { title: 'الباقات والأقسام', english: 'PLANS', icon: Layers3, color: 'from-emerald-600 to-emerald-800', href: '/admin?tab=plans' },
+                  { title: 'الحسابات والصلاحيات', english: 'ACCOUNTS', icon: Users, color: 'from-violet-600 to-purple-800', href: '/admin?tab=users' },
                 ].map((item) => (
-                  <button key={item.href} onClick={() => navigate(item.href)} className="group flex min-h-28 w-full items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 text-right transition-colors hover:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-700/20">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition-colors group-hover:border-emerald-200 group-hover:bg-emerald-50 group-hover:text-emerald-800"><item.icon size={20} strokeWidth={1.8}/></span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold text-slate-900">{item.title}</span>
-                      <span className="mt-1.5 block text-xs leading-5 text-slate-500">{item.description}</span>
-                    </span>
-                    <span className="mt-1 text-slate-300 transition-colors group-hover:text-emerald-700" aria-hidden="true">←</span>
-                  </button>
+                  <motion.button key={item.href} whileHover={{ y: -8, scale: 1.02, boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }} whileTap={{ scale: 0.98 }} layout onClick={() => navigate(item.href)} className="relative group p-3 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm hover:border-blue-200 transition-colors text-right">
+                    <div className={`w-8 h-8 bg-gradient-to-br ${item.color} rounded-full flex items-center justify-center text-white mb-2 shadow-md mr-0 ml-auto`}><item.icon size={18}/></div>
+                    <div className="text-right">
+                      <h4 className="text-[8px] font-black text-slate-400 uppercase mb-0.5">{item.english}</h4>
+                      <h3 className="text-base font-black text-slate-800 mb-0.5 arabic-font leading-normal pb-1">{item.title}</h3>
+                    </div>
+                    <div className="mt-2 flex items-center justify-end gap-1 text-[8px] font-black text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">فتح القسم <ChevronLeft size={8}/></div>
+                  </motion.button>
                 ))}
               </div>
             </section>}
