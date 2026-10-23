@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { HelpCircle, LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import { LanguageToggle } from './LanguageToggle';
+import { FallingLetters } from './Layout';
 import { useAuth } from './AuthProvider';
 
 export const PlatformTopBar: React.FC = () => {
@@ -37,9 +38,7 @@ export const PlatformTopBar: React.FC = () => {
   return (
     <header dir={lang === 'ar' ? 'rtl' : 'ltr'} className="relative isolate shrink-0 overflow-hidden border-b border-white/15 bg-gradient-to-l from-[#0f172a]/95 to-[#064e3b]/95 px-4 py-4 text-white shadow-lg sm:px-6 md:px-8 md:py-5">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        {['ق','ل','ع','ر','ب','ي','ا','ن','س','م','د','و'].map((letter, index) => (
-          <span key={index} className="absolute select-none font-bold text-white/[0.055]" style={{ left: `${7 + index * 7.5}%`, top: `${(index % 3) * 23 + 4}%`, fontSize: `${16 + (index % 4) * 5}px` }}>{letter}</span>
-        ))}
+        <FallingLetters mode="compact" />
         <div className="absolute -right-14 -top-28 h-64 w-64 rounded-full bg-emerald-300/10 blur-3xl" />
       </div>
       <div className="relative z-10 grid grid-cols-1 items-center gap-4 md:grid-cols-3">
