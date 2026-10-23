@@ -581,129 +581,115 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
               <div className="space-y-3">{schools.length ? schools.map(school => <SchoolSubscriptionRow key={school.id} school={school} plans={plans} usersCount={userCountForSchool(school.id)} disabled={saving} onSave={saveSchool}/>) : <EmptyState message="لا توجد مدارس مسجلة."/>}</div>
             </section>}
 
-            {tab === 'analytics' && <section className="grid h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_minmax(0,0.78fr)] gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-[#f6f8f7] p-3 text-slate-900 sm:p-4">
-              <header className="flex min-w-0 items-center justify-between gap-3 border-b border-slate-200 pb-3">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-base font-extrabold tracking-tight sm:text-lg">تحليلات المنصة</h2>
-                    <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-800">معاينة أثناء التطوير</span>
+            {tab === 'analytics' && <section className="relative grid h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_minmax(0,0.82fr)] gap-3 overflow-hidden rounded-[26px] border border-white/90 p-3 text-slate-800 shadow-[0_18px_55px_rgba(62,91,83,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] sm:p-4" style={{ background: 'radial-gradient(ellipse at 8% 0%,rgba(255,255,255,0.98),transparent 36%),radial-gradient(ellipse at 96% 5%,rgba(200,226,226,0.74),transparent 31%),radial-gradient(ellipse at 80% 100%,rgba(211,231,219,0.88),transparent 36%),linear-gradient(135deg,#eef5f1 0%,#e8f0f1 48%,#f5f3ed 100%)' }}>
+              <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden rounded-[26px]">
+                <div className="absolute -right-24 -top-28 h-72 w-72 rounded-full opacity-40 blur-3xl" style={{ background: 'radial-gradient(circle,#c4e9dc 0%,rgba(196,233,220,0) 70%)' }}/>
+                <div className="absolute -bottom-32 left-[28%] h-80 w-80 rounded-full opacity-30 blur-3xl" style={{ background: 'radial-gradient(circle,#d1e1f0 0%,rgba(209,225,240,0) 70%)' }}/>
+                <div className="absolute inset-0 opacity-[0.13]" style={{ backgroundImage: 'linear-gradient(rgba(86,119,110,0.13) 1px,transparent 1px),linear-gradient(90deg,rgba(86,119,110,0.13) 1px,transparent 1px)', backgroundSize: '34px 34px', maskImage: 'linear-gradient(to bottom,black,transparent 80%)' }}/>
+              </div>
+
+              <header className="relative z-10 flex min-w-0 items-center justify-between gap-3 border-b border-white/80 pb-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white bg-gradient-to-br from-white via-[#e4eee9] to-[#c1d0cc] text-[#21664f] shadow-[inset_0_1px_1px_white,0_4px_12px_rgba(60,91,82,0.12)]">
+                    <div className="absolute inset-[2px] rounded-[13px] border border-white/90"/>
+                    <Activity size={19} strokeWidth={1.8}/>
                   </div>
-                  <p className="mt-1 truncate text-[10px] text-slate-500 sm:text-xs">تصوّر لوحة الإدارة قبل إدخال بيانات المدارس والحسابات النهائية.</p>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-base font-black tracking-tight text-[#183b30] sm:text-lg">مركز التحليلات</h2>
+                      <span className="rounded-full border border-[#d6b879]/60 bg-[#fff9e9]/85 px-2.5 py-1 text-[9px] font-bold text-[#876728] shadow-[inset_0_1px_0_white]">معاينة أثناء التطوير</span>
+                    </div>
+                    <p className="mt-1 truncate text-[10px] text-slate-500 sm:text-xs">رؤية موحّدة للمدارس والحسابات والباقات، بتصميم يتطور مع بيانات قُل.</p>
+                  </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <button onClick={exportAnalyticsReport} title="تصدير تقرير CSV" className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 text-[10px] font-semibold text-slate-700 transition-colors hover:border-emerald-700 hover:text-emerald-800 sm:px-3 sm:text-xs"><Activity size={13}/> تصدير</button>
-                  <button onClick={() => void loadData()} disabled={loading} title="تحديث البيانات" className="flex h-8 items-center gap-1.5 rounded-lg bg-emerald-800 px-2.5 text-[10px] font-semibold text-white transition-colors hover:bg-emerald-900 disabled:opacity-50 sm:px-3 sm:text-xs"><RefreshCw size={13} className={loading ? 'animate-spin' : ''}/> تحديث</button>
+                  <span className="hidden items-center gap-1.5 rounded-full border border-white/90 bg-white/55 px-2.5 py-1.5 text-[9px] font-medium text-slate-500 shadow-[inset_0_1px_0_white] sm:inline-flex"><span className="h-1.5 w-1.5 rounded-full bg-[#c59a43]"/>بيانات تجريبية قابلة للتغيّر</span>
+                  <button onClick={exportAnalyticsReport} title="تصدير تقرير CSV" className="flex h-8 items-center gap-1.5 rounded-xl border border-white bg-white/65 px-2.5 text-[10px] font-semibold text-slate-700 shadow-[0_2px_7px_rgba(60,80,73,0.06),inset_0_1px_0_white] transition-all hover:-translate-y-0.5 hover:bg-white sm:px-3 sm:text-xs"><Activity size={13}/> تصدير</button>
+                  <button onClick={() => void loadData()} disabled={loading} title="تحديث البيانات" className="flex h-8 items-center gap-1.5 rounded-xl border border-[#1f6a50] bg-gradient-to-b from-[#277858] to-[#145a42] px-2.5 text-[10px] font-semibold text-white shadow-[0_3px_8px_rgba(24,99,71,0.2),inset_0_1px_0_rgba(255,255,255,0.22)] transition-all hover:-translate-y-0.5 disabled:opacity-50 sm:px-3 sm:text-xs"><RefreshCw size={13} className={loading ? 'animate-spin' : ''}/> تحديث</button>
                 </div>
               </header>
 
-              <div className="grid min-h-0 grid-cols-2 gap-3 xl:grid-cols-4 [perspective:1200px]">
+              <div className="relative z-10 grid min-h-0 grid-cols-2 gap-3 xl:grid-cols-4 [perspective:1200px]">
                 {[
-                  { label: 'المدارس المسجلة', value: schools.length, note: (schoolStatusStats.find(x => x.key === 'active')?.count || 0) + ' اشتراك فعّال', code: '01', accent: '#417e69', icon: Building2 },
-                  { label: 'حسابات المنصة', value: users.length, note: (roleStats.find(x => x.label === 'المعلمون')?.count || 0) + ' معلم مسجل', code: '02', accent: '#53769a', icon: Users },
-                  { label: 'الطلاب', value: roleStats.find(x => x.label === 'الطلاب')?.count || 0, note: 'الحسابات المسجلة بدور طالب', code: '03', accent: '#82739b', icon: GraduationCap },
-                  { label: 'الباقات المتاحة', value: plans.filter(p => p.isActive !== false).length, note: schoolPlanStats.filter(x => x.count > 0).length + ' باقة مرتبطة بمدارس', code: '04', accent: '#9c7c48', icon: Layers3 },
-                ].map((item, index) => <motion.div
-                  key={item.label}
-                  initial={{ opacity: 0, y: 12, rotateX: -5 }}
-                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                  transition={{ duration: 0.45, delay: index * 0.07, ease: [0.2, 0.7, 0.25, 1] }}
-                  whileHover={{ y: -4, rotateX: 2, rotateY: index % 2 === 0 ? -2 : 2, scale: 1.012, transition: { duration: 0.22 } }}
-                  style={{ transformStyle: 'preserve-3d' }}
-                  className="group relative min-h-0 overflow-hidden rounded-[20px] border border-white/90 p-[1px] shadow-[0_8px_22px_rgba(39,52,61,0.10),inset_0_1px_0_rgba(255,255,255,0.95)] transition-shadow duration-300 hover:shadow-[0_14px_30px_rgba(39,52,61,0.16)]"
-                >
-                  <div className="absolute inset-0 rounded-[20px]" style={{ background: 'linear-gradient(128deg,#ffffff 0%,#aeb8c0 8%,#f8fafb 18%,#c4cbd0 29%,#ffffff 39%,#8e9aa4 52%,#f7f9fa 65%,#b5bec5 78%,#ffffff 90%,#909ca5 100%)' }}/>
-                  <motion.div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -inset-y-8 -left-1/2 w-1/2 rotate-[18deg] opacity-0 blur-sm group-hover:opacity-80"
-                    style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.9),rgba(186,222,218,0.38),transparent)' }}
-                    animate={{ x: ['-20%', '245%'], opacity: [0.12, 0.34, 0.12] }}
-                    transition={{ duration: 7.5, repeat: Infinity, repeatDelay: index * 0.9, ease: 'easeInOut' }}
-                  />
-                  <div className="relative flex h-full min-h-[92px] flex-col justify-between overflow-hidden rounded-[19px] border border-white/70 px-3 py-2.5 sm:min-h-[106px] sm:px-4 sm:py-3" style={{ background: 'linear-gradient(145deg,rgba(255,255,255,0.96),rgba(234,238,241,0.93) 34%,rgba(255,255,255,0.97) 56%,rgba(213,220,225,0.94) 100%)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,1),inset 0 -1px 0 rgba(105,119,130,0.14)' }}>
-                    <div className="pointer-events-none absolute inset-0 opacity-40" style={{ background: 'radial-gradient(ellipse at 8% 0%,rgba(255,255,255,0.95),transparent 42%),radial-gradient(ellipse at 100% 100%,rgba(185,199,207,0.45),transparent 52%)' }}/>
+                  { label: 'المدارس المسجلة', value: schools.length, note: (schoolStatusStats.find(x => x.key === 'active')?.count || 0) + ' اشتراك فعّال', code: '01', accent: '#38765D', icon: Building2 },
+                  { label: 'حسابات المنصة', value: users.length, note: (roleStats.find(x => x.label === 'المعلمون')?.count || 0) + ' معلم مسجل', code: '02', accent: '#496D91', icon: Users },
+                  { label: 'الطلاب', value: roleStats.find(x => x.label === 'الطلاب')?.count || 0, note: 'الحسابات المسجلة بدور طالب', code: '03', accent: '#76669B', icon: GraduationCap },
+                  { label: 'الباقات المتاحة', value: plans.filter(p => p.isActive !== false).length, note: schoolPlanStats.filter(x => x.count > 0).length + ' باقة مرتبطة بمدارس', code: '04', accent: '#997841', icon: Layers3 },
+                ].map((item, index) => <motion.div key={item.label} initial={{ opacity: 0, y: 10, rotateX: -4 }} animate={{ opacity: 1, y: 0, rotateX: 0 }} transition={{ duration: 0.42, delay: index * 0.06, ease: [0.2, 0.7, 0.25, 1] }} whileHover={{ y: -3, rotateX: 1.5, rotateY: index % 2 === 0 ? -1.5 : 1.5, transition: { duration: 0.2 } }} style={{ transformStyle: 'preserve-3d' }} className="group relative min-h-0 overflow-hidden rounded-[20px] border border-white/90 p-[1px] shadow-[0_7px_20px_rgba(63,86,79,0.08),inset_0_1px_0_white] transition-shadow duration-300 hover:shadow-[0_12px_26px_rgba(63,86,79,0.13)]">
+                  <div className="absolute inset-0 rounded-[20px]" style={{ background: 'linear-gradient(128deg,#ffffff 0%,#b8c5c2 9%,#f8fbfa 20%,#d5dedc 31%,#ffffff 43%,#c0cbc9 55%,#f9fbfa 69%,#b1bfbb 81%,#ffffff 94%)' }}/>
+                  <motion.div aria-hidden="true" className="pointer-events-none absolute -inset-y-8 -left-1/2 w-1/2 rotate-[18deg] opacity-0 blur-sm group-hover:opacity-75" style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.95),rgba(196,228,218,0.45),transparent)' }} animate={{ x: ['-20%', '245%'], opacity: [0.08, 0.22, 0.08] }} transition={{ duration: 8, repeat: Infinity, repeatDelay: index * 0.8, ease: 'easeInOut' }}/>
+                  <div className="relative flex h-full min-h-[90px] flex-col justify-between overflow-hidden rounded-[19px] border border-white/80 px-3 py-2.5 sm:min-h-[102px] sm:px-4 sm:py-3" style={{ background: 'linear-gradient(145deg,rgba(255,255,255,0.88),rgba(234,242,239,0.74) 34%,rgba(255,255,255,0.91) 57%,rgba(216,229,225,0.76) 100%)', backdropFilter: 'blur(16px)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,1),inset 0 -1px 0 rgba(105,119,130,0.11)' }}>
+                    <div className="pointer-events-none absolute inset-0 opacity-70" style={{ background: 'radial-gradient(ellipse at 8% 0%,rgba(255,255,255,0.95),transparent 42%),radial-gradient(ellipse at 100% 100%,rgba(185,210,201,0.38),transparent 53%)' }}/>
                     <div className="relative flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="mb-1 flex items-center gap-1.5">
-                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: item.accent, boxShadow: '0 0 0 3px ' + item.accent + '18' }}/>
-                          <p className="truncate text-[10px] font-semibold tracking-wide text-slate-600 sm:text-xs">{item.label}</p>
-                        </div>
-                        <motion.p
-                          initial={{ opacity: 0.65 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.5, delay: 0.18 + index * 0.07 }}
-                          className="text-2xl font-black leading-none tracking-[-0.04em] text-slate-800 tabular-nums sm:text-3xl"
-                          style={{ textShadow: '0 1px 0 rgba(255,255,255,0.95),0 -1px 0 rgba(87,101,112,0.10)' }}
-                        >{item.value.toLocaleString('ar-AE')}</motion.p>
+                      <div className="min-w-0"><div className="mb-1 flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: item.accent, boxShadow: '0 0 0 3px ' + item.accent + '18' }}/><p className="truncate text-[10px] font-semibold tracking-wide text-slate-600 sm:text-xs">{item.label}</p></div>
+                        <motion.p initial={{ opacity: 0.65 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.18 + index * 0.07 }} className="text-2xl font-black leading-none tracking-[-0.04em] text-slate-800 tabular-nums sm:text-3xl" style={{ textShadow: '0 1px 0 rgba(255,255,255,0.95),0 -1px 0 rgba(87,101,112,0.08)' }}>{item.value.toLocaleString('ar-AE')}</motion.p>
                       </div>
-                      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-br from-white via-slate-200 to-slate-400 text-slate-600 shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_5px_rgba(47,60,70,0.12)] sm:h-10 sm:w-10">
-                        <div className="absolute inset-[2px] rounded-full border border-white/80"/>
-                        <item.icon size={17} strokeWidth={1.7} style={{ color: item.accent }}/>
-                      </div>
+                      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/90 bg-gradient-to-br from-white via-slate-100 to-slate-300 text-slate-600 shadow-[inset_0_1px_2px_rgba(255,255,255,0.98),0_2px_5px_rgba(47,60,70,0.10)] sm:h-10 sm:w-10"><div className="absolute inset-[2px] rounded-full border border-white/90"/><item.icon size={17} strokeWidth={1.7} style={{ color: item.accent }}/></div>
                     </div>
-                    <div className="relative mt-2 flex items-end justify-between gap-2 border-t border-slate-300/60 pt-2">
-                      <p className="truncate text-[9px] text-slate-500 sm:text-[10px]">{item.note}</p>
-                      <span className="shrink-0 font-mono text-[9px] tracking-[0.18em] text-slate-400">{item.code}</span>
-                    </div>
-                    <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg,transparent,' + item.accent + 'a8,rgba(255,255,255,0.9),transparent)' }}/>
+                    <div className="relative mt-2 flex items-end justify-between gap-2 border-t border-slate-300/50 pt-2"><p className="truncate text-[9px] text-slate-500 sm:text-[10px]">{item.note}</p><span className="shrink-0 font-mono text-[9px] tracking-[0.18em] text-slate-400">{item.code}</span></div>
+                    <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg,transparent,' + item.accent + '88,rgba(255,255,255,0.95),transparent)' }}/>
                   </div>
                 </motion.div>)}
               </div>
 
-              <div className="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[1fr_1.14fr_0.86fr]">
-                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.025)] sm:p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div><h3 className="text-xs font-bold sm:text-sm">حالة المدارس</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">توزيع توضيحي يتبع سجلات المدرسة</p></div>
-                    <span className="text-[9px] font-medium text-slate-400">الاشتراكات</span>
-                  </div>
-                  <div className="flex min-h-0 flex-1 items-center justify-center gap-3">
-                    <div className="relative flex aspect-square max-h-full w-[43%] max-w-[132px] items-center justify-center rounded-full" style={{ background: schools.length ? `conic-gradient(${schoolStatusStats.map((item, index) => { const before = schoolStatusStats.slice(0, index).reduce((sum, part) => sum + part.count, 0); const after = before + item.count; const total = schools.length || 1; return `${item.color} ${before / total * 100}% ${after / total * 100}%`; }).join(', ')})` : 'conic-gradient(#e6ebe8 0% 100%)' }}>
-                      <div className="flex h-[76%] w-[76%] flex-col items-center justify-center rounded-full bg-white"><span className="text-2xl font-extrabold tabular-nums text-slate-900 sm:text-3xl">{schools.length.toLocaleString('ar-AE')}</span><span className="mt-1 text-center text-[8px] text-slate-500 sm:text-[9px]">إجمالي المدارس</span></div>
+              <div className="relative z-10 grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[1fr_1.14fr_0.86fr]">
+                <section className="relative flex min-h-0 flex-col overflow-hidden rounded-[22px] border border-white/90 bg-white/55 p-3 shadow-[0_8px_24px_rgba(70,99,88,0.07),inset_0_1px_0_white] backdrop-blur-xl sm:p-4">
+                  <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-70" style={{ background: 'linear-gradient(135deg,rgba(255,255,255,0.72),rgba(224,238,232,0.22) 48%,rgba(211,225,235,0.36))' }}/>
+                  <div className="relative flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold text-[#244638] sm:text-sm">حالة المدارس</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">توزيع توضيحي لحالات الاشتراك</p></div><span className="rounded-full border border-white bg-white/65 px-2 py-1 text-[9px] text-slate-500 shadow-sm">الاشتراكات</span></div>
+                  <div className="relative flex min-h-0 flex-1 items-center justify-center gap-3">
+                    <div className="relative flex aspect-square max-h-full w-[43%] max-w-[132px] items-center justify-center rounded-full p-[5px] shadow-[0_6px_18px_rgba(43,95,73,0.12)]" style={{ background: schools.length ? 'conic-gradient(' + schoolStatusStats.map((item,index)=>{ const before=schoolStatusStats.slice(0,index).reduce((sum,part)=>sum+part.count,0); const after=before+item.count; const total=schools.length||1; return item.color+' '+before/total*100+'% '+after/total*100+'%'; }).join(', ') + ')' : 'conic-gradient(#dbe8e1 0% 100%)' }}>
+                      <div className="flex h-full w-full flex-col items-center justify-center rounded-full border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(235,243,239,0.9))] shadow-[inset_0_2px_5px_rgba(74,102,91,0.08)]"><span className="text-2xl font-black tabular-nums text-[#203b30] sm:text-3xl">{schools.length.toLocaleString('ar-AE')}</span><span className="mt-1 text-center text-[8px] text-slate-500 sm:text-[9px]">إجمالي المدارس</span></div>
                     </div>
-                    <div className="min-w-0 flex-1 space-y-3">{schoolStatusStats.map(item=><div key={item.key} className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-1.5"><span className="h-2 w-2 shrink-0 rounded-full" style={{backgroundColor:item.color}}/><span className="truncate text-[10px] text-slate-600 sm:text-xs">{item.label}</span></div><div className="text-left"><span className="text-xs font-bold tabular-nums text-slate-800">{item.count}</span><span className="mr-1 text-[9px] text-slate-400">{schools.length?Math.round(item.count/schools.length*100):0}%</span></div></div>)}</div>
+                    <div className="relative min-w-0 flex-1 space-y-3">{schoolStatusStats.map(item=><div key={item.key} className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-1.5"><span className="h-2 w-2 shrink-0 rounded-full shadow-sm" style={{backgroundColor:item.color}}/><span className="truncate text-[10px] text-slate-600 sm:text-xs">{item.label}</span></div><div className="text-left"><span className="text-xs font-bold tabular-nums text-slate-800">{item.count}</span><span className="mr-1 text-[9px] text-slate-400">{schools.length?Math.round(item.count/schools.length*100):0}%</span></div></div>)}</div>
                   </div>
-                  <p className="border-t border-slate-100 pt-2 text-[9px] text-slate-400">ستُعرض النتائج الفعلية بعد اعتماد بيانات المدارس.</p>
+                  <p className="relative border-t border-white/70 pt-2 text-[9px] text-slate-400">ستُعرض النتائج الفعلية بعد اعتماد بيانات المدارس.</p>
                 </section>
 
-                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.025)] sm:p-4">
-                  <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">تسجيل المدارس عبر الوقت</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">الأشهر الستة الأخيرة وفق تاريخ الإنشاء</p></div><span className="rounded-md bg-slate-100 px-2 py-1 text-[9px] text-slate-500">اتجاه التسجيل</span></div>
-                  <div className="relative mt-3 flex min-h-0 flex-1 items-end gap-2 border-b border-slate-200 px-1">
-                    <div className="pointer-events-none absolute inset-0 flex flex-col justify-between pb-5 pt-1">{[0,1,2].map(line=><div key={line} className="border-t border-dashed border-slate-100"/>)}</div>
-                    {recentRegistrationStats.map((item,index)=>{const max=Math.max(1,...recentRegistrationStats.map(x=>x.count));const height=item.count?Math.max(9,item.count/max*100):3;return <div key={item.label+index} className="relative z-10 flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5"><span className="text-[9px] font-semibold tabular-nums text-slate-500">{item.count}</span><motion.div initial={{height:0}} animate={{height:`${height}%`}} transition={{duration:0.55,delay:index*0.05,ease:'easeOut'}} title={`${item.label}: ${item.count} مدرسة`} className={`w-full max-w-8 rounded-t-md transition-colors ${index===recentRegistrationStats.length-1?'bg-emerald-700':'bg-emerald-200 hover:bg-emerald-500'}`}/></div>;})}
+                <section className="relative flex min-h-0 flex-col overflow-hidden rounded-[22px] border border-white/90 bg-white/58 p-3 shadow-[0_8px_24px_rgba(70,99,88,0.07),inset_0_1px_0_white] backdrop-blur-xl sm:p-4">
+                  <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse at 70% 0%,rgba(190,226,216,0.34),transparent 52%),linear-gradient(150deg,rgba(255,255,255,0.7),rgba(244,249,247,0.38))' }}/>
+                  <div className="relative flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold text-[#244638] sm:text-sm">تسجيل المدارس عبر الوقت</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">الأشهر الستة الأخيرة وفق تاريخ الإنشاء</p></div><span className="rounded-full border border-white bg-white/70 px-2 py-1 text-[9px] text-slate-500">اتجاه التسجيل</span></div>
+                  <div className="relative mt-3 flex min-h-0 flex-1 items-end gap-2 overflow-hidden rounded-xl border border-white/85 bg-white/36 px-2 pt-3">
+                    <div className="pointer-events-none absolute inset-2 flex flex-col justify-between pb-5 pt-1">{[0,1,2].map(line=><div key={line} className="border-t border-dashed border-slate-300/65"/>)}</div>
+                    {recentRegistrationStats.map((item,index)=>{const max=Math.max(1,...recentRegistrationStats.map(x=>x.count));const height=item.count?Math.max(9,item.count/max*100):3;return <div key={item.label+index} className="relative z-10 flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5"><span className="text-[9px] font-semibold tabular-nums text-slate-500">{item.count}</span><motion.div initial={{height:0}} animate={{height:height+'%'}} transition={{duration:0.55,delay:index*0.05,ease:'easeOut'}} title={item.label+': '+item.count+' مدرسة'} className={'w-full max-w-8 rounded-t-md border-x border-t border-white/70 '+(index===recentRegistrationStats.length-1?'bg-gradient-to-t from-[#287254] via-[#56ad87] to-[#c4e8d4] shadow-[0_3px_9px_rgba(52,125,88,0.12)]':'bg-gradient-to-t from-[#9fcab7] to-[#e8f5ee]')}/></div>;})}
                   </div>
-                  <div className="mt-2 flex justify-around gap-1">{recentRegistrationStats.map((item,index)=><span key={item.label+index} className={`text-[9px] ${index===recentRegistrationStats.length-1?'font-bold text-emerald-800':'text-slate-400'}`}>{item.label}</span>)}</div>
+                  <div className="relative mt-2 flex justify-around gap-1">{recentRegistrationStats.map((item,index)=><span key={item.label+index} className={'text-[9px] '+(index===recentRegistrationStats.length-1?'font-bold text-[#28684e]':'text-slate-400')}>{item.label}</span>)}</div>
                 </section>
 
-                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.025)] sm:p-4">
-                  <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">تركيبة الحسابات</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">حسب نوع المستخدم</p></div><span className="text-[9px] text-slate-400">الأدوار</span></div>
-                  <div className="mt-4 flex h-2 overflow-hidden rounded-full bg-slate-100">{roleStats.filter(item=>item.count>0).map(item=><div key={item.label} title={`${item.label}: ${item.count}`} style={{width:`${users.length?item.count/users.length*100:0}%`,backgroundColor:item.color}}/>)}</div>
-                  <div className="mt-4 min-h-0 space-y-3">{roleStats.slice(0,4).map(item=>{const percent=users.length?Math.round(item.count/users.length*100):0;return <div key={item.label} className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-2"><span className="h-2 w-2 shrink-0 rounded-full" style={{backgroundColor:item.color}}/><span className="truncate text-[10px] text-slate-600 sm:text-xs">{item.label}</span></div><span className="text-[10px] tabular-nums text-slate-500 sm:text-xs">{item.count} <span className="text-slate-400">({percent}%)</span></span></div>;})}</div>
-                  <p className="mt-auto border-t border-slate-100 pt-2 text-[9px] text-slate-400">الإجمالي: {users.length.toLocaleString('ar-AE')} حساب</p>
+                <section className="relative flex min-h-0 flex-col overflow-hidden rounded-[22px] border border-white/90 bg-white/58 p-3 shadow-[0_8px_24px_rgba(70,99,88,0.07),inset_0_1px_0_white] backdrop-blur-xl sm:p-4">
+                  <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(140deg,rgba(255,255,255,0.78),rgba(232,239,248,0.37) 58%,rgba(223,239,232,0.4))' }}/>
+                  <div className="relative flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold text-[#244638] sm:text-sm">تركيبة الحسابات</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">حسب نوع المستخدم</p></div><span className="rounded-full border border-white bg-white/70 px-2 py-1 text-[9px] text-slate-500">الأدوار</span></div>
+                  <div className="relative mt-4 flex h-2.5 overflow-hidden rounded-full border border-white/90 bg-slate-200/65 shadow-[inset_0_1px_2px_rgba(41,63,55,0.08)]">{roleStats.filter(item=>item.count>0).map(item=><div key={item.label} title={item.label+': '+item.count} style={{width:(users.length?item.count/users.length*100:0)+'%',backgroundColor:item.color}}/>)}</div>
+                  <div className="relative mt-4 min-h-0 space-y-3">{roleStats.slice(0,4).map(item=>{const percent=users.length?Math.round(item.count/users.length*100):0;return <div key={item.label} className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-2"><span className="h-2 w-2 shrink-0 rounded-full ring-2 ring-white/90" style={{backgroundColor:item.color}}/><span className="truncate text-[10px] text-slate-600 sm:text-xs">{item.label}</span></div><span className="text-[10px] tabular-nums text-slate-500 sm:text-xs">{item.count} <span className="text-slate-400">({percent}%)</span></span></div>;})}</div>
+                  <p className="relative mt-auto border-t border-white/75 pt-2 text-[9px] text-slate-400">الإجمالي: {users.length.toLocaleString('ar-AE')} حساب</p>
                 </section>
               </div>
 
-              <div className="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[1fr_1.05fr_0.95fr]">
-                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.025)] sm:p-4">
-                  <div className="mb-3 flex items-center justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">المدارس حسب الباقة</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">مقارنة الارتباط بالخطط</p></div><Layers3 size={16} className="text-slate-400"/></div>
-                  {schoolPlanStats.length ? <div className="min-h-0 flex-1 space-y-3 overflow-hidden">{schoolPlanStats.slice(0,4).map(item=>{const percent=schools.length?Math.round(item.count/schools.length*100):0;return <div key={item.id} className="space-y-1.5"><div className="flex items-center justify-between gap-2"><span className="truncate text-[10px] font-medium text-slate-700 sm:text-xs">{item.name}{!item.active?' · موقوفة':''}</span><span className="shrink-0 text-[10px] tabular-nums text-slate-500">{item.count}</span></div><div className="h-1.5 overflow-hidden rounded-full bg-slate-100"><motion.div initial={{width:0}} animate={{width:`${percent}%`}} transition={{duration:0.5,ease:'easeOut'}} className="h-full rounded-full bg-emerald-700"/></div></div>;})}</div> : <div className="flex flex-1 items-center justify-center text-xs text-slate-400">ستظهر مقارنة الباقات بعد إدخال بياناتها.</div>}
-                  <div className="mt-2 border-t border-slate-100 pt-2 text-[9px] text-slate-400">{schools.filter(s=>!s.planId).length} مدرسة دون باقة مرتبطة</div>
+              <div className="relative z-10 grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[1fr_1.05fr_0.95fr]">
+                <section className="relative flex min-h-0 flex-col overflow-hidden rounded-[22px] border border-white/90 bg-white/58 p-3 shadow-[0_8px_24px_rgba(70,99,88,0.07),inset_0_1px_0_white] backdrop-blur-xl sm:p-4">
+                  <div className="pointer-events-none absolute inset-0" style={{background:'linear-gradient(145deg,rgba(255,255,255,0.83),rgba(233,241,237,0.35) 55%,rgba(224,234,242,0.4))'}}/>
+                  <div className="relative mb-3 flex items-center justify-between gap-2"><div><h3 className="text-xs font-bold text-[#244638] sm:text-sm">المدارس حسب الباقة</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">مقارنة الارتباط بالخطط</p></div><div className="flex h-8 w-8 items-center justify-center rounded-xl border border-white bg-gradient-to-br from-white to-slate-200 text-[#527c68] shadow-sm"><Layers3 size={15}/></div></div>
+                  {schoolPlanStats.length ? <div className="relative min-h-0 flex-1 space-y-3 overflow-hidden">{schoolPlanStats.slice(0,4).map(item=>{const percent=schools.length?Math.round(item.count/schools.length*100):0;return <div key={item.id} className="space-y-1.5"><div className="flex items-center justify-between gap-2"><span className="truncate text-[10px] font-medium text-slate-700 sm:text-xs">{item.name}{!item.active?' · موقوفة':''}</span><span className="shrink-0 text-[10px] tabular-nums text-slate-500">{item.count}</span></div><div className="h-1.5 overflow-hidden rounded-full border border-white bg-slate-200/75 shadow-inner"><motion.div initial={{width:0}} animate={{width:percent+'%'}} transition={{duration:0.5,ease:'easeOut'}} className="h-full rounded-full bg-gradient-to-l from-[#216b4e] via-[#5ba987] to-[#c9e8d6]"/></div></div>;})}</div> : <div className="relative flex flex-1 items-center justify-center text-xs text-slate-400">ستظهر مقارنة الباقات بعد إدخال بياناتها.</div>}
+                  <div className="relative mt-2 border-t border-white/75 pt-2 text-[9px] text-slate-400">{schools.filter(s=>!s.planId).length} مدرسة دون باقة مرتبطة</div>
                 </section>
 
-                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.025)] sm:p-4">
-                  <div className="mb-2 flex items-center justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">تحتاج إلى متابعة</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">مدارس تحتاج إلى مراجعة بياناتها</p></div><span className="rounded-md bg-amber-50 px-2 py-1 text-[9px] font-semibold text-amber-800">قائمة مراجعة</span></div>
-                  <div className="min-h-0 flex-1 divide-y divide-slate-100 overflow-hidden">{schools.filter(s=>s.status==='suspended'||!s.planId||s.status==='trial').slice(0,4).map(school=><div key={school.id} className="flex min-w-0 items-center justify-between gap-2 py-2"><div className="min-w-0"><p className="truncate text-[10px] font-semibold text-slate-800 sm:text-xs">{school.name}</p><p className="truncate text-[9px] text-slate-500">{currentPlanName(school.planId)}</p></div><span className={`shrink-0 rounded-md px-2 py-1 text-[9px] ${school.status==='suspended'?'bg-rose-50 text-rose-700':school.status==='trial'?'bg-amber-50 text-amber-800':'bg-slate-100 text-slate-600'}`}>{school.status==='suspended'?'موقوفة':school.status==='trial'?'تجريبية':'بلا باقة'}</span></div>)}
+                <section className="relative flex min-h-0 flex-col overflow-hidden rounded-[22px] border border-white/90 bg-white/58 p-3 shadow-[0_8px_24px_rgba(70,99,88,0.07),inset_0_1px_0_white] backdrop-blur-xl sm:p-4">
+                  <div className="pointer-events-none absolute inset-0" style={{background:'linear-gradient(135deg,rgba(255,255,255,0.88),rgba(246,244,236,0.42) 58%,rgba(226,239,232,0.35))'}}/>
+                  <div className="relative mb-2 flex items-center justify-between gap-2"><div><h3 className="text-xs font-bold text-[#244638] sm:text-sm">تحتاج إلى متابعة</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">مدارس تحتاج إلى مراجعة بياناتها</p></div><span className="rounded-full border border-[#e7d8b6] bg-[#fff9e9]/80 px-2 py-1 text-[9px] font-semibold text-[#8f702e]">قائمة مراجعة</span></div>
+                  <div className="relative min-h-0 flex-1 divide-y divide-white/80 overflow-hidden">{schools.filter(s=>s.status==='suspended'||!s.planId||s.status==='trial').slice(0,4).map(school=><div key={school.id} className="flex min-w-0 items-center justify-between gap-2 py-2"><div className="min-w-0"><p className="truncate text-[10px] font-semibold text-slate-800 sm:text-xs">{school.name}</p><p className="truncate text-[9px] text-slate-500">{currentPlanName(school.planId)}</p></div><span className={'shrink-0 rounded-md px-2 py-1 text-[9px] '+(school.status==='suspended'?'bg-rose-50/90 text-rose-700':school.status==='trial'?'bg-[#fff5dd] text-[#8f702e]':'bg-slate-100/80 text-slate-600')}>{school.status==='suspended'?'موقوفة':school.status==='trial'?'تجريبية':'بلا باقة'}</span></div>)}
                     {!schools.some(s=>s.status==='suspended'||!s.planId||s.status==='trial')&&<div className="flex h-full items-center justify-center text-xs text-slate-400">ستظهر هنا الحالات التي تحتاج مراجعة.</div>}
                   </div>
-                  <button onClick={()=>setTab('schools')} className="mt-2 border-t border-slate-100 pt-2 text-right text-[10px] font-bold text-emerald-800 transition-colors hover:text-emerald-600">فتح إدارة المدارس ←</button>
+                  <button onClick={()=>setTab('schools')} className="relative mt-2 border-t border-white/75 pt-2 text-right text-[10px] font-bold text-[#246749] transition-colors hover:text-[#174c35]">فتح إدارة المدارس ←</button>
                 </section>
 
-                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-[#eef4f0] p-3 sm:p-4">
-                  <div><h3 className="text-xs font-bold sm:text-sm">ملخص المنصة</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">معاينة لما ستعرضه اللوحة بعد اكتمال التسجيل</p></div>
-                  <div className="mt-3 space-y-3">
+                <section className="relative flex min-h-0 flex-col overflow-hidden rounded-[22px] border border-white/90 p-3 shadow-[0_8px_24px_rgba(70,99,88,0.07),inset_0_1px_0_white] backdrop-blur-xl sm:p-4" style={{background:'linear-gradient(145deg,rgba(225,239,231,0.78),rgba(255,255,255,0.66) 48%,rgba(221,234,242,0.70))'}}>
+                  <div className="pointer-events-none absolute inset-0" style={{background:'radial-gradient(ellipse at 90% 0%,rgba(255,255,255,0.9),transparent 50%),linear-gradient(130deg,rgba(255,255,255,0.30),transparent 50%)'}}/>
+                  <div className="relative"><h3 className="text-xs font-bold text-[#244638] sm:text-sm">ملخص المنصة</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">معاينة لما ستعرضه اللوحة بعد اكتمال التسجيل</p></div>
+                  <div className="relative mt-3 space-y-3">
                     <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-600">الأقسام التعليمية</span><span className="text-sm font-bold text-slate-900">{SCHOOL_MODULES.length}</span></div>
                     <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-600">الباقات المسجلة</span><span className="text-sm font-bold text-slate-900">{plans.length}</span></div>
                     <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-600">مديرو المدارس</span><span className="text-sm font-bold text-slate-900">{users.filter(u=>u.role==='schoolAdmin').length}</span></div>
                   </div>
-                  <div className="mt-auto border-t border-emerald-900/10 pt-2 text-[9px] leading-4 text-slate-500">الأرقام الحالية استرشادية خلال التطوير. ستتبع النتائج السجلات التي تُدخلها وتراجعها الإدارة.</div>
+                  <div className="relative mt-auto rounded-xl border border-white/80 bg-white/45 p-2.5 text-[9px] leading-4 text-slate-500 shadow-[inset_0_1px_0_white]">الأرقام الحالية استرشادية خلال التطوير، وستتبع النتائج السجلات التي تُدخلها الإدارة وتراجعها.</div>
                 </section>
               </div>
             </section>}
