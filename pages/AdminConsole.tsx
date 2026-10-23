@@ -38,10 +38,10 @@ const inputClass = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2
 export const AdminConsole: React.FC = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
   const tab: TabKey = requestedTab === 'schools' || requestedTab === 'plans' || requestedTab === 'users' ? requestedTab : 'overview';
-  const setTab = (nextTab: TabKey) => setSearchParams({ tab: nextTab });
+  const setTab = (nextTab: TabKey) => navigate(nextTab === 'overview' ? '/' : `/admin?tab=${nextTab}`);
   const [schools, setSchools] = React.useState<SchoolRecord[]>([]);
   const [plans, setPlans] = React.useState<PlanRecord[]>([]);
   const [users, setUsers] = React.useState<UserRecord[]>([]);
@@ -318,13 +318,6 @@ export const AdminConsole: React.FC = () => {
     return <div dir="rtl" className="p-8 text-center font-bold text-red-700">هذه الصفحة مخصصة لأدمن منصة قُل.</div>;
   }
 
-  const tabs: { id: TabKey; label: string; icon: React.ElementType }[] = [
-    { id: 'overview', label: 'نظرة عامة', icon: Activity },
-    { id: 'schools', label: 'المدارس', icon: Building2 },
-    { id: 'plans', label: 'الباقات والأقسام', icon: Layers3 },
-    { id: 'users', label: 'الحسابات والصلاحيات', icon: Users },
-  ];
-
   return (
     <div dir="rtl" className="min-h-full bg-[#f7f8f6] text-slate-900 flex flex-col">
       <header className="flex flex-col gap-4 border-b border-slate-200 bg-white px-4 py-5 sm:flex-row sm:items-center sm:justify-between md:px-7">
@@ -363,14 +356,6 @@ export const AdminConsole: React.FC = () => {
             </div>
           </div>
           <span className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs font-bold text-emerald-900"><span className="h-2 w-2 rounded-full bg-emerald-500"/> أداة المعاينة جاهزة</span>
-        </div>
-
-        <div className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-transparent px-1">
-          {tabs.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setTab(id)} className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${tab === id ? 'border-b-2 border-emerald-800 text-emerald-900' : 'border-b-2 border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800'}`}>
-              <Icon size={17} />{label}
-            </button>
-          ))}
         </div>
 
         {loading ? <div className="flex min-h-64 items-center justify-center gap-3 text-slate-500"><LoaderCircle className="animate-spin" /> جارٍ تحميل بيانات المنصة...</div> : (
