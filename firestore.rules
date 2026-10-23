@@ -372,6 +372,46 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /appointment_slots/{slotId} {
+      allow get, list: if isAdmin() ||
+        (isSchoolAdmin() && (
+          resource.data.status == 'available' ||
+          resource.data.schoolId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId
+        ));
+      allow create: if isAdmin() &&
+        request.resource.data.title is string &&
+        request.resource.data.title.size() > 0 &&
+        request.resource.data.title.size() <= 120 &&
+        request.resource.data.kind in ['training', 'support'] &&
+        request.resource.data.startsAt is timestamp &&
+        request.resource.data.startsAt > request.time &&
+        request.resource.data.durationMinutes in [20, 30, 40, 60] &&
+        request.resource.data.status == 'available' &&
+        request.resource.data.timeZone == 'Asia/Dubai' &&
+        request.resource.data.createdAt is timestamp;
+      allow update: if isAdmin() ||
+        (isSchoolAdmin() &&
+          resource.data.status == 'available' &&
+          request.resource.data.status == 'booked' &&
+          request.resource.data.schoolId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId &&
+          request.resource.data.bookerUid == request.auth.uid &&
+          request.resource.data.bookerEmail is string &&
+          request.resource.data.bookedAt is timestamp &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'schoolId', 'schoolName', 'bookerUid', 'bookerEmail', 'bookedAt'])) ||
+        (isSchoolAdmin() &&
+          resource.data.status == 'booked' &&
+          resource.data.schoolId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId &&
+          resource.data.bookerUid == request.auth.uid &&
+          request.resource.data.status == 'available' &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'schoolId', 'schoolName', 'bookerUid', 'bookerEmail', 'bookedAt']) &&
+          request.resource.data.schoolId == null &&
+          request.resource.data.schoolName == null &&
+          request.resource.data.bookerUid == null &&
+          request.resource.data.bookerEmail == null &&
+          request.resource.data.bookedAt == null);
+      allow delete: if isAdmin();
+    }
+
     match /plans/{planId} {
       allow get: if isAuthenticated();
       allow list, create, update, delete: if isAdmin();
