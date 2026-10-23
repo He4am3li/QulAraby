@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home as HomeIcon, Languages, BookText, Library, BookOpen, Globe, Type, Mic, Ear, PenTool, Rocket, Gamepad2, Trophy, FileText, ClipboardList, ClipboardCheck, GraduationCap, TrendingUp, Presentation, Feather, ShieldCheck, Building2, Activity, Layers, Users, Settings2 } from 'lucide-react';
+import { Home as HomeIcon, Languages, BookText, Library, BookOpen, Globe, Type, Mic, Ear, PenTool, Rocket, Gamepad2, Trophy, FileText, ClipboardList, ClipboardCheck, GraduationCap, TrendingUp, Presentation, Feather, ShieldCheck, Building2, Activity, Layers, Users, Settings2, Receipt, BarChart3, Headphones, History } from 'lucide-react';
 import { OnboardingTour } from './OnboardingTour';
 import { RoleSwitcher } from './RoleSwitcher';
 import { useAuth } from './AuthProvider';
@@ -33,12 +33,19 @@ const navTranslations: Record<string, { en: string, ar: string }> = {
   '/admin?tab=schools': { en: 'Schools', ar: 'المدارس' },
   '/admin?tab=plans': { en: 'Plans & Modules', ar: 'الباقات والأقسام' },
   '/admin?tab=users': { en: 'Accounts & Roles', ar: 'الحسابات والصلاحيات' },
+  '/admin?tab=subscriptions': { en: 'Subscriptions', ar: 'الاشتراكات والتجديدات' },
+  '/admin?tab=analytics': { en: 'Analytics', ar: 'التحليلات' },
+  '/admin?tab=audit': { en: 'Audit Log', ar: 'سجل العمليات' },
+  '/admin?tab=support': { en: 'Support', ar: 'الدعم الفني' },
+  '/admin?tab=settings': { en: 'Platform Settings', ar: 'إعدادات المنصة' },
   '/school?tab=overview': { en: 'Overview', ar: 'نظرة عامة' },
   '/school?tab=teachers': { en: 'Teachers', ar: 'المعلمون' },
   '/school?tab=students': { en: 'Students', ar: 'الطلاب' },
   '/school?tab=classes': { en: 'Classes & Groups', ar: 'الفصول والمجموعات' },
   '/school?tab=settings': { en: 'School Details', ar: 'بيانات المدرسة' },
   '/school?tab=subscription': { en: 'Subscription & Modules', ar: 'الاشتراك والأقسام' },
+  '/school?tab=reports': { en: 'School Reports', ar: 'التقارير المدرسية' },
+  '/school?tab=support': { en: 'School Support', ar: 'الدعم الفني' },
   '/school?tab=team': { en: 'School Team', ar: 'فريق المدرسة' },
 };
 
@@ -67,20 +74,27 @@ const navIcons: Record<string, any> = {
   '/admin?tab=schools': Building2,
   '/admin?tab=plans': Layers,
   '/admin?tab=users': Users,
+  '/admin?tab=subscriptions': Receipt,
+  '/admin?tab=analytics': BarChart3,
+  '/admin?tab=audit': History,
+  '/admin?tab=support': Headphones,
+  '/admin?tab=settings': Settings2,
   '/school?tab=overview': Activity,
   '/school?tab=teachers': GraduationCap,
   '/school?tab=students': Users,
   '/school?tab=classes': ClipboardCheck,
   '/school?tab=settings': Settings2,
   '/school?tab=subscription': Layers,
+  '/school?tab=reports': BarChart3,
+  '/school?tab=support': Headphones,
   '/school?tab=team': Users,
 };
 
 const learnerNavPaths = ['/', '/whiteboard', '/calligraphy', '/test', '/letters', '/vocabulary', '/quizzes', '/translator', '/listening', '/speak', '/reading', '/writing', '/assistant', '/games', '/dialects', '/worksheets', '/preparation', '/achievements'];
 
 const getNavPathsForRole = (role?: string) => {
-  if (role === 'admin') return ['/', '/admin?tab=schools', '/admin?tab=plans', '/admin?tab=users'];
-  if (role === 'schoolAdmin') return ['/', '/school?tab=teachers', '/school?tab=students', '/school?tab=classes', '/school?tab=settings', '/school?tab=subscription'];
+  if (role === 'admin') return ['/', '/admin?tab=schools', '/admin?tab=plans', '/admin?tab=users', '/admin?tab=subscriptions', '/admin?tab=analytics', '/admin?tab=audit', '/admin?tab=support', '/admin?tab=settings'];
+  if (role === 'schoolAdmin') return ['/', '/school?tab=teachers', '/school?tab=students', '/school?tab=classes', '/school?tab=reports', '/school?tab=support', '/school?tab=settings', '/school?tab=subscription'];
   if (role === 'teacher') return learnerNavPaths;
   return learnerNavPaths.filter(path => !['/whiteboard', '/calligraphy', '/preparation'].includes(path));
 };
