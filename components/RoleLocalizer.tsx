@@ -190,6 +190,15 @@ const EN: Record<string, string> = {
   'موعد دعم':'Support appointment','جلسة تدريب':'Training session','جلسة دعم فني':'Technical support session',
   'لا توجد طلبات دعم حتى الآن.':'No support requests yet.','لا توجد حجوزات مسجلة لهذه المدرسة.':'No appointments are booked for this school.'
 
+
+  'أنشئ فترات فعلية للحجز، ثم راجع الحجوزات الواردة من المدارس. التوقيت المعتمد هو الإمارات (Asia/Dubai).':'Create available appointment slots, then review school bookings. All times use the UAE time zone (Asia/Dubai).',
+  'الأدوار':'Roles',
+  'الباقات المسجلة':'Configured Plans',
+  'في Firebase، اختر قاعدة البيانات المذكورة، ثم Rules، وانشر محتوى ملف':'In Firebase, select the specified database, open Rules, and publish the contents of the file',
+  'من GitHub. بعدها ارجع إلى هنا واضغط «تحديث البيانات».':'from GitHub. Then return here and click “Refresh Data”.',
+  'مركز التحليلات':'Analytics Center',
+  'نوع الجلسة':'Session Type'
+
 };
 
 const dictionaryEntries = Object.entries(EN).sort((a,b)=>b[0].length-a[0].length);
