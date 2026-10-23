@@ -337,46 +337,22 @@ export const AdminConsole: React.FC = () => {
 
         {loading ? <div className="flex min-h-64 items-center justify-center gap-3 text-slate-500"><LoaderCircle className="animate-spin" /> جارٍ تحميل بيانات المنصة...</div> : (
           <>
-            {tab === 'overview' && <section className="space-y-6">
-              <div className="flex justify-end">
-                <button onClick={() => void loadData()} disabled={loading} className={`${buttonClass} border border-slate-300 bg-white text-slate-700 hover:border-emerald-700 hover:text-emerald-800`}>
-                  <RefreshCw size={15} className={loading ? 'animate-spin' : ''} /> تحديث البيانات
-                </button>
-              </div>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4 animate-in fade-in duration-500">
+            {tab === 'overview' && <section>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {[
-                  { title: 'المدارس', english: 'SCHOOLS', icon: Building2, color: 'from-blue-600 to-indigo-700', href: '/admin?tab=schools' },
-                  { title: 'الباقات والأقسام', english: 'PLANS & MODULES', icon: Layers3, color: 'from-emerald-600 to-emerald-800', href: '/admin?tab=plans' },
-                  { title: 'الحسابات والصلاحيات', english: 'ACCOUNTS', icon: Users, color: 'from-violet-600 to-purple-800', href: '/admin?tab=users' },
+                  { title: 'المدارس', description: 'إدارة المدارس واشتراكاتها.', icon: Building2, href: '/admin?tab=schools' },
+                  { title: 'الباقات والأقسام', description: 'تحديد الباقات والأقسام المشمولة.', icon: Layers3, href: '/admin?tab=plans' },
+                  { title: 'الحسابات والصلاحيات', description: 'إدارة الأدوار وربط الحسابات بالمدارس.', icon: Users, href: '/admin?tab=users' },
                 ].map((item) => (
-                  <button key={item.href} onClick={() => navigate(item.href)} className="group relative rounded-[1.5rem] border border-slate-100 bg-white p-3 text-right shadow-sm transition-colors hover:border-blue-200 focus:outline-none focus:ring-2 focus:ring-emerald-700/20">
-                    <span className={`mb-2 ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br ${item.color} text-white shadow-md transition-transform group-hover:scale-105`}><item.icon size={18} strokeWidth={1.9}/></span>
-                    <span className="block text-[8px] font-black uppercase leading-none text-slate-400">{item.english}</span>
-                    <span className="mt-1 block pb-1 text-base font-black leading-normal text-slate-800">{item.title}</span>
-                    <span className="mt-2 flex items-center justify-end gap-1 text-[9px] font-black text-emerald-700 opacity-0 transition-opacity group-hover:opacity-100">فتح القسم ←</span>
+                  <button key={item.href} onClick={() => navigate(item.href)} className="group flex min-h-28 w-full items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 text-right transition-colors hover:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-700/20">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition-colors group-hover:border-emerald-200 group-hover:bg-emerald-50 group-hover:text-emerald-800"><item.icon size={20} strokeWidth={1.8}/></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-slate-900">{item.title}</span>
+                      <span className="mt-1.5 block text-xs leading-5 text-slate-500">{item.description}</span>
+                    </span>
+                    <span className="mt-1 text-slate-300 transition-colors group-hover:text-emerald-700" aria-hidden="true">←</span>
                   </button>
                 ))}
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {[
-                  { label: 'المدارس المسجلة', value: dataLoadFailed ? '—' : schools.length, icon: Building2, tone: 'bg-blue-50 text-blue-700' },
-                  { label: 'المدارس الفعّالة والتجريبية', value: dataLoadFailed ? '—' : schools.filter(s => s.status === 'active' || s.status === 'trial').length, icon: School, tone: 'bg-emerald-50 text-emerald-700' },
-                  { label: 'الباقات المعرّفة', value: dataLoadFailed ? '—' : plans.length, icon: Layers3, tone: 'bg-violet-50 text-violet-700' },
-                  { label: 'الحسابات المسجلة', value: dataLoadFailed ? '—' : users.length, icon: Users, tone: 'bg-amber-50 text-amber-700' },
-                ].map((item) => <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-5">
-                  <div className="flex items-center justify-between"><span className="text-sm font-bold text-slate-500">{item.label}</span><span className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.tone}`}><item.icon size={21} /></span></div>
-                  <div className="mt-3 text-2xl font-semibold tabular-nums tracking-tight">{item.value}</div>
-                </div>)}
-              </div>
-              <div className="grid gap-5 xl:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 bg-white p-5">
-                  <div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-black">أحدث المدارس المسجلة</h2><button className="text-sm font-bold text-emerald-800" onClick={() => setTab('schools')}>إدارة المدارس</button></div>
-                  {dataLoadFailed ? <EmptyState message="تعذر تحميل بيانات المدارس. انشر قواعد Firestore ثم أعد المحاولة." /> : schools.length ? <div className="space-y-3">{schools.slice(0, 5).map(school => <div key={school.id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3"><div className="min-w-0"><div className="truncate font-bold">{school.name}</div><div className="mt-1 text-xs text-slate-500">{currentPlanName(school.planId)} · {userCountForSchool(school.id)} مستخدم</div></div><span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${school.status === 'active' ? 'bg-emerald-100 text-emerald-800' : school.status === 'trial' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700'}`}>{school.status === 'active' ? 'فعّالة' : school.status === 'trial' ? 'تجريبية' : school.status === 'suspended' ? 'موقوفة' : 'غير محددة'}</span></div>)}</div> : <EmptyState message="لم تُضف مدارس بعد. ابدأ بإنشاء أول مدرسة." />}
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-black">الباقات والأقسام</h2><button className="text-sm font-bold text-emerald-800" onClick={() => setTab('plans')}>إدارة الباقات</button></div>
-                  {dataLoadFailed ? <EmptyState message="تعذر تحميل الباقات من قاعدة البيانات." /> : plans.length ? <div className="space-y-3">{plans.map(plan => <div key={plan.id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3"><div className="min-w-0"><div className="font-bold">{plan.name}</div><div className="mt-1 text-xs text-slate-500">{(plan.includedModules || []).length} قسم · {schools.filter(s => s.planId === plan.id).length} مدرسة</div></div><button onClick={() => editPlan(plan)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold hover:border-emerald-400">تعديل</button></div>)}</div> : <div className="space-y-3"><EmptyState message="لم تُنشأ باقات بعد." /><button onClick={() => void seedPlans()} disabled={saving} className={`${buttonClass} bg-emerald-800 text-white hover:bg-emerald-900`}><Plus size={16}/> إنشاء الباقات المقترحة</button></div>}
-                </div>
               </div>
             </section>}
 
