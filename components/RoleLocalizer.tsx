@@ -188,9 +188,7 @@ const EN: Record<string, string> = {
   'الاشتراكات والتجديدات':'Subscriptions & Renewals','التحليلات':'Analytics','سجل العمليات':'Audit Log',
   'إعدادات المنصة':'Platform Settings','حجز موعد':'Book an Appointment','طلب دعم مكتوب':'Submit a Support Request',
   'موعد دعم':'Support appointment','جلسة تدريب':'Training session','جلسة دعم فني':'Technical support session',
-  'لا توجد طلبات دعم حتى الآن.':'No support requests yet.','لا توجد حجوزات مسجلة لهذه المدرسة.':'No appointments are booked for this school.'
-
-
+  'لا توجد طلبات دعم حتى الآن.':'No support requests yet.','لا توجد حجوزات مسجلة لهذه المدرسة.':'No appointments are booked for this school.',
   'أنشئ فترات فعلية للحجز، ثم راجع الحجوزات الواردة من المدارس. التوقيت المعتمد هو الإمارات (Asia/Dubai).':'Create available appointment slots, then review school bookings. All times use the UAE time zone (Asia/Dubai).',
   'الأدوار':'Roles',
   'الباقات المسجلة':'Configured Plans',
