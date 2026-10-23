@@ -185,7 +185,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   }, []);
 
   return (
-    <div className={`h-full flex flex-col md:flex-row bg-slate-950 ${lang === 'ar' ? 'font-arabic' : ''}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={`h-full min-h-0 overflow-hidden flex flex-col md:flex-row bg-slate-950 ${lang === 'ar' ? 'font-arabic' : ''}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <OnboardingTour lang={lang} />
       <RoleSwitcher />
       
@@ -196,7 +196,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         onMouseEnter={() => setCollapsed(false)}
         onMouseLeave={() => setCollapsed(true)}
         transition={{ type: 'spring', stiffness: 300, damping: 35 }}
-        className="hidden md:flex flex-col text-white sticky top-0 h-screen shadow-[20px_0_40px_rgba(0,0,0,0.3)] relative overflow-hidden z-40" 
+        className="hidden md:flex flex-col text-white sticky top-0 h-dvh min-h-0 shadow-[20px_0_40px_rgba(0,0,0,0.3)] relative overflow-hidden z-40" 
         style={{ background: 'linear-gradient(to left, #0f172a 0%, #064e3b 100%)' }}
       >
         {/* Falling Letters Layer */}
@@ -245,7 +245,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </div>
         </div>
         
-        <nav className="relative z-10 flex-1 space-y-1 overflow-y-auto custom-scroll px-3 py-2">
+        <nav className="relative z-10 flex-1 min-h-0 space-y-1 overflow-y-auto no-scrollbar px-3 py-2">
           {navPaths.filter(path => {
             if (path.split('?')[0] === '/admin' && profile?.role !== 'admin') return false;
             if (path.split('?')[0] === '/school' && profile?.role !== 'schoolAdmin') return false;
@@ -371,8 +371,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         })}
       </nav>
 
-      <main className={`flex-1 bg-[#f8fafc] overflow-hidden h-screen ${(location.pathname === '/whiteboard' || location.pathname === '/calligraphy') ? 'p-1 md:p-2' : 'p-2 md:p-4 lg:p-6'}`}>
-        <div className={`w-full h-full bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 relative ${(location.pathname === '/whiteboard' || location.pathname === '/calligraphy') ? 'overflow-hidden' : 'overflow-y-auto custom-scroll'}`}>
+      <main className={`flex-1 min-w-0 min-h-0 bg-[#f8fafc] overflow-hidden h-dvh ${(location.pathname === '/whiteboard' || location.pathname === '/calligraphy') ? 'p-1 md:p-2' : 'p-2 md:p-4 lg:p-6'}`}>
+        <div className={`w-full h-full min-h-0 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 relative no-scrollbar ${(location.pathname === '/whiteboard' || location.pathname === '/calligraphy') ? 'overflow-hidden' : 'overflow-y-auto'}`}>
           {children}
         </div>
       </main>
