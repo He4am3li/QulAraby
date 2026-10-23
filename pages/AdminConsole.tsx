@@ -363,7 +363,7 @@ export const AdminConsole: React.FC = () => {
               <p className="mt-1 text-xs leading-5 text-slate-600">للتنقل بين الأدمن العام ومدير المدرسة والمعلم والطالب، استخدم زر «معاينة» الثابت أسفل يسار الشاشة.</p>
             </div>
           </div>
-          <a href="https://github.com/He4am3li/QulAraby/blob/main/components/RoleSwitcher.tsx" target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs font-bold text-emerald-900 transition hover:bg-emerald-100">دليل أداة المعاينة</a>
+          <span className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs font-bold text-emerald-900"><span className="h-2 w-2 rounded-full bg-emerald-500"/> أداة المعاينة جاهزة</span>
         </div>
 
         <div className="flex gap-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
