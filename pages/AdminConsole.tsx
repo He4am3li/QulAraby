@@ -41,7 +41,7 @@ export const AdminConsole: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab');
   const tab: TabKey = requestedTab === 'schools' || requestedTab === 'plans' || requestedTab === 'users' ? requestedTab : 'overview';
-  const setTab = (nextTab: TabKey) => setSearchParams(nextTab === 'overview' ? {} : { tab: nextTab });
+  const setTab = (nextTab: TabKey) => setSearchParams({ tab: nextTab });
   const [schools, setSchools] = React.useState<SchoolRecord[]>([]);
   const [plans, setPlans] = React.useState<PlanRecord[]>([]);
   const [users, setUsers] = React.useState<UserRecord[]>([]);
