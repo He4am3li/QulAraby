@@ -30,6 +30,7 @@ type UserRecord = {
 type TabKey = 'overview' | 'schools' | 'plans' | 'users' | 'subscriptions' | 'analytics' | 'audit' | 'support' | 'settings';
 type AdminLogRecord = { id: string; action?: string; target?: string; details?: string; actorEmail?: string; createdAt?: any };
 type SupportTicketRecord = { id: string; title?: string; description?: string; category?: string; status?: string; schoolId?: string; schoolName?: string; createdAt?: any; contactEmail?: string };
+type AppointmentSlotRecord = { id: string; title?: string; kind?: string; startsAt?: any; durationMinutes?: number; status?: string; schoolId?: string | null; schoolName?: string | null; bookerUid?: string | null; bookerEmail?: string | null; bookedAt?: any; createdAt?: any; timeZone?: string };
 
 const roleLabels: Record<string, string> = {
   admin: 'أدمن المنصة',
@@ -53,6 +54,11 @@ export const AdminConsole: React.FC = () => {
   const [users, setUsers] = React.useState<UserRecord[]>([]);
   const [auditLogs, setAuditLogs] = React.useState<AdminLogRecord[]>([]);
   const [supportTickets, setSupportTickets] = React.useState<SupportTicketRecord[]>([]);
+  const [appointmentSlots, setAppointmentSlots] = React.useState<AppointmentSlotRecord[]>([]);
+  const [appointmentStart, setAppointmentStart] = React.useState('');
+  const [appointmentTitle, setAppointmentTitle] = React.useState('');
+  const [appointmentKind, setAppointmentKind] = React.useState('training');
+  const [appointmentDuration, setAppointmentDuration] = React.useState('30');
   const [ticketFilter, setTicketFilter] = React.useState('all');
   const [ticketStatusDrafts, setTicketStatusDrafts] = React.useState<Record<string, string>>({});
   const [drafts, setDrafts] = React.useState<Record<string, { role: string; schoolId: string }>>({});
@@ -104,6 +110,13 @@ export const AdminConsole: React.FC = () => {
       setUsers(nextUsers.sort((a, b) => (a.displayName || a.email).localeCompare(b.displayName || b.email, 'ar')));
       setAuditLogs(nextLogs);
       setSupportTickets(nextTickets);
+      let nextAppointmentSlots: AppointmentSlotRecord[] = [];
+      try {
+        const snap = await getDocs(query(collection(db, 'appointment_slots'), limit(300)));
+        nextAppointmentSlots = snap.docs.map(item => ({ id: item.id, ...item.data() } as AppointmentSlotRecord))
+          .sort((x, y) => (x.startsAt?.toMillis?.() || new Date(x.startsAt || 0).getTime()) - (y.startsAt?.toMillis?.() || new Date(y.startsAt || 0).getTime()));
+      } catch (optionalError) { console.info('Appointment collection is not available until appointment_slots rules are published.', optionalError); }
+      setAppointmentSlots(nextAppointmentSlots);
       setTicketStatusDrafts(Object.fromEntries(nextTickets.map(ticket => [ticket.id, ticket.status || 'open'])));
       setDrafts(Object.fromEntries(nextUsers.map((u) => [u.uid, { role: u.role || 'student', schoolId: u.schoolId || '' }])));
       setSchoolPlanId((current) => current || nextPlans.find((plan) => plan.isActive !== false)?.id || '');
@@ -355,6 +368,52 @@ export const AdminConsole: React.FC = () => {
         createdAt: serverTimestamp(),
       });
     } catch (error) { console.warn('Admin event log was not stored; publish admin_audit_logs rules.', error); }
+  };
+
+  const createAppointmentSlot = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!appointmentStart || new Date(appointmentStart).getTime() <= Date.now()) {
+      flash('error', 'اختر تاريخًا ووقتًا مستقبليًا للموعِد.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await addDoc(collection(db, 'appointment_slots'), {
+        title: appointmentTitle.trim() || (appointmentKind === 'training' ? 'جلسة تعريف وتدريب' : 'جلسة دعم فني'),
+        kind: appointmentKind,
+        startsAt: new Date(appointmentStart),
+        durationMinutes: Number(appointmentDuration),
+        timeZone: 'Asia/Dubai',
+        status: 'available',
+        createdBy: profile?.uid || '',
+        createdAt: serverTimestamp(),
+      });
+      setAppointmentStart('');
+      setAppointmentTitle('');
+      await loadData();
+      flash('success', 'تمت إضافة الموعد إلى قائمة الحجز.');
+    } catch (error) {
+      console.error('Appointment slot creation failed:', error);
+      flash('error', 'تعذر إضافة الموعد. تحقق من نشر قواعد appointment_slots في Firestore.');
+    } finally { setSaving(false); }
+  };
+
+  const updateAppointmentSlot = async (slot: AppointmentSlotRecord, status: 'available' | 'cancelled') => {
+    setSaving(true);
+    try {
+      if (status === 'available') {
+        await updateDoc(doc(db, 'appointment_slots', slot.id), {
+          status: 'available', schoolId: null, schoolName: null, bookerUid: null, bookerEmail: null, bookedAt: null,
+        });
+      } else {
+        await updateDoc(doc(db, 'appointment_slots', slot.id), { status: 'cancelled' });
+      }
+      await loadData();
+      flash('success', status === 'available' ? 'أُعيد إتاحة الموعد للحجز.' : 'تم إلغاء الموعد.');
+    } catch (error) {
+      console.error('Appointment slot update failed:', error);
+      flash('error', 'تعذر تحديث الموعد. تحقق من قواعد Firestore الخاصة بالمواعيد.');
+    } finally { setSaving(false); }
   };
 
   const updateTicketStatus = async (ticket: SupportTicketRecord) => {
@@ -696,7 +755,22 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
 
             {tab === 'audit' && <section className="space-y-3"><div><h2 className="text-xl font-black">سجل العمليات الإدارية</h2><p className="mt-1 text-sm text-slate-500">يحتوي على العمليات المسجلة بعد تفعيل السجل، ولا يتضمن التغييرات السابقة.</p></div>{auditLogs.length ? <div className="overflow-hidden rounded-xl border border-slate-200 bg-white"><div className="divide-y divide-slate-100">{auditLogs.map(log=><div key={log.id} className="grid gap-1 px-4 py-3 sm:grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)]"><div className="text-xs text-slate-500">{log.createdAt?.toDate ? log.createdAt.toDate().toLocaleString('ar-AE') : 'وقت غير متاح'}</div><div className="text-sm font-semibold">{log.action || 'عملية إدارية'}</div><div className="text-xs text-slate-500">{log.details || log.target || ''} · {log.actorEmail || ''}</div></div>)}</div></div>:<EmptyState message="لا توجد سجلات عمليات متاحة بعد. ستظهر العمليات المسجلة بعد نشر قواعد سجل التدقيق."/>}</section>}
 
-            {tab === 'support' && <section className="space-y-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="text-xl font-black">مركز الدعم الفني</h2><p className="mt-1 text-sm text-slate-500">طلبات المساعدة التي ترسلها المدارس من حساباتها.</p></div><button onClick={() => void loadData()} className={`${buttonClass} border border-slate-200 bg-white text-slate-700`}><RefreshCw size={15}/> تحديث الطلبات</button></div><div className="flex flex-wrap items-center gap-2"><label className="text-sm font-semibold">تصفية الطلبات</label><select value={ticketFilter} onChange={e=>setTicketFilter(e.target.value)} className={inputClass + ' max-w-56'}><option value="all">كل الحالات</option><option value="open">جديد</option><option value="in_progress">قيد المعالجة</option><option value="resolved">تم الحل</option></select></div>{supportTickets.filter(t=>ticketFilter==='all'||(t.status||'open')===ticketFilter).length ? <div className="space-y-3">{supportTickets.filter(t=>ticketFilter==='all'||(t.status||'open')===ticketFilter).map(ticket=><div key={ticket.id} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,1fr)_180px_auto] md:items-center"><div className="min-w-0"><div className="font-bold">{ticket.title || 'طلب دعم'}</div><div className="mt-1 text-xs text-slate-500">{ticket.schoolName || ticket.schoolId || 'مدرسة غير محددة'} · {ticket.contactEmail || ''} · {ticket.createdAt?.toDate ? ticket.createdAt.toDate().toLocaleString('ar-AE') : 'تاريخ غير متاح'}</div><p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{ticket.description || ''}</p></div><select value={ticketStatusDrafts[ticket.id] || ticket.status || 'open'} onChange={e=>setTicketStatusDrafts(old=>({...old,[ticket.id]:e.target.value}))} className={inputClass}><option value="open">جديد</option><option value="in_progress">قيد المعالجة</option><option value="resolved">تم الحل</option></select><button disabled={saving || (ticketStatusDrafts[ticket.id] || ticket.status || 'open')===(ticket.status||'open')} onClick={()=>void updateTicketStatus(ticket)} className={`${buttonClass} bg-emerald-800 text-white`}><Check size={15}/> حفظ الحالة</button></div>)}</div>:<EmptyState message="لا توجد طلبات دعم بهذه الحالة."/>}</section>}
+            {tab === 'support' && <section className="space-y-4">
+              <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-[#f8fbf9] to-[#edf5f0] p-4 shadow-sm">
+                <div className="mb-3"><h2 className="font-bold text-slate-900">إدارة المواعيد</h2><p className="mt-1 text-xs text-slate-500">أنشئ فترات فعلية للحجز، ثم راجع الحجوزات الواردة من المدارس. التوقيت المعتمد هو الإمارات (Asia/Dubai).</p></div>
+                <form onSubmit={createAppointmentSlot} className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.2fr_1fr_0.8fr_0.8fr_auto] xl:items-end">
+                  <label className="space-y-1 text-xs font-semibold text-slate-700">اليوم والوقت (بتوقيت الإمارات)<input type="datetime-local" className={inputClass} value={appointmentStart} onChange={e=>setAppointmentStart(e.target.value)} required/></label>
+                  <label className="space-y-1 text-xs font-semibold text-slate-700">عنوان الموعد<input className={inputClass} value={appointmentTitle} onChange={e=>setAppointmentTitle(e.target.value)} maxLength={120} placeholder="جلسة تعريف وتدريب"/></label>
+                  <label className="space-y-1 text-xs font-semibold text-slate-700">نوع الموعد<select className={inputClass} value={appointmentKind} onChange={e=>setAppointmentKind(e.target.value)}><option value="training">تدريب على المنصة</option><option value="support">دعم فني</option></select></label>
+                  <label className="space-y-1 text-xs font-semibold text-slate-700">المدة<select className={inputClass} value={appointmentDuration} onChange={e=>setAppointmentDuration(e.target.value)}><option value="20">20 دقيقة</option><option value="30">30 دقيقة</option><option value="40">40 دقيقة</option><option value="60">60 دقيقة</option></select></label>
+                  <button disabled={saving} className={`${buttonClass} bg-emerald-800 text-white`}><CalendarDays size={15}/>{saving?'جارٍ الحفظ...':'إضافة وقت'}</button>
+                </form>
+              </section>
+              <section className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="mb-3 flex items-center justify-between gap-3"><h3 className="font-bold">المواعيد والحجوزات ({appointmentSlots.length})</h3><button onClick={()=>void loadData()} className={`${buttonClass} border border-slate-200 bg-white text-slate-700`}><RefreshCw size={14}/> تحديث</button></div>
+                {appointmentSlots.length ? <div className="grid gap-2 md:grid-cols-2">{appointmentSlots.map(slot=><div key={slot.id} className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3"><div className="min-w-0"><p className="truncate text-sm font-bold text-slate-800">{slot.title || (slot.kind==='training'?'جلسة تدريب':'جلسة دعم')}</p><p className="mt-1 text-xs text-slate-500">{slot.startsAt?.toDate?new Intl.DateTimeFormat('ar-AE',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}).format(slot.startsAt.toDate()):slot.startsAt?new Intl.DateTimeFormat('ar-AE',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}).format(new Date(slot.startsAt)):'وقت غير محدد'} · {slot.durationMinutes||30} دقيقة</p><p className="mt-1 truncate text-xs text-slate-500">{slot.status==='booked'?'حجز: '+(slot.schoolName||'مدرسة')+' · '+(slot.bookerEmail||'') : slot.status==='cancelled'?'ملغى':'متاح للحجز'}</p></div><div className="flex shrink-0 flex-col gap-1.5">{slot.status==='cancelled'?<button disabled={saving} onClick={()=>void updateAppointmentSlot(slot,'available')} className="rounded-lg border border-emerald-200 bg-white px-2 py-1.5 text-[10px] font-semibold text-emerald-800">إعادة إتاحة</button>:<button disabled={saving} onClick={()=>void updateAppointmentSlot(slot,'cancelled')} className="rounded-lg border border-rose-200 bg-white px-2 py-1.5 text-[10px] font-semibold text-rose-700">{slot.status==='booked'?'إلغاء الحجز':'إلغاء الموعد'}</button>}</div></div>)}</div>:<p className="rounded-xl border border-dashed border-slate-300 p-5 text-center text-sm text-slate-500">لم تُنشأ فترات للحجز بعد. أضف أول موعد من النموذج أعلاه.</p>}
+              </section>
+              <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4"><div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="text-xl font-black">مركز الدعم الفني</h2><p className="mt-1 text-sm text-slate-500">طلبات المساعدة التي ترسلها المدارس من حساباتها.</p></div><button onClick={() => void loadData()} className={`${buttonClass} border border-slate-200 bg-white text-slate-700`}><RefreshCw size={15}/> تحديث الطلبات</button></div><div className="flex flex-wrap items-center gap-2"><label className="text-sm font-semibold">تصفية الطلبات</label><select value={ticketFilter} onChange={e=>setTicketFilter(e.target.value)} className={inputClass + ' max-w-56'}><option value="all">كل الحالات</option><option value="open">جديد</option><option value="in_progress">قيد المعالجة</option><option value="resolved">تم الحل</option></select></div>{supportTickets.filter(t=>ticketFilter==='all'||(t.status||'open')===ticketFilter).length ? <div className="space-y-3">{supportTickets.filter(t=>ticketFilter==='all'||(t.status||'open')===ticketFilter).map(ticket=><div key={ticket.id} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,1fr)_180px_auto] md:items-center"><div className="min-w-0"><div className="font-bold">{ticket.title || 'طلب دعم'}</div><div className="mt-1 text-xs text-slate-500">{ticket.schoolName || ticket.schoolId || 'مدرسة غير محددة'} · {ticket.contactEmail || ''} · {ticket.createdAt?.toDate ? ticket.createdAt.toDate().toLocaleString('ar-AE') : 'تاريخ غير متاح'}</div><p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{ticket.description || ''}</p></div><select value={ticketStatusDrafts[ticket.id] || ticket.status || 'open'} onChange={e=>setTicketStatusDrafts(old=>({...old,[ticket.id]:e.target.value}))} className={inputClass}><option value="open">جديد</option><option value="in_progress">قيد المعالجة</option><option value="resolved">تم الحل</option></select><button disabled={saving || (ticketStatusDrafts[ticket.id] || ticket.status || 'open')===(ticket.status||'open')} onClick={()=>void updateTicketStatus(ticket)} className={`${buttonClass} bg-emerald-800 text-white`}><Check size={15}/> حفظ الحالة</button></div>)}</div>:<EmptyState message="لا توجد طلبات دعم بهذه الحالة."/>}</section>}
 
             {tab === 'settings' && <section className="space-y-4"><div><h2 className="text-xl font-black">إعدادات المنصة</h2><p className="mt-1 text-sm text-slate-500">معلومات تشغيلية مرجعية. لا تُعرض مفاتيح أو أسرار الاتصال في واجهة الإدارة.</p></div><div className="grid gap-3 md:grid-cols-2"><div className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold">قاعدة البيانات</h3><p className="mt-2 text-xs text-slate-500">قاعدة Firestore المستخدمة في تطبيق قُل</p><code dir="ltr" className="mt-2 block break-all text-xs">ai-studio-d8ed89a2-6662-4aa5-9cc7-1e8d0693722e</code></div><div className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold">الوحدات التعليمية</h3><p className="mt-2 text-xs text-slate-500">{SCHOOL_MODULES.length} قسمًا معرّفًا في إعدادات المنصة.</p><p className="mt-2 text-xs text-slate-500">تعديل تعريف الأقسام يتم من إعدادات المشروع، ثم اختبار توافق الباقات القائمة.</p></div><div className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold">الأمان</h3><p className="mt-2 text-sm text-slate-600">الأدوار وحدود الوصول تُفرض في Firestore Rules. إخفاء قسم من القائمة ليس بديلًا عن قواعد الأمان.</p><a className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-emerald-800" href="https://console.cloud.google.com/firestore/databases/ai-studio-d8ed89a2-6662-4aa5-9cc7-1e8d0693722e/security?project=gen-lang-client-0558881211" target="_blank" rel="noreferrer">فتح قواعد الأمان <ExternalLink size={14}/></a></div><div className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold">التكاملات التجارية</h3><p className="mt-2 text-sm text-slate-600">بوابة الدفع والفوترة الآلية وإرسال دعوات تسجيل الدخول تحتاج إلى تهيئة خدمات خلفية منفصلة قبل تفعيلها.</p></div></div></section>}
 
