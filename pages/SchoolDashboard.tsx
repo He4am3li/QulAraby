@@ -570,7 +570,7 @@ export const SchoolDashboard: React.FC = () => {
             { id: 'appointments', title: isEnglish ? 'Upcoming Appointments' : 'المواعيد القادمة', value: appointmentSlots.filter(slot => slot.status === 'booked' && slot.schoolId === schoolId && new Date(slot.startsAt?.toDate ? slot.startsAt.toDate() : slot.startsAt || 0).getTime() > Date.now()).length, icon: <CalendarDays size={20}/>, tone: 'amber', onClick: () => { setShowRolePanel(false); navigate('/school?tab=support'); } },
           ]}
         /> : <section>
-          <div className="flex justify-center mb-3">
+          <div className="flex justify-center mb-8">
             <button type="button" onClick={() => setShowRolePanel(true)} title={isEnglish ? 'School Pulse' : 'نبض المدرسة'} aria-label={isEnglish ? 'School Pulse' : 'نبض المدرسة'} className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-800 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-all group relative border-4 border-white">
               <School size={32}/>
               <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-black z-20">{isEnglish ? 'School Pulse' : 'نبض المدرسة'}</span>
