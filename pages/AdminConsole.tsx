@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Activity, Building2, Check, ChevronDown, ChevronLeft, CircleDollarSign, GraduationCap, Layers3,
   LoaderCircle, Plus, RefreshCw, School, Settings2, ShieldCheck, Users, X, BarChart3,
-  Receipt, Headphones, History, SlidersHorizontal, ExternalLink
+  Receipt, Headphones, History, SlidersHorizontal, ExternalLink, CalendarDays
 } from 'lucide-react';
 import {
   addDoc, collection, deleteField, doc, getDocs, serverTimestamp, setDoc, updateDoc, limit, query
