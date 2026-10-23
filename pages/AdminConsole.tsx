@@ -347,17 +347,6 @@ export const AdminConsole: React.FC = () => {
           <button onClick={() => setNotice(null)} aria-label="إغلاق التنبيه" className="rounded-lg p-1 text-current/70 hover:bg-black/5"><X size={16}/></button>
         </div>}
 
-        <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700"><GraduationCap size={19}/></div>
-            <div>
-              <h2 className="text-sm font-black text-slate-900">تطوير وتجربة الواجهات</h2>
-              <p className="mt-1 text-xs leading-5 text-slate-600">للتنقل بين الأدمن العام ومدير المدرسة والمعلم والطالب، استخدم زر «معاينة» الثابت أسفل يسار الشاشة.</p>
-            </div>
-          </div>
-          <span className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs font-bold text-emerald-900"><span className="h-2 w-2 rounded-full bg-emerald-500"/> أداة المعاينة جاهزة</span>
-        </div>
-
         {loading ? <div className="flex min-h-64 items-center justify-center gap-3 text-slate-500"><LoaderCircle className="animate-spin" /> جارٍ تحميل بيانات المنصة...</div> : (
           <>
             {tab === 'overview' && <section className="space-y-6">
@@ -368,19 +357,17 @@ export const AdminConsole: React.FC = () => {
                   <p className="mt-1 text-sm text-slate-500">اختر أحد أقسام الإدارة للوصول مباشرة إلى مهامه.</p>
                 </div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4 animate-in fade-in duration-500">
                 {[
-                  { title: 'إدارة المدارس', description: 'إضافة المدارس ومتابعة اشتراكاتها وحالتها.', icon: Building2, href: '/admin?tab=schools' },
-                  { title: 'الباقات والأقسام', description: 'تكوين الباقات وتحديد الأقسام المشمولة فيها.', icon: Layers3, href: '/admin?tab=plans' },
-                  { title: 'الحسابات والصلاحيات', description: 'إسناد الأدوار وربط الحسابات بالمدارس.', icon: Users, href: '/admin?tab=users' },
+                  { title: 'المدارس', english: 'SCHOOLS', icon: Building2, color: 'from-blue-600 to-indigo-700', href: '/admin?tab=schools' },
+                  { title: 'الباقات والأقسام', english: 'PLANS & MODULES', icon: Layers3, color: 'from-emerald-600 to-emerald-800', href: '/admin?tab=plans' },
+                  { title: 'الحسابات والصلاحيات', english: 'ACCOUNTS', icon: Users, color: 'from-violet-600 to-purple-800', href: '/admin?tab=users' },
                 ].map((item) => (
-                  <button key={item.href} onClick={() => navigate(item.href)} className="group flex min-h-36 w-full items-start gap-4 rounded-xl border border-slate-200 bg-white p-5 text-right transition-colors hover:border-emerald-700 hover:bg-emerald-50/30 focus:outline-none focus:ring-2 focus:ring-emerald-700/20">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition-colors group-hover:border-emerald-100 group-hover:bg-emerald-50 group-hover:text-emerald-800"><item.icon size={21} strokeWidth={1.8}/></span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-bold text-slate-900">{item.title}</span>
-                      <span className="mt-2 block text-sm leading-6 text-slate-500">{item.description}</span>
-                      <span className="mt-3 block text-xs font-bold text-emerald-800">فتح القسم ←</span>
-                    </span>
+                  <button key={item.href} onClick={() => navigate(item.href)} className="group relative rounded-[1.5rem] border border-slate-100 bg-white p-3 text-right shadow-sm transition-colors hover:border-blue-200 focus:outline-none focus:ring-2 focus:ring-emerald-700/20">
+                    <span className={`mb-2 ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br ${item.color} text-white shadow-md transition-transform group-hover:scale-105`}><item.icon size={18} strokeWidth={1.9}/></span>
+                    <span className="block text-[8px] font-black uppercase leading-none text-slate-400">{item.english}</span>
+                    <span className="mt-1 block pb-1 text-base font-black leading-normal text-slate-800">{item.title}</span>
+                    <span className="mt-2 flex items-center justify-end gap-1 text-[9px] font-black text-emerald-700 opacity-0 transition-opacity group-hover:opacity-100">فتح القسم ←</span>
                   </button>
                 ))}
               </div>
