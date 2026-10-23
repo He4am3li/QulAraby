@@ -194,20 +194,16 @@ const EN: Record<string, string> = {
 
 const dictionaryEntries = Object.entries(EN).sort((a,b)=>b[0].length-a[0].length);
 export function translateRoleText(value: string, lang: RoleLanguage): string {
-  if (lang !== 'en' || !/[\u0600-\u06FF]/.test(value)) return value;
+  if (lang !== 'en' || !/[\\u0600-\\u06FF]/.test(value)) return value;
   const trimmed = value.trim();
   if (EN[trimmed]) return value.replace(trimmed, EN[trimmed]);
   let result = value;
-  for (const [ar,en] of dictionaryEntries) {
+  for (const [ar, en] of dictionaryEntries) {
     if (ar.length > 8 && result.includes(ar)) result = result.split(ar).join(en);
   }
-  for (const [ar,en] of dictionaryEntries) {
-    if (ar.length > 2 && ar.length <= 8) {
-      const escaped = ar.replace(/[.*+?^${}()|[\]\\]/g, '\\  for (const [ar,en] of dictionaryEntries) {
-    if (ar.length > 8 && result.includes(ar)) result = result.split(ar).join(en);
-  }
-  return result;');
-      const boundary = new RegExp('(^|[^\\u0600-\\u06FF])' + escaped + '(?=$|[^\\u0600-\\u06FF])', 'g');
+  for (const [ar, en] of dictionaryEntries) {
+    if (ar.length > 2 && ar.length <= 8 && /^[\\u0600-\\u06FF ]+$/.test(ar)) {
+      const boundary = new RegExp('(^|[^\\\\u0600-\\\\u06FF])' + ar + '(?=$|[^\\\\u0600-\\\\u06FF])', 'g');
       result = result.replace(boundary, (_match, prefix) => prefix + en);
     }
   }
