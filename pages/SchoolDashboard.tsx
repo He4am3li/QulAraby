@@ -552,7 +552,7 @@ export const SchoolDashboard: React.FC = () => {
     <PlatformTopBar />
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-3 sm:p-4">
       <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col gap-3">
-        {notice && <div role="status" className="flex shrink-0 items-start justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="إغلاق الرسالة"><X size={14}/></button></div>}
+        {notice && <div role="status" className={'flex shrink-0 items-start justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 '+(activeTab === 'support' ? 'py-1.5' : '')}><span>{notice}</span><button onClick={() => setNotice('')} aria-label="إغلاق الرسالة"><X size={14}/></button></div>}
 
         {activeTab === 'overview' && <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {tabCards.map(item => <ModuleCard
@@ -615,65 +615,62 @@ export const SchoolDashboard: React.FC = () => {
           <section className="rounded-xl border border-slate-200 bg-white p-4"><h2 className="mb-3 font-bold">توزيع الطلاب حسب الفصل</h2>{classes.length ? <div className="space-y-3">{classes.map(item=>{const count=students.filter(student=>student.classId===item.id).length;return <div key={item.id} className="grid grid-cols-[minmax(100px,180px)_minmax(0,1fr)_40px] items-center gap-3 text-sm"><span className="truncate">{item.name}</span><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full bg-emerald-700" style={{width:students.length?`${count/students.length*100}%`:'0%'}}/></div><span className="text-left tabular-nums">{count}</span></div>})}</div>:<p className="text-sm text-slate-500">أنشئ الفصول وأسنِد الطلاب إليها لظهور التقرير.</p>}</section>
         </section>}
 
-        {activeTab === 'support' && <section className="min-h-0 flex-1 space-y-4 overflow-auto">
-          {notice && <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">{notice}</div>}
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div><h1 className="text-base font-bold text-slate-900">حجز موعد</h1><p className="mt-1 text-xs text-slate-500">الدعم الفني أو التدريب على المنصة</p></div>
+        {activeTab === 'support' && <section className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-2 overflow-hidden xl:grid-rows-[minmax(0,1.12fr)_minmax(0,0.78fr)]">
+          <section className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+            <div className="mb-2 flex shrink-0 flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2"><div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800"><CalendarDays size={17}/></div><div><h1 className="text-sm font-bold text-slate-900 sm:text-base">حجز موعد</h1><p className="text-[10px] text-slate-500">اختر التاريخ ثم الوقت المناسب</p></div></div>
               <div className="flex items-center gap-2">
-                <select value={appointmentKind} onChange={e=>setAppointmentKind(e.target.value as 'training'|'support')} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"><option value="training">تدريب على المنصة</option><option value="support">دعم فني</option></select>
-                {isDemo && <span className="rounded-full bg-amber-50 px-2.5 py-1.5 text-[10px] font-semibold text-amber-800">معاينة</span>}
+                <select aria-label="نوع الجلسة" value={appointmentKind} onChange={e=>setAppointmentKind(e.target.value as 'training'|'support')} className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-700"><option value="training">تدريب على المنصة</option><option value="support">دعم فني</option></select>
+                {isDemo&&<span className="rounded-full bg-amber-50 px-2 py-1 text-[9px] font-semibold text-amber-800">معاينة</span>}
               </div>
             </div>
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,0.82fr)]">
-              <div className="rounded-xl border border-slate-200 bg-[#fbfcfb] p-3 sm:p-4">
-                <div className="mb-4 flex items-center justify-between gap-2">
-                  <button type="button" aria-label="الشهر التالي" onClick={()=>setCalendarMonth(new Date(calendarYear,calendarMonthIndex+1,1))} className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-600 hover:text-emerald-800"><ChevronLeft size={17}/></button>
-                  <h2 className="text-base font-bold text-slate-800">{calendarMonthLabel}</h2>
-                  <button type="button" aria-label="الشهر السابق" onClick={()=>setCalendarMonth(new Date(calendarYear,calendarMonthIndex-1,1))} className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-600 hover:text-emerald-800"><ChevronLeft className="rotate-180" size={17}/></button>
+            <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[minmax(0,1.08fr)_minmax(250px,0.92fr)]">
+              <div className="flex min-h-0 flex-col rounded-xl border border-slate-200 bg-[#fafcfb] p-2.5 sm:p-3">
+                <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
+                  <button type="button" aria-label="الشهر السابق" onClick={()=>setCalendarMonth(new Date(calendarYear,calendarMonthIndex-1,1))} className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-600 hover:text-emerald-800"><ChevronLeft className="rotate-180" size={15}/></button>
+                  <h2 className="text-xs font-bold text-slate-800 sm:text-sm">{calendarMonthLabel}</h2>
+                  <button type="button" aria-label="الشهر التالي" onClick={()=>setCalendarMonth(new Date(calendarYear,calendarMonthIndex+1,1))} className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-600 hover:text-emerald-800"><ChevronLeft size={15}/></button>
                 </div>
-                <div className="mb-2 grid grid-cols-7 gap-1 text-center">{['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'].map(day=><div key={day} className="py-2 text-[10px] font-semibold text-slate-500 sm:text-xs">{day}</div>)}</div>
-                <div className="grid grid-cols-7 gap-1">
-                  {calendarCells.map((cell,index)=>{
-                    if(!cell) return <div key={'blank-'+index} className="min-h-10 sm:min-h-12"/>;
+                <div className="mb-1 grid shrink-0 grid-cols-7 gap-1 text-center">{['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'].map(day=><div key={day} className="py-1 text-[9px] font-semibold text-slate-500 sm:text-[10px]">{day}</div>)}</div>
+                <div className="grid min-h-0 flex-1 grid-cols-7 grid-rows-6 gap-1">
+                  {calendarCells.slice(0,42).map((cell,index)=>{
+                    if(!cell) return <div key={'blank-'+index}/>;
                     const count=appointmentCountForDate(cell.dateKey);
                     const past=cell.dateKey<dubaiTodayKey;
                     const selected=currentAppointmentDate===cell.dateKey;
-                    return <button key={cell.dateKey} type="button" disabled={past} onClick={()=>setSelectedAppointmentDate(cell.dateKey)} className={'relative flex min-h-10 flex-col items-center justify-center rounded-lg border text-xs transition sm:min-h-12 '+(selected?'border-[#173f32] bg-[#173f32] font-bold text-white shadow-sm':count?'border-emerald-200 bg-emerald-50 font-semibold text-emerald-900 hover:border-emerald-600':'border-transparent bg-white text-slate-700 hover:border-slate-200 hover:bg-slate-50')+(past?' cursor-not-allowed opacity-30':'')}>
-                      <span>{cell.day}</span>{count>0&&<span className={'mt-1 h-1 w-1 rounded-full '+(selected?'bg-white':'bg-emerald-600')}/>}
+                    return <button key={cell.dateKey} type="button" disabled={past} onClick={()=>setSelectedAppointmentDate(cell.dateKey)} aria-label={cell.dateKey+(count?'، '+count+' مواعيد متاحة':'')} className={'relative flex min-h-0 flex-col items-center justify-center rounded-md border text-[10px] transition sm:text-xs '+(selected?'border-[#173f32] bg-[#173f32] font-bold text-white shadow-sm':count?'border-emerald-200 bg-emerald-50 font-semibold text-emerald-900 hover:border-emerald-600':'border-transparent bg-white text-slate-700 hover:border-slate-200 hover:bg-slate-50')+(past?' cursor-not-allowed opacity-30':'')}>
+                      <span>{cell.day}</span>{count>0&&<span className={'mt-0.5 h-1 w-1 rounded-full '+(selected?'bg-white':'bg-emerald-600')}/>}
                     </button>;
                   })}
                 </div>
-                <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-200 pt-3 text-[10px] text-slate-500">
-                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-600"/>مواعيد متاحة</span>
-                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#173f32]"/>اليوم المحدد</span>
-                  <span className="mr-auto text-slate-400">توقيت الإمارات</span>
-                </div>
+                <div className="mt-1.5 flex shrink-0 items-center gap-3 border-t border-slate-200 pt-1.5 text-[9px] text-slate-500"><span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-600"/>متاح</span><span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#173f32]"/>محدد</span><span className="mr-auto text-slate-400">توقيت الإمارات</span></div>
               </div>
-              <div className="min-w-0">
-                <div className="mb-3 flex items-center justify-between gap-2"><h2 className="font-bold text-slate-800">{currentAppointmentDate ? appointmentDateLabel(currentAppointmentDate) : 'اختر يومًا'}</h2><span className="text-[10px] text-slate-400">{availableAppointmentSlots.length} موعد</span></div>
-                <div className="max-h-[370px] space-y-2 overflow-auto">
-                  {availableAppointmentSlots.map(slot=><button type="button" key={slot.id} disabled={saving||isDemo} onClick={()=>void bookAppointment(slot)} className="group flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-right transition hover:border-emerald-700 hover:bg-emerald-50/50 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50"><div><span className="block text-base font-bold tabular-nums text-slate-800">{appointmentTimeLabel(slot)}</span><span className="mt-1 block text-[10px] text-slate-500">{slot.durationMinutes||30} دقيقة · {slot.kind==='training'?'تدريب':'دعم فني'}</span></div><span className="text-xs font-bold text-emerald-800">{saving?'جارٍ الحجز...':'اختيار ←'}</span></button>)}
-                  {!availableAppointmentSlots.length&&<div className="flex min-h-[250px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 text-center"><CalendarDays size={27} className="text-slate-300"/><p className="mt-3 text-sm font-semibold text-slate-700">{availableAppointmentDates.length?'لا توجد مواعيد في هذا اليوم':'لا توجد مواعيد مضافة بعد'}</p><p className="mt-1 text-xs text-slate-500">{availableAppointmentDates.length?'اختر يومًا آخر مميزًا بنقطة خضراء.':'سيظهر الحجز هنا بعد أن يضيف الأدمن أوقاتًا متاحة.'}</p></div>}
+              <div className="flex min-h-0 flex-col">
+                <div className="mb-2 flex shrink-0 items-center justify-between gap-2"><h2 className="truncate text-xs font-bold text-slate-800 sm:text-sm">{currentAppointmentDate?appointmentDateLabel(currentAppointmentDate):'اختر يومًا'}</h2><span className="shrink-0 text-[10px] text-slate-400">{availableAppointmentSlots.length} متاح</span></div>
+                <div className="min-h-0 flex-1 space-y-1.5 overflow-auto pr-0.5">
+                  {availableAppointmentSlots.map(slot=><button type="button" key={slot.id} disabled={saving||isDemo} onClick={()=>void bookAppointment(slot)} className="group flex w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-right transition hover:border-emerald-700 hover:bg-emerald-50/50 disabled:cursor-not-allowed disabled:opacity-50"><div className="min-w-0"><span className="block text-xs font-bold tabular-nums text-slate-800 sm:text-sm">{appointmentTimeLabel(slot)}</span><span className="block text-[9px] text-slate-500">{slot.durationMinutes||30} دقيقة · {slot.kind==='training'?'تدريب':'دعم فني'}</span></div><span className="shrink-0 text-[10px] font-bold text-emerald-800">{saving?'جارٍ...':'حجز ←'}</span></button>)}
+                  {!availableAppointmentSlots.length&&<div className="flex h-full min-h-[96px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-3 text-center"><CalendarDays size={20} className="text-slate-300"/><p className="mt-2 text-xs font-semibold text-slate-700">{availableAppointmentDates.length?'لا توجد مواعيد بهذا اليوم':'لا توجد مواعيد مضافة'}</p><p className="mt-1 text-[10px] text-slate-500">{availableAppointmentDates.length?'اختر يومًا آخر عليه نقطة خضراء.':'تظهر الأوقات هنا بعد إضافتها من الأدمن.'}</p></div>}
                 </div>
               </div>
             </div>
-            {isDemo&&<p className="mt-3 text-[10px] text-amber-700">الحجز الفعلي يتطلب حساب مدير مدرسة.</p>}
           </section>
 
-          <section className="grid gap-3 xl:grid-cols-2">
-            <section className="rounded-xl border border-slate-200 bg-white p-4">
-              <div className="mb-3 flex items-center justify-between gap-2"><h2 className="font-bold">مواعيد مدرستك</h2><span className="text-xs text-slate-400">{appointmentSlots.filter(slot=>slot.schoolId===schoolId&&['booked','cancelled'].includes(slot.status||'')).length}</span></div>
-              {appointmentSlots.filter(slot=>slot.schoolId===schoolId&&['booked','cancelled'].includes(slot.status||'')).length ? <div className="space-y-2">{appointmentSlots.filter(slot=>slot.schoolId===schoolId&&['booked','cancelled'].includes(slot.status||'')).map(slot=><div key={slot.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3"><div><p className="text-sm font-semibold">{slot.title || (slot.kind==='training'?'جلسة تدريب':'موعد دعم')}</p><p className="mt-1 text-xs text-slate-500">{slot.startsAt?.toDate ? new Intl.DateTimeFormat('ar-AE',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}).format(slot.startsAt.toDate()) : slot.startsAt ? new Intl.DateTimeFormat('ar-AE',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}).format(new Date(slot.startsAt)) : 'وقت غير محدد'} · {slot.durationMinutes || 30} دقيقة</p></div><div className="flex items-center gap-2"><span className={'rounded-md px-2 py-1 text-[10px] '+(slot.status==='booked'?'bg-emerald-100 text-emerald-800':'bg-slate-200 text-slate-600')}>{slot.status==='booked'?'مؤكد':'ملغى'}</span>{slot.status==='booked'&&slot.bookerUid===profile?.uid&&<button disabled={saving} onClick={()=>void cancelAppointment(slot)} className="text-xs font-semibold text-rose-700 hover:underline disabled:opacity-50">إلغاء</button>}</div></div>)}</div> : <p className="text-sm text-slate-500">لا توجد حجوزات مسجلة.</p>}
+          <div className="grid min-h-0 grid-cols-1 gap-2 overflow-hidden md:grid-cols-2">
+            <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3">
+              <div className="mb-2 flex shrink-0 items-center justify-between gap-2"><h2 className="text-xs font-bold sm:text-sm">مواعيد مدرستك</h2><span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] text-slate-500">{appointmentSlots.filter(slot=>slot.schoolId===schoolId&&['booked','cancelled'].includes(slot.status||'')).length}</span></div>
+              <div className="min-h-0 flex-1 space-y-1.5 overflow-auto">
+                {appointmentSlots.filter(slot=>slot.schoolId===schoolId&&['booked','cancelled'].includes(slot.status||'')).map(slot=><div key={slot.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-2.5 py-2"><div className="min-w-0"><p className="truncate text-[10px] font-semibold sm:text-xs">{slot.title || (slot.kind==='training'?'جلسة تدريب':'موعد دعم')}</p><p className="mt-0.5 text-[9px] text-slate-500">{slot.startsAt?.toDate?new Intl.DateTimeFormat('ar-AE',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}).format(slot.startsAt.toDate()):slot.startsAt?new Intl.DateTimeFormat('ar-AE',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}).format(new Date(slot.startsAt)):'وقت غير محدد'}</p></div><div className="flex shrink-0 items-center gap-2"><span className={'rounded px-1.5 py-1 text-[9px] '+(slot.status==='booked'?'bg-emerald-100 text-emerald-800':'bg-slate-200 text-slate-600')}>{slot.status==='booked'?'مؤكد':'ملغى'}</span>{slot.status==='booked'&&slot.bookerUid===profile?.uid&&<button disabled={saving} onClick={()=>void cancelAppointment(slot)} className="text-[10px] font-semibold text-rose-700 disabled:opacity-50">إلغاء</button>}</div></div>)}
+                {!appointmentSlots.some(slot=>slot.schoolId===schoolId&&['booked','cancelled'].includes(slot.status||''))&&<p className="flex h-full min-h-12 items-center justify-center text-[10px] text-slate-400">لا توجد مواعيد محجوزة.</p>}
+              </div>
             </section>
-            <form onSubmit={submitSupportTicket} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4">
-              <h2 className="font-bold">طلب دعم مكتوب</h2>
-              <label className="space-y-1 text-xs font-semibold">عنوان الطلب<input className={fieldClass} value={supportTitle} onChange={e=>setSupportTitle(e.target.value)} maxLength={160} required placeholder="عنوان مختصر للمشكلة"/></label>
-              <label className="flex min-h-24 flex-1 flex-col space-y-1 text-xs font-semibold">وصف المشكلة<textarea className={fieldClass+' min-h-24 flex-1'} value={supportDescription} onChange={e=>setSupportDescription(e.target.value)} maxLength={5000} required placeholder="صف المشكلة باختصار."/></label>
-              <button disabled={saving || isDemo} className={primaryButton}><Send size={15}/>{saving ? 'جارٍ الإرسال...' : 'إرسال الطلب'}</button>
-              {schoolTickets.length>0&&<div className="border-t border-slate-100 pt-3"><h3 className="mb-2 text-sm font-semibold">طلبات سابقة ({schoolTickets.length})</h3><div className="max-h-32 space-y-2 overflow-auto">{schoolTickets.map(ticket=><div key={ticket.id} className="rounded-lg bg-slate-50 p-2"><div className="flex justify-between gap-2 text-xs"><span className="font-semibold">{ticket.title||'طلب دعم'}</span><span>{ticket.status==='resolved'?'تم الحل':ticket.status==='in_progress'?'قيد المعالجة':'جديد'}</span></div><p className="mt-1 text-[10px] text-slate-500">{ticket.description}</p></div>)}</div></div>}
+
+            <form onSubmit={submitSupportTicket} className="grid min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-2 overflow-hidden rounded-xl border border-slate-200 bg-white p-3">
+              <div className="flex items-center justify-between gap-2"><h2 className="text-xs font-bold sm:text-sm">طلب دعم مكتوب</h2><span className="text-[9px] text-slate-400">دون موعد</span></div>
+              <label className="block text-[10px] font-semibold text-slate-600">العنوان<input className={fieldClass+' mt-1 h-8'} value={supportTitle} onChange={e=>setSupportTitle(e.target.value)} maxLength={160} required placeholder="عنوان المشكلة"/></label>
+              <label className="flex min-h-0 flex-col text-[10px] font-semibold text-slate-600">وصف مختصر<textarea className={fieldClass+' mt-1 min-h-0 flex-1 resize-none'} value={supportDescription} onChange={e=>setSupportDescription(e.target.value)} maxLength={5000} required placeholder="صف المشكلة باختصار."/></label>
+              <div className="flex items-center justify-between gap-2"><span className="truncate text-[9px] text-slate-400">{schoolTickets.length?schoolTickets.length+' طلبات سابقة':''}</span><button disabled={saving||isDemo} className={primaryButton+' h-8 shrink-0 px-3 text-[10px]'}><Send size={13}/>{saving?'جارٍ الإرسال...':'إرسال الطلب'}</button></div>
             </form>
-          </section>
+          </div>
         </section>}
 
         {activeTab === 'subscription' && <div className="grid min-h-0 flex-1 gap-3 overflow-auto xl:grid-cols-[minmax(0,1.3fr)_minmax(260px,0.7fr)]">
