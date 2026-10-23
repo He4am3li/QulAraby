@@ -6,7 +6,7 @@ import {
   LoaderCircle, ChevronLeft, School, Mail, CalendarDays, ShieldCheck, Headphones, BarChart3, Send
 } from 'lucide-react';
 import {
-  addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp,
+  addDoc, collection, deleteDoc, deleteField, doc, getDoc, getDocs, query, runTransaction, serverTimestamp,
   updateDoc, where, writeBatch
 } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -51,6 +51,7 @@ type ClassRecord = {
   updatedAt?: any;
 };
 
+type AppointmentSlotRecord = { id: string; title?: string; kind?: string; startsAt?: any; durationMinutes?: number; status?: string; schoolId?: string; schoolName?: string; bookerUid?: string; bookerEmail?: string; bookedAt?: any; createdAt?: any; timeZone?: string };
 type SchoolTab = 'overview' | 'teachers' | 'students' | 'classes' | 'settings' | 'subscription' | 'reports' | 'support';
 
 const tabCards = [
@@ -98,6 +99,8 @@ export const SchoolDashboard: React.FC = () => {
   const [supportTitle, setSupportTitle] = React.useState('');
   const [supportDescription, setSupportDescription] = React.useState('');
   const [schoolTickets, setSchoolTickets] = React.useState<Array<{ id: string; title?: string; description?: string; status?: string; createdAt?: any }>>([]);
+  const [appointmentSlots, setAppointmentSlots] = React.useState<AppointmentSlotRecord[]>([]);
+  const [selectedAppointmentDate, setSelectedAppointmentDate] = React.useState('');
 
   const schoolId = profile?.schoolId || '';
   const isDemo = schoolId === '__demo__';
@@ -135,6 +138,7 @@ export const SchoolDashboard: React.FC = () => {
         ]);
         setClasses([{ id: 'demo-c1', name: 'الصف التجريبي', grade: 'المرحلة الابتدائية', teacherId: 'demo-t1', schoolId }]);
         setSchoolTickets([]);
+        setAppointmentSlots([]);
         setSchoolName(demoSchool.name);
         setContactEmail(demoSchool.contactEmail || '');
         return;
@@ -153,6 +157,18 @@ export const SchoolDashboard: React.FC = () => {
         // Support is optional until support_tickets rules have been published.
         console.info('School support tickets are not available yet.', ticketError);
       }
+      let nextAppointmentSlots: AppointmentSlotRecord[] = [];
+      try {
+        const [availableSnap, schoolBookingsSnap] = await Promise.all([
+          getDocs(query(collection(db, 'appointment_slots'), where('status', '==', 'available'))),
+          getDocs(query(collection(db, 'appointment_slots'), where('schoolId', '==', schoolId))),
+        ]);
+        const combined = [...availableSnap.docs, ...schoolBookingsSnap.docs];
+        nextAppointmentSlots = Array.from(new Map(combined.map(item => [item.id, { id: item.id, ...item.data() } as AppointmentSlotRecord])).values())
+          .sort((x, y) => (x.startsAt?.toMillis?.() || new Date(x.startsAt || 0).getTime()) - (y.startsAt?.toMillis?.() || new Date(y.startsAt || 0).getTime()));
+      } catch (appointmentError) {
+        console.info('Appointment booking is not available until appointment_slots rules are published.', appointmentError);
+      }
       if (!schoolSnap.exists()) throw new Error('لم يتم العثور على بيانات المدرسة.');
       const schoolData = schoolSnap.data() as SchoolRecord;
       let planData: PlanRecord | null = null;
@@ -167,6 +183,7 @@ export const SchoolDashboard: React.FC = () => {
       setMembers(memberData);
       setClasses(classData);
       setSchoolTickets(nextTickets.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)));
+      setAppointmentSlots(nextAppointmentSlots);
       setSchoolName(schoolData.name || '');
       setContactEmail(schoolData.contactEmail || '');
     } catch (e) {
@@ -342,6 +359,81 @@ export const SchoolDashboard: React.FC = () => {
     }
   };
 
+  const appointmentDateKey = (slot: AppointmentSlotRecord) => {
+    const raw = slot.startsAt?.toDate ? slot.startsAt.toDate() : slot.startsAt instanceof Date ? slot.startsAt : new Date(slot.startsAt || 0);
+    if (Number.isNaN(raw.getTime())) return '';
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(raw);
+  };
+  const appointmentDateLabel = (dateKey: string) => {
+    const [year, month, day] = dateKey.split('-').map(Number);
+    return new Intl.DateTimeFormat('ar-AE', { timeZone: 'Asia/Dubai', weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(Date.UTC(year, month - 1, day, 8)));
+  };
+  const appointmentTimeLabel = (slot: AppointmentSlotRecord) => {
+    const raw = slot.startsAt?.toDate ? slot.startsAt.toDate() : slot.startsAt instanceof Date ? slot.startsAt : new Date(slot.startsAt || 0);
+    return Number.isNaN(raw.getTime()) ? 'وقت غير محدد' : new Intl.DateTimeFormat('ar-AE', { timeZone: 'Asia/Dubai', hour: 'numeric', minute: '2-digit' }).format(raw);
+  };
+  const availableAppointmentDates = Array.from(new Set(appointmentSlots.filter(slot => slot.status === 'available' && slot.startsAt && new Date(slot.startsAt?.toDate ? slot.startsAt.toDate() : slot.startsAt).getTime() > Date.now()).map(appointmentDateKey).filter(Boolean))).sort();
+  const currentAppointmentDate = availableAppointmentDates.includes(selectedAppointmentDate) ? selectedAppointmentDate : availableAppointmentDates[0] || '';
+  const availableAppointmentSlots = appointmentSlots.filter(slot => slot.status === 'available' && appointmentDateKey(slot) === currentAppointmentDate && new Date(slot.startsAt?.toDate ? slot.startsAt.toDate() : slot.startsAt).getTime() > Date.now())
+    .sort((x, y) => new Date(x.startsAt?.toDate ? x.startsAt.toDate() : x.startsAt).getTime() - new Date(y.startsAt?.toDate ? y.startsAt.toDate() : y.startsAt).getTime());
+
+  const bookAppointment = async (slot: AppointmentSlotRecord) => {
+    if (isDemo || !schoolId || !school || !profile) {
+      setNotice('الحجز متاح للحساب المدرسي الفعلي فقط، وليس في وضع المعاينة.');
+      return;
+    }
+    setSaving(true);
+    setNotice('');
+    try {
+      await runTransaction(db, async transaction => {
+        const slotRef = doc(db, 'appointment_slots', slot.id);
+        const snapshot = await transaction.get(slotRef);
+        if (!snapshot.exists() || snapshot.data().status !== 'available') throw new Error('APPOINTMENT_SLOT_UNAVAILABLE');
+        const startValue = snapshot.data().startsAt;
+        const startDate = startValue?.toDate ? startValue.toDate() : new Date(startValue);
+        if (startDate.getTime() <= Date.now()) throw new Error('APPOINTMENT_SLOT_PAST');
+        transaction.update(slotRef, {
+          status: 'booked', schoolId, schoolName: school.name,
+          bookerUid: profile.uid, bookerEmail: profile.email || '',
+          bookedAt: serverTimestamp(),
+        });
+      });
+      await loadData();
+      setNotice('تم حجز الموعد بنجاح. ستظهر تفاصيله ضمن مواعيد المدرسة.');
+    } catch (e) {
+      console.error('Appointment booking failed:', e);
+      setNotice(e instanceof Error && e.message === 'APPOINTMENT_SLOT_UNAVAILABLE'
+        ? 'هذا الموعد لم يعد متاحًا، حدّث القائمة واختر وقتًا آخر.'
+        : e instanceof Error && e.message === 'APPOINTMENT_SLOT_PAST'
+          ? 'لا يمكن حجز موعد انتهى وقته.'
+          : 'تعذر حجز الموعد. تحقق من نشر قواعد Firestore الخاصة بالمواعيد ثم أعد المحاولة.');
+    } finally { setSaving(false); }
+  };
+
+  const cancelAppointment = async (slot: AppointmentSlotRecord) => {
+    if (!profile || !schoolId || slot.schoolId !== schoolId || slot.bookerUid !== profile.uid) {
+      setNotice('لا يمكن إلغاء هذا الحجز من هذا الحساب.');
+      return;
+    }
+    setSaving(true);
+    setNotice('');
+    try {
+      await runTransaction(db, async transaction => {
+        const ref = doc(db, 'appointment_slots', slot.id);
+        const snap = await transaction.get(ref);
+        if (!snap.exists() || snap.data().status !== 'booked' || snap.data().bookerUid !== profile.uid || snap.data().schoolId !== schoolId) {
+          throw new Error('APPOINTMENT_NOT_OWNED');
+        }
+        transaction.update(ref, { status: 'available', schoolId: null, schoolName: null, bookerUid: null, bookerEmail: null, bookedAt: null });
+      });
+      await loadData();
+      setNotice('تم إلغاء الموعد وإتاحته للحجز مرة أخرى.');
+    } catch (e) {
+      console.error('Appointment cancellation failed:', e);
+      setNotice('تعذر إلغاء الموعد. حدّث الصفحة وحاول مرة أخرى.');
+    } finally { setSaving(false); }
+  };
+
   const submitSupportTicket = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!supportTitle.trim() || !supportDescription.trim()) {
@@ -507,7 +599,33 @@ export const SchoolDashboard: React.FC = () => {
           <section className="rounded-xl border border-slate-200 bg-white p-4"><h2 className="mb-3 font-bold">توزيع الطلاب حسب الفصل</h2>{classes.length ? <div className="space-y-3">{classes.map(item=>{const count=students.filter(student=>student.classId===item.id).length;return <div key={item.id} className="grid grid-cols-[minmax(100px,180px)_minmax(0,1fr)_40px] items-center gap-3 text-sm"><span className="truncate">{item.name}</span><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full bg-emerald-700" style={{width:students.length?`${count/students.length*100}%`:'0%'}}/></div><span className="text-left tabular-nums">{count}</span></div>})}</div>:<p className="text-sm text-slate-500">أنشئ الفصول وأسنِد الطلاب إليها لظهور التقرير.</p>}</section>
         </section>}
 
-        {activeTab === 'support' && <section className="grid min-h-0 flex-1 gap-3 overflow-auto xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        {activeTab === 'support' && <section className="min-h-0 flex-1 space-y-4 overflow-auto">
+          <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-[#f7fbf8] to-[#edf5f0] p-4 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div><h1 className="font-bold text-slate-900">حجز موعد مع فريق قُل</h1><p className="mt-1 text-xs text-slate-500">اختر يومًا ثم وقتًا متاحًا لجلسة تدريب أو دعم. جميع الأوقات بتوقيت الإمارات (Asia/Dubai).</p></div>
+              <div className="rounded-xl border border-white bg-white/80 px-3 py-2 text-xs text-slate-600">المدة موضحة بجوار كل موعد</div>
+            </div>
+            {isDemo && <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">هذه معاينة فقط. يلزم حساب مدير مدرسة حقيقي لإجراء حجز.</p>}
+            {availableAppointmentDates.length ? <>
+              <div className="mt-4 flex gap-2 overflow-x-auto pb-1">{availableAppointmentDates.map(dateKey=><button key={dateKey} type="button" onClick={()=>setSelectedAppointmentDate(dateKey)} className={`min-w-[98px] rounded-xl border px-3 py-2 text-right transition ${currentAppointmentDate===dateKey?'border-emerald-800 bg-emerald-800 text-white shadow-sm':'border-slate-200 bg-white text-slate-700 hover:border-emerald-500'}`}><span className="block text-xs font-bold">{appointmentDateLabel(dateKey)}</span><span className={`mt-1 block text-[10px] ${currentAppointmentDate===dateKey?'text-emerald-100':'text-slate-400'}`}>{appointmentSlots.filter(slot=>slot.status==='available'&&appointmentDateKey(slot)===dateKey).length} مواعيد متاحة</span></button>)}</div>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">{availableAppointmentSlots.map(slot=><button type="button" key={slot.id} disabled={saving || isDemo} onClick={()=>void bookAppointment(slot)} className="group rounded-xl border border-slate-200 bg-white px-3 py-3 text-right shadow-[0_1px_2px_rgba(15,23,42,0.035)] transition hover:-translate-y-0.5 hover:border-emerald-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"><span className="block text-base font-bold tabular-nums text-slate-800">{appointmentTimeLabel(slot)}</span><span className="mt-1 block text-[10px] text-slate-500">{slot.kind==='training'?'جلسة تدريب':'موعد دعم'} · {slot.durationMinutes || 30} دقيقة</span><span className="mt-2 block text-[10px] font-bold text-emerald-800 group-hover:text-emerald-600">{saving?'جارٍ الحجز...':'حجز هذا الموعد ←'}</span></button>)}</div>
+            </> : <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-white/65 p-5 text-center"><CalendarDays size={24} className="mx-auto text-slate-400"/><p className="mt-2 text-sm font-semibold text-slate-700">لا توجد مواعيد متاحة حاليًا</p><p className="mt-1 text-xs text-slate-500">سيظهر التقويم هنا عندما يضيف فريق قُل فترات للحجز.</p></div>}
+          </section>
+          <section className="grid gap-3 xl:grid-cols-2">
+            <section className="rounded-xl border border-slate-200 bg-white p-4">
+              <h2 className="mb-3 font-bold">مواعيد مدرستك</h2>
+              {appointmentSlots.filter(slot=>slot.schoolId===schoolId&&['booked','cancelled'].includes(slot.status||'')).length ? <div className="space-y-2">{appointmentSlots.filter(slot=>slot.schoolId===schoolId&&['booked','cancelled'].includes(slot.status||'')).map(slot=><div key={slot.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3"><div><p className="text-sm font-semibold">{slot.title || (slot.kind==='training'?'جلسة تدريب':'موعد دعم')}</p><p className="mt-1 text-xs text-slate-500">{slot.startsAt?.toDate ? new Intl.DateTimeFormat('ar-AE',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}).format(slot.startsAt.toDate()) : slot.startsAt ? new Intl.DateTimeFormat('ar-AE',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}).format(new Date(slot.startsAt)) : 'وقت غير محدد'} · {slot.durationMinutes || 30} دقيقة</p></div><div className="flex items-center gap-2"><span className={`rounded-md px-2 py-1 text-[10px] ${slot.status==='booked'?'bg-emerald-100 text-emerald-800':'bg-slate-200 text-slate-600'}`}>{slot.status==='booked'?'مؤكد':'ملغى'}</span>{slot.status==='booked'&&slot.bookerUid===profile?.uid&&<button disabled={saving} onClick={()=>void cancelAppointment(slot)} className="text-xs font-semibold text-rose-700 hover:underline disabled:opacity-50">إلغاء</button>}</div></div>)}</div> : <p className="text-sm text-slate-500">لا توجد حجوزات مسجلة لهذه المدرسة.</p>}
+            </section>
+            <form onSubmit={submitSupportTicket} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4">
+              <div><h2 className="font-bold">إرسال طلب دعم مكتوب</h2><p className="mt-1 text-xs text-slate-500">للمشكلات التي لا تحتاج إلى اجتماع مباشر.</p></div>
+              <label className="space-y-1 text-xs font-semibold">عنوان الطلب<input className={fieldClass} value={supportTitle} onChange={e=>setSupportTitle(e.target.value)} maxLength={160} required placeholder="مثال: مشكلة في حساب أحد الطلاب"/></label>
+              <label className="flex min-h-24 flex-1 flex-col space-y-1 text-xs font-semibold">وصف المشكلة<textarea className={fieldClass+' min-h-24 flex-1'} value={supportDescription} onChange={e=>setSupportDescription(e.target.value)} maxLength={5000} required placeholder="اذكر ما حدث والخطوات التي أدت إلى المشكلة."/></label>
+              <button disabled={saving || isDemo} className={primaryButton}><Send size={15}/>{saving ? 'جارٍ الإرسال...' : 'إرسال الطلب'}</button>
+              {isDemo && <p className="text-xs text-amber-700">المعاينة لا ترسل طلبات حقيقية.</p>}
+              {schoolTickets.length>0&&<div className="border-t border-slate-100 pt-3"><h3 className="mb-2 text-sm font-semibold">طلباتك السابقة</h3><div className="max-h-32 space-y-2 overflow-auto">{schoolTickets.map(ticket=><div key={ticket.id} className="rounded-lg bg-slate-50 p-2"><div className="flex justify-between gap-2 text-xs"><span className="font-semibold">{ticket.title||'طلب دعم'}</span><span>{ticket.status==='resolved'?'تم الحل':ticket.status==='in_progress'?'قيد المعالجة':'جديد'}</span></div><p className="mt-1 text-[10px] text-slate-500">{ticket.description}</p></div>)}</div></div>}
+            </form>
+          </section>
+        </section>}
           <form onSubmit={submitSupportTicket} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4">
             <div><h1 className="font-bold">إرسال طلب دعم</h1><p className="mt-1 text-xs text-slate-500">سيصل الطلب إلى مركز الدعم في إدارة منصة قُل.</p></div>
             <label className="space-y-1 text-xs font-semibold">عنوان الطلب<input className={fieldClass} value={supportTitle} onChange={e=>setSupportTitle(e.target.value)} maxLength={160} required placeholder="مثال: مشكلة في حساب أحد الطلاب"/></label>
