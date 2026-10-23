@@ -101,25 +101,10 @@ export const SchoolDashboard: React.FC = () => {
 
   return <div dir="rtl" className="min-h-full bg-[#f7f8f6] text-slate-900 flex flex-col">
     <PlatformTopBar />
-    {profile?.schoolId === '__demo__' && <div className="mx-4 mt-4 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-5 text-amber-900"><CheckCircle2 size={17} className="shrink-0"/> وضع معاينة تجريبي. الأعداد وبيانات المدرسة الظاهرة أمثلة توضيحية وليست بيانات حقيقية.</div>}
-    <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-5 md:px-7">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-800"><Building2 size={21} strokeWidth={1.8}/></div>
-      <div className="min-w-0">
-        <p className="text-xs font-bold tracking-wide text-emerald-800">قُل · بوابة المدرسة</p>
-        <h1 className="mt-1 truncate text-xl font-bold tracking-tight text-slate-900 md:text-2xl">{school?.name || 'لوحة المدرسة'}</h1>
-        <p className="mt-1 text-sm text-slate-500">الاشتراك، المستخدمون، والأقسام المتاحة لمدرستك</p>
-      </div>
-    </header>
     <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
       {activeTab === 'overview' && <>
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-bold text-emerald-800">قُل · بوابة المدرسة</p>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">الرئيسية</h2>
-            <p className="mt-1 text-sm text-slate-500">الوصول السريع إلى إدارة فريق المدرسة واشتراكها.</p>
-          </div>
-        </div>
+
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4 animate-in fade-in duration-500">
           {[
             { title: 'المعلمون والطلاب', english: 'SCHOOL TEAM', icon: Users, color: 'from-blue-600 to-indigo-700', href: '/school?tab=team' },
@@ -141,7 +126,10 @@ export const SchoolDashboard: React.FC = () => {
         </div>
         <section className="rounded-xl border border-slate-200 bg-white p-5 md:p-6">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <div><h2 className="text-lg font-bold">ملخص الاشتراك</h2><p className="mt-1 text-sm text-slate-500">نظرة سريعة على باقة المدرسة وحالتها.</p></div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-lg font-bold">ملخص الاشتراك</h2>
+              {profile?.schoolId === '__demo__' && <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">بيانات تجريبية</span>}
+            </div>
             <button onClick={() => navigate('/school?tab=subscription')} className="text-sm font-semibold text-emerald-800 hover:text-emerald-950">عرض التفاصيل</button>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
