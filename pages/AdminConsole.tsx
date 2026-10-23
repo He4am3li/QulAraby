@@ -332,10 +332,10 @@ export const AdminConsole: React.FC = () => {
     <div dir="rtl" className="min-h-full bg-[#f7f8f6] text-slate-900 flex flex-col">
       <PlatformTopBar />
 
-      <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8">
-        <div className="mx-auto max-w-7xl space-y-6">
+      <div className={`flex-1 min-h-0 ${tab === 'plans' ? 'overflow-hidden p-2 sm:p-3' : 'overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8'}`}>
+        <div className={`mx-auto flex min-h-0 max-w-7xl flex-col ${tab === 'plans' ? 'h-full gap-2' : 'space-y-6'}`}>
 
-        {notice && <div role="status" className={`flex items-start gap-3 rounded-2xl border p-4 text-sm font-bold ${notice.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
+        {notice && <div role="status" className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${notice.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
           {notice.type === 'success' ? <Check size={18} /> : <Settings2 size={18} className="mt-0.5 shrink-0" />}
           <div className="flex-1 leading-6">
             {notice.text}
@@ -390,33 +390,73 @@ export const AdminConsole: React.FC = () => {
               </div>
             </section>}
 
-            {tab === 'plans' && <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
-                <div className="mb-5 flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-black">{editingPlanId ? 'تعديل الباقة' : 'إنشاء باقة جديدة'}</h2><p className="mt-1 text-sm text-slate-500">حدد الأقسام والحدود. القيمة 0 تعني غير محدود، والسعر اختياري.</p></div>{editingPlanId && <button onClick={resetPlanForm} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold">إلغاء التعديل</button>}</div>
-                <form onSubmit={savePlan} className="space-y-5">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="space-y-1.5 text-sm font-bold">اسم الباقة<input className={inputClass} value={planName} onChange={e => setPlanName(e.target.value)} required placeholder="مثال: الباقة المتقدمة"/></label>
-                    <label className="space-y-1.5 text-sm font-bold">السعر <span className="font-normal text-slate-400">(اختياري)</span><div className="flex gap-2"><input type="number" min="0" step="0.01" className={inputClass} value={planPrice} onChange={e => setPlanPrice(e.target.value)} placeholder="لم يحدد"/><select className="w-28 rounded-xl border border-slate-200 px-2 text-sm" value={planCurrency} onChange={e => setPlanCurrency(e.target.value)}><option value="AED">AED</option><option value="USD">USD</option><option value="SAR">SAR</option></select></div></label>
+            {tab === 'plans' && <section className="grid min-h-0 flex-1 items-stretch gap-3 overflow-hidden xl:grid-cols-[minmax(0,1.45fr)_minmax(290px,0.75fr)]">
+              <div className="flex min-h-0 flex-col rounded-xl border border-slate-200 bg-white p-3">
+                <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <h2 className="text-base font-bold">{editingPlanId ? 'تعديل الباقة' : 'إنشاء باقة جديدة'}</h2>
+                    <p className="mt-0.5 text-[11px] text-slate-500">0 تعني غير محدود، والسعر اختياري.</p>
                   </div>
-                  <label className="block space-y-1.5 text-sm font-bold">وصف الباقة<textarea className={inputClass} rows={2} value={planDescription} onChange={e => setPlanDescription(e.target.value)} placeholder="الفئة المستهدفة وما تضمه الباقة"/></label>
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  {editingPlanId && <button onClick={resetPlanForm} className="shrink-0 rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold">إلغاء</button>}
+                </div>
+                <form onSubmit={savePlan} className="flex min-h-0 flex-1 flex-col gap-2">
+                  <div className="grid shrink-0 grid-cols-2 gap-2">
+                    <label className="space-y-1 text-xs font-semibold">اسم الباقة
+                      <input className={inputClass} value={planName} onChange={e => setPlanName(e.target.value)} required placeholder="مثال: الباقة المتقدمة"/>
+                    </label>
+                    <label className="space-y-1 text-xs font-semibold">السعر <span className="font-normal text-slate-400">(اختياري)</span>
+                      <div className="flex gap-1.5">
+                        <input type="number" min="0" step="0.01" className={inputClass} value={planPrice} onChange={e => setPlanPrice(e.target.value)} placeholder="غير محدد"/>
+                        <select aria-label="عملة السعر" className="w-[76px] shrink-0 rounded-lg border border-slate-200 px-1 text-xs" value={planCurrency} onChange={e => setPlanCurrency(e.target.value)}><option value="AED">AED</option><option value="USD">USD</option><option value="SAR">SAR</option></select>
+                      </div>
+                    </label>
+                  </div>
+                  <label className="block shrink-0 space-y-1 text-xs font-semibold">وصف الباقة
+                    <textarea className={inputClass} rows={1} value={planDescription} onChange={e => setPlanDescription(e.target.value)} placeholder="الفئة المستهدفة وما تضمه الباقة"/>
+                  </label>
+                  <div className="grid shrink-0 grid-cols-3 gap-2">
                     <NumberField label="الحد الأقصى للمعلمين" value={planMaxTeachers} onChange={setPlanMaxTeachers}/>
                     <NumberField label="الحد الأقصى للطلاب" value={planMaxStudents} onChange={setPlanMaxStudents}/>
-                    <NumberField label="مدة الاشتراك بالأيام" value={planDurationDays} onChange={setPlanDurationDays}/>
+                    <NumberField label="المدة (يوم)" value={planDurationDays} onChange={setPlanDurationDays}/>
                   </div>
-                  <label className="flex items-center gap-3 rounded-xl bg-slate-50 p-3 text-sm font-bold"><input type="checkbox" checked={planActive} onChange={e => setPlanActive(e.target.checked)} className="h-4 w-4 accent-emerald-700"/> الباقة متاحة للاشتراكات الجديدة</label>
-                  <div>
-                    <div className="mb-3 flex items-center justify-between gap-3"><h3 className="font-black">أقسام الباقة</h3><span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">{planModules.length} من {SCHOOL_MODULES.length} قسم</span></div>
-                    <div className="grid gap-2 sm:grid-cols-2">{SCHOOL_MODULES.map(module => <label key={module.id} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${planModules.includes(module.id) ? 'border-emerald-300 bg-emerald-50/70' : 'border-slate-200 hover:border-slate-300'}`}><input type="checkbox" checked={planModules.includes(module.id)} onChange={e => setPlanModules(old => e.target.checked ? [...old, module.id] : old.filter(id => id !== module.id))} className="mt-1 h-4 w-4 accent-emerald-700"/><span><span className="block text-sm font-bold">{module.label}</span><span className="mt-1 block text-xs leading-5 text-slate-500">{module.description}</span></span></label>)}</div>
+                  <label className="flex shrink-0 items-center gap-2 rounded-lg bg-slate-50 px-2.5 py-2 text-xs font-semibold">
+                    <input type="checkbox" checked={planActive} onChange={e => setPlanActive(e.target.checked)} className="h-4 w-4 accent-emerald-700"/>
+                    الباقة متاحة للاشتراكات الجديدة
+                  </label>
+                  <div className="min-h-0 flex-1">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <h3 className="text-sm font-bold">أقسام الباقة</h3>
+                      <span className="rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-800">{planModules.length} من {SCHOOL_MODULES.length}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5 md:grid-cols-4 2xl:grid-cols-5">
+                      {SCHOOL_MODULES.map(module => <label key={module.id} title={module.description} className={`flex min-w-0 cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1.5 transition-colors ${planModules.includes(module.id) ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                        <input type="checkbox" checked={planModules.includes(module.id)} onChange={e => setPlanModules(old => e.target.checked ? [...old, module.id] : old.filter(id => id !== module.id))} className="h-3.5 w-3.5 shrink-0 accent-emerald-700"/>
+                        <span className="truncate text-[11px] font-medium leading-4">{module.label}</span>
+                      </label>)}
+                    </div>
                   </div>
-                  <button disabled={saving} className={`${buttonClass} w-full bg-emerald-800 text-white hover:bg-emerald-900`}><Check size={17}/>{saving ? 'جارٍ الحفظ...' : editingPlanId ? 'حفظ تعديلات الباقة' : 'إنشاء الباقة'}</button>
+                  <button disabled={saving} className={`${buttonClass} mt-0 w-full shrink-0 justify-center bg-emerald-800 py-2 text-sm text-white hover:bg-emerald-900`}><Check size={16}/>{saving ? 'جارٍ الحفظ...' : editingPlanId ? 'حفظ التعديلات' : 'إنشاء الباقة'}</button>
                 </form>
               </div>
-              <div className="space-y-3">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5"><h3 className="mb-3 font-black">الباقات الحالية</h3>{plans.length ? <div className="space-y-3">{plans.map(plan => <button key={plan.id} onClick={() => editPlan(plan)} className={`w-full rounded-xl border p-4 text-right transition hover:border-emerald-400 ${editingPlanId === plan.id ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200'}`}><div className="flex items-center justify-between gap-2"><span className="font-black">{plan.name}</span><span className={`rounded-full px-2 py-1 text-[11px] font-bold ${plan.isActive === false ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-800'}`}>{plan.isActive === false ? 'موقوفة' : 'متاحة'}</span></div><div className="mt-2 text-xs text-slate-500">{(plan.includedModules || []).length} قسم · {schools.filter(s => s.planId === plan.id).length} مدرسة مرتبطة</div><div className="mt-3 flex flex-wrap gap-1">{(plan.includedModules || []).slice(0, 5).map(id => <span key={id} className="rounded-md bg-slate-100 px-2 py-1 text-[10px]">{SCHOOL_MODULES.find(m => m.id === id)?.label || id}</span>)}{(plan.includedModules || []).length > 5 && <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px]">+{plan.includedModules.length - 5}</span>}</div></button>)}</div> : <EmptyState message="ابدأ بإنشاء أول باقة، أو جهز الباقات المقترحة."/>}
-                  {plans.length === 0 && <button onClick={() => void seedPlans()} disabled={saving} className={`${buttonClass} mt-4 w-full bg-emerald-800 text-white`}><Layers3 size={16}/> إنشاء الباقات المقترحة</button>}
+              <div className="flex min-h-0 flex-col rounded-xl border border-slate-200 bg-white p-3">
+                <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
+                  <h3 className="text-base font-bold">الباقات الحالية</h3>
+                  <span className="text-xs text-slate-500">{plans.length} باقات</span>
                 </div>
-                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-900"><CircleDollarSign size={19} className="mb-2"/><strong>التحكم التجاري مرن:</strong> الأسعار والحدود غير مفروضة من الكود. ويمكن تعديل أقسام الباقة لاحقًا، وتظهر الأقسام الجديدة للمدارس المرتبطة بها ما لم توجد صلاحية مخصصة للمدرسة.</div>
+                <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
+                  {plans.length ? plans.map(plan => <button key={plan.id} onClick={() => editPlan(plan)} className={`w-full rounded-lg border px-3 py-2 text-right transition-colors hover:border-emerald-400 ${editingPlanId === plan.id ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-semibold">{plan.name}</span>
+                      <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${plan.isActive === false ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-800'}`}>{plan.isActive === false ? 'موقوفة' : 'متاحة'}</span>
+                    </span>
+                    <span className="mt-1 flex flex-wrap items-center gap-x-2 text-[10px] text-slate-500">
+                      <span>{(plan.includedModules || []).length} قسم</span>
+                      <span>{schools.filter(s => s.planId === plan.id).length} مدرسة</span>
+                      {typeof plan.price === 'number' && <span>{plan.price} {plan.currency || 'AED'}</span>}
+                    </span>
+                  </button>) : <EmptyState message="لا توجد باقات بعد."/>}
+                </div>
+                {plans.length === 0 && <button onClick={() => void seedPlans()} disabled={saving} className={`${buttonClass} mt-2 w-full shrink-0 justify-center bg-emerald-800 py-2 text-sm text-white`}><Layers3 size={15}/> إنشاء الباقات المقترحة</button>}
               </div>
             </section>}
 
