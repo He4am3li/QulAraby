@@ -258,8 +258,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             const Icon = navIcons[path] || navIcons[routePath];
             const isTeacher = profile?.role === 'teacher' || profile?.role === 'admin';
             let label = (navTranslations[path] || navTranslations[routePath])[lang];
-            if (routePath === '/' && profile?.role === 'admin') label = lang === 'ar' ? 'لوحة الإدارة' : 'Admin dashboard';
-            if (routePath === '/' && profile?.role === 'schoolAdmin') label = lang === 'ar' ? 'لوحة المدرسة' : 'School dashboard';
+            if (routePath === '/' && (profile?.role === 'admin' || profile?.role === 'schoolAdmin')) label = lang === 'ar' ? 'الرئيسية' : 'Home';
+            
             if (path === '/test') {
               label = isTeacher 
                 ? (lang === 'ar' ? 'مستويات الطلاب' : 'Student Levels')
@@ -268,9 +268,19 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             const expectedSearch = path.includes('?') ? `?${path.split('?')[1]}` : '';
             const isDefaultOverview = path.endsWith('tab=overview') && (location.search === '' || location.search === '?tab=overview');
             const isActive = location.pathname === routePath && (location.search === expectedSearch || isDefaultOverview);
+            const sectionHeading = profile?.role === 'admin'
+              ? (path === '/admin?tab=schools' ? (lang === 'ar' ? 'إدارة المنصة' : 'Platform') : path === '/admin?tab=users' ? (lang === 'ar' ? 'المستخدمون والصلاحيات' : 'Access') : '')
+              : profile?.role === 'schoolAdmin'
+                ? (path === '/school?tab=team' ? (lang === 'ar' ? 'شؤون المدرسة' : 'School') : path === '/school?tab=subscription' ? (lang === 'ar' ? 'الاشتراك' : 'Subscription') : '')
+                : '';
 
             return (
               <div key={path} className="overflow-hidden">
+                {sectionHeading && !collapsed && (
+                  <div className="px-4 pb-1 pt-4 text-[10px] font-semibold tracking-wide text-white/45">
+                    {sectionHeading}
+                  </div>
+                )}
                 <motion.div
                   initial={false}
                   animate={{ 
@@ -345,8 +355,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             const Icon = navIcons[path] || navIcons[routePath];
           const isTeacher = profile?.role === 'teacher' || profile?.role === 'admin';
           let label = (navTranslations[path] || navTranslations[routePath])[lang];
-          if (routePath === '/' && profile?.role === 'admin') label = lang === 'ar' ? 'لوحة الإدارة' : 'Admin dashboard';
-          if (routePath === '/' && profile?.role === 'schoolAdmin') label = lang === 'ar' ? 'لوحة المدرسة' : 'School dashboard';
+          if (routePath === '/' && (profile?.role === 'admin' || profile?.role === 'schoolAdmin')) label = lang === 'ar' ? 'الرئيسية' : 'Home';
           if (path === '/test') {
             label = isTeacher 
               ? (lang === 'ar' ? 'مستويات الطلاب' : 'Student Levels')
