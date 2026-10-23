@@ -1,0 +1,39 @@
+name: Deploy Firestore Rules
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Publish Firestore security rules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_QUL }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+
+      - name: Validate Firebase deployment configuration
+        shell: bash
+        run: |
+          node -e "const c=require('./firebase.json'); if(!c.firestore?.some(x=>x.database==='ai-studio-d8ed89a2-6662-4aa5-9cc7-1e8d0693722e' && x.rules==='firestore.rules')) process.exit(1)"
+          test -s firestore.rules
+
+      - name: Publish rules to the configured named database
+        env:
+          GOOGLE_CLOUD_PROJECT: gen-lang-client-0558881211
+        run: firebase deploy --only firestore --project gen-lang-client-0558881211 --non-interactive
