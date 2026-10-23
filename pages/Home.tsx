@@ -727,7 +727,7 @@ interface ModuleCardProps {
   lang: string;
 }
 
-const ModuleCard: React.FC<ModuleCardProps> = ({ icon, title, arTitle, description, color, onClick, enterLabel, lang }) => (
+export const ModuleCard: React.FC<ModuleCardProps> = ({ icon, title, arTitle, description, color, onClick, enterLabel, lang }) => (
   <motion.button 
     whileHover={{ y: -8, scale: 1.02, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
     whileTap={{ scale: 0.98 }}
