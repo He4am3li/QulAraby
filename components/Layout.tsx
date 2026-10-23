@@ -71,17 +71,8 @@ const navIcons: Record<string, any> = {
 const learnerNavPaths = ['/', '/whiteboard', '/calligraphy', '/test', '/letters', '/vocabulary', '/quizzes', '/translator', '/listening', '/speak', '/reading', '/writing', '/assistant', '/games', '/dialects', '/worksheets', '/preparation', '/achievements'];
 
 const getNavPathsForRole = (role?: string) => {
-  if (role === 'admin') return [
-    '/admin?tab=overview',
-    '/admin?tab=schools',
-    '/admin?tab=plans',
-    '/admin?tab=users',
-  ];
-  if (role === 'schoolAdmin') return [
-    '/school?tab=overview',
-    '/school?tab=team',
-    '/school?tab=subscription',
-  ];
+  if (role === 'admin') return ['/', '/admin?tab=schools', '/admin?tab=plans', '/admin?tab=users'];
+  if (role === 'schoolAdmin') return ['/', '/school?tab=team', '/school?tab=subscription'];
   if (role === 'teacher') return learnerNavPaths;
   return learnerNavPaths.filter(path => !['/whiteboard', '/calligraphy', '/preparation'].includes(path));
 };
@@ -243,6 +234,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             const Icon = navIcons[path] || navIcons[routePath];
             const isTeacher = profile?.role === 'teacher' || profile?.role === 'admin';
             let label = (navTranslations[path] || navTranslations[routePath])[lang];
+            if (routePath === '/' && profile?.role === 'admin') label = lang === 'ar' ? 'لوحة الإدارة' : 'Admin dashboard';
+            if (routePath === '/' && profile?.role === 'schoolAdmin') label = lang === 'ar' ? 'لوحة المدرسة' : 'School dashboard';
             if (path === '/test') {
               label = isTeacher 
                 ? (lang === 'ar' ? 'مستويات الطلاب' : 'Student Levels')
@@ -328,6 +321,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             const Icon = navIcons[path] || navIcons[routePath];
           const isTeacher = profile?.role === 'teacher' || profile?.role === 'admin';
           let label = (navTranslations[path] || navTranslations[routePath])[lang];
+          if (routePath === '/' && profile?.role === 'admin') label = lang === 'ar' ? 'لوحة الإدارة' : 'Admin dashboard';
+          if (routePath === '/' && profile?.role === 'schoolAdmin') label = lang === 'ar' ? 'لوحة المدرسة' : 'School dashboard';
           if (path === '/test') {
             label = isTeacher 
               ? (lang === 'ar' ? 'مستويات الطلاب' : 'Student Levels')
