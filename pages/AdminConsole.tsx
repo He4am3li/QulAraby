@@ -346,37 +346,25 @@ export const AdminConsole: React.FC = () => {
       <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8">
         <div className="mx-auto max-w-7xl space-y-6">
 
-        {notice && <div role="status" className={`flex items-center gap-3 rounded-2xl border p-4 text-sm font-bold ${notice.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-rose-200 bg-rose-50 text-rose-800'}`}>
-          {notice.type === 'success' ? <Check size={18} /> : <X size={18} />}{notice.text}
+        {notice && <div role="status" className={`flex items-start gap-3 rounded-2xl border p-4 text-sm font-bold ${notice.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
+          {notice.type === 'success' ? <Check size={18} /> : <Settings2 size={18} className="mt-0.5 shrink-0" />}
+          <div className="flex-1 leading-6">
+            {notice.text}
+            {notice.type === 'error' && <div className="mt-1 font-normal text-amber-800">لم يتم حذف أي بيانات. لوحة الإدارة لا تستطيع عرض الأعداد أو تعديل سجلات المدارس حتى تُراجع صلاحيات قاعدة البيانات.</div>}
+          </div>
+          <button onClick={() => setNotice(null)} aria-label="إغلاق التنبيه" className="rounded-lg p-1 text-current/70 hover:bg-black/5"><X size={16}/></button>
         </div>}
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm">
-          <div className="mb-4">
-            <h2 className="text-lg font-black">معاينة التجربة التعليمية</h2>
-            <p className="mt-1 text-sm leading-6 text-slate-500">افتح واجهات الطالب أو المعلم لاختبار التجربة الفعلية، دون تغيير دور حساب الأدمن أو صلاحياته.</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
-              <div className="mb-2 flex items-center gap-2 font-black text-emerald-900"><GraduationCap size={20}/> معاينة واجهة الطالب</div>
-              <p className="mb-4 text-sm leading-6 text-slate-600">اختبر أدوات تعلم العربية كما تظهر للمتعلم.</p>
-              <div className="flex flex-wrap gap-2">
-                <button onClick={() => navigate('/letters')} className={`${buttonClass} bg-emerald-800 text-white hover:bg-emerald-900`}>الحروف</button>
-                <button onClick={() => navigate('/reading')} className={`${buttonClass} border border-emerald-200 bg-white text-emerald-900 hover:bg-emerald-50`}>القراءة</button>
-                <button onClick={() => navigate('/games')} className={`${buttonClass} border border-emerald-200 bg-white text-emerald-900 hover:bg-emerald-50`}>الألعاب</button>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4">
-              <div className="mb-2 flex items-center gap-2 font-black text-blue-900"><School size={20}/> معاينة واجهة المعلم</div>
-              <p className="mb-4 text-sm leading-6 text-slate-600">اختبر أدوات التحضير والاختبارات والسبورة التفاعلية.</p>
-              <div className="flex flex-wrap gap-2">
-                <button onClick={() => navigate('/preparation')} className={`${buttonClass} bg-blue-700 text-white hover:bg-blue-800`}>التحضير</button>
-                <button onClick={() => navigate('/quizzes')} className={`${buttonClass} border border-blue-200 bg-white text-blue-900 hover:bg-blue-50`}>الاختبارات</button>
-                <button onClick={() => navigate('/whiteboard')} className={`${buttonClass} border border-blue-200 bg-white text-blue-900 hover:bg-blue-50`}>السبورة</button>
-              </div>
+        <div className="flex flex-col gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-800 shadow-sm"><GraduationCap size={19}/></div>
+            <div>
+              <h2 className="text-sm font-black text-slate-900">تطوير وتجربة الواجهات</h2>
+              <p className="mt-1 text-xs leading-5 text-slate-600">للتنقل بين الأدمن العام ومدير المدرسة والمعلم والطالب، استخدم زر «معاينة» الثابت أسفل يسار الشاشة.</p>
             </div>
           </div>
-          <p className="mt-3 text-xs leading-5 text-slate-400">المعاينة تفتح القسم الحقيقي داخل المنصة، وتبقي صلاحية الحساب «أدمن». اختبر بيانات المدارس الفعلية بحسابات مستقلة قبل الإطلاق.</p>
-        </section>
+          <a href="https://github.com/He4am3li/QulAraby/blob/main/components/RoleSwitcher.tsx" target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs font-bold text-emerald-900 transition hover:bg-emerald-100">دليل أداة المعاينة</a>
+        </div>
 
         <div className="flex gap-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
           {tabs.map(({ id, label, icon: Icon }) => (
