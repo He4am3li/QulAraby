@@ -596,21 +596,55 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
                 </div>
               </header>
 
-              <div className="grid min-h-0 grid-cols-2 gap-2 xl:grid-cols-4">
+              <div className="grid min-h-0 grid-cols-2 gap-3 xl:grid-cols-4 [perspective:1200px]">
                 {[
-                  { label: 'المدارس المسجلة', value: schools.length, note: `${schoolStatusStats.find(x => x.key === 'active')?.count || 0} باقة فعّالة`, accent: '#176B55', pale: '#E9F4EF' },
-                  { label: 'حسابات المنصة', value: users.length, note: `${roleStats.find(x => x.label === 'المعلمون')?.count || 0} معلم مسجل`, accent: '#315B8A', pale: '#EDF3FA' },
-                  { label: 'الطلاب', value: roleStats.find(x => x.label === 'الطلاب')?.count || 0, note: 'الحسابات المسجلة بدور طالب', accent: '#7560A8', pale: '#F2EFF8' },
-                  { label: 'الباقات المتاحة', value: plans.filter(p => p.isActive !== false).length, note: `${schoolPlanStats.filter(x => x.count > 0).length} باقة مرتبطة بمدارس`, accent: '#986B25', pale: '#F8F1E5' },
-                ].map((item, index) => <motion.div key={item.label} initial={{ opacity: 0, y: 7 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, delay: index * 0.045 }} className="relative flex min-h-0 items-center justify-between gap-2 overflow-hidden rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.025)] transition-shadow duration-200 hover:shadow-md">
-                  <div className="absolute inset-y-0 right-0 w-[3px]" style={{ backgroundColor: item.accent }}/>
-                  <div className="min-w-0">
-                    <p className="truncate text-[10px] font-semibold text-slate-500 sm:text-xs">{item.label}</p>
-                    <p className="mt-1 text-2xl font-extrabold leading-none tracking-tight text-slate-900 tabular-nums sm:text-3xl">{item.value.toLocaleString('ar-AE')}</p>
-                    <p className="mt-1 truncate text-[9px] text-slate-500 sm:text-[10px]">{item.note}</p>
-                  </div>
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: item.pale, color: item.accent }}>
-                    {index === 0 ? <Building2 size={18}/> : index === 1 ? <Users size={18}/> : index === 2 ? <GraduationCap size={18}/> : <Layers3 size={18}/>}
+                  { label: 'المدارس المسجلة', value: schools.length, note: (schoolStatusStats.find(x => x.key === 'active')?.count || 0) + ' اشتراك فعّال', code: '01', accent: '#417e69', icon: Building2 },
+                  { label: 'حسابات المنصة', value: users.length, note: (roleStats.find(x => x.label === 'المعلمون')?.count || 0) + ' معلم مسجل', code: '02', accent: '#53769a', icon: Users },
+                  { label: 'الطلاب', value: roleStats.find(x => x.label === 'الطلاب')?.count || 0, note: 'الحسابات المسجلة بدور طالب', code: '03', accent: '#82739b', icon: GraduationCap },
+                  { label: 'الباقات المتاحة', value: plans.filter(p => p.isActive !== false).length, note: schoolPlanStats.filter(x => x.count > 0).length + ' باقة مرتبطة بمدارس', code: '04', accent: '#9c7c48', icon: Layers3 },
+                ].map((item, index) => <motion.div
+                  key={item.label}
+                  initial={{ opacity: 0, y: 12, rotateX: -5 }}
+                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                  transition={{ duration: 0.45, delay: index * 0.07, ease: [0.2, 0.7, 0.25, 1] }}
+                  whileHover={{ y: -4, rotateX: 2, rotateY: index % 2 === 0 ? -2 : 2, scale: 1.012, transition: { duration: 0.22 } }}
+                  style={{ transformStyle: 'preserve-3d' }}
+                  className="group relative min-h-0 overflow-hidden rounded-[20px] border border-white/90 p-[1px] shadow-[0_8px_22px_rgba(39,52,61,0.10),inset_0_1px_0_rgba(255,255,255,0.95)] transition-shadow duration-300 hover:shadow-[0_14px_30px_rgba(39,52,61,0.16)]"
+                >
+                  <div className="absolute inset-0 rounded-[20px]" style={{ background: 'linear-gradient(128deg,#ffffff 0%,#aeb8c0 8%,#f8fafb 18%,#c4cbd0 29%,#ffffff 39%,#8e9aa4 52%,#f7f9fa 65%,#b5bec5 78%,#ffffff 90%,#909ca5 100%)' }}/>
+                  <motion.div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -inset-y-8 -left-1/2 w-1/2 rotate-[18deg] opacity-0 blur-sm group-hover:opacity-80"
+                    style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.9),rgba(186,222,218,0.38),transparent)' }}
+                    animate={{ x: ['-20%', '245%'], opacity: [0.12, 0.34, 0.12] }}
+                    transition={{ duration: 7.5, repeat: Infinity, repeatDelay: index * 0.9, ease: 'easeInOut' }}
+                  />
+                  <div className="relative flex h-full min-h-[92px] flex-col justify-between overflow-hidden rounded-[19px] border border-white/70 px-3 py-2.5 sm:min-h-[106px] sm:px-4 sm:py-3" style={{ background: 'linear-gradient(145deg,rgba(255,255,255,0.96),rgba(234,238,241,0.93) 34%,rgba(255,255,255,0.97) 56%,rgba(213,220,225,0.94) 100%)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,1),inset 0 -1px 0 rgba(105,119,130,0.14)' }}>
+                    <div className="pointer-events-none absolute inset-0 opacity-40" style={{ background: 'radial-gradient(ellipse at 8% 0%,rgba(255,255,255,0.95),transparent 42%),radial-gradient(ellipse at 100% 100%,rgba(185,199,207,0.45),transparent 52%)' }}/>
+                    <div className="relative flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="mb-1 flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: item.accent, boxShadow: '0 0 0 3px ' + item.accent + '18' }}/>
+                          <p className="truncate text-[10px] font-semibold tracking-wide text-slate-600 sm:text-xs">{item.label}</p>
+                        </div>
+                        <motion.p
+                          initial={{ opacity: 0.65 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.5, delay: 0.18 + index * 0.07 }}
+                          className="text-2xl font-black leading-none tracking-[-0.04em] text-slate-800 tabular-nums sm:text-3xl"
+                          style={{ textShadow: '0 1px 0 rgba(255,255,255,0.95),0 -1px 0 rgba(87,101,112,0.10)' }}
+                        >{item.value.toLocaleString('ar-AE')}</motion.p>
+                      </div>
+                      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-gradient-to-br from-white via-slate-200 to-slate-400 text-slate-600 shadow-[inset_0_1px_2px_rgba(255,255,255,0.95),0_2px_5px_rgba(47,60,70,0.12)] sm:h-10 sm:w-10">
+                        <div className="absolute inset-[2px] rounded-full border border-white/80"/>
+                        <item.icon size={17} strokeWidth={1.7} style={{ color: item.accent }}/>
+                      </div>
+                    </div>
+                    <div className="relative mt-2 flex items-end justify-between gap-2 border-t border-slate-300/60 pt-2">
+                      <p className="truncate text-[9px] text-slate-500 sm:text-[10px]">{item.note}</p>
+                      <span className="shrink-0 font-mono text-[9px] tracking-[0.18em] text-slate-400">{item.code}</span>
+                    </div>
+                    <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg,transparent,' + item.accent + 'a8,rgba(255,255,255,0.9),transparent)' }}/>
                   </div>
                 </motion.div>)}
               </div>
