@@ -6,7 +6,7 @@ import { BrandSlogan } from '../components/BrandSlogan';
 import { FallingLetters } from '../components/Layout';
 import { 
   Trophy, CheckCircle2, Award, Star, X, Download, 
-  BookOpen, Languages, Library, BookText, ArrowUpRight, 
+  BookOpen, BookOpenCheck, Languages, Library, BookText, ArrowUpRight, 
   Zap, LayoutDashboard, Sparkles, Globe, ChevronRight, ChevronLeft, Type, Mic, Ear, PenTool, Rocket, Gamepad2, HelpCircle,
   LogOut, LogIn, User as UserIcon, Brain, FileText, ClipboardList, ClipboardCheck, GraduationCap, TrendingUp, Presentation, Feather
 } from 'lucide-react';
@@ -15,6 +15,7 @@ import { useAuth } from '../components/AuthProvider';
 import { useSchoolAccess } from '../components/SchoolAccessProvider';
 import { ROUTE_MODULES } from '../config/schoolPlans';
 import { RoleSwitcher } from '../components/RoleSwitcher';
+import { RoleActionPanel } from '../components/RoleActionPanel';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 
@@ -144,6 +145,7 @@ export const Home: React.FC = () => {
   const [certificates, setCertificates] = React.useState<CertificateData[]>([]);
   const [activeTab, setActiveTab] = React.useState<'grammar' | 'letters'>('grammar');
   const [showAchievements, setShowAchievements] = React.useState(false);
+  const [showTeacherCenter, setShowTeacherCenter] = React.useState(false);
 
   React.useEffect(() => {
     if (location.pathname === '/achievements') {
@@ -398,19 +400,31 @@ export const Home: React.FC = () => {
       </AnimatePresence>
     )}
 
-      <div className="flex-1 overflow-y-auto p-6 bg-slate-50/20 custom-scroll">
-        {!showAchievements ? (
+      <div className="flex-1 min-h-0 overflow-hidden p-6 bg-slate-50/20 custom-scroll">
+        {showTeacherCenter && profile?.role === 'teacher' ? <RoleActionPanel
+          lang={lang}
+          title={lang === 'ar' ? 'مركز التدريس' : 'Teaching Center'}
+          icon={<BookOpenCheck size={24}/>}
+          onClose={() => setShowTeacherCenter(false)}
+          items={[
+            { id: 'preparation', title: lang === 'ar' ? 'تحضير الدروس' : 'Lesson Preparation', icon: <ClipboardCheck size={20}/>, tone: 'emerald', onClick: () => { setShowTeacherCenter(false); navigate('/preparation'); } },
+            { id: 'student-levels', title: lang === 'ar' ? 'مستويات الطلاب' : 'Student Levels', icon: <GraduationCap size={20}/>, tone: 'blue', onClick: () => { setShowTeacherCenter(false); navigate('/test'); } },
+            { id: 'class-tools', title: lang === 'ar' ? 'أدوات الصف' : 'Classroom Tools', icon: <Presentation size={20}/>, tone: 'violet', onClick: () => { setShowTeacherCenter(false); navigate('/whiteboard'); } },
+            { id: 'learning-materials', title: lang === 'ar' ? 'المواد التعليمية' : 'Learning Materials', icon: <BookOpen size={20}/>, tone: 'amber', onClick: () => { setShowTeacherCenter(false); navigate('/worksheets'); } },
+          ]}
+        /> : !showAchievements ? (
           <>
             {/* Trophy Button in Center */}
             <div className="flex justify-center mb-8">
-              <button 
-                onClick={handleShowAchievements}
-                className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-all group relative border-4 border-white"
-                title={t.achievementsTitle}
+              <button
+                onClick={profile?.role === 'teacher' ? () => setShowTeacherCenter(true) : handleShowAchievements}
+                className={`w-16 h-16 ${profile?.role === 'teacher' ? 'bg-gradient-to-br from-blue-500 to-indigo-700' : 'bg-gradient-to-br from-amber-400 to-orange-500'} text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-all group relative border-4 border-white`}
+                title={profile?.role === 'teacher' ? (lang === 'ar' ? 'مركز التدريس' : 'Teaching Center') : t.achievementsTitle}
+                aria-label={profile?.role === 'teacher' ? (lang === 'ar' ? 'مركز التدريس' : 'Teaching Center') : t.achievementsTitle}
               >
-                <Trophy size={32} />
+                {profile?.role === 'teacher' ? <BookOpenCheck size={32} /> : <Trophy size={32} />}
                 <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-black z-20">
-                  {t.achievementsTitle}
+                  {profile?.role === 'teacher' ? (lang === 'ar' ? 'مركز التدريس' : 'Teaching Center') : t.achievementsTitle}
                 </div>
               </button>
             </div>
