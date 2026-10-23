@@ -111,6 +111,28 @@ export const SchoolDashboard: React.FC = () => {
     <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
       {activeTab === 'overview' && <>
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold text-emerald-800">قُل · بوابة المدرسة</p>
+            <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">الرئيسية</h2>
+            <p className="mt-1 text-sm text-slate-500">الوصول السريع إلى إدارة فريق المدرسة واشتراكها.</p>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {[
+            { title: 'المعلمون والطلاب', description: 'استعرض الحسابات المرتبطة بمدرستك وأدوارها.', icon: Users, href: '/school?tab=team' },
+            { title: 'الاشتراك والأقسام', description: 'راجع باقة المدرسة وحالتها والأقسام المتاحة.', icon: Layers3, href: '/school?tab=subscription' },
+          ].map((item) => (
+            <button key={item.href} onClick={() => navigate(item.href)} className="group flex min-h-36 w-full items-start gap-4 rounded-xl border border-slate-200 bg-white p-5 text-right transition-colors hover:border-emerald-700 hover:bg-emerald-50/30 focus:outline-none focus:ring-2 focus:ring-emerald-700/20">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition-colors group-hover:border-emerald-100 group-hover:bg-emerald-50 group-hover:text-emerald-800"><item.icon size={21} strokeWidth={1.8}/></span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-bold text-slate-900">{item.title}</span>
+                <span className="mt-2 block text-sm leading-6 text-slate-500">{item.description}</span>
+                <span className="mt-3 block text-xs font-bold text-emerald-800">فتح القسم ←</span>
+              </span>
+            </button>
+          ))}
+        </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Metric icon={Layers3} label="الباقة الحالية" value={plan?.name || 'غير محددة'}/>
           <Metric icon={Users} label="إجمالي الحسابات" value={memberCount}/>
