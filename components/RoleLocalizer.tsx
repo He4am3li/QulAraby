@@ -131,6 +131,65 @@ const EN: Record<string, string> = {
   'تعذر إضافة الموعد. تحقق من نشر قواعد appointment_slots في Firestore.':'Could not add the appointment. Check the appointment_slots Firestore rules.',
   'لا توجد مواعيد متاحة في هذا اليوم':'No appointments available on this day',
   'عرض التفاصيل':'View Details','الاسم':'Name','المعلمون':'Teachers','الطلاب':'Students',
+
+  'جارٍ تحميل بيانات المنصة...':'Loading platform data...',
+  'الأدمن العام':'Platform Admin','إجمالي المدارس':'Total Schools','إجمالي الحسابات':'Total Accounts',
+  'المدرسة':'School','مدرسة':'School','مدارس':'Schools','باقة':'Plan','الباقة الحالية':'Current Plan',
+  'مستخدم':'User','المستخدمون':'Users','الحسابات':'Accounts','الأقسام':'Modules','المدرسة المرتبط بها':'Linked School',
+  'الاسم':'Name','البريد':'Email','المعلمون':'Teachers','الطلاب':'Students','الفصول':'Classes',
+  'مفعل':'Enabled','مفعّل':'Enabled','غير مفعّل':'Disabled','موقوفة':'Suspended','تجريبية':'Trial',
+  'حالة المدارس':'School Status','حالة الاشتراك':'Subscription Status','الباقة الحالية':'Current Plan',
+  'بيانات المدرسة':'School Details','عنوان الموعد':'Appointment title','اسم الباقة':'Plan name',
+  'اسم المستخدم':'User name','البريد الإلكتروني':'Email address','الدور':'Role','المدرسة':'School',
+  'بحث':'Search','بحث بالاسم أو البريد':'Search by name or email','تصفية':'Filter','نوع المستخدم':'User type',
+  'لا يوجد بريد تواصل':'No contact email','غير متوفر':'Not available','وقت غير متاح':'Time unavailable',
+  'لا توجد بيانات':'No data available','لا توجد مدارس مسجلة بعد.':'No schools registered yet.',
+  'لا توجد حسابات مطابقة.':'No matching accounts.','لا توجد باقات بعد.':'No plans yet.',
+  'لا توجد مدارس بهذه الحالة.':'No schools with this status.','لا توجد حسابات بعد.':'No accounts yet.',
+  'لا توجد نتائج.':'No results.','لا توجد سجلات عمليات متاحة بعد.':'No audit records available yet.',
+  'المدارس المسجلة':'Registered Schools','حسابات المنصة':'Platform Accounts','الباقات المتاحة':'Available Plans',
+  'المدارس حسب الباقة':'Schools by Plan','الاشتراكات والتجديدات':'Subscriptions & Renewals',
+  'طلبات الدعم السابقة':'Previous support requests','طلبات المدرسة السابقة':'Previous school requests',
+  'إدارة فريق المدرسة':'Manage school team','مستخدمون مرتبطون':'Linked users',
+  'اسم المدرسة مطلوب.':'School name is required.','أدخل اسم المدرسة.':'Enter a school name.',
+  'تم الحفظ بنجاح.':'Saved successfully.','تم تحديث البيانات بنجاح.':'Data updated successfully.',
+  'تعذر تحميل البيانات.':'Could not load data.','تعذر حفظ البيانات.':'Could not save data.',
+  'يرجى المحاولة مرة أخرى.':'Please try again.','الرجاء الانتظار...':'Please wait...',
+  'جارٍ تحميل البيانات...':'Loading data...','تحميل البيانات':'Load data',
+  'لا توجد مواعيد محجوزة.':'No appointments booked.','لا توجد مواعيد متاحة حاليًا':'No appointments are currently available',
+  'لا توجد مواعيد بهذا اليوم':'No appointments on this day','لا توجد مواعيد مضافة':'No appointments have been added',
+  'اختر يومًا آخر عليه نقطة خضراء.':'Choose another day marked with a green dot.',
+  'تظهر الأوقات هنا بعد إضافتها من الأدمن.':'Times appear here after the admin adds them.',
+  'تم إلغاء الموعد وإتاحته للحجز مرة أخرى.':'Appointment cancelled and made available again.',
+  'تم حجز الموعد بنجاح. ستظهر تفاصيله ضمن مواعيد المدرسة.':'Appointment booked successfully. Details will appear under your school appointments.',
+  'المواعيد المتاحة':'Available appointments','الموعد':'Appointment','المواعيد':'Appointments',
+  'تسجيل الخروج':'Sign out','تسجيل الدخول':'Sign in','إعدادات':'Settings','إعدادات المدرسة':'School Settings',
+  'عرض التفاصيل':'View details','الحسابات والصلاحيات':'Accounts & Permissions',
+  'تحتاج إلى متابعة':'Needs Attention','حالة المدارس':'School Status','تسجيل المدارس عبر الوقت':'School Registrations Over Time',
+  'الأقسام التعليمية':'Learning Modules','فترة تجريبية':'Trial Period','فعّال':'Active','موقوف':'Suspended','بلا باقة':'No Plan',
+  'المستوى أو الصف':'Grade / Year','المرحلة أو الصف':'Grade / Year','المعلم المسؤول':'Assigned Teacher',
+  'فصول دون معلم':'Classes without a teacher','طلاب دون فصل':'Students without a class',
+  'المؤشرات التالية محسوبة من سجلات المدرسة الحالية، ولا تتضمن بيانات افتراضية.':'These metrics are calculated from current school records and contain no sample data.',
+  'تغيير الباقة أو حالة الاشتراك متاح للأدمن العام فقط.':'Only the platform admin can change the plan or subscription status.',
+  'معاينة فقط. لا تُحفظ التغييرات في قاعدة البيانات.':'Preview only. Changes are not saved to the database.',
+  'لم يتم ربط هذا الحساب بمدرسة. يرجى التواصل مع أدمن منصة قُل.':'This account is not linked to a school. Contact the QUL platform admin.',
+  'الحجز الفعلي يتطلب حساب مدير مدرسة.':'A real school admin account is required to book.',
+  'هذه معاينة فقط. لن يُرسل الطلب إلى فريق الدعم.':'Preview only. The request will not be sent to support.',
+  'هذه معاينة فقط. لن يتم إنشاء حجز حقيقي.':'Preview only. No real booking will be created.',
+  'أنشئ الفصول وأسنِد الطلاب إليها لظهور التقرير.':'Create classes and assign students to see this report.',
+  'لا توجد فصول بعد. أنشئ أول فصل من الزر أعلاه.':'No classes yet. Create the first class using the button above.',
+  'إعادة المحاولة':'Retry','إغلاق الرسالة':'Dismiss message','إرسال طلب دعم':'Submit support request',
+  'عنوان الطلب':'Request title','وصف المشكلة':'Issue description','طلبات سابقة':'Previous requests',
+  'اسم المدرسة':'School Name','بريد التواصل':'Contact Email','الباقة':'Plan','الحالة':'Status','تاريخ الانتهاء':'Expiration Date',
+  'تفاصيل الاشتراك':'Subscription Details','الأقسام المتاحة':'Available Modules','المعلمون':'Teachers','الطلاب':'Students',
+  'الفصول والمجموعات':'Classes & Groups','التقارير المدرسية':'School Reports','الدعم الفني':'Technical Support',
+  'الاشتراك والأقسام':'Subscription & Modules','بيانات المدرسة':'School Details','الرئيسية':'Home',
+  'الحسابات والصلاحيات':'Accounts & Permissions','الباقات والأقسام':'Plans & Modules','المدارس':'Schools',
+  'الاشتراكات والتجديدات':'Subscriptions & Renewals','التحليلات':'Analytics','سجل العمليات':'Audit Log',
+  'إعدادات المنصة':'Platform Settings','حجز موعد':'Book an Appointment','طلب دعم مكتوب':'Submit a Support Request',
+  'موعد دعم':'Support appointment','جلسة تدريب':'Training session','جلسة دعم فني':'Technical support session',
+  'لا توجد طلبات دعم حتى الآن.':'No support requests yet.','لا توجد حجوزات مسجلة لهذه المدرسة.':'No appointments are booked for this school.'
+
 };
 
 const dictionaryEntries = Object.entries(EN).sort((a,b)=>b[0].length-a[0].length);
@@ -157,6 +216,7 @@ function translateNode(node: React.ReactNode, lang: RoleLanguage): React.ReactNo
       if (typeof element.props[key] === 'string') props[key] = translateRoleText(element.props[key], lang);
     }
     if (element.props.children !== undefined) props.children = translateNode(element.props.children, lang);
+    if (element.props.lang === 'ar' || element.props.lang === 'en') props.lang = lang;
     return React.cloneElement(element, props);
   }
   return node;
