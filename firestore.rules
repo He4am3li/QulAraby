@@ -312,7 +312,38 @@ service cloud.firestore {
     match /schools/{schoolId} {
       allow get: if isAdmin() || belongsToSchool(schoolId);
       allow list: if isAdmin();
-      allow create, update, delete: if isAdmin();
+      allow create, delete: if isAdmin();
+      // School admins may edit only their own basic contact details.
+      allow update: if isAdmin() ||
+        (belongsToSchool(schoolId) &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'contactEmail', 'updatedAt']));
+
+      match /classes/{classId} {
+        allow read: if isAdmin() || belongsToSchool(schoolId);
+        allow create: if isAdmin() ||
+          (belongsToSchool(schoolId) &&
+           request.resource.data.schoolId == schoolId &&
+           request.resource.data.name is string &&
+           request.resource.data.name.size() > 0 &&
+           request.resource.data.name.size() <= 120 &&
+           (!('teacherId' in request.resource.data) || request.resource.data.teacherId == '' ||
+             (exists(/databases/$(database)/documents/users/$(request.resource.data.teacherId)) &&
+              get(/databases/$(database)/documents/users/$(request.resource.data.teacherId)).data.role == 'teacher' &&
+              get(/databases/$(database)/documents/users/$(request.resource.data.teacherId)).data.schoolId == schoolId)));
+        allow update: if isAdmin() ||
+          (belongsToSchool(schoolId) &&
+           resource.data.schoolId == schoolId &&
+           request.resource.data.schoolId == schoolId &&
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'grade', 'teacherId', 'schoolId', 'updatedAt']) &&
+           request.resource.data.name is string &&
+           request.resource.data.name.size() > 0 &&
+           request.resource.data.name.size() <= 120 &&
+           (!('teacherId' in request.resource.data) || request.resource.data.teacherId == '' ||
+             (exists(/databases/$(database)/documents/users/$(request.resource.data.teacherId)) &&
+              get(/databases/$(database)/documents/users/$(request.resource.data.teacherId)).data.role == 'teacher' &&
+              get(/databases/$(database)/documents/users/$(request.resource.data.teacherId)).data.schoolId == schoolId)));
+        allow delete: if isAdmin() || (belongsToSchool(schoolId) && resource.data.schoolId == schoolId);
+      }
     }
 
     match /plans/{planId} {
@@ -331,7 +362,16 @@ service cloud.firestore {
       allow update: if isAdmin() ||
         (isOwner(userId) && isValidUser(request.resource.data) &&
          request.resource.data.role == resource.data.role &&
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL']));
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL'])) ||
+        (isSchoolAdmin() &&
+         resource.data.schoolId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId &&
+         request.resource.data.schoolId == resource.data.schoolId &&
+         resource.data.role == 'student' &&
+         request.resource.data.role == resource.data.role &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['classId', 'updatedAt']) &&
+         request.resource.data.classId is string &&
+         (request.resource.data.classId == '' ||
+          exists(/databases/$(database)/documents/schools/$(resource.data.schoolId)/classes/$(request.resource.data.classId))));
       allow delete: if isAdmin();
 
       // Vocabulary Subcollection
