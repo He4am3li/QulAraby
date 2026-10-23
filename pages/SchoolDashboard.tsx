@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Users, GraduationCap, BookOpenCheck, Layers3, Settings2, Building2, Search,
   Plus, Save, X, Pencil, Trash2, Download, RefreshCw, CheckCircle2, Clock3,
-  LoaderCircle, ChevronLeft, School, Mail, CalendarDays, ShieldCheck
+  LoaderCircle, ChevronLeft, School, Mail, CalendarDays, ShieldCheck, Headphones, BarChart3, Send
 } from 'lucide-react';
 import {
   addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp,
@@ -51,7 +51,7 @@ type ClassRecord = {
   updatedAt?: any;
 };
 
-type SchoolTab = 'overview' | 'teachers' | 'students' | 'classes' | 'settings' | 'subscription';
+type SchoolTab = 'overview' | 'teachers' | 'students' | 'classes' | 'settings' | 'subscription' | 'reports' | 'support';
 
 const tabCards = [
   { id: 'teachers', title: 'المعلمون', english: 'TEACHERS', description: 'استعراض قائمة المعلمين وإسنادهم إلى الفصول.', icon: GraduationCap },
@@ -59,6 +59,8 @@ const tabCards = [
   { id: 'classes', title: 'الفصول والمجموعات', english: 'CLASSES', description: 'إنشاء الفصول وتحديد المعلم المسؤول.', icon: BookOpenCheck },
   { id: 'settings', title: 'بيانات المدرسة', english: 'SCHOOL DETAILS', description: 'تحديث اسم المدرسة وبريد التواصل.', icon: Settings2 },
   { id: 'subscription', title: 'الاشتراك والأقسام', english: 'SUBSCRIPTION', description: 'مراجعة الباقة والحدود والأقسام المتاحة.', icon: Layers3 },
+  { id: 'reports', title: 'التقارير المدرسية', english: 'SCHOOL REPORTS', description: 'ملخصات فعلية عن فريق المدرسة والفصول والأقسام.', icon: BarChart3 },
+  { id: 'support', title: 'الدعم الفني', english: 'SCHOOL SUPPORT', description: 'إرسال طلب للدعم ومتابعة الطلبات السابقة.', icon: Headphones },
 ] as const;
 
 const fieldClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/10';
@@ -92,6 +94,9 @@ export const SchoolDashboard: React.FC = () => {
   const [classGrade, setClassGrade] = React.useState('');
   const [classTeacher, setClassTeacher] = React.useState('');
   const [editingClassId, setEditingClassId] = React.useState<string | null>(null);
+  const [supportTitle, setSupportTitle] = React.useState('');
+  const [supportDescription, setSupportDescription] = React.useState('');
+  const [schoolTickets, setSchoolTickets] = React.useState<Array<{ id: string; title?: string; description?: string; status?: string; createdAt?: any }>>([]);
 
   const schoolId = profile?.schoolId || '';
   const isDemo = schoolId === '__demo__';
@@ -128,6 +133,7 @@ export const SchoolDashboard: React.FC = () => {
           { uid: 'demo-s2', displayName: 'طالب تجريبي 2', email: 'student2@example.com', role: 'student', schoolId },
         ]);
         setClasses([{ id: 'demo-c1', name: 'الصف التجريبي', grade: 'المرحلة الابتدائية', teacherId: 'demo-t1', schoolId }]);
+        setSchoolTickets([]);
         setSchoolName(demoSchool.name);
         setContactEmail(demoSchool.contactEmail || '');
         return;
@@ -138,6 +144,14 @@ export const SchoolDashboard: React.FC = () => {
         getDocs(query(collection(db, 'users'), where('schoolId', '==', schoolId))),
         getDocs(collection(db, 'schools', schoolId, 'classes')),
       ]);
+      let nextTickets: Array<{ id: string; title?: string; description?: string; status?: string; createdAt?: any }> = [];
+      try {
+        const ticketSnap = await getDocs(query(collection(db, 'support_tickets'), where('schoolId', '==', schoolId)));
+        nextTickets = ticketSnap.docs.map(item => ({ id: item.id, ...item.data() } as { id: string; title?: string; description?: string; status?: string; createdAt?: any }));
+      } catch (ticketError) {
+        // Support is optional until support_tickets rules have been published.
+        console.info('School support tickets are not available yet.', ticketError);
+      }
       if (!schoolSnap.exists()) throw new Error('لم يتم العثور على بيانات المدرسة.');
       const schoolData = schoolSnap.data() as SchoolRecord;
       let planData: PlanRecord | null = null;
@@ -151,6 +165,7 @@ export const SchoolDashboard: React.FC = () => {
       setPlan(planData);
       setMembers(memberData);
       setClasses(classData);
+      setSchoolTickets(nextTickets.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)));
       setSchoolName(schoolData.name || '');
       setContactEmail(schoolData.contactEmail || '');
     } catch (e) {
@@ -326,6 +341,45 @@ export const SchoolDashboard: React.FC = () => {
     }
   };
 
+  const submitSupportTicket = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!supportTitle.trim() || !supportDescription.trim()) {
+      setNotice('أدخل عنوان الطلب ووصف المشكلة.');
+      return;
+    }
+    if (supportTitle.trim().length > 160 || supportDescription.trim().length > 5000) {
+      setNotice('عنوان الطلب بحد أقصى 160 حرفًا، والوصف بحد أقصى 5000 حرف.');
+      return;
+    }
+    if (isDemo) {
+      setNotice('هذه معاينة فقط. لن يُرسل الطلب إلى فريق الدعم.');
+      return;
+    }
+    if (!schoolId || !school) return;
+    setSaving(true);
+    setNotice('');
+    try {
+      await addDoc(collection(db, 'support_tickets'), {
+        title: supportTitle.trim(),
+        description: supportDescription.trim(),
+        schoolId,
+        schoolName: school.name,
+        contactEmail: school.contactEmail || profile?.email || '',
+        status: 'open',
+        createdAt: serverTimestamp(),
+      });
+      setSupportTitle('');
+      setSupportDescription('');
+      const refreshed = await getDocs(query(collection(db, 'support_tickets'), where('schoolId', '==', schoolId)));
+      setSchoolTickets(refreshed.docs.map(item => ({ id: item.id, ...item.data() } as { id: string; title?: string; description?: string; status?: string; createdAt?: any }))
+        .sort((a,b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)));
+      setNotice('تم إرسال طلب الدعم بنجاح.');
+    } catch (e) {
+      console.error('Support ticket creation failed:', e);
+      setNotice('تعذر إرسال الطلب. تحقق من نشر قواعد Firestore المحدّثة.');
+    } finally { setSaving(false); }
+  };
+
   const exportMembers = (list: MemberRecord[], label: string) => {
     const escapeCsv = (value: string) => '"' + value.replace(/"/g, '""') + '"';
     const rows = [
@@ -353,6 +407,8 @@ export const SchoolDashboard: React.FC = () => {
     classes: 'الفصول والمجموعات',
     settings: 'بيانات المدرسة',
     subscription: 'الاشتراك والأقسام',
+    reports: 'التقارير المدرسية',
+    support: 'الدعم الفني',
   };
 
   if (loading) return <div className="flex h-full min-h-80 items-center justify-center gap-3 text-slate-500"><LoaderCircle className="animate-spin"/> جارٍ تحميل لوحة المدرسة...</div>;
@@ -433,6 +489,32 @@ export const SchoolDashboard: React.FC = () => {
             <label className="space-y-1.5 text-sm font-semibold">بريد التواصل<input className={fieldClass} type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="school@example.com"/></label>
             <div className="sm:col-span-2 flex items-center justify-between gap-3"><p className="text-xs text-slate-500">تغيير الباقة أو حالة الاشتراك متاح للأدمن العام فقط.</p><button disabled={saving} className={primaryButton}><Save size={15}/>{saving ? 'جارٍ الحفظ...' : 'حفظ البيانات'}</button></div>
           </form>
+        </section>}
+
+        {activeTab === 'reports' && <section className="min-h-0 flex-1 space-y-3 overflow-auto">
+          <div className="flex flex-wrap items-center justify-between gap-2"><div><h1 className="text-lg font-bold">التقارير المدرسية</h1><p className="mt-1 text-xs text-slate-500">المؤشرات التالية محسوبة من سجلات المدرسة الحالية، ولا تتضمن بيانات افتراضية.</p></div><button onClick={() => exportMembers([...teachers, ...students], 'school-report')} className={secondaryButton}><Download size={15}/> تصدير تقرير CSV</button></div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              { label: 'المعلمون', value: teachers.length, icon: GraduationCap },
+              { label: 'الطلاب', value: students.length, icon: Users },
+              { label: 'الفصول', value: classes.length, icon: BookOpenCheck },
+              { label: 'الأقسام المتاحة', value: modules.length, icon: Layers3 },
+              { label: 'طلاب دون فصل', value: students.filter(student => !student.classId).length, icon: School },
+              { label: 'فصول دون معلم', value: classes.filter(item => !item.teacherId).length, icon: ShieldCheck },
+            ].map(item => <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-4"><div className="flex items-center justify-between text-sm text-slate-500"><span>{item.label}</span><item.icon size={18}/></div><div className="mt-3 text-2xl font-bold">{item.value}</div></div>)}
+          </div>
+          <section className="rounded-xl border border-slate-200 bg-white p-4"><h2 className="mb-3 font-bold">توزيع الطلاب حسب الفصل</h2>{classes.length ? <div className="space-y-3">{classes.map(item=>{const count=students.filter(student=>student.classId===item.id).length;return <div key={item.id} className="grid grid-cols-[minmax(100px,180px)_minmax(0,1fr)_40px] items-center gap-3 text-sm"><span className="truncate">{item.name}</span><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full bg-emerald-700" style={{width:students.length?`${count/students.length*100}%`:'0%'}}/></div><span className="text-left tabular-nums">{count}</span></div>})}</div>:<p className="text-sm text-slate-500">أنشئ الفصول وأسنِد الطلاب إليها لظهور التقرير.</p>}</section>
+        </section>}
+
+        {activeTab === 'support' && <section className="grid min-h-0 flex-1 gap-3 overflow-auto xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <form onSubmit={submitSupportTicket} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4">
+            <div><h1 className="font-bold">إرسال طلب دعم</h1><p className="mt-1 text-xs text-slate-500">سيصل الطلب إلى مركز الدعم في إدارة منصة قُل.</p></div>
+            <label className="space-y-1 text-xs font-semibold">عنوان الطلب<input className={fieldClass} value={supportTitle} onChange={e=>setSupportTitle(e.target.value)} maxLength={160} required placeholder="مثال: مشكلة في حساب أحد الطلاب"/></label>
+            <label className="flex min-h-28 flex-1 flex-col space-y-1 text-xs font-semibold">وصف المشكلة<textarea className={fieldClass+' min-h-28 flex-1'} value={supportDescription} onChange={e=>setSupportDescription(e.target.value)} maxLength={5000} required placeholder="اذكر ما حدث والخطوات التي أدت إلى المشكلة."/></label>
+            <button disabled={saving || isDemo} className={primaryButton}><Send size={15}/>{saving ? 'جارٍ الإرسال...' : 'إرسال الطلب'}</button>
+            {isDemo && <p className="text-xs text-amber-700">المعاينة لا ترسل طلبات حقيقية.</p>}
+          </form>
+          <section className="rounded-xl border border-slate-200 bg-white p-4"><h2 className="mb-3 font-bold">طلبات المدرسة السابقة ({schoolTickets.length})</h2>{schoolTickets.length ? <div className="space-y-2">{schoolTickets.map(ticket=><div key={ticket.id} className="rounded-lg border border-slate-100 bg-slate-50 p-3"><div className="flex items-start justify-between gap-2"><p className="text-sm font-semibold">{ticket.title || 'طلب دعم'}</p><span className="shrink-0 rounded-md bg-white px-2 py-1 text-[10px]">{ticket.status==='resolved'?'تم الحل':ticket.status==='in_progress'?'قيد المعالجة':'جديد'}</span></div><p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-slate-600">{ticket.description}</p><p className="mt-2 text-[10px] text-slate-400">{ticket.createdAt?.toDate ? ticket.createdAt.toDate().toLocaleString('ar-AE') : 'وقت الإرسال'}</p></div>)}</div>:<p className="text-sm text-slate-500">لا توجد طلبات دعم حتى الآن.</p>}</section>
         </section>}
 
         {activeTab === 'subscription' && <div className="grid min-h-0 flex-1 gap-3 overflow-auto xl:grid-cols-[minmax(0,1.3fr)_minmax(260px,0.7fr)]">
