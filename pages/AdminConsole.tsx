@@ -15,6 +15,7 @@ import { useAuth } from '../components/AuthProvider';
 import { PlatformTopBar } from '../components/PlatformTopBar';
 import { RoleLocalizer, useRoleLanguage } from '../components/RoleLocalizer';
 import { ModuleCard } from './Home';
+import { RoleActionPanel, RoleActionItem } from '../components/RoleActionPanel';
 
 type PlanRecord = {
   id: string; name: string; description?: string; price?: number; currency?: string;
@@ -56,6 +57,7 @@ export const AdminConsole: React.FC = () => {
   const [users, setUsers] = React.useState<UserRecord[]>([]);
   const [auditLogs, setAuditLogs] = React.useState<AdminLogRecord[]>([]);
   const [supportTickets, setSupportTickets] = React.useState<SupportTicketRecord[]>([]);
+  const [showRolePanel, setShowRolePanel] = React.useState(false);
   const [appointmentSlots, setAppointmentSlots] = React.useState<AppointmentSlotRecord[]>([]);
   const [appointmentStart, setAppointmentStart] = React.useState('');
   const [appointmentTitle, setAppointmentTitle] = React.useState('');
@@ -515,7 +517,24 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
 
         {loading ? <div className="flex min-h-64 items-center justify-center gap-3 text-slate-500"><LoaderCircle className="animate-spin" /> جارٍ تحميل بيانات المنصة...</div> : (
           <>
-            {tab === 'overview' && <section>
+            {tab === 'overview' && (showRolePanel ? <RoleActionPanel
+              lang={lang}
+              title={isEnglish ? 'Platform Center' : 'مركز المنصة'}
+              icon={<Activity size={24}/>}
+              onClose={() => setShowRolePanel(false)}
+              items={[
+                { id: 'schools', title: isEnglish ? 'Registered Schools' : 'المدارس المسجلة', value: schools.length, icon: <Building2 size={20}/>, tone: 'emerald', onClick: () => { setShowRolePanel(false); setTab('schools'); } },
+                { id: 'accounts', title: isEnglish ? 'Platform Accounts' : 'حسابات المنصة', value: users.length, icon: <Users size={20}/>, tone: 'blue', onClick: () => { setShowRolePanel(false); setTab('users'); } },
+                { id: 'plans', title: isEnglish ? 'Available Plans' : 'الباقات المتاحة', value: plans.filter(plan => plan.isActive !== false).length, icon: <Layers3 size={20}/>, tone: 'violet', onClick: () => { setShowRolePanel(false); setTab('plans'); } },
+                { id: 'support', title: isEnglish ? 'Open Support Requests' : 'طلبات الدعم المفتوحة', value: supportTickets.filter(ticket => (ticket.status || 'open') !== 'resolved').length, icon: <Headphones size={20}/>, tone: 'amber', onClick: () => { setShowRolePanel(false); setTab('support'); } },
+              ]}
+            /> : <section>
+              <div className="flex justify-center mb-3">
+                <button type="button" onClick={() => setShowRolePanel(true)} title={isEnglish ? 'Platform Center' : 'مركز المنصة'} aria-label={isEnglish ? 'Platform Center' : 'مركز المنصة'} className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-700 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-all group relative border-4 border-white">
+                  <Activity size={32}/>
+                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-black z-20">{isEnglish ? 'Platform Center' : 'مركز المنصة'}</span>
+                </button>
+              </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
                 {[
                   { title: 'المدارس', english: 'SCHOOLS', icon: Building2, color: 'from-blue-600 to-indigo-700', tab: 'schools' as TabKey },
@@ -528,7 +547,7 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
                   { title: 'إعدادات المنصة', english: 'PLATFORM SETTINGS', icon: SlidersHorizontal, color: 'from-teal-600 to-emerald-800', tab: 'settings' as TabKey },
                 ].map(item => <ModuleCard key={item.tab} icon={<item.icon />} title={item.english} arTitle={item.title} description="" color={item.color} onClick={() => setTab(item.tab)} enterLabel={isEnglish ? 'Open section' : 'فتح القسم'} lang={lang} />)}
               </div>
-            </section>}
+            </section>)}
 
             {tab === 'schools' && <section className="space-y-5">
               <div className="rounded-xl border border-slate-200 bg-white p-5 md:p-6">
