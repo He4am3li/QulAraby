@@ -443,7 +443,7 @@ export const AdminConsole: React.FC = () => {
             </section>}
           </>
         )}
-        <footer className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900"><Settings2 size={20} className="mt-0.5 shrink-0"/><p><strong>ملاحظة تشغيلية:</strong> هذه اللوحة تدير سجلات المدارس والباقات وإسناد الحسابات. بوابات الدفع، الفوترة الآلية، دعوات الحسابات بالبريد، وإحصاءات الاستخدام التفصيلية تحتاج تكاملات مستقلة قبل الإطلاق التجاري.</p></footer>
+
         </div>
       </div>
     </div>
