@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Activity, Building2, Check, ChevronDown, CircleDollarSign, GraduationCap, Layers3,
   LoaderCircle, Plus, RefreshCw, School, Settings2, ShieldCheck, Users, X
@@ -38,7 +38,10 @@ const inputClass = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2
 export const AdminConsole: React.FC = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = React.useState<TabKey>('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const tab: TabKey = requestedTab === 'schools' || requestedTab === 'plans' || requestedTab === 'users' ? requestedTab : 'overview';
+  const setTab = (nextTab: TabKey) => setSearchParams(nextTab === 'overview' ? {} : { tab: nextTab });
   const [schools, setSchools] = React.useState<SchoolRecord[]>([]);
   const [plans, setPlans] = React.useState<PlanRecord[]>([]);
   const [users, setUsers] = React.useState<UserRecord[]>([]);
