@@ -15,6 +15,7 @@ import { SCHOOL_MODULES } from '../config/schoolPlans';
 import { PlatformTopBar } from '../components/PlatformTopBar';
 import { RoleLocalizer, useRoleLanguage } from '../components/RoleLocalizer';
 import { ModuleCard } from './Home';
+import { RoleActionPanel, RoleActionItem } from '../components/RoleActionPanel';
 
 type SchoolRecord = {
   name: string;
@@ -102,6 +103,7 @@ export const SchoolDashboard: React.FC = () => {
   const [supportDescription, setSupportDescription] = React.useState('');
   const [schoolTickets, setSchoolTickets] = React.useState<Array<{ id: string; title?: string; description?: string; status?: string; createdAt?: any }>>([]);
   const [appointmentSlots, setAppointmentSlots] = React.useState<AppointmentSlotRecord[]>([]);
+  const [showRolePanel, setShowRolePanel] = React.useState(false);
   const [selectedAppointmentDate, setSelectedAppointmentDate] = React.useState(() => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dubai' }));
   const [calendarMonth, setCalendarMonth] = React.useState(() => { const now = new Date(); return new Date(now.getFullYear(), now.getMonth(), 1); });
   const [appointmentKind, setAppointmentKind] = React.useState<'training' | 'support'>('training');
@@ -556,7 +558,25 @@ export const SchoolDashboard: React.FC = () => {
       <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col gap-3">
         {notice && <div role="status" className={'flex shrink-0 items-start justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 '+(activeTab === 'support' ? 'py-1.5' : '')}><span>{notice}</span><button onClick={() => setNotice('')} aria-label="إغلاق الرسالة"><X size={14}/></button></div>}
 
-        {activeTab === 'overview' && <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        {activeTab === 'overview' && (showRolePanel ? <RoleActionPanel
+          lang={lang}
+          title={isEnglish ? 'School Pulse' : 'نبض المدرسة'}
+          icon={<School size={24}/>}
+          onClose={() => setShowRolePanel(false)}
+          items={[
+            { id: 'teachers', title: isEnglish ? 'Teachers' : 'المعلمون', value: teachers.length, icon: <GraduationCap size={20}/>, tone: 'blue', onClick: () => { setShowRolePanel(false); navigate('/school?tab=teachers'); } },
+            { id: 'students', title: isEnglish ? 'Students' : 'الطلاب', value: students.length, icon: <Users size={20}/>, tone: 'violet', onClick: () => { setShowRolePanel(false); navigate('/school?tab=students'); } },
+            { id: 'classes', title: isEnglish ? 'Classes' : 'الفصول', value: classes.length, icon: <BookOpenCheck size={20}/>, tone: 'emerald', onClick: () => { setShowRolePanel(false); navigate('/school?tab=classes'); } },
+            { id: 'appointments', title: isEnglish ? 'Upcoming Appointments' : 'المواعيد القادمة', value: appointmentSlots.filter(slot => slot.status === 'booked' && slot.schoolId === schoolId && new Date(slot.startsAt?.toDate ? slot.startsAt.toDate() : slot.startsAt || 0).getTime() > Date.now()).length, icon: <CalendarDays size={20}/>, tone: 'amber', onClick: () => { setShowRolePanel(false); navigate('/school?tab=support'); } },
+          ]}
+        /> : <section>
+          <div className="flex justify-center mb-3">
+            <button type="button" onClick={() => setShowRolePanel(true)} title={isEnglish ? 'School Pulse' : 'نبض المدرسة'} aria-label={isEnglish ? 'School Pulse' : 'نبض المدرسة'} className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-800 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-all group relative border-4 border-white">
+              <School size={32}/>
+              <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-black z-20">{isEnglish ? 'School Pulse' : 'نبض المدرسة'}</span>
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {tabCards.map(item => <ModuleCard
             key={item.id}
             icon={<item.icon />}
@@ -568,7 +588,8 @@ export const SchoolDashboard: React.FC = () => {
             enterLabel={isEnglish ? 'Open section' : 'فتح القسم'}
             lang={lang}
           />)}
-        </section>}
+          </div>
+        </section>)}
 
         {activeTab === 'teachers' && <div className="flex min-h-0 flex-1 flex-col gap-2"><div className="flex items-center justify-between gap-2"><h1 className="text-lg font-bold">المعلمون</h1><button onClick={() => exportMembers(filteredMembers(teachers), 'teachers')} className={secondaryButton}><Download size={15}/> تصدير القائمة</button></div>{renderMemberTable(teachers, 'teacher')}</div>}
 
