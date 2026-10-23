@@ -83,7 +83,7 @@ const AppContent: React.FC = () => {
       <Layout>
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
-            <Route path="/" element={profile?.role === 'admin' ? <Navigate to="/admin" replace /> : profile?.role === 'schoolAdmin' ? <Navigate to="/school" replace /> : <Home />} />
+            <Route path="/" element={profile?.role === 'admin' ? <AdminConsole /> : profile?.role === 'schoolAdmin' ? <SchoolDashboard /> : <Home />} />
             <Route path="/admin" element={profile?.role === 'admin' ? <AdminConsole /> : <Navigate to="/" replace />} />
             <Route path="/school" element={profile?.role === 'schoolAdmin' ? <SchoolDashboard /> : <Navigate to="/" replace />} />
             <Route path="/whiteboard" element={<FeatureGate moduleId="whiteboard"><WhiteboardPage /></FeatureGate>} />
