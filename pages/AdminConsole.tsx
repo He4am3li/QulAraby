@@ -10,6 +10,7 @@ import {
 import { db } from '../firebase';
 import { ALL_SCHOOL_MODULE_IDS, SCHOOL_MODULES } from '../config/schoolPlans';
 import { useAuth } from '../components/AuthProvider';
+import { PlatformTopBar } from '../components/PlatformTopBar';
 
 type PlanRecord = {
   id: string; name: string; description?: string; price?: number; currency?: string;
@@ -320,7 +321,8 @@ export const AdminConsole: React.FC = () => {
 
   return (
     <div dir="rtl" className="min-h-full bg-[#f7f8f6] text-slate-900 flex flex-col">
-      <header className="flex flex-col gap-4 border-b border-slate-200 bg-white px-4 py-5 sm:flex-row sm:items-center sm:justify-between md:px-7">
+      <PlatformTopBar />
+      <header className="flex flex-col gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between md:px-7">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-800">
             <ShieldCheck size={21} strokeWidth={1.8} />
