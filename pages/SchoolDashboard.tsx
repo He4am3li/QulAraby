@@ -100,7 +100,8 @@ export const SchoolDashboard: React.FC = () => {
   const [supportDescription, setSupportDescription] = React.useState('');
   const [schoolTickets, setSchoolTickets] = React.useState<Array<{ id: string; title?: string; description?: string; status?: string; createdAt?: any }>>([]);
   const [appointmentSlots, setAppointmentSlots] = React.useState<AppointmentSlotRecord[]>([]);
-  const [selectedAppointmentDate, setSelectedAppointmentDate] = React.useState('');
+  const [selectedAppointmentDate, setSelectedAppointmentDate] = React.useState(() => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dubai' }));
+  const [calendarMonth, setCalendarMonth] = React.useState(() => { const now = new Date(); return new Date(now.getFullYear(), now.getMonth(), 1); });
 
   const schoolId = profile?.schoolId || '';
   const isDemo = schoolId === '__demo__';
@@ -373,9 +374,23 @@ export const SchoolDashboard: React.FC = () => {
     return Number.isNaN(raw.getTime()) ? 'وقت غير محدد' : new Intl.DateTimeFormat('ar-AE', { timeZone: 'Asia/Dubai', hour: 'numeric', minute: '2-digit' }).format(raw);
   };
   const availableAppointmentDates = Array.from(new Set(appointmentSlots.filter(slot => slot.status === 'available' && slot.startsAt && new Date(slot.startsAt?.toDate ? slot.startsAt.toDate() : slot.startsAt).getTime() > Date.now()).map(appointmentDateKey).filter(Boolean))).sort();
-  const currentAppointmentDate = availableAppointmentDates.includes(selectedAppointmentDate) ? selectedAppointmentDate : availableAppointmentDates[0] || '';
+  const currentAppointmentDate = selectedAppointmentDate || availableAppointmentDates[0] || '';
   const availableAppointmentSlots = appointmentSlots.filter(slot => slot.status === 'available' && appointmentDateKey(slot) === currentAppointmentDate && new Date(slot.startsAt?.toDate ? slot.startsAt.toDate() : slot.startsAt).getTime() > Date.now())
     .sort((x, y) => new Date(x.startsAt?.toDate ? x.startsAt.toDate() : x.startsAt).getTime() - new Date(y.startsAt?.toDate ? y.startsAt.toDate() : y.startsAt).getTime());
+  const calendarYear = calendarMonth.getFullYear();
+  const calendarMonthIndex = calendarMonth.getMonth();
+  const calendarMonthLabel = new Intl.DateTimeFormat('ar-AE', { timeZone: 'Asia/Dubai', month: 'long', year: 'numeric' }).format(new Date(Date.UTC(calendarYear, calendarMonthIndex, 15, 8)));
+  const firstWeekday = new Date(calendarYear, calendarMonthIndex, 1).getDay();
+  const daysInCalendarMonth = new Date(calendarYear, calendarMonthIndex + 1, 0).getDate();
+  const calendarCells: Array<{ dateKey: string; day: number } | null> = [
+    ...Array.from({ length: firstWeekday }, () => null),
+    ...Array.from({ length: daysInCalendarMonth }, (_, index) => ({
+      day: index + 1,
+      dateKey: calendarYear + '-' + String(calendarMonthIndex + 1).padStart(2, '0') + '-' + String(index + 1).padStart(2, '0'),
+    })),
+  ];
+  const dubaiTodayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai' }).format(new Date());
+  const appointmentCountForDate = (dateKey: string) => appointmentSlots.filter(slot => slot.status === 'available' && appointmentDateKey(slot) === dateKey && new Date(slot.startsAt?.toDate ? slot.startsAt.toDate() : slot.startsAt).getTime() > Date.now()).length;
 
   const bookAppointment = async (slot: AppointmentSlotRecord) => {
     if (isDemo || !schoolId || !school || !profile) {
@@ -600,29 +615,62 @@ export const SchoolDashboard: React.FC = () => {
         </section>}
 
         {activeTab === 'support' && <section className="min-h-0 flex-1 space-y-4 overflow-auto">
-          <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-[#f7fbf8] to-[#edf5f0] p-4 shadow-sm">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div><h1 className="font-bold text-slate-900">حجز موعد مع فريق قُل</h1><p className="mt-1 text-xs text-slate-500">اختر يومًا ثم وقتًا متاحًا لجلسة تدريب أو دعم. جميع الأوقات بتوقيت الإمارات (Asia/Dubai).</p></div>
-              <div className="rounded-xl border border-white bg-white/80 px-3 py-2 text-xs text-slate-600">المدة موضحة بجوار كل موعد</div>
+          {notice && <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">{notice}</div>}
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div><h1 className="text-base font-bold text-slate-900">حجز موعد</h1><p className="mt-1 text-xs text-slate-500">الدعم الفني أو التدريب على المنصة</p></div>
+              <div className="flex items-center gap-2">
+                <select value={appointmentKind} onChange={e=>setBookingTypeDraft(e.target.value as 'training'|'support')} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"><option value="training">تدريب على المنصة</option><option value="support">دعم فني</option></select>
+                {isDemo && <span className="rounded-full bg-amber-50 px-2.5 py-1.5 text-[10px] font-semibold text-amber-800">معاينة</span>}
+              </div>
             </div>
-            {isDemo && <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">هذه معاينة فقط. يلزم حساب مدير مدرسة حقيقي لإجراء حجز.</p>}
-            {availableAppointmentDates.length ? <>
-              <div className="mt-4 flex gap-2 overflow-x-auto pb-1">{availableAppointmentDates.map(dateKey=><button key={dateKey} type="button" onClick={()=>setSelectedAppointmentDate(dateKey)} className={`min-w-[98px] rounded-xl border px-3 py-2 text-right transition ${currentAppointmentDate===dateKey?'border-emerald-800 bg-emerald-800 text-white shadow-sm':'border-slate-200 bg-white text-slate-700 hover:border-emerald-500'}`}><span className="block text-xs font-bold">{appointmentDateLabel(dateKey)}</span><span className={`mt-1 block text-[10px] ${currentAppointmentDate===dateKey?'text-emerald-100':'text-slate-400'}`}>{appointmentSlots.filter(slot=>slot.status==='available'&&appointmentDateKey(slot)===dateKey).length} مواعيد متاحة</span></button>)}</div>
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">{availableAppointmentSlots.map(slot=><button type="button" key={slot.id} disabled={saving || isDemo} onClick={()=>void bookAppointment(slot)} className="group rounded-xl border border-slate-200 bg-white px-3 py-3 text-right shadow-[0_1px_2px_rgba(15,23,42,0.035)] transition hover:-translate-y-0.5 hover:border-emerald-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"><span className="block text-base font-bold tabular-nums text-slate-800">{appointmentTimeLabel(slot)}</span><span className="mt-1 block text-[10px] text-slate-500">{slot.kind==='training'?'جلسة تدريب':'موعد دعم'} · {slot.durationMinutes || 30} دقيقة</span><span className="mt-2 block text-[10px] font-bold text-emerald-800 group-hover:text-emerald-600">{saving?'جارٍ الحجز...':'حجز هذا الموعد ←'}</span></button>)}</div>
-            </> : <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-white/65 p-5 text-center"><CalendarDays size={24} className="mx-auto text-slate-400"/><p className="mt-2 text-sm font-semibold text-slate-700">لا توجد مواعيد متاحة حاليًا</p><p className="mt-1 text-xs text-slate-500">سيظهر التقويم هنا عندما يضيف فريق قُل فترات للحجز.</p></div>}
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.18fr)_minmax(280px,0.82fr)]">
+              <div className="rounded-xl border border-slate-200 bg-[#fbfcfb] p-3 sm:p-4">
+                <div className="mb-4 flex items-center justify-between gap-2">
+                  <button type="button" aria-label="الشهر التالي" onClick={()=>setCalendarMonth(new Date(calendarYear,calendarMonthIndex+1,1))} className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-600 hover:text-emerald-800"><ChevronLeft size={17}/></button>
+                  <h2 className="text-base font-bold text-slate-800">{calendarMonthLabel}</h2>
+                  <button type="button" aria-label="الشهر السابق" onClick={()=>setCalendarMonth(new Date(calendarYear,calendarMonthIndex-1,1))} className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-600 hover:text-emerald-800"><ChevronLeft className="rotate-180" size={17}/></button>
+                </div>
+                <div className="mb-2 grid grid-cols-7 gap-1 text-center">{['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'].map(day=><div key={day} className="py-2 text-[10px] font-semibold text-slate-500 sm:text-xs">{day}</div>)}</div>
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarCells.map((cell,index)=>{
+                    if(!cell) return <div key={'blank-'+index} className="min-h-10 sm:min-h-12"/>;
+                    const count=appointmentCountForDate(cell.dateKey);
+                    const past=cell.dateKey<dubaiTodayKey;
+                    const selected=currentAppointmentDate===cell.dateKey;
+                    return <button key={cell.dateKey} type="button" disabled={past} onClick={()=>setSelectedAppointmentDate(cell.dateKey)} className={'relative flex min-h-10 flex-col items-center justify-center rounded-lg border text-xs transition sm:min-h-12 '+(selected?'border-[#173f32] bg-[#173f32] font-bold text-white shadow-sm':count?'border-emerald-200 bg-emerald-50 font-semibold text-emerald-900 hover:border-emerald-600':'border-transparent bg-white text-slate-700 hover:border-slate-200 hover:bg-slate-50')+(past?' cursor-not-allowed opacity-30':'')}>
+                      <span>{cell.day}</span>{count>0&&<span className={'mt-1 h-1 w-1 rounded-full '+(selected?'bg-white':'bg-emerald-600')}/>}
+                    </button>;
+                  })}
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-200 pt-3 text-[10px] text-slate-500">
+                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-600"/>مواعيد متاحة</span>
+                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#173f32]"/>اليوم المحدد</span>
+                  <span className="mr-auto text-slate-400">توقيت الإمارات</span>
+                </div>
+              </div>
+              <div className="min-w-0">
+                <div className="mb-3 flex items-center justify-between gap-2"><h2 className="font-bold text-slate-800">{currentAppointmentDate ? appointmentDateLabel(currentAppointmentDate) : 'اختر يومًا'}</h2><span className="text-[10px] text-slate-400">{availableAppointmentSlots.length} موعد</span></div>
+                <div className="max-h-[370px] space-y-2 overflow-auto">
+                  {availableAppointmentSlots.map(slot=><button type="button" key={slot.id} disabled={saving||isDemo} onClick={()=>void bookAppointment(slot)} className="group flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-right transition hover:border-emerald-700 hover:bg-emerald-50/50 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50"><div><span className="block text-base font-bold tabular-nums text-slate-800">{appointmentTimeLabel(slot)}</span><span className="mt-1 block text-[10px] text-slate-500">{slot.durationMinutes||30} دقيقة · {slot.kind==='training'?'تدريب':'دعم فني'}</span></div><span className="text-xs font-bold text-emerald-800">{saving?'جارٍ الحجز...':'اختيار ←'}</span></button>)}
+                  {!availableAppointmentSlots.length&&<div className="flex min-h-[250px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 text-center"><CalendarDays size={27} className="text-slate-300"/><p className="mt-3 text-sm font-semibold text-slate-700">{availableAppointmentDates.length?'لا توجد مواعيد في هذا اليوم':'لا توجد مواعيد مضافة بعد'}</p><p className="mt-1 text-xs text-slate-500">{availableAppointmentDates.length?'اختر يومًا آخر مميزًا بنقطة خضراء.':'سيظهر الحجز هنا بعد أن يضيف الأدمن أوقاتًا متاحة.'}</p></div>}
+                </div>
+              </div>
+            </div>
+            {isDemo&&<p className="mt-3 text-[10px] text-amber-700">الحجز الفعلي يتطلب حساب مدير مدرسة.</p>}
           </section>
+
           <section className="grid gap-3 xl:grid-cols-2">
             <section className="rounded-xl border border-slate-200 bg-white p-4">
-              <h2 className="mb-3 font-bold">مواعيد مدرستك</h2>
-              {appointmentSlots.filter(slot=>slot.schoolId===schoolId&&['booked','cancelled'].includes(slot.status||'')).length ? <div className="space-y-2">{appointmentSlots.filter(slot=>slot.schoolId===schoolId&&['booked','cancelled'].includes(slot.status||'')).map(slot=><div key={slot.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3"><div><p className="text-sm font-semibold">{slot.title || (slot.kind==='training'?'جلسة تدريب':'موعد دعم')}</p><p className="mt-1 text-xs text-slate-500">{slot.startsAt?.toDate ? new Intl.DateTimeFormat('ar-AE',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}).format(slot.startsAt.toDate()) : slot.startsAt ? new Intl.DateTimeFormat('ar-AE',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}).format(new Date(slot.startsAt)) : 'وقت غير محدد'} · {slot.durationMinutes || 30} دقيقة</p></div><div className="flex items-center gap-2"><span className={`rounded-md px-2 py-1 text-[10px] ${slot.status==='booked'?'bg-emerald-100 text-emerald-800':'bg-slate-200 text-slate-600'}`}>{slot.status==='booked'?'مؤكد':'ملغى'}</span>{slot.status==='booked'&&slot.bookerUid===profile?.uid&&<button disabled={saving} onClick={()=>void cancelAppointment(slot)} className="text-xs font-semibold text-rose-700 hover:underline disabled:opacity-50">إلغاء</button>}</div></div>)}</div> : <p className="text-sm text-slate-500">لا توجد حجوزات مسجلة لهذه المدرسة.</p>}
+              <div className="mb-3 flex items-center justify-between gap-2"><h2 className="font-bold">مواعيد مدرستك</h2><span className="text-xs text-slate-400">{appointmentSlots.filter(slot=>slot.schoolId===schoolId&&['booked','cancelled'].includes(slot.status||'')).length}</span></div>
+              {appointmentSlots.filter(slot=>slot.schoolId===schoolId&&['booked','cancelled'].includes(slot.status||'')).length ? <div className="space-y-2">{appointmentSlots.filter(slot=>slot.schoolId===schoolId&&['booked','cancelled'].includes(slot.status||'')).map(slot=><div key={slot.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3"><div><p className="text-sm font-semibold">{slot.title || (slot.kind==='training'?'جلسة تدريب':'موعد دعم')}</p><p className="mt-1 text-xs text-slate-500">{slot.startsAt?.toDate ? new Intl.DateTimeFormat('ar-AE',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}).format(slot.startsAt.toDate()) : slot.startsAt ? new Intl.DateTimeFormat('ar-AE',{timeZone:'Asia/Dubai',dateStyle:'medium',timeStyle:'short'}).format(new Date(slot.startsAt)) : 'وقت غير محدد'} · {slot.durationMinutes || 30} دقيقة</p></div><div className="flex items-center gap-2"><span className={'rounded-md px-2 py-1 text-[10px] '+(slot.status==='booked'?'bg-emerald-100 text-emerald-800':'bg-slate-200 text-slate-600')}>{slot.status==='booked'?'مؤكد':'ملغى'}</span>{slot.status==='booked'&&slot.bookerUid===profile?.uid&&<button disabled={saving} onClick={()=>void cancelAppointment(slot)} className="text-xs font-semibold text-rose-700 hover:underline disabled:opacity-50">إلغاء</button>}</div></div>)}</div> : <p className="text-sm text-slate-500">لا توجد حجوزات مسجلة.</p>}
             </section>
             <form onSubmit={submitSupportTicket} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4">
-              <div><h2 className="font-bold">إرسال طلب دعم مكتوب</h2><p className="mt-1 text-xs text-slate-500">للمشكلات التي لا تحتاج إلى اجتماع مباشر.</p></div>
-              <label className="space-y-1 text-xs font-semibold">عنوان الطلب<input className={fieldClass} value={supportTitle} onChange={e=>setSupportTitle(e.target.value)} maxLength={160} required placeholder="مثال: مشكلة في حساب أحد الطلاب"/></label>
-              <label className="flex min-h-24 flex-1 flex-col space-y-1 text-xs font-semibold">وصف المشكلة<textarea className={fieldClass+' min-h-24 flex-1'} value={supportDescription} onChange={e=>setSupportDescription(e.target.value)} maxLength={5000} required placeholder="اذكر ما حدث والخطوات التي أدت إلى المشكلة."/></label>
+              <h2 className="font-bold">طلب دعم مكتوب</h2>
+              <label className="space-y-1 text-xs font-semibold">عنوان الطلب<input className={fieldClass} value={supportTitle} onChange={e=>setSupportTitle(e.target.value)} maxLength={160} required placeholder="عنوان مختصر للمشكلة"/></label>
+              <label className="flex min-h-24 flex-1 flex-col space-y-1 text-xs font-semibold">وصف المشكلة<textarea className={fieldClass+' min-h-24 flex-1'} value={supportDescription} onChange={e=>setSupportDescription(e.target.value)} maxLength={5000} required placeholder="صف المشكلة باختصار."/></label>
               <button disabled={saving || isDemo} className={primaryButton}><Send size={15}/>{saving ? 'جارٍ الإرسال...' : 'إرسال الطلب'}</button>
-              {isDemo && <p className="text-xs text-amber-700">المعاينة لا ترسل طلبات حقيقية.</p>}
-              {schoolTickets.length>0&&<div className="border-t border-slate-100 pt-3"><h3 className="mb-2 text-sm font-semibold">طلباتك السابقة</h3><div className="max-h-32 space-y-2 overflow-auto">{schoolTickets.map(ticket=><div key={ticket.id} className="rounded-lg bg-slate-50 p-2"><div className="flex justify-between gap-2 text-xs"><span className="font-semibold">{ticket.title||'طلب دعم'}</span><span>{ticket.status==='resolved'?'تم الحل':ticket.status==='in_progress'?'قيد المعالجة':'جديد'}</span></div><p className="mt-1 text-[10px] text-slate-500">{ticket.description}</p></div>)}</div></div>}
+              {schoolTickets.length>0&&<div className="border-t border-slate-100 pt-3"><h3 className="mb-2 text-sm font-semibold">طلبات سابقة ({schoolTickets.length})</h3><div className="max-h-32 space-y-2 overflow-auto">{schoolTickets.map(ticket=><div key={ticket.id} className="rounded-lg bg-slate-50 p-2"><div className="flex justify-between gap-2 text-xs"><span className="font-semibold">{ticket.title||'طلب دعم'}</span><span>{ticket.status==='resolved'?'تم الحل':ticket.status==='in_progress'?'قيد المعالجة':'جديد'}</span></div><p className="mt-1 text-[10px] text-slate-500">{ticket.description}</p></div>)}</div></div>}
             </form>
           </section>
         </section>}
