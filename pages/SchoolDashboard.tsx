@@ -626,15 +626,6 @@ export const SchoolDashboard: React.FC = () => {
             </form>
           </section>
         </section>}
-          <form onSubmit={submitSupportTicket} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4">
-            <div><h1 className="font-bold">إرسال طلب دعم</h1><p className="mt-1 text-xs text-slate-500">سيصل الطلب إلى مركز الدعم في إدارة منصة قُل.</p></div>
-            <label className="space-y-1 text-xs font-semibold">عنوان الطلب<input className={fieldClass} value={supportTitle} onChange={e=>setSupportTitle(e.target.value)} maxLength={160} required placeholder="مثال: مشكلة في حساب أحد الطلاب"/></label>
-            <label className="flex min-h-28 flex-1 flex-col space-y-1 text-xs font-semibold">وصف المشكلة<textarea className={fieldClass+' min-h-28 flex-1'} value={supportDescription} onChange={e=>setSupportDescription(e.target.value)} maxLength={5000} required placeholder="اذكر ما حدث والخطوات التي أدت إلى المشكلة."/></label>
-            <button disabled={saving || isDemo} className={primaryButton}><Send size={15}/>{saving ? 'جارٍ الإرسال...' : 'إرسال الطلب'}</button>
-            {isDemo && <p className="text-xs text-amber-700">المعاينة لا ترسل طلبات حقيقية.</p>}
-          </form>
-          <section className="rounded-xl border border-slate-200 bg-white p-4"><h2 className="mb-3 font-bold">طلبات المدرسة السابقة ({schoolTickets.length})</h2>{schoolTickets.length ? <div className="space-y-2">{schoolTickets.map(ticket=><div key={ticket.id} className="rounded-lg border border-slate-100 bg-slate-50 p-3"><div className="flex items-start justify-between gap-2"><p className="text-sm font-semibold">{ticket.title || 'طلب دعم'}</p><span className="shrink-0 rounded-md bg-white px-2 py-1 text-[10px]">{ticket.status==='resolved'?'تم الحل':ticket.status==='in_progress'?'قيد المعالجة':'جديد'}</span></div><p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-slate-600">{ticket.description}</p><p className="mt-2 text-[10px] text-slate-400">{ticket.createdAt?.toDate ? ticket.createdAt.toDate().toLocaleString('ar-AE') : 'وقت الإرسال'}</p></div>)}</div>:<p className="text-sm text-slate-500">لا توجد طلبات دعم حتى الآن.</p>}</section>
-        </section>}
 
         {activeTab === 'subscription' && <div className="grid min-h-0 flex-1 gap-3 overflow-auto xl:grid-cols-[minmax(0,1.3fr)_minmax(260px,0.7fr)]">
           <section className="rounded-xl border border-slate-200 bg-white p-4">
