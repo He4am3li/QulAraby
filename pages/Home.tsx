@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LanguageToggle } from '../components/LanguageToggle';
+import { BrandSlogan } from '../components/BrandSlogan';
 import { FallingLetters } from '../components/Layout';
 import { 
   Trophy, CheckCircle2, Award, Star, X, Download, 
@@ -340,66 +341,7 @@ export const Home: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* DEAD CENTER: Luxury Banner */}
-            <div className="flex flex-col items-center justify-center text-center group">
-              <div className="relative">
-                {/* Cinematic Pulse Glow */}
-                <motion.div 
-                  className="absolute -inset-8 bg-gradient-to-r from-blue-400/25 to-emerald-400/25 blur-[40px] rounded-full"
-                  animate={{ 
-                    opacity: [0.3, 0.5, 0.3],
-                    scale: [0.85, 1.1, 0.85]
-                  }}
-                  transition={{ 
-                    duration: 5, 
-                    repeat: Infinity, 
-                    ease: "easeInOut" 
-                  }}
-                />
-                
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="relative group cursor-default"
-                >
-                  <motion.div 
-                    animate={{ 
-                      scale: [1, 1.015, 1],
-                      boxShadow: [
-                        "0 15px 45px -12px rgba(0,0,0,0.35)",
-                        "0 25px 70px -18px rgba(0,0,0,0.45)",
-                        "0 15px 45px -12px rgba(0,0,0,0.35)"
-                      ]
-                    }}
-                    transition={{ 
-                      duration: 4, 
-                      repeat: Infinity, 
-                      ease: "easeInOut" 
-                    }}
-                    className="relative bg-white/10 backdrop-blur-3xl border border-white/20 px-6 py-2 md:px-10 md:py-3.5 rounded-[1.8rem] shadow-2xl transition-all border-b-2 border-b-white/5 overflow-hidden flex flex-col items-center gap-1 md:gap-1.5"
-                  >
-                    {/* Interior Luxury Gloss Shadow */}
-                    <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
-
-                    {/* Interior Light Sweep */}
-                    <motion.div 
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full"
-                      animate={{ translateX: ["200%", "-200%"] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", repeatDelay: 3 }}
-                    />
-
-                    <span className="relative z-10 text-white font-black text-[8px] md:text-[10px] tracking-[0.3em] md:tracking-[0.4em] uppercase drop-shadow-[0_0_15px_rgba(255,255,255,0.9)] select-none whitespace-nowrap">
-                      Learn Arabic until you can say
-                    </span>
-                    <div className="relative z-10 leading-none">
-                      <span className="text-2xl md:text-3xl font-bold text-white handwritten-font drop-shadow-[0_0_15px_rgba(255,255,255,0.9)] select-none">
-                        أنا عربي
-                      </span>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              </div>
-            </div>
+            <BrandSlogan />
 
             {/* END SIDE: User Identity */}
             <div className={`flex items-center ${lang === 'ar' ? 'justify-end' : 'justify-end'}`}>
