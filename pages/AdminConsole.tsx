@@ -222,6 +222,7 @@ export const AdminConsole: React.FC = () => {
         await addDoc(collection(db, 'plans'), { ...payload, createdAt: serverTimestamp() });
         flash('success', 'تم إنشاء الباقة.');
       }
+      await recordAdminEvent(editingPlanId ? 'تحديث باقة' : 'إنشاء باقة', editingPlanId || planName.trim(), `الباقة: ${planName.trim()}`);
       resetPlanForm();
       await loadData();
     } catch (error) {
