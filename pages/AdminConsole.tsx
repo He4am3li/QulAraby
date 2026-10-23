@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Activity, Building2, Check, ChevronDown, ChevronLeft, CircleDollarSign, GraduationCap, Layers3,
@@ -431,8 +432,8 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
     <div dir="rtl" className="h-full min-h-0 overflow-hidden bg-[#f7f8f6] text-slate-900 flex flex-col">
       <PlatformTopBar />
 
-      <div className={`flex-1 min-h-0 ${tab === 'plans' || tab === 'analytics' ? 'overflow-hidden p-2 sm:p-3' : 'overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8'}`}>
-        <div className={`mx-auto flex min-h-0 flex-col ${tab === 'analytics' ? 'h-full max-w-none' : tab === 'plans' ? 'h-full max-w-7xl gap-2' : 'max-w-7xl space-y-6'}`}>
+      <div className={`flex-1 min-h-0 ${tab === 'plans' ? 'overflow-hidden p-2 sm:p-3' : tab === 'analytics' ? 'overflow-y-auto p-2 sm:p-3 xl:overflow-hidden' : 'overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8'}`}>
+        <div className={`mx-auto flex min-h-0 flex-col ${tab === 'analytics' ? 'h-full min-h-[740px] max-w-none xl:min-h-0' : tab === 'plans' ? 'h-full max-w-7xl gap-2' : 'max-w-7xl space-y-6'}`}>
 
         {notice && <div role="status" className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${notice.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
           {notice.type === 'success' ? <Check size={18} /> : <Settings2 size={18} className="mt-0.5 shrink-0" />}
@@ -580,85 +581,95 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
               <div className="space-y-3">{schools.length ? schools.map(school => <SchoolSubscriptionRow key={school.id} school={school} plans={plans} usersCount={userCountForSchool(school.id)} disabled={saving} onSave={saveSchool}/>) : <EmptyState message="لا توجد مدارس مسجلة."/>}</div>
             </section>}
 
-            {tab === 'analytics' && <section className="grid h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_minmax(0,0.9fr)] gap-2 overflow-hidden rounded-2xl border border-emerald-900/70 bg-[#061219] p-2 text-white shadow-[0_18px_50px_rgba(2,12,16,0.22)] sm:gap-3 sm:p-3">
-              <header className="flex min-w-0 items-center justify-between gap-3 border-b border-emerald-900/60 pb-2">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-400/40 bg-emerald-400/10 text-emerald-300 shadow-[0_0_22px_rgba(52,211,153,0.12)]"><Activity size={19}/></div>
-                  <div className="min-w-0"><h2 className="truncate text-base font-black tracking-wide sm:text-lg">مركز التحليلات</h2><p className="truncate text-[10px] text-slate-400 sm:text-xs">معاينة تطويرية لعرض شكل التحليلات بعد إدخال بيانات المدارس والحسابات</p></div>
+            {tab === 'analytics' && <section className="grid h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_minmax(0,0.78fr)] gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-[#f6f8f7] p-3 text-slate-900 sm:p-4">
+              <header className="flex min-w-0 items-center justify-between gap-3 border-b border-slate-200 pb-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-base font-extrabold tracking-tight sm:text-lg">تحليلات المنصة</h2>
+                    <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-800">معاينة أثناء التطوير</span>
+                  </div>
+                  <p className="mt-1 truncate text-[10px] text-slate-500 sm:text-xs">تصوّر لوحة الإدارة قبل إدخال بيانات المدارس والحسابات النهائية.</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="hidden items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-[9px] text-amber-200 sm:inline-flex"><span className="h-1.5 w-1.5 rounded-full bg-amber-300"/>معاينة أثناء التطوير</span>
-                  <button onClick={exportAnalyticsReport} title="تصدير CSV" className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/80 px-2 text-[10px] font-bold text-slate-200 transition hover:border-emerald-500/60 hover:text-emerald-200 sm:px-3 sm:text-xs"><Activity size={13}/> تصدير</button>
-                  <button onClick={() => void loadData()} disabled={loading} title="تحديث البيانات" className="flex h-8 items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 text-[10px] font-bold text-emerald-200 transition hover:bg-emerald-500/20 disabled:opacity-50 sm:px-3 sm:text-xs"><RefreshCw size={13} className={loading ? 'animate-spin' : ''}/> تحديث</button>
+                  <button onClick={exportAnalyticsReport} title="تصدير تقرير CSV" className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 text-[10px] font-semibold text-slate-700 transition-colors hover:border-emerald-700 hover:text-emerald-800 sm:px-3 sm:text-xs"><Activity size={13}/> تصدير</button>
+                  <button onClick={() => void loadData()} disabled={loading} title="تحديث البيانات" className="flex h-8 items-center gap-1.5 rounded-lg bg-emerald-800 px-2.5 text-[10px] font-semibold text-white transition-colors hover:bg-emerald-900 disabled:opacity-50 sm:px-3 sm:text-xs"><RefreshCw size={13} className={loading ? 'animate-spin' : ''}/> تحديث</button>
                 </div>
               </header>
 
               <div className="grid min-h-0 grid-cols-2 gap-2 xl:grid-cols-4">
                 {[
-                  { label: 'المدارس المسجلة', value: schools.length, note: `${schoolStatusStats.find(x => x.key === 'active')?.count || 0} اشتراك فعّال`, icon: Building2, tone: 'text-cyan-300', glow: 'border-cyan-400/20', line: 'from-cyan-400 to-blue-500' },
-                  { label: 'إجمالي الحسابات', value: users.length, note: `${roleStats.find(x => x.label === 'المعلمون')?.count || 0} معلم مسجل`, icon: Users, tone: 'text-emerald-300', glow: 'border-emerald-400/20', line: 'from-emerald-400 to-teal-500' },
-                  { label: 'الطلاب', value: roleStats.find(x => x.label === 'الطلاب')?.count || 0, note: 'حسابات بدور طالب', icon: GraduationCap, tone: 'text-violet-300', glow: 'border-violet-400/20', line: 'from-violet-400 to-fuchsia-500' },
-                  { label: 'الباقات المتاحة', value: plans.filter(p => p.isActive !== false).length, note: `${schoolPlanStats.filter(x => x.count > 0).length} باقة مرتبطة بمدارس`, icon: Layers3, tone: 'text-amber-300', glow: 'border-amber-400/20', line: 'from-amber-300 to-orange-500' },
-                ].map(item => <div key={item.label} className={`relative flex min-h-0 items-center justify-between gap-2 overflow-hidden rounded-xl border ${item.glow} bg-gradient-to-br from-[#101f29] to-[#0b1720] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)]`}>
-                  <div className="absolute inset-y-0 right-0 w-1 bg-gradient-to-b opacity-90" style={{ backgroundImage: item.label === 'المدارس المسجلة' ? 'linear-gradient(#22d3ee,#3b82f6)' : item.label === 'إجمالي الحسابات' ? 'linear-gradient(#34d399,#14b8a6)' : item.label === 'الطلاب' ? 'linear-gradient(#a78bfa,#d946ef)' : 'linear-gradient(#fcd34d,#f97316)' }}/>
-                  <div className="min-w-0"><p className="truncate text-[10px] font-semibold text-slate-400 sm:text-xs">{item.label}</p><p className="mt-0.5 text-2xl font-black leading-none tracking-tight text-white tabular-nums sm:text-3xl">{item.value.toLocaleString('ar-AE')}</p><p className="mt-1 truncate text-[9px] text-slate-500 sm:text-[10px]">{item.note}</p></div>
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/5 bg-white/[0.035] ${item.tone}`}><item.icon size={18}/></div>
-                </div>)}
+                  { label: 'المدارس المسجلة', value: schools.length, note: `${schoolStatusStats.find(x => x.key === 'active')?.count || 0} باقة فعّالة`, accent: '#176B55', pale: '#E9F4EF' },
+                  { label: 'حسابات المنصة', value: users.length, note: `${roleStats.find(x => x.label === 'المعلمون')?.count || 0} معلم مسجل`, accent: '#315B8A', pale: '#EDF3FA' },
+                  { label: 'الطلاب', value: roleStats.find(x => x.label === 'الطلاب')?.count || 0, note: 'الحسابات المسجلة بدور طالب', accent: '#7560A8', pale: '#F2EFF8' },
+                  { label: 'الباقات المتاحة', value: plans.filter(p => p.isActive !== false).length, note: `${schoolPlanStats.filter(x => x.count > 0).length} باقة مرتبطة بمدارس`, accent: '#986B25', pale: '#F8F1E5' },
+                ].map((item, index) => <motion.div key={item.label} initial={{ opacity: 0, y: 7 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, delay: index * 0.045 }} className="relative flex min-h-0 items-center justify-between gap-2 overflow-hidden rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.025)] transition-shadow duration-200 hover:shadow-md">
+                  <div className="absolute inset-y-0 right-0 w-[3px]" style={{ backgroundColor: item.accent }}/>
+                  <div className="min-w-0">
+                    <p className="truncate text-[10px] font-semibold text-slate-500 sm:text-xs">{item.label}</p>
+                    <p className="mt-1 text-2xl font-extrabold leading-none tracking-tight text-slate-900 tabular-nums sm:text-3xl">{item.value.toLocaleString('ar-AE')}</p>
+                    <p className="mt-1 truncate text-[9px] text-slate-500 sm:text-[10px]">{item.note}</p>
+                  </div>
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: item.pale, color: item.accent }}>
+                    {index === 0 ? <Building2 size={18}/> : index === 1 ? <Users size={18}/> : index === 2 ? <GraduationCap size={18}/> : <Layers3 size={18}/>}
+                  </div>
+                </motion.div>)}
               </div>
 
-              <div className="grid min-h-0 grid-cols-1 gap-2 xl:grid-cols-[1.03fr_1.12fr_0.85fr]">
-                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-emerald-900/60 bg-[#0a1921] p-3">
-                  <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">حالة المدارس</h3><p className="mt-0.5 text-[9px] text-slate-500 sm:text-[10px]">معاينة لحالات الاشتراك</p></div><span className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-1 text-[9px] text-emerald-300">التوزيع</span></div>
+              <div className="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[1fr_1.14fr_0.86fr]">
+                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.025)] sm:p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div><h3 className="text-xs font-bold sm:text-sm">حالة المدارس</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">توزيع توضيحي يتبع سجلات المدرسة</p></div>
+                    <span className="text-[9px] font-medium text-slate-400">الاشتراكات</span>
+                  </div>
                   <div className="flex min-h-0 flex-1 items-center justify-center gap-3">
-                    <div className="relative flex aspect-square max-h-full w-[42%] max-w-[142px] items-center justify-center rounded-full p-2" style={{ background: `conic-gradient(${schoolStatusStats.map((item, index) => { const before = schoolStatusStats.slice(0, index).reduce((sum, part) => sum + part.count, 0); const after = before + item.count; const total = schools.length || 1; return `${item.color} ${before / total * 100}% ${after / total * 100}%`; }).join(', ')})` }}>
-                      <div className="flex h-full w-full flex-col items-center justify-center rounded-full border border-slate-700 bg-[#0a1921]"><span className="text-2xl font-black tabular-nums sm:text-3xl">{schools.length.toLocaleString('ar-AE')}</span><span className="text-center text-[8px] text-slate-500 sm:text-[9px]">إجمالي المدارس</span></div>
+                    <div className="relative flex aspect-square max-h-full w-[43%] max-w-[132px] items-center justify-center rounded-full" style={{ background: schools.length ? `conic-gradient(${schoolStatusStats.map((item, index) => { const before = schoolStatusStats.slice(0, index).reduce((sum, part) => sum + part.count, 0); const after = before + item.count; const total = schools.length || 1; return `${item.color} ${before / total * 100}% ${after / total * 100}%`; }).join(', ')})` : 'conic-gradient(#e6ebe8 0% 100%)' }}>
+                      <div className="flex h-[76%] w-[76%] flex-col items-center justify-center rounded-full bg-white"><span className="text-2xl font-extrabold tabular-nums text-slate-900 sm:text-3xl">{schools.length.toLocaleString('ar-AE')}</span><span className="mt-1 text-center text-[8px] text-slate-500 sm:text-[9px]">إجمالي المدارس</span></div>
                     </div>
-                    <div className="min-w-0 flex-1 space-y-2">{schoolStatusStats.map(item=><div key={item.key} className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-1.5"><span className="h-2 w-2 shrink-0 rounded-[2px]" style={{backgroundColor:item.color}}/><span className="truncate text-[10px] text-slate-300">{item.label}</span></div><div className="text-left"><span className="text-xs font-bold tabular-nums">{item.count}</span><span className="mr-1 text-[9px] text-slate-500">{schools.length?Math.round(item.count/schools.length*100):0}%</span></div></div>)}</div>
+                    <div className="min-w-0 flex-1 space-y-3">{schoolStatusStats.map(item=><div key={item.key} className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-1.5"><span className="h-2 w-2 shrink-0 rounded-full" style={{backgroundColor:item.color}}/><span className="truncate text-[10px] text-slate-600 sm:text-xs">{item.label}</span></div><div className="text-left"><span className="text-xs font-bold tabular-nums text-slate-800">{item.count}</span><span className="mr-1 text-[9px] text-slate-400">{schools.length?Math.round(item.count/schools.length*100):0}%</span></div></div>)}</div>
                   </div>
-                  <div className="mt-1 border-t border-white/[0.06] pt-2 text-[9px] text-slate-500">التصنيفات ستعكس بيانات المدارس المدخلة لاحقًا.</div>
+                  <p className="border-t border-slate-100 pt-2 text-[9px] text-slate-400">ستُعرض النتائج الفعلية بعد اعتماد بيانات المدارس.</p>
                 </section>
 
-                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-cyan-900/50 bg-[#0a1921] p-3">
-                  <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">نمو تسجيل المدارس</h3><p className="mt-0.5 text-[9px] text-slate-500 sm:text-[10px]">مثال يتحدّث حسب تواريخ إنشاء المدارس</p></div><span className="text-[9px] text-cyan-300">6 أشهر</span></div>
-                  <div className="mt-2 flex min-h-0 flex-1 items-end gap-2 border-b border-slate-700/80 px-1">
-                    {recentRegistrationStats.map((item,index)=>{const max=Math.max(1,...recentRegistrationStats.map(x=>x.count));const height=item.count?Math.max(7,item.count/max*100):3;return <div key={item.label+index} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"><span className="text-[9px] font-bold tabular-nums text-slate-300">{item.count}</span><div title={`${item.label}: ${item.count} مدرسة`} className={`w-full max-w-9 rounded-t-md border-t border-cyan-200/70 transition-all ${index===recentRegistrationStats.length-1?'bg-gradient-to-t from-emerald-600 to-cyan-300 shadow-[0_0_13px_rgba(34,211,238,0.18)]':'bg-gradient-to-t from-emerald-950 to-emerald-500/70 hover:to-cyan-300'}`} style={{height:`${height}%`}}/></div>;})}
+                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.025)] sm:p-4">
+                  <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">تسجيل المدارس عبر الوقت</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">الأشهر الستة الأخيرة وفق تاريخ الإنشاء</p></div><span className="rounded-md bg-slate-100 px-2 py-1 text-[9px] text-slate-500">اتجاه التسجيل</span></div>
+                  <div className="relative mt-3 flex min-h-0 flex-1 items-end gap-2 border-b border-slate-200 px-1">
+                    <div className="pointer-events-none absolute inset-0 flex flex-col justify-between pb-5 pt-1">{[0,1,2].map(line=><div key={line} className="border-t border-dashed border-slate-100"/>)}</div>
+                    {recentRegistrationStats.map((item,index)=>{const max=Math.max(1,...recentRegistrationStats.map(x=>x.count));const height=item.count?Math.max(9,item.count/max*100):3;return <div key={item.label+index} className="relative z-10 flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5"><span className="text-[9px] font-semibold tabular-nums text-slate-500">{item.count}</span><motion.div initial={{height:0}} animate={{height:`${height}%`}} transition={{duration:0.55,delay:index*0.05,ease:'easeOut'}} title={`${item.label}: ${item.count} مدرسة`} className={`w-full max-w-8 rounded-t-md transition-colors ${index===recentRegistrationStats.length-1?'bg-emerald-700':'bg-emerald-200 hover:bg-emerald-500'}`}/></div>;})}
                   </div>
-                  <div className="mt-1 flex justify-around gap-1">{recentRegistrationStats.map((item,index)=><span key={item.label+index} className={`text-[9px] ${index===recentRegistrationStats.length-1?'font-bold text-cyan-200':'text-slate-500'}`}>{item.label}</span>)}</div>
+                  <div className="mt-2 flex justify-around gap-1">{recentRegistrationStats.map((item,index)=><span key={item.label+index} className={`text-[9px] ${index===recentRegistrationStats.length-1?'font-bold text-emerald-800':'text-slate-400'}`}>{item.label}</span>)}</div>
                 </section>
 
-                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-violet-900/50 bg-[#0a1921] p-3">
-                  <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">تركيبة المستخدمين</h3><p className="mt-0.5 text-[9px] text-slate-500">معاينة تركيبة الحسابات حسب الدور</p></div><Users size={16} className="text-violet-300"/></div>
-                  <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-slate-800">
-                    {roleStats.filter(item=>item.count>0).map(item=><div key={item.label} title={`${item.label}: ${item.count}`} style={{width:`${users.length?item.count/users.length*100:0}%`,backgroundColor:item.color}}/>)}
-                  </div>
-                  <div className="mt-3 min-h-0 space-y-2">{roleStats.slice(0,4).map(item=>{const percent=users.length?Math.round(item.count/users.length*100):0;return <div key={item.label} className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-1.5"><span className="h-2 w-2 shrink-0 rounded-full" style={{backgroundColor:item.color}}/><span className="truncate text-[10px] text-slate-300">{item.label}</span></div><span className="text-[10px] tabular-nums text-slate-400">{item.count} <span className="text-slate-600">({percent}%)</span></span></div>;})}</div>
-                  <div className="mt-auto border-t border-white/[0.06] pt-2 text-[9px] text-slate-500">إجمالي الحسابات: {users.length.toLocaleString('ar-AE')}</div>
+                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.025)] sm:p-4">
+                  <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">تركيبة الحسابات</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">حسب نوع المستخدم</p></div><span className="text-[9px] text-slate-400">الأدوار</span></div>
+                  <div className="mt-4 flex h-2 overflow-hidden rounded-full bg-slate-100">{roleStats.filter(item=>item.count>0).map(item=><div key={item.label} title={`${item.label}: ${item.count}`} style={{width:`${users.length?item.count/users.length*100:0}%`,backgroundColor:item.color}}/>)}</div>
+                  <div className="mt-4 min-h-0 space-y-3">{roleStats.slice(0,4).map(item=>{const percent=users.length?Math.round(item.count/users.length*100):0;return <div key={item.label} className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-2"><span className="h-2 w-2 shrink-0 rounded-full" style={{backgroundColor:item.color}}/><span className="truncate text-[10px] text-slate-600 sm:text-xs">{item.label}</span></div><span className="text-[10px] tabular-nums text-slate-500 sm:text-xs">{item.count} <span className="text-slate-400">({percent}%)</span></span></div>;})}</div>
+                  <p className="mt-auto border-t border-slate-100 pt-2 text-[9px] text-slate-400">الإجمالي: {users.length.toLocaleString('ar-AE')} حساب</p>
                 </section>
               </div>
 
-              <div className="grid min-h-0 grid-cols-1 gap-2 xl:grid-cols-[1.05fr_1fr_0.95fr]">
-                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-700/70 bg-[#0a1921] p-3">
-                  <div className="mb-2 flex items-center justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">المدارس حسب الباقة</h3><p className="mt-0.5 text-[9px] text-slate-500">مثال على عدد المدارس المرتبطة بكل باقة</p></div><Layers3 size={16} className="text-emerald-300"/></div>
-                  {schoolPlanStats.length ? <div className="min-h-0 flex-1 space-y-2 overflow-hidden">{schoolPlanStats.slice(0,4).map(item=>{const percent=schools.length?Math.round(item.count/schools.length*100):0;return <div key={item.id} className="space-y-1"><div className="flex items-center justify-between gap-2"><span className="truncate text-[10px] text-slate-300">{item.name}{!item.active?' · موقوفة':''}</span><span className="shrink-0 text-[9px] tabular-nums text-slate-400">{item.count}</span></div><div className="h-1.5 overflow-hidden rounded-full bg-slate-800"><div className="h-full rounded-full bg-gradient-to-l from-emerald-400 via-cyan-400 to-blue-500 shadow-[0_0_8px_rgba(52,211,153,0.22)]" style={{width:`${percent}%`}}/></div></div>;})}</div> : <div className="flex flex-1 items-center justify-center text-xs text-slate-500">لا توجد باقات مسجلة بعد.</div>}
-                  <div className="mt-2 border-t border-white/[0.06] pt-2 text-[9px] text-slate-500">{schools.filter(s=>!s.planId).length} مدرسة دون باقة</div>
+              <div className="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[1fr_1.05fr_0.95fr]">
+                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.025)] sm:p-4">
+                  <div className="mb-3 flex items-center justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">المدارس حسب الباقة</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">مقارنة الارتباط بالخطط</p></div><Layers3 size={16} className="text-slate-400"/></div>
+                  {schoolPlanStats.length ? <div className="min-h-0 flex-1 space-y-3 overflow-hidden">{schoolPlanStats.slice(0,4).map(item=>{const percent=schools.length?Math.round(item.count/schools.length*100):0;return <div key={item.id} className="space-y-1.5"><div className="flex items-center justify-between gap-2"><span className="truncate text-[10px] font-medium text-slate-700 sm:text-xs">{item.name}{!item.active?' · موقوفة':''}</span><span className="shrink-0 text-[10px] tabular-nums text-slate-500">{item.count}</span></div><div className="h-1.5 overflow-hidden rounded-full bg-slate-100"><motion.div initial={{width:0}} animate={{width:`${percent}%`}} transition={{duration:0.5,ease:'easeOut'}} className="h-full rounded-full bg-emerald-700"/></div></div>;})}</div> : <div className="flex flex-1 items-center justify-center text-xs text-slate-400">ستظهر مقارنة الباقات بعد إدخال بياناتها.</div>}
+                  <div className="mt-2 border-t border-slate-100 pt-2 text-[9px] text-slate-400">{schools.filter(s=>!s.planId).length} مدرسة دون باقة مرتبطة</div>
                 </section>
 
-                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-emerald-900/50 bg-[#0a1921] p-3">
-                  <div className="mb-2 flex items-center justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">تحتاج إلى متابعة</h3><p className="mt-0.5 text-[9px] text-slate-500">من حالات الاشتراك والربط</p></div><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400/10 text-amber-300"><ShieldCheck size={15}/></span></div>
-                  <div className="min-h-0 flex-1 divide-y divide-white/[0.06] overflow-hidden">{schools.filter(s=>s.status==='suspended'||!s.planId||s.status==='trial').slice(0,4).map(school=><div key={school.id} className="flex min-w-0 items-center justify-between gap-2 py-2"><div className="min-w-0"><p className="truncate text-[10px] font-semibold text-slate-200">{school.name}</p><p className="truncate text-[9px] text-slate-500">{currentPlanName(school.planId)}</p></div><span className={`shrink-0 rounded-md px-1.5 py-1 text-[9px] ${school.status==='suspended'?'bg-rose-400/10 text-rose-300':school.status==='trial'?'bg-amber-400/10 text-amber-200':'bg-slate-700 text-slate-300'}`}>{school.status==='suspended'?'موقوفة':school.status==='trial'?'تجريبية':'بلا باقة'}</span></div>)}
-                    {!schools.some(s=>s.status==='suspended'||!s.planId||s.status==='trial')&&<div className="flex h-full items-center justify-center text-xs text-emerald-300">لا توجد حالات تستدعي المراجعة</div>}
+                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.025)] sm:p-4">
+                  <div className="mb-2 flex items-center justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">تحتاج إلى متابعة</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">مدارس تحتاج إلى مراجعة بياناتها</p></div><span className="rounded-md bg-amber-50 px-2 py-1 text-[9px] font-semibold text-amber-800">قائمة مراجعة</span></div>
+                  <div className="min-h-0 flex-1 divide-y divide-slate-100 overflow-hidden">{schools.filter(s=>s.status==='suspended'||!s.planId||s.status==='trial').slice(0,4).map(school=><div key={school.id} className="flex min-w-0 items-center justify-between gap-2 py-2"><div className="min-w-0"><p className="truncate text-[10px] font-semibold text-slate-800 sm:text-xs">{school.name}</p><p className="truncate text-[9px] text-slate-500">{currentPlanName(school.planId)}</p></div><span className={`shrink-0 rounded-md px-2 py-1 text-[9px] ${school.status==='suspended'?'bg-rose-50 text-rose-700':school.status==='trial'?'bg-amber-50 text-amber-800':'bg-slate-100 text-slate-600'}`}>{school.status==='suspended'?'موقوفة':school.status==='trial'?'تجريبية':'بلا باقة'}</span></div>)}
+                    {!schools.some(s=>s.status==='suspended'||!s.planId||s.status==='trial')&&<div className="flex h-full items-center justify-center text-xs text-slate-400">ستظهر هنا الحالات التي تحتاج مراجعة.</div>}
                   </div>
-                  <button onClick={()=>setTab('schools')} className="mt-2 border-t border-white/[0.06] pt-2 text-right text-[10px] font-bold text-emerald-300 hover:text-cyan-200">فتح إدارة المدارس ←</button>
+                  <button onClick={()=>setTab('schools')} className="mt-2 border-t border-slate-100 pt-2 text-right text-[10px] font-bold text-emerald-800 transition-colors hover:text-emerald-600">فتح إدارة المدارس ←</button>
                 </section>
 
-                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-cyan-900/50 bg-gradient-to-br from-[#0b2029] to-[#08141c] p-3">
-                  <div className="flex items-center justify-between gap-2"><div><h3 className="text-xs font-bold sm:text-sm">نبض المنصة</h3><p className="mt-0.5 text-[9px] text-slate-500">ملخص موارد النظام المسجلة</p></div><span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50"/><span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"/></span></div>
-                  <div className="mt-3 space-y-2.5">
-                    <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-400">الأقسام التعليمية المعرفة</span><span className="text-sm font-black text-cyan-200">{SCHOOL_MODULES.length}</span></div>
-                    <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-400">الباقات المسجلة</span><span className="text-sm font-black text-emerald-200">{plans.length}</span></div>
-                    <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-400">مديرو المدارس</span><span className="text-sm font-black text-violet-200">{users.filter(u=>u.role==='schoolAdmin').length}</span></div>
+                <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-[#eef4f0] p-3 sm:p-4">
+                  <div><h3 className="text-xs font-bold sm:text-sm">ملخص المنصة</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">معاينة لما ستعرضه اللوحة بعد اكتمال التسجيل</p></div>
+                  <div className="mt-3 space-y-3">
+                    <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-600">الأقسام التعليمية</span><span className="text-sm font-bold text-slate-900">{SCHOOL_MODULES.length}</span></div>
+                    <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-600">الباقات المسجلة</span><span className="text-sm font-bold text-slate-900">{plans.length}</span></div>
+                    <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-600">مديرو المدارس</span><span className="text-sm font-bold text-slate-900">{users.filter(u=>u.role==='schoolAdmin').length}</span></div>
                   </div>
-                  <div className="mt-auto rounded-lg border border-emerald-500/20 bg-emerald-500/[0.07] p-2"><p className="text-[10px] leading-4 text-emerald-100">تُعرض الإحصاءات من السجلات المتاحة فقط. هذه معاينة تطويرية. مؤشرات الأرباح والزيارات ستُضاف عند ربط مصادر بياناتها.</p></div>
+                  <div className="mt-auto border-t border-emerald-900/10 pt-2 text-[9px] leading-4 text-slate-500">الأرقام الحالية استرشادية خلال التطوير. ستتبع النتائج السجلات التي تُدخلها وتراجعها الإدارة.</div>
                 </section>
               </div>
             </section>}
