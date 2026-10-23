@@ -27,6 +27,26 @@ export const SchoolDashboard: React.FC = () => {
         setLoading(false);
         return;
       }
+      if (profile.schoolId === '__demo__') {
+        setSchool({
+          name: 'مدرسة تجريبية، بيانات للعرض فقط',
+          status: 'trial',
+          contactEmail: 'demo@example.com',
+        });
+        setPlan({
+          name: 'الباقة الشاملة التجريبية',
+          description: 'بيانات توضيحية غير مرتبطة بمدرسة حقيقية',
+          includedModules: SCHOOL_MODULES.map(module => module.id),
+          maxTeachers: 0,
+          maxStudents: 0,
+          durationDays: 30,
+        });
+        setMemberCount(27);
+        setTeacherCount(3);
+        setStudentCount(24);
+        setLoading(false);
+        return;
+      }
       try {
         const [schoolSnap, membersSnap] = await Promise.all([
           getDoc(doc(db, 'schools', profile.schoolId)),
@@ -64,6 +84,7 @@ export const SchoolDashboard: React.FC = () => {
   const expiresAt = school?.expiresAt?.toDate ? school.expiresAt.toDate().toLocaleDateString('ar-AE') : null;
 
   return <div dir="rtl" className="min-h-full bg-white text-slate-900 flex flex-col">
+    {profile?.schoolId === '__demo__' && <div className="mx-4 mt-4 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-5 text-amber-900"><CheckCircle2 size={17} className="shrink-0"/> وضع معاينة تجريبي. الأعداد وبيانات المدرسة الظاهرة أمثلة توضيحية وليست بيانات حقيقية.</div>}
     <header className="bg-gradient-to-l from-[#0f172a]/95 to-[#064e3b]/95 backdrop-blur-lg px-6 md:px-8 py-5 md:py-6 flex items-center justify-between shrink-0 shadow-lg relative z-10 overflow-hidden border-b border-white/20 text-white">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <FallingLetters mode="compact" />
