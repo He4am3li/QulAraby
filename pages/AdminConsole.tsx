@@ -88,8 +88,16 @@ export const AdminConsole: React.FC = () => {
       setNotice(null);
     } catch (error) {
       console.error('Admin data load failed:', error);
+      const errorCode = typeof error === 'object' && error !== null && 'code' in error
+        ? String((error as { code?: unknown }).code || '')
+        : '';
       setDataLoadFailed(true);
-      setNotice({ type: 'error', text: 'تعذر تحميل البيانات من Firestore. الأرقام غير متاحة حتى تُنشر قواعد Firestore الصحيحة على قاعدة بيانات المشروع.' });
+      const errorText = errorCode.includes('permission-denied')
+        ? 'رفضت قاعدة بيانات Firestore صلاحية القراءة. يجب نشر firestore.rules على قاعدة البيانات المسماة المستخدمة في التطبيق، وليس على قاعدة (default) فقط.'
+        : errorCode.includes('unavailable')
+          ? 'تعذر الاتصال بخدمة Firestore حاليًا. تحقق من اتصال الإنترنت وحالة خدمة Firebase ثم أعد المحاولة.'
+          : 'تعذر تحميل بيانات الإدارة من Firestore. تحقق من إعدادات قاعدة البيانات وصلاحيات حساب الأدمن.';
+      setNotice({ type: 'error', text: errorText });
     } finally {
       setLoading(false);
     }
