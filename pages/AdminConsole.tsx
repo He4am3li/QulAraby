@@ -496,8 +496,8 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
     <div dir={isEnglish ? 'ltr' : 'rtl'} className={'h-full min-h-0 overflow-hidden bg-[#f7f8f6] text-slate-900 flex flex-col '+(isEnglish?'font-sans':'')}>
       <PlatformTopBar />
 
-      <div className={`flex-1 min-h-0 ${tab === 'plans' ? 'overflow-hidden p-2 sm:p-3' : tab === 'analytics' ? 'overflow-y-auto p-2 sm:p-3 xl:overflow-hidden' : 'overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8'}`}>
-        <div className={`mx-auto flex min-h-0 flex-col ${tab === 'analytics' ? 'h-full min-h-[740px] max-w-none xl:min-h-0' : tab === 'plans' ? 'h-full max-w-7xl gap-2' : 'max-w-7xl space-y-6'}`}>
+      <div className={`flex-1 min-h-0 ${showRolePanel ? 'overflow-hidden p-2 sm:p-3' : tab === 'plans' ? 'overflow-hidden p-2 sm:p-3' : tab === 'analytics' ? 'overflow-y-auto p-2 sm:p-3 xl:overflow-hidden' : 'overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8'}`}>
+        <div className={`mx-auto flex min-h-0 flex-col ${showRolePanel ? 'h-full max-w-none gap-2' : tab === 'analytics' ? 'h-full min-h-[740px] max-w-none xl:min-h-0' : tab === 'plans' ? 'h-full max-w-7xl gap-2' : 'max-w-7xl space-y-6'}`}>
 
         {notice && <div role="status" className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${notice.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
           {notice.type === 'success' ? <Check size={18} /> : <Settings2 size={18} className="mt-0.5 shrink-0" />}
@@ -529,7 +529,7 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
                 { id: 'support', title: isEnglish ? 'Open Support Requests' : 'طلبات الدعم المفتوحة', value: supportTickets.filter(ticket => (ticket.status || 'open') !== 'resolved').length, icon: <Headphones size={20}/>, tone: 'amber', onClick: () => { setShowRolePanel(false); setTab('support'); } },
               ]}
             /> : <section>
-              <div className="flex justify-center mb-3">
+              <div className="flex justify-center mb-8">
                 <button type="button" onClick={() => setShowRolePanel(true)} title={isEnglish ? 'Platform Center' : 'مركز المنصة'} aria-label={isEnglish ? 'Platform Center' : 'مركز المنصة'} className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-700 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-all group relative border-4 border-white">
                   <Activity size={32}/>
                   <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-black z-20">{isEnglish ? 'Platform Center' : 'مركز المنصة'}</span>
