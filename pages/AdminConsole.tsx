@@ -329,7 +329,7 @@ export const AdminConsole: React.FC = () => {
   }
 
   return (
-    <div dir="rtl" className="min-h-full bg-[#f7f8f6] text-slate-900 flex flex-col">
+    <div dir="rtl" className="h-full min-h-0 overflow-hidden bg-[#f7f8f6] text-slate-900 flex flex-col">
       <PlatformTopBar />
 
       <div className={`flex-1 min-h-0 ${tab === 'plans' ? 'overflow-hidden p-2 sm:p-3' : 'overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8'}`}>
