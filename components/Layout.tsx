@@ -248,7 +248,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 ? (lang === 'ar' ? 'مستويات الطلاب' : 'Student Levels')
                 : (lang === 'ar' ? 'تحديد المستوى' : 'Placement Test');
             }
-            const isActive = location.pathname === routePath && (!path.includes('?') || location.search === `?${path.split('?')[1]}`);
+            const expectedSearch = path.includes('?') ? `?${path.split('?')[1]}` : '';
+            const isDefaultOverview = path.endsWith('tab=overview') && (location.search === '' || location.search === '?tab=overview');
+            const isActive = location.pathname === routePath && (location.search === expectedSearch || isDefaultOverview);
 
             return (
               <div key={path} className="overflow-hidden">
@@ -331,7 +333,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               ? (lang === 'ar' ? 'مستويات الطلاب' : 'Student Levels')
               : (lang === 'ar' ? 'تحديد المستوى' : 'Placement Test');
           }
-          const isActive = location.pathname === routePath && (!path.includes('?') || location.search === `?${path.split('?')[1]}`);
+          const expectedSearch = path.includes('?') ? `?${path.split('?')[1]}` : '';
+          const isDefaultOverview = path.endsWith('tab=overview') && (location.search === '' || location.search === '?tab=overview');
+          const isActive = location.pathname === routePath && (location.search === expectedSearch || isDefaultOverview);
           return (
             <Link
               key={path}
