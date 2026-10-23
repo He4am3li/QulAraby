@@ -15,7 +15,7 @@ import { SCHOOL_MODULES } from '../config/schoolPlans';
 import { PlatformTopBar } from '../components/PlatformTopBar';
 import { RoleLocalizer, useRoleLanguage } from '../components/RoleLocalizer';
 import { ModuleCard } from './Home';
-import { RoleActionPanel, RoleActionItem } from '../components/RoleActionPanel';
+import { RoleActionPanel } from '../components/RoleActionPanel';
 
 type SchoolRecord = {
   name: string;
