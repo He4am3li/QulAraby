@@ -79,41 +79,65 @@ const getNavPathsForRole = (role?: string) => {
 
 const ARABIC_CHARS = ['ق', 'ل', 'ع', 'ر', 'ب', 'ي', 'أ', 'ن', 'ا', 'ح', 'ب', 'س', 'د', 'و', 'ك'];
 
+type FallingLetterParticle = {
+  id: number;
+  char: string;
+  left: number;
+  duration: number;
+  delay: number;
+  fontSize: number;
+};
+
 export const FallingLetters = ({ mode = 'tall' }: { mode?: 'tall' | 'compact' }) => {
+  // Keep each particle stable across re-renders so the animation doesn't jump or restart.
+  const particles = React.useMemo<FallingLetterParticle[]>(() => {
+    const count = mode === 'tall' ? 20 : 12;
+    return Array.from({ length: count }, (_, id) => {
+      const duration = mode === 'tall'
+        ? 15 + Math.random() * 12
+        : 6 + Math.random() * 5;
+      return {
+        id,
+        char: ARABIC_CHARS[Math.floor(Math.random() * ARABIC_CHARS.length)],
+        left: 3 + Math.random() * 94,
+        duration,
+        // Start particles at different points in the cycle without tying them to rerenders.
+        delay: -Math.random() * duration,
+        fontSize: mode === 'tall' ? 12 + Math.random() * 10 : 14 + Math.random() * 6,
+      };
+    });
+  }, [mode]);
+
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {[...Array(mode === 'tall' ? 20 : 12)].map((_, i) => {
-        const char = ARABIC_CHARS[Math.floor(Math.random() * ARABIC_CHARS.length)];
-        const left = Math.random() * 100;
-        const duration = mode === 'tall' ? (10 + Math.random() * 15) : (0.8 + Math.random() * 1.2);
-        const delay = Math.random() * -20;
-        const fontSize = mode === 'tall' ? (12 + Math.random() * 10) : (14 + Math.random() * 6);
-        
-        return (
-          <motion.div
-            key={i}
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ 
-              y: mode === 'tall' ? ['0vh', '110vh'] : ['0%', '150%'],
-              opacity: [0, 0.4, 0.4, 0]
-            }}
-            transition={{ 
-              duration: duration,
-              repeat: Infinity,
-              delay: delay,
-              ease: "linear"
-            }}
-            className="absolute text-white/30 font-bold arabic-font select-none blur-[0.2px]"
-            style={{ 
-              left: `${left}%`, 
-              fontSize: `${fontSize}px`,
-              textShadow: mode === 'compact' ? '0 0 10px rgba(255,255,255,0.4)' : 'none'
-            }}
-          >
-            {char}
-          </motion.div>
-        );
-      })}
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+      {particles.map((particle) => (
+        <motion.div
+          key={mode + '-' + particle.id}
+          initial={{ top: '-12%', opacity: 0 }}
+          animate={{
+            // Animate top against the container height, not translateY against the glyph height.
+            top: ['-12%', '112%'],
+            opacity: [0, 0.36, 0.36, 0],
+          }}
+          transition={{
+            duration: particle.duration,
+            repeat: Infinity,
+            repeatType: 'loop',
+            delay: particle.delay,
+            ease: 'linear',
+          }}
+          className="absolute select-none font-bold text-white/30 blur-[0.2px] arabic-font"
+          style={{
+            left: particle.left + '%',
+            fontSize: particle.fontSize + 'px',
+            lineHeight: 1,
+            textShadow: mode === 'compact' ? '0 0 10px rgba(255,255,255,0.4)' : 'none',
+            willChange: 'top, opacity',
+          }}
+        >
+          {particle.char}
+        </motion.div>
+      ))}
     </div>
   );
 };
