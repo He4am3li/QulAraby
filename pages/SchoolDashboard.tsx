@@ -1,153 +1,452 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Building2, CheckCircle2, Clock3, Layers3, LoaderCircle, Users, ChevronLeft } from 'lucide-react';
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import {
+  Users, GraduationCap, BookOpenCheck, Layers3, Settings2, Building2, Search,
+  Plus, Save, X, Pencil, Trash2, Download, RefreshCw, CheckCircle2, Clock3,
+  LoaderCircle, ChevronLeft, School, Mail, CalendarDays, ShieldCheck
+} from 'lucide-react';
+import {
+  addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp,
+  updateDoc, where, writeBatch
+} from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../components/AuthProvider';
 import { SCHOOL_MODULES } from '../config/schoolPlans';
 import { PlatformTopBar } from '../components/PlatformTopBar';
 
-type SchoolRecord = { name: string; status?: string; planId?: string; contactEmail?: string; expiresAt?: any; enabledModules?: string[] };
-type MemberRecord = { uid: string; displayName?: string; email?: string; role?: string };
-type PlanRecord = { name: string; description?: string; includedModules?: string[]; price?: number; currency?: string; maxTeachers?: number; maxStudents?: number; durationDays?: number };
+type SchoolRecord = {
+  name: string;
+  status?: string;
+  planId?: string;
+  contactEmail?: string;
+  expiresAt?: any;
+  enabledModules?: string[];
+};
+type MemberRecord = {
+  uid: string;
+  displayName?: string;
+  email?: string;
+  role?: string;
+  schoolId?: string;
+  classId?: string;
+};
+type PlanRecord = {
+  name: string;
+  description?: string;
+  includedModules?: string[];
+  price?: number;
+  currency?: string;
+  maxTeachers?: number;
+  maxStudents?: number;
+  durationDays?: number;
+};
+type ClassRecord = {
+  id: string;
+  name: string;
+  grade?: string;
+  teacherId?: string;
+  schoolId: string;
+  createdAt?: any;
+  updatedAt?: any;
+};
+
+type SchoolTab = 'overview' | 'teachers' | 'students' | 'classes' | 'settings' | 'subscription';
+
+const tabCards = [
+  { id: 'teachers', title: 'المعلمون', english: 'TEACHERS', description: 'استعراض قائمة المعلمين وإسنادهم إلى الفصول.', icon: GraduationCap },
+  { id: 'students', title: 'الطلاب', english: 'STUDENTS', description: 'البحث عن الطلاب وإدارة إسنادهم إلى الفصول.', icon: Users },
+  { id: 'classes', title: 'الفصول والمجموعات', english: 'CLASSES', description: 'إنشاء الفصول وتحديد المعلم المسؤول.', icon: BookOpenCheck },
+  { id: 'settings', title: 'بيانات المدرسة', english: 'SCHOOL DETAILS', description: 'تحديث اسم المدرسة وبريد التواصل.', icon: Settings2 },
+  { id: 'subscription', title: 'الاشتراك والأقسام', english: 'SUBSCRIPTION', description: 'مراجعة الباقة والحدود والأقسام المتاحة.', icon: Layers3 },
+] as const;
+
+const fieldClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/10';
+const primaryButton = 'inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-800 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-50';
+const secondaryButton = 'inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-emerald-700 hover:text-emerald-900 disabled:opacity-50';
 
 export const SchoolDashboard: React.FC = () => {
   const { profile } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const requestedTab = searchParams.get('tab');
-  const activeTab: 'overview' | 'team' | 'subscription' = requestedTab === 'team' || requestedTab === 'subscription' ? requestedTab : 'overview';
+  const activeTab: SchoolTab =
+    requestedTab === 'teachers' || requestedTab === 'students' || requestedTab === 'classes' ||
+    requestedTab === 'settings' || requestedTab === 'subscription'
+      ? requestedTab
+      : requestedTab === 'team' ? 'teachers' : 'overview';
+
   const [school, setSchool] = React.useState<SchoolRecord | null>(null);
   const [plan, setPlan] = React.useState<PlanRecord | null>(null);
-  const [memberCount, setMemberCount] = React.useState(0);
-  const [teacherCount, setTeacherCount] = React.useState(0);
-  const [studentCount, setStudentCount] = React.useState(0);
   const [members, setMembers] = React.useState<MemberRecord[]>([]);
+  const [classes, setClasses] = React.useState<ClassRecord[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [notice, setNotice] = React.useState('');
+  const [search, setSearch] = React.useState('');
+  const [classFilter, setClassFilter] = React.useState('all');
+  const [schoolName, setSchoolName] = React.useState('');
+  const [contactEmail, setContactEmail] = React.useState('');
+  const [className, setClassName] = React.useState('');
+  const [classGrade, setClassGrade] = React.useState('');
+  const [classTeacher, setClassTeacher] = React.useState('');
+  const [editingClassId, setEditingClassId] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    let active = true;
-    const load = async () => {
-      if (!profile?.schoolId) {
-        setError('لم يتم ربط هذا الحساب بمدرسة. يرجى التواصل مع أدمن منصة قُل.');
-        setLoading(false);
-        return;
-      }
-      if (profile.schoolId === '__demo__') {
-        setSchool({
+  const schoolId = profile?.schoolId || '';
+  const isDemo = schoolId === '__demo__';
+
+  const loadData = React.useCallback(async () => {
+    if (!schoolId) {
+      setError('لم يتم ربط هذا الحساب بمدرسة. يرجى التواصل مع أدمن منصة قُل.');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      if (schoolId === '__demo__') {
+        const demoSchool: SchoolRecord = {
           name: 'مدرسة تجريبية، بيانات للعرض فقط',
           status: 'trial',
           contactEmail: 'demo@example.com',
-        });
-        setPlan({
-          name: 'الباقة الشاملة التجريبية',
-          description: 'بيانات توضيحية غير مرتبطة بمدرسة حقيقية',
+        };
+        const demoPlan: PlanRecord = {
+          name: 'معاينة تجريبية',
+          description: 'بيانات توضيحية وليست اشتراكًا فعليًا',
           includedModules: SCHOOL_MODULES.map(module => module.id),
           maxTeachers: 0,
           maxStudents: 0,
           durationDays: 30,
-        });
-        // Demo preview uses clearly synthetic member identities, not fabricated summary counts.
-        setMemberCount(0);
-        setTeacherCount(0);
-        setStudentCount(0);
+        };
+        setSchool(demoSchool);
+        setPlan(demoPlan);
         setMembers([
-          { uid: 'demo-t1', displayName: 'معلم تجريبي 1', email: 'teacher1@example.com', role: 'teacher' },
-          { uid: 'demo-t2', displayName: 'معلم تجريبي 2', email: 'teacher2@example.com', role: 'teacher' },
-          { uid: 'demo-t3', displayName: 'معلم تجريبي 3', email: 'teacher3@example.com', role: 'teacher' },
-          { uid: 'demo-s1', displayName: 'طالب تجريبي 1', email: 'student1@example.com', role: 'student' },
-          { uid: 'demo-s2', displayName: 'طالب تجريبي 2', email: 'student2@example.com', role: 'student' },
-          { uid: 'demo-s3', displayName: 'طالب تجريبي 3', email: 'student3@example.com', role: 'student' },
+          { uid: 'demo-t1', displayName: 'معلم تجريبي 1', email: 'teacher1@example.com', role: 'teacher', schoolId },
+          { uid: 'demo-t2', displayName: 'معلم تجريبي 2', email: 'teacher2@example.com', role: 'teacher', schoolId },
+          { uid: 'demo-s1', displayName: 'طالب تجريبي 1', email: 'student1@example.com', role: 'student', schoolId, classId: 'demo-c1' },
+          { uid: 'demo-s2', displayName: 'طالب تجريبي 2', email: 'student2@example.com', role: 'student', schoolId },
         ]);
-        setLoading(false);
+        setClasses([{ id: 'demo-c1', name: 'الصف التجريبي', grade: 'المرحلة الابتدائية', teacherId: 'demo-t1', schoolId }]);
+        setSchoolName(demoSchool.name);
+        setContactEmail(demoSchool.contactEmail || '');
         return;
       }
-      try {
-        const [schoolSnap, membersSnap] = await Promise.all([
-          getDoc(doc(db, 'schools', profile.schoolId)),
-          getDocs(query(collection(db, 'users'), where('schoolId', '==', profile.schoolId))),
-        ]);
-        if (!schoolSnap.exists()) throw new Error('لم يتم العثور على بيانات المدرسة.');
-        const schoolData = schoolSnap.data() as SchoolRecord;
-        let planData: PlanRecord | null = null;
-        if (schoolData.planId) {
-          const planSnap = await getDoc(doc(db, 'plans', schoolData.planId));
-          if (planSnap.exists()) planData = planSnap.data() as PlanRecord;
-        }
-        if (!active) return;
-        const memberData = membersSnap.docs.map(d => ({ uid: d.id, ...d.data() } as MemberRecord));
-        setMembers(memberData);
-        setSchool(schoolData);
-        setPlan(planData);
-        setMemberCount(memberData.length);
-        setTeacherCount(memberData.filter(m => m.role === 'teacher').length);
-        setStudentCount(memberData.filter(m => m.role === 'student').length);
-      } catch (e) {
-        console.error('School dashboard load failed:', e);
-        if (active) setError('تعذر تحميل بيانات المدرسة. تحقق من صلاحيات Firestore أو تواصل مع أدمن المنصة.');
-      } finally {
-        if (active) setLoading(false);
+
+      const [schoolSnap, membersSnap, classesSnap] = await Promise.all([
+        getDoc(doc(db, 'schools', schoolId)),
+        getDocs(query(collection(db, 'users'), where('schoolId', '==', schoolId))),
+        getDocs(collection(db, 'schools', schoolId, 'classes')),
+      ]);
+      if (!schoolSnap.exists()) throw new Error('لم يتم العثور على بيانات المدرسة.');
+      const schoolData = schoolSnap.data() as SchoolRecord;
+      let planData: PlanRecord | null = null;
+      if (schoolData.planId) {
+        const planSnap = await getDoc(doc(db, 'plans', schoolData.planId));
+        if (planSnap.exists()) planData = planSnap.data() as PlanRecord;
       }
-    };
-    void load();
-    return () => { active = false; };
-  }, [profile?.schoolId]);
+      const memberData = membersSnap.docs.map(d => ({ uid: d.id, ...d.data() } as MemberRecord));
+      const classData = classesSnap.docs.map(d => ({ id: d.id, ...d.data() } as ClassRecord));
+      setSchool(schoolData);
+      setPlan(planData);
+      setMembers(memberData);
+      setClasses(classData);
+      setSchoolName(schoolData.name || '');
+      setContactEmail(schoolData.contactEmail || '');
+    } catch (e) {
+      console.error('School dashboard load failed:', e);
+      setError('تعذر تحميل بيانات المدرسة أو الفصول. تحقق من نشر قواعد Firestore المحدثة، ثم أعد المحاولة.');
+    } finally {
+      setLoading(false);
+    }
+  }, [schoolId]);
 
-  if (loading) return <div className="flex min-h-80 items-center justify-center gap-3 text-slate-500"><LoaderCircle className="animate-spin"/> جارٍ تحميل لوحة المدرسة...</div>;
-  if (error) return <div dir="rtl" className="p-4 md:p-6"><div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 font-bold text-amber-900">{error}</div></div>;
-  const modules = (school?.enabledModules || plan?.includedModules || []).map(id => SCHOOL_MODULES.find(module => module.id === id)).filter(Boolean);
-  const status = school?.status === 'active' ? 'فعّال' : school?.status === 'trial' ? 'فترة تجريبية' : 'موقوف';
-  const expiresAt = school?.expiresAt?.toDate ? school.expiresAt.toDate().toLocaleDateString('ar-AE') : null;
+  React.useEffect(() => { void loadData(); }, [loadData]);
 
-  return <div dir="rtl" className="min-h-full bg-[#f7f8f6] text-slate-900 flex flex-col">
+  const teachers = members.filter(member => member.role === 'teacher');
+  const students = members.filter(member => member.role === 'student');
+  const modules = (school?.enabledModules || plan?.includedModules || [])
+    .map(id => SCHOOL_MODULES.find(module => module.id === id))
+    .filter(Boolean);
+  const subscriptionStatus = school?.status === 'active' ? 'فعّال' : school?.status === 'trial' ? 'فترة تجريبية' : 'موقوف';
+  const expiresAt = school?.expiresAt?.toDate ? school.expiresAt.toDate().toLocaleDateString('ar-AE') : 'غير محدد';
+
+  const filteredMembers = (list: MemberRecord[]) => list.filter(member => {
+    const text = search.trim().toLocaleLowerCase();
+    const matchesSearch = !text || (member.displayName || '').toLocaleLowerCase().includes(text) || (member.email || '').toLocaleLowerCase().includes(text);
+    const matchesClass = classFilter === 'all' || (member.classId || '') === classFilter;
+    return matchesSearch && matchesClass;
+  });
+
+  const saveSchoolDetails = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (isDemo) {
+      setSchool(current => current ? { ...current, name: schoolName.trim(), contactEmail: contactEmail.trim() } : current);
+      setNotice('تم تحديث بيانات المعاينة فقط.');
+      return;
+    }
+    if (!schoolId || !schoolName.trim()) {
+      setNotice('أدخل اسم المدرسة أولًا.');
+      return;
+    }
+    setSaving(true);
+    setNotice('');
+    try {
+      await updateDoc(doc(db, 'schools', schoolId), {
+        name: schoolName.trim(),
+        contactEmail: contactEmail.trim(),
+        updatedAt: serverTimestamp(),
+      });
+      setSchool(current => current ? { ...current, name: schoolName.trim(), contactEmail: contactEmail.trim() } : current);
+      setNotice('تم حفظ بيانات المدرسة.');
+    } catch (e) {
+      console.error('School details save failed:', e);
+      setNotice('تعذر حفظ البيانات. تأكد من نشر قواعد Firestore المحدثة.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const resetClassForm = () => {
+    setEditingClassId(null);
+    setClassName('');
+    setClassGrade('');
+    setClassTeacher('');
+  };
+
+  const editClass = (item: ClassRecord) => {
+    setEditingClassId(item.id);
+    setClassName(item.name);
+    setClassGrade(item.grade || '');
+    setClassTeacher(item.teacherId || '');
+  };
+
+  const saveClass = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!className.trim()) {
+      setNotice('أدخل اسم الفصل.');
+      return;
+    }
+    if (classTeacher && !teachers.some(teacher => teacher.uid === classTeacher)) {
+      setNotice('اختر معلمًا من معلمي المدرسة فقط.');
+      return;
+    }
+    if (isDemo) {
+      const item: ClassRecord = {
+        id: editingClassId || 'demo-c' + Date.now(),
+        name: className.trim(),
+        grade: classGrade.trim(),
+        teacherId: classTeacher,
+        schoolId,
+      };
+      setClasses(current => editingClassId ? current.map(row => row.id === editingClassId ? item : row) : [...current, item]);
+      resetClassForm();
+      setNotice('تم تحديث معاينة الفصل فقط.');
+      return;
+    }
+    if (!schoolId) return;
+    setSaving(true);
+    setNotice('');
+    try {
+      const payload = {
+        name: className.trim(),
+        grade: classGrade.trim(),
+        teacherId: classTeacher,
+        schoolId,
+        updatedAt: serverTimestamp(),
+      };
+      if (editingClassId) {
+        await updateDoc(doc(db, 'schools', schoolId, 'classes', editingClassId), payload);
+      } else {
+        await addDoc(collection(db, 'schools', schoolId, 'classes'), { ...payload, createdAt: serverTimestamp() });
+      }
+      await loadData();
+      resetClassForm();
+      setNotice(editingClassId ? 'تم تحديث الفصل.' : 'تم إنشاء الفصل.');
+    } catch (e) {
+      console.error('Class save failed:', e);
+      setNotice('تعذر حفظ الفصل. تحقق من نشر قواعد Firestore المحدثة.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteClass = async (item: ClassRecord) => {
+    const enrolled = students.filter(student => student.classId === item.id);
+    if (!window.confirm(enrolled.length
+      ? `سيتم فك إسناد ${enrolled.length} طالبًا ثم حذف الفصل «${item.name}». هل تريد المتابعة؟`
+      : `هل تريد حذف الفصل «${item.name}»؟`)) return;
+    if (isDemo) {
+      setClasses(current => current.filter(row => row.id !== item.id));
+      setMembers(current => current.map(member => member.classId === item.id ? { ...member, classId: '' } : member));
+      setNotice('تم حذف الفصل من المعاينة فقط.');
+      return;
+    }
+    if (!schoolId) return;
+    setSaving(true);
+    setNotice('');
+    try {
+      if (enrolled.length) {
+        const batch = writeBatch(db);
+        enrolled.forEach(student => batch.update(doc(db, 'users', student.uid), { classId: '', updatedAt: serverTimestamp() }));
+        await batch.commit();
+      }
+      await deleteDoc(doc(db, 'schools', schoolId, 'classes', item.id));
+      await loadData();
+      setNotice('تم حذف الفصل وفك إسناد الطلاب المرتبطين به.');
+    } catch (e) {
+      console.error('Class delete failed:', e);
+      setNotice('تعذر حذف الفصل. تحقق من صلاحيات Firestore.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const assignStudentClass = async (student: MemberRecord, nextClassId: string) => {
+    if (nextClassId && !classes.some(item => item.id === nextClassId)) {
+      setNotice('اختر فصلًا تابعًا لمدرستك.');
+      return;
+    }
+    if (isDemo) {
+      setMembers(current => current.map(item => item.uid === student.uid ? { ...item, classId: nextClassId } : item));
+      setNotice('تم تحديث إسناد الطالب في المعاينة فقط.');
+      return;
+    }
+    setSaving(true);
+    setNotice('');
+    try {
+      await updateDoc(doc(db, 'users', student.uid), { classId: nextClassId, updatedAt: serverTimestamp() });
+      setMembers(current => current.map(item => item.uid === student.uid ? { ...item, classId: nextClassId } : item));
+      setNotice('تم تحديث فصل الطالب.');
+    } catch (e) {
+      console.error('Student class assignment failed:', e);
+      setNotice('تعذر إسناد الطالب إلى الفصل. تحقق من نشر قواعد Firestore المحدثة.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const exportMembers = (list: MemberRecord[], label: string) => {
+    const escapeCsv = (value: string) => '"' + value.replace(/"/g, '""') + '"';
+    const rows = [
+      ['الاسم', 'البريد الإلكتروني', 'الدور', 'الفصل'].map(escapeCsv).join(','),
+      ...list.map(member => [
+        member.displayName || '',
+        member.email || '',
+        member.role === 'teacher' ? 'معلم' : 'طالب',
+        classes.find(item => item.id === member.classId)?.name || '',
+      ].map(escapeCsv).join(',')),
+    ];
+    const blob = new Blob(['\uFEFF' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `QUL-${label}-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const pageTitle: Record<SchoolTab, string> = {
+    overview: 'الرئيسية',
+    teachers: 'المعلمون',
+    students: 'الطلاب',
+    classes: 'الفصول والمجموعات',
+    settings: 'بيانات المدرسة',
+    subscription: 'الاشتراك والأقسام',
+  };
+
+  if (loading) return <div className="flex h-full min-h-80 items-center justify-center gap-3 text-slate-500"><LoaderCircle className="animate-spin"/> جارٍ تحميل لوحة المدرسة...</div>;
+  if (error) return <div dir="rtl" className="p-4 md:p-6"><div className="rounded-xl border border-amber-200 bg-amber-50 p-5 font-semibold text-amber-900"><p>{error}</p><button onClick={() => void loadData()} className={secondaryButton + ' mt-3'}><RefreshCw size={15}/> إعادة المحاولة</button></div></div>;
+
+  const renderMemberTable = (list: MemberRecord[], kind: 'teacher' | 'student') => {
+    const visibleMembers = filteredMembers(list);
+    return <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+        <div><h2 className="font-bold">{kind === 'teacher' ? 'قائمة المعلمين' : 'قائمة الطلاب'}</h2><p className="mt-0.5 text-xs text-slate-500">{visibleMembers.length} من {list.length} حساب</p></div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative"><Search size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث بالاسم أو البريد" className={fieldClass + ' w-52 pr-9'}/></div>
+          {kind === 'student' && <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className={fieldClass + ' w-40'}><option value="all">كل الفصول</option><option value="">دون فصل</option>{classes.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select>}
+          <button onClick={() => exportMembers(visibleMembers, kind === 'teacher' ? 'teachers' : 'students')} className={secondaryButton}><Download size={15}/> تصدير CSV</button>
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 overflow-auto">
+        {visibleMembers.length ? <table className="w-full min-w-[620px] text-right text-sm">
+          <thead className="sticky top-0 bg-slate-50 text-xs text-slate-500"><tr><th className="px-4 py-3 font-semibold">الاسم</th><th className="px-4 py-3 font-semibold">البريد الإلكتروني</th>{kind === 'student' && <th className="px-4 py-3 font-semibold">الفصل</th>}<th className="px-4 py-3 font-semibold">الحالة</th></tr></thead>
+          <tbody>{visibleMembers.map(member => <tr key={member.uid} className="border-t border-slate-100">
+            <td className="px-4 py-3 font-medium">{member.displayName || 'بدون اسم'}</td>
+            <td className="px-4 py-3 text-slate-500">{member.email || 'غير متوفر'}</td>
+            {kind === 'student' && <td className="px-4 py-2"><select disabled={saving} value={member.classId || ''} onChange={e => void assignStudentClass(member, e.target.value)} className={fieldClass + ' min-w-36'}><option value="">دون فصل</option>{classes.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></td>}
+            <td className="px-4 py-3"><span className="inline-flex items-center gap-1.5 text-xs text-slate-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-600"/>{member.role === 'teacher' ? 'معلم مرتبط بالمدرسة' : 'طالب مرتبط بالمدرسة'}</span></td>
+          </tr>)}</tbody>
+        </table> : <div className="p-10 text-center text-sm text-slate-500">لا توجد نتائج مطابقة.</div>}
+      </div>
+    </section>;
+  };
+
+  return <div dir="rtl" className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f7f8f6] text-slate-900">
     <PlatformTopBar />
-    <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-      {activeTab === 'overview' && <>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
-          {[
-            { title: 'المعلمون والطلاب', english: 'SCHOOL TEAM', icon: Users, color: 'from-blue-600 to-indigo-700', href: '/school?tab=team' },
-            { title: 'الاشتراك والأقسام', english: 'SUBSCRIPTION', icon: Layers3, color: 'from-emerald-600 to-emerald-800', href: '/school?tab=subscription' },
-          ].map((item) => (
-            <motion.button key={item.href} whileHover={{ y: -8, scale: 1.02, boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }} whileTap={{ scale: 0.98 }} layout onClick={() => navigate(item.href)} className="relative group p-3 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm hover:border-blue-200 transition-colors text-right">
-              <div className={`w-8 h-8 bg-gradient-to-br ${item.color} rounded-full flex items-center justify-center text-white mb-2 shadow-md mr-0 ml-auto`}><item.icon size={18}/></div>
-              <div className="text-right">
-                <h4 className="text-[8px] font-black text-slate-400 uppercase mb-0.5">{item.english}</h4>
-                <h3 className="text-base font-black text-slate-800 mb-0.5 arabic-font leading-normal pb-1">{item.title}</h3>
-              </div>
-              <div className="mt-2 flex items-center justify-end gap-1 text-[8px] font-black text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">فتح القسم <ChevronLeft size={8}/></div>
-            </motion.button>
-          ))}
-        </div>
-      </>}
-      {activeTab === 'team' && <section className="rounded-xl border border-slate-200 bg-white">
-        <div className="border-b border-slate-200 px-5 py-4"><h2 className="font-bold">المعلمون والطلاب</h2><p className="mt-1 text-sm text-slate-500">الحسابات المرتبطة بمدرستك فقط.</p></div>
-        {members.filter(m => m.role === 'teacher' || m.role === 'student').length ? <div className="overflow-x-auto"><table className="w-full min-w-[540px] text-right text-sm">
-          <thead className="bg-slate-50 text-xs text-slate-500"><tr><th className="px-5 py-3 font-semibold">الاسم</th><th className="px-5 py-3 font-semibold">البريد الإلكتروني</th><th className="px-5 py-3 font-semibold">الدور</th></tr></thead>
-          <tbody>{members.filter(m => m.role === 'teacher' || m.role === 'student').map(member => <tr key={member.uid} className="border-t border-slate-100"><td className="px-5 py-3 font-medium">{member.displayName || 'بدون اسم'}</td><td className="px-5 py-3 text-slate-500">{member.email || 'غير متوفر'}</td><td className="px-5 py-3"><span className="rounded-md bg-slate-100 px-2 py-1 text-xs">{member.role === 'teacher' ? 'معلم' : 'طالب'}</span></td></tr>)}</tbody>
-        </table></div> : <div className="p-8 text-center text-sm text-slate-500">لا توجد حسابات مرتبطة بهذه المدرسة حتى الآن.</div>}
-      </section>}
-      {activeTab === 'subscription' && <section className="grid items-start gap-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(260px,0.75fr)]">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 md:p-5">
-          <h2 className="mb-3 text-sm font-bold">الأقسام المشمولة في الباقة</h2>
-          {modules.length ? <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-2 2xl:grid-cols-3">{modules.map(module => <div key={module!.id} title={module!.description} className="flex min-h-9 items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/70 px-2.5 py-2"><CheckCircle2 size={15} className="shrink-0 text-emerald-700"/><span className="min-w-0 text-xs font-medium leading-4 text-slate-700">{module!.label}</span></div>)}</div> : <div className="rounded-lg bg-slate-50 p-5 text-sm text-slate-500">لا توجد أقسام مفعّلة حاليًا.</div>}
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5 md:p-6">
-          <h2 className="font-bold">تفاصيل الاشتراك</h2>
-          <dl className="mt-2 divide-y divide-slate-100 text-sm">
-            <div className="flex justify-between gap-3 py-2"><dt className="text-slate-500">الباقة</dt><dd className="font-semibold">{plan?.name || 'غير محددة'}</dd></div>
-            <div className="flex justify-between gap-3 py-2"><dt className="text-slate-500">الحالة</dt><dd className="font-semibold">{status}</dd></div>
-            <div className="flex justify-between gap-3 py-2"><dt className="text-slate-500">تاريخ الانتهاء</dt><dd className="font-semibold">{expiresAt || 'غير محدد'}</dd></div>
-            <div className="flex justify-between gap-3 py-2"><dt className="text-slate-500">بريد التواصل</dt><dd className="font-semibold">{school?.contactEmail || 'غير متوفر'}</dd></div>
-          </dl>
-          {profile?.schoolId === '__demo__' && <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">هذه تفاصيل توضيحية للمعاينة وليست اشتراكًا حقيقيًا.</p>}
-        </div>
-      </section>}
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-3 sm:p-4">
+      <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col gap-3">
+        {notice && <div role="status" className="flex shrink-0 items-start justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="إغلاق الرسالة"><X size={14}/></button></div>}
+
+        {activeTab === 'overview' && <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {tabCards.map(item => <motion.button key={item.id} whileHover={{ y: -2 }} whileTap={{ scale: 0.99 }} onClick={() => navigate('/school?tab=' + item.id)} className="group flex min-h-28 items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 text-right transition-colors hover:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-700/20">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition-colors group-hover:border-emerald-200 group-hover:bg-emerald-50 group-hover:text-emerald-800"><item.icon size={19} strokeWidth={1.8}/></span>
+            <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{item.title}</span><span className="mt-1.5 block text-xs leading-5 text-slate-500">{item.description}</span><span className="mt-2 block text-[11px] font-semibold text-emerald-800">فتح القسم ←</span></span>
+          </motion.button>)}
+        </section>}
+
+        {activeTab === 'teachers' && <div className="flex min-h-0 flex-1 flex-col gap-2"><div className="flex items-center justify-between gap-2"><h1 className="text-lg font-bold">المعلمون</h1><button onClick={() => exportMembers(filteredMembers(teachers), 'teachers')} className={secondaryButton}><Download size={15}/> تصدير القائمة</button></div>{renderMemberTable(teachers, 'teacher')}</div>}
+
+        {activeTab === 'students' && <div className="flex min-h-0 flex-1 flex-col gap-2"><div className="flex items-center justify-between gap-2"><h1 className="text-lg font-bold">الطلاب</h1><span className="text-xs text-slate-500">{students.length} طالبًا</span></div>{renderMemberTable(students, 'student')}</div>}
+
+        {activeTab === 'classes' && <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.75fr)]">
+          <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-3"><div><h1 className="font-bold">الفصول والمجموعات</h1><p className="mt-0.5 text-xs text-slate-500">{classes.length} فصل</p></div><button onClick={resetClassForm} className={secondaryButton}><Plus size={15}/> فصل جديد</button></div>
+            <div className="min-h-0 flex-1 overflow-auto">
+              {classes.length ? <div className="divide-y divide-slate-100">{classes.map(item => <div key={item.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="min-w-0"><p className="truncate text-sm font-semibold">{item.name}</p><p className="mt-1 text-xs text-slate-500">{item.grade || 'مرحلة غير محددة'} · {students.filter(student => student.classId === item.id).length} طالب · {teachers.find(teacher => teacher.uid === item.teacherId)?.displayName || 'لم يحدد معلم'}</p></div>
+                <div className="flex shrink-0 gap-1"><button title="تعديل الفصل" onClick={() => editClass(item)} className="rounded-lg p-2 text-slate-600 hover:bg-slate-100"><Pencil size={15}/></button><button title="حذف الفصل" disabled={saving} onClick={() => void deleteClass(item)} className="rounded-lg p-2 text-rose-700 hover:bg-rose-50"><Trash2 size={15}/></button></div>
+              </div>)}</div> : <div className="p-8 text-center text-sm text-slate-500">لا توجد فصول بعد. أنشئ أول فصل من الزر أعلاه.</div>}
+            </div>
+          </section>
+          <form onSubmit={saveClass} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4">
+            <div><h2 className="font-bold">{editingClassId ? 'تعديل الفصل' : 'إنشاء فصل'}</h2><p className="mt-1 text-xs text-slate-500">يمكن إسناد الطلاب إلى الفصل من صفحة الطلاب.</p></div>
+            <label className="space-y-1 text-xs font-semibold">اسم الفصل<input className={fieldClass} value={className} onChange={e => setClassName(e.target.value)} required placeholder="مثال: الصف الخامس أ"/></label>
+            <label className="space-y-1 text-xs font-semibold">المرحلة أو الصف<input className={fieldClass} value={classGrade} onChange={e => setClassGrade(e.target.value)} placeholder="مثال: الصف الخامس"/></label>
+            <label className="space-y-1 text-xs font-semibold">المعلم المسؤول<select className={fieldClass} value={classTeacher} onChange={e => setClassTeacher(e.target.value)}><option value="">لم يحدد</option>{teachers.map(teacher => <option key={teacher.uid} value={teacher.uid}>{teacher.displayName || teacher.email || teacher.uid}</option>)}</select></label>
+            <div className="mt-auto flex gap-2"><button disabled={saving} className={primaryButton + ' flex-1'}><Save size={15}/>{saving ? 'جارٍ الحفظ...' : editingClassId ? 'حفظ التعديلات' : 'إنشاء الفصل'}</button>{editingClassId && <button type="button" onClick={resetClassForm} className={secondaryButton}>إلغاء</button>}</div>
+          </form>
+        </div>}
+
+        {activeTab === 'settings' && <section className="mx-auto w-full max-w-3xl rounded-xl border border-slate-200 bg-white p-5">
+          <div className="mb-4 flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50 text-slate-700"><Building2 size={20}/></span><div><h1 className="font-bold">بيانات المدرسة</h1><p className="mt-1 text-xs text-slate-500">تعديل اسم المدرسة وبريد التواصل المسموح بهما لمدير المدرسة.</p></div></div>
+          <form onSubmit={saveSchoolDetails} className="grid gap-4 sm:grid-cols-2">
+            <label className="space-y-1.5 text-sm font-semibold">اسم المدرسة<input className={fieldClass} value={schoolName} onChange={e => setSchoolName(e.target.value)} required maxLength={150}/></label>
+            <label className="space-y-1.5 text-sm font-semibold">بريد التواصل<input className={fieldClass} type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="school@example.com"/></label>
+            <div className="sm:col-span-2 flex items-center justify-between gap-3"><p className="text-xs text-slate-500">تغيير الباقة أو حالة الاشتراك متاح للأدمن العام فقط.</p><button disabled={saving} className={primaryButton}><Save size={15}/>{saving ? 'جارٍ الحفظ...' : 'حفظ البيانات'}</button></div>
+          </form>
+        </section>}
+
+        {activeTab === 'subscription' && <div className="grid min-h-0 flex-1 gap-3 overflow-auto xl:grid-cols-[minmax(0,1.3fr)_minmax(260px,0.7fr)]">
+          <section className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="mb-3 flex items-center justify-between gap-2"><h1 className="font-bold">الأقسام المتاحة</h1><span className="text-xs text-slate-500">{modules.length} قسم</span></div>
+            {modules.length ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{modules.map(module => <div key={module!.id} title={module!.description} className="flex min-h-9 items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/70 px-2.5 py-2"><CheckCircle2 size={14} className="shrink-0 text-emerald-700"/><span className="min-w-0 text-xs font-medium leading-4 text-slate-700">{module!.label}</span></div>)}</div> : <div className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">لا توجد أقسام مفعّلة حاليًا.</div>}
+          </section>
+          <section className="rounded-xl border border-slate-200 bg-white p-4">
+            <h2 className="mb-2 font-bold">تفاصيل الاشتراك</h2>
+            <dl className="divide-y divide-slate-100 text-sm">
+              <div className="flex justify-between gap-3 py-2"><dt className="text-slate-500">الباقة</dt><dd className="text-left font-semibold">{plan?.name || 'غير محددة'}</dd></div>
+              <div className="flex justify-between gap-3 py-2"><dt className="text-slate-500">الحالة</dt><dd className="font-semibold">{subscriptionStatus}</dd></div>
+              <div className="flex justify-between gap-3 py-2"><dt className="text-slate-500">تاريخ الانتهاء</dt><dd className="font-semibold">{expiresAt}</dd></div>
+              <div className="flex justify-between gap-3 py-2"><dt className="text-slate-500">المعلمون</dt><dd className="font-semibold">{teachers.length}{plan?.maxTeachers ? ` / ${plan.maxTeachers}` : ' / غير محدود'}</dd></div>
+              <div className="flex justify-between gap-3 py-2"><dt className="text-slate-500">الطلاب</dt><dd className="font-semibold">{students.length}{plan?.maxStudents ? ` / ${plan.maxStudents}` : ' / غير محدود'}</dd></div>
+              <div className="flex justify-between gap-3 py-2"><dt className="text-slate-500">بريد التواصل</dt><dd className="max-w-[180px] truncate font-semibold" title={school?.contactEmail}>{school?.contactEmail || 'غير متوفر'}</dd></div>
+            </dl>
+            {isDemo && <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">معاينة فقط. لا تُحفظ التغييرات في قاعدة البيانات.</p>}
+          </section>
+        </div>}
       </div>
     </div>
   </div>;
 };
-
-const Metric: React.FC<{ icon: React.ElementType; label: string; value: string | number }> = ({ icon: Icon, label, value }) => <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-2 text-sm font-bold text-slate-500"><span>{label}</span><Icon size={20} className="text-emerald-700"/></div><div className="mt-3 text-2xl font-semibold tracking-tight">{value}</div></div>;
