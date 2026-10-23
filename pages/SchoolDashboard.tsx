@@ -78,7 +78,7 @@ export const SchoolDashboard: React.FC = () => {
         setMembers(memberData);
         setSchool(schoolData);
         setPlan(planData);
-        setMemberCount(members.length);
+        setMemberCount(memberData.length);
         setTeacherCount(memberData.filter(m => m.role === 'teacher').length);
         setStudentCount(memberData.filter(m => m.role === 'student').length);
       } catch (e) {
