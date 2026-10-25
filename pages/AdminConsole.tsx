@@ -496,8 +496,8 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
     <div dir={isEnglish ? 'ltr' : 'rtl'} className={'h-full min-h-0 overflow-hidden bg-[#f7f8f6] text-slate-900 flex flex-col '+(isEnglish?'font-sans':'')}>
       <PlatformTopBar />
 
-      <div className={`flex-1 min-h-0 ${showRolePanel ? 'overflow-hidden p-2 sm:p-3' : tab === 'plans' ? 'overflow-hidden p-2 sm:p-3' : tab === 'analytics' ? 'overflow-y-auto p-2 sm:p-3 xl:overflow-hidden' : 'overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8'}`}>
-        <div className={`mx-auto flex min-h-0 flex-col ${showRolePanel ? 'h-full max-w-none gap-2' : tab === 'analytics' ? 'h-full min-h-[740px] max-w-none xl:min-h-0' : tab === 'plans' ? 'h-full max-w-7xl gap-2' : 'max-w-7xl space-y-6'}`}>
+      <div className={`flex-1 min-h-0 ${showRolePanel ? 'overflow-hidden p-2 sm:p-3' : tab === 'plans' ? 'overflow-hidden p-2 sm:p-3' : tab === 'analytics' ? 'overflow-hidden p-2 sm:p-3' : 'overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8'}`}>
+        <div className={`mx-auto flex min-h-0 flex-col ${showRolePanel ? 'h-full max-w-none gap-2' : tab === 'analytics' ? 'h-full min-h-0 max-w-none' : tab === 'plans' ? 'h-full max-w-7xl gap-2' : 'max-w-7xl space-y-6'}`}>
 
         {notice && <div role="status" className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${notice.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
           {notice.type === 'success' ? <Check size={18} /> : <Settings2 size={18} className="mt-0.5 shrink-0" />}
@@ -678,13 +678,13 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-base font-black tracking-tight text-[#183b30] sm:text-lg">مركز التحليلات</h2>
-                      <span className="rounded-full border border-[#d6b879]/60 bg-[#fff9e9]/85 px-2.5 py-1 text-[9px] font-bold text-[#876728] shadow-[inset_0_1px_0_white]">معاينة أثناء التطوير</span>
+                      
                     </div>
-                    <p className="mt-1 truncate text-[10px] text-slate-500 sm:text-xs">رؤية موحّدة للمدارس والحسابات والباقات، بتصميم يتطور مع بيانات قُل.</p>
+                    
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="hidden items-center gap-1.5 rounded-full border border-white/90 bg-white/55 px-2.5 py-1.5 text-[9px] font-medium text-slate-500 shadow-[inset_0_1px_0_white] sm:inline-flex"><span className="h-1.5 w-1.5 rounded-full bg-[#c59a43]"/>بيانات تجريبية قابلة للتغيّر</span>
+                  
                   <button onClick={exportAnalyticsReport} title="تصدير تقرير CSV" className="flex h-8 items-center gap-1.5 rounded-xl border border-white bg-white/65 px-2.5 text-[10px] font-semibold text-slate-700 shadow-[0_2px_7px_rgba(60,80,73,0.06),inset_0_1px_0_white] transition-all hover:-translate-y-0.5 hover:bg-white sm:px-3 sm:text-xs"><Activity size={13}/> تصدير</button>
                   <button onClick={() => void loadData()} disabled={loading} title="تحديث البيانات" className="flex h-8 items-center gap-1.5 rounded-xl border border-[#1f6a50] bg-gradient-to-b from-[#277858] to-[#145a42] px-2.5 text-[10px] font-semibold text-white shadow-[0_3px_8px_rgba(24,99,71,0.2),inset_0_1px_0_rgba(255,255,255,0.22)] transition-all hover:-translate-y-0.5 disabled:opacity-50 sm:px-3 sm:text-xs"><RefreshCw size={13} className={loading ? 'animate-spin' : ''}/> تحديث</button>
                 </div>
@@ -716,7 +716,7 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
               <div className="relative z-10 grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[1fr_1.14fr_0.86fr]">
                 <section className="relative flex min-h-0 flex-col overflow-hidden rounded-[22px] border border-white/90 bg-white/55 p-3 shadow-[0_8px_24px_rgba(70,99,88,0.07),inset_0_1px_0_white] backdrop-blur-xl sm:p-4">
                   <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-70" style={{ background: 'linear-gradient(135deg,rgba(255,255,255,0.72),rgba(224,238,232,0.22) 48%,rgba(211,225,235,0.36))' }}/>
-                  <div className="relative flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold text-[#244638] sm:text-sm">حالة المدارس</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">توزيع توضيحي لحالات الاشتراك</p></div><span className="rounded-full border border-white bg-white/65 px-2 py-1 text-[9px] text-slate-500 shadow-sm">الاشتراكات</span></div>
+                  <div className="relative flex items-start justify-between gap-2"><div><h3 className="text-xs font-bold text-[#244638] sm:text-sm">حالة المدارس</h3><p className="mt-1 text-[9px] text-slate-500 sm:text-[10px]">توزيع حالات الاشتراك</p></div><span className="rounded-full border border-white bg-white/65 px-2 py-1 text-[9px] text-slate-500 shadow-sm">الاشتراكات</span></div>
                   <div className="relative flex min-h-0 flex-1 items-center justify-center gap-3">
                     <div className="relative flex aspect-square max-h-full w-[43%] max-w-[132px] items-center justify-center rounded-full p-[5px] shadow-[0_6px_18px_rgba(43,95,73,0.12)]" style={{ background: schools.length ? 'conic-gradient(' + schoolStatusStats.map((item,index)=>{ const before=schoolStatusStats.slice(0,index).reduce((sum,part)=>sum+part.count,0); const after=before+item.count; const total=schools.length||1; return item.color+' '+before/total*100+'% '+after/total*100+'%'; }).join(', ') + ')' : 'conic-gradient(#dbe8e1 0% 100%)' }}>
                       <div className="flex h-full w-full flex-col items-center justify-center rounded-full border border-white/90 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(235,243,239,0.9))] shadow-[inset_0_2px_5px_rgba(74,102,91,0.08)]"><span className="text-2xl font-black tabular-nums text-[#203b30] sm:text-3xl">{schools.length.toLocaleString('ar-AE')}</span><span className="mt-1 text-center text-[8px] text-slate-500 sm:text-[9px]">إجمالي المدارس</span></div>
