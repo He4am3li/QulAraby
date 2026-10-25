@@ -34,10 +34,26 @@ export default async function handler(request: Request, response: Response): Pro
       return;
     }
     const data = quiz.data() || {};
+    const userSnap = await db.collection("users").doc(user.uid).get();
+    const userProfile = userSnap.data() || {};
+    const ownsQuiz = data.authorId === user.uid;
+    const isAdmin = userProfile.role === "admin";
+    const isTeacher = userProfile.role === "teacher" || isAdmin;
+    if (data.status !== "active" && !(isTeacher && ownsQuiz) && !isAdmin) {
+      response.status(403).json({ error: "This quiz is not available to this account." });
+      return;
+    }
     const questionsSnapshot = await quizRef.collection("questions").orderBy("order", "asc").get();
     const questions = questionsSnapshot.docs.map((doc) => {
       const question = doc.data();
-      const { correctAnswer: _correctAnswer, answerKey: _answerKey, acceptedAnswers: _acceptedAnswers, ...safe } = question;
+      const {
+        correctAnswer: _correctAnswer,
+        answerKey: _answerKey,
+        acceptedAnswers: _acceptedAnswers,
+        explanation: _explanation,
+        feedback: _feedback,
+        ...safe
+      } = question;
       return { id: doc.id, ...safe };
     });
     response.status(200).json({
