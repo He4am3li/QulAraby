@@ -301,7 +301,10 @@ service cloud.firestore {
       allow delete: if request.auth.token.email == "he4amali22@gmail.com" || (isAuthenticated() && isAuthor(resource.data));
 
       match /questions/{questionId} {
-        allow read: if isAuthenticated();
+        // Students must fetch question text without answer keys through the authenticated server API.
+        // Only the authoring teacher and platform admins can read/write raw question documents.
+        allow read: if isAdmin() ||
+          (isTeacher() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
         allow create: if isTeacher() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid && isValidQuestion(request.resource.data);
         allow update: if (isAdmin() || (isTeacher() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid)) && isValidQuestion(request.resource.data);
         allow delete: if request.auth.token.email == "he4amali22@gmail.com" || (isAuthenticated() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
@@ -309,7 +312,8 @@ service cloud.firestore {
 
       match /results/{resultId} {
         allow read: if isAuthenticated() && (isAdmin() || get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid || isOwner(resource.data.userId));
-        allow create: if isAuthenticated() && isValidResult(request.resource.data) && request.resource.data.userId == request.auth.uid;
+        // Quiz results are graded and written by the server using Firebase Admin.
+        allow create: if isAdmin() && isValidResult(request.resource.data) && request.resource.data.userId == request.auth.uid;
         allow delete: if request.auth.token.email == "he4amali22@gmail.com" || (isAuthenticated() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
       }
     }
