@@ -4,8 +4,11 @@ const WINDOW_MS = 60_000;
 const MAX_AI_REQUESTS_PER_MINUTE = 45;
 const recentRequests = new Map<string, number[]>();
 
-export async function verifyFirebaseUser(request: Request): Promise<{ uid: string } | null> {
-  const authorization = request.headers.get("authorization") || "";
+type ApiRequest = { headers: Record<string, string | string[] | undefined> };
+
+export async function verifyFirebaseUser(request: ApiRequest): Promise<{ uid: string } | null> {
+  const header = request.headers.authorization;
+  const authorization = Array.isArray(header) ? header[0] : header || "";
   const match = authorization.match(/^Bearer\s+(.+)$/i);
   if (!match) return null;
 
@@ -38,7 +41,7 @@ export function consumeAiRateLimit(uid: string): boolean {
   recent.push(now);
   recentRequests.set(uid, recent);
 
-  // Keep the in-memory guard bounded in long-lived instances.
+  // Per-instance safeguard only. Use shared durable storage for strict cross-instance quotas.
   if (recentRequests.size > 2_000) {
     for (const [key, timestamps] of recentRequests) {
       if (!timestamps.some((timestamp) => now - timestamp < WINDOW_MS)) recentRequests.delete(key);
