@@ -230,77 +230,14 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
     setAbilities(prev => prev.filter(a => a.type !== type));
   };
 
-  const handleAnswerChange = async (qId: string, val: any, autoNext: boolean = false, skipFeedback: boolean = false) => {
+  const handleAnswerChange = (qId: string, val: any, autoNext: boolean = false, skipFeedback: boolean = false) => {
+    // Correctness is intentionally not exposed per question. The server grades the full
+    // submission at the end so students cannot probe answer keys through an answer oracle.
     const q = questions.find(q => q.id === qId);
-    if (!q) return;
-
-    let isCorrect = false;
-    try {
-      if (!user) throw new Error('Sign-in required to check quiz answers.');
-      const idToken = await user.getIdToken();
-      const checkResponse = await fetch('/api/quiz-check-answer', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${idToken}`,
-        },
-        cache: 'no-store',
-        body: JSON.stringify({ quizId, questionId: qId, answer: val }),
-      });
-      const checkPayload = await checkResponse.json().catch(() => ({}));
-      if (!checkResponse.ok || typeof checkPayload?.correct !== 'boolean') {
-        throw new Error(typeof checkPayload?.error === 'string' ? checkPayload.error : 'Unable to validate answer.');
-      }
-      isCorrect = checkPayload.correct;
-    } catch (error) {
-      console.error('Secure quiz answer check failed:', error);
-      if (!skipFeedback) setFeedbackType('error');
-      return;
-    }
-
-    if (isCorrect) {
-      if (!skipFeedback) {
-        setStreak(prev => prev + 1);
-        setCorrectCount(prev => prev + 1);
-        setCombo(prev => Math.min(prev + 1, 5));
-        setMaxCombo(prev => Math.max(prev, streak + 1));
-        setFeedbackType('success');
-      }
-
-      // Crypto mode logic: get abilities for difficult questions
-      if (playMode === 'crypto') {
-        const isDifficult = q.type === 'short_answer' || q.type === 'fill_blank' || q.type === 'chess_puzzle';
-        if (isDifficult && Math.random() > 0.3) {
-          const newAbilities: Ability[] = [
-            { id: Math.random().toString(), type: 'shield', nameAr: 'درع الحماية', nameEn: '30s Shield', icon: <Shield size={14} /> },
-            { id: Math.random().toString(), type: 'multiplier', nameAr: 'مضاعف النقاط', nameEn: '2x Points', icon: <Sparkles size={14} /> },
-          ];
-          const randomAbility = newAbilities[Math.floor(Math.random() * newAbilities.length)];
-          if (!abilities.find(a => a.type === randomAbility.type)) {
-            setAbilities(prev => [...prev.slice(-2), randomAbility]);
-          }
-        }
-      }
-    } else {
-      if (isShieldActive) {
-        setIsShieldActive(false);
-        if (!skipFeedback) setFeedbackType('success'); // Shield saves you
-        return;
-      }
-      
-      if (!skipFeedback) {
-        setStreak(0);
-        setErrorCount(prev => prev + 1);
-        setCombo(0);
-        setFeedbackType('error');
-      }
-    }
-
-    if (!skipFeedback) setTimeout(() => setFeedbackType(null), 1000);
-
+    if (!q || isAnswered) return;
     setAnswers(prev => ({ ...prev, [qId]: val }));
     setIsAnswered(true);
-    
+    setFeedbackType(null);
     if (autoNext && currentIndex < questions.length - 1) {
       setTimeout(() => setCurrentIndex(prev => prev + 1), 600);
     }
