@@ -105,6 +105,12 @@ service cloud.firestore {
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher'));
     }
 
+    function isStudent() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'student';
+    }
+
     function isSchoolAdmin() {
       return isAuthenticated() &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
@@ -530,14 +536,39 @@ service cloud.firestore {
     }
 
     // Live Sessions Collection
+    // Teachers can manage the session. Students may only change their own poll vote
+    // or exercise answer, never the shared prompt, answer key, or unrelated session fields.
     match /live_sessions/{sessionId} {
       allow read: if isAuthenticated();
       allow create: if isTeacher();
-      allow update: if isAuthenticated() && (
-        isTeacher() || 
-        // Allow students to interact with specific session features
+      allow update: if isTeacher() || (
+        isStudent() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['poll', 'exercise']) &&
         (
-          request.resource.data.diff(resource.data).affectedKeys().hasAny(['poll', 'exercise', 'reaction', 'stickyNotes'])
+          request.resource.data.poll == resource.data.poll ||
+          (
+            resource.data.poll is map &&
+            request.resource.data.poll is map &&
+            resource.data.poll.votes is map &&
+            request.resource.data.poll.votes is map &&
+            request.resource.data.poll.diff(resource.data.poll).affectedKeys().hasOnly(['votes']) &&
+            request.resource.data.poll.diff(resource.data.poll).affectedKeys().hasAny(['votes']) &&
+            resource.data.poll.votes.diff(request.resource.data.poll.votes).affectedKeys().hasOnly([request.auth.uid]) &&
+            resource.data.poll.votes.diff(request.resource.data.poll.votes).affectedKeys().hasOnly([request.auth.uid])
+          )
+        ) &&
+        (
+          request.resource.data.exercise == resource.data.exercise ||
+          (
+            resource.data.exercise is map &&
+            request.resource.data.exercise is map &&
+            resource.data.exercise.answers is map &&
+            request.resource.data.exercise.answers is map &&
+            resource.data.exercise.diff(request.resource.data.exercise).affectedKeys().hasOnly(['answers']) &&
+            resource.data.exercise.diff(request.resource.data.exercise).affectedKeys().hasAny(['answers']) &&
+            resource.data.exercise.answers.diff(request.resource.data.exercise.answers).affectedKeys().hasOnly([request.auth.uid]) &&
+            resource.data.exercise.answers.diff(request.resource.data.exercise.answers).affectedKeys().hasOnly([request.auth.uid])
+          )
         )
       );
       allow delete: if isTeacher();
