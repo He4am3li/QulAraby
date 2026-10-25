@@ -553,8 +553,8 @@ service cloud.firestore {
             request.resource.data.poll.votes is map &&
             request.resource.data.poll.diff(resource.data.poll).affectedKeys().hasOnly(['votes']) &&
             request.resource.data.poll.diff(resource.data.poll).affectedKeys().hasAny(['votes']) &&
-            resource.data.poll.votes.diff(request.resource.data.poll.votes).affectedKeys().hasOnly([request.auth.uid]) &&
-            resource.data.poll.votes.diff(request.resource.data.poll.votes).affectedKeys().hasOnly([request.auth.uid])
+            request.resource.data.poll.votes.diff(resource.data.poll.votes).affectedKeys().hasOnly([request.auth.uid]) &&
+            request.resource.data.poll.votes.diff(resource.data.poll.votes).affectedKeys().hasAny([request.auth.uid])
           )
         ) &&
         (
@@ -566,8 +566,8 @@ service cloud.firestore {
             request.resource.data.exercise.answers is map &&
             resource.data.exercise.diff(request.resource.data.exercise).affectedKeys().hasOnly(['answers']) &&
             resource.data.exercise.diff(request.resource.data.exercise).affectedKeys().hasAny(['answers']) &&
-            resource.data.exercise.answers.diff(request.resource.data.exercise.answers).affectedKeys().hasOnly([request.auth.uid]) &&
-            resource.data.exercise.answers.diff(request.resource.data.exercise.answers).affectedKeys().hasOnly([request.auth.uid])
+            request.resource.data.exercise.answers.diff(resource.data.exercise.answers).affectedKeys().hasOnly([request.auth.uid]) &&
+            request.resource.data.exercise.answers.diff(resource.data.exercise.answers).affectedKeys().hasAny([request.auth.uid])
           )
         )
       );
