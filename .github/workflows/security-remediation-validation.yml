@@ -1,0 +1,43 @@
+name: Security remediation validation
+
+on:
+  push:
+    branches:
+      - security/gemini-server-proxy
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out security branch
+        uses: actions/checkout@v4
+        with:
+          ref: security/gemini-server-proxy
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Resolve and patch compatible dependencies
+        run: |
+          npm install --legacy-peer-deps --no-audit --no-fund
+          npm audit fix || true
+      - name: Verify production dependency audit
+        run: npm audit --omit=dev --audit-level=high
+      - name: Verify production build
+        run: npm run build
+      - name: Commit updated lockfile if needed
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "security: refresh patched dependency lockfile"
+            git push origin security/gemini-server-proxy
+          else
+            echo "package-lock.json is already up to date."
+          fi
