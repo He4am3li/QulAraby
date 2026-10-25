@@ -1,5 +1,5 @@
-// This is the Firebase Web API key already shipped in the public client configuration.
-// It is not a service-account credential; access is still restricted by Firebase Auth and Security Rules.
+// Verify Firebase ID tokens before allowing access to AI routes.
+// The Firebase Web API key is public client configuration, not a privileged service-account key.
 const FIREBASE_WEB_API_KEY = "AIzaSyBP8driYUWFsGN6_VVR3U9cW_EhMDnkLBU";
 
 const WINDOW_MS = 60_000;
@@ -11,7 +11,7 @@ type ApiRequest = { headers: Record<string, string | string[] | undefined> };
 export async function verifyFirebaseUser(request: ApiRequest): Promise<{ uid: string } | null> {
   const header = request.headers.authorization;
   const authorization = Array.isArray(header) ? header[0] : header || "";
-  const match = authorization.match(/^Bearer\\s+(.+)$/i);
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
   if (!match) return null;
 
   try {
