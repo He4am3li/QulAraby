@@ -178,6 +178,24 @@ export const PlacementTest: React.FC = () => {
     if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
   };
 
+  const distributeOptions = (q: any, idx: number) => {
+    const options = [...q.options];
+    const current = options.indexOf(q.correctAnswer);
+    if (options.length !== 4 || current < 0) return q;
+    const target = idx % 4;
+    [options[current], options[target]] = [options[target], options[current]];
+    return { ...q, options };
+  };
+
+  const safeTranslation = (q: any) => {
+    const fallback = 'Choose the best answer based on the question.';
+    const hint = typeof q.question_translation === 'string' ? q.question_translation.trim() : '';
+    if (!hint || hint.length > 180) return fallback;
+    const normalize = (s: string) => s.normalize('NFKC').toLowerCase().replace(/[\u064b-\u065f]/g, '').trim();
+    if (q.options.some((o: string) => normalize(o).length > 1 && normalize(hint).includes(normalize(o)))) return fallback;
+    return hint;
+  };
+
   const sanitizeQuestion = (q: any, expectedSkill: string, subSkillName: string, idx: number) => {
     if (!q || typeof q !== 'object') {
       return getFallbackQuestion(expectedSkill, subSkillName, idx);
@@ -186,12 +204,7 @@ export const PlacementTest: React.FC = () => {
     q.skill = skillKey;
     q.subSkill = q.subSkill || subSkillName;
 
-    // Strict constraint: translation_instruction only allowed for 'letters' skill
-    if (skillKey !== 'letters') {
-      q.translation_instruction = '';
-    } else if (q.translation_instruction && q.translation_instruction.length > 150) {
-      q.translation_instruction = q.translation_instruction.slice(0, 150);
-    }
+    q.translation_instruction = skillKey === 'letters' ? 'Choose the correct answer.' : '';
 
     if (q.question && q.question.length > 250) {
       q.question = q.question.slice(0, 250);
@@ -207,10 +220,10 @@ export const PlacementTest: React.FC = () => {
     }
 
     if (!q.correctAnswer || !q.options.includes(q.correctAnswer)) {
-      q.correctAnswer = q.options[0];
+      return sanitizeQuestion(getFallbackQuestion(expectedSkill, subSkillName, idx), expectedSkill, subSkillName, idx);
     }
-
-    return q;
+    q.question_translation = safeTranslation(q);
+    return distributeOptions(q, idx);
   };
 
   const getFallbackQuestion = (skill: string, subSkill: string, idx: number) => {
@@ -236,10 +249,11 @@ export const PlacementTest: React.FC = () => {
     const key = (skill || 'vocab').toLowerCase();
     const list = fallbacks[key] || fallbacks.vocab;
     const item = list[(idx || 0) % list.length];
-    return {
+    return distributeOptions({
       ...item,
-      translation_instruction: key === 'letters' ? (item.translation_instruction || 'Choose the correct answer') : ''
-    };
+      translation_instruction: key === 'letters' ? 'Choose the correct answer.' : '',
+      question_translation: 'Choose the best answer based on the question.'
+    }, idx);
   };
 
   const startTest = async () => {
@@ -254,7 +268,8 @@ export const PlacementTest: React.FC = () => {
           subSkill: { type: GenType.STRING },
           difficulty: { type: GenType.INTEGER, description: "1 to 10" },
           question: { type: GenType.STRING },
-          translation_instruction: { type: GenType.STRING, description: "ONLY for Letters skill. Keep empty or omitted for all other skills." },
+          translation_instruction: { type: GenType.STRING, description: "Instruction for letters only." },
+          question_translation: { type: GenType.STRING, description: "Short English explanation of the task, never revealing or translating an answer option." },
           options: { type: GenType.ARRAY, items: { type: GenType.STRING } },
           correctAnswer: { type: GenType.STRING },
           audioPrompt: { type: GenType.STRING },
@@ -281,6 +296,7 @@ export const PlacementTest: React.FC = () => {
         2. TRANSLATION: English instruction ALLOWED for letters only (max 10 words in 'translation_instruction').
            - Keep 'translation_instruction' brief and keep 'question' EMPTY if the task is to identify a sound. NEVER include target letter/word in the question text.
         3. FORMAT: Exactly 4 distinct options, 1 correct.
+         4. Include question_translation in English: explain the instruction only; never name an answer choice or translate the tested target.
         4. CEFR: A1 difficulty.
         5. Return JSON.`,
         config: { responseMimeType: "application/json", responseSchema: schema }
@@ -300,7 +316,7 @@ export const PlacementTest: React.FC = () => {
       }
       // Fallback question if API fails
       const fallbackQ = getFallbackQuestion('letters', 'Sound Recognition', 0);
-      setQuestions([fallbackQ]);
+      setQuestions([sanitizeQuestion(fallbackQ, 'letters', 'Sound Recognition', 0)]);
     } finally {
       setLoading(false);
     }
@@ -379,7 +395,8 @@ export const PlacementTest: React.FC = () => {
           subSkill: { type: GenType.STRING },
           difficulty: { type: GenType.INTEGER, description: "1 to 10" },
           question: { type: GenType.STRING },
-          translation_instruction: { type: GenType.STRING, description: "ONLY for Letters skill. MUST BE EMPTY STRING for all other skills (translator, vocab, grammar)." },
+          translation_instruction: { type: GenType.STRING, description: "Instruction for letters only." },
+          question_translation: { type: GenType.STRING, description: "Short English task guidance; never reveal the answer, target word, or any option text." },
           options: { type: GenType.ARRAY, items: { type: GenType.STRING } },
           correctAnswer: { type: GenType.STRING },
           audioPrompt: { type: GenType.STRING },
@@ -418,6 +435,7 @@ export const PlacementTest: React.FC = () => {
         1. 'translation_instruction': MUST BE EMPTY string ("") for 'translator', 'vocab', 'grammar', and communicative skills! DO NOT fill 'translation_instruction' for 'translator' skill.
         2. Keep 'question' text clear and concise under 150 characters.
         3. OPTIONS: Exactly 4 distinct options. One valid answer in 'correctAnswer'.
+         4. Include question_translation in English to explain the instruction, without translating tested words or disclosing any option or answer.
         4. Return JSON matching schema.`,
         config: { responseMimeType: "application/json", responseSchema: schema }
       });
@@ -436,7 +454,7 @@ export const PlacementTest: React.FC = () => {
       } else {
         // Fallback question gracefully
         const fallbackQ = getFallbackQuestion(skill, subSkill, nextIdx);
-        setQuestions(prev => [...prev, fallbackQ]);
+        setQuestions(prev => [...prev, sanitizeQuestion(fallbackQ, skill, subSkill, nextIdx)]);
         setCurrentIdx(nextIdx);
         setIsAnswered(false);
         setSelectedOption(null);
@@ -1175,7 +1193,12 @@ export const PlacementTest: React.FC = () => {
               {/* Question Card */}
               <div className={`bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_32px_64px_rgba(37,99,235,0.08)] border border-white/50 p-8 md:p-12 flex flex-col items-center text-center relative overflow-hidden transition-all h-[460px] w-full max-w-2xl justify-center no-print ${isAnswered ? 'scale-[0.98] opacity-60' : 'scale-100'}`}>
                 
-                {questions[currentIdx].translation_instruction && (
+                {questions[currentIdx].question_translation && (
+                   <p lang="en" dir="ltr" className="mb-3 max-w-xl text-center text-xs font-medium leading-relaxed text-blue-700">
+                     {questions[currentIdx].question_translation}
+                   </p>
+                 )}
+                 {questions[currentIdx].translation_instruction && (
                   <div 
                     dir={/^[a-zA-Z]/.test(questions[currentIdx].translation_instruction) ? 'ltr' : 'auto'}
                     className={`mb-4 px-5 py-1.5 bg-blue-50/50 text-blue-600 rounded-full border border-blue-100 text-[10px] font-black uppercase tracking-widest animate-pulse truncate max-w-xl mx-auto ${/^[a-zA-Z]/.test(questions[currentIdx].translation_instruction) ? 'text-left' : ''}`}
