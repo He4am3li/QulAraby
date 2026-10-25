@@ -16,14 +16,24 @@ export class GoogleGenAI {
   models = {
     generateContent: async (params: GenerateContentParams): Promise<any> => {
       const idToken = await getIdToken();
-      const response = await fetch("/api/gemini", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({ params }),
-      });
+      let response: Response;
+      try {
+        response = await fetch("/api/gemini", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ params }),
+          cache: "no-store",
+          signal: AbortSignal.timeout(25_000),
+        });
+      } catch (error) {
+        if (error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError")) {
+          throw new Error("AI request timed out after 25 seconds. Please try again.");
+        }
+        throw error;
+      }
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(typeof payload?.error === "string" ? payload.error : "AI request failed.");
