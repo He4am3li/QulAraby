@@ -359,7 +359,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       </motion.aside>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center h-16 px-2 z-50 shadow-2xl">
+      <nav className="qul-mobile-nav md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex items-center h-16 px-2 z-50 shadow-2xl" aria-label={lang === 'ar' ? 'التنقل بين الأقسام' : 'Section navigation'}>
         {navPaths.filter(path => {
           if (path.split('?')[0] === '/admin' && profile?.role !== 'admin') return false;
           if (path.split('?')[0] === '/school' && profile?.role !== 'schoolAdmin') return false;
@@ -389,7 +389,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               key={path}
               to={path}
               id={`mobile-nav-${(path.split('?')[0] === '/' ? 'home' : path.split('?')[0].substring(1))}-${path.includes('?') ? path.split('=')[1] : 'main'}`}
-              className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
+              className={`qul-mobile-nav-item flex flex-col items-center justify-center h-full transition-colors ${
                 isActive ? 'text-blue-600' : 'text-slate-400'
               }`}
             >
