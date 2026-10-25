@@ -36,7 +36,7 @@ export const PlatformTopBar: React.FC = () => {
   };
 
   return (
-    <header dir={lang === 'ar' ? 'rtl' : 'ltr'} className="relative isolate shrink-0 overflow-hidden border-b border-white/15 bg-gradient-to-l from-[#0f172a]/95 to-[#064e3b]/95 px-4 py-4 text-white shadow-lg sm:px-6 md:px-8 md:py-5">
+    <header dir={lang === 'ar' ? 'rtl' : 'ltr'} className="relative isolate shrink-0 overflow-hidden border-b border-white/20 bg-gradient-to-l from-[#0f172a]/95 via-[#103b48]/95 to-[#064e3b]/95 px-4 py-4 text-white shadow-[0_12px_36px_rgba(16,38,56,0.14)] sm:px-6 md:px-8 md:py-5">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <FallingLetters mode="compact" />
         <div className="absolute -right-14 -top-28 h-64 w-64 rounded-full bg-emerald-300/10 blur-3xl" />
