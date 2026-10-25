@@ -1,4 +1,4 @@
-import { consumeAiRateLimit, verifyFirebaseUser } from "./_lib/auth";
+import { consumeAiRateLimit, verifyFirebaseUser } from "./_lib/auth.js";
 
 type ApiRequest = { method?: string; headers: Record<string, string | string[] | undefined> };
 type ApiResponse = {
