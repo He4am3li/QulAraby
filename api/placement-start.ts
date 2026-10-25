@@ -7,7 +7,7 @@ type Request = { method?: string; headers: Record<string, string | string[] | un
 type Response = { status(code: number): Response; setHeader(name: string, value: string): Response; json(body: unknown): void };
 
 function publicQuestion(question: (typeof PLACEMENT_QUESTION_BANK)[number]) {
-  const { correctAnswer: _correctAnswer, answerKey: _answerKey, acceptedAnswers: _acceptedAnswers, natureOfWrongOptions: _wrongOptions, ...safe } = question;
+  const { correctAnswer: _correctAnswer, natureOfWrongOptions: _wrongOptions, ...safe } = question;
   return safe;
 }
 
