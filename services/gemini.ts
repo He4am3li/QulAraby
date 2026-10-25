@@ -96,8 +96,8 @@ export const safeJSONParse = (text: any, fallback: any = {}) => {
 // Global queue to ensure image requests happen one at a time
 let imageRequestQueue: Promise<any> = Promise.resolve();
 
-export async function generateContentWithRetry(params: any) {
-  return withRetry(() => getAI().models.generateContent(params));
+export async function generateContentWithRetry(params: any, maxRetries = 3) {
+  return withRetry(() => getAI().models.generateContent(params), maxRetries);
 }
 
 export async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, delay = 1500): Promise<T> {
