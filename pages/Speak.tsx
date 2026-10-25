@@ -10,7 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PageHeader } from '../components/PageHeader';
 import { StudioMicIcon } from '../components/StudioMicIcon';
 import { FallingLetters } from '../components/Layout';
-import { GoogleGenAI, Modality, Type } from '@google/genai';
+import { Modality, Type } from '@google/genai';
+import { GoogleGenAI } from '../services/secureGeminiClient';
 import { generateSessionInsights, translateAndExpand, generateSpeech, decodeAudioData, speak as globalSpeak } from '../services/gemini';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -304,7 +305,7 @@ export const Speak: React.FC = () => {
       const output = contexts.output;
       const input = contexts.input;
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI();
       
       let stream: MediaStream;
       try {
