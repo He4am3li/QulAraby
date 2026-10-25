@@ -545,7 +545,7 @@ service cloud.firestore {
         isStudent() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['poll', 'exercise']) &&
         (
-          request.resource.data.poll == resource.data.poll ||
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['poll']) ||
           (
             resource.data.poll is map &&
             request.resource.data.poll is map &&
@@ -558,14 +558,14 @@ service cloud.firestore {
           )
         ) &&
         (
-          request.resource.data.exercise == resource.data.exercise ||
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['exercise']) ||
           (
             resource.data.exercise is map &&
             request.resource.data.exercise is map &&
             resource.data.exercise.answers is map &&
             request.resource.data.exercise.answers is map &&
-            resource.data.exercise.diff(request.resource.data.exercise).affectedKeys().hasOnly(['answers']) &&
-            resource.data.exercise.diff(request.resource.data.exercise).affectedKeys().hasAny(['answers']) &&
+            request.resource.data.exercise.diff(resource.data.exercise).affectedKeys().hasOnly(['answers']) &&
+            request.resource.data.exercise.diff(resource.data.exercise).affectedKeys().hasAny(['answers']) &&
             request.resource.data.exercise.answers.diff(resource.data.exercise.answers).affectedKeys().hasOnly([request.auth.uid]) &&
             request.resource.data.exercise.answers.diff(resource.data.exercise.answers).affectedKeys().hasAny([request.auth.uid])
           )
