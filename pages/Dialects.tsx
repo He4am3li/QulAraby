@@ -11,6 +11,8 @@ import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { Interactive3DTutor } from '../components/Interactive3DTutor';
 import { generateSpeech, decodeAudioData } from '../services/gemini';
+import { GoogleGenAI } from '../services/secureGeminiClient';
+import { Modality } from '@google/genai';
 
 declare global {
   interface Window {
