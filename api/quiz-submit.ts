@@ -42,6 +42,15 @@ export default async function handler(request: Request, response: Response): Pro
       return;
     }
     const quiz = quizSnap.data() || {};
+    const userSnap = await db.collection("users").doc(user.uid).get();
+    const userProfile = userSnap.data() || {};
+    const ownsQuiz = quiz.authorId === user.uid;
+    const isAdmin = userProfile.role === "admin";
+    const isTeacher = userProfile.role === "teacher" || isAdmin;
+    if (quiz.status !== "active" && !(isTeacher && ownsQuiz) && !isAdmin) {
+      response.status(403).json({ error: "This quiz is not available to this account." });
+      return;
+    }
     const attempts = await quizRef.collection("results").where("userId", "==", user.uid).get();
     const maxAttempts = typeof quiz.maxAttempts === "number" ? quiz.maxAttempts : 0;
     if (maxAttempts > 0 && attempts.size >= maxAttempts) {
