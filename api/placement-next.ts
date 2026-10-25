@@ -14,7 +14,7 @@ function normalize(value: unknown): string {
 }
 
 function publicQuestion(question: (typeof PLACEMENT_QUESTION_BANK)[number]) {
-  const { correctAnswer: _correctAnswer, answerKey: _answerKey, acceptedAnswers: _acceptedAnswers, natureOfWrongOptions: _wrongOptions, ...safe } = question;
+  const { correctAnswer: _correctAnswer, natureOfWrongOptions: _wrongOptions, ...safe } = question;
   return safe;
 }
 
