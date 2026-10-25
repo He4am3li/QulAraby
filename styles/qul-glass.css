@@ -133,3 +133,38 @@
     transition-duration: .01ms !important;
   }
 }
+
+/* Touch navigation: all permitted sections remain reachable on narrow phones. */
+.qul-mobile-nav {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: calc(4rem + env(safe-area-inset-bottom, 0px));
+  justify-content: flex-start;
+  gap: 4px;
+}
+.qul-mobile-nav::-webkit-scrollbar { display: none; }
+.qul-mobile-nav-item {
+  flex: 0 0 auto;
+  min-width: 76px;
+  max-width: 112px;
+  padding-inline: 8px;
+  text-align: center;
+}
+.qul-mobile-nav-item span {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+@media (max-width: 767px) {
+  .qul-main {
+    min-width: 0;
+    width: 100%;
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .qul-content { max-width: 100%; }
+}
