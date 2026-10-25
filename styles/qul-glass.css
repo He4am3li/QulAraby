@@ -1,0 +1,51 @@
+/* QUL Glass Experience, foundation tokens. Opt-in classes only.
+   Existing pages and functionality remain unchanged until reviewed. */
+:root {
+  --qul-emerald: #087f69;
+  --qul-blue: #1478c8;
+  --qul-ink: #102638;
+  --qul-surface: #f5f8fa;
+  --qul-glass-fill: rgba(255, 255, 255, 0.78);
+  --qul-glass-border: rgba(255, 255, 255, 0.68);
+  --qul-glass-shadow: 0 12px 36px rgba(16, 38, 56, 0.10);
+  --qul-glass-radius: 20px;
+  --qul-motion-fast: 160ms;
+  --qul-motion-standard: 240ms;
+}
+.qul-glass {
+  background: var(--qul-glass-fill);
+  border: 1px solid var(--qul-glass-border);
+  border-radius: var(--qul-glass-radius);
+  box-shadow: var(--qul-glass-shadow);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.qul-glass-interactive {
+  transition: transform var(--qul-motion-fast) ease,
+              box-shadow var(--qul-motion-standard) ease,
+              border-color var(--qul-motion-fast) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .qul-glass-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 42px rgba(16, 38, 56, 0.14);
+  }
+}
+.qul-glass-interactive:focus-visible {
+  outline: 3px solid var(--qul-blue);
+  outline-offset: 3px;
+}
+@media (prefers-color-scheme: dark) {
+  .qul-glass.qul-glass-auto-dark {
+    --qul-glass-fill: rgba(16, 38, 56, 0.80);
+    --qul-glass-border: rgba(255, 255, 255, 0.16);
+    --qul-glass-shadow: 0 12px 36px rgba(0, 0, 0, 0.24);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qul-glass-interactive { transition: none; }
+  .qul-glass-interactive:hover { transform: none; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .qul-glass { background: #f5f8fa; }
+}
