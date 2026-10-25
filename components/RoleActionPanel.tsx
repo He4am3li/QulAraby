@@ -28,7 +28,7 @@ export const RoleActionPanel: React.FC<{
 }> = ({ title, icon, items, lang, onClose }) => {
   const en = lang === 'en';
   return (
-    <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section className="qul-glass flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
       <header className="relative flex shrink-0 items-center justify-between gap-3 overflow-hidden bg-gradient-to-r from-[#0d4737] via-[#123a34] to-[#1e293b] px-5 py-4 text-white sm:px-6">
         <div className="pointer-events-none absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle at 18% 30%, white 0 1px, transparent 2px), radial-gradient(circle at 78% 65%, white 0 1px, transparent 2px)', backgroundSize: '34px 34px' }} />
         <div className="relative z-10 flex min-w-0 items-center gap-3">
@@ -39,7 +39,7 @@ export const RoleActionPanel: React.FC<{
       </header>
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden p-3 sm:grid-cols-2 sm:p-4 xl:grid-cols-4">
         {items.map(item => (
-          <button key={item.id} type="button" onClick={item.onClick} className={`group relative flex min-h-0 flex-col justify-between overflow-hidden rounded-2xl border p-4 text-start transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-700/20 ${toneClasses[item.tone]}`}>
+          <button key={item.id} type="button" onClick={item.onClick} className={`qul-glass-interactive group relative flex min-h-0 flex-col justify-between overflow-hidden rounded-2xl border p-4 text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700/30 ${toneClasses[item.tone]}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/80 bg-white/80 shadow-sm">{item.icon}</div>
               <ArrowUpRight size={17} className="opacity-50 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
