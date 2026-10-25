@@ -243,185 +243,92 @@ export const PlacementTest: React.FC = () => {
   };
 
   const startTest = async () => {
-    // Start immediately with a deterministic A1 question. Do not block the learner
-    // on a network round-trip just to render the first screen.
-    setLoading(false);
+    setLoading(true);
     setStep('testing');
-    setRetries(0);
-    setCurrentIdx(0);
-    setCurrentDifficulty(1);
-    setConsecutiveCorrect(0);
-    setConsecutiveIncorrect(0);
-    setSelectedOption(null);
-    setIsAnswered(false);
-    setQuestions([getFallbackQuestion('letters', 'Sound Recognition', 0)]);
+    try {
+      if (!user) throw new Error('Please sign in before starting the placement test.');
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/placement-start', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
+        cache: 'no-store',
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload?.question || typeof payload.question.id !== 'string') {
+        throw new Error(typeof payload?.error === 'string' ? payload.error : 'Unable to start the placement test securely.');
+      }
+      setQuestions([payload.question]);
+      setCurrentIdx(0);
+      setRetries(0);
+      setCurrentDifficulty(1);
+      setConsecutiveCorrect(0);
+      setConsecutiveIncorrect(0);
+      setSelectedOption(null);
+      setIsAnswered(false);
+      setSkillStats({});
+      setStudyPlan(null);
+    } catch (error) {
+      console.error('Secure placement test start failed:', error);
+      setStep('welcome');
+      alert(error instanceof Error ? error.message : 'تعذر بدء الاختبار. تحقق من اتصال الخادم ثم حاول مجددًا.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const generateNextQuestion = async (prevCorrect: boolean, errorNature?: string, retryCount = 0) => {
-    // Adaptive Logic: Adjust based on nature of error
-    let nextDifficulty = currentDifficulty;
-    let nextConsecutiveCorrect = prevCorrect ? consecutiveCorrect + 1 : 0;
-    let nextConsecutiveIncorrect = prevCorrect ? 0 : consecutiveIncorrect + 1;
-
-    if (nextConsecutiveCorrect >= 2) {
-      nextDifficulty = Math.min(10, nextDifficulty + 1);
-      nextConsecutiveCorrect = 0;
-    } else if (nextConsecutiveIncorrect >= 1) {
-      // Harder drop if error is fundamental (like phonetic confusion)
-      const penalty = errorNature?.toLowerCase().includes('fundamental') || errorNature?.toLowerCase().includes('phonetic') ? 2 : 1;
-      nextDifficulty = Math.max(1, nextDifficulty - penalty);
-      nextConsecutiveIncorrect = 0;
-    }
-
-    setCurrentDifficulty(nextDifficulty);
-    setConsecutiveCorrect(nextConsecutiveCorrect);
-    setConsecutiveIncorrect(nextConsecutiveIncorrect);
-
-    const nextIdx = questions.length;
-    if (nextIdx >= 80) {
-      setStep('results');
-      return;
-    }
-
-    // Determine skill (10 questions per skill)
-    const skillIdx = Math.floor(nextIdx / 10);
-    const skillObj = SKILLS_ORDER[skillIdx] || SKILLS_ORDER[0];
-    const skill = skillObj.id;
-    const qInSkill = (nextIdx % 10) + 1;
-
-    // Sub-skill determination logic
-    let subSkill = "";
-    if (skill === 'letters') {
-      if (qInSkill <= 2) subSkill = "Sound Recognition";
-      else if (qInSkill <= 4) subSkill = "Letter Shape Recognition";
-      else if (qInSkill <= 6) subSkill = "Letter Position in Word";
-      else if (qInSkill <= 8) subSkill = "Fill Missing Letter";
-      else subSkill = "Simple Word Formation";
-    } else if (skill === 'vocab') {
-      if (qInSkill <= 2) subSkill = "Word Meaning";
-      else if (qInSkill <= 4) subSkill = "Word in Context";
-      else if (qInSkill <= 6) subSkill = "Synonyms / Antonyms";
-      else if (qInSkill <= 8) subSkill = "Appropriate Word Choice";
-      else subSkill = "Semantic Domain / Odd One Out";
-    } else if (skill === 'grammar') {
-      if (qInSkill <= 2) subSkill = "Verb Conjugation";
-      else if (qInSkill <= 3) subSkill = "Pronouns";
-      else if (qInSkill <= 4) subSkill = "Tenses";
-      else if (qInSkill <= 6) subSkill = "Sentence Structure";
-      else if (qInSkill === 7) subSkill = "I'rab: Selecting Correct Form";
-      else if (qInSkill === 8) subSkill = "I'rab: Identifying Parsing Type";
-      else if (qInSkill === 9) subSkill = "I'rab: Application in Sentence";
-      else subSkill = "Complex Tarakib (Numbers/Counting)";
-    } else if (skill === 'translator') {
-      if (qInSkill <= 2) subSkill = "Word Translation";
-      else if (qInSkill <= 4) subSkill = "Simple Sentence Translation";
-      else if (qInSkill <= 6) subSkill = "Translation Choice Analysis";
-      else if (qInSkill <= 8) subSkill = "Contextual Translation";
-      else subSkill = "Paraphrasing / Meaning Transfer";
-    } else {
-      subSkill = "Communicative Skill Competency";
-    }
-
+  const generateNextQuestion = async (questionId: string, answer: string) => {
+    if (!user) return;
+    setLoading(true);
     try {
-      const schema = {
-        type: GenType.OBJECT,
-        properties: {
-          skill: { type: GenType.STRING },
-          subSkill: { type: GenType.STRING },
-          difficulty: { type: GenType.INTEGER, description: "1 to 10" },
-          question: { type: GenType.STRING },
-          translation_instruction: { type: GenType.STRING, description: "ONLY for Letters skill. MUST BE EMPTY STRING for all other skills (translator, vocab, grammar)." },
-          options: { type: GenType.ARRAY, items: { type: GenType.STRING } },
-          correctAnswer: { type: GenType.STRING },
-          audioPrompt: { type: GenType.STRING },
-          natureOfWrongOptions: { 
-            type: GenType.ARRAY, 
-            items: { 
-              type: GenType.OBJECT,
-              properties: {
-                option: { type: GenType.STRING },
-                diagnosticIndication: { type: GenType.STRING }
-              }
-            } 
-          }
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/placement-next', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
         },
-        required: ["skill", "difficulty", "question", "options", "correctAnswer", "subSkill"]
-      };
-      
-      const response = await generateContentWithRetry({
-        requestTimeoutMs: 12_000,
-        model: "gemini-3.8-flash",
-        contents: `Generate diagnostic question #${nextIdx + 1} for an Arabic Placement Test (Non-Native).
-        
-        CONTEXT:
-        - SKILL: ${skill}. 
-        - SUB-SKILL: ${subSkill}.
-        - DIFFICULTY: ${nextDifficulty}/10 (CEFR Mapping: 1-2=A1, 3-4=A2, 5-6=B1, 7-8=B2).
-        
-        MANDATORY TEMPLATES & RULES:
-        - You act as a dynamic question generator.
-        - LETTERS (10 qs): Sound Rec, Shape, Position, Fill-blank, Word Formation.
-        - VOCAB (10 qs): Meaning, Context, Syn/Ant, Choice, Semantic Domain.
-        - GRAMMAR (10 qs): Verb Conjugation, Pronouns, Tenses, Syntax, I'rab (Analysis), Counting/Tarakib.
-        - TRANSLATION (10 qs): Word, Sentence, Choice, Contextual, Paraphrase. (STRICTLY WRITTEN, NO AUDIO).
-        - COMMUNICATIVE (Listening, Reading, Writing, Speaking): Follow CEFR Can-do statements for A1-B2 levels.
-        
-        CRITICAL FIELD RULES:
-        1. 'translation_instruction': MUST BE EMPTY string ("") for 'translator', 'vocab', 'grammar', and communicative skills! DO NOT fill 'translation_instruction' for 'translator' skill.
-        2. Keep 'question' text clear and concise under 150 characters.
-        3. OPTIONS: Exactly 4 distinct options. One valid answer in 'correctAnswer'.
-        4. Return JSON matching schema.`,
-        config: { responseMimeType: "application/json", responseSchema: schema }
+        cache: 'no-store',
+        body: JSON.stringify({ questionId, answer }),
       });
-      
-      const rawQ = safeJSONParse(response.text, {});
-      const nextQ = sanitizeQuestion(rawQ, skill, subSkill, nextIdx);
-      
-      setQuestions(prev => [...prev, nextQ]);
-      setCurrentIdx(nextIdx);
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload || typeof payload.skillStats !== 'object') {
+        throw new Error(typeof payload?.error === 'string' ? payload.error : 'تعذر حفظ الإجابة. حاول مرة أخرى.');
+      }
+      setSkillStats(payload.skillStats);
+      if (payload.complete) {
+        setStep('results');
+      } else if (payload.question && typeof payload.question.id === 'string') {
+        setQuestions(prev => [...prev, payload.question]);
+        setCurrentIdx(payload.index);
+        setCurrentDifficulty(payload.question.difficulty || 1);
+        setIsAnswered(false);
+        setSelectedOption(null);
+      } else {
+        throw new Error('لم يصل السؤال التالي من الخادم.');
+      }
+    } catch (error) {
+      console.error('Secure placement answer submission failed:', error);
       setIsAnswered(false);
-      setSelectedOption(null);
-    } catch (e) {
-      console.error("Error generating next question:", e);
-      // Never retry a slow provider request multiple times while the learner waits.
-      // Use a deterministic question for this step and continue the assessment.
-      const fallbackQ = getFallbackQuestion(skill, subSkill, nextIdx);
-      setQuestions(prev => [...prev, fallbackQ]);
-      setCurrentIdx(nextIdx);
-      setIsAnswered(false);
-      setSelectedOption(null);
+      alert(error instanceof Error ? error.message : 'تعذر إرسال الإجابة. حاول مرة أخرى.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAnswer = (option: string) => {
-    if (isAnswered) return;
+    if (isAnswered || loading) return;
     const currentQ = questions[currentIdx];
+    if (!currentQ?.id) {
+      alert('تعذر تحديد السؤال الحالي. أعد تشغيل الاختبار.');
+      return;
+    }
     setSelectedOption(option);
     setIsAnswered(true);
-    
-    const isCorrect = option === currentQ.correctAnswer;
-    const isSkipped = option === 'IDK_SKIP';
-
-    // Find diagnostic nature if incorrect
-    const errorMeta = !isCorrect && !isSkipped ? currentQ.natureOfWrongOptions?.find((n: any) => n.option === option) : null;
-    
-    setSkillStats(prev => {
-      const current = prev[currentQ.skill.toLowerCase()] || { correct: 0, incorrect: 0, skipped: 0, errors: [] };
-      return {
-        ...prev,
-        [currentQ.skill.toLowerCase()]: {
-          correct: current.correct + (isCorrect ? 1 : 0),
-          incorrect: current.incorrect + (!isCorrect && !isSkipped ? 1 : 0),
-          skipped: current.skipped + (isSkipped ? 1 : 0),
-          errors: errorMeta ? [...(current.errors || []), errorMeta.diagnosticIndication] : (current.errors || [])
-        }
-      };
-    });
-
-    // Smooth transition
+    // The server grades the answer and stores the skill statistics. No answer key
+    // is sent to the browser, and the next question is returned from the preloaded bank.
     setTimeout(() => {
-      generateNextQuestion(isCorrect, errorMeta?.diagnosticIndication);
-    }, 600);
+      void generateNextQuestion(currentQ.id, option);
+    }, 120);
   };
 
   const playSound = (type: 'success' | 'click') => {
