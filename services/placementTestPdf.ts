@@ -2,6 +2,19 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { PlacementQuestion, PLACEMENT_TEST_80_QUESTIONS } from './placementTestPdfData';
 
+function escapeHtml(value: unknown): string {
+  return String(value).replace(/[&<>"']/g, (char) => {
+    const entities: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    };
+    return entities[char] || char;
+  });
+}
+
 export function generate80QuestionsHTML(teacherName: string = 'المعلم', autoPrint: boolean = false): string {
   const skillsGrouped = [
     { id: 1, name: '1. مهارة الأصوات والحروف والتعرف البصري', items: PLACEMENT_TEST_80_QUESTIONS.slice(0, 10) },
@@ -73,7 +86,7 @@ export function generate80QuestionsHTML(teacherName: string = 'المعلم', au
             <div class="meta-chip"><b>عدد الأسئلة:</b> 80 سؤالاً موضوعياً</div>
             <div class="meta-chip"><b>الزمن المقترح:</b> 60 دقيقة</div>
             <div class="meta-chip"><b>الدرجة الكلية:</b> 80 درجة</div>
-            <div class="meta-chip"><b>إعداد:</b> ${teacherName}</div>
+            <div class="meta-chip"><b>إعداد:</b> ${escapeHtml(teacherName)}</div>
           </div>
         </div>
 
