@@ -230,7 +230,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
     setAbilities(prev => prev.filter(a => a.type !== type));
   };
 
-  const handleAnswerChange = (qId: string, val: any, autoNext: boolean = false, skipFeedback: boolean = false) => {
+  const handleAnswerChange = async (qId: string, val: any, autoNext: boolean = false, skipFeedback: boolean = false) => {
     const q = questions.find(q => q.id === qId);
     if (!q) return;
 
