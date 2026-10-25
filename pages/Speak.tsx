@@ -530,7 +530,7 @@ export const Speak: React.FC = () => {
     if (!text || isGeneratingChallenge) return;
     setIsGeneratingChallenge(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI();
       const response = await ai.models.generateContent({
         model: 'gemini-3.8-flash',
         contents: `Extract 3 meaningful Arabic words from this text for a spelling challenge. Return them as a JSON array of strings. Text: "${text}"`,
