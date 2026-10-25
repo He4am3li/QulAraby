@@ -1,5 +1,5 @@
 import React from 'react';
-import Joyride, { Step, CallBackProps, STATUS } from 'react-joyride';
+import { Joyride, STATUS, type EventData, type Step } from 'react-joyride';
 
 interface OnboardingTourProps {
   lang: 'ar' | 'en';
@@ -19,7 +19,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ lang }) => {
     }
   }, []);
 
-  const handleJoyrideCallback = (data: CallBackProps) => {
+  const handleJoyrideEvent = (data: EventData) => {
     const { status } = data;
     const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
 
@@ -45,7 +45,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ lang }) => {
           </p>
         </div>
       ),
-      disableBeacon: true,
+      skipBeacon: true,
     },
     {
       target: window.innerWidth > 768 ? '#nav-test' : '#mobile-nav-test',
@@ -130,9 +130,12 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ lang }) => {
       steps={steps}
       run={run}
       continuous
-      showProgress
-      showSkipButton
-      callback={handleJoyrideCallback}
+      onEvent={handleJoyrideEvent}
+      options={{
+        showProgress: true,
+        buttons: ['back', 'close', 'primary', 'skip'],
+        primaryColor: '#2563eb',
+      }}
       locale={{
         back: lang === 'ar' ? 'السابق' : 'Back',
         close: lang === 'ar' ? 'إغلاق' : 'Close',
@@ -141,8 +144,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ lang }) => {
         skip: lang === 'ar' ? 'تخطي' : 'Skip',
       }}
       styles={{
-        options: {
-          primaryColor: '#2563eb',
+        overlay: {
           zIndex: 10000,
         },
         tooltipContainer: {
