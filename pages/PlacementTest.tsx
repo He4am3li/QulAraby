@@ -243,70 +243,18 @@ export const PlacementTest: React.FC = () => {
   };
 
   const startTest = async () => {
-    setLoading(true);
+    // Start immediately with a deterministic A1 question. Do not block the learner
+    // on a network round-trip just to render the first screen.
+    setLoading(false);
     setStep('testing');
-    try {
-      setRetries(0);
-      const schema = {
-        type: GenType.OBJECT,
-        properties: {
-          skill: { type: GenType.STRING },
-          subSkill: { type: GenType.STRING },
-          difficulty: { type: GenType.INTEGER, description: "1 to 10" },
-          question: { type: GenType.STRING },
-          translation_instruction: { type: GenType.STRING, description: "ONLY for Letters skill. Keep empty or omitted for all other skills." },
-          options: { type: GenType.ARRAY, items: { type: GenType.STRING } },
-          correctAnswer: { type: GenType.STRING },
-          audioPrompt: { type: GenType.STRING },
-          natureOfWrongOptions: { 
-            type: GenType.ARRAY, 
-            items: { 
-              type: GenType.OBJECT,
-              properties: {
-                option: { type: GenType.STRING },
-                diagnosticIndication: { type: GenType.STRING, description: "e.g. 'Phonetic confusion', 'Grammar misalignment', 'Vocabulary slip'" }
-              }
-            } 
-          }
-        },
-        required: ["skill", "difficulty", "question", "options", "correctAnswer", "subSkill"]
-      };
-      
-      const skill = SKILLS_ORDER[0].id; // letters
-      const response = await generateContentWithRetry({
-        model: "gemini-3.8-flash",
-        contents: `Generate question #1 (Skill: Letters, Sub-Skill: Sound Recognition) for an adaptive Arabic diagnostic test.
-        MANDATORY RULES:
-        1. FOR LETTERS: Visual & simple. Audio allowed ONLY for Sound Recognition. 
-        2. TRANSLATION: English instruction ALLOWED for letters only (max 10 words in 'translation_instruction').
-           - Keep 'translation_instruction' brief and keep 'question' EMPTY if the task is to identify a sound. NEVER include target letter/word in the question text.
-        3. FORMAT: Exactly 4 distinct options, 1 correct.
-        4. CEFR: A1 difficulty.
-        5. Return JSON.`,
-        config: { responseMimeType: "application/json", responseSchema: schema }
-      });
-      
-      const parsedQ = safeJSONParse(response.text, {});
-      const firstQ = sanitizeQuestion(parsedQ, 'letters', 'Sound Recognition', 0);
-      
-      setQuestions([firstQ]);
-      setRetries(0);
-    } catch (e) {
-      console.error("Initial generation failed:", e);
-      const errorMessage = e instanceof Error ? e.message : String(e || '');
-      const requestTimedOut = errorMessage.toLowerCase().includes('timed out');
-      if (retries < 2 && !requestTimedOut) {
-        setRetries(prev => prev + 1);
-        setTimeout(startTest, 1000);
-        return;
-      }
-      // Always provide a deterministic fallback rather than leaving the student on an
-      // indefinite loading screen when the server or AI provider is unavailable.
-      const fallbackQ = getFallbackQuestion('letters', 'Sound Recognition', 0);
-      setQuestions([fallbackQ]);
-    } finally {
-      setLoading(false);
-    }
+    setRetries(0);
+    setCurrentIdx(0);
+    setCurrentDifficulty(1);
+    setConsecutiveCorrect(0);
+    setConsecutiveIncorrect(0);
+    setSelectedOption(null);
+    setIsAnswered(false);
+    setQuestions([getFallbackQuestion('letters', 'Sound Recognition', 0)]);
   };
 
   const generateNextQuestion = async (prevCorrect: boolean, errorNature?: string, retryCount = 0) => {
@@ -401,6 +349,7 @@ export const PlacementTest: React.FC = () => {
       };
       
       const response = await generateContentWithRetry({
+        requestTimeoutMs: 12_000,
         model: "gemini-3.8-flash",
         contents: `Generate diagnostic question #${nextIdx + 1} for an Arabic Placement Test (Non-Native).
         
@@ -434,16 +383,13 @@ export const PlacementTest: React.FC = () => {
       setSelectedOption(null);
     } catch (e) {
       console.error("Error generating next question:", e);
-      if (retryCount < 2) {
-        setTimeout(() => generateNextQuestion(prevCorrect, errorNature, retryCount + 1), 1000);
-      } else {
-        // Fallback question gracefully
-        const fallbackQ = getFallbackQuestion(skill, subSkill, nextIdx);
-        setQuestions(prev => [...prev, fallbackQ]);
-        setCurrentIdx(nextIdx);
-        setIsAnswered(false);
-        setSelectedOption(null);
-      }
+      // Never retry a slow provider request multiple times while the learner waits.
+      // Use a deterministic question for this step and continue the assessment.
+      const fallbackQ = getFallbackQuestion(skill, subSkill, nextIdx);
+      setQuestions(prev => [...prev, fallbackQ]);
+      setCurrentIdx(nextIdx);
+      setIsAnswered(false);
+      setSelectedOption(null);
     }
   };
 
