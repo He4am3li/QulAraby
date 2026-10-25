@@ -105,6 +105,12 @@ service cloud.firestore {
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher'));
     }
 
+    function isStudent() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'student';
+    }
+
     function isSchoolAdmin() {
       return isAuthenticated() &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
@@ -295,7 +301,10 @@ service cloud.firestore {
       allow delete: if request.auth.token.email == "he4amali22@gmail.com" || (isAuthenticated() && isAuthor(resource.data));
 
       match /questions/{questionId} {
-        allow read: if isAuthenticated();
+        // Students must fetch question text without answer keys through the authenticated server API.
+        // Only the authoring teacher and platform admins can read/write raw question documents.
+        allow read: if isAdmin() ||
+          (isTeacher() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
         allow create: if isTeacher() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid && isValidQuestion(request.resource.data);
         allow update: if (isAdmin() || (isTeacher() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid)) && isValidQuestion(request.resource.data);
         allow delete: if request.auth.token.email == "he4amali22@gmail.com" || (isAuthenticated() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
@@ -303,7 +312,8 @@ service cloud.firestore {
 
       match /results/{resultId} {
         allow read: if isAuthenticated() && (isAdmin() || get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid || isOwner(resource.data.userId));
-        allow create: if isAuthenticated() && isValidResult(request.resource.data) && request.resource.data.userId == request.auth.uid;
+        // Quiz results are graded and written by the server using Firebase Admin.
+        allow create: if isAdmin() && isValidResult(request.resource.data) && request.resource.data.userId == request.auth.uid;
         allow delete: if request.auth.token.email == "he4amali22@gmail.com" || (isAuthenticated() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
       }
     }
@@ -530,14 +540,39 @@ service cloud.firestore {
     }
 
     // Live Sessions Collection
+    // Teachers can manage the session. Students may only change their own poll vote
+    // or exercise answer, never the shared prompt, answer key, or unrelated session fields.
     match /live_sessions/{sessionId} {
       allow read: if isAuthenticated();
       allow create: if isTeacher();
-      allow update: if isAuthenticated() && (
-        isTeacher() || 
-        // Allow students to interact with specific session features
+      allow update: if isTeacher() || (
+        isStudent() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['poll', 'exercise']) &&
         (
-          request.resource.data.diff(resource.data).affectedKeys().hasAny(['poll', 'exercise', 'reaction', 'stickyNotes'])
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['poll']) ||
+          (
+            resource.data.poll is map &&
+            request.resource.data.poll is map &&
+            resource.data.poll.votes is map &&
+            request.resource.data.poll.votes is map &&
+            request.resource.data.poll.diff(resource.data.poll).affectedKeys().hasOnly(['votes']) &&
+            request.resource.data.poll.diff(resource.data.poll).affectedKeys().hasAny(['votes']) &&
+            request.resource.data.poll.votes.diff(resource.data.poll.votes).affectedKeys().hasOnly([request.auth.uid]) &&
+            request.resource.data.poll.votes.diff(resource.data.poll.votes).affectedKeys().hasAny([request.auth.uid])
+          )
+        ) &&
+        (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['exercise']) ||
+          (
+            resource.data.exercise is map &&
+            request.resource.data.exercise is map &&
+            resource.data.exercise.answers is map &&
+            request.resource.data.exercise.answers is map &&
+            request.resource.data.exercise.diff(resource.data.exercise).affectedKeys().hasOnly(['answers']) &&
+            request.resource.data.exercise.diff(resource.data.exercise).affectedKeys().hasAny(['answers']) &&
+            request.resource.data.exercise.answers.diff(resource.data.exercise.answers).affectedKeys().hasOnly([request.auth.uid]) &&
+            request.resource.data.exercise.answers.diff(resource.data.exercise.answers).affectedKeys().hasAny([request.auth.uid])
+          )
         )
       );
       allow delete: if isTeacher();

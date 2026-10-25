@@ -1,15 +1,15 @@
-import { GoogleGenAI, Type, Modality } from "@google/genai";
+import { Type, Modality } from "@google/genai";
+import { GoogleGenAI } from "./secureGeminiClient";
 import { Vocabulary, MasteryLevel, QuizQuestion, ChatMessage, IrabAnalysisResult } from "../types";
 import { getCachedAsset, setCachedAsset } from "./cache";
 
-// Always use a named parameter for the API key from process.env.API_KEY.
-// Exported to be used across the application for direct Gemini API access.
+// Browser-side AI requests are sent through authenticated server endpoints.
 export const DEFAULT_TEXT_MODEL = 'gemini-3.8-flash';
 export const DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-lite-image';
 export const DEFAULT_TTS_MODEL = 'gemini-3.8-flash-lite-tts';
 export const DEFAULT_LIVE_MODEL = 'gemini-3.8-live';
 
-export const getAI = () => new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string });
+export const getAI = () => new GoogleGenAI();
 
 /**
  * Robustly parses JSON from AI responses, handling markdown backticks and repairing truncated JSON.
@@ -96,8 +96,8 @@ export const safeJSONParse = (text: any, fallback: any = {}) => {
 // Global queue to ensure image requests happen one at a time
 let imageRequestQueue: Promise<any> = Promise.resolve();
 
-export async function generateContentWithRetry(params: any) {
-  return withRetry(() => getAI().models.generateContent(params));
+export async function generateContentWithRetry(params: any, maxRetries = 3) {
+  return withRetry(() => getAI().models.generateContent(params), maxRetries);
 }
 
 export async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, delay = 1500): Promise<T> {

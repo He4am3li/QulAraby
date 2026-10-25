@@ -11,6 +11,8 @@ import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { Interactive3DTutor } from '../components/Interactive3DTutor';
 import { generateSpeech, decodeAudioData } from '../services/gemini';
+import { GoogleGenAI } from '../services/secureGeminiClient';
+import { Modality } from '@google/genai';
 
 declare global {
   interface Window {
@@ -1537,8 +1539,7 @@ export const Dialects: React.FC = () => {
     setIsChatLoading(true);
 
     try {
-      const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+      const ai = new GoogleGenAI();
       
       const rank = stampedCountries[selectedCountry.id] || 0;
       const missions = (selectedCountry as any).missions;
@@ -1608,8 +1609,7 @@ export const Dialects: React.FC = () => {
     }
 
     try {
-      const { GoogleGenAI, Modality } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+      const ai = new GoogleGenAI();
       
       const rank = stampedCountries[selectedCountry.id] || 0;
       const missions = (selectedCountry as any).missions;

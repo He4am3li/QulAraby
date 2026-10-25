@@ -13,7 +13,7 @@ import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType, serverTimestamp } from '../firebase';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "../services/secureGeminiClient";
 import { 
   collection, query, where, orderBy, onSnapshot, addDoc, 
   doc, deleteDoc, getDoc, setDoc, getDocs, writeBatch
@@ -220,7 +220,7 @@ export default function Quizzes() {
     if (!user || (!smartConfig.prompt && !smartConfig.attachment)) return;
     setIsSaving(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI();
       
       const contents: any[] = [];
       if (smartConfig.attachment) {

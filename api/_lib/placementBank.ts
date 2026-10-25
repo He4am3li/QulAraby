@@ -1,0 +1,97 @@
+export type PlacementBankQuestion = {
+  id: string;
+  skill: string;
+  subSkill: string;
+  difficulty: number;
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  translation_instruction?: string;
+  audioPrompt?: string;
+  natureOfWrongOptions?: { option: string; diagnosticIndication: string }[];
+};
+
+// Pre-authored question bank transcribed from the supplied placement-test PDF.
+// This file is server-only: never import it from client-side modules.
+export const PLACEMENT_QUESTION_BANK: PlacementBankQuestion[] = [
+  {id:"p01",skill:"letters",subSkill:"Sound Recognition",difficulty:1,question:"اختر الحرف الذي تبدأ به كلمة (أرنب):",options:["أ","ب","ت","ث"],correctAnswer:"أ"},
+  {id:"p02",skill:"letters",subSkill:"Letter Shape Recognition",difficulty:1,question:"ما الشكل المناسب لحرف الباء في أول كلمة (بطة)؟",options:["بـ","ـبـ","ب","ـب"],correctAnswer:"بـ"},
+  {id:"p03",skill:"letters",subSkill:"Long Vowels",difficulty:1,question:"اختر صوت المد في كلمة (كتاب):",options:["الواو","الألف","الياء","الفتحة"],correctAnswer:"الألف"},
+  {id:"p04",skill:"letters",subSkill:"Short Vowels",difficulty:1,question:"ما الصوت الأول بالتشكيل في كلمة (الثعبان)؟",options:["ثُ","ثَ","ثِ","ثْ"],correctAnswer:"ثُ"},
+  {id:"p05",skill:"letters",subSkill:"Visual Discrimination",difficulty:1,question:"اختر الكلمة التي تبدأ بحرف الحاء:",options:["حصان","خروف","جمل","ديك"],correctAnswer:"حصان"},
+  {id:"p06",skill:"letters",subSkill:"Letter Discrimination",difficulty:1,question:"الحرف المضموم في كلمة (ذُرَة) هو:",options:["حرف الذال","حرف الراء","التاء المربوطة","حرف الألف"],correctAnswer:"حرف الذال"},
+  {id:"p07",skill:"letters",subSkill:"Sun and Moon Letters",difficulty:2,question:"أي الكلمات التالية تحتوي على اللام الشمسية؟",options:["الشمس","القمر","النبات","المدرسة"],correctAnswer:"الشمس"},
+  {id:"p08",skill:"letters",subSkill:"Ta Marbuta",difficulty:2,question:"اختر الكلمة التي تنتهي بتاء مربوطة:",options:["زهرة","زيت","بنت","بيت"],correctAnswer:"زهرة"},
+  {id:"p09",skill:"letters",subSkill:"Tanween",difficulty:2,question:"التنوين بالضم في كلمة (عِنَب) يظهر على حرف:",options:["الباء","النون","العين","الألف"],correctAnswer:"الباء"},
+  {id:"p10",skill:"letters",subSkill:"Word Assembly",difficulty:2,question:"ما الكلمة الصحيحة إملائيًا عند تجميع الحروف (س، م، ك، ة)؟",options:["سمكة","مكتبة","سقفة","مسكة"],correctAnswer:"سمكة"},
+  {id:"p11",skill:"vocab",subSkill:"Synonyms",difficulty:1,question:"مرادف كلمة (جميل) هو:",options:["رائع","قبيح","صغير","بطيء"],correctAnswer:"رائع"},
+  {id:"p12",skill:"vocab",subSkill:"Antonyms",difficulty:1,question:"ضد كلمة (كبير) هو:",options:["صغير","طويل","كثير","سريع"],correctAnswer:"صغير"},
+  {id:"p13",skill:"vocab",subSkill:"Semantic Fields",difficulty:1,question:"الكلمة الغريبة التي لا تنتمي إلى المجموعة (ثقافة، موز، ليمون، كتاب) هي:",options:["كتاب","ثقافة","موز","ليمون"],correctAnswer:"كتاب"},
+  {id:"p14",skill:"vocab",subSkill:"Places",difficulty:2,question:"المكان الذي نشتري منه الأطعمة والخضروات يسمى:",options:["السوق","المكتبة","المستشفى","المطار"],correctAnswer:"السوق"},
+  {id:"p15",skill:"vocab",subSkill:"Plurals",difficulty:2,question:"الجمع المناسب لكلمة (طالب) هو:",options:["طلاب","طالبات","طالبون","طواليب"],correctAnswer:"طلاب"},
+  {id:"p16",skill:"vocab",subSkill:"Singular and Plural",difficulty:2,question:"مفرد كلمة (أشجار) هو:",options:["شجرة","شجر","شجّار","مشجر"],correctAnswer:"شجرة"},
+  {id:"p17",skill:"vocab",subSkill:"Professions",difficulty:2,question:"الشخص الذي يعالج المرضى في المستشفى هو:",options:["الطبيب","المنادي","المهندس","السائق"],correctAnswer:"الطبيب"},
+  {id:"p18",skill:"vocab",subSkill:"Advanced Meaning",difficulty:5,question:"ما معنى كلمة (سريع)؟",options:["يتحرك بسهولة وعكس البطء","ثابت في مكانه","بطيء الحركة","متوقف تمامًا"],correctAnswer:"يتحرك بسهولة وعكس البطء"},
+  {id:"p19",skill:"vocab",subSkill:"Contextual Word Choice",difficulty:5,question:"اختر الكلمة المناسبة: شربت (...) من الماء البارد.",options:["كوبًا","قلمًا","كتابًا","جدارًا"],correctAnswer:"كوبًا"},
+  {id:"p20",skill:"vocab",subSkill:"Advanced Synonyms",difficulty:5,question:"مرادف كلمة (سعيد) هو:",options:["مسرور","حزين","غاضب","خائف"],correctAnswer:"مسرور"},
+  {id:"p21",skill:"grammar",subSkill:"Personal Pronouns",difficulty:1,question:"اختر الضمير المناسب: (...) طالب مجتهد.",options:["هو","هي","هم","هن"],correctAnswer:"هو"},
+  {id:"p22",skill:"grammar",subSkill:"Verb Agreement",difficulty:1,question:"اختر الفعل المناسب للجملة: الطالبة (...) الدرس.",options:["تكتب","يكتب","يكتبون","أكتب"],correctAnswer:"تكتب"},
+  {id:"p23",skill:"grammar",subSkill:"Demonstratives",difficulty:1,question:"اسم الإشارة المناسب للمفرد المؤنث القريب هو:",options:["هذه","هذا","هؤلاء","ذلك"],correctAnswer:"هذه"},
+  {id:"p24",skill:"grammar",subSkill:"Prepositions",difficulty:2,question:"اختر حرف الجر المناسب: ذهبتُ (...) المدرسة.",options:["إلى","عن","على","في"],correctAnswer:"إلى"},
+  {id:"p25",skill:"grammar",subSkill:"Nominal Sentence",difficulty:2,question:"الجملة الاسمية هي الجملة التي تبدأ بـ:",options:["اسم","فعل","حرف","ظرف"],correctAnswer:"اسم"},
+  {id:"p26",skill:"grammar",subSkill:"Sentence Parts",difficulty:2,question:"الفاعل في جملة (قرأ المعلم الكتاب) هو:",options:["المعلم","قرأ","الكتاب","ضمير مستتر"],correctAnswer:"المعلم"},
+  {id:"p27",skill:"grammar",subSkill:"Verb Tenses",difficulty:5,question:"الفعل (يلعب) هو فعل:",options:["مضارع","ماضٍ","أمر","مبني للمجهول"],correctAnswer:"مضارع"},
+  {id:"p28",skill:"grammar",subSkill:"Case Endings",difficulty:5,question:"العلامة الإعرابية المرفوعة للفاعل المفرد هي:",options:["الضمة","الفتحة","الكسرة","السكون"],correctAnswer:"الضمة"},
+  {id:"p29",skill:"grammar",subSkill:"Object Case",difficulty:5,question:"اختر التشكيل الصحيح للمفعول به: شرب الولد (...)،",options:["الماءَ","الماءُ","الماءِ","ماءٌ"],correctAnswer:"الماءَ"},
+  {id:"p30",skill:"grammar",subSkill:"Numbers and Counted Nouns",difficulty:7,question:"اختر العدد والمعدود الصحيح تركيبًا:",options:["أربعة طلاب","أربع طلاب","أربعة طالب","أربعة طالبًا"],correctAnswer:"أربعة طلاب"},
+  {id:"p31",skill:"translator",subSkill:"Basic Vocabulary",difficulty:1,question:"اختر الترجمة العربية الصحيحة لكلمة School:",options:["مدرسة","بيت","مكتبة","قطار"],correctAnswer:"مدرسة"},
+  {id:"p32",skill:"translator",subSkill:"Daily Greetings",difficulty:1,question:"اختر الترجمة العربية الصحيحة لـ Good morning:",options:["صباح الخير","مساء الخير","أهلًا وسهلًا","فتح النافذة"],correctAnswer:"صباح الخير"},
+  {id:"p33",skill:"translator",subSkill:"Simple Sentences",difficulty:2,question:"اختر الترجمة الصحيحة لجملة I love reading books:",options:["أحب قراءة الكتب","أحب كتابة الرسائل","أقرأ الكتاب الآن","أحب شراء الكتب"],correctAnswer:"أحب قراءة الكتب"},
+  {id:"p34",skill:"translator",subSkill:"Professions",difficulty:2,question:"ما الترجمة الدقيقة لكلمة Doctor؟",options:["طبيب","مهندس","معلم","شرطي"],correctAnswer:"طبيب"},
+  {id:"p35",skill:"translator",subSkill:"Social Expressions",difficulty:2,question:"اختر المعنى العربي المناسب للتعبير Welcome to our home:",options:["مرحبًا بكم في بيتنا","أهلًا بكم في مدرستنا","شكرًا لزيارتكم","أهلًا وسهلًا في بيتكم"],correctAnswer:"مرحبًا بكم في بيتنا"},
+  {id:"p36",skill:"translator",subSkill:"Weather",difficulty:5,question:"ترجم إلى العربية: The weather is nice today.",options:["الطقس جميل اليوم","المطر غزير اليوم","الشمس ساطعة أمس","الجو بارد جدًا"],correctAnswer:"الطقس جميل اليوم"},
+  {id:"p37",skill:"translator",subSkill:"Work Context",difficulty:5,question:"اختر المعنى العربي الصحيح لجملة She works at a university:",options:["هي تعمل في جامعة","هي تعمل في المكتبة","هي تدرس في المدرسة","هي تعمل في المكتب"],correctAnswer:"هي تعمل في جامعة"},
+  {id:"p38",skill:"translator",subSkill:"Questions",difficulty:1,question:"ما الترجمة الإنجليزية الصحيحة لـ (ما اسمك؟):",options:["What is your name?","Where are you from?","How old are you?","How are you?"],correctAnswer:"What is your name?"},
+  {id:"p39",skill:"translator",subSkill:"Idiomatic Translation",difficulty:7,question:"اختر التعبير العربي الأدق لـ Take care of yourself:",options:["اعتنِ بنفسك","كن سريعًا","لا تخف","سافر بسلام"],correctAnswer:"اعتنِ بنفسك"},
+  {id:"p40",skill:"translator",subSkill:"Proverbs",difficulty:7,question:"اختر الترجمة الصحيحة لـ Knowledge is light:",options:["العلم نور","العلم قوة","المعرفة كنز","القراءة مفيدة"],correctAnswer:"العلم نور"},
+  {id:"p41",skill:"listening",subSkill:"Greetings",difficulty:1,question:"عند سماع التحية (السلام عليكم)، تكون الإجابة المناسبة هي:",options:["وعليكم السلام","صباح الخير","أهلًا وسهلًا","شكرًا جزيلًا"],correctAnswer:"وعليكم السلام",audioPrompt:"السلام عليكم"},
+  {id:"p42",skill:"listening",subSkill:"Social Responses",difficulty:1,question:"قال لك شخص: (شكرًا جزيلًا). ماذا ترد عليه؟",options:["عفوًا","أهلًا","فتح النافذة","نعم"],correctAnswer:"عفوًا",audioPrompt:"شكرًا جزيلًا"},
+  {id:"p43",skill:"listening",subSkill:"Listening Comprehension",difficulty:2,question:"سمعت الجملة: (أنا أسكن في مدينة الرياض). السؤال المباشر لها هو:",options:["أين تسكن؟","ما اسمك؟","من أنت؟","كيف حالك؟"],correctAnswer:"أين تسكن؟",audioPrompt:"أنا أسكن في مدينة الرياض"},
+  {id:"p44",skill:"listening",subSkill:"Direct Conversations",difficulty:1,question:"عندما تسمع (كيف حالك؟)، تجيب بـ:",options:["بخير والحمد لله","عمري عشرون سنة","أنا طالب","اسمي خالد"],correctAnswer:"بخير والحمد لله",audioPrompt:"كيف حالك؟"},
+  {id:"p45",skill:"listening",subSkill:"Directions",difficulty:2,question:"في الحوار: (أين المكتبة؟ المكتبة بجانب المسجد). أين تقع المكتبة؟",options:["بجانب المسجد","أمام المدرسة","خلف البيت","في القطار"],correctAnswer:"بجانب المسجد",audioPrompt:"أين المكتبة؟ المكتبة بجانب المسجد"},
+  {id:"p46",skill:"listening",subSkill:"Time and Seasons",difficulty:5,question:"استمعت للنص: (تسقط الأمطار في فصل الشتاء). متى تسقط الأمطار؟",options:["في الشتاء","في الصيف","في الربيع","في الخريف"],correctAnswer:"في الشتاء",audioPrompt:"تسقط الأمطار في فصل الشتاء"},
+  {id:"p47",skill:"listening",subSkill:"Announcements",difficulty:2,question:"استمعت للإعلان: (المطعم يفتح الساعة السابعة صباحًا). متى يبدأ المطعم عمله؟",options:["صباحًا","مساءً","ظهرًا","ليلًا"],correctAnswer:"صباحًا",audioPrompt:"المطعم يفتح الساعة السابعة صباحًا"},
+  {id:"p48",skill:"listening",subSkill:"Preferences",difficulty:5,question:"استمعت للحوار: (هل تحب القهوة؟ لا، أفضل الشاي). ماذا فضّل الشخص؟",options:["الشاي","القهوة","العصير","الماء"],correctAnswer:"الشاي",audioPrompt:"هل تحب القهوة؟ لا، أفضل الشاي"},
+  {id:"p49",skill:"listening",subSkill:"Numbers and Instructions",difficulty:2,question:"سمعت التوجيه: (افتح الكتاب صفحة عشرين). ما الرقم المطلوب؟",options:["20","10","30","2"],correctAnswer:"20",audioPrompt:"افتح الكتاب صفحة عشرين"},
+  {id:"p50",skill:"listening",subSkill:"Causes",difficulty:7,question:"استمعت للخبر: (تأخرت الطائرة بسبب الضباب). سبب تأخر الطائرة هو:",options:["الضباب","المطر","الرياح","الثلج"],correctAnswer:"الضباب",audioPrompt:"تأخرت الطائرة بسبب الضباب"},
+  {id:"p51",skill:"speaking",subSkill:"Polite Requests",difficulty:1,question:"لطلب المساعدة بأدب ولطف تقول:",options:["لو سمحت، هل تساعدني؟","أعطني هذا فورًا","اذهب من هنا","لا أريد شيئًا"],correctAnswer:"لو سمحت، هل تساعدني؟"},
+  {id:"p52",skill:"speaking",subSkill:"Self Introduction",difficulty:1,question:"كيف تعرّف بنفسك أمام زملائك الجدد؟",options:["مرحبًا، أنا اسمي سارة","ما اسمك أنت؟","هذا كتابي","أين المدرسة؟"],correctAnswer:"مرحبًا، أنا اسمي سارة"},
+  {id:"p53",skill:"speaking",subSkill:"Shopping",difficulty:2,question:"عندما تشتري شيئًا من البائع وتسأله عن السعر تقول:",options:["كم ثمن هذا؟","كيف حالك؟","أين البيت؟","كم الساعة؟"],correctAnswer:"كم ثمن هذا؟"},
+  {id:"p54",skill:"speaking",subSkill:"Apologies",difficulty:1,question:"عندما تريد الاعتذار عن خطأ غير مقصود تقول:",options:["أنا آسف","شكرًا","أهلًا وسهلًا","عفوًا"],correctAnswer:"أنا آسف"},
+  {id:"p55",skill:"speaking",subSkill:"Opinions",difficulty:2,question:"للتعبير عن رأيك الإيجابي في وجبة طعام لذيذة تقول:",options:["هذا الطعام لذيذ جدًا","هذا الكتاب مفيد","الطقس بارد","لا أعرف من هو"],correctAnswer:"هذا الطعام لذيذ جدًا"},
+  {id:"p56",skill:"speaking",subSkill:"Transport Schedules",difficulty:5,question:"ما السؤال المناسب للاستفسار عن وقت انطلاق القطار؟",options:["متى ينطلق القطار؟","أين القطار؟","من ركب القطار؟","كيف القطار؟"],correctAnswer:"متى ينطلق القطار؟"},
+  {id:"p57",skill:"speaking",subSkill:"Professions",difficulty:2,question:"عندما يسألك أحد: (ماذا تعمل؟)، تجيب عن مهنتك بـ:",options:["أنا مهندس في شركة","أنا في البيت","أنا بخير","عمري 25 سنة"],correctAnswer:"أنا مهندس في شركة"},
+  {id:"p58",skill:"speaking",subSkill:"Future Plans",difficulty:5,question:"للتعبير عن نيتك السفر في المستقبل تقول:",options:["سأسافر إلى مصر الشهر القادم","سافرت أمس","لم أسافر أبدًا","أنا في القطار الآن"],correctAnswer:"سأسافر إلى مصر الشهر القادم"},
+  {id:"p59",skill:"speaking",subSkill:"Suggestions",difficulty:7,question:"لتقديم اقتراح لأصدقائك بزيارة الحديقة تقول:",options:["ما رأيكم أن نذهب إلى الحديقة؟","اذهبوا وحدكم","الحديقة بعيدة","لا أحب الحدائق"],correctAnswer:"ما رأيكم أن نذهب إلى الحديقة؟"},
+  {id:"p60",skill:"speaking",subSkill:"Travel Wishes",difficulty:2,question:"لتوديع صديق مسافر وتمنّي الخير له تقول:",options:["أتمنى لك رحلة سعيدة","صباح الخير","عفوًا","كم الساعة؟"],correctAnswer:"أتمنى لك رحلة سعيدة"},
+  {id:"p61",skill:"reading",subSkill:"Characters",difficulty:1,question:"نص: (أحمد طالب نشيط يستيقظ في السادسة). ما اسم الطالب؟",options:["أحمد","خالد","محفوظ","عمر"],correctAnswer:"أحمد"},
+  {id:"p62",skill:"reading",subSkill:"Time Details",difficulty:1,question:"متى يستيقظ أحمد في النص السكني؟",options:["في الساعة السادسة","في الساعة السابعة","في الساعة الخامسة","في الظهيرة"],correctAnswer:"في الساعة السادسة"},
+  {id:"p63",skill:"reading",subSkill:"People and Participants",difficulty:2,question:"مع من يتناول أحمد الفطور في النص؟",options:["مع أسرته","مع أصدقائه","بمفرده","مع معلمه"],correctAnswer:"مع أسرته"},
+  {id:"p64",skill:"reading",subSkill:"Transport",difficulty:2,question:"كيف يذهب أحمد إلى المدرسة؟",options:["بالحافلة","سيرًا على الأقدام","بالسيارة","بالقطار"],correctAnswer:"بالحافلة"},
+  {id:"p65",skill:"reading",subSkill:"Character Traits",difficulty:2,question:"الصفة المباشرة التي وُصف بها أحمد في النص هي:",options:["نشيط","كسلان","بطيء","متأخر"],correctAnswer:"نشيط"},
+  {id:"p66",skill:"reading",subSkill:"Main Topic",difficulty:2,question:"نص: (فضل الربيع أنهى فصول السنة). الفصل المذكور هو:",options:["الربيع","الصيف","الخريف","الشتاء"],correctAnswer:"الربيع"},
+  {id:"p67",skill:"reading",subSkill:"Details",difficulty:5,question:"ماذا تفعل الطيور في فصل الربيع حسب النص؟",options:["تغرد","تنام","تطير بعيدًا","تختفي"],correctAnswer:"تغرد"},
+  {id:"p68",skill:"reading",subSkill:"Environment",difficulty:5,question:"كيف تكون الحدائق في فصل الربيع حسب النص؟",options:["خضراء جميلة","جافة","بيضاء","مظلمة"],correctAnswer:"خضراء جميلة"},
+  {id:"p69",skill:"reading",subSkill:"Vocabulary in Text",difficulty:7,question:"كلمة (أبهى) في النص تعني:",options:["أجمل","أقصر","أطول","أبرد"],correctAnswer:"أجمل"},
+  {id:"p70",skill:"reading",subSkill:"Main Idea",difficulty:7,question:"الفكرة الرئيسة الشاملة للنص هي:",options:["جمال فصل الربيع","أنواع الأشجار","هجرة الطيور","زراعة الحدائق"],correctAnswer:"جمال فصل الربيع"},
+  {id:"p71",skill:"writing",subSkill:"Letter Order",difficulty:1,question:"الترتيب الصحيح للحروف لتكوين كلمة (قلم) هو:",options:["ق - ل - م","م - ل - ق","ق - م - ل","ل - ق - م"],correctAnswer:"ق - ل - م"},
+  {id:"p72",skill:"writing",subSkill:"Tanween",difficulty:1,question:"الكلمة المكتوبة بشكل إملائي صحيح دون إضافة نون زائدة هي:",options:["كتابٌ","كتابان","كتابًا","كتابين"],correctAnswer:"كتابٌ"},
+  {id:"p73",skill:"writing",subSkill:"Question Mark",difficulty:1,question:"اختر علامة الترقيم المناسبة لنهاية سؤال (ما اسمك...):",options:["؟","!","؛","،"],correctAnswer:"؟"},
+  {id:"p74",skill:"writing",subSkill:"Exclamation",difficulty:2,question:"اختر علامة الترقيم المناسبة للجملة التعجبية (ما أجمل الشتاء...):",options:["!","؟",".",":"],correctAnswer:"!"},
+  {id:"p75",skill:"writing",subSkill:"Sentence Order",difficulty:2,question:"الترتيب الصحيح للجملة (المدرسة - إلى - الطالب - ذهب) هو:",options:["ذهب الطالب إلى المدرسة","إلى المدرسة ذهب الطالب","الطالب ذهب المدرسة إلى","ذهب المدرسة إلى الطالب"],correctAnswer:"ذهب الطالب إلى المدرسة"},
+  {id:"p76",skill:"writing",subSkill:"Hamzat Qat",difficulty:5,question:"اختر الكلمة التي تحتوي على همزة قطع مرسومة بوضوح:",options:["أحمد","اكتب","ابن","استغفر"],correctAnswer:"أحمد"},
+  {id:"p77",skill:"writing",subSkill:"Hamzat Wasl",difficulty:5,question:"الكلمة التي تبدأ بهمزة وصل تسقط في الدرج هي:",options:["اكتب","أنا","أبي","أتى"],correctAnswer:"اكتب"},
+  {id:"p78",skill:"writing",subSkill:"Medial Hamza",difficulty:7,question:"اختر الكتابة الصحيحة للهمزة المتوسطة في كلمة (مسألة):",options:["مسألة","مسئلة","مسائلة","مسآله"],correctAnswer:"مسألة"},
+  {id:"p79",skill:"writing",subSkill:"Adjective Agreement",difficulty:7,question:"اختر الجملة المكتوبة بنحو وإملاء صحيحين:",options:["قرأ الطالب كتابًا مفيدًا","قرأ الطالب كتابًا مفيدٌ","قرأ الطالب كتابٌ مفيدًا","قرأ الطالب كتابًا مفيد"],correctAnswer:"قرأ الطالب كتابًا مفيدًا"},
+  {id:"p80",skill:"writing",subSkill:"Fath Tanween",difficulty:7,question:"ما التنوين الصحيح لكلمة (سماء) بالنصب دون ألف زائدة؟",options:["سماءً","سماء","سماءاً","سماءٌ"],correctAnswer:"سماءً"}
+];

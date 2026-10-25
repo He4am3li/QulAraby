@@ -28,7 +28,8 @@
     "react-joyride": "^3.2.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "7.18.4",
-    "three": "^0.186.1"
+    "three": "^0.186.1",
+    "firebase-admin": "^13.5.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

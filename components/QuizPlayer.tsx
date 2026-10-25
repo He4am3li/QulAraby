@@ -18,7 +18,7 @@ interface Question {
   text: string;
   type: 'mcq' | 'true_false' | 'short_answer' | 'fill_blank' | 'ordering' | 'drag_drop' | 'matching' | 'chess_puzzle';
   options: string[];
-  correctAnswer: string;
+  correctAnswer?: string;
   points: number;
   chessConfig?: {
     boardSize: number;
@@ -231,59 +231,13 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
   };
 
   const handleAnswerChange = (qId: string, val: any, autoNext: boolean = false, skipFeedback: boolean = false) => {
+    // Correctness is intentionally not exposed per question. The server grades the full
+    // submission at the end so students cannot probe answer keys through an answer oracle.
     const q = questions.find(q => q.id === qId);
-    if (!q) return;
-
-    let isCorrect = false;
-    if (q.type === 'mcq' || q.type === 'true_false' || q.type === 'short_answer' || q.type === 'fill_blank') {
-      isCorrect = val?.toString().trim().toLowerCase() === q.correctAnswer.toString().trim().toLowerCase();
-    } else if (q.type === 'ordering' || q.type === 'drag_drop' || q.type === 'matching') {
-      isCorrect = safeStringify(val) === safeStringify(q.options);
-    }
-
-    if (isCorrect) {
-      if (!skipFeedback) {
-        setStreak(prev => prev + 1);
-        setCorrectCount(prev => prev + 1);
-        setCombo(prev => Math.min(prev + 1, 5));
-        setMaxCombo(prev => Math.max(prev, streak + 1));
-        setFeedbackType('success');
-      }
-
-      // Crypto mode logic: get abilities for difficult questions
-      if (playMode === 'crypto') {
-        const isDifficult = q.type === 'short_answer' || q.type === 'fill_blank' || q.type === 'chess_puzzle';
-        if (isDifficult && Math.random() > 0.3) {
-          const newAbilities: Ability[] = [
-            { id: Math.random().toString(), type: 'shield', nameAr: 'درع الحماية', nameEn: '30s Shield', icon: <Shield size={14} /> },
-            { id: Math.random().toString(), type: 'multiplier', nameAr: 'مضاعف النقاط', nameEn: '2x Points', icon: <Sparkles size={14} /> },
-          ];
-          const randomAbility = newAbilities[Math.floor(Math.random() * newAbilities.length)];
-          if (!abilities.find(a => a.type === randomAbility.type)) {
-            setAbilities(prev => [...prev.slice(-2), randomAbility]);
-          }
-        }
-      }
-    } else {
-      if (isShieldActive) {
-        setIsShieldActive(false);
-        if (!skipFeedback) setFeedbackType('success'); // Shield saves you
-        return;
-      }
-      
-      if (!skipFeedback) {
-        setStreak(0);
-        setErrorCount(prev => prev + 1);
-        setCombo(0);
-        setFeedbackType('error');
-      }
-    }
-
-    if (!skipFeedback) setTimeout(() => setFeedbackType(null), 1000);
-
+    if (!q || isAnswered) return;
     setAnswers(prev => ({ ...prev, [qId]: val }));
     setIsAnswered(true);
-    
+    setFeedbackType(null);
     if (autoNext && currentIndex < questions.length - 1) {
       setTimeout(() => setCurrentIndex(prev => prev + 1), 600);
     }
@@ -315,14 +269,24 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
           }
         }
 
-        const qSnap = await getDocs(query(collection(db, 'quizzes', quizId, 'questions'), orderBy('order', 'asc')));
-        const qList = qSnap.docs.map(doc => {
-          const data = doc.data() as Question;
-          let shuffledOptions = [...data.options];
+        if (!user) {
+          throw new Error('Sign-in required to load quiz questions.');
+        }
+        const idToken = await user.getIdToken();
+        const secureQuestionsResponse = await fetch(`/api/quiz-questions?quizId=${encodeURIComponent(quizId)}`, {
+          headers: { Authorization: `Bearer ${idToken}` },
+          cache: 'no-store',
+        });
+        const secureQuestionsPayload = await secureQuestionsResponse.json().catch(() => ({}));
+        if (!secureQuestionsResponse.ok || !Array.isArray(secureQuestionsPayload.questions)) {
+          throw new Error(typeof secureQuestionsPayload?.error === 'string' ? secureQuestionsPayload.error : 'Could not load quiz securely.');
+        }
+        const qList = (secureQuestionsPayload.questions as Question[]).map((data) => {
+          let shuffledOptions = Array.isArray(data.options) ? [...data.options] : [];
           if (data.type === 'mcq' || data.type === 'ordering' || data.type === 'drag_drop') {
             shuffledOptions = shuffledOptions.sort(() => Math.random() - 0.5);
           }
-          return { id: doc.id, ...data, options: shuffledOptions } as Question;
+          return { ...data, options: shuffledOptions } as Question;
         });
         setQuestions(qList);
       } catch (err) {
@@ -347,52 +311,32 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
     setIsAnswered(!!answers[questions[currentIndex]?.id]);
   }, [currentIndex, questions, answers]);
 
-  const calculateScore = () => {
-    let totalScore = 0;
-    questions.forEach(q => {
-      const userAnswer = answers[q.id];
-      let isCorrect = false;
-      if (q.type === 'mcq' || q.type === 'true_false' || q.type === 'short_answer' || q.type === 'fill_blank') {
-        isCorrect = userAnswer?.toString().trim().toLowerCase() === q.correctAnswer.toString().trim().toLowerCase();
-      } else if (q.type === 'ordering' || q.type === 'drag_drop' || q.type === 'matching') {
-        isCorrect = safeStringify(userAnswer) === safeStringify(q.options);
-      } else if (q.type === 'chess_puzzle') {
-        isCorrect = userAnswer === 'CHESS_MASTERED';
-      }
-
-      if (isCorrect) {
-        let points = q.points;
-        
-        if (playMode === 'race') {
-          // Time Race: Points based on speed
-          const speedFactor = (questionTimeLeft || 0) / 15;
-          points = Math.floor(points * (1 + speedFactor));
-        } else if (playMode === 'crypto') {
-          // Crypto Hack: Points for speed + multiplier
-          if (isMultiplierActive) {
-            points *= 2;
-            setIsMultiplierActive(false);
-          }
-          const speedBonus = questionTimeLeft ? (questionTimeLeft / 15) * 50 : 0;
-          points += Math.floor(speedBonus);
-        }
-
-        const multiplier = (playMode === 'race' || playMode === 'crypto') ? (1 + (combo * 0.1)) : 1;
-        totalScore += Math.floor(points * multiplier);
-      }
-    });
-
-    setScore(totalScore);
-
-    if (user) {
-      addDoc(collection(db, 'quizzes', quizId, 'results'), {
-        userId: user.uid,
-        userEmail: user.email,
-        score: totalScore,
-        totalPoints: questions.reduce((acc, q) => acc + q.points, 0),
-        timeTaken: Math.floor((Date.now() - startTime) / 1000),
-        completedAt: serverTimestamp()
+  const calculateScore = async () => {
+    if (!user) return;
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/quiz-submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        cache: 'no-store',
+        body: JSON.stringify({
+          quizId,
+          answers,
+          timeTaken: Math.floor((Date.now() - startTime) / 1000),
+          userEmail: user.email || '',
+        }),
       });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || typeof payload?.score !== 'number' || typeof payload?.totalPoints !== 'number') {
+        throw new Error(typeof payload?.error === 'string' ? payload.error : 'Could not submit the quiz securely.');
+      }
+      setScore(payload.score);
+    } catch (error) {
+      console.error('Secure quiz submission failed:', error);
+      setFeedbackType('error');
     }
   };
 
