@@ -3,6 +3,7 @@ import { auth } from "../firebase";
 
 type GenerateContentParams = {
   model: string;
+  requestTimeoutMs?: number;
   [key: string]: unknown;
 };
 
@@ -16,6 +17,7 @@ export class GoogleGenAI {
   models = {
     generateContent: async (params: GenerateContentParams): Promise<any> => {
       const idToken = await getIdToken();
+      const { requestTimeoutMs = 25_000, ...apiParams } = params;
       let response: Response;
       try {
         response = await fetch("/api/gemini", {
@@ -24,9 +26,9 @@ export class GoogleGenAI {
             "Content-Type": "application/json",
             Authorization: `Bearer ${idToken}`,
           },
-          body: JSON.stringify({ params }),
+          body: JSON.stringify({ params: apiParams }),
           cache: "no-store",
-          signal: AbortSignal.timeout(25_000),
+          signal: AbortSignal.timeout(Math.max(3_000, Math.min(requestTimeoutMs, 25_000))),
         });
       } catch (error) {
         if (error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError")) {
