@@ -18,7 +18,7 @@ interface Question {
   text: string;
   type: 'mcq' | 'true_false' | 'short_answer' | 'fill_blank' | 'ordering' | 'drag_drop' | 'matching' | 'chess_puzzle';
   options: string[];
-  correctAnswer: string;
+  correctAnswer?: string;
   points: number;
   chessConfig?: {
     boardSize: number;
@@ -235,10 +235,27 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
     if (!q) return;
 
     let isCorrect = false;
-    if (q.type === 'mcq' || q.type === 'true_false' || q.type === 'short_answer' || q.type === 'fill_blank') {
-      isCorrect = val?.toString().trim().toLowerCase() === q.correctAnswer.toString().trim().toLowerCase();
-    } else if (q.type === 'ordering' || q.type === 'drag_drop' || q.type === 'matching') {
-      isCorrect = safeStringify(val) === safeStringify(q.options);
+    try {
+      if (!user) throw new Error('Sign-in required to check quiz answers.');
+      const idToken = await user.getIdToken();
+      const checkResponse = await fetch('/api/quiz-check-answer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        cache: 'no-store',
+        body: JSON.stringify({ quizId, questionId: qId, answer: val }),
+      });
+      const checkPayload = await checkResponse.json().catch(() => ({}));
+      if (!checkResponse.ok || typeof checkPayload?.correct !== 'boolean') {
+        throw new Error(typeof checkPayload?.error === 'string' ? checkPayload.error : 'Unable to validate answer.');
+      }
+      isCorrect = checkPayload.correct;
+    } catch (error) {
+      console.error('Secure quiz answer check failed:', error);
+      if (!skipFeedback) setFeedbackType('error');
+      return;
     }
 
     if (isCorrect) {
@@ -315,14 +332,24 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
           }
         }
 
-        const qSnap = await getDocs(query(collection(db, 'quizzes', quizId, 'questions'), orderBy('order', 'asc')));
-        const qList = qSnap.docs.map(doc => {
-          const data = doc.data() as Question;
-          let shuffledOptions = [...data.options];
+        if (!user) {
+          throw new Error('Sign-in required to load quiz questions.');
+        }
+        const idToken = await user.getIdToken();
+        const secureQuestionsResponse = await fetch(`/api/quiz-questions?quizId=${encodeURIComponent(quizId)}`, {
+          headers: { Authorization: `Bearer ${idToken}` },
+          cache: 'no-store',
+        });
+        const secureQuestionsPayload = await secureQuestionsResponse.json().catch(() => ({}));
+        if (!secureQuestionsResponse.ok || !Array.isArray(secureQuestionsPayload.questions)) {
+          throw new Error(typeof secureQuestionsPayload?.error === 'string' ? secureQuestionsPayload.error : 'Could not load quiz securely.');
+        }
+        const qList = (secureQuestionsPayload.questions as Question[]).map((data) => {
+          let shuffledOptions = Array.isArray(data.options) ? [...data.options] : [];
           if (data.type === 'mcq' || data.type === 'ordering' || data.type === 'drag_drop') {
             shuffledOptions = shuffledOptions.sort(() => Math.random() - 0.5);
           }
-          return { id: doc.id, ...data, options: shuffledOptions } as Question;
+          return { ...data, options: shuffledOptions } as Question;
         });
         setQuestions(qList);
       } catch (err) {
@@ -347,52 +374,32 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
     setIsAnswered(!!answers[questions[currentIndex]?.id]);
   }, [currentIndex, questions, answers]);
 
-  const calculateScore = () => {
-    let totalScore = 0;
-    questions.forEach(q => {
-      const userAnswer = answers[q.id];
-      let isCorrect = false;
-      if (q.type === 'mcq' || q.type === 'true_false' || q.type === 'short_answer' || q.type === 'fill_blank') {
-        isCorrect = userAnswer?.toString().trim().toLowerCase() === q.correctAnswer.toString().trim().toLowerCase();
-      } else if (q.type === 'ordering' || q.type === 'drag_drop' || q.type === 'matching') {
-        isCorrect = safeStringify(userAnswer) === safeStringify(q.options);
-      } else if (q.type === 'chess_puzzle') {
-        isCorrect = userAnswer === 'CHESS_MASTERED';
-      }
-
-      if (isCorrect) {
-        let points = q.points;
-        
-        if (playMode === 'race') {
-          // Time Race: Points based on speed
-          const speedFactor = (questionTimeLeft || 0) / 15;
-          points = Math.floor(points * (1 + speedFactor));
-        } else if (playMode === 'crypto') {
-          // Crypto Hack: Points for speed + multiplier
-          if (isMultiplierActive) {
-            points *= 2;
-            setIsMultiplierActive(false);
-          }
-          const speedBonus = questionTimeLeft ? (questionTimeLeft / 15) * 50 : 0;
-          points += Math.floor(speedBonus);
-        }
-
-        const multiplier = (playMode === 'race' || playMode === 'crypto') ? (1 + (combo * 0.1)) : 1;
-        totalScore += Math.floor(points * multiplier);
-      }
-    });
-
-    setScore(totalScore);
-
-    if (user) {
-      addDoc(collection(db, 'quizzes', quizId, 'results'), {
-        userId: user.uid,
-        userEmail: user.email,
-        score: totalScore,
-        totalPoints: questions.reduce((acc, q) => acc + q.points, 0),
-        timeTaken: Math.floor((Date.now() - startTime) / 1000),
-        completedAt: serverTimestamp()
+  const calculateScore = async () => {
+    if (!user) return;
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/quiz-submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        cache: 'no-store',
+        body: JSON.stringify({
+          quizId,
+          answers,
+          timeTaken: Math.floor((Date.now() - startTime) / 1000),
+          userEmail: user.email || '',
+        }),
       });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || typeof payload?.score !== 'number' || typeof payload?.totalPoints !== 'number') {
+        throw new Error(typeof payload?.error === 'string' ? payload.error : 'Could not submit the quiz securely.');
+      }
+      setScore(payload.score);
+    } catch (error) {
+      console.error('Secure quiz submission failed:', error);
+      setFeedbackType('error');
     }
   };
 
