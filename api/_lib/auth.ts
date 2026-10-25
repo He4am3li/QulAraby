@@ -1,4 +1,4 @@
-import firebaseConfig from "../../firebase-applet-config.json";
+// This is the Firebase Web API key already shipped in the public client configuration.\n// It is not a service-account credential; access is still restricted by Firebase Auth and Security Rules.\nconst FIREBASE_WEB_API_KEY = "AIzaSyBP8driYUWFsGN6_VVR3U9cW_EhMDnkLBU";
 
 const WINDOW_MS = 60_000;
 const MAX_AI_REQUESTS_PER_MINUTE = 45;
@@ -14,7 +14,7 @@ export async function verifyFirebaseUser(request: ApiRequest): Promise<{ uid: st
 
   try {
     const response = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(firebaseConfig.apiKey)}`,
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(FIREBASE_WEB_API_KEY)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
