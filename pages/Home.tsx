@@ -743,11 +743,11 @@ interface ModuleCardProps {
 
 export const ModuleCard: React.FC<ModuleCardProps> = ({ icon, title, arTitle, description, color, onClick, enterLabel, lang }) => (
   <motion.button 
-    whileHover={{ y: -8, scale: 1.02, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
+    whileHover={{ y: -3, scale: 1.01 }}
     whileTap={{ scale: 0.98 }}
     layout
     onClick={onClick} 
-    className="relative group p-3 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm hover:border-blue-200 transition-colors"
+    className="qul-glass qul-glass-interactive relative group p-3 border border-white/70 rounded-[1.5rem] hover:border-emerald-200 transition-colors focus-visible:outline-2 focus-visible:outline-emerald-600"
   >
     <div className={`w-8 h-8 bg-gradient-to-br ${color} rounded-full flex items-center justify-center text-white mb-2 shadow-md ${lang === 'ar' ? 'mr-0 ml-auto' : ''}`}>
       {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 18 }) : icon}
