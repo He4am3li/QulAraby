@@ -1,3 +1,4 @@
+import { GoogleGenAI as SdkGoogleGenAI } from "@google/genai";
 import { auth } from "../firebase";
 
 type GenerateContentParams = {
@@ -5,12 +6,16 @@ type GenerateContentParams = {
   [key: string]: unknown;
 };
 
+async function getIdToken(): Promise<string> {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Please sign in to use AI features.");
+  return user.getIdToken();
+}
+
 export class GoogleGenAI {
   models = {
     generateContent: async (params: GenerateContentParams): Promise<any> => {
-      const user = auth.currentUser;
-      if (!user) throw new Error("Please sign in to use AI features.");
-      const idToken = await user.getIdToken();
+      const idToken = await getIdToken();
       const response = await fetch("/api/gemini", {
         method: "POST",
         headers: {
@@ -27,22 +32,25 @@ export class GoogleGenAI {
     },
   };
 
-  constructor(_options?: Record<string, unknown>) {
-    // Deliberately no API key in the browser. Requests go through authenticated Vercel Functions.
-  }
-}
+  live = {
+    connect: async (config: Record<string, unknown>): Promise<any> => {
+      const idToken = await getIdToken();
+      const tokenResponse = await fetch("/api/gemini-live-token", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${idToken}` },
+        cache: "no-store",
+      });
+      const payload = await tokenResponse.json().catch(() => ({}));
+      if (!tokenResponse.ok || typeof payload?.token !== "string") {
+        throw new Error(typeof payload?.error === "string" ? payload.error : "Could not start the live tutor.");
+      }
+      // The long-lived secret stays on the server. The browser receives a short-lived,
+      // single-use token constrained to the Live model.
+      return new SdkGoogleGenAI({ apiKey: payload.token }).live.connect(config as any);
+    },
+  };
 
-export async function getLiveAuthToken(): Promise<string> {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Please sign in to use the live tutor.");
-  const idToken = await user.getIdToken();
-  const response = await fetch("/api/gemini-live-token", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${idToken}` },
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok || typeof payload?.token !== "string") {
-    throw new Error(typeof payload?.error === "string" ? payload.error : "Could not start the live tutor.");
+  constructor(_options?: Record<string, unknown>) {
+    // Intentionally does not accept or embed a long-lived Gemini API key in browser code.
   }
-  return payload.token;
 }
