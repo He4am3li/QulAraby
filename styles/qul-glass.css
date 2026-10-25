@@ -94,3 +94,42 @@
 @media (prefers-reduced-motion: reduce) {
   .qul-sidebar .qul-nav-link { transition: none; }
 }
+
+/* Responsive application polish; keeps existing component behavior intact. */
+.qul-shell, .qul-main, .qul-content { min-height: 0; }
+.qul-content { min-width: 0; }
+.qul-shell button, .qul-shell a { -webkit-tap-highlight-color: transparent; }
+.qul-glass { position: relative; }
+.qul-glass::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  pointer-events: none; box-shadow: inset 0 1px rgba(255,255,255,.65);
+}
+@media (max-height: 800px) and (min-width: 768px) {
+  .qul-main { padding: 8px !important; }
+  .qul-sidebar nav { padding-top: 4px; padding-bottom: 4px; }
+  .qul-content { min-height: 0; }
+}
+@media (max-width: 767px) {
+  .qul-main { padding: 4px 4px 72px !important; height: 100dvh; }
+  .qul-main > .qul-content { border-radius: 14px; }
+}
+.dark .qul-shell, .dark .qul-main {
+  background: radial-gradient(circle at 15% 8%, #173b42, transparent 38%), #0b1825;
+}
+.dark .qul-main > .qul-content {
+  background: rgba(20,35,49,.9);
+  border-color: rgba(255,255,255,.12);
+  box-shadow: 0 14px 45px rgba(0,0,0,.22);
+}
+.dark .qul-glass {
+  --qul-glass-fill: rgba(30,48,60,.86);
+  --qul-glass-border: rgba(255,255,255,.16);
+  --qul-glass-shadow: 0 12px 36px rgba(0,0,0,.2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .qul-shell *, .qul-shell *::before, .qul-shell *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
