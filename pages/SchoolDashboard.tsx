@@ -570,12 +570,11 @@ export const SchoolDashboard: React.FC = () => {
             { id: 'appointments', title: isEnglish ? 'Upcoming Appointments' : 'المواعيد القادمة', value: appointmentSlots.filter(slot => slot.status === 'booked' && slot.schoolId === schoolId && new Date(slot.startsAt?.toDate ? slot.startsAt.toDate() : slot.startsAt || 0).getTime() > Date.now()).length, icon: <CalendarDays size={20}/>, tone: 'amber', onClick: () => { setShowRolePanel(false); navigate('/school?tab=support'); } },
           ]}
         /> : <section>
-          <div className="flex justify-center mb-8">
-            <button type="button" onClick={() => setShowRolePanel(true)} title={isEnglish ? 'School Pulse' : 'نبض المدرسة'} aria-label={isEnglish ? 'School Pulse' : 'نبض المدرسة'} className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-800 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-all group relative border-4 border-white">
-              <School size={32}/>
-              <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-black z-20">{isEnglish ? 'School Pulse' : 'نبض المدرسة'}</span>
-            </button>
-          </div>
+          <div className="mb-3 flex justify-end">
+             <button type="button" onClick={() => setShowRolePanel(true)} title={isEnglish ? 'School Pulse' : 'نبض المدرسة'} aria-label={isEnglish ? 'School Pulse' : 'نبض المدرسة'} className="qul-glass-interactive inline-flex items-center gap-2 rounded-xl border border-emerald-200/70 bg-white/80 px-3 py-2 text-xs font-bold text-emerald-800 shadow-sm focus-visible:outline-2 focus-visible:outline-emerald-600">
+               <School size={16}/><span>{isEnglish ? 'School Pulse' : 'نبض المدرسة'}</span>
+             </button>
+           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {tabCards.map(item => <ModuleCard
             key={item.id}
