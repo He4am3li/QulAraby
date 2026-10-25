@@ -3805,6 +3805,7 @@ export const KnowledgeSupermarket: React.FC<KnowledgeSupermarketProps> = ({ onBa
                     height="24" 
                     viewBox="0 0 200 40" 
                     preserveAspectRatio="none"
+                  >
                     {barcodeBars.map((bar, index) => (
                       <rect
                         key={index}
@@ -3815,7 +3816,7 @@ export const KnowledgeSupermarket: React.FC<KnowledgeSupermarketProps> = ({ onBa
                         fill="#15162a"
                       />
                     ))}
-                  />
+                  </svg>
                   <div className="text-[7.5px] font-mono text-slate-500 text-center">#9200-AR-2026</div>
                 </div>
 
