@@ -216,7 +216,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   }, []);
 
   return (
-    <div className={`h-full min-h-0 overflow-hidden flex flex-col md:flex-row bg-slate-950 ${lang === 'ar' ? 'font-arabic' : ''}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={`qul-shell h-full min-h-0 overflow-hidden flex flex-col md:flex-row bg-slate-950 ${lang === 'ar' ? 'font-arabic' : ''}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <OnboardingTour lang={lang} />
       <RoleSwitcher />
       
@@ -227,8 +227,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         onMouseEnter={() => setCollapsed(false)}
         onMouseLeave={() => setCollapsed(true)}
         transition={{ type: 'spring', stiffness: 300, damping: 35 }}
-        className="hidden md:flex flex-col text-white sticky top-0 h-dvh min-h-0 shadow-[20px_0_40px_rgba(0,0,0,0.3)] relative overflow-hidden z-40" 
-        style={{ background: 'linear-gradient(to left, #0f172a 0%, #064e3b 100%)' }}
+        className="qul-sidebar hidden md:flex flex-col text-white sticky top-0 h-dvh min-h-0 relative overflow-hidden z-40" 
+        style={{ background: 'linear-gradient(155deg, rgba(12,37,56,.96) 0%, rgba(5,85,73,.96) 65%, rgba(7,51,69,.98) 100%)' }}
       >
         {/* Falling Letters Layer */}
         <FallingLetters />
@@ -314,7 +314,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   <Link
                     to={path}
                     id={`nav-${(path.split('?')[0] === '/' ? 'home' : path.split('?')[0].substring(1))}-${path.includes('?') ? path.split('=')[1] : 'main'}`}
-                    className={`flex items-center rounded-2xl transition-all duration-300 border relative group/item nav-line-hover ${
+                    className={`qul-nav-link flex items-center rounded-2xl transition-all duration-300 border relative group/item nav-line-hover ${
                       collapsed ? 'justify-center p-3' : 'px-3 py-2.5 gap-3 mx-1'
                     } ${
                       isActive 
@@ -400,8 +400,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         })}
       </nav>
 
-      <main className={`flex-1 min-w-0 min-h-0 bg-[#f8fafc] overflow-hidden h-dvh ${(location.pathname === '/whiteboard' || location.pathname === '/calligraphy') ? 'p-1 md:p-2' : 'p-2 md:p-4 lg:p-6'}`}>
-        <div className={`w-full h-full min-h-0 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 relative no-scrollbar ${(location.pathname === '/whiteboard' || location.pathname === '/calligraphy') ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+      <main className={`qul-main flex-1 min-w-0 min-h-0 bg-[#f8fafc] overflow-hidden h-dvh ${(location.pathname === '/whiteboard' || location.pathname === '/calligraphy') ? 'p-1 md:p-2' : 'p-2 md:p-4 lg:p-6'}`}>
+        <div className={`qul-content w-full h-full min-h-0 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 relative no-scrollbar ${(location.pathname === '/whiteboard' || location.pathname === '/calligraphy') ? 'overflow-hidden' : 'overflow-y-auto'}`}>
           {children}
         </div>
       </main>
