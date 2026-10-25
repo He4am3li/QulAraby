@@ -1725,7 +1725,7 @@ export const KnowledgeSupermarket: React.FC<KnowledgeSupermarketProps> = ({ onBa
 
   // Aduok Ticket Printer States & Refs
   const [printerState, setPrinterState] = useState<'printing' | 'ready' | 'tearing' | 'torn'>('printing');
-  const [barcodeHtml, setBarcodeHtml] = useState<string>('');
+  const [barcodeBars, setBarcodeBars] = useState<Array<{ x: number; width: number }>>([]);
   const paperWrapperRef = useRef<HTMLDivElement>(null);
   const receiptElemRef = useRef<HTMLDivElement>(null);
 
@@ -2185,18 +2185,18 @@ export const KnowledgeSupermarket: React.FC<KnowledgeSupermarketProps> = ({ onBa
     return audits;
   };
 
-  const generateBarcodeSvg = () => {
+  const generateBarcodeBars = (): Array<{ x: number; width: number }> => {
     let seed = 73052849;
     const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+    const bars: Array<{ x: number; width: number }> = [];
     let x = 0;
-    let out = '';
     while (x < 200) {
-      const w = [1, 1, 2, 3][Math.floor(rnd() * 4)];
-      if (x + w > 200) break;
-      out += `<rect x="${x}" y="0" width="${w}" height="40" fill="#15162a"/>`;
-      x += w + [1, 1, 2][Math.floor(rnd() * 3)];
+      const width = [1, 1, 2, 3][Math.floor(rnd() * 4)];
+      if (x + width > 200) break;
+      bars.push({ x, width });
+      x += width + [1, 1, 2][Math.floor(rnd() * 3)];
     }
-    return out;
+    return bars;
   };
 
   const startShelfLaserScan = (customSlots?: Record<string, WordItem | null>) => {
@@ -2322,7 +2322,7 @@ export const KnowledgeSupermarket: React.FC<KnowledgeSupermarketProps> = ({ onBa
 
   useEffect(() => {
     if (phase === 'receipt' || phase === 'checkout') {
-      setBarcodeHtml(generateBarcodeSvg());
+      setBarcodeBars(generateBarcodeBars());
       setTypedTvText('');
       setIsTvTextComplete(false);
 
@@ -3805,7 +3805,16 @@ export const KnowledgeSupermarket: React.FC<KnowledgeSupermarketProps> = ({ onBa
                     height="24" 
                     viewBox="0 0 200 40" 
                     preserveAspectRatio="none"
-                    dangerouslySetInnerHTML={{ __html: barcodeHtml }}
+                    {barcodeBars.map((bar, index) => (
+                      <rect
+                        key={index}
+                        x={bar.x}
+                        y={0}
+                        width={bar.width}
+                        height={40}
+                        fill="#15162a"
+                      />
+                    ))}
                   />
                   <div className="text-[7.5px] font-mono text-slate-500 text-center">#9200-AR-2026</div>
                 </div>
