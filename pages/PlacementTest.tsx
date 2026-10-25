@@ -293,12 +293,15 @@ export const PlacementTest: React.FC = () => {
       setRetries(0);
     } catch (e) {
       console.error("Initial generation failed:", e);
-      if (retries < 2) {
+      const errorMessage = e instanceof Error ? e.message : String(e || '');
+      const requestTimedOut = errorMessage.toLowerCase().includes('timed out');
+      if (retries < 2 && !requestTimedOut) {
         setRetries(prev => prev + 1);
         setTimeout(startTest, 1000);
         return;
       }
-      // Fallback question if API fails
+      // Always provide a deterministic fallback rather than leaving the student on an
+      // indefinite loading screen when the server or AI provider is unavailable.
       const fallbackQ = getFallbackQuestion('letters', 'Sound Recognition', 0);
       setQuestions([fallbackQ]);
     } finally {
