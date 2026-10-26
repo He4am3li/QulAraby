@@ -256,70 +256,20 @@ export const PlacementTest: React.FC = () => {
     }, idx);
   };
 
-  const startTest = async () => {
-    setLoading(true);
+  // Start immediately from a validated local question. Never block the first screen
+  // on an external model request; subsequent questions remain adaptive.
+  const startTest = () => {
+    setRetries(0);
+    setLoading(false);
+    setCurrentIdx(0);
+    setCurrentDifficulty(3);
+    setConsecutiveCorrect(0);
+    setConsecutiveIncorrect(0);
+    setSkillStats({});
+    setIsAnswered(false);
+    setSelectedOption(null);
+    setQuestions([getFallbackQuestion('letters', 'Sound Recognition', 0)]);
     setStep('testing');
-    try {
-      setRetries(0);
-      const schema = {
-        type: GenType.OBJECT,
-        properties: {
-          skill: { type: GenType.STRING },
-          subSkill: { type: GenType.STRING },
-          difficulty: { type: GenType.INTEGER, description: "1 to 10" },
-          question: { type: GenType.STRING },
-          translation_instruction: { type: GenType.STRING, description: "Instruction for letters only." },
-          question_translation: { type: GenType.STRING, description: "Short English explanation of the task, never revealing or translating an answer option." },
-          options: { type: GenType.ARRAY, items: { type: GenType.STRING } },
-          correctAnswer: { type: GenType.STRING },
-          audioPrompt: { type: GenType.STRING },
-          natureOfWrongOptions: { 
-            type: GenType.ARRAY, 
-            items: { 
-              type: GenType.OBJECT,
-              properties: {
-                option: { type: GenType.STRING },
-                diagnosticIndication: { type: GenType.STRING, description: "e.g. 'Phonetic confusion', 'Grammar misalignment', 'Vocabulary slip'" }
-              }
-            } 
-          }
-        },
-        required: ["skill", "difficulty", "question", "options", "correctAnswer", "subSkill"]
-      };
-      
-      const skill = SKILLS_ORDER[0].id; // letters
-      const response = await generateContentWithRetry({
-        model: "gemini-3.8-flash",
-        contents: `Generate question #1 (Skill: Letters, Sub-Skill: Sound Recognition) for an adaptive Arabic diagnostic test.
-        MANDATORY RULES:
-        1. FOR LETTERS: Visual & simple. Audio allowed ONLY for Sound Recognition. 
-        2. TRANSLATION: English instruction ALLOWED for letters only (max 10 words in 'translation_instruction').
-           - Keep 'translation_instruction' brief and keep 'question' EMPTY if the task is to identify a sound. NEVER include target letter/word in the question text.
-        3. FORMAT: Exactly 4 distinct options, 1 correct.
-         4. Include question_translation in English: explain the instruction only; never name an answer choice or translate the tested target.
-        4. CEFR: A1 difficulty.
-        5. Return JSON.`,
-        config: { responseMimeType: "application/json", responseSchema: schema }
-      });
-      
-      const parsedQ = safeJSONParse(response.text, {});
-      const firstQ = sanitizeQuestion(parsedQ, 'letters', 'Sound Recognition', 0);
-      
-      setQuestions([firstQ]);
-      setRetries(0);
-    } catch (e) {
-      console.error("Initial generation failed:", e);
-      if (retries < 2) {
-        setRetries(prev => prev + 1);
-        setTimeout(startTest, 1000);
-        return;
-      }
-      // Fallback question if API fails
-      const fallbackQ = getFallbackQuestion('letters', 'Sound Recognition', 0);
-      setQuestions([sanitizeQuestion(fallbackQ, 'letters', 'Sound Recognition', 0)]);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const generateNextQuestion = async (prevCorrect: boolean, errorNature?: string, retryCount = 0) => {
