@@ -1,6 +1,6 @@
 // Reviewed offline fallback bank: 10 distinct items per each of eight assessment sections.
 // For speaking/writing, these are objective diagnostics, not direct production assessments.
-export type PlacementBankItem = {question:string;options:string[];correctAnswer:string;audioPrompt?:string};
+export type PlacementBankItem = {question:string;options:string[];correctAnswer:string;audioPrompt?:string;questionEn?:string};
 const BANK: Record<string, PlacementBankItem[]> = {
   "letters": [
     {
@@ -829,8 +829,110 @@ const BANK: Record<string, PlacementBankItem[]> = {
     }
   ]
 };
+
+// English task prompts keep the Arabic target visible without disclosing the answer.
+const ENGLISH_PROMPTS: Record<string,string[]> = {
+  "letters": [
+    "Which letter begins the word «أسد»?",
+    "Which letter begins the word «بيت»?",
+    "Which is the initial form of the letter ت?",
+    "Which letter is at the end of «قلم»?",
+    "Complete the word: كتا...",
+    "Which word begins with the letter س?",
+    "Which letter comes after د?",
+    "Which letter has three dots above it?",
+    "Which word contains the letter ش?",
+    "Arrange the letters م - ل - ق to form a word."
+  ],
+  "vocab": [
+    "What is the meaning of «كتاب»?",
+    "What is the meaning of «مدرسة»?",
+    "Complete the sentence: أشربُ ...",
+    "What is the opposite of «كبير»?",
+    "What is a synonym of «سعيد»?",
+    "Complete the sentence: الطبيب يعمل في ...",
+    "Which word names a color?",
+    "What is the opposite of «بارد»?",
+    "Which word does not belong to the group?",
+    "What is the meaning of «يستيقظ»?"
+  ],
+  "grammar": [
+    "Choose the correct pronoun: ... طالبٌ.",
+    "Complete the sentence: البنتُ ... الدرسَ.",
+    "What is the past tense of «يكتب»?",
+    "Which sentence begins with a noun?",
+    "Which option is a preposition?",
+    "Complete the sentence: الطالبان ...",
+    "What is the grammatical role of «سريع» in «قطار سريع»?",
+    "Complete the sentence: لم ... أحمدُ.",
+    "Which is the dual form of «معلم»?",
+    "Complete the sentence: في الفصل ... طلابٍ."
+  ],
+  "translator": [
+    "What is the Arabic translation of 'House'?",
+    "What is the Arabic translation of 'Water'?",
+    "Which Arabic sentence means 'I read a book'?",
+    "Which Arabic phrase means 'Good morning'?",
+    "Which Arabic sentence means 'The girl is happy'?",
+    "Which Arabic sentence means 'Where is the school'?",
+    "Which Arabic sentence means 'I do not understand'?",
+    "Which Arabic sentence means 'The weather is hot today'?",
+    "Which Arabic sentence means 'She went to the market yesterday'?",
+    "Which Arabic sentence means 'Reading helps us learn'?"
+  ],
+  "listening": [
+    "Which greeting did you hear?",
+    "Which name did the speaker say?",
+    "Where is the speaker?",
+    "How is the weather?",
+    "How many books did the speaker buy?",
+    "When will the visit take place?",
+    "Which means of transport is faster?",
+    "What does the speaker want?",
+    "At what time did the plane arrive?",
+    "Why was Sami absent from school?"
+  ],
+  "speaking": [
+    "Which response is appropriate for 'How are you'?",
+    "What would you say when greeting someone in the morning?",
+    "Which sentence can you use to introduce yourself?",
+    "How would you politely ask for water?",
+    "How would you respond to 'Thank you'?",
+    "How would you ask where the library is?",
+    "Which sentence describes your hobby?",
+    "How would you apologize for being late?",
+    "Which sentence expresses your opinion?",
+    "How would you ask someone to repeat what they said?"
+  ],
+  "reading": [
+    "Where did Ali go? Read: «ذهب علي إلى السوق».",
+    "What color is the flower? Read: «الوردة حمراء».",
+    "When does Maryam study? Read: «تدرس مريم في الصباح».",
+    "What did Omar do after eating? Read: «أكل عمر التفاحة ثم شرب الماء».",
+    "How many trees are in the garden? Read: «في الحديقة خمس شجرات».",
+    "Why did Khalid stay inside? Read: «لم يخرج خالد بسبب المطر».",
+    "When does the library open? Read: «المكتبة تفتح الساعة التاسعة».",
+    "How did they travel to the museum? Read: «ركبنا الحافلة إلى المتحف».",
+    "What is the main idea? Read: «الرياضة تقوي الجسم وتحسن الصحة».",
+    "What can you infer? Read: «رغم التعب أكمل الفريق العمل»."
+  ],
+  "writing": [
+    "Which word is spelled correctly?",
+    "Which word is written correctly?",
+    "Which sentence is written correctly?",
+    "Complete the sentence: «أنا ... العربية».",
+    "Which punctuation mark completes «أين تسكن»?",
+    "Choose the correctly written word: «قرأتُ ... مفيدةً».",
+    "Which sentence has the correct word order?",
+    "Which plural sentence is correct?",
+    "Choose the correct connector: «درست جيدًا، ... نجحت».",
+    "Which sentence is the clearest and most complete?"
+  ]
+};
+
 export const getBankQuestion = (skill:string,index:number):PlacementBankItem => {
   const items=BANK[skill]||BANK.vocab;
-  return {...items[((index%10)+10)%10],options:[...items[((index%10)+10)%10].options]};
+  const position=((index%10)+10)%10;
+  return {...items[position],questionEn:ENGLISH_PROMPTS[skill]?.[position] || items[position].question,options:[...items[position].options]};
 };
 export const placementBankCounts = Object.fromEntries(Object.entries(BANK).map(([k,v])=>[k,v.length]));
