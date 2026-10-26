@@ -342,7 +342,7 @@ export const PlacementTest: React.FC = () => {
         required: ["skill", "difficulty", "question", "options", "correctAnswer", "subSkill"]
       };
       
-      const response = await generateContentWithRetry({
+      const response = await Promise.race([generateContentWithRetry({
         model: "gemini-3.8-flash",
         contents: `Generate diagnostic question #${nextIdx + 1} for an Arabic Placement Test (Non-Native).
         
@@ -365,7 +365,7 @@ export const PlacementTest: React.FC = () => {
         3. OPTIONS: Exactly 4 distinct options. One valid answer in 'correctAnswer'.
         4. Return JSON matching schema.`,
         config: { responseMimeType: "application/json", responseSchema: schema }
-      });
+      }), new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Question generation timed out")), 6000))]);
       
       const rawQ = safeJSONParse(response.text, {});
       const nextQ = sanitizeQuestion(rawQ, skill, subSkill, nextIdx);
@@ -376,16 +376,13 @@ export const PlacementTest: React.FC = () => {
       setSelectedOption(null);
     } catch (e) {
       console.error("Error generating next question:", e);
-      if (retryCount < 2) {
-        setTimeout(() => generateNextQuestion(prevCorrect, errorNature, retryCount + 1), 1000);
-      } else {
+      // Keep the assessment usable when the model is slow or unavailable.
         // Fallback question gracefully
         const fallbackQ = getFallbackQuestion(skill, subSkill, nextIdx);
         setQuestions(prev => [...prev, fallbackQ]);
         setCurrentIdx(nextIdx);
         setIsAnswered(false);
         setSelectedOption(null);
-      }
     }
   };
 
