@@ -51,7 +51,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'Super CDing 90',
     tapeColor: 'from-amber-600 via-yellow-700 to-stone-900',
     cassetteNumber: 'C-04',
-    titleAr: 'حكمة حبة القمح',
+    titleAr: 'حكمة حبة القمح والعصفورين',
     storyId: 'wheat-grain-wisdom'
   },
 
@@ -63,7 +63,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'HF-ES 90',
     tapeColor: 'from-blue-900 via-stone-900 to-indigo-900',
     cassetteNumber: 'C-05',
-    titleAr: 'حقوق الجار والأصحاب',
+    titleAr: 'أصدقاء الحي وحق الجار',
     storyId: 'neighbor-rights'
   },
   {
@@ -73,7 +73,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'NX SA90',
     tapeColor: 'from-purple-900 via-stone-900 to-fuchsia-900',
     cassetteNumber: 'C-06',
-    titleAr: 'المزارعة والكهرباء',
+    titleAr: 'المزارعة الذكية ومدير الشركة',
     storyId: 'farmer-company-manager'
   },
   {
@@ -83,7 +83,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'SUPER FERRO',
     tapeColor: 'from-emerald-700 via-green-900 to-stone-900',
     cassetteNumber: 'C-07',
-    titleAr: 'نخلة الإمارات المعطاءة',
+    titleAr: 'سيدة الشجر: نخلة الإمارات',
     storyId: 'palm-tree-emirates'
   },
   {
@@ -125,7 +125,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'SA90 HIGH',
     tapeColor: 'from-teal-800 via-stone-900 to-emerald-950',
     cassetteNumber: 'C-11',
-    titleAr: 'رحلة استكشاف الوطن',
+    titleAr: 'رحلة استكشاف في ربوع الوطن',
     storyId: 'homeland-journey'
   },
   {
@@ -135,7 +135,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'SA-X 60',
     tapeColor: 'from-amber-800 via-stone-900 to-yellow-950',
     cassetteNumber: 'C-12',
-    titleAr: 'أمانة المرافق العامة',
+    titleAr: 'أمانة المقعد والمرافق المدرسية',
     storyId: 'school-furniture-trust'
   },
 
@@ -147,7 +147,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'PRO 60',
     tapeColor: 'from-stone-800 via-zinc-900 to-black',
     cassetteNumber: 'C-13',
-    titleAr: 'رسالة كوكب الأرض',
+    titleAr: 'رسالة كوكب الأرض وثقب الأوزون',
     storyId: 'earth-ozone-letter'
   },
   {
@@ -199,7 +199,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'chromdioxid super II',
     tapeColor: 'from-amber-900 via-stone-900 to-yellow-900',
     cassetteNumber: 'C-04',
-    titleAr: 'حكمة حبة القمح',
+    titleAr: 'حكمة حبة القمح والعصفورين',
     storyId: 'wheat-grain-wisdom'
   },
   {
@@ -209,7 +209,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'EXTRA 60',
     tapeColor: 'from-stone-800 via-zinc-900 to-black',
     cassetteNumber: 'C-05',
-    titleAr: 'حقوق الجار والأصحاب',
+    titleAr: 'أصدقاء الحي وحق الجار',
     storyId: 'neighbor-rights'
   },
   {
@@ -219,7 +219,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'Super CDing 90',
     tapeColor: 'from-teal-900 via-emerald-950 to-stone-900',
     cassetteNumber: 'C-06',
-    titleAr: 'المزارعة والكهرباء',
+    titleAr: 'المزارعة الذكية ومدير الشركة',
     storyId: 'farmer-company-manager'
   },
 
@@ -231,7 +231,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'CHROMIUM C90',
     tapeColor: 'from-indigo-900 via-blue-950 to-stone-900',
     cassetteNumber: 'C-07',
-    titleAr: 'نخلة الإمارات المعطاءة',
+    titleAr: 'سيدة الشجر: نخلة الإمارات',
     storyId: 'palm-tree-emirates'
   },
   {
@@ -273,7 +273,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'UC-II 90',
     tapeColor: 'from-stone-800 via-zinc-900 to-black',
     cassetteNumber: 'C-11',
-    titleAr: 'رحلة استكشاف الوطن',
+    titleAr: 'رحلة استكشاف في ربوع الوطن',
     storyId: 'homeland-journey'
   },
   {
@@ -283,7 +283,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'UC-II 90',
     tapeColor: 'from-cyan-900 via-blue-950 to-stone-900',
     cassetteNumber: 'C-12',
-    titleAr: 'أمانة المرافق العامة',
+    titleAr: 'أمانة المقعد والمرافق المدرسية',
     storyId: 'school-furniture-trust'
   },
   {
@@ -293,7 +293,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'HF 90',
     tapeColor: 'from-rose-900 via-stone-900 to-red-950',
     cassetteNumber: 'C-13',
-    titleAr: 'رسالة كوكب الأرض',
+    titleAr: 'رسالة كوكب الأرض وثقب الأوزون',
     storyId: 'earth-ozone-letter'
   },
   {
@@ -345,7 +345,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'musicae 90',
     tapeColor: 'from-stone-700 via-zinc-900 to-black',
     cassetteNumber: 'C-04',
-    titleAr: 'حكمة حبة القمح',
+    titleAr: 'حكمة حبة القمح والعصفورين',
     storyId: 'wheat-grain-wisdom'
   },
 
@@ -357,7 +357,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'METAL CD 90',
     tapeColor: 'from-amber-800 via-stone-900 to-yellow-900',
     cassetteNumber: 'C-05',
-    titleAr: 'حقوق الجار والأصحاب',
+    titleAr: 'أصدقاء الحي وحق الجار',
     storyId: 'neighbor-rights'
   },
   {
@@ -367,7 +367,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'EXTRA II 90',
     tapeColor: 'from-stone-800 via-zinc-900 to-black',
     cassetteNumber: 'C-06',
-    titleAr: 'المزارعة والكهرباء',
+    titleAr: 'المزارعة الذكية ومدير الشركة',
     storyId: 'farmer-company-manager'
   },
   {
@@ -377,7 +377,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'extra 90',
     tapeColor: 'from-teal-900 via-stone-900 to-emerald-950',
     cassetteNumber: 'C-07',
-    titleAr: 'نخلة الإمارات المعطاءة',
+    titleAr: 'سيدة الشجر: نخلة الإمارات',
     storyId: 'palm-tree-emirates'
   },
   {
@@ -419,7 +419,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'Setro CD 90',
     tapeColor: 'from-indigo-900 via-stone-900 to-blue-950',
     cassetteNumber: 'C-11',
-    titleAr: 'رحلة استكشاف الوطن',
+    titleAr: 'رحلة استكشاف في ربوع الوطن',
     storyId: 'homeland-journey'
   },
   {
@@ -429,7 +429,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'PRO 90',
     tapeColor: 'from-stone-800 via-zinc-900 to-black',
     cassetteNumber: 'C-12',
-    titleAr: 'أمانة المرافق العامة',
+    titleAr: 'أمانة المقعد والمرافق المدرسية',
     storyId: 'school-furniture-trust'
   }
 ];
