@@ -231,17 +231,25 @@ export const PlacementTest: React.FC = () => {
     };
   };
 
-  // Each question's correct answer rotates through the four positions, with a
-  // per-session offset. Never change the answer key when rearranging options.
-  const answerOffsetRef = React.useRef(Math.floor(Math.random() * 4));
-  const arrangeQuestion = (question: any, idx: number) => {
+  // Independent unbiased answer placement; do not cycle through 1-2-3-4.
+  const randomIndex = (max: number) => {
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      const bytes = new Uint32Array(1);
+      crypto.getRandomValues(bytes);
+      return bytes[0] % max;
+    }
+    return Math.floor(Math.random() * max);
+  };
+  const arrangeQuestion = (question: any, _idx: number) => {
     const options = [...question.options];
     const correct = question.correctAnswer;
     const answerIndex = options.indexOf(correct);
     if (answerIndex < 0 || options.length !== 4) return question;
-    options.splice(answerIndex, 1);
-    const slot = (idx + answerOffsetRef.current) % 4;
-    options.splice(slot, 0, correct);
+    // Fisher-Yates shuffle independently for each question.
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = randomIndex(i + 1);
+      [options[i], options[j]] = [options[j], options[i]];
+    }
     return { ...question, options };
   };
 
@@ -251,7 +259,6 @@ export const PlacementTest: React.FC = () => {
     setRetries(0);
     setLoading(false);
     setCurrentIdx(0);
-    answerOffsetRef.current = Math.floor(Math.random() * 4);
     setQuestions([arrangeQuestion(getFallbackQuestion('letters', 'Sound Recognition', 0), 0)]);
     setStep('testing');
   };
@@ -548,8 +555,20 @@ export const PlacementTest: React.FC = () => {
     }
   };
 
-  const speak = async (text: string) => {
-    await globalSpeak(text, 'ar');
+  // Instant local audio for the fixed listening bank: no Gemini round-trip.
+  // Recorded, pre-generated audio can replace this via /audio/placement/*.mp3 later.
+  const speak = (text: string) => {
+    if (!text || typeof window === 'undefined' || !window.speechSynthesis) return;
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ar-SA';
+    utterance.rate = 0.85;
+    const voices = synth.getVoices();
+    utterance.voice = voices.find(v => v.lang.toLowerCase().startsWith('ar') && /natural|premium|google/i.test(v.name))
+      || voices.find(v => v.lang.toLowerCase().startsWith('ar'))
+      || null;
+    synth.speak(utterance);
   };
 
   const totalScore: number = Object.keys(skillStats).reduce((acc: number, key: string) => acc + (skillStats[key]?.correct || 0), 0);
