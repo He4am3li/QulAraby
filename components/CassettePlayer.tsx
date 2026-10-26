@@ -693,7 +693,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   };
 
   const handleQuizSubmit = () => {
-    const score = questions.slice(0, 3).filter((q, i) => quizAnswers[i] === q.correctIndex).length;
+    const score = questions.slice(0, 5).filter((q, i) => quizAnswers[i] === q.correctIndex).length;
     setQuizScore(score);
     setQuizSubmitted(true);
     setListeningStage('final');
@@ -1153,7 +1153,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                     <div className="space-y-1.5 text-right" dir="rtl">
                       <div className="flex justify-between items-center text-[9px] font-bold text-stone-600">
                         <span>{listeningStage === 'final' ? 'المراجعة النهائية' : 'اختبار الفهم الأول'}</span>
-                        <span>{questionIndex + 1} / {Math.min(3, questions.length)}</span>
+                        <span>{questionIndex + 1} / {Math.min(5, questions.length)}</span>
                       </div>
                       <p className="text-[11px] font-black text-stone-950 arabic-font leading-tight">{questions[questionIndex].question}</p>
                       <div className="space-y-1">
@@ -1167,14 +1167,14 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                       </div>
                       <div className="flex items-center justify-between gap-2 pt-1">
                         <button disabled={questionIndex === 0} onClick={() => setQuestionIndex(i => i - 1)} className="text-[10px] disabled:opacity-30">السابق</button>
-                        {questionIndex < Math.min(3, questions.length) - 1 ? (
+                        {questionIndex < Math.min(5, questions.length) - 1 ? (
                           <button disabled={quizAnswers[questionIndex] === undefined} onClick={() => setQuestionIndex(i => i + 1)} className="px-3 py-1 rounded bg-stone-900 text-white text-[10px] disabled:opacity-30">التالي</button>
                         ) : listeningStage === 'questions' ? (
-                          <button onClick={() => { setFirstAttempt({ ...quizAnswers }); setListeningStage('second'); setQuestionIndex(0); if (audioRef.current) { audioRef.current.currentTime = 0; audioRef.current.play().then(() => { setIsPlaying(true); setReelsPrimed(true); }).catch(() => {}); } }} className="px-2 py-1 rounded bg-stone-900 text-white text-[10px]">الاستماع الثاني</button>
+                          <button disabled={questions.slice(0, 5).some((_, i) => quizAnswers[i] === undefined)} onClick={() => { setFirstAttempt({ ...quizAnswers }); setListeningStage('second'); setQuestionIndex(0); if (audioRef.current) { audioRef.current.currentTime = 0; audioRef.current.play().then(() => { setIsPlaying(true); setReelsPrimed(true); }).catch(() => {}); } }} className="px-2 py-1 rounded bg-stone-900 text-white text-[10px]">الاستماع الثاني</button>
                         ) : !quizSubmitted ? (
-                          <button onClick={handleQuizSubmit} className="px-2 py-1 rounded bg-stone-900 text-white text-[10px]">إنهاء وتقييم</button>
+                          <button disabled={questions.slice(0, 5).some((_, i) => quizAnswers[i] === undefined)} onClick={handleQuizSubmit} className="px-2 py-1 rounded bg-stone-900 text-white text-[10px] disabled:opacity-30">إنهاء وتقييم</button>
                         ) : (
-                          <span className="text-[10px] font-bold">النتيجة: {quizScore} / {Math.min(3, questions.length)} · أول استماع: {questions.slice(0,3).filter((q,i) => firstAttempt[i] === q.correctIndex).length}</span>
+                          <span className="text-[10px] font-bold">النتيجة: {quizScore} / {Math.min(5, questions.length)} · أول استماع: {questions.slice(0,5).filter((q,i) => firstAttempt[i] === q.correctIndex).length}</span>
                         )}
                       </div>
                     </div>
