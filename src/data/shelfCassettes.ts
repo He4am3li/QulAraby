@@ -31,7 +31,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'FERRO 90',
     tapeColor: 'from-red-800 via-stone-900 to-rose-900',
     cassetteNumber: 'C-02',
-    titleAr: 'أبطال الدفاع المدني',
+    titleAr: 'أبطال الدفاع المدني (حريق في المطبخ)',
     storyId: 'civil-defense-heroes'
   },
   {
@@ -167,7 +167,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'HF 90',
     tapeColor: 'from-sky-900 via-blue-950 to-stone-900',
     cassetteNumber: 'C-01',
-    titleAr: 'حكاية الصقر والغزال',
+    titleAr: 'الراعي والأسد الوفي',
     storyId: 'shepherd-lion'
   },
   {
@@ -177,7 +177,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'DJ2 90',
     tapeColor: 'from-violet-900 via-stone-900 to-purple-950',
     cassetteNumber: 'C-02',
-    titleAr: 'لؤلؤة الخليج والغواص',
+    titleAr: 'أبطال الدفاع المدني (حريق في المطبخ)',
     storyId: 'civil-defense-heroes'
   },
 
@@ -189,7 +189,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'LC-100',
     tapeColor: 'from-stone-700 via-stone-900 to-zinc-950',
     cassetteNumber: 'C-03',
-    titleAr: 'وفاء الخيل العربي',
+    titleAr: 'أسرار وفوائد التفاح',
     storyId: 'apple-secrets'
   },
   {
@@ -199,7 +199,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'chromdioxid super II',
     tapeColor: 'from-amber-900 via-stone-900 to-yellow-900',
     cassetteNumber: 'C-04',
-    titleAr: 'صانع الفخار العجيب',
+    titleAr: 'حكمة حبة القمح',
     storyId: 'wheat-grain-wisdom'
   },
   {
@@ -209,7 +209,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'EXTRA 60',
     tapeColor: 'from-stone-800 via-zinc-900 to-black',
     cassetteNumber: 'C-05',
-    titleAr: 'أسرار النجوم والملاحة',
+    titleAr: 'حقوق الجار والأصحاب',
     storyId: 'neighbor-rights'
   },
   {
@@ -219,7 +219,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'Super CDing 90',
     tapeColor: 'from-teal-900 via-emerald-950 to-stone-900',
     cassetteNumber: 'C-06',
-    titleAr: 'قافلة التوابل والحرير',
+    titleAr: 'المزارعة والكهرباء',
     storyId: 'farmer-company-manager'
   },
 
@@ -231,7 +231,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'CHROMIUM C90',
     tapeColor: 'from-indigo-900 via-blue-950 to-stone-900',
     cassetteNumber: 'C-07',
-    titleAr: 'الماء سر الحياة',
+    titleAr: 'نخلة الإمارات المعطاءة',
     storyId: 'palm-tree-emirates'
   },
   {
@@ -241,7 +241,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'DRI 90',
     tapeColor: 'from-emerald-900 via-stone-900 to-teal-950',
     cassetteNumber: 'C-08',
-    titleAr: 'سحر الصحراء والواحات',
+    titleAr: 'عرق الجبين وقيمة العمل',
     storyId: 'forehead-sweat-value'
   },
   {
@@ -251,7 +251,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: '508/SAPPE 60',
     tapeColor: 'from-amber-800 via-orange-950 to-stone-900',
     cassetteNumber: 'C-09',
-    titleAr: 'همة الشباب وبناء الغد',
+    titleAr: 'كروان الإذاعة المدرسية',
     storyId: 'school-radio-curlew'
   },
   {
@@ -261,7 +261,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'HOF EX 90',
     tapeColor: 'from-purple-900 via-stone-900 to-indigo-950',
     cassetteNumber: 'C-10',
-    titleAr: 'شجرة الغاف الصامدة',
+    titleAr: 'أختي الصغيرة وسر المحبة',
     storyId: 'little-sister-love'
   },
 
@@ -273,7 +273,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'UC-II 90',
     tapeColor: 'from-stone-800 via-zinc-900 to-black',
     cassetteNumber: 'C-11',
-    titleAr: 'مخترع المصباح الصغير',
+    titleAr: 'رحلة استكشاف الوطن',
     storyId: 'homeland-journey'
   },
   {
@@ -283,7 +283,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'UC-II 90',
     tapeColor: 'from-cyan-900 via-blue-950 to-stone-900',
     cassetteNumber: 'C-12',
-    titleAr: 'رحلة قطرة المطر',
+    titleAr: 'أمانة المرافق العامة',
     storyId: 'school-furniture-trust'
   },
   {
@@ -293,7 +293,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'HF 90',
     tapeColor: 'from-rose-900 via-stone-900 to-red-950',
     cassetteNumber: 'C-13',
-    titleAr: 'طبيب القرية المخلص',
+    titleAr: 'رسالة كوكب الأرض',
     storyId: 'earth-ozone-letter'
   },
   {
@@ -303,7 +303,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'Hi8 Pro 90',
     tapeColor: 'from-emerald-900 via-stone-900 to-teal-950',
     cassetteNumber: 'C-14',
-    titleAr: 'كنوز التراث البحري',
+    titleAr: 'سفينة العلم والاجتهاد',
     storyId: 'diligence-and-work'
   },
 
@@ -315,7 +315,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'BX 90',
     tapeColor: 'from-amber-900 via-stone-900 to-yellow-950',
     cassetteNumber: 'C-01',
-    titleAr: 'حارس القلعة القديمة',
+    titleAr: 'الراعي والأسد الوفي',
     storyId: 'shepherd-lion'
   },
   {
@@ -325,7 +325,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'FX-I 90',
     tapeColor: 'from-slate-800 via-zinc-900 to-black',
     cassetteNumber: 'C-02',
-    titleAr: 'بستان الحكمة والأمثال',
+    titleAr: 'أبطال الدفاع المدني (حريق في المطبخ)',
     storyId: 'civil-defense-heroes'
   },
   {
@@ -335,7 +335,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'SA90',
     tapeColor: 'from-blue-900 via-indigo-950 to-stone-900',
     cassetteNumber: 'C-03',
-    titleAr: 'حكاية الجمل الصبور',
+    titleAr: 'أسرار وفوائد التفاح',
     storyId: 'apple-secrets'
   },
   {
@@ -345,7 +345,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'musicae 90',
     tapeColor: 'from-stone-700 via-zinc-900 to-black',
     cassetteNumber: 'C-04',
-    titleAr: 'أصدقاء البيئة الخضراء',
+    titleAr: 'حكمة حبة القمح',
     storyId: 'wheat-grain-wisdom'
   },
 
@@ -357,7 +357,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'METAL CD 90',
     tapeColor: 'from-amber-800 via-stone-900 to-yellow-900',
     cassetteNumber: 'C-05',
-    titleAr: 'عجائب الفضاء السحيق',
+    titleAr: 'حقوق الجار والأصحاب',
     storyId: 'neighbor-rights'
   },
   {
@@ -367,7 +367,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'EXTRA II 90',
     tapeColor: 'from-stone-800 via-zinc-900 to-black',
     cassetteNumber: 'C-06',
-    titleAr: 'صوت الناي وذكريات الجبل',
+    titleAr: 'المزارعة والكهرباء',
     storyId: 'farmer-company-manager'
   },
   {
@@ -377,7 +377,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'extra 90',
     tapeColor: 'from-teal-900 via-stone-900 to-emerald-950',
     cassetteNumber: 'C-07',
-    titleAr: 'أمانة الراعي الأمين',
+    titleAr: 'نخلة الإمارات المعطاءة',
     storyId: 'palm-tree-emirates'
   },
   {
@@ -387,7 +387,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'Ferrocolor 09-6',
     tapeColor: 'from-red-800 via-rose-900 to-stone-900',
     cassetteNumber: 'C-08',
-    titleAr: 'رياح الأمل والعزيمة',
+    titleAr: 'عرق الجبين وقيمة العمل',
     storyId: 'forehead-sweat-value'
   },
 
@@ -399,7 +399,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'PA195 90',
     tapeColor: 'from-slate-800 via-stone-900 to-black',
     cassetteNumber: 'C-09',
-    titleAr: 'فرسان القراءة والمعرفة',
+    titleAr: 'كروان الإذاعة المدرسية',
     storyId: 'school-radio-curlew'
   },
   {
@@ -409,7 +409,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'ADX 90',
     tapeColor: 'from-stone-900 via-zinc-900 to-black',
     cassetteNumber: 'C-10',
-    titleAr: 'نداء الواجب والشجاعة',
+    titleAr: 'أختي الصغيرة وسر المحبة',
     storyId: 'little-sister-love'
   },
   {
@@ -419,7 +419,7 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'Setro CD 90',
     tapeColor: 'from-indigo-900 via-stone-900 to-blue-950',
     cassetteNumber: 'C-11',
-    titleAr: 'أهازيج الصيد والبحارة',
+    titleAr: 'رحلة استكشاف الوطن',
     storyId: 'homeland-journey'
   },
   {
@@ -429,24 +429,12 @@ export const SHELF_TAPES: ShelfTape[] = [
     model: 'PRO 90',
     tapeColor: 'from-stone-800 via-zinc-900 to-black',
     cassetteNumber: 'C-12',
-    titleAr: 'شعلة الطموح والإنجاز',
+    titleAr: 'أمانة المرافق العامة',
     storyId: 'school-furniture-trust'
   }
 ];
 
 export const getStoryForShelfTape = (tape: ShelfTape): StoryCassette | undefined => {
-  const match = STORY_CASSETTES.find(s => s.id === tape.storyId);
-  if (match) {
-    // If the tape has a custom titleAr, return a story copy with that titleAr
-    if (tape.titleAr && tape.titleAr !== match.titleAr) {
-      return {
-        ...match,
-        titleAr: tape.titleAr,
-        vintageBrand: tape.brand,
-        year: tape.year.toString()
-      };
-    }
-    return match;
-  }
-  return STORY_CASSETTES[0];
+  // Never substitute another recording or override the actual story title.
+  return STORY_CASSETTES.find(story => story.id === tape.storyId);
 };
