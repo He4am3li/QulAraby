@@ -218,7 +218,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   return (
     <div className={`h-full min-h-0 overflow-hidden flex flex-col md:flex-row bg-slate-950 ${lang === 'ar' ? 'font-arabic' : ''}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <OnboardingTour lang={lang} />
-      <RoleSwitcher />
+      <RoleSwitcher lang={lang} />
       
       {/* Dynamic Desktop Sidebar */}
       <motion.aside 
