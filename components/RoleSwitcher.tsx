@@ -60,7 +60,7 @@ export const RoleSwitcher: React.FC<{ lang: 'ar' | 'en' }> = ({ lang }) => {
     } finally { setSaving(false); }
   };
 
-  return <div className="fixed bottom-4 z-[1000] max-w-[calc(100vw-2rem)]" style={lang === 'ar' ? { left: 'max(1rem, calc(72px + 1rem))' } : { right: 'max(1rem, calc(72px + 1rem))' }} dir="rtl">
+  return <div className={`fixed z-[1000] max-w-[calc(100vw-2rem)] bottom-2 md:bottom-4 lg:bottom-6 ${lang === 'ar' ? 'left-2 md:left-4 lg:left-6' : 'right-2 md:right-4 lg:right-6'}`} dir="rtl">
     <AnimatePresence>
       {open && <motion.div initial={{opacity:0,y:10,scale:.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:10,scale:.98}} className="mb-3 w-[min(340px,calc(100vw-2rem))] rounded-xl border border-slate-300 bg-white p-4 text-slate-900 shadow-lg">
         <div className="mb-3 flex items-start justify-between gap-2"><div><h3 className="font-black">التنقل بين واجهات قُل</h3><p className="mt-1 text-xs leading-5 text-slate-500">هذه معاينة محلية لا تغيّر دورك الحقيقي في قاعدة البيانات.</p></div><button onClick={()=>setOpen(false)} aria-label="إغلاق" className="rounded-lg p-1 hover:bg-slate-100"><X size={18}/></button></div>
