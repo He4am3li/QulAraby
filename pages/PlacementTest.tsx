@@ -129,6 +129,12 @@ export const PlacementTest: React.FC = () => {
   const [selectedOption, setSelectedOption] = React.useState<string | null>(null);
   const [lang, setLang] = React.useState<'ar' | 'en'>(localStorage.getItem('hub_lang') as 'ar' | 'en' || 'ar');
   const [studyPlan, setStudyPlan] = React.useState<any>(null);
+  const [isResultsPreview, setIsResultsPreview] = React.useState(false);
+  const openResultsPreview = () => {
+    setIsResultsPreview(true);
+    setSkillStats(Object.fromEntries(SKILLS_ORDER.map((skill, i) => [skill.id, { correct: [7, 5, 6, 8, 4, 7, 6, 5][i], incorrect: 10 - [7, 5, 6, 8, 4, 7, 6, 5][i], skipped: 0 }])));
+    setStep('results');
+  };
   const [showPreviewModal, setShowPreviewModal] = React.useState(false);
 
   // Teacher State for viewing all student reports
@@ -241,6 +247,7 @@ export const PlacementTest: React.FC = () => {
 
   // Open immediately; never wait for an external AI response before the first question.
   const startTest = () => {
+    setIsResultsPreview(false);
     setRetries(0);
     setLoading(false);
     setCurrentIdx(0);
@@ -957,6 +964,7 @@ export const PlacementTest: React.FC = () => {
                     </div>
                  </div>
 
+                 <button type="button" onClick={openResultsPreview} className="mb-4 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-xs arabic-font hover:bg-slate-50">{lang === 'ar' ? 'معاينة تصميم النتائج دون أداء الاختبار' : 'Preview results layout without taking the test'}</button>
                  <div className="flex flex-wrap items-center justify-center gap-4">
                    <button 
                     onClick={startTest} 
@@ -1190,125 +1198,44 @@ export const PlacementTest: React.FC = () => {
           )}
 
           {step === 'results' && (
-            <div className="w-full animate-in zoom-in-95 fade-in duration-1000 p-4 flex flex-col gap-6 no-print max-w-6xl">
-               <div className="bg-white/70 backdrop-blur-3xl rounded-[3rem] border border-white/50 shadow-[0_32px_64px_rgba(37,99,235,0.08)] p-8 md:p-12 text-center flex flex-col items-center">
-                  <div className="mb-8">
-                    <motion.div 
-                      animate={{ scale: [1, 1.05, 1] }} 
-                      transition={{ repeat: Infinity, duration: 4 }}
-                      className="w-20 h-20 bg-blue-50/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100/50 shadow-inner"
-                    >
-                      <Award size={36} className="text-blue-500" />
-                    </motion.div>
-                    <h1 className="text-4xl font-black text-slate-900 arabic-font leading-none mb-2">{t.reportTitle}</h1>
-                    <p className="text-slate-400 text-xs font-bold opacity-60 uppercase tracking-[0.2em]">{t.reportSub}</p>
-                  </div>
-
-                  <div className="w-full mb-12 space-y-12">
-                    <section>
-                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-8 flex items-center justify-center gap-2">
-                        <div className="w-8 h-[1px] bg-slate-200" />
-                        <span className="flex items-center gap-2">
-                          <Users size={14} className="text-blue-500" />
-                          {t.coreSkills}
-                        </span>
-                        <div className="w-8 h-[1px] bg-slate-200" />
-                      </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        {SKILLS_ORDER.filter(s => s.isCore).map((s) => {
-                          const stats = skillStats[s.id.toLowerCase()] || { correct: 0, incorrect: 0, skipped: 0 };
-                          const score = stats.correct;
-                          const badge = getLevelBadge(score);
-                          return (
-                            <div key={s.id} className="bg-white/40 backdrop-blur-md p-6 rounded-[2rem] border border-white/60 shadow-sm flex flex-col text-right group hover:shadow-xl hover:bg-white/60 transition-all relative overflow-hidden">
-                                <div className="flex items-start justify-between mb-4">
-                                  <div className={`px-3 py-1 rounded-full text-[9px] font-black border ${badge.class} arabic-font uppercase tracking-wider`}>{badge.label}</div>
-                                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${s.color} text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}><s.icon size={22} /></div>
-                                </div>
-                                <h4 className="text-sm font-black text-slate-800 arabic-font mb-3 leading-none">{lang === 'ar' ? s.label.ar : s.label.en}</h4>
-                                <div className="w-full h-2 bg-slate-100/50 rounded-full overflow-hidden shadow-inner"><div className={`h-full ${s.barColor} transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(37,99,235,0.3)]`} style={{ width: `${(score / 10) * 100}%` }} /></div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </section>
-
-                    <section>
-                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-8 flex items-center justify-center gap-2">
-                        <div className="w-8 h-[1px] bg-slate-200" />
-                        <span className="flex items-center gap-2">
-                          <Stethoscope size={14} className="text-emerald-500" />
-                          {t.diagnosticSkills}
-                        </span>
-                        <div className="w-8 h-[1px] bg-slate-200" />
-                      </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 opacity-80">
-                        {SKILLS_ORDER.filter(s => !s.isCore).map((s) => {
-                          const stats = skillStats[s.id.toLowerCase()] || { correct: 0, incorrect: 0, skipped: 0 };
-                          const score = stats.correct;
-                          return (
-                            <div key={s.id} className="bg-white/30 backdrop-blur-sm p-5 rounded-[1.5rem] border border-white/50 shadow-sm flex flex-col text-right group hover:shadow-lg transition-all">
-                                <div className="flex items-center justify-between mb-4">
-                                  <h4 className="text-xs font-black text-slate-800 arabic-font leading-none">{lang === 'ar' ? s.label.ar : s.label.en}</h4>
-                                  <div className={`w-10 h-10 rounded-xl bg-slate-50/50 text-slate-500 flex items-center justify-center group-hover:bg-white transition-all shadow-inner`}><s.icon size={18} /></div>
-                                </div>
-                                <div className="w-full h-1.5 bg-slate-100/50 rounded-full overflow-hidden relative shadow-inner">
-                                   <div className={`h-full ${s.barColor} transition-all duration-1000`} style={{ width: `${(score / 10) * 100}%` }} />
-                                </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  </div>
-
-                  <div className="w-full max-w-5xl bg-slate-900/90 backdrop-blur-2xl rounded-[2.5rem] p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl relative overflow-hidden border border-white/10 group/mastery">
-                    <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-blue-500 via-emerald-500 to-blue-500 opacity-50" />
-                     <div className="flex items-center gap-8 z-10">
-                        <div className="flex flex-col items-center bg-white/5 px-10 py-6 rounded-3xl border border-white/10 shadow-inner group-hover/mastery:scale-105 transition-transform">
-                           <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.4em] mb-2">{t.masteryBadge}</span>
-                           <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-emerald-400">
-                             {Math.round((totalScore / 80) * 100)}%
-                           </span>
-                        </div>
-                        <div className="text-right">
-                           <h3 className="text-2xl font-black text-white arabic-font leading-none mb-3">{t.masteryLabel}</h3>
-                           <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em]">{t.finalScore} <span className="text-blue-400">{totalScore} / 80</span></p>
-                        </div>
-                     </div>
-                     <div className="flex flex-wrap gap-4 z-10 w-full md:w-auto">
-                        {isTeacherOrAdmin ? (
-                          <button onClick={generatePlan} className="flex-1 md:flex-none px-6 py-4 bg-white text-black rounded-xl font-black text-xs flex items-center justify-center gap-3 shadow-lg hover:bg-emerald-500 hover:text-white transition-all active:scale-95 border-b-4 border-slate-200">
-                            <UserCheck size={18} /> <span className="arabic-font uppercase">{t.viewPlan}</span>
-                          </button>
-                        ) : null}
-                        {isTeacherOrAdmin && (
-                          <button onClick={() => setShowPreviewModal(true)} className="flex-1 md:flex-none px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-black text-xs flex items-center justify-center gap-3 shadow-lg transition-all active:scale-95 border-b-4 border-blue-800">
-                            <FileText size={18} /> <span className="arabic-font uppercase">{lang === 'ar' ? 'معاينة اختبار تحديد المستوى' : 'Preview Placement Test'}</span>
-                          </button>
-                        )}
-                        <button onClick={() => navigate('/')} className="flex-1 md:flex-none px-6 py-4 bg-white/5 hover:bg-white/10 text-white rounded-xl font-black text-xs flex items-center justify-center gap-3 border border-white/10 transition-all active:scale-95">
-                          <Home size={18} /> <span className="arabic-font uppercase">{t.goHome}</span>
-                        </button>
-                     </div>
-                  </div>
-
-                  {!isTeacherOrAdmin && (
-                    <div className="w-full max-w-5xl bg-emerald-500/10 border border-emerald-500/20 p-8 rounded-[2.5rem] text-center space-y-3 mt-6">
-                      <div className="w-14 h-14 bg-emerald-500 text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-                        <ShieldCheck size={28} />
-                      </div>
-                      <h4 className="text-xl font-black text-emerald-400 arabic-font">
-                        {lang === 'ar' ? 'تم تسليم اختبارك وحفظ نتيجتك بنجاح' : 'Test Submitted and Saved Successfully'}
-                      </h4>
-                      <p className="text-xs text-slate-300 font-bold arabic-font leading-relaxed max-w-xl mx-auto">
-                        {lang === 'ar' 
-                          ? 'تم حفظ تقريرك التشخيصي والخطط العلاجية والإثرائية المخصصة وإرسالها لمعلمك لمتابعتك وتوجيهك بشكل فردي.' 
-                          : 'Your diagnostic report, remedial and enrichment plans have been saved and sent to your teacher.'}
-                      </p>
-                    </div>
-                  )}
-               </div>
+            <div className="w-full h-full min-h-0 max-w-6xl mx-auto p-3 md:p-5 flex flex-col gap-3 overflow-hidden no-print" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+              <div className="flex items-center justify-between gap-3 shrink-0">
+                <div>
+                  <h2 className="text-lg md:text-xl font-black text-slate-900 arabic-font">{lang === 'ar' ? 'نتيجة تحديد المستوى' : 'Placement Results'}</h2>
+                  <p className="text-[11px] text-slate-500 font-semibold arabic-font">{lang === 'ar' ? 'ملخص المهارات والنتيجة' : 'Skills and score overview'}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isResultsPreview && <span className="rounded-lg bg-amber-50 text-amber-800 border border-amber-200 px-2 py-1 text-[10px] font-bold">{lang === 'ar' ? 'معاينة فقط' : 'Preview only'}</span>}
+                  <button type="button" onClick={() => navigate('/')} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 arabic-font">{t.goHome}</button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 shrink-0">
+                {SKILLS_ORDER.filter(s => s.isCore).map(skill => {
+                  const score = skillStats[skill.id]?.correct || 0;
+                  return <div key={skill.id} className="rounded-2xl border border-slate-200 bg-white px-3 py-3 md:py-4 min-w-0">
+                    <div className="flex justify-between items-center gap-2 mb-3"><span className="text-xs md:text-sm font-extrabold text-slate-800 arabic-font">{lang === 'ar' ? skill.label.ar : skill.label.en}</span><skill.icon size={17} className="text-slate-500" /></div>
+                    <div className="flex items-baseline justify-between gap-2 mb-2"><span className="font-black text-xl text-slate-900" dir="ltr">{score}<span className="text-xs text-slate-400">/10</span></span><span className="text-[10px] text-slate-500 arabic-font">{Math.round(score * 10)}%</span></div>
+                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${skill.barColor}`} style={{width:`${score * 10}%`}} /></div>
+                  </div>;
+                })}
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-3 md:p-4 shrink-0">
+                <h3 className="text-xs font-extrabold text-slate-700 mb-3 arabic-font">{t.diagnosticSkills}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {SKILLS_ORDER.filter(s => !s.isCore).map(skill => {
+                    const score = skillStats[skill.id]?.correct || 0;
+                    return <div key={skill.id} className="rounded-xl bg-slate-50 border border-slate-100 p-2.5 min-w-0">
+                      <div className="flex justify-between items-center gap-1 mb-2"><span className="text-xs font-bold text-slate-700 arabic-font">{lang === 'ar' ? skill.label.ar : skill.label.en}</span><span className="text-xs font-black text-slate-700" dir="ltr">{score}/10</span></div>
+                      <div className="h-1 bg-slate-200 rounded-full overflow-hidden"><div className={`h-full ${skill.barColor}`} style={{width:`${score * 10}%`}} /></div>
+                    </div>;
+                  })}
+                </div>
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-900 text-white px-4 md:px-6 py-3 md:py-4 shrink-0">
+                <div><div className="text-xs font-bold text-slate-300 arabic-font">{lang === 'ar' ? 'النتيجة الإجمالية' : 'Total score'}</div><div className="text-xl md:text-2xl font-black" dir="ltr">{totalScore}<span className="text-sm text-slate-400"> / 80</span></div></div>
+                <div className="text-2xl md:text-3xl font-black tabular-nums" dir="ltr">{Math.round(totalScore / 80 * 100)}%</div>
+              </div>
+              <p className="text-[10px] text-slate-500 arabic-font leading-snug">{lang === 'ar' ? 'هذه نتيجة الأسئلة الحالية، وليست تصنيفًا معتمدًا وفق CEFR. يتطلب تحديد مستوى التحدث والكتابة تقييمًا مباشرًا للأداء.' : 'This score is not a validated CEFR classification. Speaking and writing require direct performance assessment.'}</p>
             </div>
           )}
 
