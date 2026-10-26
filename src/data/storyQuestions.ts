@@ -330,6 +330,7 @@ export const STORY_QUESTIONS_MAP: Record<string, StoryQuestion[]> = {
 };
 
 export const getStoryQuestions = (storyId: string, fallbackStory?: any): StoryQuestion[] => {
+  if (JUHA_BEGINNER_QUESTIONS[storyId]) return JUHA_BEGINNER_QUESTIONS[storyId];
   if (STORY_QUESTIONS_MAP[storyId]) {
     return STORY_QUESTIONS_MAP[storyId];
   }
@@ -354,4 +355,528 @@ export const getStoryQuestions = (storyId: string, fallbackStory?: any): StoryQu
     ];
   }
   return [];
+};
+
+// Beginner listening bank: exact story IDs must be used by their corresponding audio/transcript records.
+export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
+  "juha-donkey": [
+    {
+      "question": "ماذا سأل الرجل جحا؟",
+      "options": [
+        "أين تذهب؟",
+        "كم سعر حمارك؟",
+        "متى اشتريت هذا الحمار؟"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا قال جحا للرجل؟",
+      "options": [
+        "أنا ذاهب إلى السوق.",
+        "اسأل الحمار.",
+        "أنا لا أملك حمارًا."
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "من الذي كان يمشي؟",
+      "options": [
+        "الحمار",
+        "جحا",
+        "الرجل"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا فعل الرجل في النهاية؟",
+      "options": [
+        "غضب من جحا.",
+        "ضحك من كلام جحا.",
+        "ضرب الحمار."
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا كان يركب جحا؟",
+      "options": [
+        "حصانًا",
+        "حمارًا",
+        "دراجة"
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    }
+  ],
+  "juha-pot": [
+    {
+      "question": "ماذا أخذ جحا من جاره؟",
+      "options": [
+        "طعامًا",
+        "قِدْرًا",
+        "مفتاحًا"
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا أعاد جحا مع القدر الكبير بعد يومين؟",
+      "options": [
+        "قدرًا صغيرًا",
+        "ذهبًا",
+        "لا شيء"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا قال جحا عن القدر الصغير؟",
+      "options": [
+        "ضاع القدر الصغير.",
+        "قدرك أنجب قدرًا صغيرًا.",
+        "اشتريت هذا القدر الجديد."
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا حدث للقدر الكبير في المرة الثانية؟",
+      "options": [
+        "أعاده جحا لجاره.",
+        "كسره جحا.",
+        "لم يُعِدْهُ جحا."
+      ],
+      "correctIndex": 2,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا قال جحا عندما استغرب الجار من موت القدر؟",
+      "options": [
+        "إذا كان القدر ينجب، فلماذا لا يموت؟",
+        "القدر سرقه لص.",
+        "الأواني لا تعيش طويلًا."
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    }
+  ],
+  "juha-fish": [
+    {
+      "question": "إلى أين ذهب جحا ليشتري سمكًا؟",
+      "options": [
+        "إلى السوق",
+        "إلى المسجد",
+        "إلى البيت"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا قال البائع عن السمك؟",
+      "options": [
+        "هو سمك مجمد.",
+        "لقد اصطدته اليوم.",
+        "هو سمك قديم."
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "أين وضع جحا أذنه؟",
+      "options": [
+        "بجانب السمك",
+        "على جدار المحل",
+        "على رأس البائع"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا سأل جحا السمك؟",
+      "options": [
+        "عن سعر الكيلو",
+        "عن أخبار البحر",
+        "عن لون الماء"
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا قال السمك لجحا بحسب قوله؟",
+      "options": [
+        "إنه خرج من البحر منذ أسبوع.",
+        "إنه طازج ولذيذ.",
+        "البحر قريب من هنا."
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    }
+  ],
+  "juha-shoes": [
+    {
+      "question": "إلى أين ذهب جحا؟",
+      "options": [
+        "إلى المسجد",
+        "إلى السوق",
+        "إلى المدرسة"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "أين وضع جحا حذاءه عندما دخل؟",
+      "options": [
+        "تركه عند الباب.",
+        "وضعه في كيس وحمله معه.",
+        "أعطاه لصديقه."
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "لماذا حمل جحا حذاءه؟",
+      "options": [
+        "لأنه يخشى أن يسرقه أحد.",
+        "لأنه يريد تنظيفه.",
+        "لأنه جديد جدًا."
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "بماذا نصحه الرجل؟",
+      "options": [
+        "أن يتركه في البيت.",
+        "أن يضعه عند الباب ويتوكل على الله.",
+        "أن يبيعه."
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا قال جحا عن حذائه؟",
+      "options": [
+        "حذائي ثقيل جدًا.",
+        "حذائي لا يعرف الطريق إلى البيت.",
+        "حذائي ضاع مني."
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    }
+  ],
+  "juha-honey": [
+    {
+      "question": "ماذا اشترى جحا؟",
+      "options": [
+        "جرة من العسل",
+        "زجاجة من الزيت",
+        "وعاء من الحليب"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "أين وضع جحا جرة العسل؟",
+      "options": [
+        "في المطبخ",
+        "في غرفة النوم",
+        "في الشارع"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "كيف وجد جحا الجرة عندما عاد؟",
+      "options": [
+        "مكسورة",
+        "فارغة",
+        "مغلقة بإحكام"
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "مَنْ سَأَلَهُ جُحا عن العسل؟",
+      "options": [
+        "زوجته",
+        "ابنه",
+        "جاره"
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا وجد جحا حول فم ابنه؟",
+      "options": [
+        "عسلًا",
+        "ماءً",
+        "طعامًا"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    }
+  ],
+  "juha-glasses": [
+    {
+      "question": "ماذا أراد جحا أن يشتري من السوق؟",
+      "options": [
+        "كتابًا جديدًا",
+        "نظارة",
+        "قلمًا"
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا حاول جحا أن يفعل بعد أن لبس النظارة؟",
+      "options": [
+        "أن يقرأ كتابًا",
+        "أن ينظر في المرآة",
+        "أن يكتب رسالة"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "هل استطاع جحا القراءة بالنظارات؟",
+      "options": [
+        "نعم، بسهولة.",
+        "لا، لم يستطع.",
+        "قرأ جزءًا قليلًا."
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا سأله البائع؟",
+      "options": [
+        "هل تعرف القراءة؟",
+        "هل معك مال كافٍ؟",
+        "هل تحب هذا اللون؟"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "لماذا أراد جحا نظارة وهو لا يعرف القراءة؟",
+      "options": [
+        "لكي يرى الأشياء البعيدة.",
+        "لكي يتعلم القراءة.",
+        "لكي يرتديها أمام أصدقائه."
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    }
+  ],
+  "juha-key": [
+    {
+      "question": "ماذا كان يفعل جحا في الشارع؟",
+      "options": [
+        "يبحث عن مفتاحه",
+        "ينتظر جاره",
+        "يبيع المفاتيح"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "من ساعد جحا في البحث؟",
+      "options": [
+        "ابنه",
+        "جاره",
+        "رجل غريب"
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "أين فقد جحا المفتاح حقًا؟",
+      "options": [
+        "في الشارع أمام البيت",
+        "داخل البيت",
+        "في السوق البعيد"
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "لماذا تعجب الجار من جحا؟",
+      "options": [
+        "لأنه يبحث في الشارع والمفتاح ضاع في البيت.",
+        "لأنه يبحث ليلًا دون ضوء.",
+        "لأنه لا يعرف شكل المفتاح."
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "لماذا بحث جحا في الشارع؟",
+      "options": [
+        "لأن الباب مفتوح.",
+        "لأن الضوء هنا أفضل.",
+        "لأن المفتاح سقط من النافذة."
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    }
+  ],
+  "juha-doctor": [
+    {
+      "question": "إلى أين ذهب جحا؟",
+      "options": [
+        "إلى الطبيب",
+        "إلى السوق",
+        "إلى دكان العسل"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "ممَّ كان يشكو جحا؟",
+      "options": [
+        "ألم في بطنه",
+        "ألم في عينه عندما يشرب الشاي",
+        "صداع شديد"
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا طلب الطبيب من جحا ليفهم المشكلة؟",
+      "options": [
+        "أن يريه كيف يشرب الشاي.",
+        "أن يأخذ دواءً مرًا.",
+        "أن يستخدم سماعة طبية."
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا كان يوجد في كوب الشاي؟",
+      "options": [
+        "ليمون",
+        "ملعقة",
+        "سكر كثير"
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا طلب الطبيب من جحا؟",
+      "options": [
+        "أن يترك الشاي نهائيًا.",
+        "أن يخرج الملعقة قبل الشرب.",
+        "أن يشرب ماءً دافئًا."
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    }
+  ],
+  "juha-clever-donkey": [
+    {
+      "question": "لماذا ذهب جحا إلى السوق؟",
+      "options": [
+        "ليشتري حمارًا جديدًا",
+        "ليبيع حماره",
+        "ليبيع الحطب"
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "كم طلب جحا ثمنًا للحمار؟",
+      "options": [
+        "مئة درهم",
+        "خمسين درهمًا",
+        "ألف درهم"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا قال جحا عن ذكاء حماره؟",
+      "options": [
+        "إنه غبي.",
+        "إنه ذكي جدًا.",
+        "إنه يفهم لغة البشر."
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "ما الدليل على ذكاء الحمار؟",
+      "options": [
+        "أنه يعرف طريق السوق.",
+        "أنه يهرب إذا أراد جحا الذهاب إلى العمل.",
+        "أنه يحمل أثقالًا كبيرة."
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "كيف انتهى كلام الرجل؟",
+      "options": [
+        "ضحك وقال إنه أذكى منا جميعًا.",
+        "غضب وترك المكان.",
+        "دفع ثمن الحمار."
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    }
+  ],
+  "juha-door": [
+    {
+      "question": "ماذا حمل جحا على ظهره عندما خرج؟",
+      "options": [
+        "حقيبة ملابس",
+        "باب البيت",
+        "جرة عسل"
+      ],
+      "correctIndex": 1,
+      "explanation": ""
+    },
+    {
+      "question": "إلى أين كان جحا ذاهبًا؟",
+      "options": [
+        "إلى السوق",
+        "إلى بيت جاره",
+        "إلى المسجد"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "لماذا حمل جحا باب بيته؟",
+      "options": [
+        "ليبيعه في السوق.",
+        "ليصلحه.",
+        "لأنه يخاف أن يدخل لص إلى بيته."
+      ],
+      "correctIndex": 2,
+      "explanation": ""
+    },
+    {
+      "question": "ماذا قال الجار لجحا؟",
+      "options": [
+        "بيتك الآن بلا باب.",
+        "هذا باب جميل جدًا.",
+        "هل تحتاج إلى مساعدة؟"
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    },
+    {
+      "question": "بماذا رد جحا على جاره؟",
+      "options": [
+        "المفتاح معي ولن يدخل اللص.",
+        "سأشتري بابًا جديدًا.",
+        "الباب ثقيل جدًا."
+      ],
+      "correctIndex": 0,
+      "explanation": ""
+    }
+  ]
 };
