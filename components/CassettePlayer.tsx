@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import {
   Play, Pause, Volume2, VolumeX,
   RotateCcw, Check, Disc, X,
-  Download, Loader2, Sparkles, CheckCircle2,
+  Download, Loader2, CheckCircle2,
   ChevronDown, ArrowUpRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -343,6 +343,9 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState<boolean>(false);
   const [quizScore, setQuizScore] = useState<number>(0);
+  const [listeningStage, setListeningStage] = useState<'first' | 'questions' | 'second' | 'final'>('first');
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [firstAttempt, setFirstAttempt] = useState<Record<number, number>>({});
   const [printerDismissed, setPrinterDismissed] = useState<boolean>(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -401,6 +404,9 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
       setIsDoorOpen(false);
       setQuizSubmitted(false);
       setQuizAnswers({});
+      setListeningStage('first');
+      setQuestionIndex(0);
+      setFirstAttempt({});
       const match = SHELF_TAPES.find(t => t.storyId === story.id);
       if (match) setActiveTapeId(match.id);
     }
@@ -628,6 +634,9 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
       setCurrentTime(0);
       setQuizSubmitted(false);
       setQuizAnswers({});
+      setListeningStage('first');
+      setQuestionIndex(0);
+      setFirstAttempt({});
       setPrinterDismissed(false);
       if (onStoryChange) onStoryChange(selected);
 
@@ -684,12 +693,10 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   };
 
   const handleQuizSubmit = () => {
-    let score = 0;
-    if (questions.length > 0 && quizAnswers[0] === questions[0].correctIndex) {
-      score = 1;
-    }
+    const score = questions.slice(0, 3).filter((q, i) => quizAnswers[i] === q.correctIndex).length;
     setQuizScore(score);
     setQuizSubmitted(true);
+    setListeningStage('final');
   };
 
   const progressRatio = duration > 0 ? currentTime / duration : 0;
@@ -713,6 +720,9 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
         onEnded={() => {
           if (!isLooping) {
             setIsPlaying(false);
+            setReelsPrimed(false);
+            if (listeningStage === 'first') setListeningStage('questions');
+            else if (listeningStage === 'second') setListeningStage('final');
           }
         }}
       />
@@ -893,7 +903,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                     </div>
 
                     {/* Acrylic Window with Rotating Spools */}
-                    <div className="w-full bg-[#12141a] rounded-lg py-1.5 px-4 sm:px-6 border border-stone-800 shadow-inner flex items-center justify-center gap-3 relative overflow-hidden my-0.5">
+                    <div className="w-full bg-[#12141a] rounded-lg py-1.5 px-4 sm:px-6 border border-stone-800 shadow-inner flex items-center justify-center gap-1.5 relative overflow-hidden my-0.5">
                       <div
                         className="w-7 h-7 rounded-full bg-stone-200 border-2 border-stone-400 flex items-center justify-center relative shadow-xs shrink-0"
                         style={{
@@ -910,7 +920,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                         ))}
                       </div>
 
-                      <div className="flex flex-col items-center justify-center px-2 w-[105px] max-w-[32%]">
+                      <div className="flex flex-col items-center justify-center px-2 w-[88px] max-w-[27%]">
                         <div className="h-0.5 w-full max-w-[100px] bg-amber-900/80 rounded mb-0.5" />
                         <div className="flex items-center gap-1.5 text-[7.5px] font-mono text-stone-300 font-bold">
                           <span>MIN: {currentStory.durationApprox}</span>
@@ -1124,7 +1134,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                 </div>
 
                 {/* Compact Thermal Receipt Paper (Fits strictly within page, no scrolling needed!) */}
-                <div className="w-full bg-[#fcfbf7] border-x-2 border-stone-300 rounded-t-sm shadow-md p-2.5 font-mono text-stone-900 max-h-[160px] overflow-y-auto scrollbar-thin scrollbar-thumb-stone-400/50 scrollbar-track-transparent">
+                <div className="w-full bg-[#fcfbf7] border-x-2 border-stone-300 rounded-t-sm shadow-md p-2.5 font-mono text-stone-900 min-h-[160px] max-h-[160px] overflow-hidden">
                   {/* Single Line Header */}
                   <div className="text-center border-b border-dashed border-stone-400 pb-1 mb-1.5">
                     <span className="font-mono text-[9px] font-black text-stone-800">
@@ -1132,80 +1142,44 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                     </span>
                   </div>
 
-                  {/* 1 Focused Question Derived Strictly from Text */}
-                  {questions.length > 0 && (
+                  {listeningStage === 'first' ? (
+                    <div className="text-center text-[11px] arabic-font py-4">استمع إلى القصة أولًا. ستظهر الأسئلة هنا بعد انتهاء التسجيل.</div>
+                  ) : listeningStage === 'second' ? (
+                    <div className="text-center text-[11px] arabic-font py-3">
+                      الاستماع الثاني مع النص. بعد انتهاء التسجيل يمكنك مراجعة إجاباتك.
+                      <button className="block mx-auto mt-2 px-3 py-1 rounded bg-stone-900 text-white" onClick={() => setListeningStage('final')}>مراجعة الأسئلة</button>
+                    </div>
+                  ) : questions.length ? (
                     <div className="space-y-1.5 text-right" dir="rtl">
-                      <p className="text-[11px] font-black text-stone-950 arabic-font leading-tight">
-                        1. {questions[0].question}
-                      </p>
-
+                      <div className="flex justify-between items-center text-[9px] font-bold text-stone-600">
+                        <span>{listeningStage === 'final' ? 'المراجعة النهائية' : 'اختبار الفهم الأول'}</span>
+                        <span>{questionIndex + 1} / {Math.min(3, questions.length)}</span>
+                      </div>
+                      <p className="text-[11px] font-black text-stone-950 arabic-font leading-tight">{questions[questionIndex].question}</p>
                       <div className="space-y-1">
-                        {questions[0].options.map((opt, optIdx) => {
-                          const isSelected = quizAnswers[0] === optIdx;
-                          const isCorrect = questions[0].correctIndex === optIdx;
-
-                          let optStyle = 'bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300';
-                          if (quizSubmitted) {
-                            if (isCorrect) {
-                              optStyle = 'bg-emerald-100 text-emerald-950 font-black border border-emerald-500';
-                            } else if (isSelected && !isCorrect) {
-                              optStyle = 'bg-rose-100 text-rose-950 line-through border border-rose-400';
-                            }
-                          } else if (isSelected) {
-                            optStyle = 'bg-stone-900 text-white font-black border border-stone-900';
-                          }
-
-                          return (
-                            <button
-                              key={optIdx}
-                              disabled={quizSubmitted}
-                              onClick={() => handleQuizAnswer(0, optIdx)}
-                              className={`w-full text-right py-1 px-2 rounded text-[10px] arabic-font transition-all flex items-center justify-between cursor-pointer leading-tight ${optStyle}`}
-                            >
-                              <span>{opt}</span>
-                              {quizSubmitted && isCorrect && <Check className="w-3 h-3 text-emerald-700 shrink-0" />}
-                            </button>
-                          );
-                        })}
+                        {questions[questionIndex].options.map((opt, optIdx) => (
+                          <button key={optIdx} onClick={() => handleQuizAnswer(questionIndex, optIdx)}
+                            disabled={quizSubmitted}
+                            className={`w-full text-right py-1 px-2 rounded text-[10px] arabic-font border transition-colors ${quizAnswers[questionIndex] === optIdx ? 'bg-stone-900 text-white border-stone-900' : 'bg-stone-100 text-stone-900 border-stone-300'}`}>
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <button disabled={questionIndex === 0} onClick={() => setQuestionIndex(i => i - 1)} className="text-[10px] disabled:opacity-30">السابق</button>
+                        {questionIndex < Math.min(3, questions.length) - 1 ? (
+                          <button disabled={quizAnswers[questionIndex] === undefined} onClick={() => setQuestionIndex(i => i + 1)} className="px-3 py-1 rounded bg-stone-900 text-white text-[10px] disabled:opacity-30">التالي</button>
+                        ) : listeningStage === 'questions' ? (
+                          <button onClick={() => { setFirstAttempt({ ...quizAnswers }); setListeningStage('second'); setQuestionIndex(0); if (audioRef.current) { audioRef.current.currentTime = 0; audioRef.current.play().then(() => { setIsPlaying(true); setReelsPrimed(true); }).catch(() => {}); } }} className="px-2 py-1 rounded bg-stone-900 text-white text-[10px]">الاستماع الثاني</button>
+                        ) : !quizSubmitted ? (
+                          <button onClick={handleQuizSubmit} className="px-2 py-1 rounded bg-stone-900 text-white text-[10px]">إنهاء وتقييم</button>
+                        ) : (
+                          <span className="text-[10px] font-bold">النتيجة: {quizScore} / {Math.min(3, questions.length)} · أول استماع: {questions.slice(0,3).filter((q,i) => firstAttempt[i] === q.correctIndex).length}</span>
+                        )}
                       </div>
                     </div>
-                  )}
+                  ) : <div className="text-center text-[11px] py-3">لا توجد أسئلة مرتبطة بهذا التسجيل.</div>}
 
-                  {/* Submission / Score Row */}
-                  <div className="pt-1.5 text-center mt-1 border-t border-dashed border-stone-300">
-                    {!quizSubmitted ? (
-                      <button
-                        onClick={handleQuizSubmit}
-                        disabled={quizAnswers[0] === undefined}
-                        className="w-full py-1 bg-stone-900 hover:bg-black disabled:bg-stone-300 disabled:text-stone-500 text-white rounded font-mono text-[10px] font-black transition-all uppercase cursor-pointer"
-                      >
-                        [ اعتماد الإجابة ]
-                      </button>
-                    ) : (
-                      <div className="flex items-center justify-between px-1">
-                        <span className="font-mono text-[10px] font-black text-stone-900">
-                          النتيجة: {quizScore} / 1
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => {
-                              setQuizSubmitted(false);
-                              setQuizAnswers({});
-                            }}
-                            className="px-2 py-0.5 bg-stone-200 text-stone-800 hover:bg-stone-300 rounded text-[9px] font-mono font-bold cursor-pointer"
-                          >
-                            [ إعادة ]
-                          </button>
-                          <button
-                            onClick={() => setPrinterDismissed(true)}
-                            className="px-2 py-0.5 bg-stone-900 text-white hover:bg-black rounded text-[9px] font-mono font-bold cursor-pointer"
-                          >
-                            [ تم ]
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
                 </div>
 
               </div>
