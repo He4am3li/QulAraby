@@ -7,10 +7,12 @@ import {
   ArrowLeft, Zap, Layers, Star, 
   Volume2, MessageSquareText, Award, Radio as RadioIcon, Smile, 
   Phone, Mic, PhoneOff, MicOff, Compass, ArrowUpRight, Check, X, RefreshCw, Heart,
-  PenTool, UserCircle, Speech
+  PenTool, UserCircle, Speech, Disc
 } from 'lucide-react';
 import { generateListeningExercise, generateSpeech, decodeAudioData, generateWordIllustration, evaluateCallIn } from '../services/gemini';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CassettePlayer } from '../components/CassettePlayer';
+import { STORY_CASSETTES } from '../src/data/storyCassettes';
 
 const LEVELS = [
   { id: 'beginner', ar: 'مبتدئ', en: 'Beginner', icon: Zap, color: 'blue', prompt: 'Use very simple Arabic words and short sentences for children.' },
@@ -20,9 +22,21 @@ const LEVELS = [
 
 const TOPICS = [
   { id: 'lip_reader', ar: 'قارئ الشفاه', en: 'Lip Reader', icon: Speech, color: 'purple', bg: 'bg-purple-50', border: 'border-purple-500', text: 'text-purple-600', activeBg: 'bg-purple-500', description: 'ركز على حركة الحروف واختر الصوت المطابق.' },
-  { id: 'emotions', ar: 'المشاعر', en: 'Emotions', icon: Heart, color: 'rose', bg: 'bg-rose-50', border: 'border-rose-500', text: 'text-rose-600', activeBg: 'bg-rose-500', description: 'افهم نبرة الصوت وحدد شعور المتحدث.' },
   { id: 'dictation', ar: 'تحدي الإملاء', en: 'Spelling Challenge', icon: PenTool, color: 'blue', bg: 'bg-blue-50', border: 'border-blue-500', text: 'text-blue-600', activeBg: 'bg-blue-500', description: 'استمع للكلمة واكتبها بشكل صحيح.' },
+  { id: 'emotions', ar: 'المشاعر', en: 'Emotions', icon: Heart, color: 'rose', bg: 'bg-rose-50', border: 'border-rose-500', text: 'text-rose-600', activeBg: 'bg-rose-500', description: 'افهم نبرة الصوت وحدد شعور المتحدث.' },
   { id: 'radio', ar: 'الراديو', en: 'Radio', icon: RadioIcon, color: 'amber', bg: 'bg-amber-50', border: 'border-amber-500', text: 'text-amber-600', activeBg: 'bg-amber-500', description: 'استمع لمحطات مختلفة واكتشف القصص والأخبار.' },
+  {
+    id: 'cassette_stories',
+    ar: 'أشرطة الكاسيت',
+    en: 'Cassettes',
+    icon: Disc,
+    color: 'amber',
+    bg: 'bg-amber-50',
+    border: 'border-amber-500',
+    text: 'text-amber-600',
+    activeBg: 'bg-amber-500',
+    description: 'استمع لنصوص وقصص التراث والقيم عبر أشرطة الكاسيت مع النص المتزامن.'
+  },
 ];
 
 const RADIO_STATIONS = [
@@ -869,6 +883,9 @@ export const Listening: React.FC = () => {
                                     setRadioContent(null);
                                     stopAudio();
                                 }
+                                if (topic.id === 'cassette_stories') {
+                                    stopAudio();
+                                }
                                 if (topic.id === 'lip_reader') loadLipReader();
                                 if (topic.id === 'emotions') loadEmotions();
                                 if (topic.id === 'dictation') loadDictation();
@@ -878,9 +895,14 @@ export const Listening: React.FC = () => {
                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110 ${selectedTopic?.id === topic.id ? `${topic.activeBg} text-white` : 'bg-white text-slate-400'}`}>
                                 <topic.icon size={24} className={topic.id === 'lip_reader' && lang === 'ar' ? '-scale-x-100' : ''} />
                             </div>
-                            <div className="flex-1">
-                                <p className="text-sm font-black arabic-font leading-none mb-1">{lang === 'ar' ? topic.ar : topic.en}</p>
-                                <p className="text-[10px] opacity-60 font-bold uppercase tracking-tighter">{lang === 'ar' ? topic.en : topic.ar}</p>
+                            <div className="flex-1 min-w-0 pr-1 overflow-visible">
+                                <p
+                                    className="text-sm font-black leading-snug whitespace-nowrap text-right py-1 overflow-visible"
+                                    style={{ fontFamily: "'Tajawal', 'Cairo', sans-serif" }}
+                                >
+                                    {lang === 'ar' ? topic.ar : topic.en}
+                                </p>
+                                <p className="text-[10px] opacity-60 font-bold uppercase tracking-tighter truncate">{lang === 'ar' ? topic.en : topic.ar}</p>
                             </div>
                             <ChevronRight size={16} className={`opacity-20 ${lang === 'ar' ? 'rotate-180' : ''}`} />
                         </button>
@@ -905,7 +927,7 @@ export const Listening: React.FC = () => {
             </div>
         </aside>
 
-        <main className="flex-1 flex flex-col overflow-y-auto relative p-8 scrollbar-hide">
+        <main className={`flex-1 flex flex-col relative scrollbar-hide ${selectedTopic?.id === 'cassette_stories' ? 'p-2 sm:p-4 lg:p-6 overflow-y-auto' : 'p-8 overflow-y-auto'}`}>
             <AnimatePresence mode="wait">
                 {!selectedLevel ? (
                     <motion.div 
@@ -1194,6 +1216,15 @@ export const Listening: React.FC = () => {
                                 <ArrowUpRight size={18} />
                             </motion.button>
                         )}
+                    </motion.div>
+                ) : selectedTopic.id === 'cassette_stories' ? (
+                    <motion.div
+                        key="cassette_stories"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full flex flex-col items-center justify-start py-2 sm:py-3 overflow-visible"
+                    >
+                        <CassettePlayer allStories={STORY_CASSETTES} />
                     </motion.div>
                 ) : selectedTopic.id === 'lip_reader' ? (
                     renderLipReader()

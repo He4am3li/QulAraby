@@ -23,6 +23,7 @@ import { SyntaxSoccer } from '../components/games/SyntaxSoccer';
 import { ChessPro } from '../components/games/ChessPro';
 import { CandyQuest } from '../components/games/CandyQuest';
 import { PenaltyShootout } from '../components/games/PenaltyShootout';
+import stadiumPanorama from '../src/assets/images/champions_stadium_panorama_1790675976521.jpg';
 import { MemoryMatch } from '../components/games/MemoryMatch';
 import { ArabicSpaceJourney } from '../components/games/ArabicSpaceJourney';
 import { KnowledgeSupermarket } from '../components/games/KnowledgeSupermarket';
@@ -189,18 +190,18 @@ const CONSOLE_GAMES: GameDef[] = [
   { 
     id: 'penalty-shootout', 
     category: 'sports',
-    categoryAr: 'الرياضة',
-    categoryEn: 'Sports',
-    titleAr: 'ركلات الترجيح', 
+    categoryAr: 'ركلات الترجيح',
+    categoryEn: 'Goal Challenge',
+    titleAr: 'تحدي الأهداف',
     titleEn: 'Penalty Shootout',
-    descriptionAr: 'تجربة ركلات ترجيح واقعية بنمط ألعاب الكونسول؛ سدد وتصدَّ للكرات باحترافية.',
-    descriptionEn: 'Realistic console-style penalty shootout; shoot and save like a pro.',
-    detailsAr: 'تحدي ركلات الترجيح. اختر زاوية التسديد بدقة، ثم حاول التصدي لركلات الخصم كحارس مرمى.',
-    detailsEn: 'Penalty shootout challenge. Choose the shooting angle accurately, then try to block the opponent\'s kicks as a goalkeeper.',
+    descriptionAr: 'مسابقة ركلات ترجيح تعليمية تفاعلية؛ أجب عن الأسئلة اللغوية وسدد الكرة في الشباك لتحقيق الفوز بكأس البطولة!',
+    descriptionEn: 'Interactive educational penalty shootout: answer language questions and strike the ball into the net to win the championship trophy!',
+    detailsAr: 'تحدي ركلات الترجيح الممتع. أجب على أسئلة النحو والإملاء، وسدد الكرة في شباك الحارس لتحقيق الفوز.',
+    detailsEn: 'Exciting penalty shootout challenge. Answer grammar and spelling questions to strike goals past the keeper.',
     samples: [],
-    cover: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000&auto=format&fit=crop',
-    hero: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?q=80&w=2000&auto=format&fit=crop',
-    color: 'from-blue-600 via-indigo-900 to-slate-950',
+    cover: stadiumPanorama,
+    hero: stadiumPanorama,
+    color: 'from-amber-600 via-orange-700 to-slate-950',
     icon: <Trophy size={32} />
   },
   { 

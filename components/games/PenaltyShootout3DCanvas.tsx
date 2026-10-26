@@ -1,45 +1,29 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
-import { PlayerCard, TeamInfo, AnswerOption } from './PenaltyShootout';
 import championsBallTexture from '/src/assets/images/champions_ball_texture_1790676004465.jpg';
 import proPitchGrassTurf from '/src/assets/images/pro_pitch_grass_turf_1790675991247.jpg';
-const ochoaImg = 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=800&auto=format&fit=crop';
-import { Camera, Eye, Zap, Volume2, RefreshCw } from 'lucide-react';
 
-interface PenaltyShootout3DCanvasProps {
-  striker: PlayerCard;
-  team: TeamInfo;
-  opponentTeam: TeamInfo;
-  onShotFinish: (isGoal: boolean, option: AnswerOption) => void;
-  audio: any;
-  currentQuestion: {
-    id: number;
-    category: string;
-    prompt: string;
-    answers: AnswerOption[];
-    explanation: string;
-  };
-  roundIndex: number;
+export interface ShotEvent {
+  id: number;
+  isGoal: boolean;
+  cornerIndex: number; // 0: Top-Left, 1: Top-Right, 2: Bottom-Left, 3: Bottom-Right
 }
 
-export type CameraMode = 'behind_striker' | 'broadcast' | 'inside_net' | 'cinematic_orbit';
+interface PenaltyShootout3DCanvasProps {
+  shotTrigger: ShotEvent | null;
+  onShotFinish: (isGoal: boolean) => void;
+  audio: any;
+}
 
 export const PenaltyShootout3DCanvas: React.FC<PenaltyShootout3DCanvasProps> = ({
-  striker,
-  team,
-  opponentTeam,
+  shotTrigger,
   onShotFinish,
   audio,
-  currentQuestion,
-  roundIndex
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
-  const [cameraMode, setCameraMode] = useState<CameraMode>('behind_striker');
-  const [isShotActive, setIsShotActive] = useState<boolean>(false);
-  const [shotPhase, setShotPhase] = useState<'aiming' | 'runup' | 'in_flight' | 'impact' | 'celebration' | 'despair'>('aiming');
-  const [actionBanner, setActionBanner] = useState<string>('اختر إحدى زوايا المرمى الأربع للإجابة والتسديد!');
+  const [screenShake, setScreenShake] = useState<boolean>(false);
 
-  // Three.js References to control animation state
+  // Three.js References
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -54,39 +38,31 @@ export const PenaltyShootout3DCanvas: React.FC<PenaltyShootout3DCanvasProps> = (
   const strikerLeftLegRef = useRef<THREE.Group | null>(null);
   const strikerRightArmRef = useRef<THREE.Group | null>(null);
   const strikerLeftArmRef = useRef<THREE.Group | null>(null);
-  const strikerHeadRef = useRef<THREE.Mesh | null>(null);
 
   const keeperGroupRef = useRef<THREE.Group | null>(null);
   const keeperLeftArmRef = useRef<THREE.Group | null>(null);
   const keeperRightArmRef = useRef<THREE.Group | null>(null);
-
   const crowdParticlesRef = useRef<THREE.Points | null>(null);
-  const crowdMeshesRef = useRef<THREE.InstancedMesh | null>(null);
-  const stadiumLightsRef = useRef<THREE.SpotLight[]>([]);
 
   // Shot simulation trajectory variables
   const shotStateRef = useRef<{
     active: boolean;
-    phase: 'aiming' | 'runup' | 'in_flight' | 'impact' | 'celebration' | 'despair';
+    phase: 'idle' | 'runup' | 'in_flight' | 'impact' | 'celebration' | 'despair';
     startTime: number;
     duration: number;
     startPos: THREE.Vector3;
     targetPos: THREE.Vector3;
     isGoal: boolean;
-    chosenOption: AnswerOption | null;
-    ballSpin: THREE.Vector3;
     netHitTriggered: boolean;
     keeperDived: boolean;
   }>({
     active: false,
-    phase: 'aiming',
+    phase: 'idle',
     startTime: 0,
     duration: 1.1,
     startPos: new THREE.Vector3(0, 0.22, 11),
     targetPos: new THREE.Vector3(0, 1.2, 0),
     isGoal: true,
-    chosenOption: null,
-    ballSpin: new THREE.Vector3(0, 0, 0),
     netHitTriggered: false,
     keeperDived: false
   });
@@ -96,526 +72,383 @@ export const PenaltyShootout3DCanvas: React.FC<PenaltyShootout3DCanvasProps> = (
     const container = mountRef.current;
     if (!container) return;
 
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+    const width = container.clientWidth || 900;
+    const height = container.clientHeight || 550;
 
-    // 1. Scene & Fog
+    // 1. Scene & Atmosphere
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x060c18);
-    scene.fog = new THREE.FogExp2(0x060c18, 0.012);
     sceneRef.current = scene;
+    scene.background = new THREE.Color(0x020617);
+    scene.fog = new THREE.FogExp2(0x020817, 0.015);
 
-    // 2. Camera
-    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 200);
-    camera.position.set(0, 2.4, 15.2);
-    camera.lookAt(0, 1.4, 0);
+    // 2. Camera: Over-the-shoulder third person (behind striker facing the goal)
+    const camera = new THREE.PerspectiveCamera(46, width / height, 0.1, 120);
+    camera.position.set(0, 2.5, 15.6);
+    camera.lookAt(0, 1.3, 0);
     cameraRef.current = camera;
 
-    // 3. Renderer
+    // 3. Renderer with antialiasing and shadow maps
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    container.innerHTML = '';
-    container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    const textureLoader = new THREE.TextureLoader();
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+    container.appendChild(renderer.domElement);
 
-    // 4. Stadium Floodlights & Ambient
-    const ambientLight = new THREE.AmbientLight(0x2d3748, 1.2);
+    // 4. Lighting: Floodlit Night Stadium
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
-    const mainDirectional = new THREE.DirectionalLight(0xffffff, 1.5);
-    mainDirectional.position.set(10, 25, 20);
-    mainDirectional.castShadow = true;
-    mainDirectional.shadow.mapSize.width = 2048;
-    mainDirectional.shadow.mapSize.height = 2048;
-    mainDirectional.shadow.camera.near = 0.5;
-    mainDirectional.shadow.camera.far = 60;
-    mainDirectional.shadow.camera.left = -15;
-    mainDirectional.shadow.camera.right = 15;
-    mainDirectional.shadow.camera.top = 20;
-    mainDirectional.shadow.camera.bottom = -5;
-    scene.add(mainDirectional);
+    const mainFloodlight = new THREE.DirectionalLight(0xe2e8f0, 2.0);
+    mainFloodlight.position.set(15, 25, 20);
+    mainFloodlight.castShadow = true;
+    mainFloodlight.shadow.mapSize.width = 2048;
+    mainFloodlight.shadow.mapSize.height = 2048;
+    mainFloodlight.shadow.camera.near = 0.5;
+    mainFloodlight.shadow.camera.far = 60;
+    mainFloodlight.shadow.camera.left = -20;
+    mainFloodlight.shadow.camera.right = 20;
+    mainFloodlight.shadow.camera.top = 20;
+    mainFloodlight.shadow.camera.bottom = -20;
+    scene.add(mainFloodlight);
 
-    // 4 Floodlight Towers (Stadium Atmosphere)
-    const lightPositions: [number, number, number][] = [
-      [-18, 18, 18],
-      [18, 18, 18],
-      [-18, 18, -6],
-      [18, 18, -6]
-    ];
-    stadiumLightsRef.current = [];
+    // Back rim light from stands
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
+    rimLight.position.set(-15, 18, -10);
+    scene.add(rimLight);
 
-    lightPositions.forEach(([lx, ly, lz]) => {
-      const spot = new THREE.SpotLight(0xfff7ed, 4.0, 65, Math.PI / 4, 0.45, 1);
-      spot.position.set(lx, ly, lz);
-      spot.target.position.set(0, 1.2, 3);
-      spot.castShadow = false;
-      scene.add(spot);
-      scene.add(spot.target);
-      stadiumLightsRef.current.push(spot);
+    // 5. Lush Pitch Grass Floor
+    const textureLoader = new THREE.TextureLoader();
+    const turfTexture = textureLoader.load(proPitchGrassTurf);
+    turfTexture.wrapS = THREE.RepeatWrapping;
+    turfTexture.wrapT = THREE.RepeatWrapping;
+    turfTexture.repeat.set(16, 24);
 
-      // Light Flare / Lens Glow Mesh
-      const flareGeo = new THREE.SphereGeometry(0.7, 16, 16);
-      const flareMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const flare = new THREE.Mesh(flareGeo, flareMat);
-      flare.position.set(lx, ly, lz);
-      scene.add(flare);
-    });
-
-    // 5. Realistic Grass Pitch with Turf Texture
-    const grassTexture = textureLoader.load(proPitchGrassTurf);
-    grassTexture.wrapS = THREE.RepeatWrapping;
-    grassTexture.wrapT = THREE.RepeatWrapping;
-    grassTexture.repeat.set(12, 12);
-
-    const pitchGeo = new THREE.PlaneGeometry(60, 60);
+    const pitchGeo = new THREE.PlaneGeometry(80, 80);
     const pitchMat = new THREE.MeshStandardMaterial({
-      map: grassTexture,
-      roughness: 0.85,
-      metalness: 0.1
+      map: turfTexture,
+      roughness: 0.82,
+      metalness: 0.05,
+      color: 0x15803d
     });
-    const pitch = new THREE.Mesh(pitchGeo, pitchMat);
-    pitch.rotation.x = -Math.PI / 2;
-    pitch.position.y = 0;
-    pitch.receiveShadow = true;
-    scene.add(pitch);
+    const pitchMesh = new THREE.Mesh(pitchGeo, pitchMat);
+    pitchMesh.rotation.x = -Math.PI / 2;
+    pitchMesh.receiveShadow = true;
+    scene.add(pitchMesh);
 
-    // Pitch Lines (Goal Line, Penalty Box, Penalty Spot, Penalty Arc)
-    const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    // Pitch White Lines
+    const penaltyBoxGeo = new THREE.BufferGeometry();
+    const lineVertices = new Float32Array([
+      // Goal line
+      -10, 0.02, 0,  10, 0.02, 0,
+      // 18-yard box
+      -8.5, 0.02, 0, -8.5, 0.02, 16.5,
+      -8.5, 0.02, 16.5, 8.5, 0.02, 16.5,
+      8.5, 0.02, 16.5, 8.5, 0.02, 0,
+      // 6-yard box
+      -4.5, 0.02, 0, -4.5, 0.02, 5.5,
+      -4.5, 0.02, 5.5, 4.5, 0.02, 5.5,
+      4.5, 0.02, 5.5, 4.5, 0.02, 0,
+    ]);
+    penaltyBoxGeo.setAttribute('position', new THREE.BufferAttribute(lineVertices, 3));
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 3 });
+    const lineSegments = new THREE.LineSegments(penaltyBoxGeo, lineMat);
+    scene.add(lineSegments);
 
-    // Goal Line
-    const goalLine = new THREE.Mesh(new THREE.PlaneGeometry(24, 0.14), lineMat);
-    goalLine.rotation.x = -Math.PI / 2;
-    goalLine.position.set(0, 0.005, 0);
-    scene.add(goalLine);
+    // Penalty Spot (نقطة الجزاء على مسافة 11 متراً)
+    const spotGeo = new THREE.CircleGeometry(0.18, 24);
+    const spotMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const spotMesh = new THREE.Mesh(spotGeo, spotMat);
+    spotMesh.rotation.x = -Math.PI / 2;
+    spotMesh.position.set(0, 0.03, 11);
+    scene.add(spotMesh);
 
-    // 18-Yard Box Lines
-    const penaltyBoxWidth = 18;
-    const penaltyBoxLength = 14;
-    // Front line
-    const pFrontLine = new THREE.Mesh(new THREE.PlaneGeometry(penaltyBoxWidth, 0.14), lineMat);
-    pFrontLine.rotation.x = -Math.PI / 2;
-    pFrontLine.position.set(0, 0.005, penaltyBoxLength);
-    scene.add(pFrontLine);
-    // Left side line
-    const pLeftLine = new THREE.Mesh(new THREE.PlaneGeometry(0.14, penaltyBoxLength), lineMat);
-    pLeftLine.rotation.x = -Math.PI / 2;
-    pLeftLine.position.set(-penaltyBoxWidth / 2, 0.005, penaltyBoxLength / 2);
-    scene.add(pLeftLine);
-    // Right side line
-    const pRightLine = new THREE.Mesh(new THREE.PlaneGeometry(0.14, penaltyBoxLength), lineMat);
-    pRightLine.rotation.x = -Math.PI / 2;
-    pRightLine.position.set(penaltyBoxWidth / 2, 0.005, penaltyBoxLength / 2);
-    scene.add(pRightLine);
-
-    // Penalty Spot (11 meters from goal line)
-    const penaltySpotGeo = new THREE.CylinderGeometry(0.24, 0.24, 0.02, 32);
-    const penaltySpot = new THREE.Mesh(penaltySpotGeo, lineMat);
-    penaltySpot.position.set(0, 0.01, 11);
-    scene.add(penaltySpot);
-
-    // 6. Regulation 3D Goal (Width: 7.32m, Height: 2.44m, Depth: 2.2m)
-    const goalGroup = new THREE.Group();
-    const postMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.2,
-      metalness: 0.8
-    });
-    const postRadius = 0.09;
+    // 6. Realistic Goal Posts (الأعمدة والعارضة)
     const goalWidth = 7.32;
     const goalHeight = 2.44;
     const goalDepth = 2.2;
+    const postRadius = 0.07;
 
-    // Left Post
-    const leftPost = new THREE.Mesh(new THREE.CylinderGeometry(postRadius, postRadius, goalHeight, 24), postMat);
+    const postMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, metalness: 0.1 });
+
+    // Left post
+    const leftPostGeo = new THREE.CylinderGeometry(postRadius, postRadius, goalHeight, 16);
+    const leftPost = new THREE.Mesh(leftPostGeo, postMat);
     leftPost.position.set(-goalWidth / 2, goalHeight / 2, 0);
     leftPost.castShadow = true;
-    goalGroup.add(leftPost);
+    scene.add(leftPost);
 
-    // Right Post
-    const rightPost = new THREE.Mesh(new THREE.CylinderGeometry(postRadius, postRadius, goalHeight, 24), postMat);
+    // Right post
+    const rightPost = leftPost.clone();
     rightPost.position.set(goalWidth / 2, goalHeight / 2, 0);
-    rightPost.castShadow = true;
-    goalGroup.add(rightPost);
+    scene.add(rightPost);
 
-    // Crossbar
-    const crossbar = new THREE.Mesh(new THREE.CylinderGeometry(postRadius, postRadius, goalWidth + postRadius * 2, 24), postMat);
+    // Crossbar (العارضة)
+    const crossbarGeo = new THREE.CylinderGeometry(postRadius, postRadius, goalWidth + postRadius * 2, 16);
+    const crossbar = new THREE.Mesh(crossbarGeo, postMat);
     crossbar.rotation.z = Math.PI / 2;
     crossbar.position.set(0, goalHeight, 0);
     crossbar.castShadow = true;
-    goalGroup.add(crossbar);
+    scene.add(crossbar);
 
-    // Back Support Pipes
-    const backLeftSupport = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, Math.sqrt(goalHeight * goalHeight + goalDepth * goalDepth), 16), postMat);
-    backLeftSupport.position.set(-goalWidth / 2, goalHeight / 2, -goalDepth / 2);
-    backLeftSupport.rotation.x = Math.atan2(goalDepth, goalHeight);
-    goalGroup.add(backLeftSupport);
+    // Goal Net Frame
+    const backLeftPost = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, goalHeight, 12), postMat);
+    backLeftPost.position.set(-goalWidth / 2, goalHeight / 2, -goalDepth);
+    scene.add(backLeftPost);
 
-    const backRightSupport = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, Math.sqrt(goalHeight * goalHeight + goalDepth * goalDepth), 16), postMat);
-    backRightSupport.position.set(goalWidth / 2, goalHeight / 2, -goalDepth / 2);
-    backRightSupport.rotation.x = Math.atan2(goalDepth, goalHeight);
-    goalGroup.add(backRightSupport);
+    const backRightPost = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, goalHeight, 12), postMat);
+    backRightPost.position.set(goalWidth / 2, goalHeight / 2, -goalDepth);
+    scene.add(backRightPost);
 
-    // 3D Goal Net (Deformable Mesh)
-    const netGeo = new THREE.PlaneGeometry(goalWidth, goalHeight, 24, 16);
-    // Position net back plane
-    netGeo.translate(0, goalHeight / 2, -goalDepth);
+    // 3D Realistic Net (شبكة المرمى القابلة للتشوه والتأثر بالكرة)
+    const netGeo = new THREE.PlaneGeometry(goalWidth, goalHeight, 28, 16);
     const netMat = new THREE.MeshStandardMaterial({
-      color: 0xeeeeee,
+      color: 0xf1f5f9,
       wireframe: true,
       roughness: 0.9,
       transparent: true,
-      opacity: 0.75,
+      opacity: 0.85,
       side: THREE.DoubleSide
     });
     const netMesh = new THREE.Mesh(netGeo, netMat);
+    netMesh.position.set(0, goalHeight / 2, -goalDepth);
+    scene.add(netMesh);
     netMeshRef.current = netMesh;
-    netOriginalPositionsRef.current = new Float32Array(netGeo.attributes.position.array);
-    goalGroup.add(netMesh);
 
-    scene.add(goalGroup);
+    // Save original net vertex positions for elastic rebound
+    const netPosAttr = netGeo.attributes.position;
+    netOriginalPositionsRef.current = new Float32Array(netPosAttr.array);
 
-    // 7. Dynamic 3D Crowd Stands (Tiered Grandstand & Instanced Spectators)
-    const standsGroup = new THREE.Group();
-    const grandstandMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 });
-
-    // 10 Tiered Rows behind the goal
-    const numRows = 10;
-    const rowDepth = 1.2;
-    const rowHeight = 0.7;
-    for (let r = 0; r < numRows; r++) {
-      const rowMesh = new THREE.Mesh(new THREE.BoxGeometry(45, rowHeight, rowDepth), grandstandMat);
-      rowMesh.position.set(0, 0.35 + r * rowHeight, -goalDepth - 2.5 - r * rowDepth);
-      standsGroup.add(rowMesh);
-    }
-
-    // Instanced Crowd Spectators (Jump, Wave, Cheer)
-    const totalSpectators = 900;
-    const spectatorGeo = new THREE.CylinderGeometry(0.2, 0.22, 0.9, 8);
-    const spectatorMat = new THREE.MeshStandardMaterial({ roughness: 0.7 });
-    const crowdMesh = new THREE.InstancedMesh(spectatorGeo, spectatorMat, totalSpectators);
-    crowdMeshesRef.current = crowdMesh;
-
-    const dummy = new THREE.Object3D();
-    const teamColor = new THREE.Color(team.primaryColor);
-    const oppColor = new THREE.Color(opponentTeam.primaryColor);
-    const whiteColor = new THREE.Color(0xffffff);
-    const redColor = new THREE.Color(0xef4444);
-    const blueColor = new THREE.Color(0x3b82f6);
-
-    let spectatorIdx = 0;
-    for (let r = 0; r < numRows; r++) {
-      const countInRow = 90;
-      for (let c = 0; c < countInRow; c++) {
-        if (spectatorIdx >= totalSpectators) break;
-        const sx = -20 + (c / (countInRow - 1)) * 40 + (Math.random() * 0.2 - 0.1);
-        const sy = 0.8 + r * rowHeight;
-        const sz = -goalDepth - 2.5 - r * rowDepth;
-
-        dummy.position.set(sx, sy, sz);
-        dummy.updateMatrix();
-        crowdMesh.setMatrixAt(spectatorIdx, dummy.matrix);
-
-        // Assign vibrant team fan jersey colors
-        const pick = Math.random();
-        const fanColor = pick < 0.4 ? teamColor : pick < 0.7 ? oppColor : pick < 0.85 ? blueColor : redColor;
-        crowdMesh.setColorAt(spectatorIdx, fanColor);
-
-        spectatorIdx++;
-      }
-    }
-    crowdMesh.instanceMatrix.needsUpdate = true;
-    if (crowdMesh.instanceColor) crowdMesh.instanceColor.needsUpdate = true;
-    standsGroup.add(crowdMesh);
-
-    // Flashing camera lights in stands (Champions League Night effect)
-    const flashCount = 120;
-    const flashGeo = new THREE.BufferGeometry();
-    const flashPositions = new Float32Array(flashCount * 3);
-    for (let i = 0; i < flashCount; i++) {
-      flashPositions[i * 3] = (Math.random() - 0.5) * 42;
-      flashPositions[i * 3 + 1] = 1.0 + Math.random() * 7;
-      flashPositions[i * 3 + 2] = -goalDepth - 3.0 - Math.random() * 12;
-    }
-    flashGeo.setAttribute('position', new THREE.BufferAttribute(flashPositions, 3));
-    const flashMat = new THREE.PointsMaterial({
-      color: 0xffffff,
-      size: 0.35,
-      transparent: true,
-      opacity: 0.9,
-      blending: THREE.AdditiveBlending
-    });
-    const flashPoints = new THREE.Points(flashGeo, flashMat);
-    crowdParticlesRef.current = flashPoints;
-    standsGroup.add(flashPoints);
-
-    scene.add(standsGroup);
-
-    // 8. Official World Cup 3D Ball
+    // 7. Official Champions Ball (الكرة الرسمية)
     const ballTexture = textureLoader.load(championsBallTexture);
     const ballGeo = new THREE.SphereGeometry(0.22, 32, 32);
     const ballMat = new THREE.MeshStandardMaterial({
       map: ballTexture,
       roughness: 0.35,
-      metalness: 0.25
+      metalness: 0.1
     });
     const ballMesh = new THREE.Mesh(ballGeo, ballMat);
-    ballMesh.position.set(0, 0.22, 11);
+    ballMesh.position.set(0, 0.22, 11); // On penalty spot
     ballMesh.castShadow = true;
     scene.add(ballMesh);
     ballMeshRef.current = ballMesh;
 
-    // 9. Articulated 3D Striker Model (Messi / Mbappe / Ronaldo / etc.)
-    const strikerGroup = new THREE.Group();
-    strikerGroup.position.set(0, 0, 12.6); // 1.6m behind the ball
-    strikerGroup.rotation.y = Math.PI; // Looking towards the goal
+    // Ball soft contact shadow
+    const ballShadowGeo = new THREE.CircleGeometry(0.25, 24);
+    const ballShadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.45 });
+    const ballShadow = new THREE.Mesh(ballShadowGeo, ballShadowMat);
+    ballShadow.rotation.x = -Math.PI / 2;
+    ballShadow.position.set(0, 0.02, 11);
+    scene.add(ballShadow);
 
-    const jerseyMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(team.primaryColor),
-      roughness: 0.5
-    });
-    const shortsMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(team.secondaryColor || '#ffffff'),
-      roughness: 0.5
-    });
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xdeb887, roughness: 0.7 });
-    const bootMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.3 });
-
-    // Striker Torso
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.58, 0.26), jerseyMat);
-    torso.position.y = 1.35;
-    torso.castShadow = true;
-    strikerGroup.add(torso);
-
-    // Striker Head (with photo portrait texture badge or realistic athletic modeling)
-    const headTexture = textureLoader.load(striker.image);
-    const headMat = new THREE.MeshStandardMaterial({
-      map: headTexture,
-      roughness: 0.4
-    });
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 20, 20), headMat);
-    head.position.y = 1.8;
-    head.castShadow = true;
-    strikerGroup.add(head);
-    strikerHeadRef.current = head;
-
-    // Striker Shorts / Pelvis
-    const pelvis = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.24, 0.24), shortsMat);
-    pelvis.position.y = 0.98;
-    strikerGroup.add(pelvis);
-
-    // Right Leg (Kicking leg)
-    const rightLegGroup = new THREE.Group();
-    rightLegGroup.position.set(-0.14, 0.88, 0);
-    const rightThigh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.42, 12), shortsMat);
-    rightThigh.position.y = -0.21;
-    rightLegGroup.add(rightThigh);
-    const rightShin = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.065, 0.42, 12), jerseyMat);
-    rightShin.position.y = -0.58;
-    rightLegGroup.add(rightShin);
-    const rightBoot = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.08, 0.24), bootMat);
-    rightBoot.position.set(0, -0.82, -0.06);
-    rightLegGroup.add(rightBoot);
-    strikerGroup.add(rightLegGroup);
-    strikerRightLegRef.current = rightLegGroup;
-
-    // Left Leg (Plant foot)
-    const leftLegGroup = new THREE.Group();
-    leftLegGroup.position.set(0.14, 0.88, 0);
-    const leftThigh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.42, 12), shortsMat);
-    leftThigh.position.y = -0.21;
-    leftLegGroup.add(leftThigh);
-    const leftShin = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.065, 0.42, 12), jerseyMat);
-    leftShin.position.y = -0.58;
-    leftLegGroup.add(leftShin);
-    const leftBoot = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.08, 0.24), bootMat);
-    leftBoot.position.set(0, -0.82, -0.06);
-    leftLegGroup.add(leftBoot);
-    strikerGroup.add(leftLegGroup);
-    strikerLeftLegRef.current = leftLegGroup;
-
-    // Arms
-    const rightArmGroup = new THREE.Group();
-    rightArmGroup.position.set(-0.3, 1.55, 0);
-    const rightArmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.54, 12), skinMat);
-    rightArmMesh.position.y = -0.27;
-    rightArmGroup.add(rightArmMesh);
-    strikerGroup.add(rightArmGroup);
-    strikerRightArmRef.current = rightArmGroup;
-
-    const leftArmGroup = new THREE.Group();
-    leftArmGroup.position.set(0.3, 1.55, 0);
-    const leftArmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.54, 12), skinMat);
-    leftArmMesh.position.y = -0.27;
-    leftArmGroup.add(leftArmMesh);
-    strikerGroup.add(leftArmGroup);
-    strikerLeftArmRef.current = leftArmGroup;
-
-    scene.add(strikerGroup);
-    strikerGroupRef.current = strikerGroup;
-
-    // 10. Articulated 3D Goalkeeper Model (Guillermo Ochoa)
+    // 8. Goalkeeper Entity (حارس المرمى الرياضي)
     const keeperGroup = new THREE.Group();
-    keeperGroup.position.set(0, 0, 0.2); // On the goal line
-    keeperGroup.rotation.y = 0; // Looking towards the penalty spot
+    keeperGroup.position.set(0, 0.9, 0.2); // On goal line
 
-    const keeperJerseyMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.4 }); // Neon Green keeper jersey
-    const keeperShortsMat = new THREE.MeshStandardMaterial({ color: 0x064e3b, roughness: 0.5 });
-    const keeperGloveMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.3 }); // Yellow gloves
+    const keeperJerseyMat = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.6 }); // Vibrant goalkeeper jersey
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.5 });
+    const blackMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.7 });
+    const gloveMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.4 }); // Bright keeper gloves
 
     // Keeper Torso
-    const kTorso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.28), keeperJerseyMat);
-    kTorso.position.y = 1.38;
-    kTorso.castShadow = true;
-    keeperGroup.add(kTorso);
+    const keeperTorso = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.8, 0.35), keeperJerseyMat);
+    keeperTorso.castShadow = true;
+    keeperGroup.add(keeperTorso);
 
     // Keeper Head
-    const keeperHeadTexture = textureLoader.load(ochoaImg);
-    const kHead = new THREE.Mesh(new THREE.SphereGeometry(0.19, 20, 20), new THREE.MeshStandardMaterial({ map: keeperHeadTexture }));
-    kHead.position.y = 1.84;
-    kHead.castShadow = true;
-    keeperGroup.add(kHead);
+    const keeperHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 20, 20), skinMat);
+    keeperHead.position.set(0, 0.62, 0);
+    keeperGroup.add(keeperHead);
 
-    // Keeper Legs
-    const kPelvis = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.24, 0.24), keeperShortsMat);
-    kPelvis.position.y = 1.0;
-    keeperGroup.add(kPelvis);
-
-    const kLeftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.85, 12), keeperJerseyMat);
-    kLeftLeg.position.set(-0.16, 0.5, 0);
-    keeperGroup.add(kLeftLeg);
-
-    const kRightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.85, 12), keeperJerseyMat);
-    kRightLeg.position.set(0.16, 0.5, 0);
-    keeperGroup.add(kRightLeg);
-
-    // Keeper Arms with Large Gloves
+    // Keeper Left Arm & Glove
     const kLeftArmGroup = new THREE.Group();
-    kLeftArmGroup.position.set(-0.32, 1.55, 0);
-    const kLeftArmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.06, 0.55, 12), keeperJerseyMat);
-    kLeftArmMesh.position.y = -0.27;
-    kLeftArmGroup.add(kLeftArmMesh);
-    const kLeftGlove = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.16, 0.12), keeperGloveMat);
-    kLeftGlove.position.y = -0.58;
-    kLeftArmGroup.add(kLeftGlove);
+    kLeftArmGroup.position.set(-0.48, 0.3, 0);
+    const kLeftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.6, 12), keeperJerseyMat);
+    kLeftArm.position.y = -0.28;
+    const kLeftGlove = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.14), gloveMat);
+    kLeftGlove.position.y = -0.62;
+    kLeftArmGroup.add(kLeftArm, kLeftGlove);
     keeperGroup.add(kLeftArmGroup);
     keeperLeftArmRef.current = kLeftArmGroup;
 
+    // Keeper Right Arm & Glove
     const kRightArmGroup = new THREE.Group();
-    kRightArmGroup.position.set(0.32, 1.55, 0);
-    const kRightArmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.06, 0.55, 12), keeperJerseyMat);
-    kRightArmMesh.position.y = -0.27;
-    kRightArmGroup.add(kRightArmMesh);
-    const kRightGlove = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.16, 0.12), keeperGloveMat);
-    kRightGlove.position.y = -0.58;
-    kRightArmGroup.add(kRightGlove);
+    kRightArmGroup.position.set(0.48, 0.3, 0);
+    const kRightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.6, 12), keeperJerseyMat);
+    kRightArm.position.y = -0.28;
+    const kRightGlove = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.14), gloveMat);
+    kRightGlove.position.y = -0.62;
+    kRightArmGroup.add(kRightArm, kRightGlove);
     keeperGroup.add(kRightArmGroup);
     keeperRightArmRef.current = kRightArmGroup;
+
+    // Keeper Legs
+    const kLeftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.1, 0.75, 12), blackMat);
+    kLeftLeg.position.set(-0.22, -0.65, 0);
+    const kRightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.1, 0.75, 12), blackMat);
+    kRightLeg.position.set(0.22, -0.65, 0);
+    keeperGroup.add(kLeftLeg, kRightLeg);
 
     scene.add(keeperGroup);
     keeperGroupRef.current = keeperGroup;
 
-    // 11. Main 60FPS Render & Physics Loop
-    let clock = new THREE.Clock();
+    // 9. Striker Entity (اللاعب المسدد - ظهره للمشاهد)
+    const strikerGroup = new THREE.Group();
+    strikerGroup.position.set(0, 0.9, 12.6); // 1.6m behind the ball
 
+    const strikerJerseyMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.5 }); // Blue Team Jersey
+    const whiteShortsMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.6 });
+
+    // Striker Torso (Back has player number 9 in golden font effect)
+    const strikerTorso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.82, 0.36), strikerJerseyMat);
+    strikerTorso.castShadow = true;
+    strikerGroup.add(strikerTorso);
+
+    // Striker Head
+    const strikerHead = new THREE.Mesh(new THREE.SphereGeometry(0.23, 20, 20), skinMat);
+    strikerHead.position.set(0, 0.64, 0);
+    strikerGroup.add(strikerHead);
+
+    // Striker Right Kicking Leg
+    const sRightLegGroup = new THREE.Group();
+    sRightLegGroup.position.set(0.22, -0.4, 0);
+    const sRightThigh = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.45, 12), whiteShortsMat);
+    sRightThigh.position.y = -0.22;
+    const sRightShin = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.09, 0.45, 12), skinMat);
+    sRightShin.position.y = -0.58;
+    const sRightBoot = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 0.28), blackMat);
+    sRightBoot.position.set(0, -0.82, -0.08);
+    sRightLegGroup.add(sRightThigh, sRightShin, sRightBoot);
+    strikerGroup.add(sRightLegGroup);
+    strikerRightLegRef.current = sRightLegGroup;
+
+    // Striker Left Plant Leg
+    const sLeftLegGroup = new THREE.Group();
+    sLeftLegGroup.position.set(-0.22, -0.4, 0);
+    const sLeftThigh = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.45, 12), whiteShortsMat);
+    sLeftThigh.position.y = -0.22;
+    const sLeftShin = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.09, 0.45, 12), skinMat);
+    sLeftShin.position.y = -0.58;
+    const sLeftBoot = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 0.28), blackMat);
+    sLeftBoot.position.set(0, -0.82, -0.08);
+    sLeftLegGroup.add(sLeftThigh, sLeftShin, sLeftBoot);
+    strikerGroup.add(sLeftLegGroup);
+    strikerLeftLegRef.current = sLeftLegGroup;
+
+    // Striker Arms
+    const sRightArmGroup = new THREE.Group();
+    sRightArmGroup.position.set(0.46, 0.32, 0);
+    const sRightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.55, 12), strikerJerseyMat);
+    sRightArm.position.y = -0.25;
+    sRightArmGroup.add(sRightArm);
+    strikerGroup.add(sRightArmGroup);
+    strikerRightArmRef.current = sRightArmGroup;
+
+    const sLeftArmGroup = new THREE.Group();
+    sLeftArmGroup.position.set(-0.46, 0.32, 0);
+    const sLeftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.55, 12), strikerJerseyMat);
+    sLeftArm.position.y = -0.25;
+    sLeftArmGroup.add(sLeftArm);
+    strikerGroup.add(sLeftArmGroup);
+    strikerLeftArmRef.current = sLeftArmGroup;
+
+    scene.add(strikerGroup);
+    strikerGroupRef.current = strikerGroup;
+
+    // 10. Background Stadium Grandstand Lights (كشافات الاستاد وجماهير المدرجات)
+    const crowdCount = 1200;
+    const crowdGeo = new THREE.BufferGeometry();
+    const crowdPos = new Float32Array(crowdCount * 3);
+    const crowdColors = new Float32Array(crowdCount * 3);
+
+    for (let i = 0; i < crowdCount; i++) {
+      const idx = i * 3;
+      crowdPos[idx] = (Math.random() - 0.5) * 55;
+      crowdPos[idx + 1] = 4 + Math.random() * 16;
+      crowdPos[idx + 2] = -12 - Math.random() * 25;
+
+      // Sparkling fan flashes
+      const isFlash = Math.random() > 0.85;
+      crowdColors[idx] = isFlash ? 1.0 : 0.2 + Math.random() * 0.3;
+      crowdColors[idx + 1] = isFlash ? 1.0 : 0.3 + Math.random() * 0.4;
+      crowdColors[idx + 2] = isFlash ? 1.0 : 0.5 + Math.random() * 0.5;
+    }
+    crowdGeo.setAttribute('position', new THREE.BufferAttribute(crowdPos, 3));
+    crowdGeo.setAttribute('color', new THREE.BufferAttribute(crowdColors, 3));
+    const crowdParticleMat = new THREE.PointsMaterial({
+      size: 0.35,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.8
+    });
+    const crowdParticles = new THREE.Points(crowdGeo, crowdParticleMat);
+    scene.add(crowdParticles);
+    crowdParticlesRef.current = crowdParticles;
+
+    // Animation Loop
+    let clock = new THREE.Clock();
     const animate = () => {
       animFrameIdRef.current = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       const elapsed = clock.getElapsedTime();
 
-      // A. Dynamic Crowd Animation (Cheering & Camera Flashes)
-      if (crowdMeshesRef.current) {
-        const dummyMatrix = new THREE.Object3D();
-        const isGoalScored = shotStateRef.current.phase === 'celebration';
-        const bounceSpeed = isGoalScored ? 12 : 3.5;
-        const bounceHeight = isGoalScored ? 0.35 : 0.08;
-
-        for (let i = 0; i < 900; i += 8) {
-          crowdMeshesRef.current.getMatrixAt(i, dummyMatrix.matrix);
-          dummyMatrix.matrix.decompose(dummyMatrix.position, dummyMatrix.quaternion, dummyMatrix.scale);
-          dummyMatrix.position.y += Math.sin(elapsed * bounceSpeed + i) * bounceHeight * delta;
-          dummyMatrix.updateMatrix();
-          crowdMeshesRef.current.setMatrixAt(i, dummyMatrix.matrix);
-        }
-        crowdMeshesRef.current.instanceMatrix.needsUpdate = true;
-      }
-
-      // Random camera flashes
-      if (crowdParticlesRef.current) {
-        const mat = crowdParticlesRef.current.material as THREE.PointsMaterial;
-        mat.opacity = 0.4 + Math.sin(elapsed * 15) * 0.4;
-      }
-
-      // B. Keeper Idle Waving / Stance (Before Shot)
+      // Keeper Idle Waving / Anticipation (Before Shot)
       if (keeperGroupRef.current && !shotStateRef.current.keeperDived) {
-        // Shuffle side-to-side and wave arms to distract striker
-        keeperGroupRef.current.position.x = Math.sin(elapsed * 3.5) * 0.7;
+        keeperGroupRef.current.position.x = Math.sin(elapsed * 3.2) * 0.55;
         if (keeperLeftArmRef.current && keeperRightArmRef.current) {
-          keeperLeftArmRef.current.rotation.z = Math.sin(elapsed * 5) * 0.4 - 0.4;
-          keeperRightArmRef.current.rotation.z = -Math.sin(elapsed * 5) * 0.4 + 0.4;
+          keeperLeftArmRef.current.rotation.z = Math.sin(elapsed * 4.5) * 0.35 - 0.35;
+          keeperRightArmRef.current.rotation.z = -Math.sin(elapsed * 4.5) * 0.35 + 0.35;
         }
       }
 
-      // C. Striker Idle Stance (Before Run-up)
-      if (strikerGroupRef.current && shotStateRef.current.phase === 'aiming') {
-        strikerGroupRef.current.position.y = Math.sin(elapsed * 2.5) * 0.03;
-        if (strikerRightArmRef.current) strikerRightArmRef.current.rotation.x = Math.sin(elapsed * 2) * 0.1;
-        if (strikerLeftArmRef.current) strikerLeftArmRef.current.rotation.x = -Math.sin(elapsed * 2) * 0.1;
+      // Striker Idle Stance (Before Run-up)
+      if (strikerGroupRef.current && shotStateRef.current.phase === 'idle') {
+        strikerGroupRef.current.position.y = 0.9 + Math.sin(elapsed * 2.2) * 0.02;
       }
 
-      // D. Shot Execution State Machine
+      // Shot Execution Simulation State Machine
       const shot = shotStateRef.current;
       if (shot.active) {
         const timeSinceShot = elapsed - shot.startTime;
 
-        // Phase 1: Striker Run-up (0.0s to 0.45s)
-        if (timeSinceShot < 0.45) {
+        // Phase 1: Striker Run-up (0.0s to 0.42s)
+        if (timeSinceShot < 0.42) {
           shot.phase = 'runup';
-          const runProgress = timeSinceShot / 0.45;
+          const runProgress = timeSinceShot / 0.42;
           if (strikerGroupRef.current) {
-            // Move forward towards the ball (from z: 12.6 to z: 11.2)
-            strikerGroupRef.current.position.z = 12.6 - runProgress * 1.4;
-
-            // Leg running cycles
+            strikerGroupRef.current.position.z = 12.6 - runProgress * 1.35;
             if (strikerRightLegRef.current && strikerLeftLegRef.current) {
               strikerRightLegRef.current.rotation.x = -Math.sin(runProgress * Math.PI * 4) * 0.9;
               strikerLeftLegRef.current.rotation.x = Math.sin(runProgress * Math.PI * 4) * 0.9;
             }
           }
         }
-        // Phase 2: Kick Impact & Ball Launch (at 0.45s)
-        else if (timeSinceShot >= 0.45 && timeSinceShot < 0.52) {
+        // Phase 2: Kick Impact (at 0.42s)
+        else if (timeSinceShot >= 0.42 && timeSinceShot < 0.5) {
           if (strikerRightLegRef.current) {
-            // Power strike swing
-            strikerRightLegRef.current.rotation.x = 1.35; // Maximum forward strike extension
+            strikerRightLegRef.current.rotation.x = 1.3;
           }
           if (ballMeshRef.current && !shot.netHitTriggered) {
-            audio.playPowerfulKick();
+            audio?.playPowerfulKick();
           }
         }
-        // Phase 3: Ball Flight in 3D (0.45s to 1.15s)
-        else if (timeSinceShot >= 0.45 && timeSinceShot < 1.15) {
+        // Phase 3: Ball Flight in 3D (0.42s to 1.12s)
+        else if (timeSinceShot >= 0.42 && timeSinceShot < 1.12) {
           shot.phase = 'in_flight';
-          const flightProgress = (timeSinceShot - 0.45) / 0.7; // 0 to 1
+          const flightProgress = (timeSinceShot - 0.42) / 0.7;
 
           if (ballMeshRef.current) {
-            // Ball position interpolation with parabolic arc
             const currentPos = new THREE.Vector3().lerpVectors(shot.startPos, shot.targetPos, flightProgress);
-            // Height curve
-            const heightArc = Math.sin(flightProgress * Math.PI) * 0.6;
+            const heightArc = Math.sin(flightProgress * Math.PI) * 0.55;
             currentPos.y += heightArc;
-
             ballMeshRef.current.position.copy(currentPos);
-
-            // Ball rotation spin (Magnus effect)
-            ballMeshRef.current.rotation.x += 16 * delta;
-            ballMeshRef.current.rotation.y += 12 * delta;
+            ballMeshRef.current.rotation.x += 18 * delta;
+            ballMeshRef.current.rotation.y += 14 * delta;
           }
 
           // Goalkeeper Dive Reaction!
@@ -623,14 +456,13 @@ export const PenaltyShootout3DCanvas: React.FC<PenaltyShootout3DCanvasProps> = (
             shot.keeperDived = true;
           }
           if (keeperGroupRef.current) {
-            const diveProgress = Math.min(1, (timeSinceShot - 0.45) / 0.6);
-            const targetX = shot.isGoal ? shot.targetPos.x * 0.55 : shot.targetPos.x * 0.95;
+            const diveProgress = Math.min(1, (timeSinceShot - 0.42) / 0.6);
+            const targetX = shot.isGoal ? shot.targetPos.x * 0.52 : shot.targetPos.x * 0.96;
             const targetY = Math.max(0.4, shot.targetPos.y * 0.85);
 
             keeperGroupRef.current.position.x = THREE.MathUtils.lerp(0, targetX, diveProgress);
-            keeperGroupRef.current.position.y = THREE.MathUtils.lerp(0, targetY, diveProgress);
-            // Tilt body horizontally into dive
-            keeperGroupRef.current.rotation.z = THREE.MathUtils.lerp(0, targetX > 0 ? -1.1 : 1.1, diveProgress);
+            keeperGroupRef.current.position.y = THREE.MathUtils.lerp(0.9, targetY, diveProgress);
+            keeperGroupRef.current.rotation.z = THREE.MathUtils.lerp(0, targetX > 0 ? -1.15 : 1.15, diveProgress);
 
             if (keeperLeftArmRef.current && keeperRightArmRef.current) {
               keeperLeftArmRef.current.rotation.z = -1.2;
@@ -638,23 +470,23 @@ export const PenaltyShootout3DCanvas: React.FC<PenaltyShootout3DCanvasProps> = (
             }
           }
 
-          // Dynamic Camera Tracking during shot
-          if (cameraRef.current && cameraMode === 'behind_striker') {
-            cameraRef.current.position.z = THREE.MathUtils.lerp(15.2, 8.5, flightProgress * 0.5);
-            cameraRef.current.position.y = THREE.MathUtils.lerp(2.4, 1.8, flightProgress * 0.5);
+          // Dynamic Camera Dolly-Zoom
+          if (cameraRef.current) {
+            cameraRef.current.position.z = THREE.MathUtils.lerp(15.6, 9.8, flightProgress * 0.5);
+            cameraRef.current.position.y = THREE.MathUtils.lerp(2.5, 1.9, flightProgress * 0.5);
           }
         }
-        // Phase 4: Net Impact or Goalkeeper Save (at 1.15s)
-        else if (timeSinceShot >= 1.15 && timeSinceShot < 1.4) {
+        // Phase 4: Net Impact or Goalkeeper Save (at 1.12s)
+        else if (timeSinceShot >= 1.12 && timeSinceShot < 1.35) {
           if (!shot.netHitTriggered) {
             shot.netHitTriggered = true;
 
             if (shot.isGoal) {
-              // Sound: Goal Cheer & Net Swish
-              audio.playGoalCheer();
-              setActionBanner('⚽ هـــــــــدف! قذيفة في الشباك لا تصد ولا ترد!');
+              audio?.playGoalCheer();
+              setScreenShake(true);
+              setTimeout(() => setScreenShake(false), 850);
 
-              // Bulge 3D net backwards where ball hit
+              // Elastic deformation of 3D net
               if (netMeshRef.current && netOriginalPositionsRef.current) {
                 const posAttr = netMeshRef.current.geometry.attributes.position;
                 const arr = posAttr.array as Float32Array;
@@ -662,90 +494,57 @@ export const PenaltyShootout3DCanvas: React.FC<PenaltyShootout3DCanvasProps> = (
                   const vx = arr[v];
                   const vy = arr[v + 1];
                   const dist = Math.hypot(vx - shot.targetPos.x, vy - shot.targetPos.y);
-                  if (dist < 1.8) {
-                    arr[v + 2] = netOriginalPositionsRef.current[v + 2] - (1.8 - dist) * 0.65;
+                  if (dist < 1.7) {
+                    arr[v + 2] = netOriginalPositionsRef.current[v + 2] - (1.7 - dist) * 0.7;
                   }
                 }
                 posAttr.needsUpdate = true;
               }
             } else {
-              // Sound: Save / Hit Post & Despair Gasp
-              audio.playWoodworkHit();
-              audio.playDespairGasp();
-              setActionBanner('🧤 تصدي خيالي من الأخطبوط أوتشوا وتشتيت الكرة!');
+              audio?.playWoodworkHit();
+              audio?.playDespairGasp();
 
-              // Ball deflects away
               if (ballMeshRef.current) {
-                ballMeshRef.current.position.y += 0.8;
-                ballMeshRef.current.position.x += 1.4;
-                ballMeshRef.current.position.z += 1.2;
+                ballMeshRef.current.position.y += 0.7;
+                ballMeshRef.current.position.x += 1.2;
+                ballMeshRef.current.position.z += 1.0;
               }
             }
           }
         }
-        // Phase 5: Player Celebration / Despair Reaction (1.4s to 3.0s)
-        else if (timeSinceShot >= 1.4 && timeSinceShot < 3.0) {
+        // Phase 5: Player Reaction (1.35s to 2.4s)
+        else if (timeSinceShot >= 1.35 && timeSinceShot < 2.4) {
           if (shot.isGoal) {
             shot.phase = 'celebration';
-            // Striker Celebrates!
             if (strikerGroupRef.current) {
-              // Turn towards crowd & raise both arms
-              strikerGroupRef.current.rotation.y = 0;
-              strikerGroupRef.current.position.y = Math.abs(Math.sin(elapsed * 6)) * 0.35; // Jumping
+              strikerGroupRef.current.position.y = 0.9 + Math.abs(Math.sin(elapsed * 6)) * 0.35; // Jumping in joy
               if (strikerRightArmRef.current && strikerLeftArmRef.current) {
-                strikerRightArmRef.current.rotation.z = 2.4; // Arms raised to heaven
+                strikerRightArmRef.current.rotation.z = 2.4;
                 strikerLeftArmRef.current.rotation.z = -2.4;
               }
             }
-            // Keeper lies dejected on grass
             if (keeperGroupRef.current) {
-              keeperGroupRef.current.position.y = 0.2;
-              keeperGroupRef.current.rotation.z = 1.5;
+              keeperGroupRef.current.position.y = 0.25;
+              keeperGroupRef.current.rotation.z = 1.4;
             }
           } else {
             shot.phase = 'despair';
-            // Striker drops hands to head in regret
             if (strikerGroupRef.current) {
               if (strikerRightArmRef.current && strikerLeftArmRef.current) {
-                strikerRightArmRef.current.rotation.x = 2.1;
-                strikerLeftArmRef.current.rotation.x = 2.1;
+                strikerRightArmRef.current.rotation.x = 2.0;
+                strikerLeftArmRef.current.rotation.x = 2.0;
               }
             }
-            // Keeper pumps fists in celebration
             if (keeperGroupRef.current) {
-              keeperGroupRef.current.position.y = 0.8;
+              keeperGroupRef.current.position.y = 0.85;
               keeperGroupRef.current.rotation.z = 0;
-              if (keeperRightArmRef.current) keeperRightArmRef.current.rotation.z = 2.2;
             }
           }
         }
-        // Phase 6: Finish and Transition
-        else if (timeSinceShot >= 3.0) {
+        // Phase 6: Callback Finish
+        else if (timeSinceShot >= 2.4) {
           shot.active = false;
-          setIsShotActive(false);
-          if (shot.chosenOption) {
-            onShotFinish(shot.isGoal, shot.chosenOption);
-          }
-        }
-      }
-
-      // Camera Modes
-      if (cameraRef.current) {
-        if (cameraMode === 'broadcast') {
-          cameraRef.current.position.set(16, 8, 8);
-          cameraRef.current.lookAt(0, 1.2, 3);
-        } else if (cameraMode === 'inside_net') {
-          cameraRef.current.position.set(0, 1.3, -goalDepth + 0.4);
-          cameraRef.current.lookAt(0, 1.0, 11);
-        } else if (cameraMode === 'cinematic_orbit') {
-          const orbitRadius = 13;
-          cameraRef.current.position.x = Math.sin(elapsed * 0.5) * orbitRadius;
-          cameraRef.current.position.z = Math.cos(elapsed * 0.5) * orbitRadius + 4;
-          cameraRef.current.position.y = 3.5;
-          cameraRef.current.lookAt(0, 1.2, 5);
-        } else if (cameraMode === 'behind_striker' && !shot.active) {
-          cameraRef.current.position.set(0, 2.4, 15.2);
-          cameraRef.current.lookAt(0, 1.4, 0);
+          onShotFinish(shot.isGoal);
         }
       }
 
@@ -754,7 +553,6 @@ export const PenaltyShootout3DCanvas: React.FC<PenaltyShootout3DCanvasProps> = (
 
     animate();
 
-    // Handle Window Resize
     const handleResize = () => {
       if (!container || !rendererRef.current || !cameraRef.current) return;
       const nw = container.clientWidth;
@@ -768,25 +566,44 @@ export const PenaltyShootout3DCanvas: React.FC<PenaltyShootout3DCanvasProps> = (
     return () => {
       window.removeEventListener('resize', handleResize);
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
-      if (rendererRef.current && rendererRef.current.domElement) {
+      if (rendererRef.current?.domElement) {
         rendererRef.current.dispose();
       }
     };
-  }, [team, opponentTeam, striker]);
+  }, []);
 
-  // Handle Shot Trigger from UI Button / Corner Target
-  const handleTriggerShot = (option: AnswerOption, cornerIdx: number) => {
-    if (isShotActive) return;
+  // Listen to shotTrigger to execute shot
+  useEffect(() => {
+    if (!shotTrigger) {
+      // Reset striker & ball & keeper to starting position
+      if (ballMeshRef.current) {
+        ballMeshRef.current.position.set(0, 0.22, 11);
+        ballMeshRef.current.rotation.set(0, 0, 0);
+      }
+      if (strikerGroupRef.current) {
+        strikerGroupRef.current.position.set(0, 0.9, 12.6);
+        if (strikerRightLegRef.current) strikerRightLegRef.current.rotation.set(0, 0, 0);
+        if (strikerLeftLegRef.current) strikerLeftLegRef.current.rotation.set(0, 0, 0);
+        if (strikerRightArmRef.current) strikerRightArmRef.current.rotation.set(0, 0, 0);
+        if (strikerLeftArmRef.current) strikerLeftArmRef.current.rotation.set(0, 0, 0);
+      }
+      if (keeperGroupRef.current) {
+        keeperGroupRef.current.position.set(0, 0.9, 0.2);
+        keeperGroupRef.current.rotation.set(0, 0, 0);
+      }
+      if (cameraRef.current) {
+        cameraRef.current.position.set(0, 2.5, 15.6);
+        cameraRef.current.lookAt(0, 1.3, 0);
+      }
+      shotStateRef.current.active = false;
+      shotStateRef.current.phase = 'idle';
+      return;
+    }
 
-    setIsShotActive(true);
-    setActionBanner(`🚀 ${striker.name} يركض نحو الكرة ويسدد بكل قوة!`);
-
-    // Target 3D coordinates based on the corner
-    // Goal width: 7.32 (x from -3.4 to +3.4), Height: 2.44 (y from 0.2 to 2.2)
+    // Determine target based on cornerIndex
     let tx = 0;
-    let ty = 1.2;
-
-    switch (cornerIdx) {
+    let ty = 1.3;
+    switch (shotTrigger.cornerIndex) {
       case 0: // Top-Left (المقص الأيسر)
         tx = -2.9;
         ty = 2.05;
@@ -796,25 +613,23 @@ export const PenaltyShootout3DCanvas: React.FC<PenaltyShootout3DCanvasProps> = (
         ty = 2.05;
         break;
       case 2: // Bottom-Left (الأرضية اليسرى)
-        tx = -2.9;
+        tx = -2.8;
         ty = 0.35;
         break;
       case 3: // Bottom-Right (الأرضية اليمنى)
-        tx = 2.9;
+        tx = 2.8;
         ty = 0.35;
         break;
       default:
-        tx = 0;
-        ty = 1.5;
+        tx = -2.7;
+        ty = 1.8;
     }
 
-    const isGoal = !!option.correct;
-    if (!isGoal) {
-      // If incorrect, adjust target closer to keeper's reach or slightly outside
-      tx = tx * 0.45; // Keeper blocks it easily
+    if (!shotTrigger.isGoal) {
+      // If miss, target is closer to keeper's reach so he blocks it easily
+      tx = tx * 0.42;
     }
 
-    // Set shot physics in simulation state
     shotStateRef.current = {
       active: true,
       phase: 'runup',
@@ -822,133 +637,15 @@ export const PenaltyShootout3DCanvas: React.FC<PenaltyShootout3DCanvasProps> = (
       duration: 1.1,
       startPos: new THREE.Vector3(0, 0.22, 11),
       targetPos: new THREE.Vector3(tx, ty, 0),
-      isGoal: isGoal,
-      chosenOption: option,
-      ballSpin: new THREE.Vector3(12, 10, 0),
+      isGoal: shotTrigger.isGoal,
       netHitTriggered: false,
       keeperDived: false
     };
-  };
+  }, [shotTrigger]);
 
   return (
-    <div className="relative w-full h-[78vh] min-h-[580px] rounded-3xl overflow-hidden border-2 border-white/20 shadow-[0_0_60px_rgba(0,0,0,0.9)] bg-slate-950 flex flex-col justify-between select-none">
-      
-      {/* 3D WebGL Canvas Container */}
-      <div ref={mountRef} className="absolute inset-0 z-0 cursor-grab active:cursor-grabbing" />
-
-      {/* TOP HUD: Action Broadcast Banner & Camera Switcher */}
-      <div className="relative z-20 p-4 flex flex-col md:flex-row items-center justify-between gap-3 pointer-events-auto">
-        
-        {/* Live Match State Capsule */}
-        <div className="bg-slate-950/85 backdrop-blur-xl border border-white/20 px-5 py-2 rounded-2xl flex items-center gap-3 shadow-xl">
-          <span className="w-3 h-3 rounded-full bg-rose-500 animate-ping" />
-          <span className="text-xs font-black text-amber-400 tracking-wider">بث ثلاثي الأبعاد مباشر 3D STADIUM ENGINE</span>
-          <span className="text-white/40">•</span>
-          <span className="text-xs font-black text-white">{striker.name} #{striker.number}</span>
-        </div>
-
-        {/* Camera Selector Buttons */}
-        <div className="bg-slate-950/85 backdrop-blur-xl border border-white/20 p-1 rounded-2xl flex items-center gap-1 shadow-xl">
-          <button
-            onClick={() => setCameraMode('behind_striker')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              cameraMode === 'behind_striker' ? 'bg-amber-400 text-slate-950 shadow-md' : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            <Eye size={13} />
-            <span>خلف اللاعب</span>
-          </button>
-
-          <button
-            onClick={() => setCameraMode('broadcast')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              cameraMode === 'broadcast' ? 'bg-amber-400 text-slate-950 shadow-md' : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            <Camera size={13} />
-            <span>بث تلفزيوني</span>
-          </button>
-
-          <button
-            onClick={() => setCameraMode('inside_net')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              cameraMode === 'inside_net' ? 'bg-amber-400 text-slate-950 shadow-md' : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            <Zap size={13} />
-            <span>داخل الشباك</span>
-          </button>
-
-          <button
-            onClick={() => setCameraMode('cinematic_orbit')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              cameraMode === 'cinematic_orbit' ? 'bg-amber-400 text-slate-950 shadow-md' : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            <RefreshCw size={13} />
-            <span>دوران سينمائي</span>
-          </button>
-        </div>
-      </div>
-
-      {/* MID ACTION TICKER BANNER */}
-      <div className="relative z-20 self-center max-w-xl w-[92%] text-center pointer-events-none">
-        <div className="bg-slate-950/90 backdrop-blur-md border border-cyan-400/40 rounded-2xl px-6 py-2.5 shadow-[0_0_30px_rgba(6,182,212,0.4)]">
-          <p className="text-sm md:text-base font-black text-white">{actionBanner}</p>
-        </div>
-      </div>
-
-      {/* BOTTOM QUESTION & 4 CORNER SHOOTING TARGETS */}
-      <div className="relative z-20 p-4 md:p-6 flex flex-col gap-3 pointer-events-auto">
-        
-        {/* Question Prompt Bar */}
-        <div className="self-center w-full max-w-3xl bg-slate-950/95 backdrop-blur-2xl border-2 border-amber-400/80 rounded-2xl p-4 text-center shadow-2xl">
-          <div className="text-[11px] font-black text-amber-400 uppercase tracking-widest mb-1 flex items-center justify-center gap-2">
-            <span>{currentQuestion.category}</span>
-            <span>•</span>
-            <span>سدد نحو زاوية الإجابة الصحيحة لتسجيل الهدف!</span>
-          </div>
-          <h3 className="text-base md:text-lg font-black text-white leading-relaxed">
-            {currentQuestion.prompt}
-          </h3>
-        </div>
-
-        {/* 4 Interactive Goal Corner Target Buttons */}
-        <div className="max-w-4xl mx-auto w-full grid grid-cols-2 gap-3">
-          {currentQuestion.answers.map((opt, idx) => {
-            const cornerPositions = [
-              'الزاوية العليا اليسرى (90)',
-              'الزاوية العليا اليمنى (90)',
-              'الزاوية الأرضية اليسرى',
-              'الزاوية الأرضية اليمنى'
-            ];
-            return (
-              <button
-                key={idx}
-                disabled={isShotActive}
-                onClick={() => handleTriggerShot(opt, idx)}
-                className={`group relative p-3 md:p-4 rounded-2xl border-2 transition-all duration-200 text-right cursor-pointer flex flex-col justify-between shadow-xl ${
-                  isShotActive 
-                    ? 'opacity-40 cursor-not-allowed border-white/10 bg-slate-900/60'
-                    : 'bg-gradient-to-r from-slate-950/95 via-blue-950/90 to-slate-950/95 border-cyan-400/70 hover:border-amber-400 hover:scale-[1.02] active:scale-95 hover:shadow-[0_0_35px_rgba(245,158,11,0.5)]'
-                }`}
-              >
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="font-mono px-2 py-0.5 rounded-md bg-cyan-400/20 text-cyan-300 font-black border border-cyan-400/30">
-                    {opt.cornerIcon} {cornerPositions[idx]}
-                  </span>
-                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 group-hover:bg-amber-400 group-hover:scale-125 transition-all animate-ping" />
-                </div>
-                <div className="text-sm md:text-base font-black text-white group-hover:text-amber-200 transition-colors">
-                  {opt.text}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-      </div>
-
+    <div className={`relative w-full h-full min-h-[500px] overflow-hidden select-none transition-transform duration-150 ${screenShake ? 'scale-[1.015] translate-y-[-4px]' : ''}`}>
+      <div ref={mountRef} className="absolute inset-0 w-full h-full" />
     </div>
   );
 };

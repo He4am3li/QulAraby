@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Volume2, VolumeX, ShieldCheck, UserX, 
   ArrowRight, ArrowLeft, RotateCcw, Check, FileText,
-  Download, Mail, MailOpen, Music, Users, Search, AlertCircle, Loader2
+  Download, Mail, MailOpen, Music, Users, Search, AlertCircle, Loader2,
+  Lock, Unlock, Key, Fingerprint, Award, Sparkles, X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import html2canvas from 'html2canvas';
@@ -616,6 +617,42 @@ class SpyAudioEngine {
     osc.start(now);
     osc.stop(now + 0.18);
   }
+
+  public playCipherDecode() {
+    this.init();
+    if (!this.ctx || this.isMuted || !this.masterGain) return;
+    const now = this.ctx.currentTime;
+    [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+      const osc = this.ctx!.createOscillator();
+      const gain = this.ctx!.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.045);
+      gain.gain.setValueAtTime(0.22, now + idx * 0.045);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.045 + 0.08);
+      osc.connect(gain);
+      gain.connect(this.masterGain!);
+      osc.start(now + idx * 0.045);
+      osc.stop(now + idx * 0.045 + 0.09);
+    });
+  }
+
+  public playAdvancedAlarm() {
+    this.init();
+    if (!this.ctx || this.isMuted || !this.masterGain) return;
+    const now = this.ctx.currentTime;
+    [440, 880].forEach((freq, idx) => {
+      const osc = this.ctx!.createOscillator();
+      const gain = this.ctx!.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+      gain.gain.setValueAtTime(0.28, now + idx * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.18);
+      osc.connect(gain);
+      gain.connect(this.masterGain!);
+      osc.start(now + idx * 0.08);
+      osc.stop(now + idx * 0.08 + 0.19);
+    });
+  }
 }
 
 const spyAudio = new SpyAudioEngine();
@@ -1023,6 +1060,9 @@ export interface EvidenceTerm {
 export interface ClueItem {
   speech: string;
   matcher: (s: SuspectPerson) => boolean;
+  cipherKey?: string;
+  cipherHint?: string;
+  cipherOptions?: string[];
 }
 
 export interface DetectiveCase {
@@ -1202,9 +1242,27 @@ export const CASES_DATABASE: DetectiveCase[] = [
       { ar: 'عَرَبَة الأَمْتِعَة', en: 'Luggage Wagon' }
     ],
     clues: [
-      { speech: 'كاميرات المحطة أثبتت براءة جميع المسافرات الإناث', matcher: (s) => s.gender === 'أنثى' },
-      { speech: 'منصور كان يشتري تذكرة السفر من شباك التذاكر، فهو بريء', matcher: (s) => s.id === 'c4_s0' },
-      { speech: 'مازن كان في عربة الأمتعة مع عمال المحطة، فهو بريء', matcher: (s) => s.id === 'c4_s5' }
+      {
+        speech: 'كاميرات المحطة أثبتت براءة جميع المسافرات الإناث',
+        matcher: (s) => s.gender === 'أنثى',
+        cipherKey: 'تَسْجِيلَات الكَامِيرَا',
+        cipherHint: 'ما وسيلة المراقبة التي برأت المسافرات؟',
+        cipherOptions: ['تَسْجِيلَات الكَامِيرَا', 'صَافِرَة القِطَار', 'حَقِيبَة السَّفَر']
+      },
+      {
+        speech: 'منصور كان يشتري تذكرة السفر من شباك التذاكر، فهو بريء',
+        matcher: (s) => s.id === 'c4_s0',
+        cipherKey: 'شُبَّاك التَّذَاكِر',
+        cipherHint: 'أين كان منصور وقت اختفاء الحقيبة؟',
+        cipherOptions: ['شُبَّاك التَّذَاكِر', 'عَرَبَة الأَمْتِعَة', 'رَصِيف ٧']
+      },
+      {
+        speech: 'مازن كان في عربة الأمتعة مع عمال المحطة، فهو بريء',
+        matcher: (s) => s.id === 'c4_s5',
+        cipherKey: 'عَرَبَة الأَمْتِعَة',
+        cipherHint: 'ما الموقع الذي تواجد فيه مازن مع العمال؟',
+        cipherOptions: ['عَرَبَة الأَمْتِعَة', 'غُرْفَة المَحَطَّة', 'بَاب القِطَار']
+      }
     ]
   },
   {
@@ -1233,8 +1291,20 @@ export const CASES_DATABASE: DetectiveCase[] = [
       { ar: 'وَثِيقَة تَارِيخِيَّة', en: 'Historical Document' }
     ],
     clues: [
-      { speech: 'سجلات بصمات الأرشيف استبعدت جميع الذكور من دائرة الاتهام', matcher: (s) => s.gender === 'ذكر' },
-      { speech: 'منى كانت تقدم العرض التقديمي أمام الجمهور في القاعة، فهي بريئة', matcher: (s) => s.id === 'c5_s0' }
+      {
+        speech: 'سجلات بصمات الأرشيف استبعدت جميع الذكور من دائرة الاتهام',
+        matcher: (s) => s.gender === 'ذكر',
+        cipherKey: 'سِجِلّ البَصَمَات',
+        cipherHint: 'ما الدليل الجنائي الذي استبعد الذكور؟',
+        cipherOptions: ['سِجِلّ البَصَمَات', 'مَفَاتِيح الخَزِينَة', 'إِشْعَار الدُّخُول']
+      },
+      {
+        speech: 'منى كانت تقدم العرض التقديمي أمام الجمهور في القاعة، فهي بريئة',
+        matcher: (s) => s.id === 'c5_s0',
+        cipherKey: 'قَاعَة العَرْض',
+        cipherHint: 'أين كانت منى تقدم عرضها التقديمي؟',
+        cipherOptions: ['قَاعَة العَرْض', 'غُرْفَة المَخْطُوطَات', 'مَمَرّ الأَرْشِيف']
+      }
     ]
   }
 ];
@@ -1268,6 +1338,11 @@ export const DetectiveMystery: React.FC<DetectiveMysteryProps> = ({ onBack, lang
   const [stampedInnocentId, setStampedInnocentId] = useState<string | null>(null);
   const [shakeId, setShakeId] = useState<string | null>(null);
 
+  // Advanced Mode Forensic Cipher & Dossier State
+  const [isClueDecoded, setIsClueDecoded] = useState<boolean>(false);
+  const [failedCipherKey, setFailedCipherKey] = useState<string | null>(null);
+  const [showEvidenceDossier, setShowEvidenceDossier] = useState<boolean>(false);
+
   const [isCaseSolved, setIsCaseSolved] = useState<boolean>(false);
 
   // Envelope Screen State (When student finishes case and receives letter)
@@ -1289,7 +1364,7 @@ export const DetectiveMystery: React.FC<DetectiveMysteryProps> = ({ onBack, lang
   // Typewriter effect for clue sentence (كتابة حرفاً بحرف)
   const [typedClueText, setTypedClueText] = useState<string>('');
   useEffect(() => {
-    if (!activeClue?.speech) {
+    if (!activeClue?.speech || (selectedLevel === 'advanced' && !isClueDecoded)) {
       setTypedClueText('');
       return;
     }
@@ -1304,7 +1379,7 @@ export const DetectiveMystery: React.FC<DetectiveMysteryProps> = ({ onBack, lang
       }
     }, 28);
     return () => clearInterval(timer);
-  }, [activeClue]);
+  }, [activeClue, selectedLevel, isClueDecoded]);
 
   // المشتبه بهم في هذه القضية فقط (مطابقون تماماً لمسرح الجريمة بالصفحة الثانية)
   const caseSuspects = useMemo(() => {
@@ -1339,13 +1414,19 @@ export const DetectiveMystery: React.FC<DetectiveMysteryProps> = ({ onBack, lang
 
   // Select level & enter crime briefing
   const handleSelectLevel = (level: DifficultyLevel) => {
-    spyAudio.playClassifiedStamp();
     setSelectedLevel(level);
     setCurrentCaseIndex(0);
     resetCase(0);
     
-    // ضبط الموسيقى الخاصة بالقضية الأولى
-    spyAudio.setTrack(0);
+    if (level === 'advanced') {
+      // مؤثر صوتي خاص بالمستوى المتقدم ونمط موسيقي عالي التوتر
+      spyAudio.playAdvancedAlarm();
+      spyAudio.setTrack(3); // Tense Interrogation track
+    } else {
+      spyAudio.playClassifiedStamp();
+      spyAudio.setTrack(0);
+    }
+
     if (!isMusicPlaying) {
       const playing = spyAudio.toggleBgm();
       setIsMusicPlaying(playing);
@@ -1366,10 +1447,33 @@ export const DetectiveMystery: React.FC<DetectiveMysteryProps> = ({ onBack, lang
     setEliminatedIds(new Set());
     setStampedInnocentId(null);
     setShakeId(null);
+    setIsClueDecoded(false);
+    setFailedCipherKey(null);
+    setShowEvidenceDossier(false);
     setIsCaseSolved(false);
     setIsEnvelopeOpened(false);
     // تغيير النمط الموسيقي مع كل قضية تلقائياً
     spyAudio.setTrack(caseIdx % 5);
+  };
+
+  // Handle decoding cipher in advanced level
+  const handleDecodeCipher = (opt: string) => {
+    if (opt === activeClue.cipherKey || !activeClue.cipherKey) {
+      spyAudio.playCipherDecode();
+      setIsClueDecoded(true);
+      setFailedCipherKey(null);
+      try {
+        confetti({
+          particleCount: 25,
+          spread: 45,
+          origin: { x: 0.22, y: 0.38 }
+        });
+      } catch {}
+    } else {
+      spyAudio.playWrongBuzzer();
+      setFailedCipherKey(opt);
+      setTimeout(() => setFailedCipherKey(null), 500);
+    }
   };
 
   const remainingMatchingForCurrentClue = useMemo(() => {
@@ -1379,6 +1483,12 @@ export const DetectiveMystery: React.FC<DetectiveMysteryProps> = ({ onBack, lang
   // Handle clicking on suspect in crime scene
   const handleSuspectClick = (suspect: SuspectPerson) => {
     if (isCulpritIdentified || eliminatedIds.has(suspect.id)) return;
+
+    // في المستوى المتقدم، يجب فك شفرة الإفادة الجنائية أولاً
+    if (selectedLevel === 'advanced' && !isClueDecoded) {
+      spyAudio.playWrongBuzzer();
+      return;
+    }
 
     const matchesClue = activeClue.matcher(suspect);
 
@@ -1420,6 +1530,10 @@ export const DetectiveMystery: React.FC<DetectiveMysteryProps> = ({ onBack, lang
           setTimeout(() => {
             spyAudio.playClueStinger();
             setCurrentClueIndex(ci => ci + 1);
+            if (selectedLevel === 'advanced') {
+              setIsClueDecoded(false);
+              setFailedCipherKey(null);
+            }
           }, 450);
         }
       }
@@ -1456,7 +1570,7 @@ export const DetectiveMystery: React.FC<DetectiveMysteryProps> = ({ onBack, lang
     ? 'المبتدئ (مفردات الملاحظة السريعة والألوان)' 
     : selectedLevel === 'intermediate' 
     ? 'المتوسط (التحليل والاستنتاج المركب والملابس)' 
-    : 'المتقدم (الاستقصاء الجنائي الدقيق والاستثناءات)'
+    : 'المتقدم (طور المحقق الخبير وفك الشفرات الجنائية - رتبة الماسترميند 100%)'
 }
 الجاني المحدد: ${SUSPECT_MAP[activeCase.culpritId]?.name || 'المطلوب'}
 
@@ -1702,6 +1816,15 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
               <ArrowRight size={14} />
               <span>الرئيسية</span>
             </button>
+
+            {selectedLevel === 'advanced' && (
+              <div className="pointer-events-none px-3.5 py-1 rounded-full bg-amber-950/90 border border-amber-500/80 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.5)] flex items-center gap-2 backdrop-blur-md">
+                <ShieldCheck size={14} className="text-amber-400 animate-pulse" />
+                <span className="text-xs sm:text-sm font-black tracking-wider">
+                  طور المحقق الخبير (Mastermind) • الأدلة مشفرة 🔒
+                </span>
+              </div>
+            )}
           </header>
 
           {/* Millimetric Hotspot over (بدء التحقيق واستبعاد الأبرياء) - متطابق بدقة متناهية فوق المستطيل الأصلي */}
@@ -1787,6 +1910,18 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
               <span>الرئيسية</span>
             </button>
           </header>
+
+          {/* Mastermind Badge for Advanced Level */}
+          {selectedLevel === 'advanced' && (
+            <div className="absolute top-[28.5%] left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+              <div className="px-3.5 py-1 rounded-full bg-amber-950/90 border border-amber-400 text-amber-200 shadow-[0_0_15px_rgba(251,191,36,0.6)] flex items-center gap-1.5 backdrop-blur-sm animate-pulse">
+                <Award size={14} className="text-amber-300" />
+                <span className="text-xs sm:text-sm font-black tracking-wide">
+                  رتبة كبير المحققين (Mastermind Detective) • تم فك كافة الشفرات الجنائية ✓
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Vocabulary Table attached directly into the 5 rows of ٩.jpeg - خانات الجدول بالضبط بالمليمتر */}
           <div className="absolute inset-0 z-20 pointer-events-none">
@@ -1922,13 +2057,29 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
             <ArrowRight size={14} />
             <span>مسرح الجريمة</span>
           </button>
+
+          {selectedLevel === 'advanced' && (
+            <div className="pointer-events-none px-3 py-1 rounded-full bg-amber-950/85 border border-amber-500/70 text-amber-300 shadow-md flex items-center gap-1.5 backdrop-blur-md">
+              <Sparkles size={13} className="text-amber-400" />
+              <span className="text-[11px] sm:text-xs font-black">
+                طور فك الشفرات الجنائية (Advanced)
+              </span>
+            </div>
+          )}
+
+          <button
+            onClick={() => setShowEvidenceDossier(!showEvidenceDossier)}
+            className="pointer-events-auto p-1.5 px-3 rounded-full bg-black/60 border border-amber-500/40 text-amber-300 hover:bg-black/80 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold backdrop-blur-md"
+            title="سجل الأدلة والمفردات الميدانية"
+          >
+            <Fingerprint size={14} className="text-amber-400" />
+            <span>سجل الأدلة</span>
+          </button>
         </header>
 
-
-
-        {/* The Beige Rectangle for Clues directly on the left of the 6 frames - متمركز في قلب الرقعة وكتابة حرفاً بحرف */}
+        {/* The Beige Rectangle for Clues directly on the left of the 6 frames */}
         <div 
-          className="absolute z-20 flex items-center justify-center p-3 sm:p-4 md:p-5 text-center pointer-events-none"
+          className="absolute z-20 flex flex-col items-center justify-center p-2 sm:p-3 text-center"
           style={{
             left: '7.5%',
             width: '28.0%',
@@ -1937,12 +2088,57 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
           }}
           dir="rtl"
         >
-          <p className="text-amber-950 font-black text-xs sm:text-sm md:text-base leading-relaxed select-none text-center">
-            {typedClueText}
-            {typedClueText.length < (activeClue?.speech?.length || 0) && (
-              <span className="inline-block w-1.5 h-3.5 sm:h-4 bg-amber-900 mr-1 animate-pulse align-middle" />
-            )}
-          </p>
+          {selectedLevel === 'advanced' && !isClueDecoded ? (
+            <div className="w-full h-full flex flex-col justify-between items-center py-1 sm:py-1.5">
+              {/* Header Badge */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-950/15 border border-amber-900/40 text-amber-950 font-black text-[10px] sm:text-xs tracking-wide">
+                <Lock size={12} className="text-amber-900 animate-pulse" />
+                <span>إفادة جنائية مشفرة #{currentClueIndex + 1}</span>
+              </div>
+
+              {/* Hint */}
+              <p className="text-amber-950 font-black text-[11px] sm:text-xs md:text-sm leading-snug drop-shadow-sm px-1 text-center">
+                {activeClue?.cipherHint || 'اختر مفتاح الاستدلال لفك الشفرة:'}
+              </p>
+
+              {/* Cipher Options Keys */}
+              <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5 w-full pointer-events-auto">
+                {(activeClue?.cipherOptions || [activeClue?.cipherKey || 'دليل جنائي']).map((opt, idx) => {
+                  const isFailed = failedCipherKey === opt;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => handleDecodeCipher(opt)}
+                      className={`inline-flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-black shadow-sm transition-all duration-150 cursor-pointer select-none active:scale-95 ${
+                        isFailed
+                          ? 'bg-red-700 text-white border border-red-500 scale-105'
+                          : 'bg-stone-900/90 hover:bg-stone-800 text-amber-200 border border-amber-600/60 hover:border-amber-400'
+                      }`}
+                      title="استخدام هذا المفتاح لفك الشفرة"
+                    >
+                      <Key size={11} className={isFailed ? 'text-white' : 'text-amber-400'} />
+                      <span>{opt}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="w-full h-full flex flex-col justify-center items-center pointer-events-none">
+              {selectedLevel === 'advanced' && (
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 mb-1 rounded-full bg-emerald-800/15 border border-emerald-800/30 text-emerald-950 font-black text-[9px] sm:text-[10px]">
+                  <Unlock size={11} className="text-emerald-800" />
+                  <span>تم فك الشفرة الجنائية بنجاح ✓</span>
+                </div>
+              )}
+              <p className="text-amber-950 font-black text-xs sm:text-sm md:text-base leading-relaxed select-none text-center">
+                {typedClueText}
+                {typedClueText.length < (activeClue?.speech?.length || 0) && (
+                  <span className="inline-block w-1.5 h-3.5 sm:h-4 bg-amber-900 mr-1 animate-pulse align-middle" />
+                )}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* The 6 Suspect Frames exactly positioned inside the 6 frames of ٨.jpeg */}
@@ -2023,6 +2219,51 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
             );
           })}
         </div>
+
+        {/* Floating Forensic Evidence Dossier Modal */}
+        {showEvidenceDossier && (
+          <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn pointer-events-auto">
+            <div className="relative w-full max-w-md bg-stone-900 border-2 border-amber-500/80 rounded-2xl p-5 shadow-2xl text-slate-100 flex flex-col gap-3">
+              <div className="flex items-center justify-between border-b border-amber-600/40 pb-2">
+                <div className="flex items-center gap-2">
+                  <Fingerprint className="w-5 h-5 text-amber-400" />
+                  <h3 className="font-black text-sm sm:text-base text-amber-300">
+                    ملف الأدلة والمفردات الجنائية الموثقة
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowEvidenceDossier(false)}
+                  className="p-1 rounded-full hover:bg-stone-800 text-stone-400 hover:text-white transition cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <p className="text-xs text-stone-300 leading-relaxed">
+                سجل المصطلحات والأدلة المرتبطة بقضية: <span className="text-amber-300 font-bold">{activeCase.codeName}</span>
+              </p>
+
+              <div className="flex flex-col gap-2 my-1 max-h-60 overflow-y-auto">
+                {activeCase.evidenceTerms.map((term, i) => (
+                  <div
+                    key={i}
+                    className="p-2.5 rounded-xl bg-stone-950/80 border border-amber-500/30 flex items-center justify-between"
+                  >
+                    <span className="font-black text-xs text-amber-200">{term.ar}</span>
+                    <span className="text-[10px] text-stone-400 font-mono">{term.en}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setShowEvidenceDossier(false)}
+                className="w-full py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs transition cursor-pointer shadow-lg"
+              >
+                العودة للتحقيق
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Bottom-left audio toggles */}
         <div className="absolute bottom-4 left-4 z-30 flex items-center gap-2 pointer-events-auto">

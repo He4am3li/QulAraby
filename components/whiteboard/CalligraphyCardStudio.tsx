@@ -1,12 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import confetti from 'canvas-confetti';
 import {
-  PenTool,
-  Move,
-  ZoomIn,
-  Grid3X3,
   RotateCcw,
   RotateCw,
   Eye,
@@ -14,7 +9,6 @@ import {
   Save,
   BookOpen,
   Type,
-  Sun,
   X,
   Check,
   FolderHeart,
@@ -34,7 +28,7 @@ interface CalligraphyCardStudioProps {
   isReadOnly?: boolean;
 }
 
-// Arabic Calligraphy Fonts (including requested: Reem Kufi Ink, Alarabiya, Molhim, Sulimany, Aref Ruqaa Ink, HSN Naskh)
+// Arabic Calligraphy Fonts
 export interface FontOption {
   id: string;
   label: string;
@@ -42,21 +36,227 @@ export interface FontOption {
 }
 
 export const CALLIGRAPHY_FONTS: FontOption[] = [
-  { id: 'thuluth', label: 'ثُلُث', className: 'font-thuluth' },
-  { id: 'naskh', label: 'نَسْخ', className: 'font-naskh' },
-  { id: 'diwani', label: 'دِيوَانِي', className: 'font-diwani' },
-  { id: 'kufi', label: 'كُوفِي', className: 'font-kufi' },
-  { id: 'ruqah', label: 'رُقْعَة', className: 'font-ruqah' },
-  { id: 'reem_kufi_ink', label: 'رِيم كُوفِي إنك', className: 'font-reem-ink' },
+  { id: 'thuluth', label: 'خَطُّ الثُّلُثِ الجَلِيّ', className: 'font-thuluth' },
+  { id: 'diwani', label: 'الخَطُّ الدِّيوَانِيُّ', className: 'font-diwani' },
+  { id: 'naskh', label: 'خَطُّ النَّسْخِ القُرْآنِيّ', className: 'font-naskh' },
+  { id: 'ruqah', label: 'خَطُّ الرُّقْعَةِ الأَصِيل', className: 'font-ruqah' },
+  { id: 'aref_ruqaa_ink', label: 'خَطُّ الرُّقْعَةِ إنك', className: 'font-aref-ink' },
+  { id: 'reem_kufi_ink', label: 'خَطُّ رِيد كُوفِي إنْك', className: 'font-reem-kufi-ink' },
+  { id: 'kufi', label: 'الْخَطُّ الْكُوفِيُّ المَصَاحِفِيّ', className: 'font-kufi' },
+  { id: 'nastaliq', label: 'خَطُّ التَّعْلِيقِ (نَسْتَعْلِيق)', className: 'font-nastaliq' },
+  { id: 'gulzar', label: 'خَطُّ الْغُلْزَارِ السُّلْطَانِيّ', className: 'font-gulzar' },
+  { id: 'rakkas', label: 'خَطُّ الرَّقَّاصِ الإِبْدَاعِيّ', className: 'font-rakkas' },
+  { id: 'marhey', label: 'خَطُّ مَرْحَى الرِّيشِيّ', className: 'font-marhey' },
+  { id: 'amiri', label: 'خَطُّ الأَمِيرِيِّ المَلَكِيّ', className: 'font-amiri' },
+  { id: 'katibeh', label: 'خَطُّ الكَاتِبَةِ التُّرَاثِيّ', className: 'font-katibeh' },
+  { id: 'elmessiri', label: 'خَطُّ المَسِيرِي الأَنْدَلُسِيّ', className: 'font-elmessiri' },
+  { id: 'zain', label: 'خَطُّ الزَّيْنِ الانْسِيَابِيّ', className: 'font-zain' },
   { id: 'alarabiya', label: 'خَطُّ الْعَرَبِيَّةِ', className: 'font-alarabiya' },
   { id: 'molhim', label: 'خَطُّ مُلْهِم', className: 'font-molhim' },
   { id: 'sulimany', label: 'خَطُّ السُّلَيْمَانِي', className: 'font-sulimany' },
-  { id: 'aref_ruqaa_ink', label: 'رُقْعَة إنك', className: 'font-aref-ink' },
-  { id: 'hsn_naskh', label: 'حَسَن نَسْخ', className: 'font-hsn-naskh' },
-  { id: 'nastaliq', label: 'نَسْتَعْلِيق', className: 'font-nastaliq' }
+  { id: 'hsn_naskh', label: 'حَسَن نَسْخ', className: 'font-hsn-naskh' }
 ];
 
-// Authentic Calligraphy Instruments with Dynamic Scaling and Weight
+export interface CalligraphyGuideItem {
+  id: string;
+  nameAr: string;
+  descAr: string;
+  sampleAr: string;
+  nameEn: string;
+  descEn: string;
+  className: string;
+}
+
+export const CALLIGRAPHY_GUIDE_FONTS: CalligraphyGuideItem[] = [
+  {
+    id: 'thuluth',
+    nameAr: 'خَطُّ الثُّلُثِ الجَلِيّ',
+    descAr: 'أُمُّ الخطوط العربية وأصعبها وأبهى مظهر في الآيات القرآنية والعناوين الكبرى والمحاريب، يتميز بمرونته وتداخله المهيب وتناغم حركاته وسيلان حروفه العمودية الممتدة.',
+    sampleAr: 'وَقُل رَّبِّ زِدْنِي عِلْمًا',
+    nameEn: 'Thuluth Script (The King of Scripts)',
+    descEn: 'The master and most majestic Arabic script, historically used for monumental mosque inscriptions and royal decrees with sweeping vertical proportions.',
+    className: 'font-thuluth'
+  },
+  {
+    id: 'diwani',
+    nameAr: 'الخَطُّ الدِّيوَانِيُّ العُثْمَانِيّ',
+    descAr: 'ابتكره الخطاطون لديوان السلاطين، ويتميز بحركاته الدائرية ورشاقة استدارته وتناغم تشابكاته البديعة وانسياب حروفه الصاعدة والهابطة كأمواج البحر.',
+    sampleAr: 'فَصَبْرٌ جَمِيلٌ وَاللَّهُ الْمُسْتَعَانُ',
+    nameEn: 'Diwani Script (The Royal Chancellery)',
+    descEn: 'Developed during the Ottoman golden age for official state decrees, celebrated for rhythmic circular arcs and dense decorative grace.',
+    className: 'font-diwani'
+  },
+  {
+    id: 'naskh',
+    nameAr: 'خَطُّ النَّسْخِ القُرْآنِيّ',
+    descAr: 'خط تدوين المصاحف الشريفة والكتب العلمية، وضوحه فائق ورصانته متناهية، وتناسب حروفه يريح العين وييسر القراءة المتمعنة في كل العصور.',
+    sampleAr: 'إِنَّ مَعَ الْعُسْرِ يُسْرًا',
+    nameEn: 'Naskh Script (The Quranic Standard)',
+    descEn: 'The definitive script for manuscript copying and the Holy Quran, renowned for measured legibility and geometric balance.',
+    className: 'font-naskh'
+  },
+  {
+    id: 'ruqah',
+    nameAr: 'خَطُّ الرُّقْعَةِ الأَصِيل',
+    descAr: 'خط سريع وقوي ومباشر، زواياه حادة وميله متسق، يستند إلى خطوط أفقية مستقيمة بدون حليات، وهو الخط الأكثر سلاسة وتداولاً في التحرير اليومي.',
+    sampleAr: 'الحَمْدُ لِلَّهِ رَبِّ العَالَمِينَ',
+    nameEn: 'Ruqah Script (Everyday Elegance)',
+    descEn: 'A fast, geometric, and functional script created for administrative efficiency, characterized by sharp angles and compact ligatures.',
+    className: 'font-ruqah'
+  },
+  {
+    id: 'aref_ruqaa_ink',
+    nameAr: 'خَطُّ الرُّقْعَةِ إنك (بمداد الخطاط)',
+    descAr: 'تطوير حبري كلاسيكي لخط الرقعة بمحاكاة تدفق المداد الطبيعي وسيلان الحبر من سن القصب المشطوف مع نهايات ناعمة ودقيقة وغنية بالعراقة.',
+    sampleAr: 'وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ',
+    nameEn: 'Aref Ruqaa Ink (Master Calligrapher Ink Flow)',
+    descEn: 'An ink-wash rendition of Ruqah capturing authentic ink saturation, sharp nib dynamics, and the delicate feel of traditional parchment.',
+    className: 'font-aref-ink'
+  },
+  {
+    id: 'reem_kufi_ink',
+    nameAr: 'خَطُّ رِيد كُوفِي إنْك (المداد الكوفي)',
+    descAr: 'طراز كوفي حديث مستوحى من خطوط المصاحف التاريخية بلمسات حبرية معاصرة، يجمع بين أصالة الحرف الكوفي وتدفق الحبر السيال في توازن هندسي أخاذ.',
+    sampleAr: 'سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ',
+    nameEn: 'Reem Kufi Ink (Contemporary Inked Kufic)',
+    descEn: 'A contemporary Kufic display script rooted in early monumental manuscripts with expressive ink dynamics and robust architectural geometry.',
+    className: 'font-reem-kufi-ink'
+  },
+  {
+    id: 'kufi',
+    nameAr: 'الْخَطُّ الْكُوفِيُّ المَصَاحِفِيّ',
+    descAr: 'أعرق الخطوط العربية وأقدمها، يتميز بهندسته الصارمة واستقامة زواياه وهيبته التاريخية الخالدة التي نقشت بها بواكير المصاحف الحجازية والأندلسية.',
+    sampleAr: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+    nameEn: 'Kufic Script (Ancient Monumental Script)',
+    descEn: 'The earliest formulated Arabic script, born in Kufa and revered for stately architectural angularity and bold baselines.',
+    className: 'font-kufi'
+  },
+  {
+    id: 'nastaliq',
+    nameAr: 'خَطُّ التَّعْلِيقِ (نَسْتَعْلِيق)',
+    descAr: 'عروس الخطوط الإسلامية، يجمع بين النسخ والتعليق، ويشتهر بانحداره الموسيقي المائل من اليمين إلى اليسار وتناغم ضربات القلم الرفيعة والعريضة.',
+    sampleAr: 'الخَطُّ هَنْدَسَةٌ رُوحَانِيَّةٌ',
+    nameEn: 'Nastaliq Script (The Persian Masterpiece)',
+    descEn: 'Regarded as the pinnacle of poetic calligraphic expression, celebrated for cascading descending lines and lyrical delicacy.',
+    className: 'font-nastaliq'
+  },
+  {
+    id: 'gulzar',
+    nameAr: 'خَطُّ الْغُلْزَارِ السُّلْطَانِيّ',
+    descAr: 'طراز خطي سلطاني فاخر تُملأ فيه أجواف الحروف العريضة بالزخارف والتوريقات الدقيقة، استُخدم في مجامر البلاط واللوحات الإمبراطورية الفريدة.',
+    sampleAr: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',
+    nameEn: 'Gulzar Script (The Sultanic Illuminated Script)',
+    descEn: 'A sumptuous decorative imperial script where broad letter bodies are adorned with miniature Arabesque florals and gilded patterns.',
+    className: 'font-gulzar'
+  },
+  {
+    id: 'rakkas',
+    nameAr: 'خَطُّ الرَّقَّاصِ الإِبْدَاعِيّ',
+    descAr: 'خط تعبيري حديث متحرر مستوحى من حركة راقصة تتلاقى فيها أوزان الحروف المتباينة ليعطي إيقاعاً بصرياً نابضاً بالحياة في ملصقات الفن واللوحات المعاصرة.',
+    sampleAr: 'نَبْضُ الحَرْفِ وَسِحْرُ البَيَانِ',
+    nameEn: 'Rakkas Script (Dynamic Contemporary Art)',
+    descEn: 'A lively creative script with theatrical movement and rhythmic tempo, ideal for expressive modern Arabic art prints.',
+    className: 'font-rakkas'
+  },
+  {
+    id: 'marhey',
+    nameAr: 'خَطُّ مَرْحَى الرِّيشِيّ',
+    descAr: 'خط مرح حر يتميز بلمساته العفوية وضربات الريشة المستديرة الودودة، يضفي إشراقة وتفاؤلاً وأناقة عصرية في البطاقات التعبيرية والتهاني.',
+    sampleAr: 'طَابَتْ أَيَّامُكُمْ بِالخَيْرِ',
+    nameEn: 'Marhey Script (Joyful Brush Strokes)',
+    descEn: 'A joyful display script inspired by relaxed brush strokes and friendly Arabic typographic warmth.',
+    className: 'font-marhey'
+  },
+  {
+    id: 'amiri',
+    nameAr: 'خَطُّ الأَمِيرِيِّ المَلَكِيّ',
+    descAr: 'إحياء ملوكي فاخر لطبعة مطبعة بولاق المصرية العريقة، تتأصل فيه أدق تقاليد الخط العربي وتفاصيل الحروف الرصينة مع حضور ملكي بارز.',
+    sampleAr: 'حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ',
+    nameEn: 'Amiri Script (Royal Bulaq Revival)',
+    descEn: 'A classical Arabic typeface revival inspired by the prestigious royal fonts of Cairo’s Bulaq Press.',
+    className: 'font-amiri'
+  },
+  {
+    id: 'katibeh',
+    nameAr: 'خَطُّ الكَاتِبَةِ التُّرَاثِيّ',
+    descAr: 'طراز خطي بديع مستمد من خطوط النقوش الجدارية الفارسية والعثمانية الكبرى، بتوازن هندسي وعلاقات ارتفاعات متفردة تعطي طابعاً تاريخياً جليلاً.',
+    sampleAr: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',
+    nameEn: 'Katibeh Script (Classical Inscription)',
+    descEn: 'Rooted in monumental wall inscriptions and ceremonial stone engravings, conveying profound historic gravitas.',
+    className: 'font-katibeh'
+  },
+  {
+    id: 'elmessiri',
+    nameAr: 'خَطُّ المَسِيرِي الأَنْدَلُسِيّ',
+    descAr: 'مستوحى من الخطوط المغربية والأندلسية الموزونة، يجمع بين دقة الحواف واستدارة الكؤوس السفلية بنعومة تضفي طابعاً قرطبياً ساحراً.',
+    sampleAr: 'الصَّبْرُ مِفْتَاحُ الفَرَجِ',
+    nameEn: 'El Messiri Script (Andalusian Romance)',
+    descEn: 'Influenced by the graceful curves of Cordoban and Maghrebi manuscripts, characterized by soft circular bowls.',
+    className: 'font-elmessiri'
+  },
+  {
+    id: 'zain',
+    nameAr: 'خَطُّ الزَّيْنِ الانْسِيَابِيّ',
+    descAr: 'خط عصري انسيابي رشيق يوازن بين روح الخط الكوفي اللين والطباعة الرقمية الحديثة، بوضوح فائق وجاذبية بصرية تلفت الأنظار.',
+    sampleAr: 'العِلْمُ نُورٌ وَالحِكْمَةُ ضِيَاءٌ',
+    nameEn: 'Zain Script (Modern Fluid Geometry)',
+    descEn: 'A streamlined contemporary typeface fusing soft Kufic DNA with modern digital poise and crisp readability.',
+    className: 'font-zain'
+  }
+];
+
+export const CURATED_SHOWCASE_CARDS = [
+  {
+    id: 'curated_1',
+    title: 'الحَمْدُ لِلَّهِ (ثلث جلي مذهب)',
+    text: 'الحَمْدُ لِلَّهِ',
+    font: 'font-thuluth',
+    pen: 'qasab_pen' as CalligraphyPenNibId,
+    color: '#d4af37',
+    isGold: true,
+    ornament: 'royal_gilded_frame' as OrnamentStyleId,
+    size: 'A3',
+    background: 'parchment_cream'
+  },
+  {
+    id: 'curated_2',
+    title: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+    text: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+    font: 'font-diwani',
+    pen: 'bamboo_pen' as CalligraphyPenNibId,
+    color: '#1c140e',
+    isGold: false,
+    ornament: 'ottoman_tezhip_frame' as OrnamentStyleId,
+    size: '16:9',
+    background: 'damascus_mother_of_pearl'
+  },
+  {
+    id: 'curated_3',
+    title: 'وَقُل رَّبِّ زِدْنِي عِلْمًا',
+    text: 'وَقُل رَّبِّ زِدْنِي عِلْمًا',
+    font: 'font-aref-ink',
+    pen: 'qasab_pen' as CalligraphyPenNibId,
+    color: '#d4af37',
+    isGold: true,
+    ornament: 'andalusian_muqarnas_border' as OrnamentStyleId,
+    size: '4:3',
+    background: 'ottoman_gold_fleck'
+  },
+  {
+    id: 'curated_4',
+    title: 'فَصَبْرٌ جَمِيلٌ',
+    text: 'فَصَبْرٌ جَمِيلٌ',
+    font: 'font-kufi',
+    pen: 'marker_pen' as CalligraphyPenNibId,
+    color: '#f0e8dc',
+    isGold: false,
+    ornament: 'mamluk_geometric_border' as OrnamentStyleId,
+    size: '1:1',
+    background: 'imperial_burgundy'
+  }
+];
+
+// Authentic Calligraphy Instruments (مرتبة من الأقل سماكة إلى الأكثر سماكة)
 export interface PenInstrument {
   id: CalligraphyPenNibId;
   label: string;
@@ -70,142 +270,107 @@ export interface PenInstrument {
 
 export const CALLIGRAPHY_PENS: PenInstrument[] = [
   {
-    id: 'qasab_pen',
-    label: 'قلم قصب',
-    desc: 'قصبة طبيعية مشطوفة لخطوط الثلث والنسخ بميزان كلاسيكي أصيل',
-    nibWidth: '3.5',
-    scale: 1.0,
-    weight: 700,
-    opacity: 1.0,
-    effectShadow: '0 2px 4px rgba(0,0,0,0.22)'
-  },
-  {
-    id: 'bamboo_pen',
-    label: 'قلم خيزران',
-    desc: 'خيزران ذهبي عريض للخطوط الجلية الكبرى بسيلان ثري وضربات غامرة',
-    nibWidth: '5.5',
-    scale: 1.32,
-    weight: 950,
-    opacity: 1.0,
-    effectShadow: '0 3px 6px rgba(0,0,0,0.35)'
-  },
-  {
     id: 'metal_pen',
     label: 'قلم معدني',
-    desc: 'ريشة فولاذية دقيقة للنستعليق والتواقيع والحلي الرشيقة فائقة النحافة',
-    nibWidth: '1.2',
-    scale: 0.80,
+    desc: 'ريشة فولاذية دقيقة للنستعليق والتواقيع والضربات الرفيعة فائقة النحافة (1.0 مم)',
+    nibWidth: '1.0',
+    scale: 0.85,
     weight: 300,
     opacity: 0.98,
     effectShadow: '0 0.5px 1px rgba(0,0,0,0.15)'
   },
   {
+    id: 'modern_pen',
+    label: 'قلم حديث',
+    desc: 'قلم حبر مذهب بمقبض خشب الجوز لخطوط عصرية رشيقة ومتوازنة (1.8 مم)',
+    nibWidth: '1.8',
+    scale: 0.95,
+    weight: 450,
+    opacity: 1.0,
+    effectShadow: '0 1px 2px rgba(0,0,0,0.2)'
+  },
+  {
     id: 'quill_pen',
     label: 'قلم ريشة',
-    desc: 'ريشة إوز بيضاء طبيعية لضربات انسيابية رشيقة وملمس حريري رفيع',
-    nibWidth: '1.8',
-    scale: 0.88,
-    weight: 400,
+    desc: 'ريشة إوز بيضاء طبيعية لضربات انسيابية رشيقة وملمس حريري (2.4 مم)',
+    nibWidth: '2.4',
+    scale: 1.0,
+    weight: 550,
     opacity: 0.95,
-    effectShadow: '0 1px 2px rgba(0,0,0,0.18)'
+    effectShadow: '0 1.5px 3px rgba(0,0,0,0.22)'
   },
   {
     id: 'glass_pen',
     label: 'قلم زجاجي',
-    desc: 'قلم زجاج مورانو حلزوني لسيلان شعري فائق النقاء وتدفق متزن',
-    nibWidth: '2.0',
-    scale: 0.92,
-    weight: 500,
+    desc: 'قلم زجاج مورانو حلزوني لسيلان شعري فائق النقاء وتدفق متزن (3.0 مم)',
+    nibWidth: '3.0',
+    scale: 1.05,
+    weight: 650,
     opacity: 0.97,
-    effectShadow: '0 1.5px 3px rgba(0,0,0,0.22)'
+    effectShadow: '0 2px 4px rgba(0,0,0,0.25)'
   },
   {
-    id: 'modern_pen',
-    label: 'قلم حديث',
-    desc: 'قلم حبر مذهب بمقبض خشب الجوز لخطوط عصرية متوازنة متناسقة',
-    nibWidth: '2.8',
-    scale: 1.06,
-    weight: 650,
+    id: 'qasab_pen',
+    label: 'قلم قصب',
+    desc: 'قصبة طبيعية مشطوفة لخطوط الثلث والنسخ والرقعة بميزان كلاسيكي أصيل (4.2 مم)',
+    nibWidth: '4.2',
+    scale: 1.15,
+    weight: 750,
     opacity: 1.0,
     effectShadow: '0 2px 4px rgba(0,0,0,0.25)'
   },
   {
-    id: 'marker_pen',
-    label: 'قلم ماركر',
-    desc: 'ماركر شطف فاحم عريض لكثافة حبرية هندسية عالية وخطوط جليّة',
+    id: 'bamboo_pen',
+    label: 'قلم خيزران',
+    desc: 'خيزران ذهبي عريض للخطوط الجلية واللوحات الكبرى بسيلان ثري (6.0 مم)',
     nibWidth: '6.0',
-    scale: 1.36,
+    scale: 1.28,
+    weight: 850,
+    opacity: 1.0,
+    effectShadow: '0 3px 6px rgba(0,0,0,0.35)'
+  },
+  {
+    id: 'marker_pen',
+    label: 'قلم ماركر جلي',
+    desc: 'ماركر شطف فاحم عريض لكثافة حبرية هندسية عالية وخطوط طومار ضخمة (8.5 مم)',
+    nibWidth: '8.5',
+    scale: 1.38,
     weight: 950,
     opacity: 1.0,
     effectShadow: '0 4px 8px rgba(0,0,0,0.45)'
   }
 ];
 
-// Helper to safely get pen instrument with fallbacks for legacy IDs
 export const getActivePenInstrument = (id: string): PenInstrument => {
   const match = CALLIGRAPHY_PENS.find(p => p.id === id);
   if (match) return match;
-  if (id === 'reed_qalam' || id === 'graphite_pencil') return CALLIGRAPHY_PENS[0];
-  if (id === 'wet_wash') return CALLIGRAPHY_PENS[1];
-  if (id === 'flex_quill' || id === 'tashkeel_dotting') return CALLIGRAPHY_PENS[2];
-  if (id === 'sable_brush') return CALLIGRAPHY_PENS[5];
-  if (id === 'broad_tomar') return CALLIGRAPHY_PENS[6];
-  return CALLIGRAPHY_PENS[0];
+  return CALLIGRAPHY_PENS[4]; // qasab_pen
 };
 
-// 16 Professional Artist & Calligrapher Color Swatches
-export interface InkColor {
-  id: string;
-  label: string;
-  value: string;
-  isGold?: boolean;
-}
-
-export const INK_COLORS: InkColor[] = [
-  { id: 'black', label: 'فاحم كربوني', value: '#121212' },
-  { id: 'gold24', label: 'تذهيب ۲٤', value: '#c59b27', isGold: true },
-  { id: 'silver', label: 'فضي لؤلؤي', value: '#9ea8b6' },
-  { id: 'bronze', label: 'برونزي عتيق', value: '#8c5e2d' },
-  { id: 'crimson', label: 'دم الغزال', value: '#8b1e2a' },
-  { id: 'burgundy', label: 'عنابي ملكي', value: '#4c151c' },
-  { id: 'indigo', label: 'نيلي لازورد', value: '#1a293d' },
-  { id: 'royal_blue', label: 'كحلي أندلسي', value: '#0f1d33' },
-  { id: 'turquoise', label: 'تركواز شامي', value: '#0d5c63' },
-  { id: 'emerald', label: 'زمردي عميق', value: '#153d2b' },
-  { id: 'olive', label: 'زيتي عتيق', value: '#2b3819' },
-  { id: 'saffron', label: 'زعفراني مذهب', value: '#d97706' },
-  { id: 'walnut', label: 'جوزي دافئ', value: '#3a2214' },
-  { id: 'parchment_beige', label: 'بيج مقهر', value: '#bfa782' },
-  { id: 'pure_white', label: 'أبيض عاجي', value: '#f8f5ee' },
-  { id: 'royal_purple', label: 'أرجواني إمبراطوري', value: '#431c4f' }
-];
-
-// 12 Standard Geometric & Artistic Size Presets (A3, A4 + 10 standard design ratios)
+// Size Presets
 export interface SizePreset {
   id: string;
   label: string;
   subtitle: string;
   ratio: number;
-  widthUnits: number;
-  heightUnits: number;
 }
 
 export const SIZE_PRESETS: SizePreset[] = [
-  { id: 'A3', label: 'A3', subtitle: '42 × 29.7 سم', ratio: 1.414, widthUnits: 17, heightUnits: 24 },
-  { id: 'A4', label: 'A4', subtitle: '29.7 × 21 سم', ratio: 1.414, widthUnits: 17, heightUnits: 24 },
-  { id: '1:1', label: '1:1', subtitle: 'مربع قياسي', ratio: 1.0, widthUnits: 20, heightUnits: 20 },
-  { id: '4:3', label: '4:3', subtitle: 'أفقي كلاسيكي', ratio: 4 / 3, widthUnits: 24, heightUnits: 18 },
-  { id: '3:4', label: '3:4', subtitle: 'طولي قياسي', ratio: 3 / 4, widthUnits: 18, heightUnits: 24 },
-  { id: '16:9', label: '16:9', subtitle: 'عريض سينمائي', ratio: 16 / 9, widthUnits: 26, heightUnits: 14.6 },
-  { id: '9:16', label: '9:16', subtitle: 'ستوري عمودي', ratio: 9 / 16, widthUnits: 14.6, heightUnits: 26 },
-  { id: '3:2', label: '3:2', subtitle: 'فوتوغرافي أفقي', ratio: 3 / 2, widthUnits: 24, heightUnits: 16 },
-  { id: '2:3', label: '2:3', subtitle: 'فوتوغرافي عمودي', ratio: 2 / 3, widthUnits: 16, heightUnits: 24 },
-  { id: '1.75:1', label: '1.75:1', subtitle: 'بانوراما عريضة', ratio: 1.75, widthUnits: 26, heightUnits: 15 },
-  { id: '2:1', label: '2:1', subtitle: 'عريض مزدوج', ratio: 2.0, widthUnits: 26, heightUnits: 13 },
-  { id: '1:2', label: '1:2', subtitle: 'طولي ممتد', ratio: 0.5, widthUnits: 13, heightUnits: 26 }
+  { id: 'A3', label: 'A3', subtitle: '42 × 29.7 سم', ratio: 1.414 },
+  { id: 'A4', label: 'A4', subtitle: '29.7 × 21 سم', ratio: 1.414 },
+  { id: '1:1', label: '1:1', subtitle: 'مربع قياسي', ratio: 1.0 },
+  { id: '4:3', label: '4:3', subtitle: 'أفقي كلاسيكي', ratio: 4 / 3 },
+  { id: '3:4', label: '3:4', subtitle: 'طولي قياسي', ratio: 3 / 4 },
+  { id: '16:9', label: '16:9', subtitle: 'عريض سينمائي', ratio: 16 / 9 },
+  { id: '9:16', label: '9:16', subtitle: 'ستوري عمودي', ratio: 9 / 16 },
+  { id: '3:2', label: '3:2', subtitle: 'فوتوغرافي أفقي', ratio: 3 / 2 },
+  { id: '2:3', label: '2:3', subtitle: 'فوتوغرافي عمودي', ratio: 2 / 3 },
+  { id: '1.75:1', label: '1.75:1', subtitle: 'بانوراما عريضة', ratio: 1.75 },
+  { id: '2:1', label: '2:1', subtitle: 'عريض مزدوج', ratio: 2.0 },
+  { id: '1:2', label: '1:2', subtitle: 'طولي ممتد', ratio: 0.5 }
 ];
 
-// 10 Ultra-Luxury Studio Backgrounds
+// Luxury Backgrounds
 export interface LuxuryBackground {
   id: string;
   name: string;
@@ -218,17 +383,48 @@ export interface LuxuryBackground {
 export const LUXURY_BACKGROUNDS: LuxuryBackground[] = [
   {
     id: 'parchment_cream',
-    name: 'ورق قديم طبيعي',
-    desc: 'مخطوط عتيق بألياف طبيعية وتعتيق بيج مذهب',
+    name: 'ورق مقهر عاجي',
+    desc: 'مخطوط عتيق بألياف قطنية طبيعية وتعتيق بيج عاجي نقي ومريح جداً',
     isDark: false,
-    previewBg: '#eee5d6',
+    previewBg: '#faf4ea',
     style: {
-      backgroundColor: '#eee5d6',
+      backgroundColor: '#faf4ea',
       backgroundImage: `
-        radial-gradient(ellipse at 50% 50%, #faf3e8 0%, #ede3d2 65%, #dfd2bd 100%),
+        radial-gradient(ellipse at 50% 50%, #fffbf4 0%, #f6ece0 65%, #eddcc8 100%),
         repeating-linear-gradient(45deg, rgba(140, 110, 70, 0.02) 0px, rgba(140, 110, 70, 0.02) 2px, transparent 2px, transparent 6px)
       `,
       boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.85)'
+    }
+  },
+  {
+    id: 'ottoman_gold_fleck',
+    name: 'أبرو عثماني منثور بالذهب',
+    desc: 'ورق إيبرو يدوي بتعريق رخامي تقليدي مع ذرات ذهبية متلألئة',
+    isDark: false,
+    previewBg: '#f5edd6',
+    style: {
+      backgroundColor: '#f5edd6',
+      backgroundImage: `
+        radial-gradient(ellipse at 40% 40%, #fff9ec 0%, #efe1c0 60%, #e0ce9f 100%),
+        repeating-radial-gradient(circle at 70% 30%, rgba(212, 175, 55, 0.08) 0, rgba(212, 175, 55, 0.08) 3px, transparent 3px, transparent 15px),
+        repeating-linear-gradient(135deg, rgba(160, 115, 65, 0.03) 0px, rgba(160, 115, 65, 0.03) 1px, transparent 1px, transparent 7px)
+      `,
+      boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(212, 175, 55, 0.3) inset'
+    }
+  },
+  {
+    id: 'damascus_mother_of_pearl',
+    name: 'صدف دمشقي لؤلؤي',
+    desc: 'ورق عاجي مطعم بنعومة بريق الصدف السوري التراثي ولمعان عرق اللؤلؤ',
+    isDark: false,
+    previewBg: '#f6f2ea',
+    style: {
+      backgroundColor: '#f8f5ee',
+      backgroundImage: `
+        radial-gradient(circle at 30% 20%, #ffffff 0%, #f4eee2 55%, #eae0ce 100%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, transparent 45%, rgba(212, 175, 55, 0.12) 100%)
+      `,
+      boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.6) inset'
     }
   },
   {
@@ -236,7 +432,7 @@ export const LUXURY_BACKGROUNDS: LuxuryBackground[] = [
     name: 'حجر الفحم والرماد',
     desc: 'لوح بازلتي حجري داكن غير لامع عالي الفخامة',
     isDark: true,
-    previewBg: '#1c1e23',
+    previewBg: '#1b1d22',
     style: {
       backgroundColor: '#1b1d22',
       backgroundImage: `
@@ -248,35 +444,20 @@ export const LUXURY_BACKGROUNDS: LuxuryBackground[] = [
   {
     id: 'imperial_burgundy',
     name: 'مخمل عنابي سلطاني',
-    desc: 'مخمل إمبراطوري غني بألوان الياقوت الخمري',
+    desc: 'مخمل إمبراطوري فاخر بألوان الياقوت القاني والذهب',
     isDark: true,
-    previewBg: '#2a0c12',
+    previewBg: '#2c0c12',
     style: {
-      backgroundColor: '#260b10',
+      backgroundColor: '#260a10',
       backgroundImage: `
-        radial-gradient(ellipse at 50% 50%, #44141d 0%, #290b10 65%, #180508 100%),
-        repeating-linear-gradient(60deg, rgba(212, 175, 55, 0.05) 0px, rgba(212, 175, 55, 0.05) 2px, transparent 2px, transparent 10px)
+        radial-gradient(ellipse at 50% 45%, #4a1520 0%, #280a0f 65%, #150508 100%),
+        radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.15) 0%, transparent 40%)
       `,
-      boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(197, 155, 39, 0.4) inset'
+      boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(212, 175, 55, 0.3) inset'
     }
   },
   {
-    id: 'black_gold_marble',
-    name: 'رخام أسود بعروق ذهبية',
-    desc: 'رخام أوبسيديان فاحم بصدوع وشرايين الذهب ۲٤',
-    isDark: true,
-    previewBg: '#0e0e11',
-    style: {
-      backgroundColor: '#0c0c0e',
-      backgroundImage: `
-        linear-gradient(135deg, rgba(197, 155, 39, 0.32) 0%, transparent 35%, rgba(245, 208, 102, 0.36) 55%, transparent 75%),
-        radial-gradient(circle at 30% 30%, #17171c 0%, #0c0c0e 70%, #050507 100%)
-      `,
-      boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(197, 155, 39, 0.5) inset'
-    }
-  },
-  {
-    id: 'antique_leather',
+    id: 'antique_vellum',
     name: 'جلد عتيق / رق الغزال',
     desc: 'جلد مدبوغ بلون الكراميل الدافئ ومسام أصيلة',
     isDark: false,
@@ -361,21 +542,6 @@ export const LUXURY_BACKGROUNDS: LuxuryBackground[] = [
     }
   },
   {
-    id: 'royal_aged_parchment',
-    name: 'ورق مقهر ملكي',
-    desc: 'مخطوط عتيق بألياف طبيعية وتعتيق بيج مذهب',
-    isDark: false,
-    previewBg: '#eee5d6',
-    style: {
-      backgroundColor: '#eee5d6',
-      backgroundImage: `
-        radial-gradient(ellipse at 50% 50%, #faf3e8 0%, #ede3d2 65%, #dfd2bd 100%),
-        repeating-linear-gradient(45deg, rgba(140, 110, 70, 0.02) 0px, rgba(140, 110, 70, 0.02) 2px, transparent 2px, transparent 6px)
-      `,
-      boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(184, 147, 69, 0.35) inset'
-    }
-  },
-  {
     id: 'transparent_canvas',
     name: 'خلفية شفافة PNG',
     desc: 'مفرغة تماماً للدمج في التصاميم والطباعة الحرة',
@@ -393,15 +559,51 @@ export const LUXURY_BACKGROUNDS: LuxuryBackground[] = [
       backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
       boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.2) inset'
     }
+  },
+  {
+    id: 'black_gold_marble',
+    name: 'رخام أسود بعروق ذهبية',
+    desc: 'رخام أوبسيديان فاحم بصدوع وشرايين الذهب ۲٤',
+    isDark: true,
+    previewBg: '#0e0e11',
+    style: {
+      backgroundColor: '#0c0c0e',
+      backgroundImage: `
+        linear-gradient(135deg, rgba(197, 155, 39, 0.32) 0%, transparent 35%, rgba(245, 208, 102, 0.36) 55%, transparent 75%),
+        radial-gradient(circle at 30% 30%, #17171c 0%, #0c0c0e 70%, #050507 100%)
+      `,
+      boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(197, 155, 39, 0.5) inset'
+    }
+  },
+  {
+    id: 'antique_leather',
+    name: 'جلد عتيق / رق الغزال',
+    desc: 'جلد مدبوغ بلون الكراميل الدافئ ومسام أصيلة',
+    isDark: false,
+    previewBg: '#ba9460',
+    style: {
+      backgroundColor: '#ba9460',
+      backgroundImage: `
+        radial-gradient(ellipse at 50% 50%, #cfa874 0%, #ba9460 65%, #947141 100%)
+      `,
+      boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.85)'
+    }
+  },
+  {
+    id: 'royal_aged_parchment',
+    name: 'ورق مقهر ملكي',
+    desc: 'مخطوط عتيق بألياف طبيعية وتعتيق بيج مذهب',
+    isDark: false,
+    previewBg: '#eee5d6',
+    style: {
+      backgroundColor: '#eee5d6',
+      backgroundImage: `
+        radial-gradient(ellipse at 50% 50%, #faf3e8 0%, #ede3d2 65%, #dfd2bd 100%),
+        repeating-linear-gradient(45deg, rgba(140, 110, 70, 0.02) 0px, rgba(140, 110, 70, 0.02) 2px, transparent 2px, transparent 6px)
+      `,
+      boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(184, 147, 69, 0.35) inset'
+    }
   }
-];
-
-// 4 Export Formats (ordered right to left: خلفية شفافة، PDF، JPG، PNG)
-export const EXPORT_FORMATS = [
-  { id: 'transparent', label: 'خلفية شفافة', ext: 'شفاف' },
-  { id: 'pdf', label: 'PDF', ext: 'للطباعة' },
-  { id: 'jpg', label: 'JPG', ext: 'جودة عالية' },
-  { id: 'png', label: 'PNG', ext: 'جودة عالية' }
 ];
 
 // Inspirational Quotes Library
@@ -431,72 +633,141 @@ interface CanvasHistorySnapshot {
 }
 
 export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
-  initialText = 'الحمد لله',
+  initialText = 'الحَمْدُ لِلَّهِ',
   studentName = 'هشام علي',
   onCloseStudio,
   isReadOnly = false
 }) => {
-  // Main Canvas State
+  // Main Canvas State (Default: Reem Kufi Ink font, clean card without frame, signature disabled)
   const [quoteText, setQuoteText] = useState(initialText);
-  const [selectedFont, setSelectedFont] = useState('font-thuluth');
+  const [selectedFont, setSelectedFont] = useState('font-reem-kufi-ink');
   const [selectedPen, setSelectedPen] = useState<CalligraphyPenNibId>('qasab_pen');
-  const [selectedInk, setSelectedInk] = useState('#c59b27');
-  const [isGoldFoil, setIsGoldFoil] = useState(true);
+  const [selectedInk, setSelectedInk] = useState('#1c140e');
+  const [isGoldFoil, setIsGoldFoil] = useState(false);
   const [isSpecialIlluminated, setIsSpecialIlluminated] = useState(false);
   const [selectedOrnament, setSelectedOrnament] = useState<OrnamentStyleId>('none');
   const [selectedSize, setSelectedSize] = useState('A3');
-  const [selectedBackground, setSelectedBackground] = useState('royal_aged_parchment');
+  const [selectedBackground, setSelectedBackground] = useState('ottoman_gold_fleck');
   const [selectedExportFormat, setSelectedExportFormat] = useState('transparent');
   const [fontSize, setFontSize] = useState(96);
   const [selectedFoilStyle, setSelectedFoilStyle] = useState('leaf');
 
-  // Interactive Overlays
-  const [showGuidelines, setShowGuidelines] = useState(true);
+  // Guidelines set to FALSE by default as requested
+  const [showGuidelines, setShowGuidelines] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false);
-  const [activeLeftTool, setActiveLeftTool] = useState<'edit' | 'move' | 'zoom' | 'grid' | 'guide'>('edit');
   const [activeSidebarTab, setActiveSidebarTab] = useState<'text' | 'font' | 'pen' | 'color' | 'ornament' | 'size' | 'background'>('text');
 
-  // Author details
-  const [authorName] = useState(studentName || 'هشام علي');
-  const [authorYear] = useState('١٤٤٥ هـ');
+  // Live Stroke Animation State (محاكاة كتابة الخطاط حرفاً حرفاً)
+  const [revealedChars, setRevealedChars] = useState<number>(initialText.length);
+  const [isReplayingStroke, setIsReplayingStroke] = useState<boolean>(false);
+  const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Modals
+  // Author details & Signature customization (Default: OFF, student decides whether to enable)
+  const [authorName, setAuthorName] = useState(studentName || 'هشام علي');
+  const [showSignature, setShowSignature] = useState(false);
+  const [signatureName, setSignatureName] = useState(studentName ? `بقلم: ${studentName}` : 'بقلم: الخطاط');
+  const [signaturePosition, setSignaturePosition] = useState<'bottom-right' | 'bottom-center' | 'bottom-left'>('bottom-left');
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [customBgUrl, setCustomBgUrl] = useState<string | null>(null);
+  const [guideLang, setGuideLang] = useState<'ar' | 'en'>('ar');
+
+  // Modals & Flyouts
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [showTashkeelModal, setShowTashkeelModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
-  const [showHelpModal, setShowHelpModal] = useState(false);
   const [showSavedCardsModal, setShowSavedCardsModal] = useState(false);
-  const [savedCards, setSavedCards] = useState<Array<{ id: string; title: string; dataUrl: string }>>([]);
+  const [showExportFlyout, setShowExportFlyout] = useState(false);
+  const [saveSuccessToast, setSaveSuccessToast] = useState(false);
+  const [savedCards, setSavedCards] = useState<Array<{
+    id: string;
+    title: string;
+    dataUrl: string;
+    text?: string;
+    font?: string;
+    pen?: CalligraphyPenNibId;
+    color?: string;
+    isGold?: boolean;
+    isSpecialIlluminated?: boolean;
+    ornament?: OrnamentStyleId;
+    size?: string;
+    background?: string;
+    customBgUrl?: string | null;
+    showSignature?: boolean;
+    signatureName?: string;
+    signaturePosition?: 'bottom-right' | 'bottom-center' | 'bottom-left';
+  }>>([]);
 
   // Undo / Redo Stack
   const [history, setHistory] = useState<CanvasHistorySnapshot[]>([
     {
       text: initialText,
-      font: 'font-thuluth',
+      font: 'font-reem-kufi-ink',
       pen: 'qasab_pen',
-      color: '#c59b27',
-      isGold: true,
-      ornament: 'andalusian_corners',
+      color: '#1c140e',
+      isGold: false,
+      ornament: 'none',
       size: 'A3',
-      background: 'royal_aged_parchment',
+      background: 'ottoman_gold_fleck',
       isSpecialIlluminated: false
     }
   ]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
   const cardCanvasRef = useRef<HTMLDivElement>(null);
-  const textInputRef = useRef<HTMLInputElement>(null);
-  const startPanRef = useRef({ x: 0, y: 0 });
+  const stageContainerRef = useRef<HTMLDivElement>(null);
+  const [stageDimensions, setStageDimensions] = useState({ width: 900, height: 600 });
 
-  // Scroll to section when tab is clicked
-  const scrollToSection = (tabId: 'text' | 'font' | 'pen' | 'color' | 'ornament' | 'size' | 'background') => {
-    setActiveSidebarTab(tabId);
-    const el = document.getElementById(`sidebar-section-${tabId}`);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Responsive stage observer ensuring the card NEVER overflows or clips across any aspect ratio
+  useEffect(() => {
+    if (!stageContainerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setStageDimensions({ width, height });
+        }
+      }
+    });
+    observer.observe(stageContainerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Trigger Live Calligraphy Stroke Writing Animation (رسم الحروف حرفاً حرفاً)
+  const triggerStrokeAnimation = useCallback((targetText: string) => {
+    if (animationTimerRef.current) clearInterval(animationTimerRef.current);
+    setIsReplayingStroke(true);
+    setRevealedChars(0);
+    const total = targetText.length;
+    if (total === 0) {
+      setIsReplayingStroke(false);
+      return;
+    }
+    const intervalMs = Math.max(35, Math.min(85, Math.floor(1800 / total)));
+    let current = 0;
+    animationTimerRef.current = setInterval(() => {
+      current++;
+      setRevealedChars(current);
+      if (current >= total) {
+        if (animationTimerRef.current) clearInterval(animationTimerRef.current);
+        setIsReplayingStroke(false);
+      }
+    }, intervalMs);
+  }, []);
+
+  // Custom Background Upload Handler
+  const handleUploadBackground = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          setCustomBgUrl(reader.result);
+          setSelectedBackground('custom_uploaded');
+          pushHistory({ background: 'custom_uploaded' });
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -563,7 +834,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
     }
   }, []);
 
-  // Save Card to Gallery
+  // Save Card to Gallery (No scattered confetti)
   const handleSaveCard = async () => {
     if (!cardCanvasRef.current) return;
     try {
@@ -576,25 +847,50 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
       const newCard = {
         id: `card_${Date.now()}`,
         title: quoteText.slice(0, 24) || 'لوحة خط عربي',
-        dataUrl
+        dataUrl,
+        text: quoteText,
+        font: selectedFont,
+        pen: selectedPen,
+        color: selectedInk,
+        isGold: isGoldFoil,
+        isSpecialIlluminated,
+        ornament: selectedOrnament,
+        size: selectedSize,
+        background: selectedBackground,
+        customBgUrl,
+        showSignature,
+        signatureName,
+        signaturePosition
       };
       const updated = [newCard, ...savedCards.slice(0, 19)];
       setSavedCards(updated);
       localStorage.setItem('qul_calligraphy_saved_cards_atelier', JSON.stringify(updated));
-
-      // Golden Celebration Confetti
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.8 },
-        colors: ['#c59b27', '#ffd700', '#dfb15b', '#5a121a']
-      });
+      setSaveSuccessToast(true);
+      setTimeout(() => setSaveSuccessToast(false), 2600);
     } catch (err) {
       console.error('Error saving card:', err);
     }
   };
 
-  // Export Card
+  // Load Card from Gallery
+  const handleLoadCard = (card: typeof savedCards[0]) => {
+    if (card.text) setQuoteText(card.text);
+    if (card.font) setSelectedFont(card.font);
+    if (card.pen) setSelectedPen(card.pen);
+    if (card.color) setSelectedInk(card.color);
+    if (card.isGold !== undefined) setIsGoldFoil(card.isGold);
+    if (card.isSpecialIlluminated !== undefined) setIsSpecialIlluminated(card.isSpecialIlluminated);
+    if (card.ornament) setSelectedOrnament(card.ornament);
+    if (card.size) setSelectedSize(card.size);
+    if (card.background) setSelectedBackground(card.background);
+    if (card.customBgUrl) setCustomBgUrl(card.customBgUrl);
+    if (card.showSignature !== undefined) setShowSignature(card.showSignature);
+    if (card.signatureName) setSignatureName(card.signatureName);
+    if (card.signaturePosition) setSignaturePosition(card.signaturePosition);
+    setShowSavedCardsModal(false);
+  };
+
+  // Export Card (Clean export, no scattered decorations)
   const handleExport = async (formatOverride?: string) => {
     if (!cardCanvasRef.current) return;
     const format = formatOverride || selectedExportFormat;
@@ -631,24 +927,16 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
         link.href = canvas.toDataURL('image/png');
         link.click();
       }
-
-      confetti({
-        particleCount: 40,
-        spread: 45,
-        origin: { y: 0.85 },
-        colors: ['#c59b27', '#e5c158', '#4a151b']
-      });
     } catch (err) {
       console.error('Export failed:', err);
     }
   };
 
-  // Tashkeel Management
+  // Tashkeel Helpers
   const handleInsertTashkeel = (char: string) => {
     const updated = quoteText + char;
     setQuoteText(updated);
     pushHistory({ text: updated });
-    textInputRef.current?.focus();
   };
 
   const handleRemoveTashkeel = () => {
@@ -679,22 +967,51 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
       setQuoteText(dictionary[clean]);
       pushHistory({ text: dictionary[clean] });
     } else {
-      // Default: ensure common ligatures have standard marks
       setQuoteText(prev => prev + 'َ');
     }
   };
 
-  // Pen dynamics & Active Pen Tool Configuration
+  // Active Pen & Dynamics
   const penDynamics = getCalligraphyPenDynamics(selectedPen);
-  const activePenConfig = CALLIGRAPHY_PENS.find(p => p.id === selectedPen) || CALLIGRAPHY_PENS[0];
+  const activePenConfig = CALLIGRAPHY_PENS.find(p => p.id === selectedPen) || CALLIGRAPHY_PENS[4];
   const penScale = activePenConfig.scale;
 
+  // Sizing and Aspect Ratio Auto-fitting Calculation
   const currentSizeObj = SIZE_PRESETS.find(s => s.id === selectedSize) || SIZE_PRESETS[0];
   const currentRatio = currentSizeObj.ratio;
 
-  const currentBg = LUXURY_BACKGROUNDS.find(b => b.id === selectedBackground) || LUXURY_BACKGROUNDS[0];
+  // Calculate strict dimensions that NEVER overflow or clip inside the stage
+  const paddingX = 48;
+  const paddingY = 48;
+  const availW = Math.max(160, stageDimensions.width - paddingX);
+  const availH = Math.max(160, stageDimensions.height - paddingY);
 
-  // Authentic 24k Gold Foil Styling with texture and depth
+  let cardW = availW;
+  let cardH = cardW / currentRatio;
+
+  if (cardH > availH) {
+    cardH = availH;
+    cardW = cardH * currentRatio;
+  }
+
+  // Active Background
+  const currentBg = (selectedBackground === 'custom_uploaded' && customBgUrl)
+    ? {
+        id: 'custom_uploaded',
+        name: 'خلفية خاصة مرفوعة',
+        desc: 'صورة مخصصة مرفوعة من جهازك',
+        isDark: true,
+        previewBg: '#1f242d',
+        style: {
+          backgroundImage: `url(${customBgUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.95)'
+        }
+      }
+    : (LUXURY_BACKGROUNDS.find(b => b.id === selectedBackground) || LUXURY_BACKGROUNDS[0]);
+
+  // Gold foil text style
   const goldFoilStyle: React.CSSProperties = {
     backgroundImage: 'linear-gradient(135deg, #a47628 0%, #d8ad48 20%, #fff1a8 45%, #dbab42 65%, #9e6d1c 85%, #754b0e 100%)',
     WebkitBackgroundClip: 'text',
@@ -702,665 +1019,272 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
     filter: 'drop-shadow(0 2px 4px rgba(40, 25, 5, 0.45)) drop-shadow(0 1px 1px rgba(255, 255, 255, 0.35))'
   };
 
-  // Active stroke color & distinct pen stroke simulation
+  // Distinct visible stroke thickness based strictly on pen nib width
   const activeStrokeColor = isSpecialIlluminated ? '#ffd700' : isGoldFoil ? '#d4af37' : selectedInk;
   const penStrokeCSS = (() => {
     switch (selectedPen) {
-      case 'bamboo_pen':
-      case 'wet_wash':
-        return `2.8px ${activeStrokeColor}`;
-      case 'marker_pen':
-      case 'broad_tomar':
-        return `3.4px ${activeStrokeColor}`;
       case 'metal_pen':
-      case 'flex_quill':
-      case 'tashkeel_dotting':
         return '0px transparent';
-      case 'quill_pen':
-        return `0.25px ${activeStrokeColor}`;
-      case 'glass_pen':
-        return `0.5px ${activeStrokeColor}`;
       case 'modern_pen':
-      case 'sable_brush':
-        return `1.4px ${activeStrokeColor}`;
+        return `0.8px ${activeStrokeColor}`;
+      case 'quill_pen':
+        return `1.6px ${activeStrokeColor}`;
+      case 'glass_pen':
+        return `2.4px ${activeStrokeColor}`;
       case 'qasab_pen':
-      case 'reed_qalam':
+        return `3.6px ${activeStrokeColor}`;
+      case 'bamboo_pen':
+        return `5.2px ${activeStrokeColor}`;
+      case 'marker_pen':
       default:
-        return `1.1px ${activeStrokeColor}`;
+        return `7.6px ${activeStrokeColor}`;
     }
   })();
-
-  // Check if text is standard "الحمد لله"
-  const isDefaultHamd = quoteText.replace(/[\u064B-\u065F\u0670]/g, '').trim() === 'الحمد لله';
 
   return (
     <div 
       className="relative w-full h-full flex flex-col bg-[#0b0d10] text-[#e6dfd5] overflow-hidden select-none font-tajawal"
       dir="rtl"
     >
-      {/* ======================================================================= */}
-      {/* BACKGROUND CALLIGRAPHY TAPESTRY: FAINT FLOATING DIWANI ARABIC LETTERS   */}
-      {/* Authentic Diwani letters representing identity faintly in background    */}
-      {/* ======================================================================= */}
+      {/* Background Calligraphy Watermark (هوية بصرية فنية غنية ومتنوعة للحروف) */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none">
-        <svg className="w-full h-full opacity-[0.035] text-[#c59b27]" xmlns="http://www.w3.org/2000/svg">
+        <svg className="w-full h-full opacity-[0.13] text-[#d4af37]" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <pattern id="calligraphyLettersPattern" width="360" height="260" patternUnits="userSpaceOnUse">
-              {/* Classical Diwani Calligraphy Letter Glyphs Scattered Gracefully and Faintly */}
-              <text x="35" y="55" fontSize="50" fontFamily="diwani, serif" fill="currentColor" transform="rotate(-12 35 55)">عُ</text>
-              <text x="115" y="45" fontSize="32" fontFamily="diwani, serif" fill="currentColor" transform="rotate(15 115 45)">قْ</text>
-              <text x="185" y="70" fontSize="56" fontFamily="diwani, serif" fill="currentColor" transform="rotate(-6 185 70)">لـ</text>
-              <text x="270" y="48" fontSize="38" fontFamily="diwani, serif" fill="currentColor" transform="rotate(20 270 48)">وُ</text>
-              <text x="325" y="85" fontSize="30" fontFamily="diwani, serif" fill="currentColor">نْ</text>
+            <pattern id="calligraphyLettersPattern" width="620" height="460" patternUnits="userSpaceOnUse">
+              {/* Row 1 - Diwani Script Letters (Unified with Header Identity) */}
+              <text x="35" y="55" fontSize="62" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-18 35 55)">ن</text>
+              <text x="120" y="70" fontSize="38" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(22 120 70)">و</text>
+              <text x="210" y="45" fontSize="48" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-8 210 45)">ق</text>
+              <text x="310" y="80" fontSize="72" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(14 310 80)">ل</text>
+              <text x="420" y="50" fontSize="34" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-25 420 50)">ح</text>
+              <text x="520" y="75" fontSize="56" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(10 520 75)">م</text>
 
-              <text x="45" y="140" fontSize="44" fontFamily="diwani, serif" fill="currentColor" transform="rotate(10 45 140)">حَ</text>
-              <text x="135" y="155" fontSize="60" fontFamily="diwani, serif" fill="currentColor" transform="rotate(-15 135 155)">ي</text>
-              <text x="230" y="135" fontSize="46" fontFamily="diwani, serif" fill="currentColor" transform="rotate(12 230 135)">مُ</text>
-              <text x="305" y="165" fontSize="48" fontFamily="diwani, serif" fill="currentColor" transform="rotate(-8 305 165)">ط</text>
+              {/* Row 2 */}
+              <text x="75" y="170" fontSize="44" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(28 75 170)">ع</text>
+              <text x="165" y="160" fontSize="68" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-15 165 160)">ك</text>
+              <text x="270" y="185" fontSize="32" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(8 270 185)">ر</text>
+              <text x="370" y="150" fontSize="58" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-22 370 150)">س</text>
+              <text x="480" y="180" fontSize="46" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(18 480 180)">ط</text>
+              <text x="575" y="160" fontSize="36" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-12 575 160)">د</text>
 
-              <text x="25" y="225" fontSize="44" fontFamily="diwani, serif" fill="currentColor" transform="rotate(14 25 225)">س</text>
-              <text x="95" y="235" fontSize="34" fontFamily="diwani, serif" fill="currentColor">ك</text>
-              <text x="170" y="220" fontSize="52" fontFamily="diwani, serif" fill="currentColor" transform="rotate(-10 170 220)">فَ</text>
-              <text x="250" y="235" fontSize="38" fontFamily="diwani, serif" fill="currentColor" transform="rotate(16 250 235)">رَ</text>
-              <text x="320" y="230" fontSize="42" fontFamily="diwani, serif" fill="currentColor" transform="rotate(-5 320 230)">هـ</text>
+              {/* Row 3 */}
+              <text x="40" y="290" fontSize="54" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-16 40 290)">ف</text>
+              <text x="135" y="310" fontSize="30" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(24 135 310)">ز</text>
+              <text x="225" y="275" fontSize="76" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(12 225 275)">ص</text>
+              <text x="345" y="300" fontSize="42" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-28 345 300)">ي</text>
+              <text x="445" y="270" fontSize="60" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(6 445 270)">هـ</text>
+              <text x="545" y="305" fontSize="38" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-14 545 305)">ج</text>
 
-              {/* Calligraphic Mizan Diamond Dots (نقاط الميزان) */}
-              <rect x="72" y="65" width="5.5" height="5.5" fill="currentColor" transform="rotate(45 75 68)" />
-              <rect x="215" y="40" width="5" height="5" fill="currentColor" transform="rotate(45 217 42)" />
-              <rect x="180" y="170" width="6" height="6" fill="currentColor" transform="rotate(45 183 173)" />
-              <rect x="285" y="105" width="4.5" height="4.5" fill="currentColor" transform="rotate(45 287 107)" />
+              {/* Row 4 */}
+              <text x="80" y="415" fontSize="64" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(16 80 415)">ض</text>
+              <text x="190" y="390" fontSize="40" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-20 190 390)">ظ</text>
+              <text x="295" y="425" fontSize="52" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(10 295 425)">غ</text>
+              <text x="405" y="395" fontSize="70" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-12 405 395)">أ</text>
+              <text x="515" y="420" fontSize="36" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(26 515 420)">ش</text>
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#calligraphyLettersPattern)" />
         </svg>
       </div>
 
-      {/* ======================================================================= */}
-      {/* 1. TOP HEADER BANNER: Masterpiece Panoramic Calligraphy Studio Banner   */}
-      {/* Bamboo Pen & Inkwell on Right, Golden Letter Flock, Centered Title, UI   */}
-      {/* ======================================================================= */}
+      {/* TOP BANNER */}
       <CalligraphyHeaderBanner
-        onOpenHelp={() => setShowHelpModal(true)}
-        onOpenGuide={() => setShowGuideModal(true)}
-        onOpenSavedCards={() => setShowSavedCardsModal(true)}
         onCloseStudio={onCloseStudio}
+        onOpenGuide={() => setShowGuideModal(true)}
+        onOpenHelp={() => setShowGuideModal(true)}
+        onOpenSavedCards={() => setShowSavedCardsModal(true)}
         savedCardsCount={savedCards.length}
       />
 
-      {/* ======================================================================= */}
-      {/* 2. MAIN 3-COLUMN WORKSPACE:                                             */}
-      {/* [RIGHT: INSPECTOR + FAR-RIGHT TABS] | [CENTER: EASEL] | [LEFT: TOOLBAR] */}
-      {/* Pure RTL layout:                                                        */}
-      {/* Child 1 = Inspector on the RIGHT                                        */}
-      {/* Child 2 = Canvas Easel in the CENTER                                    */}
-      {/* Child 3 = Floating Toolbar on the LEFT                                  */}
-      {/* ======================================================================= */}
-      <div className="flex-1 flex flex-row min-h-0 relative overflow-hidden z-10" dir="rtl">
+      {/* MAIN STUDIO WORKSPACE */}
+      <div className="flex-1 flex flex-row min-h-0 relative z-10 overflow-hidden">
 
         {/* ===================================================================== */}
-        {/* 2.A RIGHT COLUMN: INSPECTOR CONTROLS + FAR-RIGHT VERTICAL TAB STRIP   */}
-        {/* In RTL: Child 1 is inside (Controls), Child 2 is FAR-RIGHT (Tabs)      */}
-        {/* Or we use dir="ltr" inside to ensure tabs touch the screen's right edge */}
+        {/* RIGHT COLUMN: 7 AUTHENTIC CATEGORY TABS                               */}
         {/* ===================================================================== */}
         <aside 
-          className="w-[440px] shrink-0 bg-[#101216] border-l border-[#24272f] flex flex-row min-h-0 z-20 shadow-2xl"
-          dir="ltr"
+          className="w-20 shrink-0 bg-[#0d0f13] border-l border-[#24272f] flex flex-col items-center py-4 gap-2.5 select-none z-20 shadow-2xl overflow-y-auto no-scrollbar"
         >
-          {/* MAIN INSPECTOR CONTROLS PANEL (LEFT SIDE OF THE INSPECTOR) */}
-          <div className="flex-1 flex flex-col min-h-0 p-4 overflow-y-auto no-scrollbar gap-4" dir="rtl">
-            
-            {/* ----------------------------------------------------------------- */}
-            {/* 1. TEXT SECTION (النص)                                            */}
-            {/* ----------------------------------------------------------------- */}
-            <div id="sidebar-section-text" className="flex flex-col gap-1.5 scroll-mt-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#f0e8dc] font-tajawal">النص</span>
+          {/* 1. النص (رمز النص الواضح Type) */}
+          <button
+            type="button"
+            onClick={() => setActiveSidebarTab('text')}
+            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+              activeSidebarTab === 'text'
+                ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
+                : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
+            }`}
+            title="محرر النص والعبارات"
+          >
+            <Type size={22} className="text-current" />
+            <span className="text-[10px] font-bold">النص</span>
+          </button>
 
-                {/* Tashkeel Assistant Button */}
-                <button
-                  type="button"
-                  onClick={() => setShowTashkeelModal(true)}
-                  className="text-[11px] text-[#b38a3e] hover:text-[#f3cf7a] font-bold flex items-center gap-1.5 transition cursor-pointer"
-                  title="تشكيل النص وضبط الحركات تلقائياً ويدوياً"
-                >
-                  <Type size={13} className="text-[#c59b27]" />
-                  <span>تشكيل النص</span>
-                </button>
-              </div>
+          {/* 2. الخطوط (حرف ح بخط الرقعة) */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSidebarTab('font');
+              triggerStrokeAnimation(quoteText);
+            }}
+            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+              activeSidebarTab === 'font'
+                ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
+                : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
+            }`}
+            title="الخطوط الأصيلة"
+          >
+            <span className="font-aref text-2xl leading-none font-bold text-current">ح</span>
+            <span className="text-[10px] font-bold">الخطوط</span>
+          </button>
 
-              {/* Text Input Box */}
-              <div className="relative">
-                <input
-                  ref={textInputRef}
-                  type="text"
-                  value={quoteText}
-                  onChange={(e) => {
-                    setQuoteText(e.target.value);
-                    pushHistory({ text: e.target.value });
-                  }}
-                  placeholder="اكتب عبارتك أو اسمك هنا..."
-                  className="w-full h-10 px-3.5 bg-[#0c0e12] border border-[#26241e] focus:border-[#a68038] focus:ring-1 focus:ring-[#a68038] rounded-xl text-sm font-bold text-[#f0e8dc] focus:outline-none transition text-right"
-                />
-              </div>
-            </div>
+          {/* 3. الأقلام (رمز القلم والريشة واسم الأقلام) */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSidebarTab('pen');
+              triggerStrokeAnimation(quoteText);
+            }}
+            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+              activeSidebarTab === 'pen'
+                ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
+                : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
+            }`}
+            title="الأقلام وسماكة الخط"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+              <path d="M12 19l7-7 3 3-7 7-3-3z" />
+              <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+              <path d="M2 2l7.586 7.586" />
+              <circle cx="11" cy="11" r="2" />
+            </svg>
+            <span className="text-[10px] font-bold">الأقلام</span>
+          </button>
 
-            {/* ----------------------------------------------------------------- */}
-            {/* 2. FONTS SECTION (الخطوط) - Horizontal Smooth Scrolling           */}
-            {/* Displaying every script written in its actual calligraphy style   */}
-            {/* ----------------------------------------------------------------- */}
-            <div id="sidebar-section-font" className="flex flex-col gap-1.5 scroll-mt-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#f0e8dc] font-tajawal">الخطوط</span>
-                <span className="text-[10px] text-[#a68038] font-tajawal">مرر لليسار ‹</span>
-              </div>
+          {/* 4. الألوان */}
+          <button
+            type="button"
+            onClick={() => setActiveSidebarTab('color')}
+            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+              activeSidebarTab === 'color'
+                ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
+                : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
+            }`}
+            title="الألوان والأحبار والتذهيب"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+              <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+              <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+              <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+              <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.5 17.5 2 12 2z" />
+            </svg>
+            <span className="text-[10px] font-bold">الألوان</span>
+          </button>
 
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 pt-0.5 scroll-smooth select-none">
-                {CALLIGRAPHY_FONTS.map(font => {
-                  const isSelected = selectedFont === font.className;
-                  return (
-                    <button
-                      key={font.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedFont(font.className);
-                        pushHistory({ font: font.className });
-                      }}
-                      className={`shrink-0 px-4 h-10 rounded-lg border text-sm transition flex items-center justify-center cursor-pointer active:scale-95 whitespace-nowrap ${
-                        isSelected
-                          ? 'bg-[#3b1419] border-[#a68038] text-[#f3cf7a] shadow-sm ring-1 ring-[#a68038]/40'
-                          : 'bg-[#0c0e12] border-[#26241e] text-[#b3a898] hover:border-[#a68038]/60 hover:text-white'
-                      }`}
-                      title={font.label}
-                    >
-                      {/* Authentic typography rendered in the exact calligraphy font */}
-                      <span className={`${font.className} text-base`}>{font.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+          {/* 5. الزخارف */}
+          <button
+            type="button"
+            onClick={() => setActiveSidebarTab('ornament')}
+            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+              activeSidebarTab === 'ornament'
+                ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
+                : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
+            }`}
+            title="الزخارف والإطارات الإسلامية"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2a4 4 0 0 0-4 4c0 2.5 4 6 4 6s4-3.5 4-6a4 4 0 0 0-4-4z" />
+              <path d="M12 22a4 4 0 0 0 4-4c0-2.5-4-6-4-6s-4 3.5-4 6a4 4 0 0 0 4 4z" />
+              <path d="M2 12a4 4 0 0 0 4 4c2.5 0 6-4 6-4s-3.5-4-6-4a4 4 0 0 0-4 4z" />
+              <path d="M22 12a4 4 0 0 0-4-4c-2.5-6 4-6 4s3.5 4 6 4a4 4 0 0 0 4-4z" />
+            </svg>
+            <span className="text-[10px] font-bold">الزخارف</span>
+          </button>
 
-            {/* ----------------------------------------------------------------- */}
-            {/* 3. PEN & INK SECTION (القلم والحبر) - Horizontal Smooth Scroll    */}
-            {/* Changing stroke style and scale dynamically per pen instrument    */}
-            {/* ----------------------------------------------------------------- */}
-            <div id="sidebar-section-pen" className="flex flex-col gap-1.5 scroll-mt-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#f0e8dc] font-tajawal">القلم والحبر</span>
-                <span className="text-[10px] text-[#a68038] font-tajawal">مرر لليسار ‹</span>
-              </div>
+          {/* 6. المقاسات */}
+          <button
+            type="button"
+            onClick={() => setActiveSidebarTab('size')}
+            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+              activeSidebarTab === 'size'
+                ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
+                : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
+            }`}
+            title="مقاسات وأبعاد اللوحة"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <line x1="3" y1="9" x2="21" y2="9" />
+              <line x1="3" y1="15" x2="21" y2="15" />
+              <line x1="9" y1="3" x2="9" y2="21" />
+              <line x1="15" y1="3" x2="15" y2="21" />
+            </svg>
+            <span className="text-[10px] font-bold">المقاسات</span>
+          </button>
 
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 pt-0.5 scroll-smooth select-none">
-                {CALLIGRAPHY_PENS.map(pen => {
-                  const isSelected = selectedPen === pen.id;
-                  return (
-                    <button
-                      key={pen.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedPen(pen.id);
-                        pushHistory({ pen: pen.id });
-                      }}
-                      className={`shrink-0 w-[82px] h-[112px] px-1.5 rounded-[10px] border flex flex-col items-center justify-between py-2 transition cursor-pointer active:scale-95 whitespace-nowrap ${
-                        isSelected
-                          ? 'bg-[#3b1419] border-[#a68038] shadow-sm ring-1 ring-[#a68038]/40'
-                          : 'bg-[#0c0e12] border-[#26241e] hover:border-[#a68038]/60'
-                      }`}
-                      title={pen.desc}
-                    >
-                      {/* Pen Vector Figure - Enlarged and clearer */}
-                      <div className="w-9 h-[70px] flex items-center justify-center pointer-events-none">
-                        <CalligraphyToolFigure
-                          toolId={pen.id}
-                          isSelected={isSelected}
-                          className="w-full h-full"
-                        />
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <span className={`text-[11px] font-bold text-center tracking-tight ${isSelected ? 'text-[#f3cf7a] font-black' : 'text-[#d1d5db]'}`}>
-                          {pen.label}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* ----------------------------------------------------------------- */}
-            {/* 4. COLORS & INKS (الألوان) - Horizontal Scroll + Gold Foil Effect */}
-            {/* ----------------------------------------------------------------- */}
-            <div id="sidebar-section-color" className="flex flex-col gap-1.5 scroll-mt-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#f0e8dc] font-tajawal">الألوان</span>
-                
-                {/* Authentic Royal 24k Gold Gilding Switch */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nextVal = !isSpecialIlluminated;
-                    setIsSpecialIlluminated(nextVal);
-                    if (nextVal) {
-                      setIsGoldFoil(true);
-                    }
-                    pushHistory({ isSpecialIlluminated: nextVal, isGold: true });
-                  }}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition flex items-center gap-1.5 active:scale-95 cursor-pointer ${
-                    isSpecialIlluminated
-                      ? 'bg-gradient-to-r from-[#9a6e24] via-[#f3cf7a] to-[#9a6e24] text-[#2c1a06] border-[#ffd700] shadow-[0_0_12px_rgba(243,207,122,0.4)] ring-1 ring-[#ffd700]'
-                      : 'bg-[#14161b] text-[#c59b27] border-[#8c6e39]/60 hover:border-[#c59b27] hover:text-[#f3cf7a]'
-                  }`}
-                  title="تذهيب الحروف بالذهب الخالص المضيء"
-                >
-                  <Sun size={12} className={isSpecialIlluminated ? 'text-[#ffd700]' : ''} />
-                  <span>تأثير التذهيب الخالص</span>
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-1 pt-0.5 scroll-smooth px-1 select-none">
-                {INK_COLORS.map(color => {
-                  const isSelected = isGoldFoil ? color.isGold : selectedInk === color.value;
-                  return (
-                    <button
-                      key={color.id}
-                      type="button"
-                      onClick={() => {
-                        if (color.isGold) {
-                          setIsGoldFoil(true);
-                          setSelectedInk(color.value);
-                          pushHistory({ color: color.value, isGold: true });
-                        } else {
-                          setIsGoldFoil(false);
-                          setIsSpecialIlluminated(false);
-                          setSelectedInk(color.value);
-                          pushHistory({ color: color.value, isGold: false, isSpecialIlluminated: false });
-                        }
-                      }}
-                      className={`shrink-0 w-8 h-8 rounded-full border-2 transition flex items-center justify-center cursor-pointer active:scale-90 ${
-                        isSelected
-                          ? 'border-[#f3cf7a] shadow-md scale-105 ring-1 ring-[#a68038]/50'
-                          : 'border-[#26241e] hover:border-[#a68038]'
-                      }`}
-                      style={{
-                        backgroundColor: color.isGold ? '#c59b27' : color.value,
-                        backgroundImage: color.isGold
-                          ? 'radial-gradient(circle at 35% 35%, #fff2a8, #c59b27 70%, #855814)'
-                          : undefined
-                      }}
-                      title={color.label}
-                    >
-                      {isSelected && (
-                        <Check size={15} className="text-white drop-shadow-md stroke-[3]" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* ----------------------------------------------------------------- */}
-            {/* 5. ORNAMENTS SECTION (الزخارف) - Horizontal Smooth Scroll         */}
-            {/* ----------------------------------------------------------------- */}
-            <div id="sidebar-section-ornament" className="flex flex-col gap-1.5 scroll-mt-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#f0e8dc] font-tajawal">الزخارف</span>
-                <span className="text-[10px] text-[#a68038] font-tajawal">مرر لليسار ‹</span>
-              </div>
-
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 pt-0.5 scroll-smooth select-none">
-                {ORNAMENT_OPTIONS.map(orn => {
-                  const isSelected = selectedOrnament === orn.id;
-                  return (
-                    <button
-                      key={orn.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedOrnament(orn.id);
-                        pushHistory({ ornament: orn.id });
-                      }}
-                      className={`shrink-0 px-3.5 h-10 rounded-lg border flex items-center gap-2 transition cursor-pointer active:scale-95 whitespace-nowrap ${
-                        isSelected
-                          ? 'bg-[#3b1419] border-[#a68038] text-[#f3cf7a] shadow-sm ring-1 ring-[#a68038]/40'
-                          : 'bg-[#0c0e12] border-[#26241e] text-[#9aa0a6] hover:border-[#a68038]/60 hover:text-white'
-                      }`}
-                      title={orn.label}
-                    >
-                      {orn.id === 'none' && (
-                        <span className="text-sm font-bold opacity-60">⊘</span>
-                      )}
-                      {orn.id === 'andalusian_corners' && (
-                        <svg className="w-5 h-5 text-[#c59b27]" viewBox="0 0 40 40" fill="currentColor">
-                          <path d="M4,4 L36,4 C26,4 20,10 20,20 C20,30 10,30 10,30 C10,30 10,36 4,36 Z" />
-                        </svg>
-                      )}
-                      {orn.id === 'mamluk_geometric' && (
-                        <svg className="w-5 h-5 text-[#c59b27]" viewBox="0 0 40 40" fill="currentColor">
-                          <polygon points="20,4 25,12 34,10 30,18 36,24 28,26 26,34 20,28 14,34 12,26 4,24 10,18 6,10 15,12" />
-                        </svg>
-                      )}
-                      {orn.id === 'ottoman_tezhip' && (
-                        <svg className="w-6 h-3 text-[#c59b27]" viewBox="0 0 60 20" fill="none">
-                          <line x1="2" y1="10" x2="22" y2="10" stroke="currentColor" strokeWidth="1.5" />
-                          <line x1="38" y1="10" x2="58" y2="10" stroke="currentColor" strokeWidth="1.5" />
-                          <polygon points="30,4 36,10 30,16 24,10" fill="currentColor" />
-                        </svg>
-                      )}
-                      {orn.id === 'manuscript_filigree' && (
-                        <div className="w-5 h-5 border-2 border-[#c59b27] rounded flex items-center justify-center">
-                          <div className="w-2.5 h-2.5 border border-[#c59b27]" />
-                        </div>
-                      )}
-                      {orn.id === 'sultani_crest' && (
-                        <svg className="w-5 h-5 text-[#c59b27]" viewBox="0 0 40 40" fill="currentColor">
-                          <polygon points="20,2 26,14 38,20 26,26 20,38 14,26 2,20 14,14" />
-                        </svg>
-                      )}
-                      {orn.id === 'central_shamseh' && (
-                        <svg className="w-5 h-5 text-[#c59b27]" viewBox="0 0 40 40" fill="none">
-                          <circle cx="20" cy="20" r="14" stroke="currentColor" strokeWidth="1.5" />
-                          <circle cx="20" cy="20" r="4" fill="currentColor" />
-                          <polygon points="20,2 23,8 20,14 17,8" fill="currentColor" />
-                          <polygon points="20,26 23,32 20,38 17,32" fill="currentColor" />
-                        </svg>
-                      )}
-                      {orn.id === 'full_arabesque' && (
-                        <div className="w-5 h-5 border border-dashed border-[#c59b27] rounded flex items-center justify-center">
-                          <div className="w-2 h-2 bg-[#c59b27] rounded-sm" />
-                        </div>
-                      )}
-                      <span className="text-xs font-bold">{orn.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* ----------------------------------------------------------------- */}
-            {/* 6. SIZES SECTION (المقاسات) - Horizontal Smooth Scroll            */}
-            {/* ----------------------------------------------------------------- */}
-            <div id="sidebar-section-size" className="flex flex-col gap-1.5 scroll-mt-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#f0e8dc] font-tajawal">المقاسات</span>
-                <span className="text-[10px] text-[#a68038] font-tajawal">مرر لليسار ‹</span>
-              </div>
-
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 pt-0.5 scroll-smooth select-none">
-                {SIZE_PRESETS.map(size => {
-                  const isSelected = selectedSize === size.id;
-                  return (
-                    <button
-                      key={size.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedSize(size.id);
-                        pushHistory({ size: size.id });
-                      }}
-                      className={`shrink-0 min-w-[76px] h-12 px-2.5 rounded-[10px] border flex flex-col items-center justify-center gap-0.5 transition cursor-pointer active:scale-95 whitespace-nowrap ${
-                        isSelected
-                          ? 'bg-[#3b1419] border-[#a68038] text-white shadow-sm ring-1 ring-[#a68038]/40'
-                          : 'bg-[#0c0e12] border-[#26241e] text-[#9aa0a6] hover:border-[#a68038]/60 hover:text-white'
-                      }`}
-                    >
-                      <span className={`text-xs font-bold ${isSelected ? 'text-[#f3cf7a]' : 'text-white'}`}>
-                        {size.label}
-                      </span>
-                      <span className="text-[9px] text-[#8c949e]">{size.subtitle}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* ----------------------------------------------------------------- */}
-            {/* 7. LUXURY BACKGROUNDS (الخلفيات) - Ultra-Luxury Parchments & Textures */}
-            {/* ----------------------------------------------------------------- */}
-            <div id="sidebar-section-background" className="flex flex-col gap-1.5 scroll-mt-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#f0e8dc] font-tajawal">الخلفيات</span>
-                <span className="text-[10px] text-[#a68038] font-tajawal">مرر لليسار ‹</span>
-              </div>
-
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 pt-0.5 scroll-smooth select-none">
-                {LUXURY_BACKGROUNDS.map(bg => {
-                  const isSelected = selectedBackground === bg.id;
-                  return (
-                    <button
-                      key={bg.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedBackground(bg.id);
-                        pushHistory({ background: bg.id });
-                      }}
-                      className={`shrink-0 min-w-[102px] h-14 px-2 rounded-[10px] border flex items-center gap-2 transition cursor-pointer active:scale-95 whitespace-nowrap ${
-                        isSelected
-                          ? 'bg-[#3b1419] border-[#a68038] text-white shadow-sm ring-1 ring-[#a68038]/40'
-                          : 'bg-[#0c0e12] border-[#26241e] text-[#9aa0a6] hover:border-[#a68038]/60 hover:text-white'
-                      }`}
-                      title={bg.desc}
-                    >
-                      {/* Background Thumbnail Preview */}
-                      <div
-                        className="w-7 h-7 rounded-full border border-[#8c6e39]/50 shrink-0 shadow-inner flex items-center justify-center overflow-hidden"
-                        style={{
-                          backgroundColor: bg.previewBg
-                        }}
-                      >
-                        {bg.id === 'transparent_canvas' && (
-                          <div className="w-full h-full grid grid-cols-2 grid-rows-2">
-                            <div className="bg-white/80" />
-                            <div className="bg-black/50" />
-                            <div className="bg-black/50" />
-                            <div className="bg-white/80" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col text-right">
-                        <span className={`text-[11px] font-bold ${isSelected ? 'text-[#f3cf7a]' : 'text-[#e0d6c8]'}`}>
-                          {bg.name}
-                        </span>
-                        <span className="text-[9px] text-[#8c949e]">
-                          {bg.isDark ? 'داكنة مذهبة' : 'فاتحة كلاسيكية'}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-          </div>
-
-          {/* VERTICAL CATEGORY TABS STRIP (FAR RIGHT EDGE OF THE ENTIRE SCREEN) */}
-          <div className="w-20 shrink-0 bg-[#0d0f13] border-l border-[#24272f] flex flex-col items-center py-5 gap-3 select-none">
-            
-            {/* 1. النص (Pen/Edit) */}
-            <button
-              type="button"
-              onClick={() => scrollToSection('text')}
-              className={`w-14 py-3 rounded-xl flex flex-col items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
-                activeSidebarTab === 'text'
-                  ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm'
-                  : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
-              }`}
-              title="النص"
-            >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                <path d="M12 19l7-7 3 3-7 7-3-3z" />
-                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
-                <path d="M2 2l7.586 7.586" />
-                <circle cx="11" cy="11" r="2" />
-              </svg>
-              <span className="text-[11px] font-bold">النص</span>
-            </button>
-
-            {/* 2. الخطوط (Calligraphic Arabic Baa 'ب') */}
-            <button
-              type="button"
-              onClick={() => scrollToSection('font')}
-              className={`w-14 py-3 rounded-xl flex flex-col items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
-                activeSidebarTab === 'font'
-                  ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm'
-                  : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
-              }`}
-              title="الخطوط"
-            >
-              <span className="font-thuluth text-3xl leading-none font-bold">ب</span>
-              <span className="text-[11px] font-bold">الخطوط</span>
-            </button>
-
-            {/* 3. القلم والحبر (Feather / Nib) */}
-            <button
-              type="button"
-              onClick={() => scrollToSection('pen')}
-              className={`w-14 py-3 rounded-xl flex flex-col items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
-                activeSidebarTab === 'pen'
-                  ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm'
-                  : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
-              }`}
-              title="القلم والحبر"
-            >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L3 11.5V21h9.5z" />
-                <line x1="16" y1="8" x2="2" y2="22" />
-              </svg>
-              <span className="text-[11px] font-bold leading-tight text-center">القلم<br />والحبر</span>
-            </button>
-
-            {/* 4. الألوان (Artist Palette) */}
-            <button
-              type="button"
-              onClick={() => scrollToSection('color')}
-              className={`w-14 py-3 rounded-xl flex flex-col items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
-                activeSidebarTab === 'color'
-                  ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm'
-                  : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
-              }`}
-              title="الألوان"
-            >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
-                <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
-                <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
-                <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
-                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.5 17.5 2 12 2z" />
-              </svg>
-              <span className="text-[11px] font-bold">الألوان</span>
-            </button>
-
-            {/* 5. الزخارف (Arabesque Flower) */}
-            <button
-              type="button"
-              onClick={() => scrollToSection('ornament')}
-              className={`w-14 py-3 rounded-xl flex flex-col items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
-                activeSidebarTab === 'ornament'
-                  ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm'
-                  : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
-              }`}
-              title="الزخارف"
-            >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M12 2a4 4 0 0 0-4 4c0 2.5 4 6 4 6s4-3.5 4-6a4 4 0 0 0-4-4z" />
-                <path d="M12 22a4 4 0 0 0 4-4c0-2.5-4-6-4-6s-4 3.5-4 6a4 4 0 0 0 4 4z" />
-                <path d="M2 12a4 4 0 0 0 4 4c2.5 0 6-4 6-4s-3.5-4-6-4a4 4 0 0 0-4 4z" />
-                <path d="M22 12a4 4 0 0 0-4-4c-2.5-6 4-6 4s3.5 4 6 4a4 4 0 0 0 4-4z" />
-              </svg>
-              <span className="text-[11px] font-bold">الزخارف</span>
-            </button>
-
-            {/* 6. المقاسات (Dimensions Frame) */}
-            <button
-              type="button"
-              onClick={() => scrollToSection('size')}
-              className={`w-14 py-3 rounded-xl flex flex-col items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
-                activeSidebarTab === 'size'
-                  ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm'
-                  : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
-              }`}
-              title="المقاسات"
-            >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <line x1="3" y1="9" x2="21" y2="9" />
-                <line x1="3" y1="15" x2="21" y2="15" />
-                <line x1="9" y1="3" x2="9" y2="21" />
-                <line x1="15" y1="3" x2="15" y2="21" />
-              </svg>
-              <span className="text-[11px] font-bold">المقاسات</span>
-            </button>
-
-            {/* 7. الخلفيات (Luxury Backgrounds) */}
-            <button
-              type="button"
-              onClick={() => scrollToSection('background')}
-              className={`w-14 py-3 rounded-xl flex flex-col items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
-                activeSidebarTab === 'background'
-                  ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm'
-                  : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
-              }`}
-              title="الخلفيات"
-            >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
-                <polyline points="21 15 16 10 5 21" />
-              </svg>
-              <span className="text-[11px] font-bold">الخلفيات</span>
-            </button>
-
-          </div>
-
+          {/* 7. الخلفيات */}
+          <button
+            type="button"
+            onClick={() => setActiveSidebarTab('background')}
+            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+              activeSidebarTab === 'background'
+                ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
+                : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
+            }`}
+            title="الخلفيات والورق المقهر"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
+              <polyline points="21 15 16 10 5 21" />
+            </svg>
+            <span className="text-[10px] font-bold">الخلفيات</span>
+          </button>
         </aside>
 
         {/* ===================================================================== */}
-        {/* 2.B CENTER COLUMN: CALLIGRAPHY PARCHMENT EASEL STAGE (المحراب)         */}
+        {/* CENTER COLUMN: CALLIGRAPHY PARCHMENT EASEL STAGE (المحراب)            */}
         {/* ===================================================================== */}
         <main 
           className="flex-1 flex flex-col min-h-0 bg-transparent relative overflow-hidden"
           dir="rtl"
         >
-          {/* THE CANVAS SCENE */}
+          {/* THE CANVAS SCENE STAGE (Auto-sized via stageDimensions to fit 100% without scroll) */}
           <div 
-            className="flex-1 flex items-center justify-center p-4 sm:p-8 overflow-hidden relative"
-            onPointerDown={(e) => {
-              if (activeLeftTool === 'move') {
-                setIsPanning(true);
-                startPanRef.current = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
-              }
-            }}
-            onPointerMove={(e) => {
-              if (isPanning && activeLeftTool === 'move') {
-                setPanOffset({
-                  x: e.clientX - startPanRef.current.x,
-                  y: e.clientY - startPanRef.current.y
-                });
-              }
-            }}
-            onPointerUp={() => setIsPanning(false)}
-            onPointerLeave={() => setIsPanning(false)}
+            ref={stageContainerRef}
+            className="flex-1 flex flex-col items-center justify-center p-3 sm:p-5 overflow-hidden relative w-full h-full"
           >
+            {/* Toast notification when card is saved */}
+            {saveSuccessToast && (
+              <div className="absolute top-4 z-40 bg-[#161a22]/95 border border-[#c59b27] text-[#f3cf7a] px-4 py-2 rounded-xl shadow-2xl flex items-center gap-2 animate-fade-in backdrop-blur-md">
+                <Save size={16} className="text-[#ffd700]" />
+                <span className="text-xs font-bold font-tajawal">تم حفظ اللوحة في المعرض بنجاح! ✨</span>
+              </div>
+            )}
 
-            {/* THE PARCHMENT CARD SCALER BOX */}
+            {/* THE PARCHMENT CARD SCALER BOX (Exact bounded containment) */}
             <div
-              className="relative transition-transform duration-200 flex items-center justify-center"
+              className="relative transition-all duration-300 flex items-center justify-center shadow-2xl rounded-2xl"
               style={{
-                transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
-                aspectRatio: `${currentRatio}`,
-                width: currentRatio >= 1 ? 'min(96%, 860px)' : 'min(90%, 540px)',
-                height: currentRatio >= 1 ? 'auto' : 'min(92%, 660px)',
-                maxHeight: 'calc(100vh - 165px)'
+                width: `${cardW}px`,
+                height: `${cardH}px`,
+                maxWidth: '100%',
+                maxHeight: '100%',
+                transform: `scale(${zoomLevel})`
               }}
             >
               {/* THE EXPORTABLE PARCHMENT CARD */}
               <div
                 ref={cardCanvasRef}
                 id="calligraphy-export-card"
-                className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between p-8 sm:p-11 select-none"
+                className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between p-7 sm:p-10 select-none"
                 style={{
                   ...currentBg.style
                 }}
               >
-                {/* 1. Fine Millimeter Grid Overlay (when toggled) */}
+                {/* Grid Overlay (if toggled) */}
                 {showGrid && (
                   <div 
                     className="absolute inset-0 pointer-events-none z-10 opacity-30"
@@ -1374,234 +1298,132 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
                   />
                 )}
 
-                {/* 2. HIGH-CRAFT ARABESQUE CALLIGRAPHY ORNAMENTS */}
+                {/* 1. PROFESSIONAL ISLAMIC ORNAMENTS (All 10 styles strictly connected) */}
                 <CalligraphyOrnaments ornamentId={selectedOrnament} isDarkBackground={currentBg.isDark} />
 
-                {/* 4. PROFESSIONAL CALLIGRAPHY GUIDELINES (ميزان الخط العربي وقواعد الحروف) */}
-                {/* Precisely defines the letter baseline, ascender line, midline, and descender line */}
+                {/* 2. CALLIGRAPHY GUIDELINES (Optional, default OFF) */}
                 {showGuidelines && (
                   <div className="absolute inset-0 pointer-events-none z-15 select-none" dir="rtl">
-                    
-                    {/* Measurement Scale Ruler on Left Side */}
-                    <div className="absolute left-6 inset-y-0 flex flex-col justify-center gap-0 text-[#8c6e39] font-tajawal z-20">
-                      <div className="relative h-64 flex flex-col justify-between">
-                        
-                        {/* 1. الثلث الأعلى (Ascender Line) */}
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold">
-                          <span className="w-2.5 h-[2px] bg-[#8c6e39]" />
-                          <span className="bg-[#eee5d6]/90 px-1 py-0.5 rounded border border-[#8c6e39]/40 text-[#684f24]">الثلث الأعلى</span>
-                        </div>
-
-                        {/* 2. خط الوسط (Midline) */}
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold">
-                          <span className="w-2.5 h-[2px] bg-[#8c6e39]" />
-                          <span className="bg-[#eee5d6]/90 px-1 py-0.5 rounded border border-[#8c6e39]/40 text-[#684f24]">خط الوسط</span>
-                        </div>
-
-                        {/* 3. سطر الأساس (Baseline - Exact Base of Calligraphy Letters) */}
-                        <div className="flex items-center gap-1.5 text-[11px] font-black text-[#5c3e0e]">
-                          <span className="w-3.5 h-[3px] bg-[#a68038]" />
-                          <span className="bg-[#f5ecdd] px-1.5 py-0.5 rounded border border-[#a68038] shadow-sm">سطر الأساس</span>
-                        </div>
-
-                        {/* 4. الثلث الأسفل (Descender Line) */}
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold">
-                          <span className="w-2.5 h-[2px] bg-[#8c6e39]" />
-                          <span className="bg-[#eee5d6]/90 px-1 py-0.5 rounded border border-[#8c6e39]/40 text-[#684f24]">الثلث الأسفل</span>
-                        </div>
-
-                        {/* Calligraphic Mizan Dots Column (نقاط الميزان الماسية المعينة) */}
-                        <div className="absolute right-[-14px] top-6 bottom-16 flex flex-col justify-around items-center opacity-70">
-                          {[...Array(7)].map((_, dotIdx) => (
-                            <div
-                              key={dotIdx}
-                              className="w-2 h-2 bg-[#8c6e39] rotate-45"
-                              title={`نقطة ميزان ${dotIdx + 1}`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Precision Horizontal Guidelines Drawn Across the Card */}
                     <div className="absolute inset-x-8 inset-y-0 flex flex-col justify-center">
                       <div className="relative h-64 flex flex-col justify-between">
-                        {/* 1. Ascender Dashed Line (أعلى الألف واللام) */}
                         <div className="w-full border-b border-dashed border-[#8c6e39]/60" />
-                        
-                        {/* 2. Midline (خط وسط الحروف) */}
                         <div className="w-full border-b border-dotted border-[#8c6e39]/50" />
-                        
-                        {/* 3. Baseline (سطر الأساس الذهبي الذي ترتكز عليه الحروف) */}
                         <div className="w-full border-b-2 border-[#a68038]/75 shadow-sm" />
-                        
-                        {/* 4. Descender Dashed Line (سطر قعود ونوازل الحروف) */}
                         <div className="w-full border-b border-dashed border-[#8c6e39]/60" />
                       </div>
                     </div>
-
                   </div>
                 )}
 
-                {/* Top Spacer with Floating Authentic Pen Character Badge */}
-                <div className="shrink-0 flex items-center justify-between w-full relative z-20 pb-1">
-                  <div className={`text-[11px] font-tajawal font-bold flex items-center gap-2 px-3 py-1 rounded-full border transition-all shadow-xs ${
-                    currentBg.isDark
-                      ? 'bg-black/50 border-[#c59b27]/40 text-[#f3cf7a]'
-                      : 'bg-[#eee5d6]/80 border-[#8c6e39]/35 text-[#5c431b]'
-                  }`}>
-                    <span 
-                      className="inline-block rounded-full shadow-xs transition-all"
-                      style={{
-                        width: selectedPen === 'bamboo_pen' || selectedPen === 'marker_pen' ? '9px' : selectedPen === 'metal_pen' || selectedPen === 'quill_pen' ? '4px' : '6.5px',
-                        height: selectedPen === 'bamboo_pen' || selectedPen === 'marker_pen' ? '9px' : selectedPen === 'metal_pen' || selectedPen === 'quill_pen' ? '4px' : '6.5px',
-                        backgroundColor: selectedPen === 'bamboo_pen' ? '#e5b84c' : selectedPen === 'metal_pen' ? '#a0aec0' : selectedPen === 'quill_pen' ? '#f5ede3' : '#c59b27'
-                      }} 
-                    />
-                    <span>{activePenConfig.label}</span>
-                    <span className="opacity-80 text-[10px]">({activePenConfig.nibWidth} مم)</span>
-                  </div>
-                </div>
-
-                {/* 5. MAIN ARABIC CALLIGRAPHY ARTWORK */}
+                {/* 3. MAIN ARABIC CALLIGRAPHY ARTWORK (With Live Stroke Character-by-Character Writing) */}
                 <div className="relative z-20 my-auto flex flex-col items-center justify-center text-center px-4 w-full">
-                  {isDefaultHamd && selectedFont === 'font-thuluth' ? (
-                    /* Authentic Classical Thuluth Vector Composition of "الحَمْدُ لِلَّهِ" */
-                    <div 
-                      className="w-full max-w-lg flex items-center justify-center py-2 transition-transform duration-300"
+                  <div
+                    className="w-full flex items-center justify-center transition-transform duration-300"
+                    style={{
+                      transform: `scale(${penScale})`
+                    }}
+                  >
+                    <h2
+                      className={`w-full ${selectedFont} tracking-normal transition-all duration-300 select-text leading-relaxed`}
                       style={{
-                        transform: `scale(${penScale * (fontSize / 96)})`
+                        fontSize: `clamp(${1.8 * (fontSize / 96)}rem, ${4.2 * (fontSize / 96)}vw, ${4.8 * (fontSize / 96)}rem)`,
+                        fontWeight: activePenConfig.weight,
+                        opacity: activePenConfig.opacity,
+                        WebkitTextStroke: penStrokeCSS,
+                        paintOrder: 'stroke fill',
+                        filter: isSpecialIlluminated
+                          ? 'drop-shadow(0 2px 6px rgba(184,134,11,0.5)) drop-shadow(0 0 18px rgba(243,207,122,0.7))'
+                          : isGoldFoil
+                          ? 'drop-shadow(0 2px 4px rgba(40, 25, 5, 0.45))'
+                          : penDynamics.filterEffect,
+                        letterSpacing: (selectedPen === 'metal_pen') ? '0.03em' : (selectedPen === 'bamboo_pen' || selectedPen === 'marker_pen') ? '-0.02em' : '0em',
+                        ...(isSpecialIlluminated
+                          ? {
+                              backgroundImage: 'linear-gradient(135deg, #fff9e6 0%, #ffd700 25%, #fffdfa 50%, #c59b27 75%, #7a5012 100%)',
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent'
+                            }
+                          : isGoldFoil
+                          ? goldFoilStyle
+                          : {
+                              color: selectedInk,
+                              WebkitTextFillColor: selectedInk,
+                              fill: selectedInk
+                            }),
+                        textShadow: (isSpecialIlluminated || isGoldFoil)
+                          ? undefined
+                          : activePenConfig.effectShadow || (currentBg.isDark ? '0 2px 10px rgba(0,0,0,0.7)' : '0 2px 4px rgba(0,0,0,0.18)')
                       }}
                     >
-                      <svg
-                        viewBox="0 0 540 180"
-                        className="w-full h-auto drop-shadow-md overflow-visible select-text"
-                      >
-                        <defs>
-                          <linearGradient id="calligraphyGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#9a6e24" />
-                            <stop offset="25%" stopColor="#d8ad48" />
-                            <stop offset="50%" stopColor="#fff2a8" />
-                            <stop offset="75%" stopColor="#d4a33c" />
-                            <stop offset="100%" stopColor="#7a5012" />
-                          </linearGradient>
-                          <linearGradient id="calligraphyPureGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#ffd700" />
-                            <stop offset="30%" stopColor="#fff5b8" />
-                            <stop offset="60%" stopColor="#d4a33c" />
-                            <stop offset="100%" stopColor="#875608" />
-                          </linearGradient>
-                        </defs>
-                        {/* Render authentic Thuluth calligraphy glyphs with responsive pen stroke dynamics */}
-                        <text
-                          x="270"
-                          y="125"
-                          textAnchor="middle"
-                          fill={isSpecialIlluminated ? "url(#calligraphyPureGoldGrad)" : isGoldFoil ? "url(#calligraphyGoldGrad)" : selectedInk}
-                          stroke={isSpecialIlluminated ? "url(#calligraphyPureGoldGrad)" : isGoldFoil ? "url(#calligraphyGoldGrad)" : selectedInk}
-                          strokeWidth={
-                            selectedPen === 'bamboo_pen' || selectedPen === 'wet_wash' ? 7.2 :
-                            selectedPen === 'marker_pen' || selectedPen === 'broad_tomar' ? 6.8 :
-                            selectedPen === 'metal_pen' || selectedPen === 'flex_quill' || selectedPen === 'tashkeel_dotting' ? 0.0 :
-                            selectedPen === 'quill_pen' ? 0.25 :
-                            selectedPen === 'glass_pen' ? 0.6 :
-                            selectedPen === 'modern_pen' || selectedPen === 'sable_brush' ? 1.6 :
-                            2.2 // qasab_pen
-                          }
-                          paintOrder="stroke fill"
-                          className="font-thuluth text-[104px] font-bold"
-                          style={{
-                            fontWeight: activePenConfig.weight,
-                            opacity: activePenConfig.opacity,
-                            filter: isSpecialIlluminated
-                              ? 'drop-shadow(0 2px 6px rgba(184,134,11,0.6)) drop-shadow(0 0 20px rgba(243,207,122,0.75))'
-                              : isGoldFoil 
-                              ? 'drop-shadow(0 2px 4px rgba(60,40,10,0.4))' 
-                              : penDynamics.filterEffect
-                          }}
-                        >
-                          الحَمْدُ لِلَّهِ
-                        </text>
-                      </svg>
-                    </div>
-                  ) : (
-                    /* Dynamic Text for custom input with pen dynamics & responsive typography */
-                    <div 
-                      className="w-full flex items-center justify-center transition-transform duration-300"
-                      style={{
-                        transform: `scale(${penScale})`
-                      }}
-                    >
-                      <h2
-                        className={`w-full ${selectedFont} tracking-normal transition-all duration-300 select-text leading-relaxed`}
-                        style={{
-                          fontSize: `clamp(${1.8 * (fontSize / 96)}rem, ${4.2 * (fontSize / 96)}vw, ${4.8 * (fontSize / 96)}rem)`,
-                          fontWeight: activePenConfig.weight,
-                          opacity: activePenConfig.opacity,
-                          WebkitTextStroke: penStrokeCSS,
-                          paintOrder: 'stroke fill',
-                          filter: penDynamics.filterEffect,
-                          letterSpacing: (selectedPen === 'metal_pen' || selectedPen === 'quill_pen') ? '0.03em' : (selectedPen === 'bamboo_pen' || selectedPen === 'marker_pen') ? '-0.02em' : '0em',
-                          color: (isSpecialIlluminated || isGoldFoil) ? undefined : selectedInk,
-                          ...(isSpecialIlluminated
-                            ? {
-                                backgroundImage: 'linear-gradient(135deg, #fff9e6 0%, #ffd700 25%, #fffdfa 50%, #c59b27 75%, #7a5012 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                filter: 'drop-shadow(0 2px 6px rgba(184,134,11,0.5)) drop-shadow(0 0 18px rgba(243,207,122,0.7))'
-                              }
-                            : isGoldFoil
-                            ? goldFoilStyle
-                            : {}),
-                          textShadow: (isSpecialIlluminated || isGoldFoil)
-                            ? undefined
-                            : activePenConfig.effectShadow || (currentBg.isDark ? '0 2px 10px rgba(0,0,0,0.7)' : '0 2px 4px rgba(0,0,0,0.18)')
-                        }}
-                      >
-                        {quoteText || 'اكتب عبارتك هنا...'}
-                      </h2>
-                    </div>
-                  )}
-                </div>
-
-                {/* 6. CALLIGRAPHER SIGNATURE (Bottom Left of parchment) */}
-                <div className="relative z-20 shrink-0 w-full flex items-end justify-between pt-2">
-                  <div className={`flex items-center gap-2 text-xs font-amiri font-bold ${currentBg.isDark ? 'text-[#c59b27]/90' : 'text-[#5a4833]'}`}>
-                    {/* Feather quill icon */}
-                    <svg viewBox="0 0 24 24" className="w-5 h-5 text-[#c59b27]" fill="none" stroke="currentColor" strokeWidth="1.75">
-                      <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L3 11.5V21h9.5z" strokeLinecap="round" strokeLinejoin="round" />
-                      <line x1="16" y1="8" x2="2" y2="22" strokeLinecap="round" />
-                    </svg>
-                    <div className="flex flex-col">
-                      <span>{authorName}</span>
-                      <span className={`text-[10px] font-mono ${currentBg.isDark ? 'text-[#c59b27]/70' : 'text-[#8c7348]/80'}`}>{authorYear}</span>
-                    </div>
+                      {isReplayingStroke ? (
+                        <>
+                          {quoteText.slice(0, revealedChars)}
+                          {revealedChars < quoteText.length && (
+                            <span className="inline-block w-1.5 h-7 bg-[#d4af37] animate-pulse rounded-full mr-1 align-middle shadow-[0_0_10px_#ffd700]" />
+                          )}
+                        </>
+                      ) : (
+                        quoteText || 'اكتب عبارتك هنا...'
+                      )}
+                    </h2>
                   </div>
                 </div>
+
+                {/* 4. CALLIGRAPHER SIGNATURE */}
+                {showSignature && (
+                  <div className={`relative z-20 shrink-0 w-full flex items-end pt-2 ${
+                    signaturePosition === 'bottom-right' ? 'justify-start text-right' :
+                    signaturePosition === 'bottom-center' ? 'justify-center text-center' :
+                    'justify-end text-left'
+                  }`}>
+                    <div 
+                      onClick={() => setShowSignatureModal(true)}
+                      className="cursor-pointer group flex flex-col items-center gap-0.5 opacity-90 hover:opacity-100 transition"
+                      title="انقر لتعديل التوقيع أو مكانه"
+                    >
+                      <span
+                        className={`text-xs font-diwani px-2.5 py-0.5 rounded transition ${
+                          currentBg.isDark
+                            ? 'text-[#e5b84c] group-hover:bg-white/10'
+                            : 'text-[#684c1f] group-hover:bg-[#8c601c]/10'
+                        }`}
+                      >
+                        {authorName ? `بقلم: ${authorName}` : signatureName}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
               </div>
             </div>
 
           </div>
 
-          {/* DEDICATED CALLIGRAPHY STUDIO TRAY (مطابقة للأشرطة الأفقية التفاعلية: الخلفيات، الزخارف، الألوان، القلم والحبر) */}
+          {/* THE CALLIGRAPHER'S DESK TRAY */}
           <CalligraphyStudioTray
             activeTab={activeSidebarTab}
             onSelectTab={(tab) => {
               setActiveSidebarTab(tab);
-              scrollToSection(tab);
+              if (tab === 'pen' || tab === 'font') {
+                triggerStrokeAnimation(quoteText);
+              }
             }}
             selectedPen={selectedPen}
             onSelectPen={(pen) => {
               setSelectedPen(pen);
               pushHistory({ pen });
+              triggerStrokeAnimation(quoteText);
             }}
             fontSize={fontSize}
-            onFontSizeChange={(newSize) => setFontSize(newSize)}
+            onFontSizeChange={(size) => {
+              setFontSize(size);
+            }}
             selectedInk={selectedInk}
             onSelectInk={(ink) => {
               setSelectedInk(ink);
-              pushHistory({ color: ink });
+              setIsGoldFoil(false);
+              setIsSpecialIlluminated(false);
+              pushHistory({ color: ink, isGold: false, isSpecialIlluminated: false });
             }}
             isGoldFoil={isGoldFoil}
             onToggleGoldFoil={(val) => {
@@ -1624,6 +1446,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
             onSelectFont={(font) => {
               setSelectedFont(font);
               pushHistory({ font });
+              triggerStrokeAnimation(quoteText);
             }}
             selectedSize={selectedSize}
             onSelectSize={(size) => {
@@ -1631,233 +1454,126 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
               pushHistory({ size });
             }}
             quoteText={quoteText}
-            onQuoteTextChange={(text) => {
-              setQuoteText(text);
-              pushHistory({ text });
+            onQuoteTextChange={(t) => {
+              setQuoteText(t);
+              pushHistory({ text: t });
             }}
+            onOpenTashkeel={() => setShowTashkeelModal(true)}
+            authorName={authorName}
+            onAuthorNameChange={(name) => setAuthorName(name)}
+            onUploadCustomBg={handleUploadBackground}
+            customBgUrl={customBgUrl}
           />
-
-          {/* EASEL BOTTOM ACTION STRIP */}
-          {/* Order in RTL: RIGHTMOST: [حفظ البطاقة] -> [معاينة] -> [تصدير] */}
-          <div className="shrink-0 h-16 bg-[#0f1115]/95 border-t border-[#23262e] px-6 flex items-center justify-between z-20 shadow-lg" dir="rtl">
-            
-            {/* RIGHT SIDE: Strictly [حفظ البطاقة] then [معاينة] then [تصدير] */}
-            <div className="flex items-center gap-3">
-              
-              {/* 1. حفظ البطاقة (Primary Burgundy Button with Gold Wings) */}
-              <div className="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-[#a68038]">
-                  <path d="M12 2 L14.5 9.5 L22 12 L14.5 14.5 L12 22 L9.5 14.5 L2 12 L9.5 9.5 Z" />
-                </svg>
-                <span className="w-6 h-px bg-[#a68038]/70" />
-
-                <button
-                  type="button"
-                  onClick={handleSaveCard}
-                  className="px-6 py-2.5 rounded-xl border border-[#a68038] bg-[#3b1419] hover:bg-[#4d161e] text-[#f0e8dc] text-sm font-bold flex items-center gap-2.5 transition active:scale-95 shadow-lg shadow-red-950/40 cursor-pointer"
-                  title="حفظ البطاقة في المعرض"
-                >
-                  <Save size={18} className="text-[#f3cf7a]" />
-                  <span>حفظ البطاقة</span>
-                </button>
-
-                <span className="w-6 h-px bg-[#a68038]/70" />
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-[#a68038]">
-                  <path d="M12 2 L14.5 9.5 L22 12 L14.5 14.5 L12 22 L9.5 14.5 L2 12 L9.5 9.5 Z" />
-                </svg>
-              </div>
-
-              {/* 2. معاينة (Preview Button) */}
-              <button
-                type="button"
-                onClick={() => setIsPreviewMode(true)}
-                className="px-5 py-2.5 rounded-xl border border-[#2b2e37] bg-[#14161b] hover:bg-[#1e2128] text-[#e0d6c8] text-sm font-bold flex items-center gap-2 transition active:scale-95 shadow-sm cursor-pointer"
-                title="معاينة اللوحة بكامل الشاشة"
-              >
-                <Eye size={18} className="text-[#b38a3e]" />
-                <span>معاينة</span>
-              </button>
-
-              {/* 3. تصدير (Export Button + Format Picker) */}
-              <div className="flex items-center rounded-xl border border-[#2b2e37] bg-[#14161b] p-1 shadow-sm gap-1">
-                <button
-                  type="button"
-                  onClick={() => handleExport(selectedExportFormat)}
-                  className="px-4 py-2 rounded-lg bg-[#222630] hover:bg-[#2c323f] text-[#e0d6c8] hover:text-white text-sm font-bold flex items-center gap-2 transition active:scale-95 cursor-pointer"
-                  title="تصدير البطاقة بالصيغة المحددة"
-                >
-                  <Download size={17} className="text-[#f3cf7a]" />
-                  <span>تصدير</span>
-                </button>
-
-                <div className="flex items-center gap-1 px-1">
-                  {(['transparent', 'png', 'jpg', 'pdf'] as const).map(fmt => (
-                    <button
-                      key={fmt}
-                      type="button"
-                      onClick={() => setSelectedExportFormat(fmt)}
-                      className={`px-2 py-1 rounded text-[11px] font-bold transition cursor-pointer ${
-                        selectedExportFormat === fmt
-                          ? 'bg-[#3b1419] text-[#f3cf7a] border border-[#a68038]/60 shadow-xs'
-                          : 'text-[#8c949e] hover:text-[#e0d6c8] hover:bg-[#1a1c22]'
-                      }`}
-                      title={fmt === 'transparent' ? 'صورة مفرغة شفافة بدون خلفية' : fmt.toUpperCase()}
-                    >
-                      {fmt === 'transparent' ? 'مفرغ (شفاف)' : fmt.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Empty Left Side (advice text removed as requested) */}
-            <div className="hidden lg:block" />
-
-          </div>
 
         </main>
 
         {/* ===================================================================== */}
-        {/* 2.C LEFT COLUMN: VERTICAL FLOATING ACTION TOOLBAR                      */}
+        {/* LEFT COLUMN: 7 STUDIO WORKFLOW ACTIONS                                */}
+        {/* (حفظ البطاقة - معاينة - تصدير - المعرض - دليل الخط - تراجع - إعادة)   */}
         {/* ===================================================================== */}
         <aside 
-          className="w-20 shrink-0 p-3 flex flex-col items-center justify-center z-20"
-          dir="rtl"
+          className="w-20 shrink-0 bg-[#0d0f13] border-r border-[#24272f] flex flex-col items-center py-4 gap-2.5 select-none z-20 shadow-2xl overflow-y-auto no-scrollbar"
         >
-          <div className="w-full bg-[#111317] border border-[#2a261f] rounded-2xl p-2 flex flex-col items-center justify-between shadow-xl py-3.5 gap-3">
-            
-            {/* 1. تحرير (Edit) - Active */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveLeftTool('edit');
-                setActiveSidebarTab('text');
-                textInputRef.current?.focus();
-              }}
-              className={`w-full py-3 rounded-xl flex flex-col items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
-                activeLeftTool === 'edit'
-                  ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-md shadow-red-950/40'
-                  : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
-              }`}
-              title="تحرير النص"
-            >
-              <PenTool size={26} className="rotate-45" />
-              <span className="text-xs font-bold">تحرير</span>
-            </button>
+          {/* 1. حفظ البطاقة */}
+          <button
+            type="button"
+            onClick={handleSaveCard}
+            className="w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 shadow-sm relative group"
+            title="حفظ البطاقة في المعرض"
+          >
+            <Save size={22} className="text-current group-hover:scale-110 transition" />
+            <span className="text-[10px] font-bold text-center leading-tight">حفظ</span>
+          </button>
 
-            {/* 2. تحريك (Move) */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveLeftTool('move');
-                setPanOffset({ x: 0, y: 0 });
-              }}
-              className={`w-full py-3 rounded-xl flex flex-col items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
-                activeLeftTool === 'move'
-                  ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-md'
-                  : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
-              }`}
-              title="تحريك اللوحة"
-            >
-              <Move size={26} />
-              <span className="text-xs font-bold">تحريك</span>
-            </button>
+          {/* 2. معاينة */}
+          <button
+            type="button"
+            onClick={() => setIsPreviewMode(true)}
+            className="w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 group"
+            title="معاينة اللوحة بكامل الشاشة"
+          >
+            <Eye size={22} className="text-current group-hover:scale-110 transition" />
+            <span className="text-[10px] font-bold">معاينة</span>
+          </button>
 
-            {/* 3. تكبير (Zoom) */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveLeftTool('zoom');
-                setZoomLevel(prev => (prev >= 1.4 ? 1 : prev + 0.2));
-              }}
-              className={`w-full py-3 rounded-xl flex flex-col items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
-                activeLeftTool === 'zoom'
-                  ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-md'
-                  : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
-              }`}
-              title={`تكبير وتصغير (${Math.round(zoomLevel * 100)}%)`}
-            >
-              <ZoomIn size={26} />
-              <span className="text-xs font-bold">تكبير</span>
-            </button>
+          {/* 3. تصدير */}
+          <button
+            type="button"
+            onClick={() => setShowExportFlyout(true)}
+            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+              showExportFlyout
+                ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
+                : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50'
+            } group`}
+            title="تصدير وتحميل البطاقة"
+          >
+            <Download size={22} className="text-current group-hover:scale-110 transition" />
+            <span className="text-[10px] font-bold">تصدير</span>
+          </button>
 
-            {/* 4. شبكة (Grid) */}
-            <button
-              type="button"
-              onClick={() => setShowGrid(prev => !prev)}
-              className={`w-full py-3 rounded-xl flex flex-col items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
-                showGrid
-                  ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-md'
-                  : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
-              }`}
-              title="إظهار شبكة هندسة الخط"
-            >
-              <Grid3X3 size={26} />
-              <span className="text-xs font-bold">شبكة</span>
-            </button>
+          {/* 4. المعرض */}
+          <button
+            type="button"
+            onClick={() => setShowSavedCardsModal(true)}
+            className="w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 relative group"
+            title="معرض اللوحات المحفوظة"
+          >
+            <FolderHeart size={22} className="text-current group-hover:scale-110 transition" />
+            <span className="text-[10px] font-bold">المعرض</span>
+            {savedCards.length > 0 && (
+              <span className="absolute top-1 -right-0.5 bg-[#8a121d] text-[#fff] text-[9px] font-bold px-1.5 py-0.2 rounded-full border border-[#f3cf7a]/70">
+                {savedCards.length}
+              </span>
+            )}
+          </button>
 
-            {/* 5. إرشادات (Guidelines) */}
-            <button
-              type="button"
-              onClick={() => setShowGuidelines(prev => !prev)}
-              className={`w-full py-3 rounded-xl flex flex-col items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
-                showGuidelines
-                  ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-md'
-                  : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
-              }`}
-              title="إظهار خطوط ميزان الحروف والثلث الأعلى والأسفل"
-            >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3">
-                <line x1="2" y1="5" x2="22" y2="5" />
-                <line x1="2" y1="12" x2="22" y2="12" />
-                <line x1="2" y1="19" x2="22" y2="19" />
-              </svg>
-              <span className="text-xs font-bold">إرشادات</span>
-            </button>
+          {/* 5. دليل الخط */}
+          <button
+            type="button"
+            onClick={() => setShowGuideModal(true)}
+            className="w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 group"
+            title="دليل وقواعد الخط العربي الأصيل"
+          >
+            <BookOpen size={22} className="text-current group-hover:scale-110 transition" />
+            <span className="text-[10px] font-bold">دليل الخط</span>
+          </button>
 
-            {/* Divider */}
-            <div className="w-10 h-px bg-[#24272f] my-1" />
+          {/* 6. تراجع */}
+          <button
+            type="button"
+            onClick={handleUndo}
+            disabled={historyIndex <= 0}
+            className="w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#9aa0a6] disabled:hover:border-transparent group"
+            title="تراجع خطوة (Ctrl+Z)"
+          >
+            <RotateCcw size={22} className="text-current group-hover:scale-110 transition" />
+            <span className="text-[10px] font-bold">تراجع</span>
+          </button>
 
-            {/* 6. تراجع (Undo) */}
-            <button
-              type="button"
-              onClick={handleUndo}
-              disabled={historyIndex <= 0}
-              className="w-full py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 text-[#9aa0a6] hover:text-[#f3cf7a] hover:bg-[#181b21] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
-              title="تراجع"
-            >
-              <RotateCcw size={20} />
-              <span className="text-[10px] font-bold">تراجع</span>
-            </button>
-
-            {/* 7. إعادة (Redo) */}
-            <button
-              type="button"
-              onClick={handleRedo}
-              disabled={historyIndex >= history.length - 1}
-              className="w-full py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 text-[#9aa0a6] hover:text-[#f3cf7a] hover:bg-[#181b21] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
-              title="إعادة"
-            >
-              <RotateCw size={20} />
-              <span className="text-[10px] font-bold">إعادة</span>
-            </button>
-
-          </div>
+          {/* 7. إعادة */}
+          <button
+            type="button"
+            onClick={handleRedo}
+            disabled={historyIndex >= history.length - 1}
+            className="w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#9aa0a6] disabled:hover:border-transparent group"
+            title="إعادة خطوة (Ctrl+Y)"
+          >
+            <RotateCw size={22} className="text-current group-hover:scale-110 transition" />
+            <span className="text-[10px] font-bold">إعادة</span>
+          </button>
         </aside>
 
       </div>
 
       {/* ======================================================================= */}
-      {/* 3. MODALS: INSPIRATION QUOTES, CALLIGRAPHY GUIDE, GALLERY, FULLSCREEN  */}
+      {/* MODALS                                                                  */}
       {/* ======================================================================= */}
       
-      {/* 1. TASHKEEL & TEXT SHAPING MODAL (تشكيل النص وضبط الحركات) */}
+      {/* 1. TASHKEEL MODAL */}
       {showTashkeelModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" dir="rtl">
           <div className="w-full max-w-xl bg-[#14161a] border border-[#272a31] rounded-2xl p-6 shadow-2xl flex flex-col gap-4 max-h-[85vh] overflow-hidden">
             
-            {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-[#272a31]">
               <div className="flex items-center gap-2 text-[#f3cf7a] font-bold font-tajawal text-lg">
                 <Type size={18} className="text-[#c59b27]" />
@@ -1872,7 +1588,6 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
               </button>
             </div>
 
-            {/* Current Text Preview & Quick Action Buttons */}
             <div className="flex flex-col gap-2 p-3 bg-[#0a0c0f] border border-[#26241e] rounded-xl">
               <div className="text-xs text-[#9aa0a6] font-bold">النص الحالي:</div>
               <div className="text-lg font-bold font-thuluth text-[#f3cf7a] text-center py-2 bg-[#121418] rounded-lg border border-[#26241e]/80">
@@ -1899,7 +1614,6 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
               </div>
             </div>
 
-            {/* Virtual Harakat Keyboard */}
             <div className="flex flex-col gap-2">
               <span className="text-xs font-bold text-[#e6dfd5]">لوحة الحركات والضبط:</span>
               <div className="grid grid-cols-6 gap-2">
@@ -1931,7 +1645,6 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
               </div>
             </div>
 
-            {/* Ready Diacritized Exemplars (نماذج مشكلة جاهزة) */}
             <div className="flex-1 overflow-y-auto no-scrollbar space-y-2 pt-2 border-t border-[#272a31]">
               <span className="text-xs font-bold text-[#e6dfd5]">عبارات مأثورة مضبوطة بالشكل:</span>
               <div className="space-y-1.5 pt-1">
@@ -1942,6 +1655,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
                     onClick={() => {
                       setQuoteText(quote);
                       pushHistory({ text: quote });
+                      triggerStrokeAnimation(quote);
                       setShowTashkeelModal(false);
                     }}
                     className="w-full p-2.5 rounded-xl border border-[#272a31] bg-[#0e1013] hover:bg-[#1f2229] hover:border-[#a68038] text-right font-thuluth text-base text-[#f0e8dc] transition active:scale-[0.99] flex items-center justify-between group cursor-pointer"
@@ -1957,124 +1671,374 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
         </div>
       )}
 
-      {/* 2. CALLIGRAPHY GUIDE BOOK MODAL */}
-      {showGuideModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" dir="rtl">
-          <div className="w-full max-w-2xl bg-[#14161a] border border-[#272a31] rounded-2xl p-6 shadow-2xl flex flex-col gap-4 max-h-[85vh] overflow-hidden">
-            <div className="flex items-center justify-between pb-3 border-b border-[#272a31]">
-              <div className="flex items-center gap-2 text-[#f3cf7a] font-bold font-thuluth text-xl">
-                <BookOpen size={18} />
-                <span>دليل أمهات الخطوط العربية وقواعدها</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowGuideModal(false)}
-                className="p-1.5 text-[#9aa0a6] hover:text-white transition cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 py-2 text-sm text-[#e0d6c8] leading-relaxed">
-              <div className="p-4 rounded-xl border border-[#272a31] bg-[#0e1013]">
-                <h3 className="font-bold text-[#f3cf7a] text-base mb-1 font-thuluth">١. خط الثلث (سيد الخطوط)</h3>
-                <p className="text-xs text-[#9aa0a6]">أمير الخطوط وأصعبها كتابة، يتميز بمداته الرشيقة وتداخل حروفه وجمال تشكيله، وهو الأصل في لافتات المساجد وعناوين الكتب المقدسة.</p>
-              </div>
-
-              <div className="p-4 rounded-xl border border-[#272a31] bg-[#0e1013]">
-                <h3 className="font-bold text-[#f3cf7a] text-base mb-1 font-naskh">٢. خط النسخ (خط التوثيق والمصاحف)</h3>
-                <p className="text-xs text-[#9aa0a6]">أوضح الخطوط قراءة وأكثرها اتزاناً، استُخدم في تدوين المصاحف الشريفة والمخطوطات العلمية لوضوح حروفه ونظام ميزان نقطه.</p>
-              </div>
-
-              <div className="p-4 rounded-xl border border-[#272a31] bg-[#0e1013]">
-                <h3 className="font-bold text-[#f3cf7a] text-base mb-1 font-diwani">٣. خط الديواني (خط البلاغة والفرمانات)</h3>
-                <p className="text-xs text-[#9aa0a6]">أبدعه الخطاطون العثمانيون في دواوين الحكم، يتميز بانحناءاته الحلزونية وتداخله الشاعري الفاتن.</p>
-              </div>
-
-              <div className="p-4 rounded-xl border border-[#272a31] bg-[#0e1013]">
-                <h3 className="font-bold text-[#f3cf7a] text-base mb-1 font-kufi">٤. الخط الكوفي (أقدم الخطوط الهندسية)</h3>
-                <p className="text-xs text-[#9aa0a6]">خط العمارة الإسلامية والمآذن والنقوش الصخرية، يعتمد على الزوايا المستقيمة والتناظر الهندسي الصارم.</p>
-              </div>
-
-              <div className="p-4 rounded-xl border border-[#272a31] bg-[#0e1013]">
-                <h3 className="font-bold text-[#f3cf7a] text-base mb-1 font-ruqah">٥. خط الرقعة (خط السرعة واليوميات)</h3>
-                <p className="text-xs text-[#9aa0a6]">أكثر الخطوط عملية وسرعة في التدوين، يمتاز بحروفه المطموسة واستقامة خطوطه دون تشكيل مفرط.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 3. HELP INSTRUCTIONS MODAL */}
-      {showHelpModal && (
+      {/* 2. SIGNATURE CUSTOMIZATION MODAL */}
+      {showSignatureModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" dir="rtl">
           <div className="w-full max-w-md bg-[#14161a] border border-[#272a31] rounded-2xl p-6 shadow-2xl flex flex-col gap-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#272a31]">
-              <div className="flex items-center gap-2 text-[#f3cf7a] font-bold text-lg">
-                <HelpCircle size={18} />
-                <span>إرشادات استخدام المحراب</span>
+              <div className="flex items-center gap-2 text-[#f3cf7a] font-bold text-base">
+                <span>تخصيص توقيع الخطاط</span>
               </div>
               <button
                 type="button"
-                onClick={() => setShowHelpModal(false)}
+                onClick={() => setShowSignatureModal(false)}
                 className="p-1.5 text-[#9aa0a6] hover:text-white transition cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs text-[#e0d6c8] leading-relaxed">
-              <p>• <strong className="text-[#f3cf7a]">تحرير النص:</strong> أدخل عبارتك باللغة العربية مع إمكانية استخدام أزرار التشكيل السريع.</p>
-              <p>• <strong className="text-[#f3cf7a]">أدوات القلم والألوان:</strong> اختر من بين 6 أدوات كلاسيكية لتغيير سماكة ومدّات الحروف، وطبّق تذهيب عيار 24 أو الحبر الفاحم.</p>
-              <p>• <strong className="text-[#f3cf7a]">الإرشادات والشبكة:</strong> أظهر خطوط الميزان والثلث الأعلى والأسفل لضبط توازن الكلمات.</p>
-              <p>• <strong className="text-[#f3cf7a]">الحفظ والتصدير:</strong> يمكنك حفظ البطاقة مباشرة إلى معرض كروتك، أو تصديرها كملف عالي الدقة (PNG، JPG، PDF، أو خلفية شفافة).</p>
+            <div className="flex items-center justify-between p-3 rounded-xl bg-[#0a0c0f] border border-[#26241e]">
+              <span className="text-sm font-bold text-[#e6dfd5]">إظهار التوقيع على البطاقة</span>
+              <button
+                type="button"
+                onClick={() => setShowSignature(!showSignature)}
+                className={`w-12 h-6 rounded-full p-0.5 transition-colors cursor-pointer ${showSignature ? 'bg-[#3b1419] border border-[#a68038]' : 'bg-[#272a31]'}`}
+              >
+                <div className={`w-5 h-5 rounded-full bg-white transition-transform ${showSignature ? 'translate-x-0' : '-translate-x-6'}`} />
+              </button>
+            </div>
+
+            {showSignature && (
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#9aa0a6]">نص التوقيع:</label>
+                  <input
+                    type="text"
+                    value={authorName}
+                    onChange={(e) => {
+                      setAuthorName(e.target.value);
+                      setSignatureName(`بقلم: ${e.target.value}`);
+                    }}
+                    placeholder="اسم الخطاط..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#272a31] bg-[#0a0c0f] text-white text-sm focus:outline-none focus:border-[#a68038]"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#9aa0a6]">مكان التوقيع:</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'bottom-right', label: 'يمين' },
+                      { id: 'bottom-center', label: 'وسط' },
+                      { id: 'bottom-left', label: 'يسار' },
+                    ].map((pos) => (
+                      <button
+                        key={pos.id}
+                        type="button"
+                        onClick={() => setSignaturePosition(pos.id as any)}
+                        className={`py-2 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                          signaturePosition === pos.id
+                            ? 'bg-[#3b1419] border-[#a68038] text-[#f3cf7a]'
+                            : 'bg-[#0a0c0f] border-[#272a31] text-[#9aa0a6] hover:text-white'
+                        }`}
+                      >
+                        {pos.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowSignatureModal(false)}
+              className="mt-2 w-full py-2.5 bg-[#3b1419] hover:bg-[#4d161e] border border-[#a68038] text-[#f3cf7a] rounded-xl text-sm font-bold transition cursor-pointer"
+            >
+              حفظ الإعدادات
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 3. EXPORT MODAL DIALOG (Smooth Centered Animation with Calligraphy Department Branding) */}
+      {showExportFlyout && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+          dir="rtl"
+          onClick={() => setShowExportFlyout(false)}
+        >
+          <div
+            className="relative w-full max-w-md bg-[#12141a]/98 backdrop-blur-xl border border-[#a37e38]/70 rounded-2xl p-5 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-4 select-none animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Department Identity Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#292c35]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#3b1419] to-[#1c0a0c] border border-[#a37e38]/70 flex items-center justify-center text-[#ffd700] shadow-sm">
+                  <Download size={20} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#f3cf7a] font-tajawal flex items-center gap-2">
+                    <span>تصدير اللوحة الفنية</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1e222b] text-[#c59b27] border border-[#a37e38]/30">300 DPI</span>
+                  </h3>
+                  <p className="text-[11px] text-[#9aa0a6]">قسم الخط العربي الأصيل • استخراج فوري عالي الدقة</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowExportFlyout(false)}
+                className="p-1.5 rounded-lg bg-[#181a20] hover:bg-[#331116] text-[#9aa0a6] hover:text-white transition cursor-pointer border border-[#272a31]"
+                title="إغلاق"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <p className="text-xs text-[#b8b0a2] leading-relaxed">
+              اختر الصيغة المناسبة لحفظ أو مشاركة لوحتك الفنية بأعلى نقاء حبري:
+            </p>
+
+            {/* 4 Instant Export Options */}
+            <div className="flex flex-col gap-2.5">
+              {[
+                {
+                  id: 'transparent',
+                  label: 'مفرغ شفاف (PNG)',
+                  badge: 'للتصميم والمونتاج',
+                  desc: 'العبارة والزخرفة مفرغة دون أي خلفية، مثالية للدمج الحر'
+                },
+                {
+                  id: 'png',
+                  label: 'صورة فائقة الدقة (PNG)',
+                  badge: '300 DPI كاملة',
+                  desc: 'كاملة بالورق المقهر والتذهيب والزخارف الإسلامية المختارة'
+                },
+                {
+                  id: 'jpg',
+                  label: 'صورة خفيفة (JPG)',
+                  badge: 'للمشاركة الفورية',
+                  desc: 'حجم معتدل وسريع للإرسال عبر المنصات والتطبيقات'
+                },
+                {
+                  id: 'pdf',
+                  label: 'مستند طباعة فاخر (PDF)',
+                  badge: 'طباعة أوفست',
+                  desc: 'بأبعاد هندسية دقيقة جاهزة فوراً للمطابع والمعارض'
+                },
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    handleExport(opt.id);
+                    setShowExportFlyout(false);
+                  }}
+                  className="group/item w-full p-3 rounded-xl border border-[#272a33] bg-[#0c0e12]/90 hover:bg-[#2a1215] hover:border-[#d4af37] text-right transition cursor-pointer flex items-center justify-between gap-3 shadow-xs active:scale-[0.99]"
+                >
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-[#f0e8dc] group-hover/item:text-[#f3cf7a] transition font-tajawal">
+                        {opt.label}
+                      </span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#1e222b] text-[#c59b27] font-mono group-hover/item:bg-[#3b171c] border border-[#3a3528]/50">
+                        {opt.badge}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-[#8c949e] truncate leading-tight">
+                      {opt.desc}
+                    </span>
+                  </div>
+                  <div className="w-8 h-8 rounded-lg bg-[#181a22] group-hover/item:bg-[#d4af37] text-white group-hover/item:text-[#120604] flex items-center justify-center shrink-0 transition shadow-inner">
+                    <Download size={16} />
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="pt-2 border-t border-[#252832] flex items-center justify-between text-[11px] text-[#717885]">
+              <span className="flex items-center gap-1.5 text-[#a68038]">
+                <span>❖ قسم الخط العربي الأصيل</span>
+              </span>
+              <span>دقة تصدير فائقة</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* 4. SAVED CARDS GALLERY MODAL */}
-      {showSavedCardsModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" dir="rtl">
-          <div className="w-full max-w-2xl bg-[#14161a] border border-[#272a31] rounded-2xl p-6 shadow-2xl flex flex-col gap-4 max-h-[85vh] overflow-hidden">
-            <div className="flex items-center justify-between pb-3 border-b border-[#272a31]">
-              <div className="flex items-center gap-2 text-[#f3cf7a] font-bold font-thuluth text-xl">
-                <FolderHeart size={18} />
-                <span>معرض البطاقات المحفوظة</span>
+      {/* 4. CALLIGRAPHY GUIDE MODAL */}
+      {showGuideModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4" dir="rtl">
+          <div className="w-full max-w-4xl bg-[#14161a] border border-[#a68038]/60 rounded-2xl p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-4 max-h-[88vh] overflow-hidden">
+
+            {/* Calligraphy Department Identity Top Banner */}
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#17110a] via-[#2a170d] to-[#17110a] border border-[#a68038]/70 p-3.5 sm:p-4 shadow-lg shrink-0">
+              <div className="absolute inset-0 opacity-20 pointer-events-none">
+                <svg className="w-full h-full text-[#c59b27]" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern id="guideIdentityPattern" width="280" height="50" patternUnits="userSpaceOnUse">
+                      <text x="25" y="32" fontSize="22" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor">قلم</text>
+                      <text x="100" y="32" fontSize="24" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor">ميزان</text>
+                      <text x="190" y="32" fontSize="24" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor">خط</text>
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#guideIdentityPattern)" />
+                </svg>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowSavedCardsModal(false)}
-                className="p-1.5 text-[#9aa0a6] hover:text-white transition cursor-pointer"
-              >
-                <X size={18} />
-              </button>
+              <div className="relative z-10 flex flex-col items-center justify-center text-center py-1">
+                <div className="flex items-center gap-2.5 sm:gap-3 text-[#c59b27]">
+                  <span className="w-8 sm:w-16 h-[1.5px] bg-gradient-to-r from-transparent via-[#c59b27] to-[#c59b27]" />
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-[#c59b27] drop-shadow-[0_0_8px_rgba(197,155,39,0.7)]">
+                    <polygon points="12,2 14.5,8.5 21,9.5 16,14.5 17.5,21 12,17.5 6.5,21 8,14.5 3,9.5 9.5,8.5" />
+                    <circle cx="12" cy="12" r="2.5" fill="#15120c" />
+                  </svg>
+                  <span className="text-sm sm:text-base md:text-lg font-black text-white font-tajawal tracking-wide drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+                    دليل قواعد الخطوط
+                  </span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-[#c59b27] drop-shadow-[0_0_8px_rgba(197,155,39,0.7)]">
+                    <polygon points="12,2 14.5,8.5 21,9.5 16,14.5 17.5,21 12,17.5 6.5,21 8,14.5 3,9.5 9.5,8.5" />
+                    <circle cx="12" cy="12" r="2.5" fill="#15120c" />
+                  </svg>
+                  <span className="w-8 sm:w-16 h-[1.5px] bg-gradient-to-l from-transparent via-[#c59b27] to-[#c59b27]" />
+                </div>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto no-scrollbar py-2">
-              {savedCards.length === 0 ? (
-                <div className="text-center py-12 text-[#9aa0a6] flex flex-col items-center gap-3">
-                  <ImageIcon size={32} className="opacity-40" />
-                  <p className="text-xs">لم تقم بحفظ أي بطاقة بعد. انقر على «حفظ البطاقة» لإضافتها لمعرضك.</p>
+            {/* Header Controls */}
+            <div className="flex items-center justify-between pb-2 border-b border-[#272a31] shrink-0">
+              <div className="flex items-center gap-2 text-[#f3cf7a] font-bold text-sm font-tajawal">
+                <BookOpen size={18} className="text-[#c59b27]" />
+                <span>الخطوط المعتمدة ونماذجها ({CALLIGRAPHY_GUIDE_FONTS.length} خطاً)</span>
+              </div>
+              <div className="flex items-center gap-3">
+                {/* Language Switcher */}
+                <div className="flex items-center bg-[#0e1013] border border-[#272a31] rounded-xl p-0.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setGuideLang('ar')}
+                    className={`px-3 py-1 rounded-lg transition cursor-pointer ${
+                      guideLang === 'ar' ? 'bg-[#3b1419] text-[#f3cf7a] font-bold border border-[#a37e38]/50' : 'text-[#8c949e] hover:text-white'
+                    }`}
+                  >
+                    العربية
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGuideLang('en')}
+                    className={`px-3 py-1 rounded-lg transition cursor-pointer ${
+                      guideLang === 'en' ? 'bg-[#3b1419] text-[#f3cf7a] font-bold border border-[#a37e38]/50' : 'text-[#8c949e] hover:text-white'
+                    }`}
+                  >
+                    English (LTR)
+                  </button>
                 </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {savedCards.map(card => (
-                    <div key={card.id} className="rounded-xl border border-[#272a31] bg-[#0e1013] overflow-hidden p-2 flex flex-col gap-2">
-                      <img src={card.dataUrl} alt={card.title} className="w-full h-28 object-contain rounded-lg bg-[#eee5d6]" />
-                      <div className="flex items-center justify-between text-[11px] font-bold text-[#f0e8dc]">
-                        <span className="truncate">{card.title}</span>
-                        <a
-                          href={card.dataUrl}
-                          download={`${card.title}.png`}
-                          className="text-[#b38a3e] hover:text-[#f3cf7a]"
-                          title="تنزيل"
-                        >
-                          <Download size={13} />
-                        </a>
+                <button
+                  type="button"
+                  onClick={() => setShowGuideModal(false)}
+                  className="p-1.5 rounded-lg bg-[#1f2229] hover:bg-[#331116] text-[#9aa0a6] hover:text-white transition cursor-pointer border border-[#272a31]"
+                  title="إغلاق"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Content Body */}
+            <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 text-sm leading-relaxed text-[#d8d0c5]">
+              {guideLang === 'ar' ? (
+                <>
+                  {/* Arabic Intro Canon */}
+                  <div className="p-4 bg-[#0a0c0f] border border-[#a68038]/40 rounded-xl space-y-1.5">
+                    <h4 className="font-bold text-[#f3cf7a] font-thuluth text-xl">مِيزَانُ النُّقْطَةِ وَقَوَاعِدُ ابْنِ مُقْلَةَ:</h4>
+                    <p className="text-xs text-[#a0a6b1] leading-relaxed">
+                      الخط هندسة روحانية ظهرت بآلة جسمانية. تُقاس أبعاد الحروف بنقطة قلم القصب المربعة المائلة، وتُشتق أقطار الدوائر ونسب الألف واللام من ذات الميزان لتحقيق التناغم الأسمى والجمال الخالد.
+                    </p>
+                  </div>
+
+                  {/* Grid of All 14 Fonts (Both Title and Description rendered in the font itself!) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    {CALLIGRAPHY_GUIDE_FONTS.map(font => (
+                      <div
+                        key={font.id}
+                        className="p-4 bg-[#0c0e12] border border-[#272a31] hover:border-[#a68038] rounded-xl flex flex-col justify-between gap-3 transition-all hover:bg-[#11141a] group"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between border-b border-[#20232a] pb-2">
+                            <h3 className={`${font.className} text-xl font-bold text-[#f3cf7a]`}>
+                              {font.nameAr}
+                            </h3>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedFont(font.className);
+                                pushHistory({ font: font.className });
+                                triggerStrokeAnimation(quoteText);
+                                setShowGuideModal(false);
+                              }}
+                              className="text-xs px-2.5 py-1 rounded-lg bg-[#3b1419] hover:bg-[#4d161e] border border-[#a37e38]/70 text-[#f3cf7a] transition active:scale-95 cursor-pointer font-tajawal font-bold"
+                            >
+                              اختيار الخط
+                            </button>
+                          </div>
+
+                          {/* Font Description (Rendered in the exact font!) */}
+                          <p className={`${font.className} text-base text-[#cfc7ba] leading-relaxed`}>
+                            {font.descAr}
+                          </p>
+                        </div>
+
+                        {/* Sample Quote in Font */}
+                        <div className="pt-2 border-t border-[#1e222a] flex items-baseline justify-between bg-[#08090b] p-2.5 rounded-lg">
+                          <span className="text-[11px] text-[#8c949e] font-tajawal">نموذج:</span>
+                          <span className={`${font.className} text-xl text-[#ffffff] font-normal drop-shadow-sm`}>
+                            {font.sampleAr}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </>
+              ) : (
+                /* English Guide (Strictly LTR and text-left) */
+                <div dir="ltr" className="text-left space-y-4">
+                  <div className="p-4 bg-[#0a0c0f] border border-[#a68038]/40 rounded-xl space-y-1.5 text-left">
+                    <h4 className="font-bold text-[#f3cf7a] text-base">The Canon of Proportions & The Rhombic Dot</h4>
+                    <p className="text-xs text-[#a0a6b1] leading-relaxed">
+                      Arabic calligraphy is a sacred spiritual geometry materialized through bodily instruments. The proportions of every letter are calibrated according to the rhombic dot created by the angled reed pen (Qalam), establishing cosmic equilibrium across letterforms.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-left" dir="ltr">
+                    {CALLIGRAPHY_GUIDE_FONTS.map(font => (
+                      <div
+                        key={font.id}
+                        className="p-4 bg-[#0c0e12] border border-[#272a31] hover:border-[#a68038] rounded-xl flex flex-col justify-between gap-3 text-left transition-all hover:bg-[#11141a]"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between border-b border-[#20232a] pb-2">
+                            <h3 className="text-sm font-bold text-[#f3cf7a]">
+                              {font.nameEn}
+                            </h3>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedFont(font.className);
+                                pushHistory({ font: font.className });
+                                triggerStrokeAnimation(quoteText);
+                                setShowGuideModal(false);
+                              }}
+                              className="text-xs px-2.5 py-1 rounded-lg bg-[#3b1419] hover:bg-[#4d161e] border border-[#a37e38]/70 text-[#f3cf7a] transition active:scale-95 cursor-pointer font-bold"
+                            >
+                              Apply Font
+                            </button>
+                          </div>
+                          <p className="text-xs text-[#a0a6b1] leading-relaxed">
+                            {font.descEn}
+                          </p>
+                        </div>
+
+                        {/* Arabic Sample rendered in its authentic script */}
+                        <div className="pt-2 border-t border-[#1e222a] bg-[#08090b] p-2.5 rounded-lg flex items-center justify-between">
+                          <span className="text-[10px] text-[#717885] uppercase tracking-wider">Sample:</span>
+                          <span className={`${font.className} text-xl text-[#ffffff]`} dir="rtl">
+                            {font.sampleAr}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -2082,40 +2046,249 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
         </div>
       )}
 
+      {/* 4. SAVED CARDS GALLERY MODAL (معرض اللوحات الفنية الشامل) */}
+      {showSavedCardsModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4" dir="rtl">
+          <div className="w-full max-w-4xl bg-[#14161a] border border-[#a68038]/60 rounded-2xl p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-4 max-h-[88vh] overflow-hidden">
+            {/* Calligraphy Department Identity Top Banner */}
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#17110a] via-[#2a170d] to-[#17110a] border border-[#a68038]/70 p-3.5 sm:p-4 shadow-lg shrink-0">
+              <div className="absolute inset-0 opacity-20 pointer-events-none">
+                <svg className="w-full h-full text-[#c59b27]" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern id="galleryIdentityPattern" width="280" height="50" patternUnits="userSpaceOnUse">
+                      <text x="25" y="32" fontSize="22" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor">معرض</text>
+                      <text x="110" y="32" fontSize="24" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor">لوحة</text>
+                      <text x="195" y="32" fontSize="22" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor">تذهيب</text>
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#galleryIdentityPattern)" />
+                </svg>
+              </div>
+              <div className="relative z-10 flex flex-col items-center justify-center text-center py-1">
+                <div className="flex items-center gap-2.5 sm:gap-3 text-[#c59b27]">
+                  <span className="w-8 sm:w-16 h-[1.5px] bg-gradient-to-r from-transparent via-[#c59b27] to-[#c59b27]" />
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-[#c59b27] drop-shadow-[0_0_8px_rgba(197,155,39,0.7)]">
+                    <polygon points="12,2 14.5,8.5 21,9.5 16,14.5 17.5,21 12,17.5 6.5,21 8,14.5 3,9.5 9.5,8.5" />
+                    <circle cx="12" cy="12" r="2.5" fill="#15120c" />
+                  </svg>
+                  <span className="text-sm sm:text-base md:text-lg font-black text-white font-tajawal tracking-wide drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+                    معرض اللوحات
+                  </span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-[#c59b27] drop-shadow-[0_0_8px_rgba(197,155,39,0.7)]">
+                    <polygon points="12,2 14.5,8.5 21,9.5 16,14.5 17.5,21 12,17.5 6.5,21 8,14.5 3,9.5 9.5,8.5" />
+                    <circle cx="12" cy="12" r="2.5" fill="#15120c" />
+                  </svg>
+                  <span className="w-8 sm:w-16 h-[1.5px] bg-gradient-to-l from-transparent via-[#c59b27] to-[#c59b27]" />
+                </div>
+              </div>
+            </div>
+
+            {/* Gallery Header Controls */}
+            <div className="flex items-center justify-between pb-2 border-b border-[#272a31] shrink-0">
+              <div className="flex items-center gap-2 text-[#f3cf7a] font-bold text-sm font-tajawal">
+                <FolderHeart size={18} className="text-[#c59b27]" />
+                <span>مقتنيات المعرض ({savedCards.length} لوحة خاصة محفوظة)</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSavedCardsModal(false)}
+                className="p-1.5 rounded-lg bg-[#1f2229] hover:bg-[#331116] text-[#9aa0a6] hover:text-white transition cursor-pointer border border-[#272a31]"
+                title="إغلاق"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Gallery Content */}
+            <div className="flex-1 overflow-y-auto no-scrollbar py-2 space-y-6">
+
+              {/* Section 1: User's Saved Cards */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-bold text-[#e6dfd5] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#d4af37]" />
+                    <span>لوحاتك الخاصة المحفوظة ({savedCards.length})</span>
+                  </h3>
+                  {savedCards.length > 0 && (
+                    <span className="text-[11px] text-[#9aa0a6]">انقر على أي لوحة لفتحها مباشرة في المحراب للتعديل</span>
+                  )}
+                </div>
+
+                {savedCards.length === 0 ? (
+                  <div className="text-center py-8 px-4 border border-dashed border-[#2b251b] rounded-2xl bg-[#0d0f13]/60 flex flex-col items-center gap-2.5 text-[#9aa0a6]">
+                    <ImageIcon size={32} className="text-[#a68038]/40" />
+                    <p className="text-xs text-[#b8b0a2]">لم تقم بحفظ لوحات خاصة بك حتى الآن. يمكنك النقر على «حفظ» في العمود الأيسر في أي وقت.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
+                    {savedCards.map(card => (
+                      <div
+                        key={card.id}
+                        onClick={() => handleLoadCard(card)}
+                        className="group relative rounded-xl border border-[#2b271f] hover:border-[#d4af37] bg-[#0c0e12] overflow-hidden p-2 flex flex-col gap-2 transition-all duration-200 cursor-pointer hover:shadow-xl hover:shadow-amber-950/20 hover:-translate-y-1"
+                      >
+                        <div className="relative w-full aspect-4/3 overflow-hidden rounded-lg bg-[#181a20] flex items-center justify-center border border-[#222]">
+                          <img
+                            src={card.dataUrl}
+                            alt={card.title}
+                            className="w-full h-full object-contain group-hover:scale-105 transition duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center p-2">
+                            <span className="bg-[#3b1419] border border-[#f3cf7a] text-[#f3cf7a] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+                              فتح في المحراب للتعديل
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-xs font-bold text-[#f0e8dc] px-1">
+                          <span className="truncate">{card.title}</span>
+                          <div className="flex items-center gap-1">
+                            <a
+                              href={card.dataUrl}
+                              download={`${card.title}.png`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-[#b38a3e] hover:text-[#f3cf7a] p-1 rounded hover:bg-[#1a1d24]"
+                              title="تنزيل اللوحة كصورة"
+                            >
+                              <Download size={13} />
+                            </a>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const updated = savedCards.filter(c => c.id !== card.id);
+                                setSavedCards(updated);
+                                localStorage.setItem('qul_calligraphy_saved_cards_atelier', JSON.stringify(updated));
+                              }}
+                              className="text-[#8c949e] hover:text-[#e05252] p-1 rounded hover:bg-[#1a1d24]"
+                              title="حذف من المعرض"
+                            >
+                              <X size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Section 2: Curated Heritage Masterpieces (روائع مقتنيات المحراب الجاهزة) */}
+              <div className="pt-4 border-t border-[#252830]">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-bold text-[#e6dfd5] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#a68038]" />
+                    <span>مقتنيات المحراب الكلاسيكية (نماذج جاهزة للتعديل والإبداع)</span>
+                  </h3>
+                  <span className="text-[11px] text-[#9aa0a6]">اختر أي لوحة لتحميل إعداداتها فوراً</span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                  {CURATED_SHOWCASE_CARDS.map(masterpiece => (
+                    <div
+                      key={masterpiece.id}
+                      onClick={() => {
+                        setQuoteText(masterpiece.text);
+                        setSelectedFont(masterpiece.font);
+                        setSelectedPen(masterpiece.pen);
+                        setSelectedInk(masterpiece.color);
+                        setIsGoldFoil(masterpiece.isGold);
+                        setSelectedOrnament(masterpiece.ornament);
+                        setSelectedSize(masterpiece.size);
+                        setSelectedBackground(masterpiece.background);
+                        pushHistory({
+                          text: masterpiece.text,
+                          font: masterpiece.font,
+                          pen: masterpiece.pen,
+                          color: masterpiece.color,
+                          isGold: masterpiece.isGold,
+                          ornament: masterpiece.ornament,
+                          size: masterpiece.size,
+                          background: masterpiece.background
+                        });
+                        triggerStrokeAnimation(masterpiece.text);
+                        setShowSavedCardsModal(false);
+                      }}
+                      className="group relative rounded-xl border border-[#2b271f] hover:border-[#d4af37] bg-[#0c0e12] overflow-hidden p-3 flex flex-col gap-2 transition-all duration-200 cursor-pointer hover:shadow-xl hover:shadow-amber-950/20 hover:-translate-y-1"
+                    >
+                      <div className="w-full aspect-4/3 rounded-lg overflow-hidden flex flex-col items-center justify-center p-3 text-center border border-[#312b20] bg-gradient-to-br from-[#1b1712] to-[#0c0a08] relative group-hover:scale-102 transition">
+                        <span className={`${masterpiece.font} text-base sm:text-lg text-[#f3cf7a] line-clamp-2`}>
+                          {masterpiece.text}
+                        </span>
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center p-2">
+                          <span className="bg-[#3b1419] border border-[#f3cf7a] text-[#f3cf7a] text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg">
+                            فتح وتعديل
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[11px] font-bold text-[#e0d6c8] text-center truncate">
+                        {masterpiece.title}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {/* 5. FULLSCREEN PREVIEW MODAL */}
       {isPreviewMode && (
-        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-6" dir="rtl">
-          <button
-            type="button"
-            onClick={() => setIsPreviewMode(false)}
-            className="absolute top-6 left-6 p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
-          >
-            <X size={22} />
-          </button>
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4 sm:p-8" dir="rtl">
+          <div className="w-full max-w-4xl flex items-center justify-between pb-3">
+            <span className="text-[#f3cf7a] font-bold text-sm">معاينة اللوحة الفاخرة بالإعدادات الحالية</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleExport('png')}
+                className="px-3.5 py-1.5 bg-[#3b1419] hover:bg-[#521720] border border-[#a68038] text-[#f3cf7a] text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md"
+              >
+                <Download size={14} />
+                <span>تحميل كصورة PNG</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPreviewMode(false)}
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
 
-          <div 
-            className="max-w-2xl max-h-[85vh] w-full rounded-2xl overflow-hidden shadow-2xl p-10 flex flex-col justify-between"
+          <div
+            className="relative w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between p-8 sm:p-12 select-none"
             style={{
-              backgroundColor: '#eee5d6',
-              backgroundImage: 'radial-gradient(ellipse at 50% 50%, #faf3e8 0%, #ede3d2 65%, #dfd2bd 100%)',
-              aspectRatio: `${currentRatio}`
+              aspectRatio: `${currentRatio}`,
+              maxHeight: 'calc(88vh - 40px)',
+              ...currentBg.style
             }}
           >
-            <div />
-            
-            <h2
-              className={`w-full text-center ${selectedFont} tracking-normal text-5xl sm:text-6xl md:text-7xl`}
-              style={{
-                color: isGoldFoil ? undefined : selectedInk,
-                ...(isGoldFoil ? goldFoilStyle : {})
-              }}
-            >
-              {quoteText}
-            </h2>
+            <CalligraphyOrnaments ornamentId={selectedOrnament} isDarkBackground={currentBg.isDark} />
 
-            <div className="flex items-center justify-between text-xs text-[#5a4833] font-amiri font-bold">
-              <span>{authorName} ({authorYear})</span>
+            <div />
+
+            <div className="relative z-20 my-auto flex flex-col items-center justify-center text-center px-4 w-full">
+              <h2
+                className={`w-full ${selectedFont} tracking-normal text-5xl leading-relaxed`}
+                style={{
+                  color: isGoldFoil ? undefined : selectedInk,
+                  ...(isGoldFoil ? goldFoilStyle : { WebkitTextFillColor: selectedInk }),
+                  fontWeight: activePenConfig.weight,
+                  WebkitTextStroke: penStrokeCSS
+                }}
+              >
+                {quoteText}
+              </h2>
             </div>
+
+            {showSignature && (
+              <div className="relative z-20 shrink-0 w-full flex items-end justify-end text-xs font-diwani text-[#684c1f]">
+                <span>{authorName ? `بقلم: ${authorName}` : signatureName}</span>
+              </div>
+            )}
           </div>
         </div>
       )}

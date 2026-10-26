@@ -1,24 +1,19 @@
 import React from 'react';
+import { CalligraphyOrnaments as LegacyCalligraphyOrnaments, type OrnamentStyleId as LegacyOrnamentStyleId } from './LegacyCalligraphyOrnaments';
 
-export type OrnamentStyleId =
+export type OrnamentStyleId = LegacyOrnamentStyleId
   | 'none'
-  | 'andalusian_corners'
-  | 'mamluk_geometric'
-  | 'ottoman_tezhip'
-  | 'manuscript_filigree'
-  | 'sultani_crest'
-  | 'central_shamseh'
-  | 'full_arabesque'
-  | 'andalusian_frame'
-  | 'star_medallion_8'
-  | 'star_rosette_12'
-  | 'floral_corners_frame'
-  | 'ottoman_cornerpiece'
-  | 'scalloped_cartouche'
-  | 'dense_arabesque_corner'
+  | 'royal_gilded_frame'
+  | 'andalusian_muqarnas_border'
+  | 'ottoman_tezhip_frame'
   | 'mamluk_geometric_border'
-  | 'palmette_inner_frame'
-  | 'delicate_spandrel';
+  | 'sultani_mihrab_arch'
+  | 'persian_shamsah_crest'
+  | 'khattat_oval_cartouche'
+  | 'floral_palmette_corners'
+  | 'delicate_spandrel'
+  | 'fatimid_cusped_frame'
+  | 'samarkand_turquoise_gold';
 
 export interface OrnamentOption {
   id: OrnamentStyleId;
@@ -27,7 +22,18 @@ export interface OrnamentOption {
 }
 
 export const ORNAMENT_OPTIONS: OrnamentOption[] = [
-  { id: 'none', label: 'بدون زخرفة', desc: 'صفحة نقية بدون حواشي' },
+  { id: 'none', label: 'بدون زخرفة', desc: 'لوحة نقية بدون حواشي أو إطارات' },
+  { id: 'royal_gilded_frame', label: 'إطار تذهيب سلطاني', desc: 'إطار ملكي مزدوج بتوريق عثماني وأركان مذهبة' },
+  { id: 'andalusian_muqarnas_border', label: 'إطار أندلسي مضفر', desc: 'تضفير هندسي إسلامي بنجوم ثمانية وتداخلات قصر الحمراء' },
+  { id: 'ottoman_tezhip_frame', label: 'تذهيب عثماني فاخر', desc: 'زخرفة تذهيب نباتية عثمانية بأوراق الساز وتوريق الرومي' },
+  { id: 'mamluk_geometric_border', label: 'إطار هندسي مملوكي', desc: 'شبكة هندسية مملوكية دقيقة بأركان متقاطعة وأشرطة ذهبية' },
+  { id: 'sultani_mihrab_arch', label: 'محراب سلطاني متوج', desc: 'قوس محراب إسلامي علوي متوج يعلو النص بقنديل معلّق' },
+  { id: 'persian_shamsah_crest', label: 'شمسة إمبراطورية مشعة', desc: 'شمسة مذهبة متوهجة تعلو اللوحة بزخارف مشعة مذهبة' },
+  { id: 'khattat_oval_cartouche', label: 'خرطوشة خطاط مذهبة', desc: 'خرطوشة بيضاوية مقوسة بحواف مذهبة تحيط بالنص' },
+  { id: 'floral_palmette_corners', label: 'أركان توريق نباتي', desc: 'أربعة أركان نباتية مورقة بزخارف ذهبية دقيقة' },
+  { id: 'delicate_spandrel', label: 'زوايا تذهيب رقيقة', desc: 'أركان مشجرة دقيقة بنقوش لولبية إسلامية ناعمة' },
+  { id: 'fatimid_cusped_frame', label: 'إطار كوفي فاطمي مفصص', desc: 'أقواس مفصصة فاطمية مورقة بنقوش جصية عتيقة' },
+  { id: 'samarkand_turquoise_gold', label: 'تطريز سمرقند مذهب', desc: 'شبكة أرابيسك مذهبة مستوحاة من عمارة سمرقند وتيمور' },
   { id: 'andalusian_frame', label: 'إطار أندلسي هندسي', desc: 'إطار متداخل مع مربعات زوايا معقدة' },
   { id: 'star_medallion_8', label: 'شمسة مثمنة مذهبة', desc: 'شمسة إسلامية مثمنة في المركز' },
   { id: 'star_rosette_12', label: 'قنديل شمسة مقوسة', desc: 'شمسة زهرية مقوسة بإشعاع اثني عشري' },
@@ -35,9 +41,7 @@ export const ORNAMENT_OPTIONS: OrnamentOption[] = [
   { id: 'ottoman_cornerpiece', label: 'ركنية عثمانية كبرى', desc: 'ركنية تذهيب عثمانية كبرى مورقة' },
   { id: 'scalloped_cartouche', label: 'خرطوشة / طغراء مقوسة', desc: 'خرطوشة أرابيسك مقوسة محيطية' },
   { id: 'dense_arabesque_corner', label: 'ركنية مشجرة كثيفة', desc: 'تذهيب مثلثي كثيف بأوراق وأزهار الأرابيسك' },
-  { id: 'mamluk_geometric_border', label: 'إطار تذهيب مملوكي', desc: 'إطار هندسي مضفر بزوايا متراكبة' },
   { id: 'palmette_inner_frame', label: 'إطار أزهار وبراعم', desc: 'إطار مقوس للداخل مع براعم لوتس' },
-  { id: 'delicate_spandrel', label: 'زاوية تذهيب رقيقة', desc: 'أركان رقيقة رشيقة بانحناءات نباتية' },
   { id: 'andalusian_corners', label: 'أندلسي مذهب', desc: 'أركان توريق غرناطية مذهبة' },
   { id: 'mamluk_geometric', label: 'مملوكي هندسي', desc: 'نجميات ثمانية وتضفير هندسي' },
   { id: 'ottoman_tezhip', label: 'تذهيب عثماني', desc: 'أغصان مورقة وأزهار لوتس بالذهب' },
@@ -56,440 +60,319 @@ export const CalligraphyOrnaments: React.FC<CalligraphyOrnamentsProps> = ({
   ornamentId,
   isDarkBackground = false
 }) => {
-  if (ornamentId === 'none') return null;
+  if (!ornamentId || ornamentId === 'none') return null;
+  if (!["none","royal_gilded_frame","andalusian_muqarnas_border","ottoman_tezhip_frame","mamluk_geometric_border","sultani_mihrab_arch","persian_shamsah_crest","khattat_oval_cartouche","floral_palmette_corners","delicate_spandrel","fatimid_cusped_frame","samarkand_turquoise_gold"].includes(ornamentId)) {
+    return <LegacyCalligraphyOrnaments ornamentId={ornamentId} isDarkBackground={isDarkBackground} />;
+  }
 
-  const goldPrimary = isDarkBackground ? '#f3cf7a' : '#9e7529';
-  const goldSecondary = isDarkBackground ? '#c59b27' : '#785516';
-  const goldFaint = isDarkBackground ? 'rgba(243, 207, 122, 0.25)' : 'rgba(158, 117, 41, 0.25)';
+  const goldPrimary = isDarkBackground ? '#f5d066' : '#9e7529';
+  const goldSecondary = isDarkBackground ? '#d4af37' : '#785516';
+  const goldLight = isDarkBackground ? '#fff3b0' : '#c59b27';
+  const goldFill = isDarkBackground ? 'rgba(245, 208, 102, 0.14)' : 'rgba(158, 117, 41, 0.09)';
 
   return (
     <div className="absolute inset-0 pointer-events-none z-10 select-none overflow-hidden">
       
-      {/* =================================================================== */}
-      {/* 1. ANDALUSIAN CORNERS (أركان توريق أندلسية مذهبة بدون إطار خارجي)    */}
-      {/* =================================================================== */}
-      {ornamentId === 'andalusian_corners' && (
-        <>
-          {/* Top Right Corner Filigree */}
-          <svg className="absolute top-4 right-4 w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 100 100" fill="none">
-            <path
-              d="M6,6 L94,6 C75,6 60,21 60,40 C60,59 41,60 41,60 C41,60 40,79 21,79 C6,79 6,94 6,94 Z"
-              fill={goldSecondary}
-              opacity="0.2"
-            />
-            <path
-              d="M10,10 L90,10 C70,10 55,25 55,45 C55,65 35,65 35,65 C35,65 35,85 15,85 L10,85 Z"
-              stroke={goldPrimary}
-              strokeWidth="1.5"
-            />
-            <circle cx="28" cy="28" r="4.5" fill={goldPrimary} />
-            <circle cx="28" cy="28" r="2" fill="#fff9e6" />
-            <path d="M12,12 Q38,12 38,38 Q12,38 12,12" fill={goldPrimary} opacity="0.6" />
-            <circle cx="50" cy="18" r="2.5" fill={goldSecondary} />
-            <circle cx="18" cy="50" r="2.5" fill={goldSecondary} />
-          </svg>
+      {/* 1. ROYAL GILDED FRAME */}
+      {ornamentId === 'royal_gilded_frame' && (
+        <svg className="w-full h-full absolute inset-0" viewBox="0 0 800 600" preserveAspectRatio="none" fill="none">
+          <defs>
+            <linearGradient id="royalGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={goldPrimary} />
+              <stop offset="30%" stopColor={goldLight} />
+              <stop offset="70%" stopColor={goldSecondary} />
+              <stop offset="100%" stopColor={goldPrimary} />
+            </linearGradient>
+          </defs>
 
-          {/* Top Left Corner Filigree (Mirrored) */}
-          <svg className="absolute top-4 left-4 w-16 h-16 sm:w-20 sm:h-20 transform -scale-x-100" viewBox="0 0 100 100" fill="none">
-            <path
-              d="M6,6 L94,6 C75,6 60,21 60,40 C60,59 41,60 41,60 C41,60 40,79 21,79 C6,79 6,94 6,94 Z"
-              fill={goldSecondary}
-              opacity="0.2"
-            />
-            <path
-              d="M10,10 L90,10 C70,10 55,25 55,45 C55,65 35,65 35,65 C35,65 35,85 15,85 L10,85 Z"
-              stroke={goldPrimary}
-              strokeWidth="1.5"
-            />
-            <circle cx="28" cy="28" r="4.5" fill={goldPrimary} />
-            <circle cx="28" cy="28" r="2" fill="#fff9e6" />
-            <path d="M12,12 Q38,12 38,38 Q12,38 12,12" fill={goldPrimary} opacity="0.6" />
-            <circle cx="50" cy="18" r="2.5" fill={goldSecondary} />
-            <circle cx="18" cy="50" r="2.5" fill={goldSecondary} />
-          </svg>
+          <rect x="20" y="20" width="760" height="560" rx="8" stroke="url(#royalGoldGrad)" strokeWidth="2.8" />
+          <rect x="28" y="28" width="744" height="544" rx="6" stroke="url(#royalGoldGrad)" strokeWidth="0.8" strokeDasharray="6 3" />
+          <rect x="34" y="34" width="732" height="532" rx="4" stroke="url(#royalGoldGrad)" strokeWidth="1.2" opacity="0.85" />
 
-          {/* Bottom Right Corner Filigree (Mirrored vertically) */}
-          <svg className="absolute bottom-4 right-4 w-16 h-16 sm:w-20 sm:h-20 transform -scale-y-100" viewBox="0 0 100 100" fill="none">
-            <path
-              d="M6,6 L94,6 C75,6 60,21 60,40 C60,59 41,60 41,60 C41,60 40,79 21,79 C6,79 6,94 6,94 Z"
-              fill={goldSecondary}
-              opacity="0.2"
-            />
-            <path
-              d="M10,10 L90,10 C70,10 55,25 55,45 C55,65 35,65 35,65 C35,65 35,85 15,85 L10,85 Z"
-              stroke={goldPrimary}
-              strokeWidth="1.5"
-            />
-            <circle cx="28" cy="28" r="4.5" fill={goldPrimary} />
-            <circle cx="28" cy="28" r="2" fill="#fff9e6" />
-            <path d="M12,12 Q38,12 38,38 Q12,38 12,12" fill={goldPrimary} opacity="0.6" />
-          </svg>
+          {/* 4 Rich Gilded Corners */}
+          <g transform="translate(744, 56)">
+            <path d="M0,0 C-18,0 -28,-14 -28,-28 C-14,-28 0,-18 0,0 Z" fill="url(#royalGoldGrad)" />
+            <circle cx="-14" cy="-14" r="4" fill={goldLight} />
+            <path d="M0,-28 L-28,0" stroke="url(#royalGoldGrad)" strokeWidth="1.8" />
+          </g>
+          <g transform="translate(56, 56)">
+            <path d="M0,0 C18,0 28,-14 28,-28 C14,-28 0,-18 0,0 Z" fill="url(#royalGoldGrad)" />
+            <circle cx="14" cy="-14" r="4" fill={goldLight} />
+            <path d="M0,-28 L28,0" stroke="url(#royalGoldGrad)" strokeWidth="1.8" />
+          </g>
+          <g transform="translate(744, 544)">
+            <path d="M0,0 C-18,0 -28,14 -28,28 C-14,28 0,18 0,0 Z" fill="url(#royalGoldGrad)" />
+            <circle cx="-14" cy="14" r="4" fill={goldLight} />
+            <path d="M0,28 L-28,0" stroke="url(#royalGoldGrad)" strokeWidth="1.8" />
+          </g>
+          <g transform="translate(56, 544)">
+            <path d="M0,0 C18,0 28,14 28,28 C14,28 0,18 0,0 Z" fill="url(#royalGoldGrad)" />
+            <circle cx="14" cy="14" r="4" fill={goldLight} />
+            <path d="M0,28 L28,0" stroke="url(#royalGoldGrad)" strokeWidth="1.8" />
+          </g>
 
-          {/* Bottom Left Corner Filigree (Mirrored both) */}
-          <svg className="absolute bottom-4 left-4 w-16 h-16 sm:w-20 sm:h-20 transform -scale-x-100 -scale-y-100" viewBox="0 0 100 100" fill="none">
-            <path
-              d="M6,6 L94,6 C75,6 60,21 60,40 C60,59 41,60 41,60 C41,60 40,79 21,79 C6,79 6,94 6,94 Z"
-              fill={goldSecondary}
-              opacity="0.2"
-            />
-            <path
-              d="M10,10 L90,10 C70,10 55,25 55,45 C55,65 35,65 35,65 C35,65 35,85 15,85 L10,85 Z"
-              stroke={goldPrimary}
-              strokeWidth="1.5"
-            />
-            <circle cx="28" cy="28" r="4.5" fill={goldPrimary} />
-            <circle cx="28" cy="28" r="2" fill="#fff9e6" />
-            <path d="M12,12 Q38,12 38,38 Q12,38 12,12" fill={goldPrimary} opacity="0.6" />
-          </svg>
-        </>
+          {/* Center Rosettes */}
+          <g transform="translate(400, 20)">
+            <polygon points="0,-8 7,0 0,8 -7,0" fill="url(#royalGoldGrad)" />
+            <circle cx="0" cy="0" r="2.5" fill={goldLight} />
+          </g>
+          <g transform="translate(400, 580)">
+            <polygon points="0,-8 7,0 0,8 -7,0" fill="url(#royalGoldGrad)" />
+            <circle cx="0" cy="0" r="2.5" fill={goldLight} />
+          </g>
+          <g transform="translate(20, 300)">
+            <polygon points="-8,0 0,7 8,0 0,-7" fill="url(#royalGoldGrad)" />
+            <circle cx="0" cy="0" r="2.5" fill={goldLight} />
+          </g>
+          <g transform="translate(780, 300)">
+            <polygon points="-8,0 0,7 8,0 0,-7" fill="url(#royalGoldGrad)" />
+            <circle cx="0" cy="0" r="2.5" fill={goldLight} />
+          </g>
+        </svg>
       )}
 
-      {/* =================================================================== */}
-      {/* 2. MAMLUK GEOMETRIC (تضفير مملوكي بنجوم ثمانية مذهبة)                 */}
-      {/* =================================================================== */}
-      {ornamentId === 'mamluk_geometric' && (
-        <>
-          <div className="absolute inset-4 sm:inset-5 border-2 border-[#c59b27]/80 rounded-lg pointer-events-none">
-            <div className="absolute inset-1.5 border border-dashed border-[#c59b27]/50 rounded pointer-events-none" />
-          </div>
+      {/* 2. ANDALUSIAN MUQARNAS BORDER */}
+      {ornamentId === 'andalusian_muqarnas_border' && (
+        <svg className="w-full h-full absolute inset-0" viewBox="0 0 800 600" preserveAspectRatio="none" fill="none">
+          <rect x="18" y="18" width="764" height="564" stroke={goldPrimary} strokeWidth="2.8" />
+          <rect x="26" y="26" width="748" height="548" stroke={goldSecondary} strokeWidth="1.4" />
 
-          {/* Four 8-Pointed Star Rosettes at Corners */}
-          {['top-3 right-3', 'top-3 left-3', 'bottom-3 right-3', 'bottom-3 left-3'].map((pos, idx) => (
-            <div key={idx} className={`absolute ${pos} w-8 h-8 flex items-center justify-center`}>
-              <svg viewBox="0 0 40 40" className="w-full h-full text-[#c59b27]" fill="currentColor">
-                <polygon points="20,2 24.5,13 36,10 29.5,20 36,30 24.5,27 20,38 15.5,27 4,30 10.5,20 4,10 15.5,13" />
-                <circle cx="20" cy="20" r="4.5" fill={isDarkBackground ? '#0c0c0e' : '#eee5d6'} />
-                <circle cx="20" cy="20" r="2" fill="#c59b27" />
-              </svg>
-            </div>
+          {[
+            { cx: 48, cy: 48 },
+            { cx: 752, cy: 48 },
+            { cx: 48, cy: 552 },
+            { cx: 752, cy: 552 }
+          ].map((corner, i) => (
+            <g key={i} transform={`translate(${corner.cx}, ${corner.cy})`}>
+              <rect x="-18" y="-18" width="36" height="36" fill={goldFill} stroke={goldPrimary} strokeWidth="1.6" />
+              <rect x="-18" y="-18" width="36" height="36" fill={goldFill} stroke={goldPrimary} strokeWidth="1.6" transform="rotate(45)" />
+              <circle cx="0" cy="0" r="5" fill={goldLight} />
+            </g>
           ))}
 
-          {/* Center Side Braided Knot Accents */}
-          <div className="absolute top-1/2 right-3 -translate-y-1/2 w-4 h-12 flex flex-col justify-between items-center text-[#c59b27]">
-            <span className="w-2.5 h-2.5 rotate-45 border border-[#c59b27] bg-[#c59b27]/20" />
-            <span className="w-3.5 h-3.5 rotate-45 border-2 border-[#c59b27] bg-[#c59b27]/40" />
-            <span className="w-2.5 h-2.5 rotate-45 border border-[#c59b27] bg-[#c59b27]/20" />
-          </div>
-          <div className="absolute top-1/2 left-3 -translate-y-1/2 w-4 h-12 flex flex-col justify-between items-center text-[#c59b27]">
-            <span className="w-2.5 h-2.5 rotate-45 border border-[#c59b27] bg-[#c59b27]/20" />
-            <span className="w-3.5 h-3.5 rotate-45 border-2 border-[#c59b27] bg-[#c59b27]/40" />
-            <span className="w-2.5 h-2.5 rotate-45 border border-[#c59b27] bg-[#c59b27]/20" />
-          </div>
-        </>
+          <rect x="66" y="66" width="668" height="468" stroke={goldPrimary} strokeWidth="1.2" strokeDasharray="8 4" opacity="0.85" />
+        </svg>
       )}
 
-      {/* =================================================================== */}
-      {/* 3. OTTOMAN TEZHIP (تذهيب عثماني نباتي مورق)                          */}
-      {/* =================================================================== */}
-      {ornamentId === 'ottoman_tezhip' && (
-        <>
-          <div className="absolute inset-3 sm:inset-4 border border-[#c59b27]/50 rounded-2xl pointer-events-none" />
+      {/* 3. OTTOMAN TEZHIP FRAME */}
+      {ornamentId === 'ottoman_tezhip_frame' && (
+        <svg className="w-full h-full absolute inset-0" viewBox="0 0 800 600" preserveAspectRatio="none" fill="none">
+          <rect x="24" y="24" width="752" height="552" rx="8" stroke={goldPrimary} strokeWidth="2.4" />
+          <rect x="32" y="32" width="736" height="536" rx="6" stroke={goldSecondary} strokeWidth="0.9" opacity="0.8" />
 
-          {/* Top Centered Floral Palmette Crest */}
-          <div className="absolute top-2 inset-x-0 flex justify-center">
-            <svg viewBox="0 0 180 36" className="w-44 h-9 text-[#c59b27]" fill="currentColor">
-              <path d="M90,3 C98,12 112,14 125,10 C110,22 96,28 90,34 C84,28 70,22 55,10 C68,14 82,12 90,3 Z" opacity="0.85" />
-              <circle cx="90" cy="18" r="3.5" fill={isDarkBackground ? '#0c0c0e' : '#eee5d6'} />
-              <circle cx="90" cy="18" r="1.8" fill="#c59b27" />
-              {/* Flanking tendrils */}
-              <path d="M125,10 Q145,8 165,14 Q148,18 132,16" fill="none" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M55,10 Q35,8 15,14 Q32,18 48,16" fill="none" stroke="currentColor" strokeWidth="1.2" />
-            </svg>
-          </div>
-
-          {/* Bottom Centered Floral Palmette Crest */}
-          <div className="absolute bottom-2 inset-x-0 flex justify-center transform rotate-180">
-            <svg viewBox="0 0 180 36" className="w-44 h-9 text-[#c59b27]" fill="currentColor">
-              <path d="M90,3 C98,12 112,14 125,10 C110,22 96,28 90,34 C84,28 70,22 55,10 C68,14 82,12 90,3 Z" opacity="0.85" />
-              <circle cx="90" cy="18" r="3.5" fill={isDarkBackground ? '#0c0c0e' : '#eee5d6'} />
-              <circle cx="90" cy="18" r="1.8" fill="#c59b27" />
-              <path d="M125,10 Q145,8 165,14 Q148,18 132,16" fill="none" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M55,10 Q35,8 15,14 Q32,18 48,16" fill="none" stroke="currentColor" strokeWidth="1.2" />
-            </svg>
-          </div>
-        </>
+          {/* Ottoman Tezhip Saz Leaf Corners */}
+          <g transform="translate(740, 58)">
+            <path d="M0,0 C-32,0 -48,-16 -54,-44 C-38,-48 -16,-32 0,0 Z" fill={goldFill} stroke={goldPrimary} strokeWidth="1.5" />
+            <circle cx="-26" cy="-26" r="4.5" fill={goldPrimary} />
+            <circle cx="-12" cy="-38" r="3" fill={goldLight} />
+            <circle cx="-38" cy="-12" r="3" fill={goldLight} />
+          </g>
+          <g transform="translate(60, 58)">
+            <path d="M0,0 C32,0 48,-16 54,-44 C38,-48 16,-32 0,0 Z" fill={goldFill} stroke={goldPrimary} strokeWidth="1.5" />
+            <circle cx="26" cy="-26" r="4.5" fill={goldPrimary} />
+            <circle cx="12" cy="-38" r="3" fill={goldLight} />
+            <circle cx="38" cy="-12" r="3" fill={goldLight} />
+          </g>
+          <g transform="translate(740, 542)">
+            <path d="M0,0 C-32,0 -48,16 -54,44 C-38,48 -16,32 0,0 Z" fill={goldFill} stroke={goldPrimary} strokeWidth="1.5" />
+            <circle cx="-26" cy="26" r="4.5" fill={goldPrimary} />
+            <circle cx="-12" cy="38" r="3" fill={goldLight} />
+            <circle cx="-38" cy="12" r="3" fill={goldLight} />
+          </g>
+          <g transform="translate(60, 542)">
+            <path d="M0,0 C32,0 48,16 54,44 C38,48 16,32 0,0 Z" fill={goldFill} stroke={goldPrimary} strokeWidth="1.5" />
+            <circle cx="26" cy="26" r="4.5" fill={goldPrimary} />
+            <circle cx="12" cy="38" r="3" fill={goldLight} />
+            <circle cx="38" cy="12" r="3" fill={goldLight} />
+          </g>
+        </svg>
       )}
 
-      {/* =================================================================== */}
-      {/* 4. MANUSCRIPT FILIGREE (حواشي المخطوطات الملكية المزدوجة)           */}
-      {/* =================================================================== */}
-      {ornamentId === 'manuscript_filigree' && (
-        <>
-          <div className="absolute inset-3 sm:inset-4 border-2 border-[#c59b27]/80 rounded-xl pointer-events-none">
-            <div className="absolute inset-2 border border-[#c59b27]/40 rounded-lg pointer-events-none">
-              <div className="absolute inset-1.5 border border-dotted border-[#c59b27]/60 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* 4 Corner Diamonds */}
-          {['top-4 right-4', 'top-4 left-4', 'bottom-4 right-4', 'bottom-4 left-4'].map((pos, idx) => (
-            <div key={idx} className={`absolute ${pos} w-5 h-5 flex items-center justify-center`}>
-              <div className="w-3.5 h-3.5 rotate-45 border-2 border-[#c59b27] bg-[#c59b27]/70" />
-            </div>
-          ))}
-        </>
-      )}
-
-      {/* =================================================================== */}
-      {/* 5. SULTANI CREST (تاج سلطاني ومحراب علوي وسفلي مذهب)                 */}
-      {/* =================================================================== */}
-      {ornamentId === 'sultani_crest' && (
-        <>
-          <div className="absolute inset-x-5 inset-y-4 border-y border-[#c59b27]/60 pointer-events-none" />
-          
-          {/* Top Mihrab Arch Header */}
-          <div className="absolute top-2 inset-x-8 h-10 flex items-center justify-center">
-            <svg viewBox="0 0 320 40" className="w-72 h-10 text-[#c59b27]" fill="none" stroke="currentColor" strokeWidth="1.4">
-              <path d="M10,36 L80,36 Q110,36 130,22 Q160,2 190,22 Q210,36 240,36 L310,36" />
-              <polygon points="160,3 164,12 173,12 166,18 169,27 160,21 151,27 154,18 147,12 156,12" fill="currentColor" stroke="none" />
-              <circle cx="100" cy="32" r="2.5" fill="currentColor" stroke="none" />
-              <circle cx="220" cy="32" r="2.5" fill="currentColor" stroke="none" />
-            </svg>
-          </div>
-
-          {/* Bottom Plinth Footer */}
-          <div className="absolute bottom-2 inset-x-8 h-8 flex items-center justify-center transform rotate-180">
-            <svg viewBox="0 0 320 40" className="w-72 h-8 text-[#c59b27]" fill="none" stroke="currentColor" strokeWidth="1.4">
-              <path d="M10,36 L80,36 Q110,36 130,22 Q160,2 190,22 Q210,36 240,36 L310,36" />
-              <polygon points="160,3 164,12 173,12 166,18 169,27 160,21 151,27 154,18 147,12 156,12" fill="currentColor" stroke="none" />
-            </svg>
-          </div>
-        </>
-      )}
-
-      {/* =================================================================== */}
-      {/* 6. CENTRAL SHAMSEH (شمسة إسلامية مذهبة كعلامة مائية خلف النص)       */}
-      {/* =================================================================== */}
-      {ornamentId === 'central_shamseh' && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
-          <svg viewBox="0 0 200 200" className="w-64 h-64 sm:w-80 sm:h-80 text-[#c59b27]" fill="currentColor">
-            {/* 16-lobed central medallion */}
-            <circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" strokeWidth="1.2" strokeDasharray="3 3" />
-            <circle cx="100" cy="100" r="76" fill="none" stroke="currentColor" strokeWidth="1.5" />
-            <circle cx="100" cy="100" r="62" fill="none" stroke="currentColor" strokeWidth="0.8" />
-            {/* Outer Lobes */}
-            {[...Array(16)].map((_, i) => (
-              <g key={i} transform={`rotate(${i * 22.5} 100 100)`}>
-                <path d="M100,12 C104,20 108,24 100,32 C92,24 96,20 100,12 Z" />
-                <circle cx="100" cy="8" r="2" />
-              </g>
-            ))}
-          </svg>
-        </div>
-      )}
-
-      {/* =================================================================== */}
-      {/* 7. FULL ARABESQUE (إطار أرابيسك مورق متكامل)                          */}
-      {/* =================================================================== */}
-      {ornamentId === 'full_arabesque' && (
-        <>
-          <div
-            className="absolute inset-3 sm:inset-4 border-2 border-[#c59b27]/85 rounded-xl pointer-events-none"
-            style={{
-              boxShadow: '0 0 0 2px rgba(197, 155, 39, 0.25) inset'
-            }}
-          >
-            <div className="absolute inset-2 border border-[#c59b27]/40 rounded-lg pointer-events-none" />
-          </div>
-
-          {/* Running Floral Crests Along Sides */}
-          {['top-2 right-2', 'top-2 left-2', 'bottom-2 right-2', 'bottom-2 left-2'].map((pos, idx) => (
-            <div key={idx} className={`absolute ${pos} w-10 h-10 flex items-center justify-center text-[#c59b27]`}>
-              <svg viewBox="0 0 32 32" className="w-full h-full" fill="currentColor">
-                <path d="M4,4 L28,4 C20,4 16,10 16,16 C16,22 10,28 4,28 Z" opacity="0.75" />
-                <circle cx="10" cy="10" r="2.5" fill="#fff6cc" />
-              </svg>
-            </div>
-          ))}
-        </>
-      )}
-
-      {/* =================================================================== */}
-      {/* 8. ANDALUSIAN FRAME (إطار أندلسي هندسي)                              */}
-      {/* =================================================================== */}
-      {ornamentId === 'andalusian_frame' && (
-        <>
-          <div className="absolute inset-4 sm:inset-5 border-2 border-[#e5b84c]/90 rounded-lg pointer-events-none">
-            <div className="absolute inset-1.5 border border-[#e5b84c]/40 rounded pointer-events-none" />
-          </div>
-          {['top-3 right-3', 'top-3 left-3', 'bottom-3 right-3', 'bottom-3 left-3'].map((pos, idx) => (
-            <div key={idx} className={`absolute ${pos} w-7 h-7 flex items-center justify-center`}>
-              <div className="w-6 h-6 border border-[#e5b84c] bg-[#e5b84c]/20 flex items-center justify-center">
-                <div className="w-2.5 h-2.5 rotate-45 bg-[#e5b84c]" />
-              </div>
-            </div>
-          ))}
-        </>
-      )}
-
-      {/* =================================================================== */}
-      {/* 9. STAR MEDALLION 8 (شمسة مثمنة مذهبة)                              */}
-      {/* =================================================================== */}
-      {ornamentId === 'star_medallion_8' && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-25">
-          <svg viewBox="0 0 120 120" className="w-64 h-64 sm:w-72 sm:h-72 text-[#e5b84c]" fill="currentColor">
-            <polygon points="60,10 72,40 102,32 84,56 108,68 84,80 96,104 68,92 60,112 52,92 24,104 36,80 12,68 36,56 18,32 48,40" />
-            <circle cx="60" cy="60" r="22" fill={isDarkBackground ? '#0c0c0e' : '#eee5d6'} stroke="currentColor" strokeWidth="2" />
-            <circle cx="60" cy="60" r="12" fill="currentColor" />
-          </svg>
-        </div>
-      )}
-
-      {/* =================================================================== */}
-      {/* 10. STAR ROSETTE 12 (قنديل شمسة مقوسة)                               */}
-      {/* =================================================================== */}
-      {ornamentId === 'star_rosette_12' && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-25">
-          <svg viewBox="0 0 140 140" className="w-72 h-72 sm:w-80 sm:h-80 text-[#e5b84c]" fill="none" stroke="currentColor">
-            <circle cx="70" cy="70" r="60" strokeWidth="1.5" strokeDasharray="4 4" />
-            <circle cx="70" cy="70" r="48" strokeWidth="2" />
-            <circle cx="70" cy="70" r="32" strokeWidth="1" />
-            <polygon points="70,16 82,50 118,50 90,70 102,104 70,84 38,104 50,70 22,50 58,50" fill="currentColor" fillOpacity="0.25" strokeWidth="1.5" />
-          </svg>
-        </div>
-      )}
-
-      {/* =================================================================== */}
-      {/* 11. FLORAL CORNERS FRAME (إطار أركان توريق)                         */}
-      {/* =================================================================== */}
-      {ornamentId === 'floral_corners_frame' && (
-        <>
-          <div className="absolute inset-4 sm:inset-5 border border-[#e5b84c]/80 rounded-xl pointer-events-none" />
-          {/* 4 floral corner medallions */}
-          <div className="absolute top-4 right-4 w-12 h-12 text-[#e5b84c]">
-            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.2">
-              <path d="M4 20 Q16 16 20 4" />
-              <circle cx="16" cy="16" r="3" fill="currentColor" />
-              <path d="M4 4 Q20 4 20 20" />
-            </svg>
-          </div>
-          <div className="absolute top-4 left-4 w-12 h-12 text-[#e5b84c] -scale-x-100">
-            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.2">
-              <path d="M4 20 Q16 16 20 4" />
-              <circle cx="16" cy="16" r="3" fill="currentColor" />
-              <path d="M4 4 Q20 4 20 20" />
-            </svg>
-          </div>
-          <div className="absolute bottom-4 right-4 w-12 h-12 text-[#e5b84c] -scale-y-100">
-            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.2">
-              <path d="M4 20 Q16 16 20 4" />
-              <circle cx="16" cy="16" r="3" fill="currentColor" />
-              <path d="M4 4 Q20 4 20 20" />
-            </svg>
-          </div>
-          <div className="absolute bottom-4 left-4 w-12 h-12 text-[#e5b84c] -scale-x-100 -scale-y-100">
-            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.2">
-              <path d="M4 20 Q16 16 20 4" />
-              <circle cx="16" cy="16" r="3" fill="currentColor" />
-              <path d="M4 4 Q20 4 20 20" />
-            </svg>
-          </div>
-        </>
-      )}
-
-      {/* =================================================================== */}
-      {/* 12. OTTOMAN CORNERPIECE (ركنية عثمانية كبرى)                         */}
-      {/* =================================================================== */}
-      {ornamentId === 'ottoman_cornerpiece' && (
-        <>
-          <div className="absolute top-3 right-3 w-28 h-28 text-[#e5b84c] pointer-events-none">
-            <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M4 4 L96 4 L96 96 C80 75 75 55 55 55 C35 55 35 35 4 4 Z" fill="currentColor" fillOpacity="0.18" />
-              <circle cx="70" cy="30" r="4" fill="currentColor" />
-              <circle cx="85" cy="18" r="2.5" fill="currentColor" />
-              <circle cx="55" cy="25" r="2.5" fill="currentColor" />
-              <circle cx="75" cy="55" r="2.5" fill="currentColor" />
-            </svg>
-          </div>
-          <div className="absolute bottom-3 left-3 w-28 h-28 text-[#e5b84c] pointer-events-none -scale-x-100 -scale-y-100">
-            <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M4 4 L96 4 L96 96 C80 75 75 55 55 55 C35 55 35 35 4 4 Z" fill="currentColor" fillOpacity="0.18" />
-              <circle cx="70" cy="30" r="4" fill="currentColor" />
-              <circle cx="85" cy="18" r="2.5" fill="currentColor" />
-              <circle cx="55" cy="25" r="2.5" fill="currentColor" />
-              <circle cx="75" cy="55" r="2.5" fill="currentColor" />
-            </svg>
-          </div>
-        </>
-      )}
-
-      {/* =================================================================== */}
-      {/* 13. SCALLOPED CARTOUCHE (خرطوشة / طغراء مقوسة)                       */}
-      {/* =================================================================== */}
-      {ornamentId === 'scalloped_cartouche' && (
-        <div className="absolute inset-4 sm:inset-6 flex items-center justify-center pointer-events-none">
-          <svg viewBox="0 0 320 220" className="w-full h-full text-[#e5b84c]" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <rect x="10" y="10" width="300" height="200" rx="40" strokeDasharray="6 4" strokeWidth="1.2" />
-            <rect x="18" y="18" width="284" height="184" rx="34" strokeWidth="1.6" />
-            <circle cx="160" cy="18" r="5" fill="currentColor" />
-            <circle cx="160" cy="202" r="5" fill="currentColor" />
-          </svg>
-        </div>
-      )}
-
-      {/* =================================================================== */}
-      {/* 14. DENSE ARABESQUE CORNER (ركنية مشجرة كثيفة)                       */}
-      {/* =================================================================== */}
-      {ornamentId === 'dense_arabesque_corner' && (
-        <>
-          <div className="absolute top-2 right-2 w-24 h-24 text-[#e5b84c] pointer-events-none">
-            <svg viewBox="0 0 80 80" fill="currentColor">
-              <polygon points="4,4 76,4 4,76" opacity="0.25" />
-              <path d="M4,76 L76,4" stroke="currentColor" strokeWidth="2" fill="none" />
-              <circle cx="28" cy="28" r="5" />
-              <circle cx="48" cy="20" r="3.5" />
-              <circle cx="20" cy="48" r="3.5" />
-            </svg>
-          </div>
-          <div className="absolute bottom-2 left-2 w-24 h-24 text-[#e5b84c] pointer-events-none -scale-x-100 -scale-y-100">
-            <svg viewBox="0 0 80 80" fill="currentColor">
-              <polygon points="4,4 76,4 4,76" opacity="0.25" />
-              <path d="M4,76 L76,4" stroke="currentColor" strokeWidth="2" fill="none" />
-              <circle cx="28" cy="28" r="5" />
-              <circle cx="48" cy="20" r="3.5" />
-              <circle cx="20" cy="48" r="3.5" />
-            </svg>
-          </div>
-        </>
-      )}
-
-      {/* =================================================================== */}
-      {/* 15. MAMLUK GEOMETRIC BORDER (إطار تذهيب مملوكي)                      */}
-      {/* =================================================================== */}
+      {/* 4. MAMLUK GEOMETRIC BORDER */}
       {ornamentId === 'mamluk_geometric_border' && (
-        <div className="absolute inset-4 sm:inset-5 border-2 border-[#e5b84c]/90 rounded-lg pointer-events-none">
-          <div className="absolute inset-1.5 border border-[#e5b84c]/50 rounded pointer-events-none" />
-          <div className="absolute inset-3 border-2 border-[#e5b84c]/70 rounded pointer-events-none" />
-        </div>
+        <svg className="w-full h-full absolute inset-0" viewBox="0 0 800 600" preserveAspectRatio="none" fill="none">
+          <rect x="20" y="20" width="760" height="560" stroke={goldPrimary} strokeWidth="2.6" />
+          <rect x="28" y="28" width="744" height="544" stroke={goldSecondary} strokeWidth="1" />
+          <rect x="40" y="40" width="720" height="520" stroke={goldPrimary} strokeWidth="1.6" />
+
+          <line x1="20" y1="20" x2="40" y2="40" stroke={goldPrimary} strokeWidth="2.2" />
+          <line x1="780" y1="20" x2="760" y2="40" stroke={goldPrimary} strokeWidth="2.2" />
+          <line x1="20" y1="580" x2="40" y2="560" stroke={goldPrimary} strokeWidth="2.2" />
+          <line x1="780" y1="580" x2="760" y2="560" stroke={goldPrimary} strokeWidth="2.2" />
+        </svg>
       )}
 
-      {/* =================================================================== */}
-      {/* 16. PALMETTE INNER FRAME (إطار أزهار وبراعم)                          */}
-      {/* =================================================================== */}
-      {ornamentId === 'palmette_inner_frame' && (
-        <div className="absolute inset-4 sm:inset-6 border-2 border-[#e5b84c]/80 rounded-3xl pointer-events-none">
-          <div className="absolute top-2 right-2 w-6 h-6 border-b-2 border-l-2 border-[#e5b84c] rounded-bl-xl" />
-          <div className="absolute top-2 left-2 w-6 h-6 border-b-2 border-r-2 border-[#e5b84c] rounded-br-xl" />
-          <div className="absolute bottom-2 right-2 w-6 h-6 border-t-2 border-l-2 border-[#e5b84c] rounded-tl-xl" />
-          <div className="absolute bottom-2 left-2 w-6 h-6 border-t-2 border-r-2 border-[#e5b84c] rounded-tr-xl" />
-        </div>
+      {/* 5. SULTANI MIHRAB ARCH */}
+      {ornamentId === 'sultani_mihrab_arch' && (
+        <svg className="w-full h-full absolute inset-0" viewBox="0 0 800 600" preserveAspectRatio="none" fill="none">
+          <rect x="22" y="22" width="756" height="556" rx="8" stroke={goldPrimary} strokeWidth="2" />
+          <rect x="30" y="30" width="740" height="540" rx="6" stroke={goldSecondary} strokeWidth="0.8" opacity="0.6" />
+
+          {/* Crown Arch at Top */}
+          <path
+            d="M75,145 L75,90 Q75,48 180,46 Q280,44 360,32 Q400,18 440,32 Q520,44 620,46 Q725,48 725,90 L725,145"
+            stroke={goldPrimary}
+            strokeWidth="2.6"
+            fill="none"
+          />
+          <path
+            d="M90,135 L90,95 Q90,62 190,60 Q290,58 370,48 Q400,36 430,48 Q510,58 610,60 Q710,62 710,95 L710,135"
+            stroke={goldSecondary}
+            strokeWidth="1"
+            strokeDasharray="4 2"
+            fill={goldFill}
+          />
+
+          <g transform="translate(400, 72)">
+            <line x1="0" y1="-35" x2="0" y2="0" stroke={goldPrimary} strokeWidth="1.4" />
+            <polygon points="0,0 8,14 0,24 -8,14" fill={goldPrimary} stroke={goldLight} strokeWidth="0.8" />
+            <circle cx="0" cy="12" r="3" fill="#fff" />
+            <line x1="0" y1="24" x2="0" y2="30" stroke={goldPrimary} strokeWidth="1.2" />
+            <circle cx="0" cy="31" r="2" fill={goldLight} />
+          </g>
+        </svg>
       )}
 
-      {/* =================================================================== */}
-      {/* 17. DELICATE SPANDREL (زاوية تذهيب رقيقة)                            */}
-      {/* =================================================================== */}
+      {/* 6. PERSIAN SHAMSAH CREST */}
+      {ornamentId === 'persian_shamsah_crest' && (
+        <svg className="w-full h-full absolute inset-0" viewBox="0 0 800 600" preserveAspectRatio="none" fill="none">
+          <rect x="22" y="22" width="756" height="556" rx="6" stroke={goldPrimary} strokeWidth="1.6" />
+          <rect x="28" y="28" width="744" height="544" rx="4" stroke={goldSecondary} strokeWidth="0.7" strokeDasharray="4 2" />
+
+          {/* 24-point radiant Shamsah */}
+          <g transform="translate(400, 65)">
+            {[...Array(24)].map((_, i) => (
+              <polygon
+                key={i}
+                points="0,-34 3,-18 0,-15 -3,-18"
+                fill={goldPrimary}
+                transform={`rotate(${i * 15})`}
+              />
+            ))}
+            <circle cx="0" cy="0" r="19" fill={goldFill} stroke={goldPrimary} strokeWidth="1.6" />
+            <circle cx="0" cy="0" r="13" stroke={goldLight} strokeWidth="1" strokeDasharray="2 2" />
+            <circle cx="0" cy="0" r="5.5" fill={goldPrimary} />
+            <circle cx="0" cy="0" r="2" fill="#fff" />
+          </g>
+
+          <line x1="140" y1="65" x2="340" y2="65" stroke={goldPrimary} strokeWidth="1.4" />
+          <polygon points="140,65 155,62 155,68" fill={goldPrimary} />
+          <line x1="460" y1="65" x2="660" y2="65" stroke={goldPrimary} strokeWidth="1.4" />
+          <polygon points="660,65 645,62 645,68" fill={goldPrimary} />
+        </svg>
+      )}
+
+      {/* 7. KHATTAT OVAL CARTOUCHE */}
+      {ornamentId === 'khattat_oval_cartouche' && (
+        <svg className="w-full h-full absolute inset-0" viewBox="0 0 800 600" preserveAspectRatio="none" fill="none">
+          <rect x="18" y="18" width="764" height="564" stroke={goldSecondary} strokeWidth="1" opacity="0.6" />
+          <rect x="24" y="24" width="752" height="552" stroke={goldPrimary} strokeWidth="2" />
+
+          <ellipse cx="400" cy="300" rx="335" ry="175" stroke={goldPrimary} strokeWidth="2.2" fill={goldFill} />
+          <ellipse cx="400" cy="300" rx="325" ry="165" stroke={goldSecondary} strokeWidth="0.8" strokeDasharray="5 3" />
+
+          <g transform="translate(65, 300)">
+            <polygon points="0,-14 14,0 0,14 -14,0" fill={goldPrimary} />
+            <circle cx="0" cy="0" r="3.5" fill={goldLight} />
+          </g>
+          <g transform="translate(735, 300)">
+            <polygon points="0,-14 14,0 0,14 -14,0" fill={goldPrimary} />
+            <circle cx="0" cy="0" r="3.5" fill={goldLight} />
+          </g>
+        </svg>
+      )}
+
+      {/* 8. FLORAL PALMETTE CORNERS */}
+      {ornamentId === 'floral_palmette_corners' && (
+        <svg className="w-full h-full absolute inset-0" viewBox="0 0 800 600" preserveAspectRatio="none" fill="none">
+          <rect x="26" y="26" width="748" height="548" rx="4" stroke={goldPrimary} strokeWidth="1.4" />
+
+          <g transform="translate(725, 46)">
+            <path d="M0,0 C-22,0 -38,-16 -44,-44 C-16,-38 0,-22 0,0 Z" fill={goldFill} stroke={goldPrimary} strokeWidth="1.6" />
+            <circle cx="-20" cy="-20" r="3.5" fill={goldPrimary} />
+            <path d="M-12,-6 Q-28,-28 -6,-12" stroke={goldLight} strokeWidth="1.2" />
+          </g>
+          <g transform="translate(75, 46)">
+            <path d="M0,0 C22,0 38,-16 44,-44 C16,-38 0,-22 0,0 Z" fill={goldFill} stroke={goldPrimary} strokeWidth="1.6" />
+            <circle cx="20" cy="-20" r="3.5" fill={goldPrimary} />
+            <path d="M12,-6 Q28,-28 6,-12" stroke={goldLight} strokeWidth="1.2" />
+          </g>
+          <g transform="translate(725, 554)">
+            <path d="M0,0 C-22,0 -38,16 -44,44 C-16,38 0,22 0,0 Z" fill={goldFill} stroke={goldPrimary} strokeWidth="1.6" />
+            <circle cx="-20" cy="20" r="3.5" fill={goldPrimary} />
+            <path d="M-12,6 Q-28,28 -6,12" stroke={goldLight} strokeWidth="1.2" />
+          </g>
+          <g transform="translate(75, 554)">
+            <path d="M0,0 C22,0 38,16 44,44 C16,38 0,22 0,0 Z" fill={goldFill} stroke={goldPrimary} strokeWidth="1.6" />
+            <circle cx="20" cy="20" r="3.5" fill={goldPrimary} />
+            <path d="M12,6 Q28,28 6,12" stroke={goldLight} strokeWidth="1.2" />
+          </g>
+        </svg>
+      )}
+
+      {/* 9. DELICATE SPANDREL */}
       {ornamentId === 'delicate_spandrel' && (
-        <>
-          <div className="absolute inset-4 sm:inset-5 border border-[#e5b84c]/40 rounded-xl pointer-events-none" />
-          {['top-3 right-3', 'top-3 left-3', 'bottom-3 right-3', 'bottom-3 left-3'].map((pos, idx) => (
-            <div key={idx} className={`absolute ${pos} w-8 h-8 flex items-center justify-center text-[#e5b84c]`}>
-              <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" strokeWidth="1.2">
-                <path d="M4 26 L4 8 C4 8 8 4 16 4 L26 4" />
-                <circle cx="12" cy="12" r="2.5" fill="currentColor" />
-              </svg>
-            </div>
+        <svg className="w-full h-full absolute inset-0" viewBox="0 0 800 600" preserveAspectRatio="none" fill="none">
+          <rect x="24" y="24" width="752" height="552" stroke={goldPrimary} strokeWidth="1.5" />
+
+          <g transform="translate(776, 24)">
+            <path d="M0,0 L-48,0 C-48,26 -26,48 0,48 Z" fill={goldFill} stroke={goldPrimary} strokeWidth="1.5" />
+            <circle cx="-20" cy="20" r="3.5" fill={goldLight} />
+          </g>
+          <g transform="translate(24, 24)">
+            <path d="M0,0 L48,0 C48,26 26,48 0,48 Z" fill={goldFill} stroke={goldPrimary} strokeWidth="1.5" />
+            <circle cx="20" cy="20" r="3.5" fill={goldLight} />
+          </g>
+          <g transform="translate(776, 576)">
+            <path d="M0,0 L-48,0 C-48,-26 -26,-48 0,-48 Z" fill={goldFill} stroke={goldPrimary} strokeWidth="1.5" />
+            <circle cx="-20" cy="-20" r="3.5" fill={goldLight} />
+          </g>
+          <g transform="translate(24, 576)">
+            <path d="M0,0 L48,0 C48,-26 26,-48 0,-48 Z" fill={goldFill} stroke={goldPrimary} strokeWidth="1.5" />
+            <circle cx="20" cy="-20" r="3.5" fill={goldLight} />
+          </g>
+        </svg>
+      )}
+
+      {/* 10. FATIMID CUSPED FRAME */}
+      {ornamentId === 'fatimid_cusped_frame' && (
+        <svg className="w-full h-full absolute inset-0" viewBox="0 0 800 600" preserveAspectRatio="none" fill="none">
+          <rect x="22" y="22" width="756" height="556" stroke={goldPrimary} strokeWidth="2.2" />
+          <path
+            d="M50,50 Q100,25 150,50 Q200,25 250,50 Q300,25 350,50 Q400,25 450,50 Q500,25 550,50 Q600,25 650,50 Q700,25 750,50"
+            stroke={goldSecondary}
+            strokeWidth="1.2"
+          />
+          <path
+            d="M50,550 Q100,575 150,550 Q200,575 250,550 Q300,575 350,550 Q400,575 450,550 Q500,575 550,550 Q600,575 650,550 Q700,575 750,550"
+            stroke={goldSecondary}
+            strokeWidth="1.2"
+          />
+          <rect x="42" y="42" width="716" height="516" stroke={goldPrimary} strokeWidth="1" strokeDasharray="5 3" />
+        </svg>
+      )}
+
+      {/* 11. SAMARKAND TURQUOISE & GOLD */}
+      {ornamentId === 'samarkand_turquoise_gold' && (
+        <svg className="w-full h-full absolute inset-0" viewBox="0 0 800 600" preserveAspectRatio="none" fill="none">
+          <rect x="20" y="20" width="760" height="560" stroke={goldPrimary} strokeWidth="2.8" />
+          <rect x="30" y="30" width="740" height="540" stroke="#0d5c63" strokeWidth="2" opacity="0.75" />
+          <rect x="38" y="38" width="724" height="524" stroke={goldSecondary} strokeWidth="1" strokeDasharray="6 3" />
+
+          {/* 4 Samarkand Star tiles */}
+          {[
+            { cx: 55, cy: 55 },
+            { cx: 745, cy: 55 },
+            { cx: 55, cy: 545 },
+            { cx: 745, cy: 545 }
+          ].map((c, idx) => (
+            <g key={idx} transform={`translate(${c.cx}, ${c.cy})`}>
+              <rect x="-16" y="-16" width="32" height="32" fill="#0d5c63" stroke={goldPrimary} strokeWidth="1.4" />
+              <rect x="-16" y="-16" width="32" height="32" fill="#093f44" stroke={goldLight} strokeWidth="1.4" transform="rotate(45)" />
+              <circle cx="0" cy="0" r="4.5" fill={goldLight} />
+            </g>
           ))}
-        </>
+        </svg>
       )}
 
     </div>
