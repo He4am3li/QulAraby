@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { getBankQuestion } from '../data/placementQuestionBank';
 import { useNavigate } from 'react-router-dom';
 import { 
   Trophy, Star, Zap, ChevronRight, Loader2, Volume2, 
@@ -214,32 +215,28 @@ export const PlacementTest: React.FC = () => {
   };
 
   const getFallbackQuestion = (skill: string, subSkill: string, idx: number) => {
-    const fallbacks: Record<string, any[]> = {
-      letters: [
-        { skill: 'letters', subSkill: 'Sound Recognition', difficulty: 1, question: 'اختر الصوت المطابق لحرف (أ)', options: ['أَ', 'بَ', 'تَ', 'ثَ'], correctAnswer: 'أَ', translation_instruction: 'Choose the sound' },
-        { skill: 'letters', subSkill: 'Letter Shape Recognition', difficulty: 1, question: 'ما هو الشكل المناسب لحرف الباء في أول الكلمة؟', options: ['بـ', 'ـبـ', 'ـب', 'ب'], correctAnswer: 'بـ', translation_instruction: 'Select the correct letter form' }
-      ],
-      vocab: [
-        { skill: 'vocab', subSkill: 'Word Meaning', difficulty: 2, question: 'ما معنى كلمة "كِتَاب"؟', options: ['Book', 'Pen', 'School', 'Teacher'], correctAnswer: 'Book', translation_instruction: '' },
-        { skill: 'vocab', subSkill: 'Word Meaning', difficulty: 2, question: 'ما معنى كلمة "مَدْرَسَة"؟', options: ['School', 'House', 'Market', 'Hospital'], correctAnswer: 'School', translation_instruction: '' }
-      ],
-      grammar: [
-        { skill: 'grammar', subSkill: 'Pronouns', difficulty: 2, question: 'اختر الضمير المناسب: (...) طَالِبٌ مجتهدٌ.', options: ['هُوَ', 'هِيَ', 'هُمْ', 'أَنْتُنَّ'], correctAnswer: 'هُوَ', translation_instruction: '' },
-        { skill: 'grammar', subSkill: 'Verb Conjugation', difficulty: 3, question: 'اختر التصريف الصحيح: الطَّالِبُ (...) الدَّرْسَ.', options: ['يَكْتُبُ', 'تَكْتُبُ', 'يَكْتُبُونَ', 'تَكْتُبْنَ'], correctAnswer: 'يَكْتُبُ', translation_instruction: '' }
-      ],
-      translator: [
-        { skill: 'translator', subSkill: 'Word Translation', difficulty: 2, question: 'اختر الترجمة الصحيحة لكلمة: "House"', options: ['بَيْت', 'مَدْرَسَة', 'شَارِع', 'سَيَّارَة'], correctAnswer: 'بَيْت', translation_instruction: '' },
-        { skill: 'translator', subSkill: 'Simple Sentence Translation', difficulty: 3, question: 'اختر الترجمة الصحيحة لجملة: "I read a book"', options: ['أَقْرَأُ كِتَاباً', 'أَكْتُبُ كِتَاباً', 'أَشْتَرِي كِتَاباً', 'أَحْمِلُ كِتَاباً'], correctAnswer: 'أَقْرَأُ كِتَاباً', translation_instruction: '' }
-      ]
-    };
-
-    const key = (skill || 'vocab').toLowerCase();
-    const list = fallbacks[key] || fallbacks.vocab;
-    const item = list[(idx || 0) % list.length];
+    const item = getBankQuestion(skill, idx);
     return {
       ...item,
-      translation_instruction: key === 'letters' ? (item.translation_instruction || 'Choose the correct answer') : ''
+      skill,
+      subSkill,
+      difficulty: Math.max(1, Math.min(10, currentDifficulty)),
+      translation_instruction: skill === 'letters' ? 'Choose the correct answer' : ''
     };
+  };
+
+  // Each question's correct answer rotates through the four positions, with a
+  // per-session offset. Never change the answer key when rearranging options.
+  const answerOffsetRef = React.useRef(Math.floor(Math.random() * 4));
+  const arrangeQuestion = (question: any, idx: number) => {
+    const options = [...question.options];
+    const correct = question.correctAnswer;
+    const answerIndex = options.indexOf(correct);
+    if (answerIndex < 0 || options.length !== 4) return question;
+    options.splice(answerIndex, 1);
+    const slot = (idx + answerOffsetRef.current) % 4;
+    options.splice(slot, 0, correct);
+    return { ...question, options };
   };
 
   // Open immediately; never wait for an external AI response before the first question.
@@ -247,7 +244,8 @@ export const PlacementTest: React.FC = () => {
     setRetries(0);
     setLoading(false);
     setCurrentIdx(0);
-    setQuestions([getFallbackQuestion('letters', 'Sound Recognition', 0)]);
+    answerOffsetRef.current = Math.floor(Math.random() * 4);
+    setQuestions([arrangeQuestion(getFallbackQuestion('letters', 'Sound Recognition', 0), 0)]);
     setStep('testing');
   };
 
@@ -316,6 +314,15 @@ export const PlacementTest: React.FC = () => {
       subSkill = "Communicative Skill Competency";
     }
 
+    // Use a complete local bank so network latency and API quota never repeat
+    // two fallback questions or stall the learner between questions.
+    const nextQuestion = arrangeQuestion(getFallbackQuestion(skill, subSkill, nextIdx), nextIdx);
+    setQuestions(prev => [...prev, nextQuestion]);
+    setCurrentIdx(nextIdx);
+    setIsAnswered(false);
+    setSelectedOption(null);
+    return;
+
     try {
       const schema = {
         type: GenType.OBJECT,
@@ -370,7 +377,7 @@ export const PlacementTest: React.FC = () => {
       const rawQ = safeJSONParse(response.text, {});
       const nextQ = sanitizeQuestion(rawQ, skill, subSkill, nextIdx);
       
-      setQuestions(prev => [...prev, nextQ]);
+      setQuestions(prev => [...prev, arrangeQuestion(nextQ, nextIdx)]);
       setCurrentIdx(nextIdx);
       setIsAnswered(false);
       setSelectedOption(null);
@@ -379,7 +386,7 @@ export const PlacementTest: React.FC = () => {
       // Keep the assessment usable when the model is slow or unavailable.
         // Fallback question gracefully
         const fallbackQ = getFallbackQuestion(skill, subSkill, nextIdx);
-        setQuestions(prev => [...prev, fallbackQ]);
+        setQuestions(prev => [...prev, arrangeQuestion(fallbackQ, nextIdx)]);
         setCurrentIdx(nextIdx);
         setIsAnswered(false);
         setSelectedOption(null);
