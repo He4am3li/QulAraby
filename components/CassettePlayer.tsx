@@ -90,7 +90,7 @@ const ShelfCassetteItem: React.FC<{
   tape: ShelfTape;
   isActive: boolean;
   isPlaying: boolean;
-  onClick: () => void;
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }> = ({ tape, isActive, isPlaying, onClick }) => {
   return (
     <div className="flex flex-col items-center gap-1 w-full">
@@ -571,7 +571,17 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
    * 2. Walkman door snaps automatically closed
    * 3. Loaded tape appears in bay and plays!
    */
-  const handleSelectShelfTape = (shelfTape: ShelfTape) => {
+  const chamberTargetRef = useRef<HTMLDivElement>(null);
+  const insertionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const insertionBusyRef = useRef(false);
+  const [flight, setFlight] = useState<{ tape: ShelfTape; x: number; y: number; width: number; height: number; dx: number; dy: number; scale: number } | null>(null);
+
+  useEffect(() => () => {
+    if (insertionTimerRef.current) clearTimeout(insertionTimerRef.current);
+  }, []);
+
+  const handleSelectShelfTape = (shelfTape: ShelfTape, event: React.MouseEvent<HTMLButtonElement>) => {
+    if (insertionBusyRef.current) return;
     const selected = getStoryForShelfTape(shelfTape);
     if (!selected) return;
 
@@ -584,17 +594,27 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
     }
     setIsPlaying(false);
 
+    const origin = event.currentTarget.getBoundingClientRect();
+    const destination = chamberTargetRef.current?.getBoundingClientRect();
+    const destinationWidth = destination ? Math.min(destination.width - 28, origin.width * 2.1) : origin.width;
+    const scale = destinationWidth / origin.width;
+    const dx = destination ? destination.left + (destination.width - destinationWidth) / 2 - origin.left : 0;
+    const dy = destination ? destination.top + (destination.height - origin.height * scale) / 2 - origin.top : 0;
+    insertionBusyRef.current = true;
+    setFlight({ tape: shelfTape, x: origin.left, y: origin.top, width: origin.width, height: origin.height, dx, dy, scale });
     // Open door if not already open
     setIsDoorOpen(true);
     setFlyingTape(shelfTape);
     setIsInserting(true);
 
     // Stage 1: Fly tape in
-    setTimeout(() => {
+    insertionTimerRef.current = setTimeout(() => {
       // Stage 2: Snap door shut
       setIsDoorOpen(false);
       setIsInserting(false);
       setFlyingTape(null);
+      setFlight(null);
+      insertionBusyRef.current = false;
 
       setActiveTapeId(shelfTape.id);
       setCurrentStory(selected);
@@ -614,7 +634,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
           }).catch(() => {});
         }
       }, 250);
-    }, 450);
+    }, 1000);
   };
 
   const handleEjectDoor = () => {
@@ -679,6 +699,24 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
         }}
       />
 
+      {/* The selected physical tape travels from its exact shelf position into the deck. */}
+      <AnimatePresence>
+        {flight && (
+          <motion.div
+            key={flight.tape.id}
+            initial={{ x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 }}
+            animate={{ x: [0, flight.dx * 0.48, flight.dx], y: [0, Math.min(-65, flight.dy * 0.42 - 55), flight.dy], scale: [1, 1.15, flight.scale], rotate: [0, -9, 0], opacity: [1, 1, 1] }}
+            transition={{ duration: 0.88, times: [0, 0.52, 1], ease: [0.22, 1, 0.36, 1] }}
+            style={{ position: 'fixed', left: flight.x, top: flight.y, width: flight.width, height: flight.height, transformOrigin: 'top left', zIndex: 9999, pointerEvents: 'none' }}
+            className={`rounded-md border-2 border-amber-200 shadow-[0_22px_45px_rgba(0,0,0,0.5)] bg-gradient-to-r ${flight.tape.tapeColor} p-2 flex flex-col justify-between`}
+          >
+            <div className="flex justify-between text-[8px] font-bold text-white"><span>{flight.tape.brand}</span><span>{flight.tape.cassetteNumber}</span></div>
+            <div className="text-center text-white font-black arabic-font text-[10px] leading-tight">{flight.tape.titleAr}</div>
+            <div className="h-3 rounded bg-black/75 border border-white/20" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 2-SECTION BALANCED WORKBENCH */}
       {/* IN RTL:
           First child = RIGHT side (The 4-Column Wooden Cassette Rack Shelf)
@@ -710,7 +748,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                   tape={tape}
                   isActive={activeTapeId === tape.id}
                   isPlaying={isPlaying && activeTapeId === tape.id}
-                  onClick={() => handleSelectShelfTape(tape)}
+                  onClick={(event) => handleSelectShelfTape(tape, event)}
                 />
               ))}
             </div>
@@ -765,12 +803,13 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
               </div>
 
               {/* The Cassette Chamber: Open Walkman Door OR Loaded Tape */}
+              <div ref={chamberTargetRef}>
               {isDoorOpen || !currentStory ? (
                 /* Pure Mechanical Open Walkman Bay (Zero Text!) */
                 <OpenWalkmanChamber
                   isOpen={isDoorOpen}
-                  isInserting={isInserting}
-                  flyingTape={flyingTape}
+                  isInserting={false}
+                  flyingTape={null}
                 />
               ) : (
                 /* Loaded Cassette in Closed Bay */
@@ -888,7 +927,8 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                 </motion.div>
               )}
 
-              {/* Scrubber & Single-Line Controls Bar */}
+
+              </div>              {/* Scrubber & Single-Line Controls Bar */}
               <div className="w-full flex flex-col gap-1.5 pt-0.5 select-none">
                 {/* Time Scrubber Line */}
                 <div className="flex items-center gap-2 w-full font-mono text-[11px] text-white/90" dir="ltr">
