@@ -349,7 +349,9 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   const singleLineTickerRef = useRef<HTMLDivElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  const effectiveAudioSrc = audioSrc || currentStory?.audioSrc || '';
+  // The selected tape is authoritative: never let a parent-provided audioSrc
+  // play a different recording under the selected story's title/transcript.
+  const effectiveAudioSrc = currentStory?.audioSrc || (!currentStory ? audioSrc : '') || '';
 
   // Get real comprehension questions strictly from the text
   const questions: StoryQuestion[] = useMemo(() => {
@@ -598,6 +600,8 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
       audioRef.current.pause();
     }
     setIsPlaying(false);
+    setDuration(0);
+    setCurrentTime(0);
     setIsSeated(false);
     setReelsPrimed(false);
 
@@ -639,6 +643,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
           insertionTimerRef.current = setTimeout(() => {
             insertionBusyRef.current = false;
             if (audioRef.current) {
+              audioRef.current.load();
               audioRef.current.currentTime = 0;
               audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
             }
@@ -693,6 +698,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
     <div className={`w-full max-w-[1500px] mx-auto flex flex-col select-none relative ${className}`} dir="rtl">
       {/* Hidden audio element */}
       <audio
+        key={effectiveAudioSrc}
         ref={audioRef}
         src={effectiveAudioSrc || undefined}
         preload="metadata"
