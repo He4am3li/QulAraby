@@ -928,7 +928,8 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
               )}
 
 
-              </div>              {/* Scrubber & Single-Line Controls Bar */}
+              </div>
+              {/* Scrubber & Single-Line Controls Bar */}
               <div className="w-full flex flex-col gap-1.5 pt-0.5 select-none">
                 {/* Time Scrubber Line */}
                 <div className="flex items-center gap-2 w-full font-mono text-[11px] text-white/90" dir="ltr">
