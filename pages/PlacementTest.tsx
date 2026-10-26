@@ -135,6 +135,36 @@ export const PlacementTest: React.FC = () => {
     setSkillStats(Object.fromEntries(SKILLS_ORDER.map((skill, i) => [skill.id, { correct: [7, 5, 6, 8, 4, 7, 6, 5][i], incorrect: 10 - [7, 5, 6, 8, 4, 7, 6, 5][i], skipped: 0 }])));
     setStep('results');
   };
+  const [lastCompletedResult, setLastCompletedResult] = React.useState<any>(null);
+  const [checkingPreviousResult, setCheckingPreviousResult] = React.useState(true);
+  const [resultLoadError, setResultLoadError] = React.useState(false);
+  const [retakeApproved, setRetakeApproved] = React.useState(false);
+  React.useEffect(() => {
+    let active = true;
+    if (!user?.uid || isTeacherOrAdmin) { setCheckingPreviousResult(false); return; }
+    setCheckingPreviousResult(true);
+    getDocs(query(collection(db, 'placement_results'), where('userId', '==', user.uid)))
+      .then(snapshot => {
+        if (!active) return;
+        const results = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as any));
+        results.sort((a, b) => (b.completedAt?.seconds || 0) - (a.completedAt?.seconds || 0));
+        setLastCompletedResult(results[0] || null);
+        setRetakeApproved(results.some(r => r.retakeApproved === true));
+        setResultLoadError(false);
+      })
+      .catch(error => { console.error('Could not load placement history', error); if (active) setResultLoadError(true); })
+      .finally(() => { if (active) setCheckingPreviousResult(false); });
+    return () => { active = false; };
+  }, [user?.uid, isTeacherOrAdmin]);
+  const showSavedResult = () => {
+    if (!lastCompletedResult?.skillStats) return;
+    setSkillStats(lastCompletedResult.skillStats);
+    setStudyPlan(lastCompletedResult.studyPlan || null);
+    setIsResultsPreview(false);
+    setStep('results');
+  };
+  const lastCompletedMs = lastCompletedResult?.completedAt?.toMillis?.() || (lastCompletedResult?.completedAt?.seconds || 0) * 1000;
+  const retakeAvailable = !lastCompletedResult || retakeApproved || (lastCompletedMs > 0 && Date.now() - lastCompletedMs >= 30 * 24 * 60 * 60 * 1000);
   const [showPreviewModal, setShowPreviewModal] = React.useState(false);
 
   // Teacher State for viewing all student reports
@@ -286,6 +316,15 @@ export const PlacementTest: React.FC = () => {
     const nextIdx = questions.length;
     if (nextIdx >= 80) {
       setStep('results');
+      if (user?.uid && !isResultsPreview) {
+        const completedStats = { ...skillStats };
+        const score = Object.values(completedStats).reduce((n: number, v: any) => n + (v?.correct || 0), 0);
+        const completedAt = new Date();
+        const result = { userId: user.uid, studentName: user.displayName || profile?.displayName || user.email?.split('@')[0] || 'طالب', studentEmail: user.email || '', totalScore: score, skillStats: completedStats, ...(profile?.schoolId ? { schoolId: profile.schoolId } : {}), completedAt: serverTimestamp() };
+        setDoc(doc(db, 'placement_results', `${user.uid}_${completedAt.getTime()}`), result)
+          .then(() => setLastCompletedResult({ ...result, completedAt: { seconds: Math.floor(completedAt.getTime() / 1000) } }))
+          .catch(err => console.error('Could not save placement attempt', err));
+      }
       return;
     }
 
@@ -984,14 +1023,17 @@ export const PlacementTest: React.FC = () => {
                  </div>
 
                  <button type="button" onClick={openResultsPreview} className="mb-4 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-xs arabic-font hover:bg-slate-50">{lang === 'ar' ? 'معاينة تصميم النتائج دون أداء الاختبار' : 'Preview results layout without taking the test'}</button>
+                 {lastCompletedResult && !retakeAvailable && <p className="mb-3 text-xs font-semibold text-slate-600 arabic-font">{lang === 'ar' ? 'يمكن إعادة الاختبار بعد 30 يومًا أو بموافقة المعلم.' : 'Retake available after 30 days or teacher approval.'}</p>}
+                 {lastCompletedResult && retakeAvailable && <button type="button" onClick={showSavedResult} className="mb-3 block mx-auto text-xs font-bold text-blue-700 underline arabic-font">{lang === 'ar' ? 'عرض نتيجتي السابقة' : 'View previous result'}</button>}
                  <div className="flex flex-wrap items-center justify-center gap-4">
                    <button 
-                    onClick={startTest} 
+                    onClick={lastCompletedResult && !retakeAvailable ? showSavedResult : startTest}
+                    disabled={checkingPreviousResult || resultLoadError}
                     className="group relative px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-sm transition-all overflow-hidden border border-white/5 shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <span className="relative z-10 flex items-center justify-center px-4">
-                      <span className="arabic-font">{t.startBtn}</span>
+                      <span className="arabic-font">{checkingPreviousResult ? (lang === 'ar' ? 'جاري التحقق...' : 'Checking...') : resultLoadError ? (lang === 'ar' ? 'تعذر التحقق من المحاولات' : 'Could not check attempts') : lastCompletedResult && !retakeAvailable ? (lang === 'ar' ? 'عرض نتيجتي' : 'View my result') : t.startBtn}</span>
                     </span>
                   </button>
 
