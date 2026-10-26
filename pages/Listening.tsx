@@ -21,7 +21,6 @@ const LEVELS = [
 ];
 
 const TOPICS = [
-  { id: 'lip_reader', ar: 'قارئ الشفاه', en: 'Lip Reader', icon: Speech, color: 'purple', bg: 'bg-purple-50', border: 'border-purple-500', text: 'text-purple-600', activeBg: 'bg-purple-500', description: 'ركز على حركة الحروف واختر الصوت المطابق.' },
   { id: 'dictation', ar: 'تحدي الإملاء', en: 'Spelling Challenge', icon: PenTool, color: 'blue', bg: 'bg-blue-50', border: 'border-blue-500', text: 'text-blue-600', activeBg: 'bg-blue-500', description: 'استمع للكلمة واكتبها بشكل صحيح.' },
   { id: 'emotions', ar: 'المشاعر', en: 'Emotions', icon: Heart, color: 'rose', bg: 'bg-rose-50', border: 'border-rose-500', text: 'text-rose-600', activeBg: 'bg-rose-500', description: 'افهم نبرة الصوت وحدد شعور المتحدث.' },
   { id: 'radio', ar: 'الراديو', en: 'Radio', icon: RadioIcon, color: 'amber', bg: 'bg-amber-50', border: 'border-amber-500', text: 'text-amber-600', activeBg: 'bg-amber-500', description: 'استمع لمحطات مختلفة واكتشف القصص والأخبار.' },
@@ -886,14 +885,13 @@ export const Listening: React.FC = () => {
                                 if (topic.id === 'cassette_stories') {
                                     stopAudio();
                                 }
-                                if (topic.id === 'lip_reader') loadLipReader();
                                 if (topic.id === 'emotions') loadEmotions();
                                 if (topic.id === 'dictation') loadDictation();
                             }}
                             className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-4 text-right group ${selectedTopic?.id === topic.id ? `${topic.border} ${topic.bg} ${topic.text} shadow-md` : 'border-slate-50 bg-slate-50/50 hover:border-slate-200 text-slate-500'} ${!selectedLevel ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
                         >
                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110 ${selectedTopic?.id === topic.id ? `${topic.activeBg} text-white` : 'bg-white text-slate-400'}`}>
-                                <topic.icon size={24} className={topic.id === 'lip_reader' && lang === 'ar' ? '-scale-x-100' : ''} />
+                                <topic.icon size={24}  />
                             </div>
                             <div className="flex-1 min-w-0 pr-1 overflow-visible">
                                 <p
@@ -1226,8 +1224,6 @@ export const Listening: React.FC = () => {
                     >
                         <CassettePlayer allStories={STORY_CASSETTES} />
                     </motion.div>
-                ) : selectedTopic.id === 'lip_reader' ? (
-                    renderLipReader()
                 ) : selectedTopic.id === 'emotions' ? (
                     renderEmotions()
                 ) : selectedTopic.id === 'dictation' ? (
