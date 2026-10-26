@@ -243,7 +243,7 @@ const StatItem = ({ value, label, icon: Icon }: any) => (
 export const Landing = () => {
   const { signIn, signOut, user, profile, isSigningIn, authError, clearAuthError } = useAuth();
   const [lang, setLang] = useState(localStorage.getItem('hub_lang') || 'ar');
-  const [loginOpen, setLoginOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(new URLSearchParams(window.location.search).get('login') === '1');
 
   useEffect(() => {
     localStorage.setItem('hub_lang', lang);
@@ -805,18 +805,25 @@ export const Landing = () => {
         </p>
       </footer>
     </div>
-      {loginOpen && <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#020b13]/85 backdrop-blur-xl p-4" dir={lang === 'ar' ? 'rtl' : 'ltr'} role="dialog" aria-modal="true" aria-label={lang === 'ar' ? 'تسجيل الدخول' : 'Sign in'}>
-        <div className="relative w-full max-w-[420px] overflow-hidden rounded-[28px] border border-emerald-300/25 bg-[#091b25] p-7 md:p-10 shadow-[0_24px_100px_rgba(0,0,0,.65),0_0_55px_rgba(16,185,129,.16)]">
-          <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-emerald-400/20 blur-[75px]" />
-          <div className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/80 to-transparent" />
-          <button type="button" onClick={() => setLoginOpen(false)} aria-label={lang === 'ar' ? 'إغلاق' : 'Close'} className="absolute top-4 end-4 rounded-full p-2 text-slate-300 hover:bg-white/10 hover:text-white"><X size={19}/></button>
-          <div className="relative flex flex-col items-center text-center">
-            <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-emerald-300/35 bg-emerald-400/10 shadow-[0_0_35px_rgba(16,185,129,.24)]"><img src="/Logo.png" alt="QUL" className="h-16 w-16 rounded-2xl object-cover" /></div>
-            <h2 className="text-2xl font-black text-white arabic-font">{lang === 'ar' ? 'مرحبًا بك في قُل' : 'Welcome to QUL'}</h2>
-            <p className="mt-3 text-sm text-slate-300 arabic-font">{lang === 'ar' ? 'سجّل الدخول بحسابك للوصول إلى منصتك التعليمية' : 'Sign in to access your learning platform'}</p>
-            <button type="button" disabled={isSigningIn} onClick={signIn} className="mt-9 flex w-full items-center justify-center gap-3 rounded-2xl border border-emerald-300/40 bg-gradient-to-r from-emerald-500 to-blue-600 px-5 py-4 text-sm font-extrabold text-white shadow-[0_0_24px_rgba(16,185,129,.24)] transition hover:brightness-110 disabled:opacity-60"><LogIn size={19}/>{isSigningIn ? (lang === 'ar' ? 'جارٍ تسجيل الدخول...' : 'Signing in...') : (lang === 'ar' ? 'المتابعة باستخدام Google' : 'Continue with Google')}</button>
-            {authError && <p role="alert" className="mt-4 text-xs text-rose-300 arabic-font">{authError}</p>}
-            <p className="mt-6 text-[11px] text-slate-400 arabic-font">{lang === 'ar' ? 'يُستخدم حسابك الحالي دون تغيير الصلاحيات أو البيانات.' : 'Your existing account and permissions remain unchanged.'}</p>
+      {loginOpen && <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#030b16]/90 backdrop-blur-2xl p-3 sm:p-6" dir={lang === 'ar' ? 'rtl' : 'ltr'} role="dialog" aria-modal="true" aria-label={lang === 'ar' ? 'اختيار الحساب' : 'Choose an account'}>
+        <div className="relative w-full max-w-[820px] overflow-hidden rounded-[30px] border border-emerald-300/30 bg-[#081823] shadow-[0_28px_110px_rgba(0,0,0,.75),0_0_70px_rgba(16,185,129,.17)]">
+          <div className="pointer-events-none absolute -top-32 start-1/3 h-72 w-72 rounded-full bg-emerald-400/20 blur-[90px]" />
+          <div className="pointer-events-none absolute -bottom-28 end-0 h-72 w-72 rounded-full bg-blue-500/20 blur-[90px]" />
+          <div className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent" />
+          <button type="button" onClick={() => setLoginOpen(false)} aria-label={lang === 'ar' ? 'إغلاق' : 'Close'} className="absolute top-4 end-4 z-10 rounded-full p-2 text-slate-300 hover:bg-white/10 hover:text-white"><X size={20}/></button>
+          <div className="relative flex flex-col gap-8 p-6 sm:p-10 md:flex-row md:items-center md:gap-12 md:p-14">
+            <div className="flex-1 text-center md:text-start">
+              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-300/40 bg-emerald-400/10 shadow-[0_0_35px_rgba(16,185,129,.3)]"><img src="/Logo.png" alt="QUL" className="h-14 w-14 rounded-xl object-cover" /></div>
+              <p className="mb-3 text-xs font-bold tracking-[.3em] text-emerald-300">QUL • ACCOUNT ACCESS</p>
+              <h2 className="text-3xl font-black text-white sm:text-4xl arabic-font">{lang === 'ar' ? 'اختر حسابك' : 'Choose an account'}</h2>
+              <p className="mt-4 text-sm leading-7 text-slate-300 arabic-font">{lang === 'ar' ? 'تابع إلى منصة قُل باستخدام حساب Google الخاص بك.' : 'Continue to QUL with your Google account.'}</p>
+            </div>
+            <div className="w-full flex-1 overflow-hidden rounded-2xl border border-white/15 bg-white/[.055] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,.12)] sm:p-5">
+              <p className="mb-4 px-2 text-xs font-semibold text-slate-300 arabic-font">{lang === 'ar' ? 'الدخول الآمن' : 'Secure sign-in'}</p>
+              <button type="button" disabled={isSigningIn} onClick={signIn} className="group flex w-full items-center gap-4 rounded-xl border border-emerald-300/25 bg-white/10 px-4 py-4 text-start text-sm font-bold text-white transition hover:border-emerald-300/70 hover:bg-emerald-400/15 disabled:opacity-50"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-lg font-black text-blue-600">G</span><span className="flex-1 arabic-font">{isSigningIn ? (lang === 'ar' ? 'جارٍ الاتصال...' : 'Connecting...') : (lang === 'ar' ? 'اختيار حساب Google' : 'Choose Google account')}</span><ArrowRight size={18} className="opacity-70" /></button>
+              <p className="mt-4 px-2 text-xs leading-6 text-slate-400 arabic-font">{lang === 'ar' ? 'ستظهر حسابات Google المتاحة في نافذة Google الآمنة. لا يمكن عرضها مسبقًا دون إذنك.' : 'Available Google accounts appear in Google’s secure chooser. They cannot be listed here without your permission.'}</p>
+              {authError && <p role="alert" className="mt-3 text-xs text-rose-300">{authError}</p>}
+            </div>
           </div>
         </div>
       </div>}
