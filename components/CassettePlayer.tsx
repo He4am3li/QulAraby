@@ -607,8 +607,9 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
     setFlyingTape(shelfTape);
     setIsInserting(true);
 
-    // Stage 1: Fly tape in
+    // Allow the tape to lift from the shelf before its curved flight.
     insertionTimerRef.current = setTimeout(() => {
+      // The deck closes only after the cassette has reached the spindle bay.
       // Stage 2: Snap door shut
       setIsDoorOpen(false);
       setIsInserting(false);
@@ -634,7 +635,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
           }).catch(() => {});
         }
       }, 250);
-    }, 1000);
+    }, 1770);
   };
 
   const handleEjectDoor = () => {
@@ -699,20 +700,43 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
         }}
       />
 
-      {/* The selected physical tape travels from its exact shelf position into the deck. */}
+      {/* Cinematic 3D cassette pickup, bezier-like arc, mechanical alignment and seating. */}
       <AnimatePresence>
         {flight && (
           <motion.div
             key={flight.tape.id}
-            initial={{ x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 }}
-            animate={{ x: [0, flight.dx * 0.48, flight.dx], y: [0, Math.min(-65, flight.dy * 0.42 - 55), flight.dy], scale: [1, 1.15, flight.scale], rotate: [0, -9, 0], opacity: [1, 1, 1] }}
-            transition={{ duration: 0.88, times: [0, 0.52, 1], ease: [0.22, 1, 0.36, 1] }}
-            style={{ position: 'fixed', left: flight.x, top: flight.y, width: flight.width, height: flight.height, transformOrigin: 'top left', zIndex: 9999, pointerEvents: 'none' }}
-            className={`rounded-md border-2 border-amber-200 shadow-[0_22px_45px_rgba(0,0,0,0.5)] bg-gradient-to-r ${flight.tape.tapeColor} p-2 flex flex-col justify-between`}
+            initial={{ x: 0, y: 0, scale: 1, rotateZ: 0, rotateY: 0, rotateX: 0, opacity: 1 }}
+            animate={{
+              x: [0, 0, flight.dx * 0.16, flight.dx * 0.52, flight.dx * 0.83, flight.dx, flight.dx],
+              y: [0, -16, -58, Math.min(-85, flight.dy * 0.45 - 65), flight.dy - 35, flight.dy - 8, flight.dy],
+              scale: [1, 1.07, 1.15, 1.23, flight.scale * 1.07, flight.scale, flight.scale * 0.96],
+              rotateZ: [0, -3, -11, -8, 5, 0, 0],
+              rotateY: [0, -12, -24, -15, 8, 0, 0],
+              rotateX: [0, 9, 17, 12, -8, 0, 0],
+              opacity: [1, 1, 1, 1, 1, 1, 0.98]
+            }}
+            transition={{ duration: 1.57, times: [0, 0.12, 0.28, 0.53, 0.77, 0.91, 1], ease: 'easeInOut' }}
+            style={{ position: 'fixed', left: flight.x, top: flight.y, width: flight.width, height: flight.height, transformOrigin: 'top left', transformStyle: 'preserve-3d', perspective: 1100, zIndex: 9999, pointerEvents: 'none', willChange: 'transform' }}
+            className={`rounded-md border-2 border-stone-700 shadow-[0_25px_55px_rgba(0,0,0,0.55)] bg-gradient-to-r ${flight.tape.tapeColor} p-1.5 flex flex-col justify-between overflow-hidden`}
           >
-            <div className="flex justify-between text-[8px] font-bold text-white"><span>{flight.tape.brand}</span><span>{flight.tape.cassetteNumber}</span></div>
-            <div className="text-center text-white font-black arabic-font text-[10px] leading-tight">{flight.tape.titleAr}</div>
-            <div className="h-3 rounded bg-black/75 border border-white/20" />
+            <div className="absolute inset-0 rounded-md border border-white/25 pointer-events-none" />
+            <div className="absolute top-0.5 left-0.5 w-1 h-1 rounded-full bg-stone-300" />
+            <div className="absolute top-0.5 right-0.5 w-1 h-1 rounded-full bg-stone-300" />
+            <div className="absolute bottom-0.5 left-0.5 w-1 h-1 rounded-full bg-stone-300" />
+            <div className="absolute bottom-0.5 right-0.5 w-1 h-1 rounded-full bg-stone-300" />
+            <div className="flex justify-between text-[7px] font-mono font-bold text-white/90 px-1 border-b border-white/15"><span>{flight.tape.brand}</span><span>{flight.tape.year}</span></div>
+            <div className="rounded bg-stone-950/95 border border-black/80 flex items-center justify-between px-2 py-1 shadow-inner">
+              <div className="w-3 h-3 rounded-full border-2 border-stone-400 bg-stone-200"><div className="w-1 h-1 rounded-full bg-stone-900 m-0.5" /></div>
+              <div className="h-0.5 bg-amber-950/90 flex-1 mx-2" />
+              <div className="w-3 h-3 rounded-full border-2 border-stone-400 bg-stone-200"><div className="w-1 h-1 rounded-full bg-stone-900 m-0.5" /></div>
+            </div>
+            <div className="text-center text-white font-black arabic-font text-[9px] leading-tight truncate">{flight.tape.titleAr}</div>
+            <motion.div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/25 to-transparent pointer-events-none"
+              animate={{ x: ['-130%', '170%'] }}
+              transition={{ duration: 0.95, ease: 'easeInOut' }}
+            />
           </motion.div>
         )}
       </AnimatePresence>
