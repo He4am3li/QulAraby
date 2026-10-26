@@ -19,6 +19,8 @@ export interface StoryCassette {
   moralLessonAr: string;
   keyVocab: { word: string; meaning: string }[];
   paragraphs: string[];
+  /** Verified word-level alignment against the actual audio, in seconds. */
+  wordTimings?: { startTime: number; endTime: number }[];
 }
 
 export const STORY_CASSETTES: StoryCassette[] = [
