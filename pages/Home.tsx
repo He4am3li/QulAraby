@@ -14,7 +14,6 @@ import { Vocabulary, CertificateData } from '../types';
 import { useAuth } from '../components/AuthProvider';
 import { useSchoolAccess } from '../components/SchoolAccessProvider';
 import { ROUTE_MODULES } from '../config/schoolPlans';
-import { RoleSwitcher } from '../components/RoleSwitcher';
 import { RoleActionPanel } from '../components/RoleActionPanel';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
@@ -366,9 +365,6 @@ export const Home: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col items-start">
-                      <div className="flex items-center gap-1.5">
-                        <RoleSwitcher />
-                      </div>
                       <p className="text-xs font-bold text-white leading-none mt-1">
                         {user.displayName?.split(' ').slice(0, 2).join(' ') || user.email?.split('@')[0]}
                       </p>
