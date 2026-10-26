@@ -221,7 +221,7 @@ export const PlacementTest: React.FC = () => {
       skill,
       subSkill,
       difficulty: Math.max(1, Math.min(10, currentDifficulty)),
-      translation_instruction: skill === 'letters' ? 'Choose the correct answer' : ''
+      translation_instruction: ''
     };
   };
 
@@ -1124,25 +1124,13 @@ export const PlacementTest: React.FC = () => {
               {/* Question Card */}
               <div className={`bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_32px_64px_rgba(37,99,235,0.08)] border border-white/50 p-8 md:p-12 flex flex-col items-center text-center relative overflow-hidden transition-all h-[460px] w-full max-w-2xl justify-center no-print ${isAnswered ? 'scale-[0.98] opacity-60' : 'scale-100'}`}>
                 
-                {questions[currentIdx].translation_instruction && (
-                  <div 
-                    dir={/^[a-zA-Z]/.test(questions[currentIdx].translation_instruction) ? 'ltr' : 'auto'}
-                    className={`mb-4 px-5 py-1.5 bg-blue-50/50 text-blue-600 rounded-full border border-blue-100 text-[10px] font-black uppercase tracking-widest animate-pulse truncate max-w-xl mx-auto ${/^[a-zA-Z]/.test(questions[currentIdx].translation_instruction) ? 'text-left' : ''}`}
-                  >
-                    {questions[currentIdx].translation_instruction}
-                  </div>
-                )}
-
                 <div className="flex-grow-0 w-full flex flex-col items-center justify-center py-2">
-                  {/* Prevent showing the question twice if it's the same as the instruction in Letters section or if instruction is already present */}
-                  {Boolean(questions[currentIdx].question) && (
-                    <h3 
-                      dir={/^[a-zA-Z]/.test(questions[currentIdx].question || '') ? 'ltr' : 'auto'}
-                      className={`text-sm md:text-base font-bold text-slate-800 mb-2 leading-tight max-w-xl arabic-font line-clamp-1 w-full ${/^[a-zA-Z]/.test(questions[currentIdx].question || '') ? 'text-left' : ''}`}
-                    >
-                      {questions[currentIdx].question}
-                    </h3>
-                  )}
+                  <h3
+                    dir="ltr"
+                    className="text-base md:text-lg font-bold text-slate-800 mb-4 leading-relaxed max-w-xl w-full text-center"
+                  >
+                    {questions[currentIdx].questionEn || questions[currentIdx].question}
+                  </h3>
 
                   {questions[currentIdx].audioPrompt && questions[currentIdx].skill !== 'translator' && (
                     <div className="mb-6">
