@@ -243,6 +243,7 @@ const StatItem = ({ value, label, icon: Icon }: any) => (
 export const Landing = () => {
   const { signIn, signOut, user, profile, isSigningIn, authError, clearAuthError } = useAuth();
   const [lang, setLang] = useState(localStorage.getItem('hub_lang') || 'ar');
+  const [loginOpen, setLoginOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('hub_lang', lang);
@@ -539,7 +540,7 @@ export const Landing = () => {
             className="pt-8"
           >
             <button 
-              onClick={signIn}
+              onClick={() => setLoginOpen(true)}
               className="group relative inline-flex items-center gap-4 bg-gradient-to-r from-blue-600 to-emerald-600 px-10 py-5 rounded-2xl font-black text-sm md:text-base uppercase tracking-widest shadow-2xl shadow-blue-900/40 hover:scale-105 transition-all"
             >
               {t.cta}
@@ -782,7 +783,7 @@ export const Landing = () => {
 
             <div className="pt-8">
               <button 
-                onClick={signIn}
+                onClick={() => setLoginOpen(true)}
                 className="group relative px-10 py-5 bg-white text-black rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)] overflow-hidden"
               >
                 <span className="relative z-10 flex items-center gap-3">
@@ -803,6 +804,22 @@ export const Landing = () => {
         </p>
       </footer>
     </div>
+      {loginOpen && <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#020b13]/85 backdrop-blur-xl p-4" dir={lang === 'ar' ? 'rtl' : 'ltr'} role="dialog" aria-modal="true" aria-label={lang === 'ar' ? 'تسجيل الدخول' : 'Sign in'}>
+        <div className="relative w-full max-w-[420px] overflow-hidden rounded-[28px] border border-emerald-300/25 bg-[#091b25] p-7 md:p-10 shadow-[0_24px_100px_rgba(0,0,0,.65),0_0_55px_rgba(16,185,129,.16)]">
+          <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-emerald-400/20 blur-[75px]" />
+          <div className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/80 to-transparent" />
+          <button type="button" onClick={() => setLoginOpen(false)} aria-label={lang === 'ar' ? 'إغلاق' : 'Close'} className="absolute top-4 end-4 rounded-full p-2 text-slate-300 hover:bg-white/10 hover:text-white"><X size={19}/></button>
+          <div className="relative flex flex-col items-center text-center">
+            <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-emerald-300/35 bg-emerald-400/10 shadow-[0_0_35px_rgba(16,185,129,.24)]"><img src="/Logo.png" alt="QUL" className="h-16 w-16 rounded-2xl object-cover" /></div>
+            <h2 className="text-2xl font-black text-white arabic-font">{lang === 'ar' ? 'مرحبًا بك في قُل' : 'Welcome to QUL'}</h2>
+            <p className="mt-3 text-sm text-slate-300 arabic-font">{lang === 'ar' ? 'سجّل الدخول بحسابك للوصول إلى منصتك التعليمية' : 'Sign in to access your learning platform'}</p>
+            <button type="button" disabled={isSigningIn} onClick={signIn} className="mt-9 flex w-full items-center justify-center gap-3 rounded-2xl border border-emerald-300/40 bg-gradient-to-r from-emerald-500 to-blue-600 px-5 py-4 text-sm font-extrabold text-white shadow-[0_0_24px_rgba(16,185,129,.24)] transition hover:brightness-110 disabled:opacity-60"><LogIn size={19}/>{isSigningIn ? (lang === 'ar' ? 'جارٍ تسجيل الدخول...' : 'Signing in...') : (lang === 'ar' ? 'المتابعة باستخدام Google' : 'Continue with Google')}</button>
+            {authError && <p role="alert" className="mt-4 text-xs text-rose-300 arabic-font">{authError}</p>}
+            <p className="mt-6 text-[11px] text-slate-400 arabic-font">{lang === 'ar' ? 'يُستخدم حسابك الحالي دون تغيير الصلاحيات أو البيانات.' : 'Your existing account and permissions remain unchanged.'}</p>
+          </div>
+        </div>
+      </div>}
+
   );
 };
 
