@@ -730,66 +730,6 @@ export const PlacementTest: React.FC = () => {
           {isTeacherOrAdmin ? (
             <TeacherStudentLevels results={allStudentResults} loading={fetchingReports} profile={profile} user={user} lang={lang} onPreviewTest={() => setShowPreviewModal(true)} />
           ) : (
-                <div className="space-y-4">
-                  {fetchingReports ? (
-                    <div className="py-20 flex justify-center">
-                      <Loader2 className="animate-spin text-blue-500" size={32} />
-                    </div>
-                  ) : allStudentResults.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {allStudentResults
-                        .filter(res => {
-                          if (!searchQuery.trim()) return true;
-                          const q = searchQuery.toLowerCase();
-                          return (res.studentName || '').toLowerCase().includes(q) || (res.studentEmail || '').toLowerCase().includes(q);
-                        })
-                        .map((res) => (
-                          <div 
-                            key={res.id} 
-                            onClick={() => setSelectedStudentResult(res)}
-                            className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-blue-300 transition-all cursor-pointer group flex flex-col justify-between space-y-4"
-                          >
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <h3 className="font-black text-slate-900 arabic-font text-base group-hover:text-blue-600 transition-colors">
-                                  {res.studentName}
-                                </h3>
-                                <p className="text-xs text-slate-400 font-bold mt-1">{res.studentEmail || 'طالب'}</p>
-                              </div>
-                              <div className="w-12 h-12 bg-blue-50 text-blue-600 font-black rounded-2xl flex items-center justify-center text-sm shadow-inner border border-blue-100 shrink-0">
-                                {res.totalScore}/80
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between text-xs text-slate-500 pt-4 border-t border-slate-100 font-bold">
-                              <span className="flex items-center gap-1 text-emerald-600">
-                                <CheckCircle2 size={14} />
-                                {lang === 'ar' ? 'الخطة العلاجية جاهزة' : 'Plan Ready'}
-                              </span>
-                              <span>
-                                {res.completedAt?.seconds 
-                                  ? new Date(res.completedAt.seconds * 1000).toLocaleDateString('ar-EG')
-                                  : 'مؤخراً'}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  ) : (
-                    <div className="bg-white p-16 rounded-3xl text-center border border-slate-200 space-y-3">
-                      <Users size={40} className="mx-auto text-slate-300" />
-                      <h3 className="text-lg font-black text-slate-700 arabic-font">
-                        {lang === 'ar' ? 'لا توجد تقارير طلاب حتى الآن' : 'No Student Reports Yet'}
-                      </h3>
-                      <p className="text-xs text-slate-400 font-bold arabic-font">
-                        {lang === 'ar' ? 'عندما ينهي أي طالب اختبار تحديد المستوى، ستظهر نتائجه وخطته العلاجية والإثرائية هنا تلقائياً.' : 'Results will appear automatically here once students complete the test.'}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
             <>
           
           {step === 'welcome' && (
