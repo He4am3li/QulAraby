@@ -1128,7 +1128,7 @@ export const PlacementTest: React.FC = () => {
 
                 <div className="flex-grow-0 w-full flex flex-col items-center justify-center py-2">
                   {/* Prevent showing the question twice if it's the same as the instruction in Letters section or if instruction is already present */}
-                  {!(questions[currentIdx].skill.toLowerCase() === 'letters' && (questions[currentIdx].translation_instruction || !questions[currentIdx].question)) && (
+                  {Boolean(questions[currentIdx].question) && (
                     <h3 
                       dir={/^[a-zA-Z]/.test(questions[currentIdx].question || '') ? 'ltr' : 'auto'}
                       className={`text-sm md:text-base font-bold text-slate-800 mb-2 leading-tight max-w-xl arabic-font line-clamp-1 w-full ${/^[a-zA-Z]/.test(questions[currentIdx].question || '') ? 'text-left' : ''}`}
