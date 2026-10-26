@@ -117,7 +117,7 @@ const ShelfCassetteItem: React.FC<{
         </div>
 
         {/* Center Acrylic Window with Dual Spool Teeth */}
-        <div className="bg-stone-950/95 rounded py-0.5 px-1.5 border border-black/80 flex items-center justify-between my-auto shadow-inner">
+        <div className="bg-stone-950/95 rounded py-0.5 px-1.5 border border-black/80 flex items-center justify-center gap-3 my-auto shadow-inner">
           <div
             className="w-3.5 h-3.5 rounded-full bg-stone-200 border border-stone-400 flex items-center justify-center relative shadow-xs"
             style={{
@@ -128,7 +128,7 @@ const ShelfCassetteItem: React.FC<{
             <div className="w-1 h-1 rounded-full bg-stone-950" />
           </div>
 
-          <div className="flex-1 h-0.5 bg-amber-950/90 mx-1.5 rounded" />
+          <div className="w-5 h-0.5 bg-amber-950/90 rounded" />
 
           <div
             className="w-3.5 h-3.5 rounded-full bg-stone-200 border border-stone-400 flex items-center justify-center relative shadow-xs"
@@ -287,7 +287,7 @@ const OpenWalkmanChamber: React.FC<{
             className={`absolute inset-x-5 top-9 h-[112px] rounded-lg border-2 border-stone-700 shadow-[0_12px_25px_rgba(0,0,0,0.65)] bg-gradient-to-r ${flyingTape.tapeColor} p-2 z-10 flex flex-col justify-between`}
           >
             <div className="flex justify-between text-[8px] font-bold text-white"><span>{flyingTape.brand}</span><span>{flyingTape.cassetteNumber}</span></div>
-            <div className="rounded bg-black/80 h-7 flex justify-around items-center">
+            <div className="rounded bg-black/80 h-7 flex justify-center gap-8 items-center">
               <div className="w-5 h-5 rounded-full bg-stone-200 border-[3px] border-stone-500" />
               <div className="w-5 h-5 rounded-full bg-stone-200 border-[3px] border-stone-500" />
             </div>
@@ -457,22 +457,28 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
     });
   }, [currentStory, duration]);
 
-  // Synchronized active word index
+  // Prefer measured word boundaries from the audio when alignment data is available.
+  // A duration-weighted estimate is retained only as a fallback for unaligned stories.
+  const alignedWords = useMemo(() => {
+    const alignment = currentStory?.wordTimings;
+    if (!alignment || alignment.length !== timedWords.length) return timedWords;
+    if (!alignment.every((w, i) => Number.isFinite(w.startTime) && Number.isFinite(w.endTime) && w.endTime > w.startTime && (i === 0 || w.startTime >= alignment[i - 1].startTime))) return timedWords;
+    return timedWords.map((word, i) => ({ ...word, startTime: alignment[i].startTime, endTime: alignment[i].endTime }));
+  }, [currentStory, timedWords]);
+
   const activeWordIndex = useMemo(() => {
-    if (timedWords.length === 0) return 0;
-    if (currentTime < timedWords[0].startTime) return 0;
-    if (currentTime >= timedWords[timedWords.length - 1].endTime) return timedWords.length - 1;
-
-    const foundIdx = timedWords.findIndex(w => currentTime >= w.startTime && currentTime <= w.endTime);
-    if (foundIdx !== -1) return foundIdx;
-
-    for (let i = timedWords.length - 1; i >= 0; i--) {
-      if (currentTime >= timedWords[i].startTime) {
-        return i;
-      }
+    if (!alignedWords.length) return -1;
+    let low = 0;
+    let high = alignedWords.length - 1;
+    while (low <= high) {
+      const mid = (low + high) >> 1;
+      const word = alignedWords[mid];
+      if (currentTime < word.startTime) high = mid - 1;
+      else if (currentTime >= word.endTime) low = mid + 1;
+      else return mid;
     }
-    return 0;
-  }, [currentTime, timedWords]);
+    return -1; // Do not highlight words during actual pauses or silence.
+  }, [currentTime, alignedWords]);
 
   // 60FPS RAF AUDIO TRACKER
   const updateAudioProgress = useCallback(() => {
@@ -730,7 +736,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
             <div className="absolute bottom-0.5 left-0.5 w-1 h-1 rounded-full bg-stone-300" />
             <div className="absolute bottom-0.5 right-0.5 w-1 h-1 rounded-full bg-stone-300" />
             <div className="flex justify-between text-[7px] font-mono font-bold text-white/90 px-1 border-b border-white/15"><span>{flight.tape.brand}</span><span>{flight.tape.year}</span></div>
-            <div className="rounded bg-stone-950/95 border border-black/80 flex items-center justify-between px-2 py-1 shadow-inner">
+            <div className="rounded bg-stone-950/95 border border-black/80 flex items-center justify-center gap-8 px-2 py-1 shadow-inner">
               <div className="w-3 h-3 rounded-full border-2 border-stone-400 bg-stone-200"><div className="w-1 h-1 rounded-full bg-stone-900 m-0.5" /></div>
               <div className="h-0.5 bg-amber-950/90 flex-1 mx-2" />
               <div className="w-3 h-3 rounded-full border-2 border-stone-400 bg-stone-200"><div className="w-1 h-1 rounded-full bg-stone-900 m-0.5" /></div>
@@ -881,7 +887,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                     </div>
 
                     {/* Acrylic Window with Rotating Spools */}
-                    <div className="w-full bg-[#12141a] rounded-lg py-1.5 px-4 sm:px-6 border border-stone-800 shadow-inner flex items-center justify-between relative overflow-hidden my-0.5">
+                    <div className="w-full bg-[#12141a] rounded-lg py-1.5 px-4 sm:px-6 border border-stone-800 shadow-inner flex items-center justify-center gap-3 relative overflow-hidden my-0.5">
                       <div
                         className="w-7 h-7 rounded-full bg-stone-200 border-2 border-stone-400 flex items-center justify-center relative shadow-xs shrink-0"
                         style={{
@@ -898,7 +904,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                         ))}
                       </div>
 
-                      <div className="flex flex-col items-center justify-center px-2 flex-1">
+                      <div className="flex flex-col items-center justify-center px-2 w-[105px] max-w-[32%]">
                         <div className="h-0.5 w-full max-w-[100px] bg-amber-900/80 rounded mb-0.5" />
                         <div className="flex items-center gap-1.5 text-[7.5px] font-mono text-stone-300 font-bold">
                           <span>MIN: {currentStory.durationApprox}</span>
@@ -931,7 +937,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                         className="flex items-center justify-start gap-1 overflow-x-hidden whitespace-nowrap scrollbar-hide select-none w-full"
                         dir="rtl"
                       >
-                        {timedWords.map((item) => {
+                        {alignedWords.map((item) => {
                           const isSpoken = item.id === activeWordIndex;
                           return (
                             <button
