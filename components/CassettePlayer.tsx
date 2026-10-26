@@ -178,7 +178,7 @@ const OpenWalkmanChamber: React.FC<{
   return (
     <div
       className="w-full rounded-2xl relative shadow-2xl border-2 border-stone-800 bg-[#0c0f16] overflow-hidden flex flex-col justify-end p-2 select-none"
-      style={{ minHeight: '190px', perspective: '700px' }}
+      style={{ minHeight: '190px', perspective: '900px', overflow: 'visible' }}
     >
       {/* Recessed Mechanical Interior (Zero Text!) */}
       <div className="absolute inset-2 rounded-xl bg-gradient-to-b from-[#090b10] via-[#0d1017] to-[#121620] border border-stone-800/80 shadow-[inset_0_4px_16px_rgba(0,0,0,0.9)] flex flex-col justify-between p-3 overflow-hidden">
@@ -248,12 +248,13 @@ const OpenWalkmanChamber: React.FC<{
       {/* Tilted Open Walkman Door Cradle (Snaps shut when tape is inserted) */}
       <motion.div
         animate={{
-          rotateX: isOpen ? 24 : 0,
-          y: isOpen ? 6 : 0,
+          rotateX: isOpen ? -72 : 0,
+          y: isOpen ? 22 : 0,
+          scaleY: isOpen ? 0.94 : 1,
         }}
-        transition={{ type: "spring", stiffness: 220, damping: 20 }}
+        transition={{ type: "spring", stiffness: 145, damping: 23, mass: 0.9 }}
         style={{ transformOrigin: "bottom center" }}
-        className="w-full h-[155px] rounded-xl border-2 border-stone-600/90 bg-stone-900/40 backdrop-blur-xs shadow-2xl relative flex flex-col justify-between p-2 z-20 pointer-events-none"
+        className="w-full h-[155px] rounded-xl border-2 border-stone-600/90 bg-stone-900/50 backdrop-blur-xs shadow-2xl relative flex flex-col justify-between p-2 z-20 pointer-events-none"
       >
         {/* Brushed Metal Top Edge of Door */}
         <div className="w-full h-3 rounded-t-lg bg-gradient-to-r from-stone-400 via-stone-200 to-stone-400 border-b border-stone-500 flex items-center justify-between px-2">
@@ -275,26 +276,22 @@ const OpenWalkmanChamber: React.FC<{
         </div>
       </motion.div>
 
-      {/* FLYING TAPE ANIMATION (Flies in smoothly when clicked and snaps inside!) */}
+      {/* Tape settles onto the capstan hubs while the door remains open. */}
       <AnimatePresence>
         {isInserting && flyingTape && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.7, y: -90, rotateX: 20 }}
-            animate={{ opacity: 1, scale: 0.96, y: 10, rotateX: 24 }}
-            exit={{ opacity: 0, scale: 1 }}
-            transition={{ duration: 0.38, ease: "easeOut" }}
-            className="absolute inset-x-4 bottom-4 z-40 pointer-events-none"
+            initial={{ opacity: 0, scale: 1.06, y: -18, rotateX: -9 }}
+            animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 24 }}
+            className={`absolute inset-x-5 top-9 h-[112px] rounded-lg border-2 border-stone-700 shadow-[0_12px_25px_rgba(0,0,0,0.65)] bg-gradient-to-r ${flyingTape.tapeColor} p-2 z-10 flex flex-col justify-between`}
           >
-            <div className={`w-full h-[140px] rounded-xl border-2 border-amber-300 shadow-2xl p-2 bg-gradient-to-r ${flyingTape.tapeColor} flex flex-col justify-between`}>
-              <div className="flex justify-between text-[9px] font-mono text-white font-black">
-                <span>{flyingTape.brand}</span>
-                <span>{flyingTape.cassetteNumber}</span>
-              </div>
-              <div className="text-center font-black text-white text-xs arabic-font">
-                {flyingTape.titleAr}
-              </div>
-              <div className="bg-black/80 rounded h-6 w-full" />
+            <div className="flex justify-between text-[8px] font-bold text-white"><span>{flyingTape.brand}</span><span>{flyingTape.cassetteNumber}</span></div>
+            <div className="rounded bg-black/80 h-7 flex justify-around items-center">
+              <div className="w-5 h-5 rounded-full bg-stone-200 border-[3px] border-stone-500" />
+              <div className="w-5 h-5 rounded-full bg-stone-200 border-[3px] border-stone-500" />
             </div>
+            <div className="text-center text-white text-[10px] font-black arabic-font">{flyingTape.titleAr}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -326,6 +323,8 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   // Mechanical Door State
   const [isDoorOpen, setIsDoorOpen] = useState<boolean>(!story);
   const [isInserting, setIsInserting] = useState<boolean>(false);
+  const [isSeated, setIsSeated] = useState(false);
+  const [reelsPrimed, setReelsPrimed] = useState(false);
   const [flyingTape, setFlyingTape] = useState<ShelfTape | null>(null);
 
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -593,6 +592,8 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
       audioRef.current.pause();
     }
     setIsPlaying(false);
+    setIsSeated(false);
+    setReelsPrimed(false);
 
     const origin = event.currentTarget.getBoundingClientRect();
     const destination = chamberTargetRef.current?.getBoundingClientRect();
@@ -608,34 +609,37 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
     setIsInserting(true);
 
     // Allow the tape to lift from the shelf before its curved flight.
+    // Phase 1: cassette flies into the open, outward-hinged deck.
     insertionTimerRef.current = setTimeout(() => {
-      // The deck closes only after the cassette has reached the spindle bay.
-      // Stage 2: Snap door shut
-      setIsDoorOpen(false);
-      setIsInserting(false);
-      setFlyingTape(null);
       setFlight(null);
-      insertionBusyRef.current = false;
-
+      setIsSeated(true);
       setActiveTapeId(shelfTape.id);
       setCurrentStory(selected);
       setCurrentTime(0);
       setQuizSubmitted(false);
       setQuizAnswers({});
       setPrinterDismissed(false);
-
       if (onStoryChange) onStoryChange(selected);
 
-      // Stage 3: Smooth auto-play
-      setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.currentTime = 0;
-          audioRef.current.play().then(() => {
-            setIsPlaying(true);
-          }).catch(() => {});
-        }
-      }, 250);
-    }, 1770);
+      // Phase 2: leave the tape visible in the bay before the door closes over it.
+      insertionTimerRef.current = setTimeout(() => {
+        setIsDoorOpen(false);
+        setIsInserting(false);
+        setFlyingTape(null);
+
+        // Phase 3: engage the spindles, then start playback only after the latch closes.
+        insertionTimerRef.current = setTimeout(() => {
+          setReelsPrimed(true);
+          insertionTimerRef.current = setTimeout(() => {
+            insertionBusyRef.current = false;
+            if (audioRef.current) {
+              audioRef.current.currentTime = 0;
+              audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+            }
+          }, 450);
+        }, 520);
+      }, 440);
+    }, 1590);
   };
 
   const handleEjectDoor = () => {
@@ -643,6 +647,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
       audioRef.current.pause();
     }
     setIsPlaying(false);
+    setReelsPrimed(false);
     setIsDoorOpen(true);
   };
 
@@ -797,7 +802,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                 {/* Left (in RTL): Gold Deck Title + Reel + Eject Button */}
                 <div className="flex items-center gap-1.5">
                   <div className="w-6 h-6 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-300 shadow-xs">
-                    <Disc className={`w-3.5 h-3.5 ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }} />
+                    <Disc className={`w-3.5 h-3.5 ${reelsPrimed ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }} />
                   </div>
                   <div className="flex flex-col text-right">
                     <span className="text-[7.5px] font-mono tracking-widest text-amber-400/80 uppercase font-bold">
@@ -832,8 +837,8 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                 /* Pure Mechanical Open Walkman Bay (Zero Text!) */
                 <OpenWalkmanChamber
                   isOpen={isDoorOpen}
-                  isInserting={false}
-                  flyingTape={null}
+                  isInserting={isSeated && isDoorOpen}
+                  flyingTape={isSeated ? flyingTape : null}
                 />
               ) : (
                 /* Loaded Cassette in Closed Bay */
