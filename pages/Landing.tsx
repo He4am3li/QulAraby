@@ -325,6 +325,7 @@ export const Landing = () => {
   }[lang as 'ar' | 'en'];
 
   return (
+    <>
     <div 
       tabIndex={0}
       aria-label={lang === 'ar' ? 'محتوى صفحة الهبوط' : 'Landing page content'}
@@ -819,7 +820,7 @@ export const Landing = () => {
           </div>
         </div>
       </div>}
-
+    </>
   );
 };
 
