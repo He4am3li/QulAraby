@@ -1,834 +1,695 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Sparkles, LogIn, Globe, Users, GraduationCap, 
-  Gamepad2, Mic, BookOpen, PenTool, Brain, 
-  ArrowRight, CheckCircle2, Trophy, Zap, 
-  Search, Languages, FileText, LayoutDashboard,
-  Play, Star, ShieldCheck, Clock, Award, Ear, Library,
-  AlertCircle, Loader2, X
-} from 'lucide-react';
-import { useAuth } from '../components/AuthProvider';
-import { translateAndExpand } from '../services/gemini';
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUpRight,
+  Check,
+  Globe,
+  LogIn,
+  Pause,
+  Play,
+  X,
+} from "lucide-react";
+import { useAuth } from "../components/AuthProvider";
+import { LandingArtwork } from "../components/landing/LandingArtwork";
+import type { createLandingScene } from "../components/landing/createLandingScene";
+import "./Landing.css";
 
-const ARABIC_CHARS = ['ق', 'ل', 'ع', 'ر', 'ب', 'ي', 'أ', 'ن', 'ا', 'ح', 'ب', 'س', 'د', 'و', 'ك'];
-
-const FallingLetters = () => {
-  const letters = "أب ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ي".split(" ");
-  return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      {[...Array(80)].map((_, i) => (
-        <div
-          key={i}
-          className="falling-char"
-          style={{
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * -20}s`,
-            animationDuration: `${10 + Math.random() * 15}s`,
-            fontSize: `${12 + Math.random() * 24}px`,
-          }}
-        >
-          {letters[Math.floor(Math.random() * letters.length)]}
-        </div>
-      ))}
-    </div>
-  );
+type Language = "ar" | "en";
+const readLanguage = (): Language => {
+  try {
+    return localStorage.getItem("hub_lang") === "en" ? "en" : "ar";
+  } catch {
+    return "ar";
+  }
+};
+// Only populate with an approved public booking/contact URL.
+const SCHOOL_DEMO_URL = "";
+const COPY = {
+  ar: {
+    nav: ["التجربة", "للمدارس"],
+    login: "تسجيل الدخول",
+    school: "اكتشف قُل لمدرستك",
+    book: "احجز عرضًا لمدرستك",
+    eyebrow: "العربية، كما تستحق أن تُعاش",
+    title: (
+      <>
+        لغةٌ تفتح
+        <br />
+        <em>عالمًا.</em>
+      </>
+    ),
+    intro:
+      "منصة لتعليم العربية لغير الناطقين بها. تجارب تُشرك الطالب، وأدوات تمنح المعلم مساحة أكبر للتعليم.",
+    explore: "ابدأ الاكتشاف",
+    scroll: "مرّر لتكتشف",
+    chapters: ["البداية", "اقرأ", "استمع", "اكتشف"],
+    stories: [
+      {
+        label: "01 / بين السطور",
+        title: (
+          <>
+            كل كلمة،
+            <br />
+            <em>بداية حكاية.</em>
+          </>
+        ),
+        text: "قراءة تأخذ الطالب من معرفة الكلمة إلى فهم المعنى. خطوة بخطوة، وبإيقاعه الخاص.",
+        tag: "القراءة · المفردات · الفهم",
+      },
+      {
+        label: "02 / أصغِ إلى الحكاية",
+        title: (
+          <>
+            لغةٌ تُسمع.
+            <br />
+            <em>ومعنى يبقى.</em>
+          </>
+        ),
+        text: "حكايات تستحق الإصغاء. يستمع الطالب، يفكر، ثم يعود للنص بعينٍ أكثر فهمًا.",
+        tag: "الاستماع · التفكير · التقييم",
+      },
+      {
+        label: "03 / أبعد من الدرس",
+        title: (
+          <>
+            فضول صغير.
+            <br />
+            <em>اكتشاف كبير.</em>
+          </>
+        ),
+        text: "حين يصبح التعلّم مغامرة، تتحول المحاولة إلى رغبة في الاستمرار.",
+        tag: "اللعب · التحدي · الاكتشاف",
+      },
+    ],
+    schoolsLabel: "للمدارس التي ترى أبعد",
+    schoolsTitle: (
+      <>
+        مكانٌ للطالب.
+        <br />
+        مساحةٌ للمعلم.
+        <br />
+        <em>رؤيةٌ للمدرسة.</em>
+      </>
+    ),
+    schoolsText:
+      "تجربة عربية واحدة تجمع التعلّم والتعليم والمتابعة، بهوية تناسب مجتمع مدرستك.",
+    roles: [
+      ["الطالب", "يتعلّم، يجرّب، ويتقدّم."],
+      ["المعلم", "يوجّه التعلّم ويصنع التجربة."],
+      ["المدرسة", "تتابع الرحلة من مكان واحد."],
+    ],
+    final: "تبدأ الرحلة بكلمة.",
+    finalSub: "وتكبر مع كل تجربة.",
+    rights: "قُل. مساحة للغة، وأفق للتعلّم.",
+    pause: "إيقاف الحركة",
+    resume: "تشغيل الحركة",
+    close: "إغلاق",
+    chooser: "أهلًا بك في قُل",
+    google: "المتابعة باستخدام Google",
+    connecting: "جارٍ الاتصال...",
+    demoTitle: "جرّب كلمة",
+    demoText: "نافذة صغيرة على تجربة المفردات.",
+    word: "اكتب كلمة بالإنجليزية",
+    translate: "اكتشف معناها",
+    loading: "جارٍ البحث...",
+    error: "تعذر تحميل المعنى. حاول مرة أخرى.",
+    skip: "تجاوز إلى المحتوى",
+  },
+  en: {
+    nav: ["The experience", "For schools"],
+    login: "Sign in",
+    school: "Explore QUL for your school",
+    book: "Book a school demo",
+    eyebrow: "ARABIC, BROUGHT TO LIFE",
+    title: (
+      <>
+        A language.
+        <br />
+        <em>A whole world.</em>
+      </>
+    ),
+    intro:
+      "Arabic learning for non-native speakers. Experiences that engage students. Tools that give teachers more room to teach.",
+    explore: "Explore the experience",
+    scroll: "SCROLL TO DISCOVER",
+    chapters: ["Welcome", "Read", "Listen", "Explore"],
+    stories: [
+      {
+        label: "01 / BETWEEN THE LINES",
+        title: (
+          <>
+            Every word.
+            <br />
+            <em>A new story.</em>
+          </>
+        ),
+        text: "From recognising a word to understanding its meaning. Reading that moves at the learner’s own pace.",
+        tag: "READING · VOCABULARY · UNDERSTANDING",
+      },
+      {
+        label: "02 / A STORY WORTH HEARING",
+        title: (
+          <>
+            Hear the language.
+            <br />
+            <em>Keep the meaning.</em>
+          </>
+        ),
+        text: "Listen, reflect, then return to the story with a deeper understanding.",
+        tag: "LISTENING · REFLECTION · ASSESSMENT",
+      },
+      {
+        label: "03 / BEYOND THE LESSON",
+        title: (
+          <>
+            A little curiosity.
+            <br />
+            <em>A big discovery.</em>
+          </>
+        ),
+        text: "When learning becomes an adventure, every attempt is a reason to keep going.",
+        tag: "PLAY · CHALLENGE · DISCOVERY",
+      },
+    ],
+    schoolsLabel: "FOR SCHOOLS THAT LOOK FURTHER",
+    schoolsTitle: (
+      <>
+        Room to learn.
+        <br />
+        Space to teach.
+        <br />
+        <em>A shared vision.</em>
+      </>
+    ),
+    schoolsText:
+      "Learning, teaching and progress in one Arabic experience, with a place for your whole school community.",
+    roles: [
+      ["Students", "Learn, experiment and grow."],
+      ["Teachers", "Guide learning. Shape the experience."],
+      ["Schools", "Follow the journey in one place."],
+    ],
+    final: "It starts with a word.",
+    finalSub: "It grows with every experience.",
+    rights: "QUL. A place for language. A world of learning.",
+    pause: "Pause motion",
+    resume: "Enable motion",
+    close: "Close",
+    chooser: "Welcome to QUL",
+    google: "Continue with Google",
+    connecting: "Connecting...",
+    demoTitle: "Try a word",
+    demoText: "A small window into vocabulary learning.",
+    word: "Type an English word",
+    translate: "Discover its meaning",
+    loading: "Looking it up...",
+    error: "Unable to load the meaning. Please try again.",
+    skip: "Skip to content",
+  },
 };
 
-const LogoArt = () => (
-  <div className="relative w-14 h-14 md:w-16 md:h-16 group shrink-0 flex items-center justify-center">
-    {/* Outer Glow */}
-    <div className="absolute -inset-3 bg-gradient-to-tr from-blue-500/25 via-emerald-500/25 to-amber-500/25 blur-xl rounded-full opacity-75 group-hover:opacity-100 transition-opacity duration-500" />
-    
-    {/* Container Frame */}
-    <div className="relative w-full h-full rounded-2xl md:rounded-3xl border border-slate-700/60 flex items-center justify-center shadow-2xl overflow-hidden group-hover:border-blue-500/60 transition-colors">
-      <img 
-        src="/Logo.png" 
-        alt="شعار منصة قُل" 
-        className="w-full h-full object-cover scale-125 group-hover:scale-130 transition-transform duration-300"
-      />
-    </div>
-  </div>
-);
-
-const SideRail = ({ side, text, subtext }: { side: 'left' | 'right', text: string, subtext: string }) => (
-  <div className={`fixed top-0 bottom-0 ${side === 'left' ? 'left-0' : 'right-0'} w-12 md:w-16 hidden xl:flex flex-col items-center justify-center z-40 pointer-events-none`}>
-    <div className="h-full w-[1px] bg-gradient-to-b from-transparent via-white/10 to-transparent absolute" />
-    
-    <div className={`flex flex-col items-center gap-8 ${side === 'left' ? 'rotate-180' : ''}`} style={{ writingMode: 'vertical-rl' }}>
-      <span className="text-[10px] font-black uppercase text-white/20 whitespace-nowrap">
-        {text}
-      </span>
-      <div className="w-1 h-1 rounded-full bg-blue-500/40" />
-      <span className="text-[8px] font-bold uppercase text-blue-500/40 whitespace-nowrap">
-        {subtext}
-      </span>
-    </div>
-
-    {/* Decorative Dots */}
-    <div className="absolute top-12 flex flex-col gap-1">
-      {[...Array(3)].map((_, i) => (
-        <div key={i} className="w-1 h-1 rounded-full bg-white/10" />
-      ))}
-    </div>
-    <div className="absolute bottom-12 flex flex-col gap-1">
-      {[...Array(3)].map((_, i) => (
-        <div key={i} className="w-1 h-1 rounded-full bg-white/10" />
-      ))}
-    </div>
-  </div>
-);
-
-const FloatingParticle = ({ delay }: { delay: number }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0 }}
-    animate={{ 
-      opacity: [0, 0.5, 0],
-      scale: [0, 1, 0],
-      y: [-20, -100],
-      x: Math.random() * 40 - 20
-    }}
-    transition={{ 
-      duration: 3 + Math.random() * 2,
-      repeat: Infinity,
-      delay: delay,
-      ease: "easeOut"
-    }}
-    className="absolute w-1 h-1 bg-blue-400 rounded-full blur-[1px]"
-  />
-);
-
-const CertificateMini = ({ topic, lang }: { topic: string, lang: string }) => (
-  <motion.div 
-    whileHover={{ y: -10, scale: 1.02 }}
-    className="relative w-72 h-96 bg-white rounded-[2rem] border-4 border-slate-50 shadow-2xl flex flex-col items-center text-center p-8 space-y-4 overflow-hidden group"
-  >
-    <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-[#2563eb] rotate-12"><Award size={120} /></div>
-    <Award size={40} className="text-amber-500 drop-shadow-md" />
-    <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight">
-      {lang === 'ar' ? 'شهادة إتقان' : 'Mastery Certificate'}
-    </h1>
-    <div className="w-12 h-0.5 bg-blue-500/20" />
-    <p className="text-xs text-[#2563eb] font-bold underline underline-offset-4">Arabic Learner</p>
-    <div className="flex-1 flex items-center justify-center w-full">
-      <h2 className="text-xl font-black text-emerald-900 arabic-font bg-emerald-50 px-6 py-4 rounded-2xl border border-emerald-100 shadow-inner w-full">
-        {topic}
-      </h2>
-    </div>
-    <div className="flex justify-between w-full pt-4 border-t border-slate-50">
-      <div className="text-[8px] font-black text-slate-300 uppercase">QUL ARCADE</div>
-      <div className="text-[8px] font-black text-slate-300 uppercase">2024.04.15</div>
-    </div>
-    
-    {/* Holographic Shine */}
-    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-  </motion.div>
-);
-
-const InstantDemo = ({ lang }: { lang: string }) => {
-  const [input, setInput] = useState('');
-  const [result, setResult] = useState<any>(null);
+function WordDemo({ lang }: { lang: Language }) {
+  const [word, setWord] = useState("");
+  const [result, setResult] = useState<{
+    translation?: string;
+    arabic_definition?: string;
+    english_definition?: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const handleDemo = async () => {
-    if (!input.trim()) return;
-    setLoading(true);
-    try {
-      const analysis = await translateAndExpand(input, false);
-      setResult(analysis);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const [error, setError] = useState(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  const t = COPY[lang];
   return (
-    <div className="w-full max-w-7xl mx-auto p-8 md:p-12 rounded-[3rem] bg-black/40 backdrop-blur-3xl border border-white/10 shadow-2xl">
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-3 px-6 py-4 rounded-full bg-white/5 border border-white/10">
-          <Search size={20} className="text-blue-400" />
-          <input 
-            type="text" 
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={lang === 'ar' ? 'اكتب كلمة بالإنجليزية لتجربة الذكاء الاصطناعي...' : 'Type an English word to test AI...'}
-            className="flex-1 bg-transparent border-none outline-none text-lg text-white placeholder:text-white/20"
-            onKeyDown={(e) => e.key === 'Enter' && handleDemo()}
+    <details className="qul-word-demo">
+      <summary>
+        {t.demoTitle}
+        <span>+</span>
+      </summary>
+      <p>{t.demoText}</p>
+      <form
+        onSubmit={async (event) => {
+          event.preventDefault();
+          if (!word.trim() || loading) return;
+          setLoading(true);
+          setError(false);
+          setResult(null);
+          try {
+            const { translateAndExpand } = await import("../services/gemini");
+            const data = await translateAndExpand(word.trim(), false);
+            if (mounted.current) setResult(data);
+          } catch {
+            if (mounted.current) setError(true);
+          } finally {
+            if (mounted.current) setLoading(false);
+          }
+        }}
+      >
+        <label htmlFor="qul-demo-word">{t.word}</label>
+        <div>
+          <input
+            id="qul-demo-word"
+            dir="auto"
+            maxLength={100}
+            value={word}
+            onChange={(event) => setWord(event.target.value)}
+            required
           />
-          <button 
-            onClick={handleDemo}
-            disabled={loading}
-            className="px-6 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-widest transition-all disabled:opacity-50"
-          >
-            {loading ? (lang === 'ar' ? 'جاري التحليل...' : 'Analyzing...') : (lang === 'ar' ? 'حلل الآن' : 'Analyze')}
+          <button className="qul-button" disabled={loading || !word.trim()}>
+            {loading ? t.loading : t.translate}
           </button>
         </div>
-
-        <AnimatePresence mode="wait">
-          {result && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="p-6 rounded-[2rem] bg-white/5 border border-white/10 space-y-4"
-            >
-              <div className="flex justify-between items-center">
-                <div className="text-right">
-                  <h4 className="text-3xl md:text-4xl font-black text-emerald-400 arabic-font">{result.translation}</h4>
-                  <p className="text-xs text-white/40 uppercase tracking-widest">{result.analysis?.type}</p>
-                </div>
-                <div className="text-left">
-                  <h4 className="text-xl md:text-2xl font-bold text-white/80">{result.original_word}</h4>
-                </div>
-              </div>
-              <div className="h-[1px] bg-white/10" />
-              <p className="text-sm md:text-base text-slate-300 leading-relaxed italic">
-                {lang === 'ar' ? result.arabic_definition : result.english_definition}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      </form>
+      <div aria-live="polite">
+        {error && <p role="alert">{t.error}</p>}
+        {result && (
+          <div className="qul-word-result">
+            <strong lang="ar" dir="rtl">
+              {result.translation}
+            </strong>
+            <p>
+              {lang === "ar"
+                ? result.arabic_definition
+                : result.english_definition}
+            </p>
+          </div>
+        )}
       </div>
-    </div>
+    </details>
   );
-};
-
-const FeatureCard = ({ icon: Icon, title, desc, color, delay, image }: any) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ delay, duration: 0.5 }}
-    whileHover={{ y: -5 }}
-    className="group relative p-6 rounded-[2rem] bg-slate-900 border border-white/10 backdrop-blur-xl hover:bg-white/10 transition-all overflow-hidden h-64 flex flex-col justify-end"
-  >
-    {/* Cinematic Background Image */}
-    <div className="absolute inset-0 z-0">
-      <img 
-        src={image} 
-        alt={title} 
-        className="w-full h-full object-cover opacity-30 group-hover:opacity-60 transition-opacity duration-500"
-        referrerPolicy="no-referrer"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent" />
-    </div>
-
-    <div className={`absolute -inset-4 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-10 blur-2xl transition-opacity z-0`} />
-    
-    <div className="relative z-10">
-      <div className={`w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-        <Icon className="text-white/80" size={24} />
-      </div>
-      <h3 className="text-lg font-black mb-2 arabic-font text-white/90">{title}</h3>
-      <p className="text-xs text-slate-400 leading-relaxed font-bold opacity-80">{desc}</p>
-    </div>
-    
-    {/* Arcade Corner Decoration */}
-    <div className="absolute top-2 right-2 w-1 h-1 bg-white/20 rounded-full z-10" />
-    <div className="absolute bottom-2 left-2 w-1 h-1 bg-white/20 rounded-full z-10" />
-  </motion.div>
-);
-
-const StatItem = ({ value, label, icon: Icon }: any) => (
-  <div className="flex flex-col items-center gap-2">
-    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-blue-400">
-      <Icon size={18} />
-    </div>
-    <div className="text-2xl font-black text-white">{value}</div>
-    <div className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-black">{label}</div>
-  </div>
-);
+}
 
 export const Landing = () => {
-  const { signIn, signOut, user, profile, isSigningIn, authError, clearAuthError } = useAuth();
-  const [lang, setLang] = useState(localStorage.getItem('hub_lang') || 'ar');
-  const [loginOpen, setLoginOpen] = useState(new URLSearchParams(window.location.search).get('login') === '1');
+  const { signIn, isSigningIn, authError, clearAuthError } = useAuth();
+  const [lang, setLang] = useState<Language>(readLanguage);
+  const [loginOpen, setLoginOpen] = useState(
+    () => new URLSearchParams(window.location.search).get("login") === "1",
+  );
+  const [paused, setPaused] = useState(false);
+  const [reduced, setReduced] = useState(
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+  const [wide, setWide] = useState(
+    () => window.matchMedia("(min-width: 901px)").matches,
+  );
+  const [sceneReady, setSceneReady] = useState(false);
+  const [sceneFailed, setSceneFailed] = useState(false);
+  const [chapter, setChapter] = useState(0);
+  const root = useRef<HTMLDivElement>(null),
+    stage = useRef<HTMLDivElement>(null),
+    dialog = useRef<HTMLDialogElement>(null);
+  const scene = useRef<ReturnType<typeof createLandingScene> | null>(null);
+  const progress = useRef(0);
+  const t = COPY[lang];
+  const moving = !paused && !reduced;
 
   useEffect(() => {
-    localStorage.setItem('hub_lang', lang);
-    window.dispatchEvent(new Event('langChanged'));
-  }, [lang]);
-
-  useEffect(() => {
-    const handleLangChange = () => {
-      const currentLang = localStorage.getItem('hub_lang') || 'ar';
-      if (currentLang !== lang) {
-        setLang(currentLang);
-      }
+    const sync = () => setLang(readLanguage());
+    window.addEventListener("langChanged", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("langChanged", sync);
+      window.removeEventListener("storage", sync);
     };
-    window.addEventListener('langChanged', handleLangChange);
-    return () => window.removeEventListener('langChanged', handleLangChange);
-  }, [lang]);
-
-  const t = {
-    ar: {
-      tagline: 'بوابتك الذكية لإتقان اللغة العربية',
-      sloganPrefix: 'Learn Arabic until you can say',
-      sloganMain: 'أنا عربي',
-      subTagline: 'منصة تفاعلية تجمع بين متعة الألعاب وقوة الذكاء الاصطناعي لتمكين الطلاب والمعلمين.',
-      login: 'دخول المنصة',
-      teacherTitle: 'للمعلمين',
-      teacherDesc: 'أنشئ أوراق عمل تفاعلية وتحديات حية في ثوانٍ باستخدام الذكاء الاصطناعي.',
-      studentTitle: 'للطلاب',
-      studentDesc: 'تعلم من خلال ألعاب الأركيد، وتحدث مع رفيقك الذكي، وحطم الأرقام القياسية.',
-      featuresTitle: 'مختبرات الإتقان الذكية',
-      demoTitle: 'جرب ذكاء "قُل" الآن',
-      statsTitle: 'إمكانات منصة قُل',
-      hallOfFame: 'جدار الإنجازات',
-      feature1: 'التحدث الذكي',
-      feature1Desc: 'محادثات صوتية مباشرة مع رفيق ذكي يصحح نطقك ببراعة.',
-      feature2: 'تحديات الأركيد',
-      feature2Desc: 'حول دروسك إلى ألعاب تنافسية مع أصدقائك في صالة الألعاب.',
-      feature3: 'المختبر اللغوي',
-      feature3Desc: 'تحليل عميق للجذور والأوزان والمعاني بلمسة واحدة.',
-      feature4: 'شهادات الإتقان',
-      feature4Desc: 'وثق تقدمك بشهادات رقمية فاخرة تعكس مهاراتك الحقيقية.',
-      teacherSectionTitle: 'مختبر المعلم الذكي',
-      teacherSectionDesc: 'وداعاً لساعات التحضير الطويلة. "قُل" هو مساعدك الذي لا ينام.',
-      vocabularyTools: 'ترجمة وتحليل المفردات',
-      learningActivities: 'ألعاب وأنشطة تعليمية',
-      learnerTools: 'أدوات للطلاب والمعلمين',
-      aiTools: 'مساعدات لغوية بالذكاء الاصطناعي',
-      cta: 'ابدأ رحلتك الآن'
-    },
-    en: {
-      tagline: 'Your smart gateway to mastering the Arabic',
-      sloganPrefix: 'Learn Arabic until you can say',
-      sloganMain: 'ANA ARABI',
-      subTagline: 'An interactive platform combining game fun with AI power to empower students and teachers.',
-      login: 'Enter Arcade',
-      teacherTitle: 'For Teachers',
-      teacherDesc: 'Create interactive worksheets and live challenges in seconds using AI.',
-      studentTitle: 'For Students',
-      studentDesc: 'Learn through arcade games, chat with your smart companion, and break records.',
-      featuresTitle: 'Smart Mastery Labs',
-      demoTitle: 'Test Qul AI Now',
-      statsTitle: 'What QUL Offers',
-      hallOfFame: 'Hall of Fame',
-      feature1: 'Smart Speech',
-      feature1Desc: 'Real-time voice chats with a smart companion who corrects your pronunciation.',
-      feature2: 'Arcade Challenges',
-      feature2Desc: 'Turn your lessons into competitive games with friends in the arcade.',
-      feature3: 'Linguistic Lab',
-      feature3Desc: 'Deep analysis of roots, weights, and meanings with one touch.',
-      feature4: 'Mastery Certificates',
-      feature4Desc: 'Document your progress with luxury digital certificates reflecting your skills.',
-      teacherSectionTitle: "The Teacher's Smart Lab",
-      teacherSectionDesc: 'Goodbye to long preparation hours. "Qul" is your assistant that never sleeps.',
-      vocabularyTools: 'Vocabulary translation and analysis',
-      learningActivities: 'Educational games and activities',
-      learnerTools: 'Tools for students and teachers',
-      aiTools: 'AI-assisted language tools',
-      cta: 'Start Your Journey'
+  }, []);
+  const changeLanguage = () => {
+    const next = lang === "ar" ? "en" : "ar";
+    setLang(next);
+    try {
+      localStorage.setItem("hub_lang", next);
+      window.dispatchEvent(new Event("langChanged"));
+    } catch {
+      /* Storage may be blocked. */
     }
-  }[lang as 'ar' | 'en'];
+  };
+  useEffect(() => {
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)"),
+      desktop = window.matchMedia("(min-width: 901px)");
+    const update = () => {
+      setReduced(motion.matches);
+      setWide(desktop.matches);
+    };
+    motion.addEventListener("change", update);
+    desktop.addEventListener("change", update);
+    return () => {
+      motion.removeEventListener("change", update);
+      desktop.removeEventListener("change", update);
+    };
+  }, []);
+  useEffect(() => {
+    const element = root.current;
+    if (!element) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const sections = Array.from(
+        element.querySelectorAll<HTMLElement>(".qul-chapter"),
+      );
+      const top = element.scrollTop;
+      let value = 0;
+      for (let i = 0; i < sections.length; i++) {
+        const start = sections[i].offsetTop - sections[0].offsetTop;
+        const next = sections[i + 1]
+          ? sections[i + 1].offsetTop - sections[0].offsetTop
+          : start + sections[i].offsetHeight;
+        if (top >= start)
+          value = i + Math.min(1, (top - start) / (next - start));
+      }
+      progress.current = Math.min(3, value);
+      scene.current?.setProgress(progress.current);
+      setChapter(Math.min(3, Math.floor(value + 0.5)));
+      element.style.setProperty(
+        "--qul-progress",
+        String(top / Math.max(1, element.scrollHeight - element.clientHeight)),
+      );
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    element.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    update();
+    return () => {
+      cancelAnimationFrame(frame);
+      element.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, []);
+  useEffect(() => {
+    if (!wide || !moving || sceneFailed || !stage.current) return;
+    let cancelled = false;
+    const host = stage.current;
+    Promise.all([
+      import("../components/landing/createLandingScene"),
+      document.fonts.load('100px "Al-Wissam"'),
+    ])
+      .then(([module]) => {
+        if (cancelled) return;
+        try {
+          scene.current = module.createLandingScene(host, () => {
+            setSceneFailed(true);
+            setSceneReady(false);
+          });
+          scene.current.setProgress(progress.current);
+          setSceneReady(true);
+        } catch {
+          setSceneFailed(true);
+          setSceneReady(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setSceneFailed(true);
+      });
+    return () => {
+      cancelled = true;
+      scene.current?.dispose();
+      scene.current = null;
+      setSceneReady(false);
+    };
+  }, [wide, moving, sceneFailed]);
+  useEffect(() => {
+    const modal = dialog.current;
+    if (!modal) return;
+    if (loginOpen && !modal.open) modal.showModal();
+    if (!loginOpen && modal.open) modal.close();
+  }, [loginOpen]);
+  const goTo = (id: string) => {
+    const target = root.current?.querySelector<HTMLElement>(`#${id}`);
+    target?.scrollIntoView({
+      behavior: moving ? "smooth" : "instant",
+      block: "start",
+    });
+    target?.focus({ preventScroll: true });
+  };
+  const openLogin = () => {
+    clearAuthError();
+    setLoginOpen(true);
+  };
+  const schoolAction = () =>
+    SCHOOL_DEMO_URL
+      ? window.open(SCHOOL_DEMO_URL, "_blank", "noopener,noreferrer")
+      : goTo("qul-schools");
 
   return (
-    <>
-    <div 
-      tabIndex={0}
-      aria-label={lang === 'ar' ? 'محتوى صفحة الهبوط' : 'Landing page content'}
-      className={`h-screen min-h-screen w-full overflow-y-auto overflow-x-hidden overscroll-y-contain text-white selection:bg-blue-500/30 relative focus:outline-none ${lang === 'ar' ? 'arabic-font' : 'font-sans'}`} 
-      dir={lang === 'ar' ? 'rtl' : 'ltr'}
-      style={{ background: 'linear-gradient(to left, #0f172a 0%, #064e3b 100%)', WebkitOverflowScrolling: 'touch' }}
+    <div
+      ref={root}
+      className={`qul-landing ${moving ? "" : "qul-still"} ${sceneReady ? "qul-webgl-ready" : ""}`}
+      lang={lang}
+      dir={lang === "ar" ? "rtl" : "ltr"}
     >
-      {/* Side Rails - Fills the empty side space */}
-      <SideRail 
-        side="left" 
-        text={lang === 'ar' ? 'تعلم اللغة العربية' : 'LEARN ARABIC'} 
-        subtext="POWERED BY GEMINI 3.1" 
-      />
-      <SideRail 
-        side="right" 
-        text={lang === 'ar' ? 'نظام قُل للأركيد' : 'QUL ARCADE SYSTEM'} 
-        subtext="STATUS: ONLINE // AI ACTIVE" 
-      />
-
-      {/* Atmospheric Particles in the sides */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute left-0 top-0 bottom-0 w-32">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%` }}>
-              <FloatingParticle delay={i * 0.5} />
-            </div>
-          ))}
-        </div>
-        <div className="absolute right-0 top-0 bottom-0 w-32">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} style={{ top: `${Math.random() * 100}%`, right: `${Math.random() * 100}%` }}>
-              <FloatingParticle delay={i * 0.5 + 2} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Background Decorative Glows - Cinematic Luxury */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-600/5 rounded-full blur-[120px] animate-pulse delay-700" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-900/5 rounded-full blur-[150px]" />
-      </div>
-      
-      <FallingLetters />
-
-      {/* Navigation */}
-      <nav className="relative z-50 flex items-center justify-between px-6 py-6 md:px-16 md:py-8 w-full backdrop-blur-md bg-black/20 border-b border-white/5">
-        <div className="flex items-center gap-6">
-          <LogoArt />
-          <div className="flex flex-col">
-            <span className="text-xl md:text-2xl font-black tracking-tighter text-white/90">قُل / Qul</span>
-            <span className="text-[10px] md:text-[12px] font-black text-blue-400 uppercase tracking-[0.3em] opacity-60">Arcade Experience</span>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-4 md:gap-8">
-          <button 
-            onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
-            className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-[11px] font-black uppercase tracking-widest text-white/70"
-          >
-            {lang === 'ar' ? 'English' : 'العربية'}
+      <button className="qul-skip" onClick={() => goTo("qul-intro")}>
+        {t.skip}
+      </button>
+      <header className="qul-header">
+        <button
+          className="qul-brand"
+          onClick={() => goTo("qul-intro")}
+          aria-label={lang === "ar" ? "قُل، البداية" : "QUL, home"}
+        >
+          <img src="/Logo.png" width="42" height="42" alt="" />
+          <span>
+            قُل<span className="qul-brand-latin">QUL</span>
+          </span>
+        </button>
+        <nav
+          aria-label={lang === "ar" ? "القائمة الرئيسية" : "Main navigation"}
+        >
+          <button onClick={() => goTo("qul-read")}>{t.nav[0]}</button>
+          <button onClick={() => goTo("qul-schools")}>{t.nav[1]}</button>
+        </nav>
+        <div className="qul-header-actions">
+          <button className="qul-language" onClick={changeLanguage}>
+            <Globe size={15} />
+            {lang === "ar" ? "EN" : "العربية"}
           </button>
-          <button 
-            onClick={() => signIn()}
-            disabled={isSigningIn}
-            className="flex items-center gap-3 bg-white text-black px-6 py-2 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all shadow-lg disabled:opacity-50"
-          >
-            {isSigningIn ? <Loader2 size={14} className="animate-spin text-blue-500" /> : <LogIn size={14} />}
-            {isSigningIn ? (lang === 'ar' ? 'جاري الاتصال...' : 'Connecting...') : t.login}
+          <button className="qul-login" onClick={openLogin}>
+            <LogIn size={15} />
+            {t.login}
           </button>
         </div>
-      </nav>
-
-      {/* Auth Error Banner if login issue occurred */}
-      <AnimatePresence>
-        {authError && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="relative z-50 max-w-4xl mx-auto px-6 pt-4"
-          >
-            <div className="bg-red-950/80 border border-red-500/50 rounded-2xl p-4 flex items-center justify-between gap-4 text-red-200 shadow-2xl backdrop-blur-xl">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-                <span className="text-xs md:text-sm font-semibold">{authError}</span>
-              </div>
-              <button
-                onClick={clearAuthError}
-                className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-red-300 hover:text-white"
-              >
-                <X size={16} />
-              </button>
+      </header>
+      {authError && !loginOpen && (
+        <div className="qul-auth-notice" role="alert">
+          <span>{authError}</span>
+          <button onClick={clearAuthError} aria-label={t.close}>
+            <X size={18} />
+          </button>
+        </div>
+      )}
+      <main>
+        <div className="qul-journey">
+          <div className="qul-stage" aria-hidden="true">
+            <div className="qul-stage-glow" />
+            <div className="qul-stage-fallback">
+              <LandingArtwork chapter={chapter} />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Hero Section */}
-      <main className="relative z-10 pt-12 pb-20 px-6">
-        <div className="w-full max-w-[1600px] mx-auto text-center space-y-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-6"
-          >
-            <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-blue-400 text-[10px] md:text-[14px] font-black uppercase tracking-wide">
-              {t.tagline}
-            </div>
-
-            {/* Slogan Design - Luxury Cinematic Card flanked by Account & Language Cards */}
-            <div className="flex items-center justify-center gap-4 py-4 w-full">
-              {/* Account Holder Rectangle - Right in Arabic (RTL), Left in English (LTR) */}
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
-                onClick={() => {
-                  if (user) {
-                    signOut();
-                  } else {
-                    signIn();
-                  }
-                }}
-                className="hidden lg:flex flex-col items-center justify-center px-6 py-8 rounded-[2rem] bg-black/40 border border-white/10 hover:border-blue-500/50 backdrop-blur-3xl w-56 text-center gap-3 shrink-0 shadow-2xl cursor-pointer group transition-all"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform overflow-hidden">
-                  {isSigningIn ? (
-                    <Loader2 size={22} className="animate-spin text-blue-400" />
-                  ) : user?.photoURL ? (
-                    <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover rounded-2xl" />
-                  ) : (
-                    <Users size={22} />
-                  )}
-                </div>
-                <span className="text-xs font-black text-white/90 truncate max-w-[180px]">
-                  {profile?.displayName || user?.displayName || (user ? user.email?.split('@')[0] : (lang === 'ar' ? 'صاحب الحساب' : 'Account Holder'))}
-                </span>
-                <span className="text-[9px] font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 px-3.5 py-1 rounded-full border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all">
-                  {isSigningIn ? (lang === 'ar' ? 'جاري الاتصال...' : 'Connecting...') : user ? (lang === 'ar' ? 'مسجل الدخول' : 'Logged In') : (lang === 'ar' ? 'دخول المنصة' : 'Sign In')}
-                </span>
-              </motion.div>
-
-              {/* Main "أنا عربي" Rectangle */}
-              <motion.div 
-                initial={{ scale: 0.98, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.8 }}
-                className="relative group w-full max-w-3xl"
-              >
-                {/* Animated Glow Backing */}
-                <div className="absolute -inset-8 bg-gradient-to-r from-blue-600/20 via-emerald-500/20 to-blue-600/20 rounded-[3rem] blur-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-1000 animate-pulse" />
-                
-                <div className="relative bg-black/40 backdrop-blur-3xl border border-white/10 px-8 md:px-16 py-8 md:py-12 rounded-[3rem] shadow-[0_30px_70px_rgba(0,0,0,0.6)] flex flex-col items-center gap-4 overflow-hidden">
-                  {/* Decorative Elements */}
-                  <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.05)_0%,_transparent_50%)] pointer-events-none" />
-                  <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.05)_0%,_transparent_50%)] pointer-events-none" />
-                  
-                  <div className="flex items-center gap-6 w-full">
-                    <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                    <p className="text-white font-black text-[10px] md:text-[16px] uppercase text-center whitespace-nowrap tracking-widest drop-shadow-[0_0_20px_rgba(255,255,255,0.9)]">
-                      {t.sloganPrefix}
-                    </p>
-                    <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                  </div>
-                  
-                  <h1 className="text-4xl md:text-7xl lg:text-8xl font-black font-aref relative whitespace-nowrap">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/60 drop-shadow-[0_10px_30px_rgba(255,255,255,0.4)]">
-                      {t.sloganMain}
-                    </span>
-                    {/* Subtle underline */}
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: '100%' }}
-                      transition={{ delay: 1, duration: 1.5 }}
-                      className="absolute -bottom-4 left-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent"
-                    />
-                  </h1>
-                </div>
-              </motion.div>
-
-              {/* Language Switcher Rectangle - Left in Arabic (RTL), Right in English (LTR) */}
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
-                onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
-                className="hidden lg:flex flex-col items-center justify-center px-6 py-8 rounded-[2rem] bg-black/40 border border-white/10 hover:border-emerald-500/50 backdrop-blur-3xl w-56 text-center gap-3 shrink-0 shadow-2xl cursor-pointer group transition-all"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
-                  <Globe size={22} />
-                </div>
-                <span className="text-xs font-black text-white/90">
-                  {lang === 'ar' ? 'تغيير اللغة' : 'Change Language'}
-                </span>
-                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3.5 py-1 rounded-full border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                  {lang === 'ar' ? 'English (EN)' : 'العربية (AR)'}
-                </span>
-              </motion.div>
-            </div>
-
-            <p className="text-[10px] md:text-[18px] text-slate-400 w-full mx-auto font-bold leading-relaxed opacity-70 lg:whitespace-nowrap overflow-hidden text-ellipsis">
-              {t.subTagline}
-            </p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-            className="pt-8"
-          >
-            <button 
-              onClick={() => setLoginOpen(true)}
-              className="group relative inline-flex items-center gap-4 bg-gradient-to-r from-blue-600 to-emerald-600 px-10 py-5 rounded-2xl font-black text-sm md:text-base uppercase tracking-widest shadow-2xl shadow-blue-900/40 hover:scale-105 transition-all"
-            >
-              {t.cta}
-              <ArrowRight className={`w-5 h-5 transition-transform group-hover:translate-x-2 ${lang === 'ar' ? 'rotate-180 group-hover:-translate-x-2' : ''}`} />
-            </button>
-          </motion.div>
-
-          {/* Instant AI Demo Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="pt-24 space-y-10"
-          >
-            <div className="flex flex-col items-center gap-3">
-              <h2 className="text-2xl md:text-4xl font-black arabic-font text-white/90">{t.demoTitle}</h2>
-              <div className="w-20 h-1.5 bg-blue-500 rounded-full" />
-            </div>
-            <div className="w-full max-w-[1600px] mx-auto">
-              <InstantDemo lang={lang} />
-            </div>
-          </motion.div>
-
-          {/* Smart Mastery Labs Section */}
-          <div className="pt-24 space-y-10">
-            <div className="flex flex-col items-center gap-2">
-              <h2 className="text-2xl md:text-3xl font-black arabic-font text-white/90">{t.featuresTitle}</h2>
-              <div className="w-16 h-1 bg-blue-500 rounded-full" />
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-              <FeatureCard 
-                icon={Search} 
-                title={lang === 'ar' ? 'اختبار المستوى' : 'Placement Test'} 
-                desc={lang === 'ar' ? 'تحديد مستوى ذكي وشامل' : 'Smart comprehensive assessment'} 
-                color="from-slate-500 to-slate-800"
-                image="https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=800&q=80"
-                delay={0.1}
-              />
-              <FeatureCard 
-                icon={GraduationCap} 
-                title={lang === 'ar' ? 'الحروف الهجائية' : 'Alphabet'} 
-                desc={lang === 'ar' ? 'تعلم النطق والكتابة' : 'Learn pronunciation & writing'} 
-                color="from-blue-500 to-indigo-600"
-                image="https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0?auto=format&fit=crop&w=800&q=80"
-                delay={0.2}
-              />
-              <FeatureCard 
-                icon={Ear} 
-                title={lang === 'ar' ? 'الاستماع الذكي' : 'AI Listening'} 
-                desc={lang === 'ar' ? 'تطوير مهارات الاستيعاب' : 'Boost comprehension skills'} 
-                color="from-cyan-500 to-blue-600"
-                image="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80"
-                delay={0.3}
-              />
-              <FeatureCard 
-                icon={Mic} 
-                title={lang === 'ar' ? 'التحدث الصوتي' : 'AI Voice Chat'} 
-                desc={lang === 'ar' ? 'محادثة مباشرة مع الذكاء الاصطناعي' : 'Real-time AI conversation'} 
-                color="from-rose-500 to-red-600"
-                image="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=800&q=80"
-                delay={0.4}
-              />
-              <FeatureCard 
-                icon={BookOpen} 
-                title={lang === 'ar' ? 'القراءة التفاعلية' : 'Interactive Reading'} 
-                desc={lang === 'ar' ? 'قصص ونصوص ذكية' : 'Smart stories & texts'} 
-                color="from-emerald-500 to-teal-600"
-                image="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80"
-                delay={0.5}
-              />
-              <FeatureCard 
-                icon={PenTool} 
-                title={lang === 'ar' ? 'الكتابة الإبداعية' : 'Smart Writing'} 
-                desc={lang === 'ar' ? 'تصحيح ذكي وتعبير' : 'AI correction & composition'} 
-                color="from-violet-500 to-purple-600"
-                image="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80"
-                delay={0.6}
-              />
-              <FeatureCard 
-                icon={Languages} 
-                title={lang === 'ar' ? 'المترجم الذكي' : 'Smart Translator'} 
-                desc={lang === 'ar' ? 'تحليل لغوي عميق' : 'Deep linguistic analysis'} 
-                color="from-amber-500 to-orange-600"
-                image="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80"
-                delay={0.7}
-              />
-              <FeatureCard 
-                icon={Library} 
-                title={lang === 'ar' ? 'محرر القواعد' : 'Grammar Hub'} 
-                desc={lang === 'ar' ? 'معلم قواعد ذكي' : 'AI grammar tutor'} 
-                color="from-indigo-500 to-blue-700"
-                image="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80"
-                delay={0.8}
-              />
-              <FeatureCard 
-                icon={Gamepad2} 
-                title={lang === 'ar' ? 'الألعاب التعليمية' : 'Educational Games'} 
-                desc={lang === 'ar' ? 'تعلم بالمرح والتحدي' : 'Learn with fun & challenge'} 
-                color="from-orange-500 to-red-600"
-                image="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80"
-                delay={0.9}
-              />
-              <FeatureCard 
-                icon={Globe} 
-                title={lang === 'ar' ? 'اللهجات العربية' : 'Arabic Dialects'} 
-                desc={lang === 'ar' ? 'استكشف تنوع اللغة' : 'Explore language diversity'} 
-                color="from-cyan-600 to-blue-800"
-                image="https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=800&q=80"
-                delay={1.0}
-              />
-              <FeatureCard 
-                icon={FileText} 
-                title={lang === 'ar' ? 'أوراق العمل' : 'Worksheets'} 
-                desc={lang === 'ar' ? 'توليد تلقائي للتمارين' : 'Auto-generated exercises'} 
-                color="from-slate-600 to-slate-900"
-                image="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80"
-                delay={1.1}
-              />
-              <FeatureCard 
-                icon={Brain} 
-                title={lang === 'ar' ? 'الذاكرة الذكية' : 'Smart Memory'} 
-                desc={lang === 'ar' ? 'تتبع ومراجعة الأخطاء' : 'Track & review mistakes'} 
-                color="from-pink-500 to-rose-600"
-                image="https://images.unsplash.com/photo-1516534775068-ba3e7458af70?auto=format&fit=crop&w=800&q=80"
-                delay={1.2}
-              />
-            </div>
+            <div ref={stage} className="qul-canvas" />
+            <span className="qul-stage-caption">
+              QUL /{" "}
+              {
+                [
+                  "A WORLD OF WORDS",
+                  "BETWEEN THE LINES",
+                  "LISTEN CLOSELY",
+                  "STAY CURIOUS",
+                ][chapter]
+              }
+            </span>
           </div>
-
-          {/* Teacher's Lab Section */}
-          <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="pt-32 grid grid-cols-1 md:grid-cols-2 gap-12 items-center text-right"
+          <section
+            className="qul-chapter qul-hero"
+            id="qul-intro"
+            tabIndex={-1}
           >
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest">
-                <Users size={12} />
-                {t.teacherTitle}
-              </div>
-              <h2 className="text-3xl md:text-4xl font-black arabic-font leading-tight">
-                {t.teacherSectionTitle}
-              </h2>
-              <p className="text-sm text-slate-400 font-bold leading-relaxed">
-                {t.teacherSectionDesc}
+            <div className="qul-chapter-copy">
+              <p className="qul-eyebrow">
+                <span />
+                {t.eyebrow}
               </p>
-              <ul className="space-y-3">
-                {[
-                  lang === 'ar' ? 'إنشاء أوراق عمل ذكية بضغطة زر' : 'Create smart worksheets with one click',
-                  lang === 'ar' ? 'تتبع تقدم الطلاب بلوحة تحكم سينمائية' : 'Track student progress with cinematic dashboard',
-                  lang === 'ar' ? 'إدارة التحديات المباشرة في الفصل' : 'Manage live challenges in the classroom'
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-white/80 text-xs font-bold">
-                    <CheckCircle2 size={16} className="text-emerald-500" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="relative group overflow-hidden rounded-3xl">
-              <div className="absolute -inset-4 bg-blue-500/20 blur-3xl rounded-full opacity-50 group-hover:opacity-80 transition-opacity" />
-              <div className="relative aspect-video rounded-3xl bg-slate-900 border border-white/10 shadow-2xl overflow-hidden">
-                <video 
-                  autoPlay 
-                  loop 
-                  muted 
-                  playsInline 
-                  className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity"
+              <h1>{t.title}</h1>
+              <p className="qul-description">{t.intro}</p>
+              <div className="qul-hero-actions">
+                <button className="qul-button" onClick={schoolAction}>
+                  {SCHOOL_DEMO_URL ? t.book : t.school}
+                  <ArrowUpRight size={19} />
+                </button>
+                <button
+                  className="qul-text-button"
+                  onClick={() => goTo("qul-read")}
                 >
-                  <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-a-futuristic-interface-31831-large.mp4" type="video/mp4" />
-                </video>
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-emerald-500/20" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:scale-110 transition-transform cursor-pointer shadow-2xl">
-                    <Play size={24} fill="currentColor" />
-                  </div>
-                </div>
-                {/* Mock UI Elements Overlay */}
-                <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
-                  <div className="h-2 w-24 bg-white/20 rounded-full animate-pulse" />
-                  <div className="flex gap-1">
-                    <div className="h-1.5 w-1.5 bg-red-500/50 rounded-full" />
-                    <div className="h-1.5 w-1.5 bg-amber-500/50 rounded-full" />
-                    <div className="h-1.5 w-1.5 bg-emerald-500/50 rounded-full" />
-                  </div>
-                </div>
-                <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                  <div className="space-y-1">
-                    <div className="h-1.5 w-32 bg-white/10 rounded-full" />
-                    <div className="h-1.5 w-20 bg-white/10 rounded-full" />
-                  </div>
-                  <div className="h-8 w-8 bg-blue-500/20 rounded-lg border border-blue-500/30 flex items-center justify-center">
-                    <Sparkles size={14} className="text-blue-400 animate-spin-slow" />
-                  </div>
-                </div>
+                  {t.explore}
+                  <ArrowDown size={16} />
+                </button>
+              </div>
+              <div className="qul-hero-note">
+                <span>قُل</span>
+                <p>
+                  Learn Arabic.
+                  <br />
+                  <b>Find your voice.</b>
+                </p>
               </div>
             </div>
-          </motion.div>
-
-          {/* Platform Capabilities Section */}
-          <div className="pt-32 pb-12">
-            <div className="p-8 md:p-12 rounded-[3rem] bg-white/5 border border-white/10 backdrop-blur-2xl relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.05)_0%,_transparent_70%)]" />
-              <div className="relative mb-8 text-center">
-                <h2 className="text-2xl md:text-3xl font-black arabic-font text-white/90">{t.statsTitle}</h2>
-                <div className="w-16 h-1 bg-blue-500 rounded-full mx-auto mt-3" />
+            <div className="qul-mobile-art">
+              <LandingArtwork chapter={0} />
+            </div>
+            <button
+              className="qul-scroll-hint"
+              onClick={() => goTo("qul-read")}
+            >
+              <span>{t.scroll}</span>
+              <ArrowDown size={17} />
+            </button>
+          </section>
+          {t.stories.map((story, index) => (
+            <section
+              className="qul-chapter"
+              id={["qul-read", "qul-listen", "qul-explore"][index]}
+              key={index}
+              tabIndex={-1}
+            >
+              <div className="qul-chapter-copy">
+                <p className="qul-eyebrow">{story.label}</p>
+                <h2>{story.title}</h2>
+                <p className="qul-description">{story.text}</p>
+                <p className="qul-tags">{story.tag}</p>
+                <button
+                  className="qul-text-button"
+                  onClick={() =>
+                    goTo(["qul-listen", "qul-explore", "qul-schools"][index])
+                  }
+                >
+                  {index === 2 ? t.nav[1] : t.chapters[index + 2]}
+                  <ArrowDown size={16} />
+                </button>
               </div>
-              <div className="relative grid grid-cols-2 md:grid-cols-4 gap-8">
-                <StatItem icon={Languages} value={lang === 'ar' ? 'مفردات' : 'Vocabulary'} label={t.vocabularyTools} />
-                <StatItem icon={Zap} value={lang === 'ar' ? 'أنشطة' : 'Activities'} label={t.learningActivities} />
-                <StatItem icon={Users} value={lang === 'ar' ? 'تعليم' : 'Learning'} label={t.learnerTools} />
-                <StatItem icon={Sparkles} value={lang === 'ar' ? 'مساعد' : 'AI Tools'} label={t.aiTools} />
+              <div className="qul-mobile-art">
+                <LandingArtwork chapter={index + 1} />
               </div>
-            </div>
-          </div>
-
-          {/* CTA Footer */}
-          <div className="pt-24 pb-20 text-center space-y-10">
-            <div className="flex flex-col items-center gap-2">
-              <h2 className="text-2xl md:text-3xl font-black arabic-font">{t.hallOfFame}</h2>
-              <div className="w-16 h-1 bg-amber-500 rounded-full" />
-            </div>
-            
-            <div className="flex flex-wrap justify-center gap-8 px-4">
-              <CertificateMini 
-                topic={lang === 'ar' ? 'الجملة الاسمية' : 'Nominal Sentence'} 
-                lang={lang} 
-              />
-              <CertificateMini 
-                topic={lang === 'ar' ? 'كان وأخواتها' : 'Kana & Sisters'} 
-                lang={lang} 
-              />
-              <CertificateMini 
-                topic={lang === 'ar' ? 'الفعل المضارع' : 'Present Tense'} 
-                lang={lang} 
-              />
-            </div>
-
-            <div className="pt-8">
-              <button 
-                onClick={() => setLoginOpen(true)}
-                className="group relative px-10 py-5 bg-white text-black rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)] overflow-hidden"
+            </section>
+          ))}
+          <div
+            className="qul-chapter-nav"
+            aria-label={lang === "ar" ? "مشاهد التجربة" : "Experience chapters"}
+          >
+            {t.chapters.map((name, index) => (
+              <button
+                key={name}
+                aria-label={name}
+                aria-current={chapter === index ? "step" : undefined}
+                onClick={() =>
+                  goTo(
+                    ["qul-intro", "qul-read", "qul-listen", "qul-explore"][
+                      index
+                    ],
+                  )
+                }
               >
-                <span className="relative z-10 flex items-center gap-3">
-                  {t.login}
-                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span>0{index + 1}</span>
+                <i />
               </button>
-            </div>
+            ))}
           </div>
         </div>
+        <section className="qul-schools" id="qul-schools" tabIndex={-1}>
+          <div className="qul-school-heading">
+            <p className="qul-eyebrow">{t.schoolsLabel}</p>
+            <h2>{t.schoolsTitle}</h2>
+          </div>
+          <div className="qul-school-detail">
+            <p className="qul-description">{t.schoolsText}</p>
+            <div className="qul-roles">
+              {t.roles.map(([title, description], i) => (
+                <div key={title}>
+                  <span>0{i + 1}</span>
+                  <div>
+                    <h3>{title}</h3>
+                    <p>{description}</p>
+                  </div>
+                  <Check size={18} />
+                </div>
+              ))}
+            </div>
+            {SCHOOL_DEMO_URL ? (
+              <a
+                className="qul-button"
+                href={SCHOOL_DEMO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t.book}
+                <ArrowUpRight size={18} />
+              </a>
+            ) : (
+              <button className="qul-button" onClick={openLogin}>
+                {t.login}
+                <ArrowLeft size={18} />
+              </button>
+            )}
+            <WordDemo lang={lang} />
+          </div>
+        </section>
+        <section className="qul-finale">
+          <p className="qul-eyebrow">QUL / قُل</p>
+          <h2>{t.final}</h2>
+          <p>{t.finalSub}</p>
+          <button className="qul-button" onClick={openLogin}>
+            {t.login}
+            <ArrowUpRight size={18} />
+          </button>
+          <div className="qul-finale-letters" aria-hidden="true">
+            ع ر ب ي
+          </div>
+        </section>
       </main>
-
-      {/* Footer Branding */}
-      <footer className="relative z-10 py-8 border-t border-white/5 text-center">
-        <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.5em]">
-          &copy; {new Date().getFullYear()} QUL ARCADE EXPERIENCE • ALL RIGHTS RESERVED
-        </p>
+      <footer className="qul-footer">
+        <span>{t.rights}</span>
+        <span dir="ltr">© {new Date().getFullYear()} QUL</span>
       </footer>
+      {!reduced && (
+        <button
+          className="qul-motion"
+          onClick={() => setPaused((value) => !value)}
+          aria-label={paused ? t.resume : t.pause}
+          aria-pressed={paused}
+        >
+          {paused ? <Play size={14} /> : <Pause size={14} />}
+          <span>{paused ? t.resume : t.pause}</span>
+        </button>
+      )}
+      <dialog
+        ref={dialog}
+        className="qul-auth"
+        onCancel={() => setLoginOpen(false)}
+        onClose={() => setLoginOpen(false)}
+        dir={lang === "ar" ? "rtl" : "ltr"}
+        aria-labelledby="qul-auth-title"
+      >
+        <button
+          className="qul-dialog-close"
+          onClick={() => setLoginOpen(false)}
+          aria-label={t.close}
+        >
+          <X size={22} />
+        </button>
+        <img src="/Logo.png" width="64" height="64" alt="قُل" />
+        <h2 id="qul-auth-title">{t.chooser}</h2>
+        <button
+          className="qul-button"
+          onClick={() => void signIn()}
+          disabled={isSigningIn}
+        >
+          {isSigningIn ? t.connecting : t.google}
+          <LogIn size={18} />
+        </button>
+        {authError && <p role="alert">{authError}</p>}
+      </dialog>
     </div>
-      {loginOpen && <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#030b16]/90 backdrop-blur-2xl p-3 sm:p-6" dir={lang === 'ar' ? 'rtl' : 'ltr'} role="dialog" aria-modal="true" aria-label={lang === 'ar' ? 'اختيار الحساب' : 'Choose an account'}>
-        <div className="relative w-full max-w-[820px] overflow-hidden rounded-[30px] border border-emerald-300/30 bg-[#081823] shadow-[0_28px_110px_rgba(0,0,0,.75),0_0_70px_rgba(16,185,129,.17)]">
-          <div className="pointer-events-none absolute -top-32 start-1/3 h-72 w-72 rounded-full bg-emerald-400/20 blur-[90px]" />
-          <div className="pointer-events-none absolute -bottom-28 end-0 h-72 w-72 rounded-full bg-blue-500/20 blur-[90px]" />
-          <div className="pointer-events-none absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent" />
-          <button type="button" onClick={() => setLoginOpen(false)} aria-label={lang === 'ar' ? 'إغلاق' : 'Close'} className="absolute top-4 end-4 z-10 rounded-full p-2 text-slate-300 hover:bg-white/10 hover:text-white"><X size={20}/></button>
-          <div className="relative flex flex-col gap-8 p-6 sm:p-10 md:flex-row md:items-center md:gap-12 md:p-14">
-            <div className="flex-1 text-center md:text-start">
-              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-300/40 bg-emerald-400/10 shadow-[0_0_35px_rgba(16,185,129,.3)]"><img src="/Logo.png" alt="QUL" className="h-14 w-14 rounded-xl object-cover" /></div>
-              <p className="mb-3 text-xs font-bold tracking-[.3em] text-emerald-300">QUL • ACCOUNT ACCESS</p>
-              <h2 className="text-3xl font-black text-white sm:text-4xl arabic-font">{lang === 'ar' ? 'اختر حسابك' : 'Choose an account'}</h2>
-              <p className="mt-4 text-sm leading-7 text-slate-300 arabic-font">{lang === 'ar' ? 'تابع إلى منصة قُل باستخدام حساب Google الخاص بك.' : 'Continue to QUL with your Google account.'}</p>
-            </div>
-            <div className="w-full flex-1 overflow-hidden rounded-2xl border border-white/15 bg-white/[.055] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,.12)] sm:p-5">
-              <p className="mb-4 px-2 text-xs font-semibold text-slate-300 arabic-font">{lang === 'ar' ? 'الدخول الآمن' : 'Secure sign-in'}</p>
-              <button type="button" disabled={isSigningIn} onClick={signIn} className="group flex w-full items-center gap-4 rounded-xl border border-emerald-300/25 bg-white/10 px-4 py-4 text-start text-sm font-bold text-white transition hover:border-emerald-300/70 hover:bg-emerald-400/15 disabled:opacity-50"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-lg font-black text-blue-600">G</span><span className="flex-1 arabic-font">{isSigningIn ? (lang === 'ar' ? 'جارٍ الاتصال...' : 'Connecting...') : (lang === 'ar' ? 'اختيار حساب Google' : 'Choose Google account')}</span><ArrowRight size={18} className="opacity-70" /></button>
-              <p className="mt-4 px-2 text-xs leading-6 text-slate-400 arabic-font">{lang === 'ar' ? 'ستظهر حسابات Google المتاحة في نافذة Google الآمنة. لا يمكن عرضها مسبقًا دون إذنك.' : 'Available Google accounts appear in Google’s secure chooser. They cannot be listed here without your permission.'}</p>
-              {authError && <p role="alert" className="mt-3 text-xs text-rose-300">{authError}</p>}
-            </div>
-          </div>
-        </div>
-      </div>}
-    </>
   );
 };
-
 export default Landing;
