@@ -1287,7 +1287,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                         </>
                       )}
                     </div>
-                  ) : {listeningStage === 'first' ? (
+                  ) : listeningStage === 'first' ? (
                     <div className="text-center text-[11px] arabic-font py-4">استمع إلى القصة أولًا. ستظهر الأسئلة هنا بعد انتهاء التسجيل.</div>
                   ) : listeningStage === 'second' ? (
                     <div className="text-center text-[11px] arabic-font py-3">
