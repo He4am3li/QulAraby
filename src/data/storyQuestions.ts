@@ -374,8 +374,8 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
       "question": "ماذا قال جحا للرجل؟",
       "options": [
         "أنا ذاهب إلى السوق.",
-        "اسأل الحمار.",
-        "أنا لا أملك حمارًا."
+        "اسأل الحمار",
+        "أنا لا أملك حماراً."
       ],
       "correctIndex": 1,
       "explanation": ""
@@ -394,7 +394,7 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
       "question": "ماذا فعل الرجل في النهاية؟",
       "options": [
         "غضب من جحا.",
-        "ضحك من كلام جحا.",
+        "ضحك من كلام جحا",
         "ضرب الحمار."
       ],
       "correctIndex": 1,
@@ -403,8 +403,8 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا كان يركب جحا؟",
       "options": [
-        "حصانًا",
-        "حمارًا",
+        "حصاناً",
+        "حماراً",
         "دراجة"
       ],
       "correctIndex": 1,
@@ -415,9 +415,9 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا أخذ جحا من جاره؟",
       "options": [
-        "طعامًا",
+        "طعاماً",
         "قِدْرًا",
-        "مفتاحًا"
+        "مفتاحاً"
       ],
       "correctIndex": 1,
       "explanation": ""
@@ -425,18 +425,18 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا أعاد جحا مع القدر الكبير بعد يومين؟",
       "options": [
-        "قدرًا صغيرًا",
-        "ذهبًا",
+        "قِدْرًا صغيرًا",
+        "ذهباً",
         "لا شيء"
       ],
       "correctIndex": 0,
       "explanation": ""
     },
     {
-      "question": "ماذا قال جحا عن القدر الصغير؟",
+      "question": "ماذا قال جحا عندما سأله الجار عن القدر الصغير؟",
       "options": [
         "ضاع القدر الصغير.",
-        "قدرك أنجب قدرًا صغيرًا.",
+        "قِدْرُكَ أنجبَ قِدْرًا صغيرًا",
         "اشتريت هذا القدر الجديد."
       ],
       "correctIndex": 1,
@@ -447,7 +447,7 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
       "options": [
         "أعاده جحا لجاره.",
         "كسره جحا.",
-        "لم يُعِدْهُ جحا."
+        "لم يُعِدْهُ جحا"
       ],
       "correctIndex": 2,
       "explanation": ""
@@ -455,9 +455,9 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا قال جحا عندما استغرب الجار من موت القدر؟",
       "options": [
-        "إذا كان القدر ينجب، فلماذا لا يموت؟",
+        "إذا كان القِدْرُ يُنْجِبُ، فلماذا لا يموتُ؟!",
         "القدر سرقه لص.",
-        "الأواني لا تعيش طويلًا."
+        "الأواني لا تعيش طويلاً."
       ],
       "correctIndex": 0,
       "explanation": ""
@@ -465,9 +465,9 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
   ],
   "juha-fish": [
     {
-      "question": "إلى أين ذهب جحا ليشتري سمكًا؟",
+      "question": "إلى أين ذهب جحا ليشتري سمكاً؟",
       "options": [
-        "إلى السوق",
+        "إلى السُّوقِ",
         "إلى المسجد",
         "إلى البيت"
       ],
@@ -478,7 +478,7 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
       "question": "ماذا قال البائع عن السمك؟",
       "options": [
         "هو سمك مجمد.",
-        "لقد اصطدته اليوم.",
+        "لقد اصطَدْتُهُ اليومَ",
         "هو سمك قديم."
       ],
       "correctIndex": 1,
@@ -487,7 +487,7 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "أين وضع جحا أذنه؟",
       "options": [
-        "بجانب السمك",
+        "بجانب السَّمَكِ",
         "على جدار المحل",
         "على رأس البائع"
       ],
@@ -498,7 +498,7 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
       "question": "ماذا سأل جحا السمك؟",
       "options": [
         "عن سعر الكيلو",
-        "عن أخبار البحر",
+        "عن أَخْبارِ البَحْرِ",
         "عن لون الماء"
       ],
       "correctIndex": 1,
@@ -507,7 +507,7 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا قال السمك لجحا بحسب قوله؟",
       "options": [
-        "إنه خرج من البحر منذ أسبوع.",
+        "إنه خرج من البحر منذ أسبوع",
         "إنه طازج ولذيذ.",
         "البحر قريب من هنا."
       ],
@@ -529,8 +529,8 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "أين وضع جحا حذاءه عندما دخل؟",
       "options": [
-        "تركه عند الباب.",
-        "وضعه في كيس وحمله معه.",
+        "تركه على الأرض عند الباب.",
+        "وضعه في كيس وحمله معه",
         "أعطاه لصديقه."
       ],
       "correctIndex": 1,
@@ -539,9 +539,9 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "لماذا حمل جحا حذاءه؟",
       "options": [
-        "لأنه يخشى أن يسرقه أحد.",
+        "لأنه يخشى أن يسرقه أحد",
         "لأنه يريد تنظيفه.",
-        "لأنه جديد جدًا."
+        "لأنه جديد جداً."
       ],
       "correctIndex": 0,
       "explanation": ""
@@ -550,7 +550,7 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
       "question": "بماذا نصحه الرجل؟",
       "options": [
         "أن يتركه في البيت.",
-        "أن يضعه عند الباب ويتوكل على الله.",
+        "أن يضعه عند الباب ويتوكل على الله",
         "أن يبيعه."
       ],
       "correctIndex": 1,
@@ -559,8 +559,8 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا قال جحا عن حذائه؟",
       "options": [
-        "حذائي ثقيل جدًا.",
-        "حذائي لا يعرف الطريق إلى البيت.",
+        "حذائي ثقيل جداً.",
+        "حذائي لا يعرف الطريق إلى البيت",
         "حذائي ضاع مني."
       ],
       "correctIndex": 1,
@@ -571,7 +571,7 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا اشترى جحا؟",
       "options": [
-        "جرة من العسل",
+        "جَرَّةً مِنَ العَسَلِ",
         "زجاجة من الزيت",
         "وعاء من الحليب"
       ],
@@ -581,7 +581,7 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "أين وضع جحا جرة العسل؟",
       "options": [
-        "في المطبخ",
+        "في المَطْبَخِ",
         "في غرفة النوم",
         "في الشارع"
       ],
@@ -592,14 +592,14 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
       "question": "كيف وجد جحا الجرة عندما عاد؟",
       "options": [
         "مكسورة",
-        "فارغة",
+        "فارِغَةً",
         "مغلقة بإحكام"
       ],
       "correctIndex": 1,
       "explanation": ""
     },
     {
-      "question": "مَنْ سَأَلَهُ جُحا عن العسل؟",
+      "question": "من سأل جحا عن العسل؟",
       "options": [
         "زوجته",
         "ابنه",
@@ -611,9 +611,9 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا وجد جحا حول فم ابنه؟",
       "options": [
-        "عسلًا",
+        "عَسَلًا",
         "ماءً",
-        "طعامًا"
+        "طعاماً"
       ],
       "correctIndex": 0,
       "explanation": ""
@@ -623,9 +623,9 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا أراد جحا أن يشتري من السوق؟",
       "options": [
-        "كتابًا جديدًا",
-        "نظارة",
-        "قلمًا"
+        "كتاباً جديداً",
+        "نَظَّارَةً",
+        "قلماً"
       ],
       "correctIndex": 1,
       "explanation": ""
@@ -633,7 +633,7 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا حاول جحا أن يفعل بعد أن لبس النظارة؟",
       "options": [
-        "أن يقرأ كتابًا",
+        "أن يقرأ كتاباً",
         "أن ينظر في المرآة",
         "أن يكتب رسالة"
       ],
@@ -643,17 +643,17 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "هل استطاع جحا القراءة بالنظارات؟",
       "options": [
-        "نعم، بسهولة.",
-        "لا، لم يستطع.",
-        "قرأ جزءًا قليلًا."
+        "نعم، بسهولة",
+        "لا، لم يستطع",
+        "قرأ جزءاً قليلاً"
       ],
       "correctIndex": 1,
       "explanation": ""
     },
     {
-      "question": "ماذا سأله البائع؟",
+      "question": "ما هو السؤال الذي سأله البائع لجحا؟",
       "options": [
-        "هل تعرف القراءة؟",
+        "هل تَعْرِفُ القِراءَةَ؟",
         "هل معك مال كافٍ؟",
         "هل تحب هذا اللون؟"
       ],
@@ -663,9 +663,9 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "لماذا أراد جحا نظارة وهو لا يعرف القراءة؟",
       "options": [
-        "لكي يرى الأشياء البعيدة.",
-        "لكي يتعلم القراءة.",
-        "لكي يرتديها أمام أصدقائه."
+        "لكي يرى الأشياء البعيدة",
+        "لكي أَتَعَلَّمَ القِراءَةَ",
+        "لكي يرتديها أمام أصدقائه"
       ],
       "correctIndex": 1,
       "explanation": ""
@@ -675,9 +675,9 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا كان يفعل جحا في الشارع؟",
       "options": [
-        "يبحث عن مفتاحه",
+        "يَبْحَثُ عَنْ مِفْتاحِهِ",
         "ينتظر جاره",
-        "يبيع المفاتيح"
+        "يباع المفاتيح"
       ],
       "correctIndex": 0,
       "explanation": ""
@@ -686,17 +686,17 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
       "question": "من ساعد جحا في البحث؟",
       "options": [
         "ابنه",
-        "جاره",
+        "جارُهُ",
         "رجل غريب"
       ],
       "correctIndex": 1,
       "explanation": ""
     },
     {
-      "question": "أين فقد جحا المفتاح حقًا؟",
+      "question": "أين فقد جحا المفتاح حقاً؟",
       "options": [
         "في الشارع أمام البيت",
-        "داخل البيت",
+        "داخِلَ البَيْتِ",
         "في السوق البعيد"
       ],
       "correctIndex": 1,
@@ -705,19 +705,19 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "لماذا تعجب الجار من جحا؟",
       "options": [
-        "لأنه يبحث في الشارع والمفتاح ضاع في البيت.",
-        "لأنه يبحث ليلًا دون ضوء.",
-        "لأنه لا يعرف شكل المفتاح."
+        "لأنه يبحث في الشارع والمفتاح ضاع في البيت",
+        "لأنه يبحث ليلاً بدون ضوء",
+        "لأنه لا يعرف شكل المفتاح"
       ],
       "correctIndex": 0,
       "explanation": ""
     },
     {
-      "question": "لماذا بحث جحا في الشارع؟",
+      "question": "ما هو عذر جحا للبحث في الشارع؟",
       "options": [
-        "لأن الباب مفتوح.",
-        "لأن الضوء هنا أفضل.",
-        "لأن المفتاح سقط من النافذة."
+        "لأن الباب مفتوح",
+        "لأن الضَّوْءَ هُنا أَفْضَلُ",
+        "لأن المفتاح سقط من النافذة"
       ],
       "correctIndex": 1,
       "explanation": ""
@@ -727,7 +727,7 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "إلى أين ذهب جحا؟",
       "options": [
-        "إلى الطبيب",
+        "إلى الطَّبيبِ",
         "إلى السوق",
         "إلى دكان العسل"
       ],
@@ -739,26 +739,26 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
       "options": [
         "ألم في بطنه",
         "ألم في عينه عندما يشرب الشاي",
-        "صداع شديد"
+        "صداع شديد في الرأس"
       ],
       "correctIndex": 1,
       "explanation": ""
     },
     {
-      "question": "ماذا طلب الطبيب من جحا ليفهم المشكلة؟",
+      "question": "ماذا فعل الطبيب ليعرف المشكلة؟",
       "options": [
-        "أن يريه كيف يشرب الشاي.",
-        "أن يأخذ دواءً مرًا.",
-        "أن يستخدم سماعة طبية."
+        "أراه كيف يشرب الشاي",
+        "أعطاه دواءً مراً",
+        "فحصه بسماعة طبية"
       ],
       "correctIndex": 0,
       "explanation": ""
     },
     {
-      "question": "ماذا كان يوجد في كوب الشاي؟",
+      "question": "ماذا كان يوجد في كوب الشاي أثناء شرب جحا؟",
       "options": [
         "ليمون",
-        "ملعقة",
+        "مِلْعَقَةٌ",
         "سكر كثير"
       ],
       "correctIndex": 1,
@@ -767,9 +767,9 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا طلب الطبيب من جحا؟",
       "options": [
-        "أن يترك الشاي نهائيًا.",
-        "أن يخرج الملعقة قبل الشرب.",
-        "أن يشرب ماءً دافئًا."
+        "أن يترك شرب الشاي نهائياً",
+        "أن يخرج الملعقة من الكوب قبل الشرب",
+        "أن يشرب ماءً دافئاً"
       ],
       "correctIndex": 1,
       "explanation": ""
@@ -779,18 +779,18 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "لماذا ذهب جحا إلى السوق؟",
       "options": [
-        "ليشتري حمارًا جديدًا",
-        "ليبيع حماره",
+        "ليشتري حماراً جديداً",
+        "لِيَبِيعَ حِمارَهُ",
         "ليبيع الحطب"
       ],
       "correctIndex": 1,
       "explanation": ""
     },
     {
-      "question": "كم طلب جحا ثمنًا للحمار؟",
+      "question": "كم طلب جحا ثمناً للحمار؟",
       "options": [
-        "مئة درهم",
-        "خمسين درهمًا",
+        "مِئَةِ دِرْهَمٍ",
+        "خمسين درهماً",
         "ألف درهم"
       ],
       "correctIndex": 0,
@@ -799,19 +799,19 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا قال جحا عن ذكاء حماره؟",
       "options": [
-        "إنه غبي.",
-        "إنه ذكي جدًا.",
-        "إنه يفهم لغة البشر."
+        "إنه غبي ولا يفهم شيئاً",
+        "إنَّهُ ذَكِيٌّ جِدًّا",
+        "إنه يفهم لغة البشر"
       ],
       "correctIndex": 1,
       "explanation": ""
     },
     {
-      "question": "ما الدليل على ذكاء الحمار؟",
+      "question": "ما هو الدليل على ذكاء الحمار؟",
       "options": [
-        "أنه يعرف طريق السوق.",
-        "أنه يهرب إذا أراد جحا الذهاب إلى العمل.",
-        "أنه يحمل أثقالًا كبيرة."
+        "أنه يعرف طريق السوق",
+        "أنه يهرب منه إذا أراد الذهاب للعمل",
+        "أنه يحمل أثقالاً كبيرة"
       ],
       "correctIndex": 1,
       "explanation": ""
@@ -819,9 +819,9 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "كيف انتهى كلام الرجل؟",
       "options": [
-        "ضحك وقال إنه أذكى منا جميعًا.",
-        "غضب وترك المكان.",
-        "دفع ثمن الحمار."
+        "ضحك وقال إنه أذكى منا جميعاً",
+        "غضب وترك المكان",
+        "دفع ثمن الحمار فوراً"
       ],
       "correctIndex": 0,
       "explanation": ""
@@ -829,19 +829,19 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
   ],
   "juha-door": [
     {
-      "question": "ماذا حمل جحا على ظهره عندما خرج؟",
+      "question": "ماذا حمل جحا على ظهره عندما خرج من البيت؟",
       "options": [
         "حقيبة ملابس",
-        "باب البيت",
+        "بابَ البَيْتِ",
         "جرة عسل"
       ],
       "correctIndex": 1,
       "explanation": ""
     },
     {
-      "question": "إلى أين كان جحا ذاهبًا؟",
+      "question": "إلى أين كان جحا ذاهباً؟",
       "options": [
-        "إلى السوق",
+        "إلى السُّوقِ",
         "إلى بيت جاره",
         "إلى المسجد"
       ],
@@ -851,9 +851,9 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "لماذا حمل جحا باب بيته؟",
       "options": [
-        "ليبيعه في السوق.",
-        "ليصلحه.",
-        "لأنه يخاف أن يدخل لص إلى بيته."
+        "لكي يبيعه في السوق",
+        "ليخافه اللص",
+        "لأنه يخاف أن يدخل لص إلى بيته"
       ],
       "correctIndex": 2,
       "explanation": ""
@@ -861,8 +861,8 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "ماذا قال الجار لجحا؟",
       "options": [
-        "بيتك الآن بلا باب.",
-        "هذا باب جميل جدًا.",
+        "بيتك الآن بلا باب",
+        "هذا باب جميل جداً",
         "هل تحتاج إلى مساعدة؟"
       ],
       "correctIndex": 0,
@@ -871,9 +871,9 @@ export const JUHA_BEGINNER_QUESTIONS: Record<string, StoryQuestion[]> = {
     {
       "question": "بماذا رد جحا على جاره؟",
       "options": [
-        "المفتاح معي ولن يدخل اللص.",
-        "سأشتري بابًا جديدًا.",
-        "الباب ثقيل جدًا."
+        "المفتاح معي ولن يدخل اللص",
+        "سأشتري باباً جديداً غداً",
+        "الباب ثقيل جداً"
       ],
       "correctIndex": 0,
       "explanation": ""
