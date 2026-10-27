@@ -8,7 +8,7 @@ import {
   Flame, Ghost, Search, BookOpen, Music, 
   Image as ImageIcon, Puzzle, Rocket, Globe,
   Heart, Zap as ZapIcon, Shield, Coins, ShoppingCart,
-  Check, X, HelpCircle, Dice5, Loader2, Train
+  Check, X, HelpCircle, Dice5, Loader2, Train, DoorOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -28,6 +28,7 @@ import { MemoryMatch } from '../components/games/MemoryMatch';
 import { ArabicSpaceJourney } from '../components/games/ArabicSpaceJourney';
 import { KnowledgeSupermarket } from '../components/games/KnowledgeSupermarket';
 import { DetectiveMystery } from '../components/games/DetectiveMystery';
+import { ArcadeCorridor } from '../components/games/ArcadeCorridor';
 import supermarketParkingImg from '../src/assets/images/supermarket_parking_intro_1791186344934.jpg';
 import supermarketAisleImg from '../src/assets/images/supermarket_aisle_hall_1791186364722.jpg';
 import vibrantSpaceNebula from '../src/assets/images/vibrant_cinematic_space_nebula_1790179537071.jpg';
@@ -68,6 +69,19 @@ interface GameDef {
 
 // --- Enhanced Game Data ---
 const CONSOLE_GAMES: GameDef[] = [
+  {
+    id: 'arcade-corridor',
+    category: 'adventure', categoryAr: 'مغامرات ثلاثية الأبعاد', categoryEn: '3D Adventure',
+    titleAr: 'بوابات المغامرة', titleEn: 'Adventure Portals',
+    descriptionAr: 'ادخل إلى ممر ثلاثي الأبعاد واستكشف أبوابًا تؤدي إلى أربع ألعاب تعليمية موجودة في المنصة.',
+    descriptionEn: 'Walk through an interactive 3D corridor and discover four existing learning games behind the doors.',
+    detailsAr: 'تجربة تفاعلية تبدأ ببوابة كبيرة، ثم يمكنك السير داخل الممر بالتمرير أو السحب، وفتح الأبواب للدخول إلى دكان المعرفة، نحو الفضاء، من الجاني؟، وقطار القواعد.',
+    detailsEn: 'Open the entrance doors, explore the hallway with scrolling or swiping and enter four playable educational rooms.',
+    samples: [],
+    cover: vibrantSpaceNebula, hero: vibrantSpaceNebula,
+    color: 'from-emerald-800 via-amber-900 to-stone-950',
+    icon: <DoorOpen size={32}/>
+  },
     { 
     id: 'detective-mystery', 
     category: 'detective',
@@ -588,7 +602,7 @@ export const Games: React.FC = () => {
       {activeGame && (
         <div className="fixed inset-0 z-[200] bg-[#020617] flex flex-col">
           {/* Floating Back Button (Hidden for Knowledge Supermarket to avoid duplicate conflicting arrows) */}
-          {activeGame !== 'knowledge-supermarket' && activeGame !== 'detective-mystery' && (
+          {activeGame !== 'knowledge-supermarket' && activeGame !== 'detective-mystery' && activeGame !== 'arcade-corridor' && (
             <motion.button 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -601,6 +615,11 @@ export const Games: React.FC = () => {
           )}
 
           <div className="flex-1 relative">
+            {activeGame === 'arcade-corridor' && (
+              <ArcadeCorridor lang={lang} onBack={() => setActiveGame(null)} onLaunch={(gameId) => {
+                if (CONSOLE_GAMES.some(game => game.id === gameId && !game.locked)) setActiveGame(gameId);
+              }} />
+            )}
             {activeGame === 'detective-mystery' && (
               <DetectiveMystery
                 onBack={() => {
