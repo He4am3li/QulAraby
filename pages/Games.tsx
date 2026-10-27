@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Gamepad2, Trophy, Star, RefreshCcw, 
   ArrowRight, ArrowLeft, CheckCircle2, XCircle, 
@@ -406,6 +407,12 @@ const DetailsModal: React.FC<{ game: GameDef, lang: 'ar' | 'en', onClose: () => 
 
 export const Games: React.FC = () => {
   const { user } = useAuth();
+  // Allow a stable, shareable game URL. The app's existing authentication
+  // and school access checks remain in place on the /games route.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const deepLinkedGame = searchParams.get('game');
+  const validDeepLinkedGame = CONSOLE_GAMES.some(g => g.id === deepLinkedGame && !g.locked)
+    ? deepLinkedGame : null;
   const [lang, setLang] = React.useState<'ar' | 'en'>(
     (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar'
   );
@@ -427,9 +434,9 @@ export const Games: React.FC = () => {
   };
 
   
-  const [isBooting, setIsBooting] = React.useState(true);
+  const [isBooting, setIsBooting] = React.useState(() => !validDeepLinkedGame);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [activeGame, setActiveGame] = React.useState<string | null>(null);
+  const [activeGame, setActiveGame] = React.useState<string | null>(() => validDeepLinkedGame);
   const [selectedIdx, setSelectedIdx] = React.useState(0);
   const [score, setScore] = React.useState(0);
   const [level, setLevel] = React.useState(1);
@@ -437,6 +444,27 @@ export const Games: React.FC = () => {
   const [loadingVocab, setLoadingVocab] = React.useState(false);
   const [isWon, setIsWon] = React.useState(false);
   const [showDetails, setShowDetails] = React.useState(false);
+
+  React.useEffect(() => {
+    // Synchronize back/forward navigation with a deep-linked game.
+    if (validDeepLinkedGame) {
+      setIsBooting(false);
+      setIsLoading(false);
+      setActiveGame(validDeepLinkedGame);
+      setSelectedIdx(Math.max(0, CONSOLE_GAMES.findIndex(g => g.id === validDeepLinkedGame)));
+    }
+  }, [validDeepLinkedGame]);
+
+  const closeGame = () => {
+    setActiveGame(null);
+    if (searchParams.has('game')) {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.delete('game');
+        return next;
+      }, { replace: true });
+    }
+  };
 
   React.useEffect(() => {
     if (user) fetchVocab();
@@ -606,7 +634,7 @@ export const Games: React.FC = () => {
             <motion.button 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              onClick={() => setActiveGame(null)}
+              onClick={closeGame}
               whileHover={{ scale: 1.1, x: 5 }}
               className="absolute top-6 left-6 z-[150] w-12 h-12 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all border border-white/10"
             >
@@ -616,7 +644,7 @@ export const Games: React.FC = () => {
 
           <div className="flex-1 relative">
             {activeGame === 'arcade-corridor' && (
-              <ArcadeCorridor lang={lang} onBack={() => setActiveGame(null)} onLaunch={(gameId) => {
+              <ArcadeCorridor lang={lang} onBack={closeGame} onLaunch={(gameId) => {
                 if (CONSOLE_GAMES.some(game => game.id === gameId && !game.locked)) setActiveGame(gameId);
               }} />
             )}
