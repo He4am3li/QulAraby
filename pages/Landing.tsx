@@ -307,6 +307,7 @@ export const Landing = () => {
   const progress = useRef(0);
   const t = COPY[lang];
   const moving = !paused && !reduced;
+  const floatLetters = ["ق", "ل", "ع", "ر", "ب", "ي", "ة", "م", "ن", "ت", "س", "أ"];
 
   useEffect(() => {
     const sync = () => setLang(readLanguage());
@@ -483,6 +484,19 @@ export const Landing = () => {
       )}
       <main>
         <div className="qul-journey">
+          <div className="qul-floating-letters" aria-hidden="true">
+            {floatLetters.map((letter, index) => (
+              <span
+                key={index}
+                style={{
+                  left: `${(index * 37 + 11) % 94}%`,
+                  top: `${(index * 23 + 7) % 90}%`,
+                  animationDelay: `${-(index * 1.7)}s`,
+                  animationDuration: `${14 + (index % 5) * 3}s`,
+                }}
+              >{letter}</span>
+            ))}
+          </div>
           <div className="qul-stage" aria-hidden="true">
             <div className="qul-stage-glow" />
             <div className="qul-stage-fallback">
@@ -506,7 +520,7 @@ export const Landing = () => {
             id="qul-intro"
             tabIndex={-1}
           >
-            <div className="qul-chapter-copy">
+            <div className="qul-chapter-copy qul-glass">
               <p className="qul-eyebrow">
                 <span />
                 {t.eyebrow}
@@ -553,7 +567,7 @@ export const Landing = () => {
               key={index}
               tabIndex={-1}
             >
-              <div className="qul-chapter-copy">
+              <div className="qul-chapter-copy qul-glass">
                 <p className="qul-eyebrow">{story.label}</p>
                 <h2>{story.title}</h2>
                 <p className="qul-description">{story.text}</p>
