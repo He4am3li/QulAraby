@@ -10,6 +10,9 @@ import { STORY_CASSETTES, StoryCassette } from '../src/data/storyCassettes';
 import { SHELF_TAPES, ShelfTape, getStoryForShelfTape, getShelfTapesForLevel } from '../src/data/shelfCassettes';
 import { getStoryQuestions, StoryQuestion } from '../src/data/storyQuestions';
 import { ARABIC_ENGLISH_DICT } from '../src/data/arabicEnglishDict';
+import { useAuth } from './AuthProvider';
+import { db } from '../firebase';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface CassettePlayerProps {
   audioSrc?: string;
@@ -96,6 +99,7 @@ const ShelfCassetteItem: React.FC<{
   return (
     <div className="flex flex-col items-center gap-1 w-full">
       <button
+        data-tape-id={tape.id}
         onClick={onClick}
         title={`${tape.titleAr} (${tape.brand} ${tape.year}) - انقر للتشغيل`}
         className={`group w-full rounded-md p-1.5 relative transition-all duration-200 flex flex-col justify-between overflow-hidden cursor-pointer shadow-md select-none ${
@@ -341,6 +345,12 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   // Vocabulary Translation Popup
   const [wordTranslation, setWordTranslation] = useState<{ arabic: string; english: string } | null>(null);
 
+  const { user } = useAuth();
+  const [completionView, setCompletionView] = useState<'receipt' | 'words'>('receipt');
+  const [savedVocabulary, setSavedVocabulary] = useState<string[]>([]);
+  const [savingWord, setSavingWord] = useState<string | null>(null);
+  const [vocabularyError, setVocabularyError] = useState('');
+
   // Compact Thermal Quiz State
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState<boolean>(false);
@@ -405,6 +415,9 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
       setCurrentStory(story);
       setCurrentTime(0);
       setIsDoorOpen(false);
+      setCompletionView('receipt');
+      setSavedVocabulary([]);
+      setVocabularyError('');
       setQuizSubmitted(false);
       setQuizAnswers({});
       setListeningStage('first');
@@ -643,6 +656,9 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
       setActiveTapeId(shelfTape.id);
       setCurrentStory(selected);
       setCurrentTime(0);
+      setCompletionView('receipt');
+      setSavedVocabulary([]);
+      setVocabularyError('');
       setQuizSubmitted(false);
       setQuizAnswers({});
       setListeningStage('first');
@@ -708,6 +724,90 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
     setQuizScore(score);
     setQuizSubmitted(true);
     setListeningStage('final');
+    setCompletionView('receipt');
+    audioRef.current?.pause();
+    setIsPlaying(false);
+    setReelsPrimed(false);
+  };
+
+
+  // Only display words that actually occur in this story and have exact dictionary meanings.
+  const suggestedWords = useMemo(() => {
+    const source = currentStory?.paragraphs?.join(' ') || '';
+    const tokens = source.match(/[\u0621-\u064A\u064B-\u065F]+/g) || [];
+    const seen = new Set<string>();
+    const result: { word: string; meaning: string }[] = [];
+    for (const token of tokens) {
+      const word = token.replace(/[\u064B-\u065F]/g, '');
+      if (word.length < 3 || seen.has(word)) continue;
+      const meaning = ARABIC_ENGLISH_DICT[word];
+      if (!meaning) continue;
+      seen.add(word);
+      result.push({ word, meaning });
+      if (result.length === 4) break;
+    }
+    return result;
+  }, [currentStory]);
+
+  const pronounceWord = (word: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const speech = new SpeechSynthesisUtterance(word);
+    speech.lang = 'ar';
+    speech.rate = 0.85;
+    window.speechSynthesis.speak(speech);
+  };
+
+  const saveWord = async (word: string, meaning: string) => {
+    if (!user) { setVocabularyError('يرجى تسجيل الدخول لحفظ الكلمات في المفردات.'); return; }
+    setSavingWord(word);
+    setVocabularyError('');
+    try {
+      const id = 'listening_' + Array.from(word).map(ch => ch.codePointAt(0)!.toString(16)).join('_');
+      await setDoc(doc(db, 'users', user.uid, 'vocabulary', id), {
+        id, userId: user.uid, original_word: word, word,
+        translation: meaning, meaning_en: meaning, meaning_ar: word,
+        is_english_to_arabic: false,
+        english_definition: meaning, arabic_definition: word,
+        analysis: {
+          type: 'noun',
+          details_ar: { category: '', sub_category: '', rule: '', example: '' },
+          details_en: { category: '', sub_category: '', rule: '', example: '' }
+        },
+        review_count: 0, last_reviewed: '', next_review: '',
+        mastery_level: 2, createdAt: serverTimestamp()
+      }, { merge: true });
+      setSavedVocabulary(prev => prev.includes(word) ? prev : [...prev, word]);
+    } catch {
+      setVocabularyError('تعذّر حفظ الكلمة. حاول مرة أخرى.');
+    } finally {
+      setSavingWord(null);
+    }
+  };
+
+  const startAgain = () => {
+    setQuizAnswers({});
+    setFirstAttempt({});
+    setQuizSubmitted(false);
+    setQuestionIndex(0);
+    setCompletionView('receipt');
+    setListeningStage('first');
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+        setReelsPrimed(true);
+      }).catch(() => {});
+    }
+  };
+
+  const nextTape = () => {
+    const index = visibleTapes.findIndex(t => t.id === activeTapeId);
+    const next = visibleTapes[index + 1];
+    if (!next) return;
+    // Use the same real shelf click handler to preserve cassette insertion animation.
+    const shelf = document.querySelector<HTMLButtonElement>('[data-tape-id="' + next.id + '"]');
+    shelf?.click();
   };
 
   const progressRatio = duration > 0 ? currentTime / duration : 0;
@@ -1150,7 +1250,44 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
 
                 {/* Compact Thermal Receipt Paper (Fits strictly within page, no scrolling needed!) */}
                 <div className="w-full bg-[#fcfbf7] border-x-2 border-stone-300 rounded-t-sm shadow-md p-2.5 font-mono text-stone-900 h-[170px] overflow-hidden flex flex-col justify-center">
-                  {listeningStage === 'first' ? (
+                  {quizSubmitted ? (
+                    <div className="h-full flex flex-col justify-between gap-1 text-center arabic-font" dir="rtl">
+                      {completionView === 'receipt' ? (
+                        <>
+                          <div className="text-[11px] font-black text-stone-900">تذكرة الإنجاز · {currentStory?.titleAr}</div>
+                          <div className="flex justify-around gap-2 text-[10px] font-bold">
+                            <span>الفهم الأول: {questions.slice(0, 5).filter((q, i) => firstAttempt[i] === q.correctIndex).length}/{Math.min(5, questions.length)}</span>
+                            <span>بعد المراجعة: {quizScore}/{Math.min(5, questions.length)}</span>
+                          </div>
+                          <div className="text-[10px] text-emerald-800">✓ اكتمل الاستماع والمراجعة</div>
+                          <div className="flex justify-center flex-wrap gap-1">
+                            <button disabled={visibleTapes.findIndex(t => t.id === activeTapeId) >= visibleTapes.length - 1} className="rounded bg-stone-900 text-white px-2 py-1 text-[10px] disabled:opacity-40" onClick={nextTape}>الشريط التالي</button>
+                            <button className="rounded bg-stone-200 px-2 py-1 text-[10px]" onClick={startAgain}>أحاول مرة أخرى</button>
+                            <button className="rounded bg-stone-200 px-2 py-1 text-[10px]" onClick={() => setCompletionView('words')}>كلماتي الجديدة</button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-[10px] font-black">مفردات مختارة من النص</div>
+                          {suggestedWords.length ? (
+                            <div className="grid grid-cols-2 gap-1">
+                              {suggestedWords.map(({ word, meaning }) => (
+                                <div key={word} className="flex items-center justify-between gap-1 border border-stone-300 rounded px-1 py-0.5 text-[9px]">
+                                  <span className="truncate" title={meaning}>{word} · {meaning}</span>
+                                  <span className="flex shrink-0 gap-1">
+                                    <button title="نطق الكلمة" onClick={() => pronounceWord(word)}><Volume2 className="w-3 h-3" /></button>
+                                    <button title="حفظ في المفردات" disabled={savingWord === word || savedVocabulary.includes(word)} onClick={() => saveWord(word, meaning)}>{savedVocabulary.includes(word) ? '✓' : '+'}</button>
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : <div className="text-[10px]">لا تتوفر كلمات بمعانٍ موثوقة لهذا النص حاليًا.</div>}
+                          {vocabularyError && <div className="text-[9px] text-red-700">{vocabularyError}</div>}
+                          <button className="text-[10px] underline" onClick={() => setCompletionView('receipt')}>العودة إلى التذكرة</button>
+                        </>
+                      )}
+                    </div>
+                  ) : listeningStage === 'first' ? (
                     <div className="text-center text-[11px] arabic-font py-4">استمع إلى القصة أولًا. ستظهر الأسئلة هنا بعد انتهاء التسجيل.</div>
                   ) : listeningStage === 'second' ? (
                     <div className="text-center text-[11px] arabic-font py-3">
