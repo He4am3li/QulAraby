@@ -463,7 +463,7 @@ export function createQulCorridor(host: HTMLElement, callbacks: Callbacks) {
     last=now;
     travel+=dt;
     openEntrance=THREE.MathUtils.damp(openEntrance,openTarget,2.3,dt);
-    entranceLeaves[0].rotation.y=openEntrance*-.Math.PI*.57;
+    entranceLeaves[0].rotation.y=-openEntrance * Math.PI * .57;
     entranceLeaves[1].rotation.y=openEntrance*Math.PI*.57;
     entrance.visible=phase==='entrance'||(phase==='entering'&&camera.position.z>19);
     targets.forEach(hit=>{
