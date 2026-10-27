@@ -794,32 +794,100 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   };
 
 
-  // Only display words that actually occur in this story and have exact dictionary meanings.
-  const suggestedWords = useMemo(() => {
-    const source = currentStory?.paragraphs?.join(' ') || '';
-    const tokens = source.match(/[\u0621-\u064A\u064B-\u065F]+/g) || [];
-    const seen = new Set<string>();
-    const result: { word: string; meaning: string }[] = [];
-    for (const token of tokens) {
-      const word = token.replace(/[\u064B-\u065F]/g, '');
-      if (word.length < 3 || seen.has(word)) continue;
-      const meaning = ARABIC_ENGLISH_DICT[word];
-      if (!meaning) continue;
-      seen.add(word);
-      result.push({ word, meaning });
-      if (result.length === 4) break;
-    }
-    return result;
-  }, [currentStory]);
-
-  const pronounceWord = (word: string) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const speech = new SpeechSynthesisUtterance(word);
-    speech.lang = 'ar';
-    speech.rate = 0.85;
-    window.speechSynthesis.speak(speech);
+  // Editorially selected, more challenging beginner vocabulary. Each entry is
+  // validated against the actual story text before being displayed.
+  const JUHA_CHALLENGE_WORDS: Record<string, { word: string; meaning: string; match: string }[]> = {
+    'juha-donkey': [
+      { word: 'تعجّب', meaning: 'was surprised', match: 'تعجب' },
+      { word: 'يركب', meaning: 'rides', match: 'يركب' },
+      { word: 'الحمار', meaning: 'the donkey', match: 'حمار' },
+      { word: 'يمشي', meaning: 'walks', match: 'يمشي' }
+    ],
+    'juha-pot': [
+      { word: 'أنجب', meaning: 'gave birth', match: 'أنجب' },
+      { word: 'القدرين', meaning: 'the two pots', match: 'القدرين' },
+      { word: 'أعاده', meaning: 'returned it', match: 'أعاد' },
+      { word: 'تعجّب', meaning: 'was surprised', match: 'تعجب' }
+    ],
+    'juha-fish': [
+      { word: 'طازج', meaning: 'fresh', match: 'طازج' },
+      { word: 'اصطدته', meaning: 'I caught it', match: 'اصطدته' },
+      { word: 'اقترب', meaning: 'approached', match: 'اقترب' },
+      { word: 'منذ', meaning: 'since / ago', match: 'منذ' }
+    ],
+    'juha-shoes': [
+      { word: 'خلع', meaning: 'took off', match: 'خلع' },
+      { word: 'يتوكّل', meaning: 'puts trust in God', match: 'توكل' },
+      { word: 'يسرقه', meaning: 'steals it', match: 'يسرقه' },
+      { word: 'حذاءه', meaning: 'his shoes', match: 'حذاءه' }
+    ],
+    'juha-honey': [
+      { word: 'جرّة', meaning: 'jar', match: 'جرة' },
+      { word: 'فارغة', meaning: 'empty', match: 'فارغة' },
+      { word: 'لسانك', meaning: 'your tongue', match: 'لسانك' },
+      { word: 'حول', meaning: 'around', match: 'حول' }
+    ],
+    'juha-glasses': [
+      { word: 'نظّارة', meaning: 'eyeglasses', match: 'نظارة' },
+      { word: 'يستطع', meaning: 'was able to', match: 'يستطع' },
+      { word: 'جرّب', meaning: 'tried', match: 'جرب' },
+      { word: 'المتجر', meaning: 'the shop', match: 'المتجر' }
+    ],
+    'juha-key': [
+      { word: 'فقدته', meaning: 'I lost it', match: 'فقدته' },
+      { word: 'يبحث', meaning: 'searches', match: 'يبحث' },
+      { word: 'تعجّب', meaning: 'was surprised', match: 'تعجب' },
+      { word: 'الضوء', meaning: 'the light', match: 'الضوء' }
+    ],
+    'juha-doctor': [
+      { word: 'تشكو', meaning: 'complain of / suffer from', match: 'تشكو' },
+      { word: 'الملعقة', meaning: 'the spoon', match: 'الملعقة' },
+      { word: 'أحضر', meaning: 'brought', match: 'احضر' },
+      { word: 'أرني', meaning: 'show me', match: 'ارني' }
+    ],
+    'juha-clever-donkey': [
+      { word: 'درهم', meaning: 'dirham (currency)', match: 'درهم' },
+      { word: 'يهرب', meaning: 'runs away', match: 'يهرب' },
+      { word: 'الدليل', meaning: 'the evidence', match: 'الدليل' },
+      { word: 'الثمن', meaning: 'the price', match: 'ثمن' }
+    ],
+    'juha-door': [
+      { word: 'اللص', meaning: 'the thief', match: 'لص' },
+      { word: 'ظهره', meaning: 'his back', match: 'ظهره' },
+      { word: 'المفتاح', meaning: 'the key', match: 'مفتاح' },
+      { word: 'تخف', meaning: 'be afraid', match: 'تخف' }
+    ]
   };
+  const suggestedWords = useMemo(() => {
+    const text = currentStory?.paragraphs?.join(' ') || '';
+    const normalize = (value: string) => value
+      .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ى/g, 'ي')
+      .replace(/ة/g, 'ه');
+    const normalizedText = normalize(text);
+    const curated = JUHA_CHALLENGE_WORDS[currentStory?.id || ''];
+    if (curated) {
+      return curated.filter(entry => normalizedText.includes(normalize(entry.match)))
+        .slice(0, 4).map(({ word, meaning }) => ({ word, meaning }));
+    }
+    // Other levels: favor less frequent, longer content words, not first-occurrence order.
+    const tokens = text.match(/[\u0621-\u064A\u064B-\u065F]+/g) || [];
+    const counts = new Map<string, number>();
+    for (const token of tokens) {
+      const clean = token.replace(/[\u064B-\u065F]/g, '');
+      counts.set(clean, (counts.get(clean) || 0) + 1);
+    }
+    const stopwords = new Set(['كان', 'كانت', 'هذا', 'هذه', 'الذي', 'التي', 'إلى', 'على', 'من', 'في', 'قال', 'وقال', 'لقد', 'ذلك', 'عندما', 'ولكن', 'أحد', 'أين', 'كيف', 'ماذا', 'هناك', 'أخرى']);
+    return Array.from(counts.keys())
+      .filter(word => word.length >= 4 && !stopwords.has(word) && Boolean(ARABIC_ENGLISH_DICT[word]))
+      .sort((a, b) => {
+        const score = (w: string) => w.length * 2 - Math.log2((counts.get(w) || 1) + 1) * 4;
+        return score(b) - score(a);
+      })
+      .slice(0, 4)
+      .map(word => ({ word, meaning: ARABIC_ENGLISH_DICT[word] }));
+  }, [currentStory]);
 
   const saveWord = async (word: string, meaning: string) => {
     if (!user) { setVocabularyError('يرجى تسجيل الدخول لحفظ الكلمات في المفردات.'); return; }
@@ -1342,16 +1410,13 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                         </div>
                       ) : (
                         <>
-                          <div className="text-[10px] font-black">مفردات مختارة من النص</div>
+                          <div className="text-[10px] font-black">أربع مفردات متقدمة من النص</div>
                           {suggestedWords.length ? (
                             <div className="grid grid-cols-2 gap-1">
                               {suggestedWords.map(({ word, meaning }) => (
                                 <div key={word} className="flex items-center justify-between gap-1 border border-stone-300 rounded px-1 py-0.5 text-[9px]">
-                                  <span className="truncate" title={meaning}>{word} · {meaning}</span>
-                                  <span className="flex shrink-0 gap-1">
-                                    <button title="نطق الكلمة" onClick={() => pronounceWord(word)}><Volume2 className="w-3 h-3" /></button>
-                                    <button title="حفظ في المفردات" disabled={savingWord === word || savedVocabulary.includes(word)} onClick={() => saveWord(word, meaning)}>{savedVocabulary.includes(word) ? '✓' : '+'}</button>
-                                  </span>
+                                  <span className="min-w-0 flex-1 text-right leading-tight"><strong className="block text-[10px]">{word}</strong><span className="block text-[9px] text-stone-600" dir="ltr">{meaning}</span></span>
+                                  <button className="shrink-0 rounded border border-stone-400 px-1.5 py-0.5 font-bold" title="حفظ في المفردات" disabled={savingWord === word || savedVocabulary.includes(word)} onClick={() => saveWord(word, meaning)}>{savedVocabulary.includes(word) ? '✓' : '+'}</button>
                                 </div>
                               ))}
                             </div>
