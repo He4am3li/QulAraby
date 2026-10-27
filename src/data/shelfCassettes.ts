@@ -543,5 +543,27 @@ export const JUHA_SHELF_TAPES: ShelfTape[] = [
   }
 ];
 
-export const getShelfTapesForLevel = (level?: string): ShelfTape[] =>
-  level === 'beginner' ? JUHA_SHELF_TAPES : SHELF_TAPES;
+// Each non-beginner recording appears once, in the level matching its
+// approximate recorded duration. Use existing audio metadata, not tape year.
+const parseDurationSeconds = (duration: string): number => {
+  const parts = duration.split(':').map(Number);
+  if (parts.length !== 2 || parts.some(n => !Number.isFinite(n))) return Number.POSITIVE_INFINITY;
+  return parts[0] * 60 + parts[1];
+};
+
+const UNIQUE_STORY_TAPES = STORY_CASSETTES
+  .map(story => {
+    const tape = SHELF_TAPES.find(item => item.storyId === story.id);
+    return tape ? { tape, story, seconds: parseDurationSeconds(story.durationApprox) } : null;
+  })
+  .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+  .sort((a, b) => a.seconds - b.seconds || a.story.id.localeCompare(b.story.id));
+
+const LEVEL_SPLIT = Math.ceil(UNIQUE_STORY_TAPES.length / 2);
+
+export const getShelfTapesForLevel = (level?: string): ShelfTape[] => {
+  if (level === 'beginner') return JUHA_SHELF_TAPES;
+  if (level === 'intermediate') return UNIQUE_STORY_TAPES.slice(0, LEVEL_SPLIT).map(entry => entry.tape);
+  if (level === 'advanced') return UNIQUE_STORY_TAPES.slice(LEVEL_SPLIT).map(entry => entry.tape);
+  return SHELF_TAPES;
+};
