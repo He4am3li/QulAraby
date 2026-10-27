@@ -500,7 +500,7 @@ export const Landing = () => {
           <div className="qul-stage" aria-hidden="true">
             <div className="qul-stage-glow" />
             <div className="qul-stage-fallback">
-              <LandingArtwork chapter={chapter} />
+              <LandingArtwork key={chapter} chapter={chapter} />
             </div>
             <div ref={stage} className="qul-canvas" />
             <span className="qul-stage-caption">
