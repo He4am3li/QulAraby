@@ -261,6 +261,32 @@ export function createLandingScene(host: HTMLElement, onFailure: () => void) {
     rail.position.set(x, -2.3, -16);
     corridor.add(rail);
   }
+  // Architectural surfaces give the journey the continuous environment
+  // present in the reference, instead of free-floating isolated objects.
+  const floorMat = new THREE.MeshStandardMaterial({
+    color: 0x0c2b23, metalness: 0.27, roughness: 0.52,
+    transparent: true, opacity: 0.84, side: THREE.DoubleSide
+  });
+  const wallMat = new THREE.MeshStandardMaterial({
+    color: 0x153c2f, metalness: 0.17, roughness: 0.6,
+    transparent: true, opacity: 0.18, side: THREE.DoubleSide,
+    depthWrite: false
+  });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(6, 38), floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(0, -2.62, -15.5);
+  corridor.add(floor);
+  for (const x of [-3.03, 3.03]) {
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(38, 5.2), wallMat);
+    wall.rotation.y = Math.PI / 2;
+    wall.position.set(x, 0, -15.5);
+    corridor.add(wall);
+  }
+  for (let i = 0; i < 4; i++) {
+    const frameLight = new THREE.PointLight(0xb4eac3, mobile ? 6 : 10, 11, 2);
+    frameLight.position.set(i % 2 ? 2 : -2, 1.8, -i * 8 - 1.5);
+    corridor.add(frameLight);
+  }
   let cameraProgress = 0;
   let progress = 0,
     frame = 0,
