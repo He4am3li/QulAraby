@@ -1149,14 +1149,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                 </div>
 
                 {/* Compact Thermal Receipt Paper (Fits strictly within page, no scrolling needed!) */}
-                <div className="w-full bg-[#fcfbf7] border-x-2 border-stone-300 rounded-t-sm shadow-md p-2.5 font-mono text-stone-900 min-h-[160px] max-h-[160px] overflow-hidden">
-                  {/* Single Line Header */}
-                  <div className="text-center border-b border-dashed border-stone-400 pb-1 mb-1.5">
-                    <span className="font-mono text-[9px] font-black text-stone-800">
-                      *** فحص استيعاب: {currentStory?.titleAr || 'الراعي والأسد الوفي'} ***
-                    </span>
-                  </div>
-
+                <div className="w-full bg-[#fcfbf7] border-x-2 border-stone-300 rounded-t-sm shadow-md p-2.5 font-mono text-stone-900 h-[170px] overflow-hidden flex flex-col justify-center">
                   {listeningStage === 'first' ? (
                     <div className="text-center text-[11px] arabic-font py-4">استمع إلى القصة أولًا. ستظهر الأسئلة هنا بعد انتهاء التسجيل.</div>
                   ) : listeningStage === 'second' ? (
@@ -1165,7 +1158,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                       <button className="block mx-auto mt-2 px-3 py-1 rounded bg-stone-900 text-white" onClick={() => setListeningStage('final')}>مراجعة الأسئلة</button>
                     </div>
                   ) : questions.length ? (
-                    <div className="space-y-1.5 text-right" dir="rtl">
+                    <div className="flex flex-col justify-between gap-1 text-right h-full min-h-0" dir="rtl">
                       <div className="flex justify-between items-center text-[9px] font-bold text-stone-600">
                         <span>{listeningStage === 'final' ? 'المراجعة النهائية' : 'اختبار الفهم الأول'}</span>
                         <span>{questionIndex + 1} / {Math.min(5, questions.length)}</span>
@@ -1177,8 +1170,8 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                           }}>إعادة الاستماع</button>
                         )}
                       </div>
-                      <p className="text-[11px] font-black text-stone-950 arabic-font leading-tight">{questions[questionIndex].question}</p>
-                      <div className="space-y-1">
+                      <p className="text-[11px] font-black text-stone-950 arabic-font leading-snug">{questions[questionIndex].question}</p>
+                      <div className="grid gap-1">
                         {questions[questionIndex].options.map((opt, optIdx) => (
                           <button key={optIdx} onClick={() => handleQuizAnswer(questionIndex, optIdx)}
                             disabled={quizSubmitted}
@@ -1187,7 +1180,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                           </button>
                         ))}
                       </div>
-                      <div className="flex items-center justify-between gap-2 pt-1">
+                      <div className="flex items-center justify-between gap-2 pt-0.5 shrink-0">
                         <button disabled={questionIndex === 0} onClick={() => setQuestionIndex(i => i - 1)} className="text-[10px] disabled:opacity-30">السابق</button>
                         {questionIndex < Math.min(5, questions.length) - 1 ? (
                           <button disabled={quizAnswers[questionIndex] === undefined} onClick={() => setQuestionIndex(i => i + 1)} className="px-3 py-1 rounded bg-stone-900 text-white text-[10px] disabled:opacity-30">التالي</button>
