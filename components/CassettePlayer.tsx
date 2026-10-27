@@ -257,7 +257,7 @@ const OpenWalkmanChamber: React.FC<{
           y: isOpen ? 22 : 0,
           scaleY: isOpen ? 0.94 : 1,
         }}
-        transition={{ type: "spring", stiffness: 145, damping: 23, mass: 0.9 }}
+        transition={{ duration: 0.95, ease: [0.25, 0.1, 0.25, 1] }}
         style={{ transformOrigin: "bottom center" }}
         className="w-full h-[155px] rounded-xl border-2 border-stone-600/90 bg-stone-900/50 backdrop-blur-xs shadow-2xl relative flex flex-col justify-between p-2 z-20 pointer-events-none"
       >
@@ -327,7 +327,8 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   });
 
   // Mechanical Door State
-  const [isDoorOpen, setIsDoorOpen] = useState<boolean>(!story);
+  const [isDoorOpen, setIsDoorOpen] = useState<boolean>(false);
+  const [isClosingDoor, setIsClosingDoor] = useState(false);
   const [isInserting, setIsInserting] = useState<boolean>(false);
   const [isSeated, setIsSeated] = useState(false);
   const [reelsPrimed, setReelsPrimed] = useState(false);
@@ -672,11 +673,13 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
    */
   const chamberTargetRef = useRef<HTMLDivElement>(null);
   const insertionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const insertionBusyRef = useRef(false);
   const [flight, setFlight] = useState<{ tape: ShelfTape; x: number; y: number; width: number; height: number; dx: number; dy: number; scale: number } | null>(null);
 
   useEffect(() => () => {
     if (insertionTimerRef.current) clearTimeout(insertionTimerRef.current);
+    if (openingTimerRef.current) clearTimeout(openingTimerRef.current);
   }, []);
 
   const handleSelectShelfTape = (shelfTape: ShelfTape, event: React.MouseEvent<HTMLButtonElement>) => {
@@ -704,15 +707,16 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
     const dx = destination ? destination.left + (destination.width - destinationWidth) / 2 - origin.left : 0;
     const dy = destination ? destination.top + (destination.height - origin.height * scale) / 2 - origin.top : 0;
     insertionBusyRef.current = true;
-    setFlight({ tape: shelfTape, x: origin.left, y: origin.top, width: origin.width, height: origin.height, dx, dy, scale });
-    // Open door if not already open
+    // Open the outward-hinged door completely before the cassette leaves the shelf.
+    setIsClosingDoor(false);
     setIsDoorOpen(true);
     setFlyingTape(shelfTape);
     setIsInserting(true);
 
-    // Allow the tape to lift from the shelf before its curved flight.
-    // Phase 1: cassette flies into the open, outward-hinged deck.
-    insertionTimerRef.current = setTimeout(() => {
+    // Phase 1: slow outward opening (0.9s), then cassette flight (1.57s).
+    openingTimerRef.current = setTimeout(() => {
+      setFlight({ tape: shelfTape, x: origin.left, y: origin.top, width: origin.width, height: origin.height, dx, dy, scale });
+      insertionTimerRef.current = setTimeout(() => {
       setFlight(null);
       setIsSeated(true);
       setActiveTapeId(shelfTape.id);
@@ -729,14 +733,16 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
       setPrinterDismissed(false);
       if (onStoryChange) onStoryChange(selected);
 
-      // Phase 2: leave the tape visible in the bay before the door closes over it.
+      // Phase 2: cassette seats, then the outward door swings slowly shut over it.
       insertionTimerRef.current = setTimeout(() => {
+        setIsClosingDoor(true);
         setIsDoorOpen(false);
-        setIsInserting(false);
-        setFlyingTape(null);
-
-        // Phase 3: engage the spindles, then start playback only after the latch closes.
         insertionTimerRef.current = setTimeout(() => {
+          setIsClosingDoor(false);
+          setIsInserting(false);
+          setFlyingTape(null);
+          // Phase 3: engage spindles only after the door is fully latched.
+          insertionTimerRef.current = setTimeout(() => {
           setReelsPrimed(true);
           insertionTimerRef.current = setTimeout(() => {
             insertionBusyRef.current = false;
@@ -746,9 +752,11 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
               audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
             }
           }, 450);
-        }, 520);
-      }, 440);
-    }, 1590);
+          }, 520);
+        }, 980);
+      }, 320);
+      }, 1590);
+    }, 980);
   };
 
   const handleEjectDoor = () => {
@@ -1035,7 +1043,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
 
           {/* Internal Scrollable Cassette Grid (Bottom wooden frame is permanently fixed and visible!) */}
           <div className="relative z-10 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-amber-800/40 scrollbar-track-transparent p-2.5 sm:p-3 pr-1.5">
-            <div className={`grid ${selectedLevel === 'beginner' ? 'grid-cols-3 gap-x-3 gap-y-4' : 'grid-cols-4 gap-x-2 gap-y-3'}`}>
+            <div className="grid grid-cols-3 gap-x-3 gap-y-4">
               {visibleTapes.map((tape) => (
                 <ShelfCassetteItem
                   key={tape.id}
@@ -1098,11 +1106,11 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
 
               {/* The Cassette Chamber: Open Walkman Door OR Loaded Tape */}
               <div ref={chamberTargetRef}>
-              {isDoorOpen || !currentStory ? (
+              {isDoorOpen || isClosingDoor || !currentStory ? (
                 /* Pure Mechanical Open Walkman Bay (Zero Text!) */
                 <OpenWalkmanChamber
                   isOpen={isDoorOpen}
-                  isInserting={isSeated && isDoorOpen}
+                  isInserting={isSeated && (isDoorOpen || isClosingDoor)}
                   flyingTape={isSeated ? flyingTape : null}
                 />
               ) : (
