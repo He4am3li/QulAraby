@@ -560,7 +560,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   const isJuhaStory = Boolean(currentStory?.id.startsWith('juha-'));
 
   const activeWordIndex = useMemo(() => {
-    if (isJuhaStory && !hasVerifiedWordTimings) return -1;
+    if (!hasVerifiedWordTimings) return -1;
     if (!alignedWords.length) return -1;
     let low = 0;
     let high = alignedWords.length - 1;
@@ -572,7 +572,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
       else return mid;
     }
     return -1; // Do not highlight words during actual pauses or silence.
-  }, [currentTime, alignedWords, isJuhaStory, hasVerifiedWordTimings]);
+  }, [currentTime, alignedWords, hasVerifiedWordTimings]);
 
   // 60FPS RAF AUDIO TRACKER
   const updateAudioProgress = useCallback(() => {
@@ -1191,12 +1191,12 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
 
                     {/* STRICT SYNCHRONIZED TEXT TICKER */}
                     <div className="w-full bg-[#0a100d] rounded px-2 py-0.5 border border-emerald-950 shadow-inner overflow-hidden">
-                      {isJuhaStory && (listeningStage === 'first' || listeningStage === 'questions') ? (
+                      {(listeningStage === 'first' || listeningStage === 'questions') ? (
                         <p className="text-emerald-400/80 text-[11px] text-center">استمع أولًا، ثم أجب عن الأسئلة.</p>
                       ) : (
                       <div
                         ref={singleLineTickerRef}
-                        className={`flex items-center justify-start gap-1 ${isJuhaStory && !hasVerifiedWordTimings ? 'overflow-x-auto' : 'overflow-x-hidden'} whitespace-nowrap scrollbar-hide select-none w-full`}
+                        className={`flex items-center justify-start gap-1 ${!hasVerifiedWordTimings ? 'overflow-x-auto' : 'overflow-x-hidden'} whitespace-nowrap scrollbar-hide select-none w-full`}
                         dir="rtl"
                       >
                         {alignedWords.map((item) => {
@@ -1206,7 +1206,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                               key={item.id}
                               data-spoken={isSpoken}
                               onClick={() => handleWordClick(item)}
-                              title={isJuhaStory && !hasVerifiedWordTimings ? 'انقر للترجمة' : 'انقر للترجمة الفورية بالإنجليزية والاستماع'}
+                              title={!hasVerifiedWordTimings ? 'انقر للترجمة' : 'انقر للترجمة الفورية بالإنجليزية والاستماع'}
                               className={`px-1 py-0.2 rounded transition-all duration-100 whitespace-nowrap arabic-font text-[11px] font-bold cursor-pointer shrink-0 ${
                                 isSpoken
                                   ? 'bg-amber-400 text-stone-950 shadow-[0_0_10px_rgba(251,191,36,0.95)] scale-105 font-black'
@@ -1428,18 +1428,18 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                       )}
                     </div>
                   ) : listeningStage === 'first' ? (
-                    <div className="text-center text-[11px] arabic-font py-4">استمع إلى القصة أولًا. ستظهر الأسئلة هنا بعد انتهاء التسجيل.</div>
+                    <div className="text-center text-[11px] arabic-font py-4">استمع إلى التسجيل أولًا. ستظهر الأسئلة هنا بعد انتهاء الاستماع.</div>
                   ) : listeningStage === 'second' ? (
                     <div className="text-center text-[11px] arabic-font py-3">
                       الاستماع الثاني مع النص. بعد انتهاء التسجيل يمكنك مراجعة إجاباتك.
-                      <button className="block mx-auto mt-2 px-3 py-1 rounded bg-stone-900 text-white" onClick={() => setListeningStage('final')}>مراجعة الأسئلة</button>
+                      <button className="block mx-auto mt-2 px-3 py-1 rounded bg-stone-900 text-white" onClick={() => { audioRef.current?.pause(); setIsPlaying(false); setReelsPrimed(false); setListeningStage('final'); }}>مراجعة الأسئلة</button>
                     </div>
                   ) : questions.length ? (
                     <div className="flex flex-col justify-between gap-1 text-right h-full min-h-0" dir="rtl">
                       <div className="flex justify-between items-center text-[9px] font-bold text-stone-600">
                         <span>{listeningStage === 'final' ? 'المراجعة النهائية' : 'اختبار الفهم الأول'}</span>
                         <span>{questionIndex + 1} / {Math.min(5, questions.length)}</span>
-                        {listeningStage === 'questions' && isJuhaStory && (
+                        {listeningStage === 'questions' && (
                           <button type="button" onClick={() => {
                             if (!audioRef.current) return;
                             audioRef.current.currentTime = 0;
@@ -1462,7 +1462,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                         {questionIndex < Math.min(5, questions.length) - 1 ? (
                           <button disabled={quizAnswers[questionIndex] === undefined} onClick={() => setQuestionIndex(i => i + 1)} className="px-3 py-1 rounded bg-stone-900 text-white text-[10px] disabled:opacity-30">التالي</button>
                         ) : listeningStage === 'questions' ? (
-                          <button disabled={questions.slice(0, 5).some((_, i) => quizAnswers[i] === undefined)} onClick={() => { setFirstAttempt({ ...quizAnswers }); setListeningStage('second'); setQuestionIndex(0); if (audioRef.current) { audioRef.current.currentTime = 0; audioRef.current.play().then(() => { setIsPlaying(true); setReelsPrimed(true); }).catch(() => {}); } }} className="px-2 py-1 rounded bg-stone-900 text-white text-[10px]">الاستماع الثاني</button>
+                          <button disabled={questions.slice(0, 5).some((_, i) => quizAnswers[i] === undefined)} onClick={() => { setFirstAttempt({ ...quizAnswers }); setQuizAnswers({}); setListeningStage('second'); setQuestionIndex(0); if (audioRef.current) { audioRef.current.currentTime = 0; audioRef.current.play().then(() => { setIsPlaying(true); setReelsPrimed(true); }).catch(() => {}); } }} className="px-2 py-1 rounded bg-stone-900 text-white text-[10px]">الاستماع الثاني</button>
                         ) : !quizSubmitted ? (
                           <button disabled={questions.slice(0, 5).some((_, i) => quizAnswers[i] === undefined)} onClick={handleQuizSubmit} className="px-2 py-1 rounded bg-stone-900 text-white text-[10px] disabled:opacity-30">إنهاء وتقييم</button>
                         ) : (
