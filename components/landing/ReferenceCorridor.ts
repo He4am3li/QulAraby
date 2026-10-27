@@ -472,7 +472,7 @@ export function createQulCorridor(host: HTMLElement, callbacks: Callbacks) {
       portal.open=THREE.MathUtils.damp(portal.open,portal.targetOpen,2.1,dt);
       portal.hinge.rotation.y=portal.open;
       (portal.glow.material as THREE.MeshBasicMaterial).opacity=
-        hover===hit&&phase==='corridor'?.15:0;
+        hover === hit && phase === 'corridor' ? 0.15 : 0;
     });
     if(phase==='entering') {
       requestedZ=8;
