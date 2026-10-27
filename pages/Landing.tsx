@@ -382,7 +382,7 @@ export const Landing = () => {
     };
   }, []);
   useEffect(() => {
-    if (!wide || !moving || sceneFailed || !stage.current) return;
+    if (!moving || sceneFailed || !stage.current) return;
     let cancelled = false;
     const host = stage.current;
     Promise.all([
@@ -412,7 +412,7 @@ export const Landing = () => {
       scene.current = null;
       setSceneReady(false);
     };
-  }, [wide, moving, sceneFailed]);
+  }, [moving, sceneFailed]);
   useEffect(() => {
     const modal = dialog.current;
     if (!modal) return;
