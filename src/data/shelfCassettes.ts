@@ -1,4 +1,4 @@
-import { STORY_CASSETTES, StoryCassette } from './storyCassettes';
+import { STORY_CASSETTES, JUHA_STORIES, StoryCassette } from './storyCassettes';
 
 export interface ShelfTape {
   id: string;
@@ -436,5 +436,112 @@ export const SHELF_TAPES: ShelfTape[] = [
 
 export const getStoryForShelfTape = (tape: ShelfTape): StoryCassette | undefined => {
   // Never substitute another recording or override the actual story title.
-  return STORY_CASSETTES.find(story => story.id === tape.storyId);
+  return [...STORY_CASSETTES, ...JUHA_STORIES].find(story => story.id === tape.storyId);
 };
+
+
+export const JUHA_SHELF_TAPES: ShelfTape[] = [
+  {
+    id: 'tape-juha-1',
+    year: 1979,
+    brand: 'TDK',
+    model: 'SUPER D 90',
+    tapeColor: 'from-amber-700 via-stone-800 to-amber-900',
+    cassetteNumber: 'J-01',
+    titleAr: 'جحا والحمار',
+    storyId: 'juha-donkey'
+  },
+  {
+    id: 'tape-juha-2',
+    year: 1981,
+    brand: 'BASF',
+    model: 'FERRO 90',
+    tapeColor: 'from-orange-800 via-stone-900 to-amber-950',
+    cassetteNumber: 'J-02',
+    titleAr: 'جحا والقدر',
+    storyId: 'juha-pot'
+  },
+  {
+    id: 'tape-juha-3',
+    year: 1983,
+    brand: 'SONY',
+    model: 'HF 90',
+    tapeColor: 'from-cyan-800 via-blue-900 to-stone-950',
+    cassetteNumber: 'J-03',
+    titleAr: 'جحا والسمك',
+    storyId: 'juha-fish'
+  },
+  {
+    id: 'tape-juha-4',
+    year: 1985,
+    brand: 'PHILIPS',
+    model: 'UC-II 90',
+    tapeColor: 'from-emerald-800 via-stone-900 to-teal-950',
+    cassetteNumber: 'J-04',
+    titleAr: 'جحا والحذاء',
+    storyId: 'juha-shoes'
+  },
+  {
+    id: 'tape-juha-5',
+    year: 1987,
+    brand: 'MAXELL',
+    model: 'UD-XL II 90',
+    tapeColor: 'from-yellow-700 via-amber-800 to-stone-950',
+    cassetteNumber: 'J-05',
+    titleAr: 'جحا والعسل',
+    storyId: 'juha-honey'
+  },
+  {
+    id: 'tape-juha-6',
+    year: 1989,
+    brand: 'AGFA',
+    model: 'SUPER COLOR',
+    tapeColor: 'from-purple-800 via-stone-900 to-indigo-950',
+    cassetteNumber: 'J-06',
+    titleAr: 'جحا والنظارة',
+    storyId: 'juha-glasses'
+  },
+  {
+    id: 'tape-juha-7',
+    year: 1991,
+    brand: 'PHILIPS',
+    model: 'LC-100',
+    tapeColor: 'from-amber-600 via-yellow-700 to-stone-900',
+    cassetteNumber: 'J-07',
+    titleAr: 'جحا والمفتاح',
+    storyId: 'juha-key'
+  },
+  {
+    id: 'tape-juha-8',
+    year: 1993,
+    brand: 'SONY',
+    model: 'UX-S 60',
+    tapeColor: 'from-red-800 via-rose-900 to-stone-900',
+    cassetteNumber: 'J-08',
+    titleAr: 'جحا والطبيب',
+    storyId: 'juha-doctor'
+  },
+  {
+    id: 'tape-juha-9',
+    year: 1995,
+    brand: 'TDK',
+    model: 'DJ2 90',
+    tapeColor: 'from-teal-800 via-slate-800 to-stone-900',
+    cassetteNumber: 'J-09',
+    titleAr: 'جحا والحمار العجيب',
+    storyId: 'juha-clever-donkey'
+  },
+  {
+    id: 'tape-juha-10',
+    year: 1997,
+    brand: 'SCOTCH',
+    model: 'BX 90',
+    tapeColor: 'from-stone-700 via-zinc-800 to-black',
+    cassetteNumber: 'J-10',
+    titleAr: 'جحا والباب',
+    storyId: 'juha-door'
+  }
+];
+
+export const getShelfTapesForLevel = (level?: string): ShelfTape[] =>
+  level === 'beginner' ? JUHA_SHELF_TAPES : SHELF_TAPES;

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { STORY_CASSETTES, StoryCassette } from '../src/data/storyCassettes';
-import { SHELF_TAPES, ShelfTape, getStoryForShelfTape } from '../src/data/shelfCassettes';
+import { SHELF_TAPES, ShelfTape, getStoryForShelfTape, getShelfTapesForLevel } from '../src/data/shelfCassettes';
 import { getStoryQuestions, StoryQuestion } from '../src/data/storyQuestions';
 import { ARABIC_ENGLISH_DICT } from '../src/data/arabicEnglishDict';
 
@@ -16,6 +16,7 @@ interface CassettePlayerProps {
   trackTitle?: string;
   story?: StoryCassette;
   allStories?: StoryCassette[];
+  selectedLevel?: string;
   onStoryChange?: (story: StoryCassette) => void;
   className?: string;
 }
@@ -304,6 +305,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   trackTitle,
   story,
   allStories = STORY_CASSETTES,
+  selectedLevel,
   onStoryChange,
   className = ''
 }) => {
@@ -347,6 +349,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   const [questionIndex, setQuestionIndex] = useState(0);
   const [firstAttempt, setFirstAttempt] = useState<Record<number, number>>({});
   const [printerDismissed, setPrinterDismissed] = useState<boolean>(false);
+  const visibleTapes = useMemo(() => getShelfTapesForLevel(selectedLevel), [selectedLevel]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const singleLineTickerRef = useRef<HTMLDivElement | null>(null);
@@ -474,7 +477,15 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
     return timedWords.map((word, i) => ({ ...word, startTime: alignment[i].startTime, endTime: alignment[i].endTime }));
   }, [currentStory, timedWords]);
 
+  const hasVerifiedWordTimings = Boolean(currentStory?.wordTimings &&
+    currentStory.wordTimings.length === timedWords.length && timedWords.length > 0 &&
+    currentStory.wordTimings.every((w, i, timings) => Number.isFinite(w.startTime) &&
+      Number.isFinite(w.endTime) && w.endTime > w.startTime &&
+      (i === 0 || w.startTime >= timings[i - 1].startTime)));
+  const isJuhaStory = Boolean(currentStory?.id.startsWith('juha-'));
+
   const activeWordIndex = useMemo(() => {
+    if (isJuhaStory && !hasVerifiedWordTimings) return -1;
     if (!alignedWords.length) return -1;
     let low = 0;
     let high = alignedWords.length - 1;
@@ -486,7 +497,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
       else return mid;
     }
     return -1; // Do not highlight words during actual pauses or silence.
-  }, [currentTime, alignedWords]);
+  }, [currentTime, alignedWords, isJuhaStory, hasVerifiedWordTimings]);
 
   // 60FPS RAF AUDIO TRACKER
   const updateAudioProgress = useCallback(() => {
@@ -672,7 +683,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   };
 
   const handleWordClick = (word: TimedWord) => {
-    if (audioRef.current) {
+    if (audioRef.current && (!isJuhaStory || hasVerifiedWordTimings)) {
       audioRef.current.currentTime = word.startTime;
       setCurrentTime(word.startTime);
     }
@@ -793,7 +804,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
           {/* Internal Scrollable Cassette Grid (Bottom wooden frame is permanently fixed and visible!) */}
           <div className="relative z-10 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-amber-800/40 scrollbar-track-transparent p-2.5 sm:p-3 pr-1.5">
             <div className="grid grid-cols-4 gap-x-2 gap-y-3">
-              {SHELF_TAPES.map((tape) => (
+              {visibleTapes.map((tape) => (
                 <ShelfCassetteItem
                   key={tape.id}
                   tape={tape}
@@ -948,9 +959,12 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
 
                     {/* STRICT SYNCHRONIZED TEXT TICKER */}
                     <div className="w-full bg-[#0a100d] rounded px-2 py-0.5 border border-emerald-950 shadow-inner overflow-hidden">
+                      {isJuhaStory && (listeningStage === 'first' || listeningStage === 'questions') ? (
+                        <p className="text-emerald-400/80 text-[11px] text-center">استمع أولًا، ثم أجب عن الأسئلة.</p>
+                      ) : (
                       <div
                         ref={singleLineTickerRef}
-                        className="flex items-center justify-start gap-1 overflow-x-hidden whitespace-nowrap scrollbar-hide select-none w-full"
+                        className={`flex items-center justify-start gap-1 ${isJuhaStory && !hasVerifiedWordTimings ? 'overflow-x-auto' : 'overflow-x-hidden'} whitespace-nowrap scrollbar-hide select-none w-full`}
                         dir="rtl"
                       >
                         {alignedWords.map((item) => {
@@ -960,7 +974,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                               key={item.id}
                               data-spoken={isSpoken}
                               onClick={() => handleWordClick(item)}
-                              title="انقر للترجمة الفورية بالإنجليزية والاستماع"
+                              title={isJuhaStory && !hasVerifiedWordTimings ? 'انقر للترجمة' : 'انقر للترجمة الفورية بالإنجليزية والاستماع'}
                               className={`px-1 py-0.2 rounded transition-all duration-100 whitespace-nowrap arabic-font text-[11px] font-bold cursor-pointer shrink-0 ${
                                 isSpoken
                                   ? 'bg-amber-400 text-stone-950 shadow-[0_0_10px_rgba(251,191,36,0.95)] scale-105 font-black'
@@ -972,6 +986,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                           );
                         })}
                       </div>
+                      )}
                     </div>
 
                   </div>
@@ -1154,14 +1169,21 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                       <div className="flex justify-between items-center text-[9px] font-bold text-stone-600">
                         <span>{listeningStage === 'final' ? 'المراجعة النهائية' : 'اختبار الفهم الأول'}</span>
                         <span>{questionIndex + 1} / {Math.min(5, questions.length)}</span>
+                        {listeningStage === 'questions' && isJuhaStory && (
+                          <button type="button" onClick={() => {
+                            if (!audioRef.current) return;
+                            audioRef.current.currentTime = 0;
+                            audioRef.current.play().then(() => { setIsPlaying(true); setReelsPrimed(true); }).catch(() => {});
+                          }}>إعادة الاستماع</button>
+                        )}
                       </div>
                       <p className="text-[11px] font-black text-stone-950 arabic-font leading-tight">{questions[questionIndex].question}</p>
                       <div className="space-y-1">
                         {questions[questionIndex].options.map((opt, optIdx) => (
                           <button key={optIdx} onClick={() => handleQuizAnswer(questionIndex, optIdx)}
                             disabled={quizSubmitted}
-                            className={`w-full text-right py-1 px-2 rounded text-[10px] arabic-font border transition-colors ${quizAnswers[questionIndex] === optIdx ? 'bg-stone-900 text-white border-stone-900' : 'bg-stone-100 text-stone-900 border-stone-300'}`}>
-                            {opt}
+                            className={`w-full text-right py-1 px-2 rounded text-[10px] arabic-font border transition-colors ${quizSubmitted && optIdx === questions[questionIndex].correctIndex ? 'bg-emerald-100 text-emerald-950 border-emerald-600' : quizSubmitted && quizAnswers[questionIndex] === optIdx ? 'bg-red-100 text-red-950 border-red-600' : quizAnswers[questionIndex] === optIdx ? 'bg-stone-900 text-white border-stone-900' : 'bg-stone-100 text-stone-900 border-stone-300'}`}>
+                            {opt}{quizSubmitted && optIdx === questions[questionIndex].correctIndex ? ' ✓' : quizSubmitted && quizAnswers[questionIndex] === optIdx ? ' ✗' : ''}
                           </button>
                         ))}
                       </div>

@@ -1222,7 +1222,7 @@ export const Listening: React.FC = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="w-full flex flex-col items-center justify-start py-2 sm:py-3 overflow-visible"
                     >
-                        <CassettePlayer allStories={STORY_CASSETTES} />
+                        <CassettePlayer key={selectedLevel.id} allStories={STORY_CASSETTES} selectedLevel={selectedLevel.id} />
                     </motion.div>
                 ) : selectedTopic.id === 'emotions' ? (
                     renderEmotions()
