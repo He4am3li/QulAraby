@@ -320,7 +320,7 @@ export function createQulCorridor(host: HTMLElement, callbacks: Callbacks) {
   let roomTarget=new THREE.Vector3();
   let viewTarget=new THREE.Vector3();
   let travel=0;
-  let animId=0,disposed=false,last=0,enabled=true;
+  let animId=0,disposed=false,last=0,enabled=true,motionEnabled=true;
   let pointerX=0, pointerY=0, downX=0,downY=0;
   let touchY=0, touchX=0,touchMoved=false;
   let currentSegment=0;
@@ -457,11 +457,11 @@ export function createQulCorridor(host: HTMLElement, callbacks: Callbacks) {
   observer.observe(host);
   const draw=(now:number)=>{
     animId=requestAnimationFrame(draw);
-    if(disposed||document.hidden||!enabled)return;
+    if(disposed||document.hidden)return;
     if(mobile&&now-last<28)return;
     const dt=Math.min((now-last)/1000||.016,.06);
     last=now;
-    travel+=dt;
+    if(motionEnabled) travel+=dt;
     openEntrance=THREE.MathUtils.damp(openEntrance,openTarget,2.3,dt);
     entranceLeaves[0].rotation.y=-openEntrance * Math.PI * .57;
     entranceLeaves[1].rotation.y=openEntrance*Math.PI*.57;
@@ -525,7 +525,7 @@ export function createQulCorridor(host: HTMLElement, callbacks: Callbacks) {
   };
   return {
     start,back:goBack,visit:navigate,setLanguage,
-    setMotionEnabled(next:boolean){enabled=next; if(!next)renderer.render(scene,camera);},
+    setMotionEnabled(next:boolean){motionEnabled=next;},
     dispose(){
       disposed=true;cancelAnimationFrame(animId);observer.disconnect();
       canvas.removeEventListener('wheel',onWheel);
