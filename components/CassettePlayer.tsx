@@ -1176,7 +1176,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                           <button key={optIdx} onClick={() => handleQuizAnswer(questionIndex, optIdx)}
                             disabled={quizSubmitted}
                             className={`w-full text-right py-1 px-2 rounded text-[10px] arabic-font border transition-colors ${quizSubmitted && optIdx === questions[questionIndex].correctIndex ? 'bg-emerald-100 text-emerald-950 border-emerald-600' : quizSubmitted && quizAnswers[questionIndex] === optIdx ? 'bg-red-100 text-red-950 border-red-600' : quizAnswers[questionIndex] === optIdx ? 'bg-stone-900 text-white border-stone-900' : 'bg-stone-100 text-stone-900 border-stone-300'}`}>
-                            {opt}{quizSubmitted && optIdx === questions[questionIndex].correctIndex ? ' ✓' : quizSubmitted && quizAnswers[questionIndex] === optIdx ? ' ✗' : ''}
+                            {opt.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')}{quizSubmitted && optIdx === questions[questionIndex].correctIndex ? ' ✓' : quizSubmitted && quizAnswers[questionIndex] === optIdx ? ' ✗' : ''}
                           </button>
                         ))}
                       </div>
