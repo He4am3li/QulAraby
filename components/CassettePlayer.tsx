@@ -192,7 +192,7 @@ const OpenWalkmanChamber: React.FC<{
         </div>
 
         {/* Center Mechanical Drive Spindles & Heads */}
-        <div className="flex items-center justify-between px-6 my-auto">
+        <div className="flex items-center justify-center gap-8 sm:gap-10 my-auto">
           {/* Left Geared Hub Spindle */}
           <div className="w-9 h-9 rounded-full bg-stone-800 border-2 border-stone-600 flex items-center justify-center relative shadow-md">
             <div className="w-3.5 h-3.5 rounded-full bg-stone-950 border border-stone-700" />
@@ -803,7 +803,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
 
           {/* Internal Scrollable Cassette Grid (Bottom wooden frame is permanently fixed and visible!) */}
           <div className="relative z-10 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-amber-800/40 scrollbar-track-transparent p-2.5 sm:p-3 pr-1.5">
-            <div className="grid grid-cols-4 gap-x-2 gap-y-3">
+            <div className={`grid ${selectedLevel === 'beginner' ? 'grid-cols-3 gap-x-3 gap-y-4' : 'grid-cols-4 gap-x-2 gap-y-3'}`}>
               {visibleTapes.map((tape) => (
                 <ShelfCassetteItem
                   key={tape.id}
@@ -914,7 +914,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                     </div>
 
                     {/* Acrylic Window with Rotating Spools */}
-                    <div className="w-full bg-[#12141a] rounded-lg py-1.5 px-4 sm:px-6 border border-stone-800 shadow-inner flex items-center justify-center gap-1.5 relative overflow-hidden my-0.5">
+                    <div className="w-full bg-[#12141a] rounded-lg py-1.5 px-4 sm:px-6 border border-stone-800 shadow-inner flex items-center justify-center gap-2 relative overflow-hidden my-0.5">
                       <div
                         className="w-7 h-7 rounded-full bg-stone-200 border-2 border-stone-400 flex items-center justify-center relative shadow-xs shrink-0"
                         style={{
@@ -931,7 +931,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                         ))}
                       </div>
 
-                      <div className="flex flex-col items-center justify-center px-2 w-[88px] max-w-[27%]">
+                      <div className="flex flex-col items-center justify-center px-1 w-[44px] max-w-[16%]">
                         <div className="h-0.5 w-full max-w-[100px] bg-amber-900/80 rounded mb-0.5" />
                         <div className="flex items-center gap-1.5 text-[7.5px] font-mono text-stone-300 font-bold">
                           <span>MIN: {currentStory.durationApprox}</span>
