@@ -1253,19 +1253,32 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                   {quizSubmitted ? (
                     <div className="h-full flex flex-col justify-between gap-1 text-center arabic-font" dir="rtl">
                       {completionView === 'receipt' ? (
-                        <>
-                          <div className="text-[11px] font-black text-stone-900">تذكرة الإنجاز · {currentStory?.titleAr}</div>
-                          <div className="flex justify-around gap-2 text-[10px] font-bold">
-                            <span>الفهم الأول: {questions.slice(0, 5).filter((q, i) => firstAttempt[i] === q.correctIndex).length}/{Math.min(5, questions.length)}</span>
-                            <span>بعد المراجعة: {quizScore}/{Math.min(5, questions.length)}</span>
+                        <motion.div
+                          key={`achievement-${activeTapeId}-${quizScore}`}
+                          initial={{ y: -155, opacity: 0.4 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ y: { duration: 1.15, ease: [0.2, 0.75, 0.2, 1] }, opacity: { duration: 0.35 } }}
+                          className="w-full h-full flex flex-col items-center justify-between text-center bg-[#fbf8ef] border-x border-stone-300 shadow-[0_3px_8px_rgba(0,0,0,0.12)] px-2 py-1.5"
+                        >
+                          <div className="font-mono text-[8px] tracking-widest text-stone-600" dir="ltr">QUL · LISTENING STATION</div>
+                          <div className="text-[13px] font-black text-stone-950">تذكرة الإنجاز</div>
+                          <div className="text-[10px] font-bold text-stone-800">{currentStory?.titleAr}</div>
+                          <div className="w-full border-t border-dashed border-stone-400" />
+                          <div className="w-full flex justify-around gap-2">
+                            <div className="flex flex-col"><span className="text-[9px] text-stone-600">الفهم الأول</span><strong className="text-[17px] leading-5">{questions.slice(0, 5).filter((q, i) => firstAttempt[i] === q.correctIndex).length}/{Math.min(5, questions.length)}</strong></div>
+                            <div className="flex flex-col"><span className="text-[9px] text-stone-600">بعد المراجعة</span><strong className="text-[17px] leading-5 text-emerald-800">{quizScore}/{Math.min(5, questions.length)}</strong></div>
                           </div>
-                          <div className="text-[10px] text-emerald-800">✓ اكتمل الاستماع والمراجعة</div>
-                          <div className="flex justify-center flex-wrap gap-1">
-                            <button disabled={visibleTapes.findIndex(t => t.id === activeTapeId) >= visibleTapes.length - 1} className="rounded bg-stone-900 text-white px-2 py-1 text-[10px] disabled:opacity-40" onClick={nextTape}>الشريط التالي</button>
-                            <button className="rounded bg-stone-200 px-2 py-1 text-[10px]" onClick={startAgain}>أحاول مرة أخرى</button>
-                            <button className="rounded bg-stone-200 px-2 py-1 text-[10px]" onClick={() => setCompletionView('words')}>كلماتي الجديدة</button>
+                          <div className="text-[10px] font-bold text-emerald-800">
+                            {(() => { const first = questions.slice(0, 5).filter((q, i) => firstAttempt[i] === q.correctIndex).length; const delta = quizScore - first; return delta > 0 ? `↑ تحسّن بمقدار ${delta} ${delta === 1 ? 'سؤال' : 'أسئلة'}` : delta === 0 ? 'حافظت على مستواك' : 'واصل التدريب لتحسين نتيجتك'; })()}
                           </div>
-                        </>
+                          <div className="text-[9px] text-stone-700">أحسنت! لقد أكملت الاستماع والمراجعة.</div>
+                          <div className="text-[8px] text-stone-500">اكتملت الجلسة · لم تُحفظ النتيجة في حسابك بعد</div>
+                          <div className="flex justify-center gap-1 w-full">
+                            <button disabled={visibleTapes.findIndex(t => t.id === activeTapeId) >= visibleTapes.length - 1} className="rounded bg-stone-900 text-white px-2 py-1 text-[9px] disabled:opacity-40" onClick={nextTape}>الشريط التالي</button>
+                            <button className="rounded bg-stone-200 px-2 py-1 text-[9px]" onClick={startAgain}>أحاول مرة أخرى</button>
+                            <button className="rounded bg-stone-200 px-2 py-1 text-[9px]" onClick={() => setCompletionView('words')}>كلماتي الجديدة</button>
+                          </div>
+                        </motion.div>
                       ) : (
                         <>
                           <div className="text-[10px] font-black">مفردات مختارة من النص</div>
