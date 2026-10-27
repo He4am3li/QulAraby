@@ -7,7 +7,8 @@ export function createLandingScene(host: HTMLElement, onFailure: () => void) {
     antialias: true,
     powerPreference: "low-power",
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  const mobile = window.matchMedia('(max-width: 900px)').matches;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1 : 1.5));
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   host.appendChild(renderer.domElement);
@@ -41,7 +42,7 @@ export function createLandingScene(host: HTMLElement, onFailure: () => void) {
   });
   const glow = new THREE.MeshBasicMaterial({ color: 0x8df5d0 });
   const groups = Array.from({ length: 4 }, () => new THREE.Group());
-  groups.forEach((g) => scene.add(g));
+  groups.forEach((g, i) => { g.position.z = -i * 8; scene.add(g); });
   const textures: THREE.Texture[] = [];
   const box = (
     g: THREE.Object3D,
@@ -231,9 +232,36 @@ export function createLandingScene(host: HTMLElement, onFailure: () => void) {
   const planetRing = ring(groups[3], 1.1, 0.04, 1.1, 0.85, -0.3);
   planetRing.rotation.x = 1.2;
   planetRing.rotation.y = 0.4;
-  const orbit = ring(scene, 2.75, 0.008);
+  const orbit = ring(groups[0], 2.75, 0.008);
   orbit.rotation.x = 1.27;
   orbit.position.y = -1.8;
+
+  // A spatial gallery: architectural portals, guide rails and floating glyphs
+  // remain in the same world as the camera moves forward through each chapter.
+  const corridor = new THREE.Group();
+  scene.add(corridor);
+  const bronzeLine = new THREE.MeshBasicMaterial({ color: 0xc7aa73, transparent: true, opacity: 0.30, depthWrite: false });
+  const greenLine = new THREE.MeshBasicMaterial({ color: 0x79d3ae, transparent: true, opacity: 0.16, depthWrite: false });
+  for (let i = 0; i < 10; i++) {
+    const z = 2 - i * 3.5;
+    for (const x of [-3.0, 3.0]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.018, 5.2, 0.018), bronzeLine);
+      post.position.set(x, 0, z);
+      corridor.add(post);
+    }
+    const top = new THREE.Mesh(new THREE.BoxGeometry(6.02, 0.018, 0.018), bronzeLine);
+    top.position.set(0, 2.6, z);
+    corridor.add(top);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(6.02, 0.018, 0.018), greenLine);
+    base.position.set(0, -2.6, z);
+    corridor.add(base);
+  }
+  for (const x of [-2.6, 2.6]) {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.016, 39), greenLine);
+    rail.position.set(x, -2.3, -16);
+    corridor.add(rail);
+  }
+  let cameraProgress = 0;
   let progress = 0,
     frame = 0,
     lastRender = 0,
@@ -248,6 +276,7 @@ export function createLandingScene(host: HTMLElement, onFailure: () => void) {
     if (!width || !height) return;
     renderer.setSize(width, height);
     camera.aspect = width / height;
+    camera.fov = width <= 900 ? (height > width ? 60 : 46) : 34;
     camera.updateProjectionMatrix();
   };
   const observer = new ResizeObserver(resize);
@@ -263,22 +292,13 @@ export function createLandingScene(host: HTMLElement, onFailure: () => void) {
     }
     lastRender = now;
     const time = (now - start) / 1000;
+    // Scroll moves the viewpoint through one continuous space (never swaps scenes).
+    cameraProgress += (progress - cameraProgress) * (mobile ? 0.14 : 0.1);
     groups.forEach((g, i) => {
-      const distance = i - progress;
-      g.visible = Math.abs(distance) < 1;
-      if (!g.visible) return;
-      const scale = 1 - Math.min(Math.abs(distance), 1) * 0.8;
-      g.scale.setScalar(scale);
-      g.position.set(
-        distance * 5,
-        Math.sin(time * 0.6) * 0.07,
-        -Math.abs(distance) * 2,
-      );
-      g.rotation.set(
-        0.08 + Math.sin(time * 0.25) * 0.035,
-        Math.sin(time * 0.28) * 0.14,
-        -0.08,
-      );
+      g.visible = Math.abs(i - cameraProgress) < 2.1;
+      g.position.set(0, Math.sin(time * 0.55 + i) * 0.06, -i * 8);
+      g.scale.setScalar(1);
+      g.rotation.set(0.05, Math.sin(time * 0.2 + i) * 0.075, -0.04);
     });
     letters.forEach(({ glyph, phase }) => {
       const angle = phase + time * 0.06;
@@ -289,8 +309,12 @@ export function createLandingScene(host: HTMLElement, onFailure: () => void) {
     reels.forEach((reel) => (reel.rotation.z = time * 0.55));
     flame.scale.y = 1 + Math.sin(time * 7) * 0.08;
     orbit.rotation.z = time * 0.025;
-    camera.position.x = Math.sin(progress * Math.PI) * 0.28;
-    camera.lookAt(0, 0, 0);
+    camera.position.set(
+      Math.sin(cameraProgress * Math.PI) * (mobile ? 0.12 : 0.28),
+      mobile ? 0.1 : 0.4,
+      9 - cameraProgress * 8
+    );
+    camera.lookAt(camera.position.x * 0.15, 0, camera.position.z - 9);
     renderer.render(scene, camera);
     frame = requestAnimationFrame(render);
   };
