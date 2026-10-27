@@ -99,6 +99,7 @@ const ShelfCassetteItem: React.FC<{
   return (
     <div className="flex flex-col items-center gap-1 w-full">
       <button
+        data-tape-id={tape.id}
         onClick={onClick}
         title={`${tape.titleAr} (${tape.brand} ${tape.year}) - انقر للتشغيل`}
         className={`group w-full rounded-md p-1.5 relative transition-all duration-200 flex flex-col justify-between overflow-hidden cursor-pointer shadow-md select-none ${
