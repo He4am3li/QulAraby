@@ -347,9 +347,70 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
 
   const { user } = useAuth();
   const [completionView, setCompletionView] = useState<'receipt' | 'words'>('receipt');
+  const receiptAnimationRef = useRef<Animation | null>(null);
+  const receiptPaperRef = useRef<HTMLDivElement>(null);
+  const receiptSoundRef = useRef<AudioContext | null>(null);
+  const printedReceiptKeyRef = useRef('');
+  const [receiptPrinting, setReceiptPrinting] = useState(false);
   const [savedVocabulary, setSavedVocabulary] = useState<string[]>([]);
   const [savingWord, setSavingWord] = useState<string | null>(null);
   const [vocabularyError, setVocabularyError] = useState('');
+
+
+  // Reuse the stepper-style receipt feed from KnowledgeSupermarket: short
+  // advances alternating with holds, rather than a simple sliding card.
+  useEffect(() => {
+    if (!quizSubmitted || completionView !== 'receipt' || !receiptPaperRef.current) return;
+    const key = String(activeTapeId) + ':' + String(quizScore) + ':' + String(firstAttempt[0] ?? '');
+    if (printedReceiptKeyRef.current === key) return;
+    printedReceiptKeyRef.current = key;
+    const paper = receiptPaperRef.current;
+    const height = paper.offsetHeight || 160;
+    const steps = 16;
+    const frames: Keyframe[] = [{ transform: `translateY(-${height}px)`, offset: 0 }];
+    for (let i = 1; i <= steps; i++) {
+      const start = (i - 1) / steps;
+      const end = i / steps;
+      const y = -height * (1 - i / steps);
+      frames.push({ transform: `translateY(${y}px)`, offset: start + (end - start) * 0.72 });
+      if (i !== steps) frames.push({ transform: `translateY(${y}px)`, offset: end });
+    }
+    setReceiptPrinting(true);
+    const anim = paper.animate(frames, { duration: 2600, fill: 'forwards', easing: 'linear' });
+    receiptAnimationRef.current = anim;
+    anim.onfinish = () => {
+      paper.style.transform = 'translateY(0)';
+      anim.cancel();
+      receiptAnimationRef.current = null;
+      setReceiptPrinting(false);
+    };
+    // Quiet mechanical feed ticks, using the same Web Audio approach as the supermarket.
+    try {
+      const AudioContextCtor = window.AudioContext;
+      if (AudioContextCtor) {
+        const ctx = receiptSoundRef.current ?? new AudioContextCtor();
+        receiptSoundRef.current = ctx;
+        if (ctx.state === 'suspended') void ctx.resume();
+        for (let i = 0; i < 16; i++) {
+          const t = ctx.currentTime + i * 0.16;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(i % 2 ? 370 : 320, t);
+          gain.gain.setValueAtTime(0.014, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.045);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.05);
+        }
+      }
+    } catch { /* Audio is optional when browser blocks playback. */ }
+    return () => {
+      anim.cancel();
+      receiptAnimationRef.current = null;
+    };
+  }, [quizSubmitted, completionView, activeTapeId, quizScore, firstAttempt]);
 
   // Compact Thermal Quiz State
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
@@ -722,6 +783,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   const handleQuizSubmit = () => {
     const score = questions.slice(0, 5).filter((q, i) => quizAnswers[i] === q.correctIndex).length;
     setQuizScore(score);
+    printedReceiptKeyRef.current = '';
     setQuizSubmitted(true);
     setListeningStage('final');
     setCompletionView('receipt');
@@ -788,6 +850,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   const startAgain = () => {
     setQuizAnswers({});
     setFirstAttempt({});
+    printedReceiptKeyRef.current = '';
     setQuizSubmitted(false);
     setQuestionIndex(0);
     setCompletionView('receipt');
@@ -1249,16 +1312,13 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                 </div>
 
                 {/* Compact Thermal Receipt Paper (Fits strictly within page, no scrolling needed!) */}
-                <div className="w-full bg-[#fcfbf7] border-x-2 border-stone-300 rounded-t-sm shadow-md p-2.5 font-mono text-stone-900 h-[170px] overflow-hidden flex flex-col justify-center">
+                <div className="relative w-full bg-[#fcfbf7] border-x-2 border-stone-300 rounded-t-sm shadow-md p-2.5 font-mono text-stone-900 h-[170px] overflow-hidden flex flex-col justify-center">
                   {quizSubmitted ? (
                     <div className="h-full flex flex-col justify-between gap-1 text-center arabic-font" dir="rtl">
                       {completionView === 'receipt' ? (
-                        <motion.div
-                          key={`achievement-${activeTapeId}-${quizScore}`}
-                          initial={{ y: -155, opacity: 0.4 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ y: { duration: 1.15, ease: [0.2, 0.75, 0.2, 1] }, opacity: { duration: 0.35 } }}
-                          className="w-full h-full flex flex-col items-center justify-between text-center bg-[#fbf8ef] border-x border-stone-300 shadow-[0_3px_8px_rgba(0,0,0,0.12)] px-2 py-1.5"
+                        <div
+                          ref={receiptPaperRef}
+                          className="relative w-full h-full flex flex-col items-center justify-between text-center bg-[#fbf8ef] border-x border-stone-300 shadow-[0_3px_8px_rgba(0,0,0,0.12)] px-2 py-1.5"
                         >
                           <div className="font-mono text-[8px] tracking-widest text-stone-600" dir="ltr">QUL · LISTENING STATION</div>
                           <div className="text-[13px] font-black text-stone-950">تذكرة الإنجاز</div>
@@ -1278,7 +1338,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                             <button className="rounded bg-stone-200 px-2 py-1 text-[9px]" onClick={startAgain}>أحاول مرة أخرى</button>
                             <button className="rounded bg-stone-200 px-2 py-1 text-[9px]" onClick={() => setCompletionView('words')}>كلماتي الجديدة</button>
                           </div>
-                        </motion.div>
+                        </div>
                       ) : (
                         <>
                           <div className="text-[10px] font-black">مفردات مختارة من النص</div>
