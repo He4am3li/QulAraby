@@ -1402,10 +1402,10 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                           </div>
                           <div className="text-[9px] text-stone-700">أحسنت! لقد أكملت الاستماع والمراجعة.</div>
                           <div className="text-[8px] text-stone-500">اكتملت الجلسة · لم تُحفظ النتيجة في حسابك بعد</div>
-                          <div className="flex justify-center gap-1 w-full">
-                            <button disabled={visibleTapes.findIndex(t => t.id === activeTapeId) >= visibleTapes.length - 1} className="rounded bg-stone-900 text-white px-2 py-1 text-[9px] disabled:opacity-40" onClick={nextTape}>الشريط التالي</button>
+                          <div className="flex flex-row justify-center gap-1 w-full" dir="rtl">
+                            <button className="rounded bg-stone-200 px-2 py-1 text-[9px]" onClick={() => setCompletionView('words')}>المفردات الجيدة</button>
                             <button className="rounded bg-stone-200 px-2 py-1 text-[9px]" onClick={startAgain}>أحاول مرة أخرى</button>
-                            <button className="rounded bg-stone-200 px-2 py-1 text-[9px]" onClick={() => setCompletionView('words')}>كلماتي الجديدة</button>
+                            <button disabled={visibleTapes.findIndex(t => t.id === activeTapeId) >= visibleTapes.length - 1} className="rounded bg-stone-900 text-white px-2 py-1 text-[9px] disabled:opacity-40" onClick={nextTape}>الشريط التالي</button>
                           </div>
                         </div>
                       ) : (
@@ -1414,8 +1414,9 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                           {suggestedWords.length ? (
                             <div className="grid grid-cols-2 gap-1">
                               {suggestedWords.map(({ word, meaning }) => (
-                                <div key={word} className="flex items-center justify-between gap-1 border border-stone-300 rounded px-1 py-0.5 text-[9px]">
-                                  <span className="min-w-0 flex-1 text-right leading-tight"><strong className="block text-[10px]">{word}</strong><span className="block text-[9px] text-stone-600" dir="ltr">{meaning}</span></span>
+                                <div key={word} dir="rtl" className="flex items-center gap-1 border border-stone-300 rounded px-1 py-0.5 text-[9px]">
+                                  <strong className="min-w-0 flex-1 text-right text-[10px] leading-tight">{word}</strong>
+                                  <span className="min-w-0 flex-1 text-left text-[9px] text-stone-600 leading-tight" dir="ltr">{meaning}</span>
                                   <button className="shrink-0 rounded border border-stone-400 px-1.5 py-0.5 font-bold" title="حفظ في المفردات" disabled={savingWord === word || savedVocabulary.includes(word)} onClick={() => saveWord(word, meaning)}>{savedVocabulary.includes(word) ? '✓' : '+'}</button>
                                 </div>
                               ))}
