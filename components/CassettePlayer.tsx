@@ -775,7 +775,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
           details_en: { category: '', sub_category: '', rule: '', example: '' }
         },
         review_count: 0, last_reviewed: '', next_review: '',
-        mastery_level: 'learning', createdAt: serverTimestamp()
+        mastery_level: 2, createdAt: serverTimestamp()
       }, { merge: true });
       setSavedVocabulary(prev => prev.includes(word) ? prev : [...prev, word]);
     } catch {
