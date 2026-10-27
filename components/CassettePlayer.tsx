@@ -357,6 +357,16 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   const [vocabularyError, setVocabularyError] = useState('');
 
 
+  // Compact Thermal Quiz State
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
+  const [quizSubmitted, setQuizSubmitted] = useState<boolean>(false);
+  const [quizScore, setQuizScore] = useState<number>(0);
+  const [listeningStage, setListeningStage] = useState<'first' | 'questions' | 'second' | 'final'>('first');
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [firstAttempt, setFirstAttempt] = useState<Record<number, number>>({});
+  const [printerDismissed, setPrinterDismissed] = useState<boolean>(false);
+  const visibleTapes = useMemo(() => getShelfTapesForLevel(selectedLevel), [selectedLevel]);
+
   // Reuse the stepper-style receipt feed from KnowledgeSupermarket: short
   // advances alternating with holds, rather than a simple sliding card.
   useEffect(() => {
@@ -412,15 +422,6 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
     };
   }, [quizSubmitted, completionView, activeTapeId, quizScore, firstAttempt]);
 
-  // Compact Thermal Quiz State
-  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
-  const [quizSubmitted, setQuizSubmitted] = useState<boolean>(false);
-  const [quizScore, setQuizScore] = useState<number>(0);
-  const [listeningStage, setListeningStage] = useState<'first' | 'questions' | 'second' | 'final'>('first');
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [firstAttempt, setFirstAttempt] = useState<Record<number, number>>({});
-  const [printerDismissed, setPrinterDismissed] = useState<boolean>(false);
-  const visibleTapes = useMemo(() => getShelfTapesForLevel(selectedLevel), [selectedLevel]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const singleLineTickerRef = useRef<HTMLDivElement | null>(null);
