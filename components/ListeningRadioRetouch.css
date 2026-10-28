@@ -203,3 +203,16 @@
     transition: none !important;
   }
 }
+/* Local voice and teacher-recording controls, kept outside the radio dials. */
+.qul-radio-audio-settings { width: min(100%, 768px); flex-shrink: 0; margin: 10px auto 18px; border: 1px solid #c7b99a; border-radius: 12px; padding: 10px 14px; background: #faf7ef; color: #382b20; font-size: 13px; }
+.qul-radio-audio-settings summary { cursor: pointer; font-weight: 800; }
+.qul-radio-audio-settings p { margin: 8px 0; line-height: 1.7; }
+.qul-radio-audio-settings label { display: flex; flex-direction: column; gap: 5px; font-weight: 700; min-width: 0; }
+.qul-radio-audio-options { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
+.qul-radio-audio-settings select { max-width: 260px; border: 1px solid #b4a58a; border-radius: 6px; padding: 7px; background: white; }
+.qul-radio-audio-settings button { padding: 7px 12px; border-radius: 6px; border: 1px solid #b4a58a; background: #fff; }
+.qul-radio-audio-settings button:disabled { opacity: .5; cursor: not-allowed; }
+.qul-radio-recording-options { border-top: 1px solid #ded4c1; margin-top: 12px; padding-top: 12px; }
+.qul-radio-recording-options input { max-width: 100%; font-weight: 400; }
+.qul-radio-recording-options [role=status] { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; overflow-wrap: anywhere; }
+.qul-radio-call-help { font-size: 10px; line-height: 1.5; text-align: center; margin: 5px 0; }
