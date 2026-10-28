@@ -1,349 +1,413 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowUp, ArrowDown, ArrowRight, Check, ChevronLeft,
-  Crosshair, DoorOpen, RotateCcw, ShieldCheck, Zap, Target, LockKeyhole, X } from 'lucide-react';
+import {
+  ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, ChevronLeft, Crosshair,
+  DoorOpen, FileLock2, FileText, Footprints, LockKeyhole, RotateCcw,
+  ShieldAlert, ShieldCheck, Skull, Target, Trophy, X, Zap
+} from 'lucide-react';
 import { useAuth } from '../AuthProvider';
-import { MISSIONS } from './TacticalMissionScene';
-import type { GamePhase, MissionId, createTacticalScene } from './TacticalMissionScene';
-import './TacticalMission.css';
+import { SECRET_ROOMS } from './SecretMissionEngine';
+import type { SecretPhase, SecretRoomId, createSecretMission } from './SecretMissionEngine';
+import './SecretMission.css';
 
-type Language = 'ar' | 'en';
-type Question = { ar: string; en: string; choices: { ar: string; en: string }[]; correct: number };
-const TASKS: Record<MissionId, Question[]> = {
-  // Learning difficulty rises by room: A1 vocabulary -> A2 directions ->
-  // B1 evidence and syntax -> B2 reasoning and safe decisions.
-  warehouse: [
-    {ar:'باب المخزن مغلق. ما الأداة التي تحتاج إليها لفتحه؟',
-      en:'The depot door is locked. Which tool do you need to open it?',
-      choices:[{ar:'المصباح',en:'Flashlight'},{ar:'المفتاح',en:'Key'},{ar:'القلم',en:'Pen'}],correct:1},
-    {ar:'قال المسؤول: «ضع الخوذة على رأسك». ماذا يرتدي الجندي؟',
-      en:'The officer says “Put the helmet on your head.” What should the soldier wear?',
-      choices:[{ar:'الخوذة',en:'Helmet'},{ar:'الحذاء',en:'Shoe'},{ar:'القفاز',en:'Glove'}],correct:0},
-    {ar:'بعد دخول المخزن، ما الأمر المناسب لحماية المكان؟',
-      en:'After entering the depot, which instruction will secure it?',
-      choices:[{ar:'اجلس على الأرض',en:'Sit on the floor'},{ar:'أغلق الباب',en:'Close the door'},{ar:'اكتب اسمك',en:'Write your name'}],correct:1},
-  ],
-  signals: [
-    {ar:'تقول رسالة التحكم: «افتح الباب الأزرق ثم اقترب من الجهاز». ماذا تفعل أولًا؟',
-      en:'Control says “Open the blue door, then approach the device.” What comes first?',
-      choices:[{ar:'أقترب من الجهاز',en:'Approach the device'},{ar:'أفتح الباب الأزرق',en:'Open the blue door'},{ar:'أغلق النافذة',en:'Close the window'}],correct:1},
-    {ar:'تظهر على الشاشة عبارة: «لا تلمس الزر الأحمر». ما التصرف الصحيح؟',
-      en:'The screen reads “Do not touch the red button.” What should you do?',
-      choices:[{ar:'أبتعد عن الزر الأحمر',en:'Avoid the red button'},{ar:'أضغط الزر الأحمر',en:'Press the red button'},{ar:'أفصل الشاشة',en:'Disconnect the screen'}],correct:0},
-    {ar:'إذا كانت الإشارة خضراء فتقدم، وإذا كانت حمراء فتوقف. الإشارة الآن حمراء. ماذا تفعل؟',
-      en:'Green means advance and red means stop. The signal is now red. What do you do?',
-      choices:[{ar:'أتقدم بسرعة',en:'Advance quickly'},{ar:'أعود إلى المخزن',en:'Return to the depot'},{ar:'أتوقف وأنتظر',en:'Stop and wait'}],correct:2},
-  ],
-  archive: [
-    {ar:'وجد المحقق بطاقة قرب النافذة، لكنه لم يجد المفتاح. ما الشيء الذي عثر عليه؟',
-      en:'The detective found a card by the window, but not the key. What did he find?',
-      choices:[{ar:'المفتاح',en:'The key'},{ar:'النافذة',en:'The window'},{ar:'البطاقة',en:'The card'}],correct:2},
-    {ar:'اختر الفعل الصحيح: «الجنديان .... التقرير».',
-      en:'Choose the correct verb: “The two soldiers .... the report.”',
-      choices:[{ar:'يقرؤون',en:'They (plural) read'},{ar:'يقرآن',en:'The two read'},{ar:'تقرأ',en:'She reads'}],correct:1},
-    {ar:'الباب مغلق، والمفتاح في درج المكتب. ما الخطوة المنطقية قبل فتح الباب؟',
-      en:'The door is locked; the key is in the desk drawer. What should you do first?',
-      choices:[{ar:'أفتح الدرج وآخذ المفتاح',en:'Get the key from the drawer'},{ar:'أحطم النافذة',en:'Break the window'},{ar:'أنتظر دون محاولة',en:'Wait and do nothing'}],correct:0},
-  ],
-  command: [
-    {ar:'توقفت الكهرباء، فأطفأ القائد الأجهزة غير الضرورية. لماذا اتخذ هذا القرار؟',
-      en:'Power failed, so the commander shut down nonessential devices. Why?',
-      choices:[{ar:'ليزيد عدد الأجهزة',en:'To use more devices'},{ar:'ليحافظ على طاقة المولد',en:'To save generator power'},{ar:'ليغلق جميع الأبواب',en:'To lock every door'}],correct:1},
-    {ar:'سمع الحارس صوتًا خلف الباب، ففحص الكاميرا قبل فتحه. ما السلوك الذي يدل عليه هذا التصرف؟',
-      en:'A guard checks the camera before opening a noisy door. What does this show?',
-      choices:[{ar:'التسرع',en:'Rushing'},{ar:'الإهمال',en:'Negligence'},{ar:'الحذر والتحقق',en:'Caution and verification'}],correct:2},
-    {ar:'وصلت رسالة بلغة لا تفهمها، لكن زميلك يعرفها. ما القرار الأنسب لإنقاذ الفريق؟',
-      en:'A message arrives in a language you do not know, but your teammate does. What is best?',
-      choices:[{ar:'أطلب مساعدته وأتعاون معه',en:'Ask for help and work together'},{ar:'أتجاهل الرسالة',en:'Ignore the message'},{ar:'أخمن معناها وحدي',en:'Guess alone'}],correct:0},
-  ],
+type Bilingual = { ar:string; en:string };
+type Choice = Bilingual;
+type SafeChallenge = {
+  prompt:Bilingual;
+  choices:[Choice,Choice,Choice];
+  answer:number;
+  pin:string;
+  loot:Bilingual;
 };
-const LEVELS: Record<MissionId,{ar:string;en:string;goalAr:string;goalEn:string}> = {
-  warehouse:{ar:'01 · تأسيس / A1',en:'01 · FOUNDATION / A1',goalAr:'المفردات وفهم الأوامر المباشرة',goalEn:'Vocabulary and simple commands'},
-  signals:{ar:'02 · تطبيق / A2',en:'02 · APPLICATION / A2',goalAr:'تتبّع التعليمات وترتيب الخطوات',goalEn:'Following multi-step instructions'},
-  archive:{ar:'03 · تحليل / B1',en:'03 · ANALYSIS / B1',goalAr:'فهم الأدلة والتراكيب اللغوية',goalEn:'Evidence, grammar and inference'},
-  command:{ar:'04 · استنتاج / B2',en:'04 · REASONING / B2',goalAr:'التفسير واتخاذ القرار والتعاون',goalEn:'Inference, decisions and collaboration'}
+const choices=(ar:string[],en:string[]):[Choice,Choice,Choice] => [
+  {ar:ar[0],en:en[0]}, {ar:ar[1],en:en[1]}, {ar:ar[2],en:en[2]}
+];
+const MISSIONS:Record<SecretRoomId,{subtitle:Bilingual; briefing:Bilingual;skills:Bilingual;safes:SafeChallenge[];reward:Bilingual}> = {
+  depot: {
+    subtitle:{ar:'العملية الأولى · A1',en:'OPERATION 01 · A1'},
+    briefing:{ar:'المخزن محروس. تعطّل أجهزة الحراسة، ثم افتح أربع خزائن بكلمات السر العربية للحصول على جهاز الإرسال الأول.',
+      en:'The depot is guarded. Neutralize the security drones, then open four safes with Arabic language codes.'},
+    skills:{ar:'المفردات الأساسية والأوامر القصيرة',en:'Core vocabulary and simple instructions'},
+    safes:[
+      {prompt:{ar:'الخزنة 01: ما الكلمة التي تعني «KEY»؟',en:'SAFE 01: Which Arabic word means KEY?'},
+        choices:choices(['المفتاح','النافذة','المطر'],['Key','Window','Rain']),answer:0,pin:'2418',loot:{ar:'مفتاح إلكتروني',en:'Electronic key'}},
+      {prompt:{ar:'الخزنة 02: أين تُوضع الكتب؟',en:'SAFE 02: Where do you keep books?'},
+        choices:choices(['في الحذاء','على الرف','تحت الماء'],['In a shoe','On a shelf','Under water']),answer:1,pin:'7053',loot:{ar:'خريطة المخزن',en:'Depot floor plan'}},
+      {prompt:{ar:'الخزنة 03: اختر الأمر الصحيح لفتح الباب.',en:'SAFE 03: Choose the correct command to open a door.'},
+        choices:choices(['ذهب الولد','الباب جميل','افتح الباب'],['The boy went','The door is nice','Open the door']),answer:2,pin:'9164',loot:{ar:'بطاقة العبور',en:'Access badge'}},
+      {prompt:{ar:'الخزنة 04: ما ضد كلمة «مغلق»؟',en:'SAFE 04: What is the opposite of CLOSED?'},
+        choices:choices(['مفتوح','بعيد','صغير'],['Open','Far','Small']),answer:0,pin:'3825',loot:{ar:'سلاح طاقة أساسي مطوَّر',en:'Upgraded energy blaster'}}
+    ],
+    reward:{ar:'قاذف الطاقة MK-II',en:'Energy Blaster MK-II'}
+  },
+  comms: {
+    subtitle:{ar:'العملية الثانية · A2',en:'OPERATION 02 · A2'},
+    briefing:{ar:'حارسان يراقبان الاتصالات. تعامل معهما بحذر، ثم اتبع التعليمات واستخرج شفرات أربع خزائن.',
+      en:'Two guards patrol communications. Stay alert, then follow instructions to unlock all four safes.'},
+    skills:{ar:'فهم التعليمات وتسلسل الأحداث',en:'Following instructions and sequence'},
+    safes:[
+      {prompt:{ar:'الخزنة 01: «اذهب إلى اليمين ثم توقّف». ماذا تفعل أولًا؟',en:'SAFE 01: “Go right, then stop.” What comes first?'},
+        choices:choices(['أتوقّف','أذهب إلى اليمين','أجلس'],['Stop','Go right','Sit']),answer:1,pin:'6549',loot:{ar:'شفرة الاتصالات',en:'Radio cipher'}},
+      {prompt:{ar:'الخزنة 02: «لا تلمس الزر الأحمر». ما التصرف الصحيح؟',en:'SAFE 02: “Do not touch the red button.” What should you do?'},
+        choices:choices(['أتجنب الزر الأحمر','أضغطه فورًا','أكسره'],['Avoid the red button','Press it','Break it']),answer:0,pin:'1802',loot:{ar:'مفتاح القناة الآمنة',en:'Secure channel key'}},
+      {prompt:{ar:'الخزنة 03: «بعد فحص الشاشة أرسل الرسالة». ما الذي يحدث ثانيًا؟',en:'SAFE 03: “After checking the screen, send the message.” What happens second?'},
+        choices:choices(['فحص الشاشة','الذهاب للنوم','إرسال الرسالة'],['Check the screen','Go to sleep','Send the message']),answer:2,pin:'4371',loot:{ar:'جهاز تشويش',en:'Signal jammer'}},
+      {prompt:{ar:'الخزنة 04: الإشارة حمراء الآن. ماذا يجب أن تفعل؟',en:'SAFE 04: The light is red. What should you do?'},
+        choices:choices(['أركض بسرعة','أتوقف وأنتظر','أتجاهلها'],['Run quickly','Stop and wait','Ignore it']),answer:1,pin:'5296',loot:{ar:'عدسة الاستهداف',en:'Targeting lens'}}
+    ],
+    reward:{ar:'ماسح الاستهداف MK-III',en:'Targeting Scanner MK-III'}
+  },
+  archive: {
+    subtitle:{ar:'العملية الثالثة · B1',en:'OPERATION 03 · B1'},
+    briefing:{ar:'ثلاثة حراس يحرسون أرشيف المعلومات. اجمع الأدلة، وحل المسائل النحوية والاستنتاجية لفتح الخزائن.',
+      en:'Three guards defend the classified archive. Collect clues and solve grammar and inference challenges.'},
+    skills:{ar:'القراءة التحليلية والنحو والاستنتاج',en:'Grammar, evidence and inference'},
+    safes:[
+      {prompt:{ar:'الخزنة 01: «وجد الحارس بطاقة قرب النافذة، ولم يجد المفتاح». ماذا وجد؟',en:'SAFE 01: “The guard found a card near the window, not a key.” What did he find?'},
+        choices:choices(['مفتاحًا','بطاقةً','كتابًا'],['A key','A card','A book']),answer:1,pin:'6423',loot:{ar:'بطاقة الحارس',en:'Guard ID badge'}},
+      {prompt:{ar:'الخزنة 02: اختر الفعل الصحيح: «الجنديان ____ التقرير».',en:'SAFE 02: Complete correctly: “The two soldiers ____ the report.”'},
+        choices:choices(['يقرآن','يقرأون','تقرأ'],['Both read','They (plural) read','She reads']),answer:0,pin:'2719',loot:{ar:'خريطة الأرشيف',en:'Archive map'}},
+      {prompt:{ar:'الخزنة 03: عثر المحقق على أثرٍ جديد بعد فتح الباب. ما سبب دخوله؟',en:'SAFE 03: The detective found a new clue after opening the door. Why did he enter?'},
+        choices:choices(['لشراء الطعام','لينام','للبحث عن دليل'],['To buy food','To sleep','To search for clues']),answer:2,pin:'8650',loot:{ar:'ملف الأدلة',en:'Evidence dossier'}},
+      {prompt:{ar:'الخزنة 04: أي عبارة تبيّن علاقة السبب بالنتيجة؟',en:'SAFE 04: Which sentence connects cause and consequence?'},
+        choices:choices(['المكان واسع','أضاء المصباح لأنه كان الظلام شديدًا','أمامنا باب'],['The place is big','He lit the lamp because it was dark','There is a door']),answer:1,pin:'3147',loot:{ar:'مقوّي نبضات الطاقة',en:'Energy pulse amplifier'}}
+    ],
+    reward:{ar:'مقوّي طاقة MK-IV',en:'Pulse Amplifier MK-IV'}
+  },
+  vault: {
+    subtitle:{ar:'العملية الأخيرة · B2',en:'FINAL OPERATION · B2'},
+    briefing:{ar:'نظام دفاع آلي شديد الحماية يمنع الوصول إلى الوثائق. ستحتاج التجهيزات التي جمعتها، ثم أربعة قرارات لغوية لاستعادة الأوراق السرية.',
+      en:'An armored defense turret protects the stolen documents. Use all previous upgrades and solve four reasoning challenges.'},
+    skills:{ar:'التفكير الناقد والتحليل واتخاذ القرار',en:'Critical reasoning, analysis and decisions'},
+    safes:[
+      {prompt:{ar:'الخزنة 01: لماذا يراجع القائد الكاميرات قبل فتح الغرفة المغلقة؟',en:'SAFE 01: Why does the commander check cameras before opening the sealed room?'},
+        choices:choices(['للتحقق من سلامة المكان','لتغيير لون الباب','لتضييع الوقت'],['To verify safety','To change its color','To waste time']),answer:0,pin:'9528',loot:{ar:'خريطة الدفاع',en:'Defense map'}},
+      {prompt:{ar:'الخزنة 02: نَفِدَت طاقة المولد. ما القرار الأكثر منطقية؟',en:'SAFE 02: The generator has low energy. What is the logical decision?'},
+        choices:choices(['أشغّل الأجهزة كلها','أُطفئ الأجهزة غير الضرورية','أُهمل التحذير'],['Run every device','Switch off nonessential devices','Ignore warning']),answer:1,pin:'6104',loot:{ar:'مفتاح الحماية',en:'Defense key'}},
+      {prompt:{ar:'الخزنة 03: يحمل زميلك الشفرة الصحيحة وأنت لا تعرفها؛ كيف تتصرف؟',en:'SAFE 03: Your teammate knows the code and you do not. What is best?'},
+        choices:choices(['أتجاهله','أخمّن وحدي','أتعاون معه لفك الشفرة'],['Ignore him','Guess alone','Cooperate to decode']),answer:2,pin:'4782',loot:{ar:'جهاز فك التشفير',en:'Decryption device'}},
+      {prompt:{ar:'الخزنة 04: اختَر الاستنتاج الصحيح: استُعيدت الوثائق ولم يُصب أي زميل؛ ما سبب نجاح الفريق؟',en:'SAFE 04: The documents were recovered and no teammate was hurt. What explains the team’s success?'},
+        choices:choices(['التعاون والحذر وحسن التخطيط','التسرع بلا معلومات','ترك المهمة مبكرًا'],['Teamwork, caution and planning','Rushing blindly','Abandoning the mission']),answer:0,pin:'2036',loot:{ar:'ملف الأوراق السرية المسروقة',en:'Stolen classified documents'}}
+    ],
+    reward:{ar:'الوثائق السرية',en:'Secret Documents'}
+  }
 };
-
-const REWARDS: Record<MissionId, {ar:string;en:string}> = {
-  warehouse: {ar:'موجّه الطاقة MK-II',en:'Energy Focus MK-II'},
-  signals: {ar:'ماسح الإشارات MK-III',en:'Signal Scanner MK-III'},
-  archive: {ar:'عدسة كشف الأدلة',en:'Evidence Vision Lens'},
-  command: {ar:'قاذف النبضات المتقدم',en:'Advanced Pulse Launcher'},
-};
-const savedMissions = (key:string): MissionId[] => {
-  try {
-    const parsed=JSON.parse(localStorage.getItem(key)||'[]');
-    return Array.isArray(parsed)?MISSIONS.map(m=>m.id).filter(id=>parsed.includes(id)):[];
+const sequence=SECRET_ROOMS.map(x=>x.id);
+const storageKey=(uid:string)=>'qul_secret_documents_v2_'+uid;
+function readProgress(key:string):SecretRoomId[]{
+  try{
+    const value=JSON.parse(localStorage.getItem(key)||'[]');
+    if(!Array.isArray(value))return [];
+    return sequence.filter((x,i)=>i<3&&value.includes(x));
   }catch{return [];}
-};
-type Input = {x:number;z:number;sprint:boolean};
-type Props = {lang:Language;onBack:()=>void;onLaunch?:(gameId:string)=>void};
-export const ArcadeCorridor: React.FC<Props> = ({lang,onBack}) => {
+}
+type Input={forward:number;strafe:number;run:boolean};
+export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(id:string)=>void}>=({lang,onBack})=>{
   const {user}=useAuth();
   const ar=lang==='ar';
-  const key='qul_tactical_missions_v1_'+(user?.uid||'guest');
-  const [completed,setCompleted]=useState<MissionId[]>(()=>savedMissions(key));
-  const [phase,setPhase]=useState<GamePhase>('entrance');
-  const [room,setRoom]=useState<MissionId|null>(null);
-  const [nearby,setNearby]=useState<MissionId|null>(null);
+  const key=storageKey(user?.uid||'guest');
+  const [completed,setCompleted]=useState<SecretRoomId[]>(()=>readProgress(key));
+  const [phase,setPhase]=useState<SecretPhase>('intro');
+  const [room,setRoom]=useState<SecretRoomId|null>(null);
+  const [nearby,setNearby]=useState<SecretRoomId|null>(null);
+  const [health,setHealth]=useState(100);
+  const [threats,setThreats]=useState(0);
+  const [opened,setOpened]=useState([false,false,false,false]);
+  const [activeSafe,setActiveSafe]=useState(0);
+  const [selectedPin,setSelectedPin]=useState<string|null>(null);
+  const [hitFlash,setHitFlash]=useState(false);
+  const [documents,setDocuments]=useState(false);
+  const [score,setScore]=useState(0);
   const [ready,setReady]=useState(false);
   const [error,setError]=useState('');
   const [attempt,setAttempt]=useState(0);
-  const [round,setRound]=useState(0);
-  const [feedback,setFeedback]=useState<'correct'|'wrong'|null>(null);
-  const [armed,setArmed]=useState(false);
-  const [shield,setShield]=useState(3);
-  const [failed,setFailed]=useState(false);
-  const [reward,setReward]=useState(false);
-  const [score,setScore]=useState(0);
-  const [input,setInput]=useState<Input>({x:0,z:0,sprint:false});
+  const [input,setInput]=useState<Input>({forward:0,strafe:0,run:false});
+  const [crouch,setCrouch]=useState(false);
   const [paused,setPaused]=useState(false);
   const host=useRef<HTMLDivElement>(null);
-  const engine=useRef<ReturnType<typeof createTacticalScene>|null>(null);
-  const timer=useRef<ReturnType<typeof setTimeout>|null>(null);
+  const engine=useRef<ReturnType<typeof createSecretMission>|null>(null);
   const completedRef=useRef(completed);
   completedRef.current=completed;
-  const progressRef=useRef<{room:MissionId|null;round:number;armed:boolean}>({room:null,round:0,armed:false});
-  const unlocked=(id:MissionId)=>completedRef.current.includes(id)||MISSIONS.find(m=>!completedRef.current.includes(m.id))?.id===id;
-  const nextMission=MISSIONS.find(m=>!completed.includes(m.id))?.id;
-  useEffect(()=>setCompleted(savedMissions(key)),[key]);
+  const phaseRef=useRef<SecretPhase>('intro');
+  const lastThreats=useRef(0);
+  const safeRef=useRef(0);
+  const flashTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+  const currentRoom=room?MISSIONS[room]:null;
+  const next=sequence.find(x=>!completed.includes(x))??'vault';
+  const allowed=[...completed,next];
+  const allSafesOpen=opened.every(Boolean);
+
+  useEffect(()=>{setCompleted(readProgress(key));},[key]);
 
   useEffect(()=>{
-    const el=host.current;
-    if(!el)return;
-    let cancelled=false;
-    let scene:ReturnType<typeof createTacticalScene>|null=null;
-    import('./TacticalMissionScene').then(module=>{
-      if(cancelled)return;
-      try {
-        scene=module.createTacticalScene(el,{
-          lang,
-          onPhase(next,id){
-            if(cancelled)return;
-            setPhase(next);
-            if(next==='room'){
-              progressRef.current={room:id??null,round:0,armed:false};
-              setRoom(id??null);setRound(0);setReward(false);setFeedback(null);
-              setArmed(false);setFailed(false);setShield(3);
+    const container=host.current;if(!container)return;
+    let stopped=false;
+    let scene:ReturnType<typeof createSecretMission>|null=null;
+    import('./SecretMissionEngine').then(module=>{
+      if(stopped)return;
+      try{
+        scene=module.createSecretMission(container,{
+          onPhase(state,id){
+            if(stopped)return;
+            phaseRef.current=state;
+            setPhase(state);
+            if(state==='combat'){
+              setRoom(id||null);setOpened([false,false,false,false]);setActiveSafe(0);safeRef.current=0;
+              setSelectedPin(null);setHealth(100);
             }
-            if(next==='corridor'){setRoom(null);progressRef.current.armed=false;setArmed(false);}
+            if(state==='hall')setRoom(null);
+            if(state==='victory'){
+              setDocuments(true);
+              setScore(v=>v+900);
+              // 4/4 is awarded only after the final physical vault and document pickup.
+              setCompleted(prev=>prev.includes('vault')?prev:[...prev,'vault']);
+            }
           },
-          onNearby(id){if(!cancelled)setNearby(id);},
-          onTargetHit(){if(!cancelled)handleTargetHit();},
-          canEnter(id){return completedRef.current.includes(id)||MISSIONS.find(m=>!completedRef.current.includes(m.id))?.id===id;},
-          onError(message){if(!cancelled)setError(message);}
-        });
+          onHealth(value){if(!stopped)setHealth(value);},
+          onThreats(n){
+            if(stopped)return;
+            if(n<lastThreats.current)setScore(x=>x+(lastThreats.current-n)*150);
+            lastThreats.current=n;setThreats(n);
+          },
+          onNearby(id){if(!stopped)setNearby(id);},
+          onShot(hit){
+            if(stopped)return;
+            if(hit){setHitFlash(true);if(flashTimer.current)clearTimeout(flashTimer.current);flashTimer.current=setTimeout(()=>setHitFlash(false),110);}
+          },
+          onError(message){if(!stopped){setError(message);setReady(false);}}
+        },lang);
         engine.current=scene;
-        scene.setUpgrade(Math.min(5,completed.length+1));
+        scene.setAllowed([...completedRef.current,sequence.find(x=>!completedRef.current.includes(x))??'vault']);
+        scene.setWeaponTier(completedRef.current.length);
         setReady(true);setError('');
-      }catch(e){if(!cancelled)setError(ar?'تعذر إنشاء المشهد الثلاثي الأبعاد.':'Could not initialize the 3D scene.');}
-    }).catch(()=>{if(!cancelled)setError(ar?'تعذر تحميل مشهد اللعبة.':'Failed to load game scene.');});
+      }catch(e){
+        if(!stopped)setError(ar?'تعذّر تشغيل المشهد ثلاثي الأبعاد.':'Unable to initialize 3D scene.');
+      }
+    }).catch(()=>{if(!stopped)setError(ar?'فشل تحميل اللعبة.':'Game failed to load.');});
     return ()=>{
-      cancelled=true;scene?.dispose();
+      stopped=true;scene?.dispose();
       if(engine.current===scene)engine.current=null;
     };
   },[attempt]);
 
-  useEffect(()=>{engine.current?.setLanguage(lang);},[lang,ready]);
-  useEffect(()=>{engine.current?.setUpgrade(Math.min(5,completed.length+1));},[completed,ready]);
-  useEffect(()=>{engine.current?.setInput(input);},[input,ready]);
-  useEffect(()=>{engine.current?.setPaused(paused);},[paused,ready]);
-  useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current);},[]);
+  useEffect(()=>{
+    const current=sequence.find(x=>!completed.includes(x))??'vault';
+    engine.current?.setAllowed([...completed,current]);
+    engine.current?.setWeaponTier(completed.length);
+  },[completed,ready]);
+  useEffect(()=>engine.current?.setLanguage(lang),[lang,ready]);
+  useEffect(()=>engine.current?.setMovement(input.forward,input.strafe,input.run),[input,ready]);
+  useEffect(()=>engine.current?.setCrouch(crouch),[crouch,ready]);
+  useEffect(()=>engine.current?.setPaused(paused),[paused,ready]);
+  useEffect(()=>()=>{if(flashTimer.current)clearTimeout(flashTimer.current);},[]);
 
-  const current=room?TASKS[room][round]:null;
-  const info=room?MISSIONS.find(m=>m.id===room):null;
-  const near=nearby?MISSIONS.find(m=>m.id===nearby):null;
-  const handleTargetHit=()=>{
-    const progress=progressRef.current;
-    if(!progress.armed||!progress.room)return;
-    const missionId=progress.room;
-    progress.armed=false;
-    setArmed(false);
-    setFeedback(null);
-    setScore(previous=>previous+100);
-    if(progress.round===TASKS[missionId].length-1){
-      setReward(true);
-      const next=completedRef.current.includes(missionId)
-        ? completedRef.current : [...completedRef.current,missionId];
-      completedRef.current=next;
-      setCompleted(next);
-      try{localStorage.setItem(key,JSON.stringify(next));}catch{}
-    }else{
-      progress.round+=1;
-      setRound(progress.round);
-    }
-  };
-  const answer=(index:number)=>{
-    if(!room||phase!=='room'||!TASKS[room][round]||feedback||reward||armed||failed)return;
-    const current=TASKS[room][round];
-    if(index!==current.correct){
-      const remaining=Math.max(0,shield-1);
-      setShield(remaining);
-      setFeedback('wrong');
-      if(remaining===0){
-        setFailed(true);
-        return;
-      }
-      timer.current=setTimeout(()=>setFeedback(null),850);
+  const answer=(idx:number)=>{
+    if(!room||phase!=='safes'||opened[activeSafe]||selectedPin!==null)return;
+    const q=MISSIONS[room].safes[activeSafe];
+    if(idx!==q.answer){
+      setSelectedPin('wrong');
+      if(flashTimer.current)clearTimeout(flashTimer.current);
+      flashTimer.current=setTimeout(()=>setSelectedPin(null),850);
       return;
     }
-    // Answering gives permission to fire at the holographic target.
-    // Only a real projectile hit completes the stage and awards points.
-    progressRef.current.armed=true;
-    setArmed(true);
-    setFeedback('correct');
-    engine.current?.armTarget(true);
+    if(!engine.current?.openSafe(activeSafe))return;
+    setSelectedPin(q.pin);
+    setOpened(prev=>prev.map((done,i)=>i===activeSafe?true:done));
+    setScore(n=>n+125);
   };
-  const retry=()=>{
-    if(timer.current)clearTimeout(timer.current);
-    progressRef.current={room,round:0,armed:false};
-    engine.current?.armTarget(false);
-    setRound(0);setShield(3);setFailed(false);setFeedback(null);setReward(false);setArmed(false);
+  const advanceSafe=()=>{
+    if(!room)return;
+    if(activeSafe<3){
+      const index=activeSafe+1;safeRef.current=index;setActiveSafe(index);setSelectedPin(null);return;
+    }
+    if(room==='vault'){
+      // The documents exist only after all four physical vaults have been opened.
+      if(!opened.every(Boolean))return;
+      const success=engine.current?.finish();
+      if(success)setDocuments(true);
+      return;
+    }
+    setCompleted(prev=>{
+      if(prev.includes(room))return prev;
+      const value=[...prev,room];
+      try{localStorage.setItem(key,JSON.stringify(value));}catch{}
+      return value;
+    });
+    setScore(v=>v+400);
+    engine.current?.exitRoom();
   };
-  const direction=(type:'x'|'z',value:number,pressed:boolean)=>{
-    setInput(prev=>({...prev,[type]:pressed?value:0}));
+  const move=(kind:'forward'|'backward'|'left'|'right',down:boolean)=>{
+    const axes:{[key:string]:Partial<Input>}={
+      forward:{forward:down?1:0},backward:{forward:down?-1:0},
+      left:{strafe:down?-1:0},right:{strafe:down?1:0}
+    };
+    setInput(prev=>({...prev,...axes[kind]}));
   };
-  const directional=(icon:React.ReactNode, axis:'x'|'z',value:number,label:string)=>(
-    <button aria-label={label} className="qul-ops-direction"
-      onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);direction(axis,value,true);}}
-      onPointerUp={()=>direction(axis,value,false)}
-      onPointerCancel={()=>direction(axis,value,false)}
-      onLostPointerCapture={()=>direction(axis,value,false)}
-    >{icon}</button>
-  );
+  const hold=(kind:'forward'|'backward'|'left'|'right',icon:React.ReactNode)=>
+    <button className="qul-secret-move" aria-label={kind}
+      onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);move(kind,true);}}
+      onPointerUp={()=>move(kind,false)}
+      onPointerCancel={()=>move(kind,false)}
+      onLostPointerCapture={()=>move(kind,false)}>{icon}</button>;
+  const location=room?SECRET_ROOMS.find(x=>x.id===room):null;
+  const accessible=SECRET_ROOMS.filter(r=>allowed.includes(r.id));
+  const gear=completed.length;
   return (
-    <div className="qul-ops" dir={ar?'rtl':'ltr'}>
-      <div ref={host} className="qul-ops-world"/>
-      <div className="qul-ops-vignette" aria-hidden="true"/>
-      <header className="qul-ops-header">
-        <div className="qul-ops-brand"><Crosshair size={23}/><span><strong>QUL <em>OPS</em></strong><small>{ar?'المهام التعليمية':'TACTICAL LEARNING'}</small></span></div>
-        <div className="qul-ops-header-actions"><span>MK-{completed.length+1}</span><button onClick={onBack}><X size={17}/>{ar?'خروج':'EXIT'}</button></div>
-      </header>
-      {!ready&&(
-        <div className="qul-ops-loader" role="status">
-          <Crosshair size={42}/><strong>{error||(ar?'جارٍ تجهيز اللعبة...':'PREPARING GAME...')}</strong>
-          {error&&<button onClick={()=>{setError('');setAttempt(n=>n+1);}}><RotateCcw size={16}/>{ar?'إعادة المحاولة':'RETRY'}</button>}
-          <button onClick={onBack}>{ar?'العودة للألعاب':'BACK'}</button>
+    <section className="qul-secret" dir={ar?'rtl':'ltr'}>
+      <div ref={host} className="qul-secret-scene" aria-label={ar?'منشأة العمليات ثلاثية الأبعاد':'3D tactical facility'} />
+      <div className="qul-secret-shade" aria-hidden="true" />
+      <div className="qul-secret-top">
+        <div className="qul-secret-logo"><Crosshair size={22}/><div><strong>QUL OPS</strong><small>{ar?'العملية: استرداد الوثائق':'OPERATION: DOCUMENT RECOVERY'}</small></div></div>
+        <div className="qul-secret-gear"><Zap size={15}/> MK-{gear+1}</div>
+        <button className="qul-secret-exit" onClick={onBack}><X size={17}/>{ar?'خروج':'EXIT'}</button>
+      </div>
+      <div className="qul-secret-stats">
+        <span><ShieldCheck size={16}/><b>{health}%</b></span>
+        <span><Target size={16}/>{threats} {ar?'حراس':'GUARDS'}</span>
+        <span><FileLock2 size={16}/>{completed.length}/4</span>
+        <span><Zap size={16}/>{score} XP</span>
+      </div>
+      {!ready&&<div className="qul-secret-loader" role="status"><Crosshair size={40}/>
+        <h2>{error||(ar?'جارٍ تجهيز المهمة...':'Preparing your mission...')}</h2>
+        {error&&<button onClick={()=>{setError('');setAttempt(x=>x+1);}}><RotateCcw size={17}/>{ar?'إعادة المحاولة':'Retry'}</button>}
+        <button onClick={onBack}>{ar?'العودة للألعاب':'Back to games'}</button>
+      </div>}
+
+      {ready&&phase==='intro'&&<div className="qul-secret-brief">
+        <div className="qul-secret-case">TOP SECRET / ملف سري</div>
+        <h1>{ar?'عملية استرداد الأوراق السرية':'THE STOLEN DOCUMENTS'}</h1>
+        <p>{ar?'سرقت مجموعة مسلحة وثائق حساسة وأخفتها في منشأة محصنة. ادخل بترقّب، وتعامل مع الحراس، وافتح ٤ خزائن في كل غرفة بحل شفرات عربية متدرجة الصعوبة، ثم عطّل السلاح الآلي واستعد الأوراق.':'Stolen documents are hidden in a guarded facility. Clear the security threats, open four language-coded safes in each room, disable the final turret, and recover the documents.'}</p>
+        <div className="qul-secret-brief-facts">
+          <span>{ar?'٤ غرف':'4 ROOMS'}</span><span>{ar?'١٦ خزنة':'16 SAFES'}</span><span>{ar?'تدرج A1–B2':'A1–B2'}</span>
         </div>
-      )}
-      {ready&&phase==='entrance'&&(
-        <div className="qul-ops-intro">
-          <small>QUL / TACTICAL MISSION</small>
-          <h1>{ar?'المهمة السرية':'SECRET MISSION'}</h1>
-          <p>{ar?'أربع مهمات تتدرج من مفردات A1 إلى استنتاج B2. أجب، ثم أطلق طاقة على الهدف المضيء. لديك ثلاث وحدات درع في كل غرفة؛ ثلاث أخطاء تعني إعادة المحاولة.':'Four missions, from A1 vocabulary to B2 reasoning. Answer, then fire at the lit target. You have three shield cells per room; three errors mean a retry.'}</p>
-          <button className="qul-ops-action" onClick={()=>engine.current?.start()}><DoorOpen size={20}/>{ar?'ابدأ المهمة':'START OPERATION'}</button>
-        </div>
-      )}
-      {ready&&(phase==='starting'||phase==='entering'||phase==='leaving')&&
-        <div className="qul-ops-status">{phase==='starting'?(ar?'جاري فتح البوابة...':'OPENING GATE...'):phase==='entering'?(ar?'دخول الغرفة...':'ENTERING ROOM...'):(ar?'مغادرة الغرفة...':'LEAVING ROOM...')}</div>}
-      {ready&&phase==='corridor'&&(
-        <>
-          <div className="qul-ops-objective"><span className="qul-ops-led"/>{near?(ar?'اقتربت من: '+near.ar:'NEAR: '+near.en):(nextMission?(ar?'المهمة التالية: '+MISSIONS.find(m=>m.id===nextMission)?.ar:'NEXT: '+MISSIONS.find(m=>m.id===nextMission)?.en):(ar?'اكتملت جميع المهمات':'ALL MISSIONS COMPLETE'))}</div>
-          {nearby&&unlocked(nearby)&&<button className="qul-ops-enter" onClick={()=>engine.current?.enterNearest()}><DoorOpen size={18}/>{ar?'افتح الباب':'OPEN DOOR'}</button>}
-          <nav className="qul-ops-map">
-            <div className="qul-ops-map-title">MISSION SELECT <b>{completed.length}/4</b></div>
-            <div className="qul-ops-map-list">
-              {MISSIONS.map((m,i)=><button key={m.id}
-                disabled={!unlocked(m.id)}
-                className={completed.includes(m.id)?'completed':!unlocked(m.id)?'locked':'next'}
-                onClick={()=>engine.current?.travelTo(m.id)}>
-                <span>0{i+1}</span><strong>{ar?m.ar:m.en}</strong>
-                {completed.includes(m.id)?<Check size={13}/>:!unlocked(m.id)?<LockKeyhole size={13}/>:<Target size={13}/>}
-              </button>)}
+        <button className="qul-secret-primary" onClick={()=>engine.current?.start()}>
+          <DoorOpen size={20}/>{ar?'ابدأ التسلل':'BEGIN INFILTRATION'}
+        </button>
+      </div>}
+
+      {ready&&phase==='entering'&&<div className="qul-secret-status">{ar?'فتح بوابة المنشأة...':'OPENING FACILITY GATE...'}</div>}
+      {ready&&phase==='room-enter'&&<div className="qul-secret-status">{ar?'دخول الغرفة بترقّب...':'ENTERING ROOM...'}</div>}
+      {ready&&phase==='room-exit'&&<div className="qul-secret-status">{ar?'العودة إلى الممر...':'RETURNING TO CORRIDOR...'}</div>}
+
+      {ready&&phase==='hall'&&<div className="qul-secret-objective">
+        <span className="qul-secret-light"/>{ar?'الهدف التالي: '+MISSIONS[next].subtitle.ar:'NEXT OBJECTIVE: '+MISSIONS[next].subtitle.en}
+        <strong>{ar?SECRET_ROOMS.find(x=>x.id===next)?.ar:SECRET_ROOMS.find(x=>x.id===next)?.en}</strong>
+      </div>}
+      {ready&&phase==='hall'&&nearby&&allowed.includes(nearby)&&
+        <button className="qul-secret-enter" onClick={()=>engine.current?.enterRoom(nearby)}>
+          <DoorOpen size={18}/>{ar?'ادخل الغرفة':'ENTER ROOM'}
+        </button>}
+      {ready&&phase==='hall'&&
+        <div className="qul-secret-minimap">
+          <div>SECURE FACILITY <span>{completed.length}/4</span></div>
+          {SECRET_ROOMS.map((r,i)=><button key={r.id} disabled={!allowed.includes(r.id)}
+            onClick={()=>engine.current?.travelTo(r.id)}
+            className={completed.includes(r.id)?'cleared':r.id===next?'next':'locked'}>
+            <span>0{i+1}</span><strong>{ar?r.ar:r.en}</strong>
+            {completed.includes(r.id)?<Check size={13}/>:r.id===next?<Target size={13}/>:<LockKeyhole size={13}/>}
+          </button>)}
+        </div>}
+
+      {ready&&phase==='combat'&&room&&<div className="qul-secret-combat">
+        <strong><ShieldAlert size={20}/>{ar?'تحذير: حراس مسلحون':'HOSTILES DETECTED'}</strong>
+        <p>{MISSIONS[room].briefing[lang]}</p>
+        <span>{ar?'الحراس المتبقون':'HOSTILES REMAINING'}: {threats}</span>
+        <small>{ar?'استخدم التصويب وإطلاق نبضات الطاقة. المشي البطيء والزحف يقللان احتمال إصابتك.':'Aim and fire energy pulses. Crouching and moving reduce your exposure.'}</small>
+      </div>}
+
+      {ready&&phase==='safes'&&room&&
+        <div className="qul-secret-vault-panel">
+          <div className="qul-secret-vault-header">
+            <div><span>SECURE SAFE SYSTEM / {MISSIONS[room].subtitle.en}</span>
+              <h2>{ar?location?.ar:location?.en}</h2>
+              <p>{ar?MISSIONS[room].skills.ar:MISSIONS[room].skills.en}</p>
             </div>
-          </nav>
-        </>
-      )}
-      {ready&&phase==='room'&&room&&(
-        <aside className="qul-ops-mission">
-          <div className="qul-ops-mission-top"><span>OBJECTIVE / 0{MISSIONS.findIndex(m=>m.id===room)+1}</span><button onClick={()=>{if(timer.current)clearTimeout(timer.current);engine.current?.leave();}} aria-label={ar?'عودة':'Back'}><ArrowLeft size={20}/></button></div>
-          <h2>{ar?info?.ar:info?.en}</h2>
-          <div className="qul-ops-learning-goal">
-            <strong>{ar?LEVELS[room].ar:LEVELS[room].en}</strong>
-            <span>{ar?LEVELS[room].goalAr:LEVELS[room].goalEn}</span>
+            <div className="qul-secret-vault-progress">{opened.filter(Boolean).length}/4</div>
           </div>
-          {failed ? (
-            <div className="qul-ops-failed">
+          <div className="qul-secret-vault-tabs">
+            {[0,1,2,3].map(i=><div key={i} className={opened[i]?'open':i===activeSafe?'active':'locked'}>
+              {opened[i]?<Check size={14}/>:<LockKeyhole size={13}/>}
+              {ar?'خزنة':'SAFE'} {i+1}
+            </div>)}
+          </div>
+          {selectedPin==='wrong'&&<div className="qul-secret-error">{ar?'شفرة خاطئة، أعد التفكير.':'Incorrect code. Try again.'}</div>}
+          {opened[activeSafe]&&selectedPin&&selectedPin!=='wrong'?(
+            <div className="qul-secret-safe-result">
               <ShieldCheck size={32}/>
-              <h3>{ar?'فشلت هذه المحاولة':'MISSION FAILED'}</h3>
-              <p>{ar?'نفدت وحدات الدرع بسبب ثلاث إجابات غير صحيحة. احتفظت بإنجازات الغرف السابقة.':'Three incorrect answers used up your shield. Previous room achievements are safe.'}</p>
-              <button className="qul-ops-action" onClick={retry}><RotateCcw size={17}/>{ar?'أعد المهمة':'RETRY MISSION'}</button>
+              <strong>{ar?'فتحت الخزنة بنجاح':'SAFE UNLOCKED'}</strong>
+              <span>PIN: {selectedPin}</span>
+              <p>{ar?'وجدت:':'Recovered:'} <b>{MISSIONS[room].safes[activeSafe].loot[lang]}</b></p>
+              <button className="qul-secret-primary" onClick={advanceSafe}>
+                {room==='vault'&&activeSafe===3?(ar?'استرد الأوراق السرية':'RECOVER DOCUMENTS'):
+                  activeSafe===3?(ar?'أكمل العملية وافتح الباب التالي':'COMPLETE ROOM & UNLOCK NEXT'):
+                    (ar?'الخزنة التالية':'NEXT SAFE')}
+                <ChevronLeft size={17}/>
+              </button>
             </div>
-          ) : !reward ? (
-            <>
-              <div className="qul-ops-stage">
-                <strong>{ar?'المرحلة':'STAGE'} {round+1} / 3</strong>
-                <span>{[0,1,2].map(i=><i key={i} className={i<=round?'on':''}/>)}</span>
-              </div>
-              <div className="qul-ops-shields" aria-label={ar?'الدرع المتبقي':'Remaining shield'}>
-                {ar?'الدرع:':'SHIELD:'} {Array.from({length:3},(_,i)=><ShieldCheck key={i} size={16} className={i<shield?'charged':'spent'}/>)}
-                <small>{shield}/3</small>
-              </div>
-              {!armed?(
-                <>
-                  <p>{ar?current?.ar:current?.en}</p>
-                  <div className="qul-ops-answers">
-                    {current?.choices.map((choice,i)=><button key={i}
-                      disabled={Boolean(feedback)}
-                      onClick={()=>answer(i)}
-                      className={feedback==='wrong'?'wrong':''}>
-                      <span>{String.fromCharCode(65+i)}</span>{ar?choice.ar:choice.en}
-                    </button>)}
-                  </div>
-                  {feedback==='wrong'&&<div className="qul-ops-feedback wrong">{ar?'إجابة غير صحيحة، حاول مرة أخرى':'Incorrect answer. Try again.'}</div>}
-                </>
-              ):(
-                <div className="qul-ops-target-step">
-                  <Target size={34}/>
-                  <strong>{ar?'فُتح قفل الطاقة!':'ENERGY TARGET UNLOCKED'}</strong>
-                  <p>{ar?'الهدف المضيء أمام الجندي. أطلق نبضة لإصابته وإكمال المرحلة.':'The holographic target is glowing. Fire a pulse to complete the stage.'}</p>
-                  <button className="qul-ops-fire" onClick={()=>engine.current?.fire()}>
-                    <Crosshair size={22}/>{ar?'إطلاق نبضة الطاقة':'FIRE ENERGY PULSE'}
-                  </button>
-                  <small>{ar?'أو اضغط مسافة / انقر داخل المشهد':'Or press SPACE / tap inside the scene'}</small>
-                </div>
-              )}
-            </>
           ):(
-            <div className="qul-ops-reward"><ShieldCheck size={42}/><h3>{ar?'مهمة ناجحة!':'MISSION COMPLETE'}</h3><p>{ar?'حصلت على تجهيز جديد:':'NEW EQUIPMENT UNLOCKED:'}</p>
-              <strong>{ar?REWARDS[room].ar:REWARDS[room].en}</strong>
-              <small>{ar?'✓ أُنجزت مراحل الغرفة الثلاث وأُتيح الباب التالي':'✓ Three stages cleared; the next room is unlocked'}</small>
-              <button className="qul-ops-action" onClick={()=>engine.current?.leave()}>{ar?'العودة للممر':'CONTINUE'}<ChevronLeft size={18}/></button>
+            <div className="qul-secret-safe-challenge">
+              <span>{ar?'رمز الخزنة '+(activeSafe+1):'SAFE '+(activeSafe+1)+' CODE'}</span>
+              <p>{MISSIONS[room].safes[activeSafe].prompt[lang]}</p>
+              <div className="qul-secret-choices">
+                {MISSIONS[room].safes[activeSafe].choices.map((choice,i)=>
+                  <button key={i} onClick={()=>answer(i)}>
+                    <b>{String.fromCharCode(65+i)}</b>
+                    {choice[lang]}
+                  </button>)}
+              </div>
             </div>
           )}
-        </aside>
-      )}
-      <div className="qul-ops-stats">
-        <span><Crosshair size={16}/><b>{score}</b> XP</span>
-        <span><ShieldCheck size={16}/>{completed.length}/4</span>
-        <span><Zap size={16}/>{phase==='room'?shield:3}/3</span>
+        </div>}
+
+      {ready&&phase==='dead'&&<div className="qul-secret-end defeat">
+        <Skull size={42}/><small>MISSION FAILED</small>
+        <h2>{ar?'أُصيبت الشخصية وفشلت المحاولة':'OPERATOR DOWN'}</h2>
+        <p>{ar?'نفدت طاقتك تحت نيران الحراس. يمكنك إعادة الغرفة دون فقد إنجازات الغرف السابقة.':'Your health ran out. Retry this room without losing cleared earlier rooms.'}</p>
+        <button className="qul-secret-primary" onClick={()=>engine.current?.restartRoom()}><RotateCcw size={18}/>{ar?'أعد المحاولة':'RETRY ROOM'}</button>
+        <button className="qul-secret-secondary" onClick={onBack}>{ar?'الخروج':'EXIT'}</button>
+      </div>}
+
+      {ready&&phase==='victory'&&documents&&<div className="qul-secret-end victory">
+        <Trophy size={43}/><small>MISSION ACCOMPLISHED</small>
+        <h2>{ar?'استعدت الأوراق السرية!':'CLASSIFIED DOCUMENTS RECOVERED!'}</h2>
+        <p>{ar?'نجحت في تجاوز حراس المنشأة، وفتح الخزائن الست عشرة، وتعطيل السلاح المتطور، واستعادة الوثائق.':'You cleared the guards, unlocked sixteen safes, disabled the advanced defense system and recovered the secret documents.'}</p>
+        <div className="qul-secret-win-stats"><span>16 / 16 {ar?'خزنة':'SAFES'}</span><span>{score} XP</span></div>
+        <button className="qul-secret-primary" onClick={onBack}><FileText size={18}/>{ar?'العودة للألعاب':'BACK TO GAMES'}</button>
+      </div>}
+
+      <div className="qul-secret-crosshair" aria-hidden="true" style={{opacity:['combat','safes'].includes(phase)?.8:0}}>
+        <span className={hitFlash?'hit':''}>+</span>
       </div>
-      {ready&&phase==='corridor'&&(
-        <div className="qul-ops-controls">
-          <div className="qul-ops-dpad">
-            <div>{directional(<ArrowUp size={23}/>,'z',1,'Forward')}</div>
-            <div>{directional(<ArrowLeft size={23}/>,'x',-1,'Left')}
-              {directional(<ArrowDown size={23}/>,'z',-1,'Back')}
-              {directional(<ArrowRight size={23}/>,'x',1,'Right')}</div>
+      {ready&&['hall','combat','safes'].includes(phase)&&
+        <div className="qul-secret-controls">
+          <div className="qul-secret-pad">
+            <div>{hold('forward',<ArrowUp size={23}/>)}</div>
+            <div>{hold('left',<ArrowLeft size={23}/>)}
+              {hold('backward',<ArrowDown size={23}/>)}
+              {hold('right',<ArrowRight size={23}/>)}</div>
           </div>
-          <button className="qul-ops-run" aria-label="Sprint"
-            onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);setInput(v=>({...v,sprint:true}));}}
-            onPointerUp={()=>setInput(v=>({...v,sprint:false}))}
-            onPointerCancel={()=>setInput(v=>({...v,sprint:false}))}
-            onLostPointerCapture={()=>setInput(v=>({...v,sprint:false}))}><Zap size={22}/></button>
-          <div className="qul-ops-desktop-instructions">WASD / ↑↓ {ar?'للحركة':'MOVE'} · SHIFT {ar?'للجري':'RUN'} · E {ar?'للدخول':'ENTER'} · SPACE {ar?'للإطلاق':'FIRE'}</div>
-        </div>
-      )}
-      {ready&&phase==='corridor'&&<div className="qul-ops-crosshair" aria-hidden="true">+</div>}
-      {ready&&phase==='corridor'&&completed.length===4&&(
-        <div className="qul-ops-victory" role="status">
-          <ShieldCheck size={35}/>
-          <h2>{ar?'تم إنجاز العملية!':'OPERATION COMPLETE!'}</h2>
-          <p>{ar?'أنهيت الغرف الأربع، وأثبتّ تطورك من المفردات إلى الاستنتاج.':'You cleared all four rooms, progressing from vocabulary to reasoning.'}</p>
-          <strong>{score} XP</strong>
-          <button className="qul-ops-action" onClick={onBack}>{ar?'العودة للألعاب':'BACK TO GAMES'}</button>
-        </div>
-      )}
-      {ready&&<button className="qul-ops-pause" onClick={()=>setPaused(v=>!v)}>{paused?(ar?'استئناف':'RESUME'):(ar?'إيقاف مؤقت':'PAUSE')}</button>}
-    </div>
+          <div className="qul-secret-move-actions">
+            <button className="qul-secret-action jump" onClick={()=>engine.current?.jump()}>
+              <ArrowUp size={19}/><small>{ar?'قفز':'JUMP'}</small>
+            </button>
+            <button className={'qul-secret-action crouch '+(crouch?'active':'')}
+              onClick={()=>setCrouch(x=>!x)}><Footprints size={18}/><small>{ar?'زحف':'CROUCH'}</small></button>
+            <button className="qul-secret-action run"
+              onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);setInput(p=>({...p,run:true}));}}
+              onPointerUp={()=>setInput(p=>({...p,run:false}))}
+              onPointerCancel={()=>setInput(p=>({...p,run:false}))}
+              onLostPointerCapture={()=>setInput(p=>({...p,run:false}))}>
+              <Zap size={18}/><small>{ar?'ركض':'RUN'}</small>
+            </button>
+            <button className="qul-secret-action fire" disabled={phase==='hall'}
+              onClick={()=>engine.current?.fire()}><Crosshair size={26}/><small>{ar?'إطلاق':'FIRE'}</small></button>
+          </div>
+        </div>}
+      {ready&&<div className="qul-secret-bottom-help">{ar?
+        'WASD للحركة · حرّك الكاميرا بالسحب · Shift للجري · Space للقفز · C للزحف · F للإطلاق · E للدخول':
+        'WASD MOVE · DRAG CAMERA · SHIFT SPRINT · SPACE JUMP · C CROUCH · F FIRE · E ENTER'}</div>}
+      {ready&&<button className="qul-secret-pause" onClick={()=>setPaused(p=>!p)}>
+        {paused?(ar?'استئناف':'RESUME'):(ar?'إيقاف مؤقت':'PAUSE')}
+      </button>}
+    </section>
   );
 };
