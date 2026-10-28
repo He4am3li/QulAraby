@@ -28,13 +28,13 @@
 .qul-radio-thermal-printer button:focus-visible{outline:2px solid #eac388;outline-offset:1px;}
 .qul-radio-printer-surface{
   position:relative;overflow:hidden;
-  border:6px solid #39251a;
+  border:6px solid #2a1a10;
   border-radius:15px;
   padding:9px 12px 8px;
   background:
     repeating-linear-gradient(179deg,transparent 0 2px,#f1b86a16 3px 4px,transparent 5px 12px),
     radial-gradient(ellipse at 17% 0%,#9a6540 0%,transparent 59%),
-    linear-gradient(145deg,#69452f 0%,#483021 46%,#765037 79%,#38251c 100%);
+    linear-gradient(135deg,#765038 0%,#4a3023 35%,#65442c 66%,#3c281f 100%);
   box-shadow:inset 0 2px 2px #eac29766,inset 0 -5px 10px #170b0ab8,
     0 2px 1px #21130d,0 7px 13px #30211675,0 16px 28px #20140d4e;
 }
