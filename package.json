@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test:radio": "node scripts/test-radio.mjs && node tests/radio-ui.test.mjs"
   },
   "dependencies": {
     "@google/genai": "2.31.0",
@@ -34,6 +35,8 @@
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "fake-indexeddb": "6.2.6",
+    "happy-dom": "21.0.4",
     "jpeg-js": "^0.4.4",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"

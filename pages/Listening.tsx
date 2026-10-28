@@ -9,14 +9,17 @@ import {
   Phone, Mic, PhoneOff, MicOff, Compass, ArrowUpRight, Check, X, RefreshCw, Heart,
   PenTool, UserCircle, Speech, Disc
 } from 'lucide-react';
-import { generateSpeech, decodeAudioData, generateWordIllustration, evaluateCallIn } from '../services/gemini';
+import { generateSpeech, decodeAudioData, generateWordIllustration } from '../services/gemini';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CassettePlayer } from '../components/CassettePlayer';
 import { RadioThermalPrinter, RadioLearningStage } from '../components/RadioThermalPrinter';
 import '../components/ListeningRadioRetouch.css';
+import { RadioAudioSettings } from '../components/RadioAudioSettings';
+import { useRadioNarration } from '../src/hooks/useRadioNarration';
 import { STORY_CASSETTES } from '../src/data/storyCassettes';
 import { drawRadioCorpusText } from '../src/data/radioShuffleBag';
 import { RADIO_AUTHORED_EXERCISES } from '../src/data/radioAuthoredExercises';
+import { getRadioDifficultWords } from '../src/data/radioVocabulary';
 import type { RadioCorpusType } from '../src/data/radioTextCorpus';
 import { useAuth } from '../components/AuthProvider';
 
@@ -77,12 +80,11 @@ export const Listening: React.FC = () => {
   const [radioTextSerial, setRadioTextSerial] = React.useState(0);
   const [radioContent, setRadioContent] = React.useState<any>(null);
   const [radioAudio, setRadioAudio] = React.useState<AudioBuffer | null>(null);
+  const [radioTextId, setRadioTextId] = React.useState('');
   const [isRadioPlaying, setIsRadioPlaying] = React.useState(false);
   const [radioListenStage, setRadioListenStage] = React.useState<RadioLearningStage>('first');
   const [radioPlaybackEndCount, setRadioPlaybackEndCount] = React.useState(0);
   const radioStationRequestRef = React.useRef(0);
-  const radioNarrationRef = React.useRef<SpeechSynthesisUtterance | null>(null);
-  const radioNarrationTokenRef = React.useRef(0);
   const [volume, setVolume] = React.useState(0.5);
   const [selectedWord, setSelectedWord] = React.useState<{ word: string, meaningEn: string, meaningAr: string } | null>(null);
   const [isWordSpeaking, setIsWordSpeaking] = React.useState(false);
@@ -95,10 +97,15 @@ export const Listening: React.FC = () => {
   const [isCalling, setIsCalling] = React.useState(false);
   const [isIncomingCall, setIsIncomingCall] = React.useState(false);
   const [isRecording, setIsRecording] = React.useState(false);
-  const [callFeedback, setCallFeedback] = React.useState<any>(null);
-  const [isEvaluating, setIsEvaluating] = React.useState(false);
+  const [callAudioUrl, setCallAudioUrl] = React.useState<string | null>(null);
+  const callAudioUrlRef = React.useRef<string | null>(null);
+  const [callError, setCallError] = React.useState('');
+  const [callMicPending, setCallMicPending] = React.useState(false);
+  const callMicPendingRef = React.useRef(false);
+  const callTokenRef = React.useRef(0);
+  const callStreamRef = React.useRef<MediaStream | null>(null);
+  const callPlaybackRef = React.useRef<HTMLAudioElement | null>(null);
   const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
-  const audioChunksRef = React.useRef<Blob[]>([]);
   const callTimerRef = React.useRef<any>(null);
   const [callSeconds, setCallSeconds] = React.useState(0);
 
@@ -263,90 +270,19 @@ export const Listening: React.FC = () => {
     extraOscillatorsRef.current = [];
   };
 
-  const stopRadioNarration = () => {
-    radioNarrationTokenRef.current += 1;
-    if (radioNarrationRef.current && 'speechSynthesis' in window) {
-      try { window.speechSynthesis.cancel(); } catch {}
-    }
-    radioNarrationRef.current = null;
-  };
-
-  // Radio narration is handled entirely by the learner's browser/device.
-  // Never call Gemini, paid TTS, or any text generation when tuning a station.
+  const radioNarration = useRadioNarration({
+    textId: radioTextId, ownerId: user?.uid,
+    transcript: radioContent?.transcript || '', level: selectedLevel?.id,
+    volume, lang, onEnd: () => setRadioPlaybackEndCount(n => n + 1),
+    onState: (playing, paused) => { setIsRadioPlaying(playing); setIsPaused(paused); },
+    onError: setError
+  });
+  const stopRadioNarration = radioNarration.stop;
   const playRadioNarration = (restart = false) => {
-    if (!radioContent?.transcript || !('speechSynthesis' in window) ||
-        typeof SpeechSynthesisUtterance === 'undefined') {
-      setError(lang === 'ar'
-        ? 'المتصفح لا يدعم قراءة النص صوتيًا. جرّب متصفحًا أحدث.'
-        : 'This browser does not support speech playback.');
-      return;
-    }
-    const synth = window.speechSynthesis;
-    if (!restart && radioNarrationRef.current) {
-      if (synth.paused) {
-        synth.resume();
-        setIsRadioPlaying(true); setIsPaused(false);
-        return;
-      }
-      if (synth.speaking) {
-        synth.pause();
-        setIsRadioPlaying(false); setIsPaused(true);
-        return;
-      }
-    }
-    stopRadioNarration();
-    const token = radioNarrationTokenRef.current;
-    const requestId = radioStationRequestRef.current;
-    // Imported Word text has occasional isolated final alifs and legacy vowel
-    // glyphs. Clean only for pronunciation, never alter its stored questions.
-    const speechText = String(radioContent.transcript)
-      .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
-      .replace(/([\u0621-\u064A])\s+ا(?=[\s،.!؟؛]|$)/g, '$1ا')
-      .replace(/\s+([،.؛:؟!])/g, '$1')
-      .replace(/([،.؛:؟!])(?=\S)/g, '$1 ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    const utterance = new SpeechSynthesisUtterance(speechText);
-    utterance.lang = 'ar-SA';
-    utterance.rate = selectedLevel?.id === 'beginner' ? 0.83 : selectedLevel?.id === 'intermediate' ? 0.91 : 0.97;
-    utterance.pitch = 1;
-    utterance.volume = Math.max(0, Math.min(1, volume));
-    const voices = synth.getVoices().filter(v => /^ar([_-]|$)/i.test(v.lang));
-    const voice = voices.find(v => /natural|premium|enhanced|neural/i.test(v.name)) ||
-      voices.find(v => /google/i.test(v.name)) ||
-      voices.find(v => v.localService) || voices[0];
-    if (voice) utterance.voice = voice;
-    utterance.onend = () => {
-      if (token !== radioNarrationTokenRef.current ||
-          requestId !== radioStationRequestRef.current) return;
-      radioNarrationRef.current = null;
-      setIsRadioPlaying(false); setIsPaused(false);
-      setRadioPlaybackEndCount(n => n + 1);
-    };
-    utterance.onerror = event => {
-      if (token !== radioNarrationTokenRef.current ||
-          requestId !== radioStationRequestRef.current) return;
-      radioNarrationRef.current = null;
-      setIsRadioPlaying(false); setIsPaused(false);
-      if (event.error !== 'canceled' && event.error !== 'interrupted') {
-        setError(lang === 'ar' ? 'تعذّر تشغيل الصوت من جهازك.' : 'Speech playback failed on this device.');
-      }
-    };
-    radioNarrationRef.current = utterance;
-    setIsRadioPlaying(true); setIsPaused(false); setError(null);
-    synth.speak(utterance);
+    if (!isCalling && !isIncomingCall) radioNarration.play(restart);
   };
 
-  React.useEffect(() => {
-    return () => {
-      radioStationRequestRef.current += 1;
-      radioNarrationTokenRef.current += 1;
-      if (radioNarrationRef.current && 'speechSynthesis' in window) {
-        try { window.speechSynthesis.cancel(); } catch {}
-        radioNarrationRef.current = null;
-      }
-    };
-  }, []);
+  React.useEffect(() => () => { radioStationRequestRef.current++; }, []);
 
   const stopAudio = () => {
     stopRadioNarration();
@@ -557,6 +493,7 @@ export const Listening: React.FC = () => {
     setLoading(true);
     setRadioContent(null);
     setRadioAudio(null);
+    setRadioTextId('');
     setRadioListenStage('first');
     setRadioPlaybackEndCount(0);
     stopAudio();
@@ -581,11 +518,12 @@ export const Listening: React.FC = () => {
       // No AI-generated text or quiz. The document's Arabic wording and
       // five authored questions are paired by one stable corpus ID.
       setRadioTextTitle(source.titleAr);
+      setRadioTextId(source.id);
       setRadioContent({
         transcript: authored.transcript,
         translation: source.translationEn,
         quiz: authored.quiz,
-        wordMap: []
+        wordMap: getRadioDifficultWords(source)
       });
     } catch (error) {
       console.error('Could not load the local radio corpus:', error);
@@ -600,95 +538,108 @@ export const Listening: React.FC = () => {
     }
   };
 
-  const startCall = () => {
-    setIsCalling(true);
-    setCallSeconds(0);
-    setCallFeedback(null);
-    callTimerRef.current = setInterval(() => {
-      setCallSeconds(prev => prev + 1);
-    }, 1000);
-  };
+  // Simulated phone call. All recording/playback remains on this device.
+  const callPrompt = selectedLevel?.id === 'beginner'
+    ? (lang === 'ar' ? 'اذكر فكرة النص، واستخدم كلمة جديدة في جملة قصيرة.' : 'State the main idea and use a new word in a short sentence.')
+    : selectedLevel?.id === 'intermediate'
+    ? (lang === 'ar' ? 'لخّص النص بجملتين، ثم اشرح تفصيلًا مهمًا.' : 'Summarize the text in two sentences and explain one important detail.')
+    : (lang === 'ar' ? 'حلّل فكرة النص، ثم قدّم رأيك مع دليل منه.' : 'Analyze the main idea and support your opinion with evidence.');
 
-  const endCall = () => {
-    if (isRecording) stopRecording();
-    setIsCalling(false);
-    setIsRecording(false);
+  const clearCallAudio = () => {
+    callPlaybackRef.current?.pause();
+    if (callAudioUrlRef.current) URL.revokeObjectURL(callAudioUrlRef.current);
+    callAudioUrlRef.current = null; setCallAudioUrl(null);
+  };
+  const cancelCallResources = React.useCallback(() => {
+    callTokenRef.current++;
+    callMicPendingRef.current = false;
+    const recorder = mediaRecorderRef.current;
+    if (recorder?.state === 'recording') recorder.stop();
+    mediaRecorderRef.current = null;
+    callStreamRef.current?.getTracks().forEach(track => track.stop());
+    callStreamRef.current = null;
+    callPlaybackRef.current?.pause();
     if (callTimerRef.current) clearInterval(callTimerRef.current);
-  };
+    callTimerRef.current = null;
+    if (callAudioUrlRef.current) URL.revokeObjectURL(callAudioUrlRef.current);
+    callAudioUrlRef.current = null;
+  }, []);
 
+  React.useEffect(() => {
+    cancelCallResources();
+    setIsCalling(false); setIsIncomingCall(false); setIsRecording(false);
+    setCallMicPending(false); setCallAudioUrl(null); setCallError('');
+    return cancelCallResources;
+  }, [selectedLevel?.id, selectedTopic?.id, radioTextSerial, radioFrequency, cancelCallResources]);
+
+  const startCall = () => {
+    stopAudio(); cancelCallResources(); clearCallAudio();
+    setIsCalling(true); setCallSeconds(0); setCallError('');
+    setIsRecording(false); setCallMicPending(false);
+    callTimerRef.current = setInterval(() => setCallSeconds(n => n + 1), 1000);
+  };
+  const endCall = () => {
+    cancelCallResources(); setCallAudioUrl(null);
+    setIsCalling(false); setIsRecording(false); setCallMicPending(false);
+  };
   const startRecording = async () => {
+    if (callMicPendingRef.current || mediaRecorderRef.current?.state === 'recording') return;
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setCallError(lang === 'ar' ? 'المتصفح لا يدعم التسجيل المحلي.' : 'Local recording is not supported.');
+      return;
+    }
+    const request = ++callTokenRef.current;
+    callMicPendingRef.current = true; setCallMicPending(true); setCallError('');
+    callPlaybackRef.current?.pause();
+    let stream: MediaStream | null = null;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Permission may resolve after hang-up, station change, or unmount.
+      if (request !== callTokenRef.current) { stream.getTracks().forEach(track => track.stop()); return; }
+      callStreamRef.current = stream;
+      const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+      mediaRecorderRef.current = recorder;
+      recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+      recorder.onstop = () => {
+        stream?.getTracks().forEach(track => track.stop());
+        if (request !== callTokenRef.current) return;
+        setIsRecording(false); mediaRecorderRef.current = null; callStreamRef.current = null;
+        if (!chunks.length) { setCallError(lang === 'ar' ? 'التسجيل فارغ. حاول مرة أخرى.' : 'The recording is empty. Try again.'); return; }
+        clearCallAudio();
+        const url = URL.createObjectURL(new Blob(chunks, { type: recorder.mimeType || 'audio/webm' }));
+        callAudioUrlRef.current = url; setCallAudioUrl(url);
       };
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        handleCallInSubmit(audioBlob);
+      recorder.onerror = () => {
+        stream?.getTracks().forEach(track => track.stop());
+        if (request !== callTokenRef.current) return;
+        callTokenRef.current++; setIsRecording(false); mediaRecorderRef.current = null;
+        setCallError(lang === 'ar' ? 'تعذّر التسجيل. حاول مرة أخرى.' : 'Recording failed. Try again.');
       };
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      console.error("Error accessing microphone:", err);
+      recorder.start(); clearCallAudio(); setIsRecording(true);
+    } catch {
+      stream?.getTracks().forEach(track => track.stop());
+      if (request === callTokenRef.current) setCallError(lang === 'ar'
+        ? 'تعذّر فتح الميكروفون. اسمح باستخدامه ثم حاول مجددًا. التسجيل يبقى على جهازك.'
+        : 'Could not open the microphone. Allow access and retry. Recording stays on your device.');
+    } finally {
+      if (request === callTokenRef.current) { callMicPendingRef.current = false; setCallMicPending(false); }
     }
   };
-
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-    }
+    if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop();
+    callStreamRef.current?.getTracks().forEach(track => track.stop());
+    setIsRecording(false);
   };
 
-  const handleCallInSubmit = async (blob: Blob) => {
-    setIsEvaluating(true);
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
-        const result = await evaluateCallIn(base64Audio, radioContent.transcript);
-        setCallFeedback(result);
-        setIsEvaluating(false);
-      };
-    } catch (err) {
-      console.error("Error evaluating call-in:", err);
-      setIsEvaluating(false);
-    }
-  };
-
-  const handleWordClick = async (word: string) => {
-    if (!radioContent?.wordMap) return;
-    const cleanWord = word.replace(/[.,!?;:()]/g, '');
-    const mapping = radioContent.wordMap.find((m: any) => 
-      m.word === cleanWord || 
-      m.word.includes(cleanWord) || 
-      cleanWord.includes(m.word)
-    );
-    if (mapping) {
-      setSelectedWord(mapping);
-      setIsWordSpeaking(true);
-      try {
-        const audioBytes = await generateSpeech(cleanWord, 'ar');
-        if (audioBytes) {
-          const ctx = await initAudio();
-          const buffer = await decodeAudioData(audioBytes, ctx);
-          const source = ctx.createBufferSource();
-          source.buffer = buffer;
-          source.connect(gainNodeRef.current!);
-          source.onended = () => setIsWordSpeaking(false);
-          source.start(0);
-        }
-      } catch (e) {
-        setIsWordSpeaking(false);
-      }
-    }
+  const handleWordClick = (word: string) => {
+    // A local, approved gloss; never send a word to paid TTS/translation.
+    const key = (value: string) => value.normalize('NFKC')
+      .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+      .replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه')
+      .replace(/[^\u0621-\u064A]/g,'');
+    const match = radioContent?.wordMap?.find((item: any) => key(item.sourceSurface || item.word) === key(word));
+    if (match) setSelectedWord(match);
   };
 
   // --- Renderers ---
@@ -1016,6 +967,7 @@ export const Listening: React.FC = () => {
                                     setRadioFrequency(0);
                                     setRadioTextTitle('');
                                     setRadioContent(null);
+                                    setRadioTextId('');
                                     setRadioListenStage('first');
                                     setRadioPlaybackEndCount(0);
                                     stopAudio();
@@ -1063,6 +1015,7 @@ export const Listening: React.FC = () => {
                                 setRadioFrequency(0);
                                 setRadioTextTitle('');
                                 setRadioContent(null);
+                                setRadioTextId('');
                                 setRadioListenStage('first');
                                 setRadioPlaybackEndCount(0);
                               }
@@ -1078,7 +1031,7 @@ export const Listening: React.FC = () => {
             </div>
         </aside>
 
-        <main className={`flex-1 flex flex-col relative scrollbar-hide ${selectedTopic?.id === 'cassette_stories' ? 'p-2 sm:p-4 lg:p-6 overflow-y-auto' : selectedTopic?.id === 'radio' ? 'p-1.5 sm:p-2 overflow-hidden' : 'p-8 overflow-y-auto'}`}>
+        <main className={`flex-1 flex flex-col relative scrollbar-hide ${selectedTopic?.id === 'cassette_stories' ? 'p-2 sm:p-4 lg:p-6 overflow-y-auto' : selectedTopic?.id === 'radio' ? 'p-1.5 sm:p-2 overflow-y-auto' : 'p-8 overflow-y-auto'}`}>
             <AnimatePresence mode="wait">
                 {!selectedLevel ? (
                     <motion.div 
@@ -1160,31 +1113,42 @@ export const Listening: React.FC = () => {
                                         <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
                                             <AnimatePresence mode="wait">
                                                 {isIncomingCall ? (
-                                                    <motion.div key="incoming" className="flex flex-col items-center gap-4">
+                                                    <motion.div key="incoming" className="flex flex-col items-center gap-2">
+                                                        <p className="qul-radio-call-help">{lang === 'ar' ? 'مكالمة تدريبية: سجّل إجابتك ثم استمع إليها. لا اتصال حقيقي ولا تقييم آلي.' : 'Practice call: record and replay your answer. No real call or AI assessment.'}</p>
                                                         <div className="w-16 h-16 rounded-full bg-[#2a1d15] flex items-center justify-center text-[#d4c19c] animate-bounce">
                                                             <Phone size={24} />
                                                         </div>
                                                         <div className="flex items-center gap-4">
-                                                            <button onClick={() => setIsIncomingCall(false)} className="w-10 h-10 rounded-full bg-red-500/20 text-red-600 flex items-center justify-center"><PhoneOff size={18} /></button>
-                                                            <button onClick={() => { setIsIncomingCall(false); startCall(); }} className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center"><Phone size={18} /></button>
+                                                            <button aria-label={lang === 'ar' ? 'إلغاء التدريب' : 'Cancel practice'} onClick={() => setIsIncomingCall(false)} className="w-10 h-10 rounded-full bg-red-500/20 text-red-600 flex items-center justify-center"><PhoneOff size={18} /></button>
+                                                            <button aria-label={lang === 'ar' ? 'بدء التدريب الشفهي' : 'Start speaking practice'} onClick={() => { setIsIncomingCall(false); startCall(); }} className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center"><Phone size={18} /></button>
                                                         </div>
                                                     </motion.div>
                                                 ) : isCalling ? (
-                                                    <motion.div key="calling" className="w-full h-full flex flex-col items-center justify-between py-2">
+                                                    <motion.div key="calling" dir={lang === 'ar' ? 'rtl' : 'ltr'} className="w-full h-full flex flex-col items-center justify-between py-2 overflow-y-auto">
                                                         <div className="text-center">
-                                                            <p className="text-[8px] font-black uppercase tracking-widest text-[#2a1d15]/40">On Air Call</p>
+                                                            <p className="text-[8px] font-black uppercase tracking-widest text-[#2a1d15]/40">{lang === 'ar' ? 'تدريب شفهي محلي' : 'LOCAL SPEAKING PRACTICE'}</p>
+                                                            <p className="text-[10px] font-black text-[#2a1d15] leading-tight" dir={lang === 'ar' ? 'rtl' : 'ltr'}>{callPrompt}</p>
                                                             <p className="text-[10px] font-mono text-emerald-600 font-bold">
                                                                 {Math.floor(callSeconds / 60).toString().padStart(2, '0')}:{(callSeconds % 60).toString().padStart(2, '0')}
                                                             </p>
+                                                            {callAudioUrl && !isRecording && <audio ref={callPlaybackRef} controls src={callAudioUrl}
+                                                              className="w-full max-w-[190px] h-7 mt-1"
+                                                              aria-label={lang === 'ar' ? 'الاستماع إلى إجابتي' : 'Listen to my recording'} />}
+                                                            <p className="qul-radio-call-help">{lang === 'ar' ? 'تحدث ٣٠ إلى ٦٠ ثانية، أوقف التسجيل، ثم استمع. يُحذف التسجيل عند إنهاء التدريب.' : 'Speak for 30 to 60 seconds, stop, then listen. Recording is discarded when you end practice.'}</p>
+                                                            {callMicPending && <p role="status">{lang === 'ar' ? 'بانتظار إذن الميكروفون…' : 'Waiting for microphone permission…'}</p>}
+                                                            {callError && <p role="alert" className="text-[9px] font-bold text-red-800">{callError}</p>}
                                                         </div>
                                                         <div className="flex gap-4">
-                                                            <button 
+                                                            <button
+                                                                title={lang === 'ar' ? 'سجّل إجابتك ثم استمع إليها' : 'Record and replay your voice'}
+                                                                aria-label={isRecording ? (lang === 'ar' ? 'إيقاف التسجيل' : 'Stop recording') : (lang === 'ar' ? 'بدء التسجيل' : 'Start recording')}
+                                                                disabled={callMicPending}
                                                                 onClick={isRecording ? stopRecording : startRecording}
                                                                 className={`w-10 h-10 rounded-full flex items-center justify-center ${isRecording ? 'bg-red-500 text-white' : 'bg-[#2a1d15] text-[#d4c19c]'}`}
                                                             >
                                                                 {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
                                                             </button>
-                                                            <button onClick={endCall} className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><PhoneOff size={16} /></button>
+                                                            <button aria-label={lang === 'ar' ? 'إنهاء التدريب' : 'End practice'} onClick={endCall} className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><PhoneOff size={16} /></button>
                                                         </div>
                                                     </motion.div>
                                                 ) : loading ? (
@@ -1275,12 +1239,13 @@ export const Listening: React.FC = () => {
                                     </div>
 
                                     <div className="flex flex-col items-center gap-1">
-                                        <div 
+                                        <button type="button" aria-label={lang === 'ar' ? (isRadioPlaying ? 'إيقاف مؤقت' : 'تشغيل الراديو') : (isRadioPlaying ? 'Pause radio' : 'Play radio')}
+                                            disabled={!radioContent?.transcript || radioNarration.busy || isCalling || isIncomingCall}
                                             className={`w-16 h-16 rounded-full border-4 border-[#2a1d15] flex items-center justify-center relative cursor-pointer active:scale-95 transition-all qul-original-radio-play ${!radioContent?.transcript ? 'opacity-50' : 'bg-slate-100'}`}
                                             onClick={() => playRadioNarration()}
                                         >
                                             {isRadioPlaying ? <Pause size={24} className="text-slate-700" /> : <Play size={24} className="text-slate-700" />}
-                                        </div>
+                                        </button>
                                         <span className="text-[8px] font-black text-white/30 uppercase">{isRadioPlaying ? 'Playing' : 'Start'}</span>
                                     </div>
                                 </div>
@@ -1298,10 +1263,13 @@ export const Listening: React.FC = () => {
                             audioPlaying={isRadioPlaying}
                             playEndCount={radioPlaybackEndCount}
                             onStageChange={setRadioListenStage}
-                            onStudioCall={() => setIsIncomingCall(true)}
+                            onStudioCall={() => { stopAudio(); setIsIncomingCall(true); setCallError(''); }}
                             onReplay={() => playRadioNarration(true)}
                             onNextStation={() => { void loadRadioStation(radioFrequency === RADIO_STATIONS.length ? 1 : radioFrequency + 1); }}
                         />
+                        {error && <p role="alert" className="w-full max-w-3xl rounded-xl bg-red-50 p-3 text-sm text-red-800" dir={lang === 'ar' ? 'rtl' : 'ltr'}>{error}</p>}
+                        <RadioAudioSettings audio={radioNarration} lang={lang} hasText={Boolean(radioTextId)}
+                          textTitle={radioTextTitle} practiceActive={isCalling || isIncomingCall}/>
                     </motion.div>
                 ) : selectedTopic.id === 'cassette_stories' ? (
                     <motion.div
