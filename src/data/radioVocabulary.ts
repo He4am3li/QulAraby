@@ -40,10 +40,17 @@ for (const [arabic, ...english] of RADIO_BILINGUAL_GLOSSARY) {
   dictionary.set(key, [...new Set([...(dictionary.get(key) || []), ...english])]);
 }
 
+// Normalize common prefixes and the definite article for rarity scoring so
+// e.g. "وفتحت" and "فتحت" are not treated as unrelated obscure vocabulary.
+const lexicalRoot = (word: string): string => word
+  .replace(/^[وفبكل](?=ال)/, '')
+  .replace(/^(?:ال|لل)/, '')
+  .replace(/^[وفبكل](?=.{4,})/, '');
+
 const frequency = new Map<string, number>();
 for (const source of RADIO_TEXT_CORPUS) {
   const seen = new Set((RADIO_AUTHORED_EXERCISES[source.id]?.transcript || '')
-    .match(/[\u0621-\u064A\u064B-\u065F\u0670]+/g)?.map(arabicKey) || []);
+    .match(/[\u0621-\u064A\u064B-\u065F\u0670]+/g)?.map(word => lexicalRoot(arabicKey(word))) || []);
   for (const word of seen) {
     frequency.set(word, (frequency.get(word) || 0) + 1);
   }
@@ -52,7 +59,10 @@ for (const source of RADIO_TEXT_CORPUS) {
 const variants = (key: string): string[] => [
   key,
   key.replace(/^[وفبكل]/, ''),
-  key.replace(/^لل/, 'ال')
+  key.replace(/^لل/, 'ال'),
+  key.replace(/^ال/, ''),
+  key.replace(/^[وفبكل](?=ال)/, ''),
+  key.replace(/^[وفبكل](?=ال)/, '').replace(/^ال/, '')
 ];
 
 export function getRadioDifficultWords(
@@ -75,11 +85,21 @@ export function getRadioDifficultWords(
     );
     if (!meaningEn) continue;
     seen.add(key);
-    const documentFrequency = frequency.get(key) || 1;
+    const lexeme = lexicalRoot(key);
+    const documentFrequency = frequency.get(lexeme) || 1;
     const rarity = Math.log((RADIO_TEXT_CORPUS.length + 1) / (documentFrequency + 1));
-    const length = Math.min(key.length, 14);
-    const morphology = /(?:ات|يون|يات|يه|يين)$/.test(key) ? 0.65 : 0;
-    const difficulty = rarity * 4 + length * 0.72 + morphology;
+    const length = Math.min(lexeme.length, 14);
+    const morphology = /(?:ات|يون|يات|يه|يين)$/.test(lexeme) ? 0.65 : 0;
+    // Simple everyday speech verbs are not harder vocabulary than concrete
+    // and abstract curriculum words, even if a particular inflection is rare.
+    const routine = new Set([
+      'said','saw','entered','opened','closed','sat','went','came',
+      'gave','took','was','were','put','asked','read','wrote','want',
+      'like','morning','today','yesterday','day','now','home','good',
+      'am','is','are','had','did','have','can','go'
+    ]);
+    const routinePenalty = routine.has(meaningEn.toLowerCase()) ? 6.5 : 0;
+    const difficulty = rarity * 4 + length * 0.72 + morphology - routinePenalty;
     const cleanWord = raw.replace(/[\u064B-\u065F\u0670\u0640\u06D6-\u06ED]/g, '').replace(/^اال/, 'ال');
     candidates.push({ word: cleanWord, meaningEn, meaningAr: '', difficulty });
   }
