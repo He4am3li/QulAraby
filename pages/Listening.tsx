@@ -12,6 +12,7 @@ import {
 import { generateListeningExercise, generateSpeech, decodeAudioData, generateWordIllustration, evaluateCallIn } from '../services/gemini';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CassettePlayer } from '../components/CassettePlayer';
+import { ListeningSkeuoRadio } from '../components/ListeningSkeuoRadio';
 import { STORY_CASSETTES } from '../src/data/storyCassettes';
 
 const LEVELS = [
@@ -925,7 +926,7 @@ export const Listening: React.FC = () => {
             </div>
         </aside>
 
-        <main className={`flex-1 flex flex-col relative scrollbar-hide ${selectedTopic?.id === 'cassette_stories' ? 'p-2 sm:p-4 lg:p-6 overflow-y-auto' : 'p-8 overflow-y-auto'}`}>
+        <main className={`flex-1 flex flex-col relative scrollbar-hide ${selectedTopic?.id === 'cassette_stories' ? 'p-2 sm:p-4 lg:p-6 overflow-y-auto' : selectedTopic?.id === 'radio' ? 'p-2 sm:p-4 overflow-y-auto' : 'p-8 overflow-y-auto'}`}>
             <AnimatePresence mode="wait">
                 {!selectedLevel ? (
                     <motion.div 
@@ -966,8 +967,8 @@ export const Listening: React.FC = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         className="h-full flex flex-col items-center justify-center"
                     >
-                        {/* REALISTIC RADIO COMPONENT */}
-                        <div className="relative w-full max-w-3xl pt-12">
+                        {/* Skeuomorphic radio receiver — preserve existing station, quiz and audio state. */}
+                        <div className="relative w-full max-w-[960px]">
                             {/* Quiz Overlay for Radio (Integrated) */}
                             <AnimatePresence>
                                 {radioQuizMode && radioContent && (
@@ -1051,169 +1052,31 @@ export const Listening: React.FC = () => {
                                 )}
                             </AnimatePresence>
 
-                            {/* Radio Handle */}
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-12 border-[10px] border-[#1a110a] rounded-t-3xl z-0" />
-                            
-                            {/* Antenna */}
-                            <motion.div 
-                                initial={{ height: 40 }}
-                                animate={{ height: isRadioPlaying ? 120 : 60 }}
-                                className="absolute top-0 right-20 w-2 bg-gradient-to-r from-slate-400 via-slate-200 to-slate-400 rounded-full origin-bottom z-0 shadow-[2px_0_5px_rgba(0,0,0,0.3)]"
-                            >
-                                <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-slate-300 to-slate-500 rounded-full shadow-md border border-slate-400" />
-                            </motion.div>
-
-                            <div className="relative w-full aspect-[16/10] bg-[#3d2b1f] rounded-3xl border-[12px] border-[#2a1d15] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] p-8 flex flex-col overflow-hidden z-10">
-                                <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] opacity-30 pointer-events-none" />
-                                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-black/20 pointer-events-none" />
-                                
-                                <div className={`flex-[1_1_0%] min-h-0 flex gap-6 ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
-                                    <div className="w-1/4 h-full bg-[#120a05] rounded-2xl border-4 border-[#2a1d15] shadow-inner relative overflow-hidden flex flex-col">
-                                        <div className="p-4 h-full overflow-y-auto custom-scrollbar relative z-10">
-                                            {radioContent ? (
-                                                <p className="text-[10px] leading-relaxed font-bold text-emerald-400/80 text-left py-4">
-                                                    {radioContent.translation || "..."}
-                                                </p>
-                                            ) : (
-                                                <div className="absolute inset-0 grid grid-cols-6 gap-px p-2 opacity-10">
-                                                    {Array.from({ length: 120 }).map((_, i) => (
-                                                        <div key={i} className="w-1 h-1 bg-black rounded-full" />
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex-1 h-full bg-[#d4c19c] rounded-2xl border-4 border-[#2a1d15] shadow-[inset_0_4px_12px_rgba(0,0,0,0.3)] p-6 flex flex-col items-center justify-center relative overflow-hidden">
-                                        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/20 via-transparent to-black/10 pointer-events-none z-20" />
-                                        
-                                        <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
-                                            <AnimatePresence mode="wait">
-                                                {isIncomingCall ? (
-                                                    <motion.div key="incoming" className="flex flex-col items-center gap-4">
-                                                        <div className="w-16 h-16 rounded-full bg-[#2a1d15] flex items-center justify-center text-[#d4c19c] animate-bounce">
-                                                            <Phone size={24} />
-                                                        </div>
-                                                        <div className="flex items-center gap-4">
-                                                            <button onClick={() => setIsIncomingCall(false)} className="w-10 h-10 rounded-full bg-red-500/20 text-red-600 flex items-center justify-center"><PhoneOff size={18} /></button>
-                                                            <button onClick={() => { setIsIncomingCall(false); startCall(); }} className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center"><Phone size={18} /></button>
-                                                        </div>
-                                                    </motion.div>
-                                                ) : isCalling ? (
-                                                    <motion.div key="calling" className="w-full h-full flex flex-col items-center justify-between py-2">
-                                                        <div className="text-center">
-                                                            <p className="text-[8px] font-black uppercase tracking-widest text-[#2a1d15]/40">On Air Call</p>
-                                                            <p className="text-[10px] font-mono text-emerald-600 font-bold">
-                                                                {Math.floor(callSeconds / 60).toString().padStart(2, '0')}:{(callSeconds % 60).toString().padStart(2, '0')}
-                                                            </p>
-                                                        </div>
-                                                        <div className="flex gap-4">
-                                                            <button 
-                                                                onClick={isRecording ? stopRecording : startRecording}
-                                                                className={`w-10 h-10 rounded-full flex items-center justify-center ${isRecording ? 'bg-red-500 text-white' : 'bg-[#2a1d15] text-[#d4c19c]'}`}
-                                                            >
-                                                                {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
-                                                            </button>
-                                                            <button onClick={endCall} className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><PhoneOff size={16} /></button>
-                                                        </div>
-                                                    </motion.div>
-                                                ) : loading ? (
-                                                    <motion.div key="loading" className="flex flex-col items-center gap-3">
-                                                        <Loader2 size={40} className="animate-spin text-[#2a1d15]/60" />
-                                                    </motion.div>
-                                                ) : radioContent ? (
-                                                    <motion.div key="content" className="text-center">
-                                                        <div className="w-16 h-16 bg-[#2a1d15] rounded-full flex items-center justify-center text-[#d4c19c] mb-4 mx-auto shadow-lg">
-                                                            <RadioIcon size={32} />
-                                                        </div>
-                                                        <h4 className="text-lg font-black text-[#2a1d15] arabic-font">
-                                                            {RADIO_STATIONS.find(s => s.id === radioFrequency)?.[lang]}
-                                                        </h4>
-                                                    </motion.div>
-                                                ) : (
-                                                    <motion.div key="empty" className="text-[#2a1d15]/40 flex flex-col items-center text-center">
-                                                        <RadioIcon size={40} className="opacity-20 mb-4" />
-                                                        <h4 className="text-sm font-black arabic-font">{t.chooseTopic}</h4>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
-
-                                        <div className="absolute bottom-4 left-4 right-4 h-8 bg-[#2a1d15]/10 rounded-lg border border-[#2a1d15]/20 flex items-center px-4 shadow-inner">
-                                            <div className="flex-1 h-0.5 bg-[#2a1d15]/30 relative">
-                                                <motion.div 
-                                                    animate={{ left: radioFrequency === 0 ? '50%' : `${(radioFrequency - 1) * 25}%` }}
-                                                    className="absolute top-1/2 -translate-y-1/2 w-1 h-8 bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.8)] z-30" 
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="w-1/4 h-full bg-[#120a05] rounded-2xl border-4 border-[#2a1d15] shadow-inner relative overflow-hidden flex flex-col">
-                                        <div className="p-4 h-full overflow-y-auto custom-scrollbar relative z-10">
-                                            {radioContent && (
-                                                <div dir="rtl" className="text-xs leading-relaxed font-black text-amber-400/90 text-right arabic-font py-4 flex flex-wrap gap-x-1">
-                                                    {radioContent.transcript.split(' ').map((word: string, i: number) => (
-                                                        <span key={i} onClick={() => handleWordClick(word)} className="hover:text-white cursor-pointer inline-block">{word}</span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="h-28 mt-8 flex-shrink-0 flex items-center justify-between px-4 bg-black/10 rounded-3xl border border-white/5 p-4">
-                                    <div className="flex items-center gap-6">
-                                        <div className="flex flex-col items-center gap-1">
-                                            <div className={`w-3 h-3 rounded-full ${isRadioPlaying || isPaused ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]' : 'bg-red-900/40'}`} />
-                                            <span className="text-[8px] font-black text-white/30 uppercase">Power</span>
-                                        </div>
-                                        <div className="flex flex-col items-center gap-1">
-                                            <div className="w-16 h-16 bg-gradient-to-b from-slate-300 via-slate-100 to-slate-400 rounded-full border-4 border-[#2a1d15] shadow-[0_5px_15px_rgba(0,0,0,0.4)] flex items-center justify-center relative">
-                                                <motion.div animate={{ rotate: volume * 360 }} className="w-full h-full flex items-center justify-center">
-                                                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-1.5 h-3 bg-red-600 rounded-full" />
-                                                </motion.div>
-                                            </div>
-                                            <span className="text-[8px] font-black text-white/30 uppercase">Volume</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-2">
-                                        {RADIO_STATIONS.map(station => (
-                                            <button 
-                                                key={station.id} 
-                                                onClick={() => loadRadioStation(station.id)}
-                                                className={`px-4 h-14 rounded-xl font-black text-xs transition-all border border-white/20 ${radioFrequency === station.id ? 'bg-slate-600 text-white shadow-inner' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
-                                            >
-                                                {lang === 'ar' ? station.ar : station.en}
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    <div className="flex flex-col items-center gap-1">
-                                        <div 
-                                            className={`w-16 h-16 rounded-full border-4 border-[#2a1d15] flex items-center justify-center relative cursor-pointer active:scale-95 transition-all ${!radioAudio ? 'opacity-50' : 'bg-slate-100'}`}
-                                            onClick={() => radioAudio && playBuffer(radioAudio)}
-                                        >
-                                            {isRadioPlaying ? <Pause size={24} className="text-slate-700" /> : <Play size={24} className="text-slate-700" />}
-                                        </div>
-                                        <span className="text-[8px] font-black text-white/30 uppercase">{isRadioPlaying ? 'Playing' : 'Start'}</span>
-                                    </div>
-                                </div>
-                            </div>
+                            <ListeningSkeuoRadio
+                                lang={lang}
+                                stations={RADIO_STATIONS}
+                                stationId={radioFrequency}
+                                content={radioContent}
+                                loading={loading}
+                                audioReady={Boolean(radioAudio)}
+                                isPlaying={isRadioPlaying}
+                                isPaused={isPaused}
+                                volume={volume}
+                                isIncomingCall={isIncomingCall}
+                                isCalling={isCalling}
+                                isRecording={isRecording}
+                                callSeconds={callSeconds}
+                                onTune={loadRadioStation}
+                                onPlayPause={() => { if (radioAudio) void playBuffer(radioAudio); }}
+                                onVolume={setVolume}
+                                onWord={handleWordClick}
+                                onOpenQuiz={() => { setCurrentQuizIndex(0); setRadioFeedback(null); setRadioQuizMode(true); }}
+                                onDismissCall={() => setIsIncomingCall(false)}
+                                onAnswerCall={() => { setIsIncomingCall(false); startCall(); }}
+                                onRecord={isRecording ? stopRecording : startRecording}
+                                onEndCall={endCall}
+                            />
                         </div>
-
-                        {radioContent && !loading && !radioQuizMode && (
-                            <motion.button 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                onClick={() => setRadioQuizMode(true)}
-                                className="mt-8 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm flex items-center gap-3 hover:scale-105 active:scale-95 shadow-xl shadow-slate-900/20"
-                            >
-                                {t.check}
-                                <ArrowUpRight size={18} />
-                            </motion.button>
-                        )}
                     </motion.div>
                 ) : selectedTopic.id === 'cassette_stories' ? (
                     <motion.div
