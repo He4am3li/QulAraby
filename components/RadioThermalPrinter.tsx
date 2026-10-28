@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {CheckCircle2, FileText, Minus, Printer} from 'lucide-react';
+import {CheckCircle2, FileText, Minus, Phone, Printer} from 'lucide-react';
 import {useAuth} from './AuthProvider';
 import {db} from '../firebase';
 import {doc, serverTimestamp, setDoc} from 'firebase/firestore';
@@ -18,6 +18,7 @@ type Props = {
   audioPlaying: boolean; playEndCount: number;
   onReplay: () => void; onNextStation: () => void;
   onStageChange: (stage: RadioLearningStage) => void;
+  onStudioCall: () => void;
 };
 type Vocabulary = {word:string; meaning:string};
 
@@ -59,7 +60,7 @@ const printSound=()=>{
 
 export const RadioThermalPrinter:React.FC<Props>=({
   lang,stationTitle,stationId,content,loading,audioReady,audioPlaying,
-  playEndCount,onReplay,onNextStation,onStageChange
+  playEndCount,onReplay,onNextStation,onStageChange,onStudioCall
 })=>{
   const ar=lang==='ar', {user}=useAuth();
   const [stage,setStage]=useState<RadioLearningStage>('first');
@@ -155,6 +156,11 @@ export const RadioThermalPrinter:React.FC<Props>=({
             audioPlaying?(ar?'جارٍ الاستماع':'LISTENING'):(ar?'جاهز للإجابة':'READY')}
         </span>
         <span className="qul-radio-printer-name">QUIZ PRINTER · THERMAL TAPE</span>
+        {stage === 'receipt' && <button type="button" className="qul-radio-printer-fold qul-radio-studio-call"
+          onClick={onStudioCall} title={ar ? 'اتصل باستوديو الراديو' : 'Call radio studio'}
+          aria-label={ar ? 'اتصل باستوديو الراديو' : 'Call radio studio'}>
+          <Phone size={13}/>
+        </button>}
         <button type="button" className="qul-radio-printer-fold" onClick={()=>setCollapsed(v=>!v)}
           aria-label={collapsed?(ar?'فتح الطابعة':'Open printer'):(ar?'تصغير الطابعة':'Minimize printer')}>
           {collapsed?<FileText size={15}/>:<Minus size={15}/>}
