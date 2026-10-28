@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { Vocabulary, MasteryLevel, QuizQuestion, ChatMessage, IrabAnalysisResult } from "../types";
 import { getCachedAsset, setCachedAsset } from "./cache";
+import type { RadioCorpusText } from '../src/data/radioTextCorpus';
 
 // Always use a named parameter for the API key from process.env.API_KEY.
 // Exported to be used across the application for direct Gemini API access.
@@ -662,6 +663,102 @@ export const generateListeningExercise = async (level: string, topic: string, la
     });
     return safeJSONParse(response.text, {});
   });
+};
+
+/**
+ * The radio uses the USER'S 150-text reference corpus, not an AI-invented
+ * transcript. The source Word file is bilingual and its column extraction
+ * occasionally reverses the punctuation order in Arabic paragraphs. Repair
+ * Arabic reading order faithfully using the included original English
+ * translation, then create five questions ONLY about this chosen source text.
+ * Cache the verified result by source ID: subsequent uses need only TTS.
+ */
+export const prepareRadioExerciseFromSource = async (source: RadioCorpusText): Promise<any> => {
+  const storageKey = 'qul_radio_prepared_source_v2:' + source.id;
+  try {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      const cached = JSON.parse(stored);
+      if (cached?.transcript && Array.isArray(cached.quiz) && cached.quiz.length === 5 &&
+          Array.isArray(cached.wordMap)) {
+        return { ...cached, translation: source.translationEn };
+      }
+    }
+  } catch { /* private mode or malformed cache: generate again */ }
+  const ai = getAI();
+  const questionSchema = {
+    type: Type.OBJECT,
+    properties: {
+      question: { type: Type.STRING },
+      options: { type: Type.ARRAY, items: { type: Type.STRING } },
+      correctAnswer: { type: Type.STRING },
+      explanation: { type: Type.STRING }
+    },
+    required: ['question','options','correctAnswer','explanation']
+  };
+  const schema = {
+    type: Type.OBJECT,
+    properties: {
+      transcript: { type: Type.STRING },
+      quiz: { type: Type.ARRAY, items: questionSchema },
+      wordMap: { type: Type.ARRAY, items: {
+        type: Type.OBJECT,
+        properties: {
+          word: { type: Type.STRING },
+          meaningEn: { type: Type.STRING },
+          meaningAr: { type: Type.STRING }
+        },
+        required: ['word','meaningEn','meaningAr']
+      }}
+    },
+    required: ['transcript','quiz','wordMap']
+  };
+  const result = await withRetry(async () => {
+    const response = await ai.models.generateContent({
+      model: DEFAULT_TEXT_MODEL,
+      contents: [
+        'You are carefully restoring a bilingual Arabic language learning TEXT, not writing a new one.',
+        'This text is ITEM ' + source.number + ' of exactly TEN for level=' + source.level + ' and type=' + source.type + '.',
+        'Its canonical Arabic title is: ' + source.titleAr,
+        'ARABIC SOURCE (extracted from a two-column Word table, with potential RTL punctuation and phrase-order artifacts):',
+        source.sourceArabic,
+        'CANONICAL PROVIDED ENGLISH TRANSLATION, used only to verify correct original sentence order and meanings:',
+        source.translationEn,
+        source.type === 'riddle'
+          ? 'The document answer key says the riddle answer is: ' + (source.riddleAnswerAr || 'not supplied') + '. Do not add the answer to the spoken riddle itself.'
+          : '',
+        'TASK 1: Return transcript as natural and fully ordered Arabic that faithfully reproduces the meaning, events, people, details, and level of the supplied document. ONLY repair document extraction errors, punctuation and misspellings. No creative additions, no changes to facts, no invented text. For dialogues, preserve named speaker turns. For news, remember all news in this source are FICTIONAL educational texts, not real current reports.',
+        'TASK 2: Create EXACTLY FIVE short Arabic comprehension multiple-choice questions strictly supported by the transcript. Each must have EXACTLY THREE equally plausible, similarly short, DISTINCT answer options and ONE correctAnswer EXACTLY copied from one option. Vary correct-answer positions and keep ALL options without diacritics to prevent revealing the answer. Each question <=14 Arabic words, each option <=6 Arabic words. For riddles, ask the actual solution in one question and use the answer key above; other questions should focus on the stated clues.',
+        'TASK 3: Provide a concise wordMap of 10-14 relatively CHALLENGING words that actually occur in the transcript and their accurate English meanings. Skip common stopwords. Use meaningAr for a concise Arabic gloss.',
+        'Do NOT return a new translation: the app uses the original published English translation.'
+      ].join('\n'),
+      config: { responseMimeType: 'application/json', responseSchema: schema }
+    });
+    const parsed = safeJSONParse(response.text, null);
+    if (!parsed || typeof parsed.transcript !== 'string' ||
+        (parsed.transcript.match(/[\u0621-\u064A]/g) || []).length < 35 ||
+        !Array.isArray(parsed.quiz) || parsed.quiz.length !== 5 ||
+        !Array.isArray(parsed.wordMap)) {
+      throw new Error('Radio source preparation returned an incomplete listening exercise.');
+    }
+    const norm = (text: string) => String(text).replace(/[\u064B-\u065F\u0670]/g,'').trim();
+    parsed.quiz = parsed.quiz.map((item: any) => {
+      if (!item?.question || !Array.isArray(item.options) || item.options.length !== 3) {
+        throw new Error('The five source-grounded radio questions require three answers each.');
+      }
+      const correct = item.options.find((option: string) => norm(option) === norm(item.correctAnswer));
+      if (!correct || new Set(item.options.map((v: string) => norm(v))).size !== 3) {
+        throw new Error('A generated radio question has an invalid correct answer.');
+      }
+      return { ...item, correctAnswer: correct };
+    });
+    return parsed;
+  });
+  const output = { ...result, translation: source.translationEn };
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(output));
+  } catch { /* successful preparation remains usable without storage */ }
+  return output;
 };
 
 export const evaluateCallIn = async (audioBase64: string, transcript: string): Promise<any> => {
