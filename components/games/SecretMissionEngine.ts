@@ -790,7 +790,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   events.onThreats(0);
   const setLanguage=(value:'ar'|'en')=>{language=value;};
   const restartRoom=()=>{if(!activeRoom)return;resetThreats();player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);};
-  const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4)return false;emit('victory','vault');return true;};
+  const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4||!rewardCollected)return false;emit('victory','vault');return true;};
   return {
     start,travelTo,enterRoom,exitRoom,openSafe,collectReward,fire,jump,look,setCrouch,setMovement,setWeaponTier,
     restartRoom,finish,setAllowed,setLanguage,
