@@ -254,6 +254,7 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
     // A glowing mission target reacts to completing the learning objective.
     const target = new THREE.Mesh(geo(new THREE.TorusGeometry(.42,.08,7,24)),[cyan,violet,orange,red][i]);
     target.position.set(side*.72,1.64,-1.95);
+    target.rotation.y=Math.PI/2; // face the player entering from the corridor
     interior.add(target);
     target.visible = false; // appears once the educational answer unlocks it
     const roomLight = new THREE.PointLight([0xf5d39b,0xabe9f5,0xe0c5fa,0xffc4ac][i], mobile ? 16 : 22, 13, 2);
@@ -634,7 +635,7 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
       // Retain a stable over-the-shoulder view of the console.
       desiredLook.set(active?.side?active.side*9.4:0,1.42,(active?.z??0)-1.55);
       cameraLook.lerp(desiredLook,clamp(dt*3,0,1));
-      operator.rotation.y=THREE.MathUtils.damp(operator.rotation.y,active?.side===1?Math.PI/2:-Math.PI/2,4,dt);
+      operator.rotation.y=THREE.MathUtils.damp(operator.rotation.y,active?.side===1?-Math.PI/2:Math.PI/2,4,dt);
     }
     if(modelMixer){
       modelMixer.update(dt);
