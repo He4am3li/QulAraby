@@ -659,67 +659,62 @@ export const Listening: React.FC = () => {
     }
   };
 
+  // Simulated studio call: speaking exercise with on-device recording and
+  // playback. Nothing is uploaded, and no paid speech evaluation is invoked.
+  const callPrompt = selectedLevel?.id === 'beginner'
+    ? (lang === 'ar' ? 'اذكر شخصية واحدة وحدثًا واحدًا من النص.' : 'Name one person and one event in the text.')
+    : selectedLevel?.id === 'intermediate'
+    ? (lang === 'ar' ? 'لخّص الفكرة الرئيسة، واشرح سبب حدث مهم.' : 'Summarize the main idea and explain one event.')
+    : (lang === 'ar' ? 'حلّل فكرة النص، ثم قدّم رأيك مع دليل منه.' : 'Analyze the text and support your opinion with evidence.');
+
   const startCall = () => {
-    setIsCalling(true);
-    setCallSeconds(0);
-    setCallFeedback(null);
-    callTimerRef.current = setInterval(() => {
-      setCallSeconds(prev => prev + 1);
-    }, 1000);
+    stopRadioNarration();
+    setIsRadioPlaying(false); setIsPaused(false);
+    setIsCalling(true);setCallSeconds(0);setCallError('');
+    if(callTimerRef.current)clearInterval(callTimerRef.current);
+    callTimerRef.current=setInterval(()=>setCallSeconds(n=>n+1),1000);
   };
-
   const endCall = () => {
-    if (isRecording) stopRecording();
-    setIsCalling(false);
-    setIsRecording(false);
-    if (callTimerRef.current) clearInterval(callTimerRef.current);
-  };
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        handleCallInSubmit(audioBlob);
-      };
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      console.error("Error accessing microphone:", err);
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if(mediaRecorderRef.current?.state==='recording'){
       mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      mediaRecorderRef.current.stream.getTracks().forEach(track=>track.stop());
+    }
+    setIsCalling(false);setIsRecording(false);
+    if(callTimerRef.current)clearInterval(callTimerRef.current);
+    callTimerRef.current=null;
+  };
+  const startRecording = async () => {
+    if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==='undefined'){
+      setCallError(lang==='ar'?'المتصفح لا يدعم التسجيل المحلي.':'Local recording is not supported.');
+      return;
+    }
+    try {
+      setCallError('');
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      const recorder=new MediaRecorder(stream);
+      mediaRecorderRef.current=recorder;
+      audioChunksRef.current=[];
+      recorder.ondataavailable=e=>{if(e.data.size)audioChunksRef.current.push(e.data);};
+      recorder.onstop=()=>{
+        stream.getTracks().forEach(track=>track.stop());
+        if(!audioChunksRef.current.length)return;
+        const blob=new Blob(audioChunksRef.current,{type:recorder.mimeType||'audio/webm'});
+        if(callAudioUrlRef.current)URL.revokeObjectURL(callAudioUrlRef.current);
+        const url=URL.createObjectURL(blob);
+        callAudioUrlRef.current=url;setCallAudioUrl(url);
+      };
+      recorder.start();setIsRecording(true);
+    }catch(e){
+      console.error('Radio speaking exercise microphone error:',e);
+      setCallError(lang==='ar'?'اسمح باستخدام الميكروفون. التسجيل محلي ولا يُرفع للخادم.':'Allow microphone access. Your recording stays on the device.');
     }
   };
-
-  const handleCallInSubmit = async (blob: Blob) => {
-    setIsEvaluating(true);
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
-        const result = await evaluateCallIn(base64Audio, radioContent.transcript);
-        setCallFeedback(result);
-        setIsEvaluating(false);
-      };
-    } catch (err) {
-      console.error("Error evaluating call-in:", err);
-      setIsEvaluating(false);
+  const stopRecording=()=>{
+    if(mediaRecorderRef.current?.state==='recording'){
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track=>track.stop());
     }
+    setIsRecording(false);
   };
 
   const handleWordClick = (word: string) => {
@@ -1215,13 +1210,20 @@ export const Listening: React.FC = () => {
                                                 ) : isCalling ? (
                                                     <motion.div key="calling" className="w-full h-full flex flex-col items-center justify-between py-2">
                                                         <div className="text-center">
-                                                            <p className="text-[8px] font-black uppercase tracking-widest text-[#2a1d15]/40">On Air Call</p>
+                                                            <p className="text-[8px] font-black uppercase tracking-widest text-[#2a1d15]/40">{lang === 'ar' ? 'تدريب شفهي محلي' : 'LOCAL SPEAKING PRACTICE'}</p>
+                                                            <p className="text-[10px] font-black text-[#2a1d15] leading-tight" dir={lang === 'ar' ? 'rtl' : 'ltr'}>{callPrompt}</p>
                                                             <p className="text-[10px] font-mono text-emerald-600 font-bold">
                                                                 {Math.floor(callSeconds / 60).toString().padStart(2, '0')}:{(callSeconds % 60).toString().padStart(2, '0')}
                                                             </p>
+                                                            {callAudioUrl && !isRecording && <audio controls src={callAudioUrl}
+                                                              className="w-full max-w-[190px] h-7 mt-1"
+                                                              aria-label={lang === 'ar' ? 'الاستماع إلى إجابتي' : 'Listen to my recording'} />}
+                                                            {callError && <p className="text-[9px] font-bold text-red-800">{callError}</p>}
                                                         </div>
                                                         <div className="flex gap-4">
-                                                            <button 
+                                                            <button
+                                                                title={lang === 'ar' ? 'سجّل إجابتك ثم استمع إليها' : 'Record and replay your voice'}
+                                                                aria-label={isRecording ? (lang === 'ar' ? 'إيقاف التسجيل' : 'Stop recording') : (lang === 'ar' ? 'بدء التسجيل' : 'Start recording')}
                                                                 onClick={isRecording ? stopRecording : startRecording}
                                                                 className={`w-10 h-10 rounded-full flex items-center justify-center ${isRecording ? 'bg-red-500 text-white' : 'bg-[#2a1d15] text-[#d4c19c]'}`}
                                                             >
@@ -1339,7 +1341,7 @@ export const Listening: React.FC = () => {
                             audioPlaying={isRadioPlaying}
                             playEndCount={radioPlaybackEndCount}
                             onStageChange={setRadioListenStage}
-                            onStudioCall={() => setIsIncomingCall(true)}
+                            onStudioCall={() => { setIsIncomingCall(true); setCallError(''); }}
                             onReplay={() => playRadioNarration(true)}
                             onNextStation={() => { void loadRadioStation(radioFrequency === RADIO_STATIONS.length ? 1 : radioFrequency + 1); }}
                         />
