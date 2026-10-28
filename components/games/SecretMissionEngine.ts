@@ -288,6 +288,20 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let model:THREE.Group|null=null,modelMixer:THREE.AnimationMixer|null=null,modelAction:THREE.AnimationAction|null=null;
   const clips=new Map<string,THREE.AnimationAction>();
   const guards:Combatant[]=[];
+  const guardAnimations:THREE.AnimationClip[]=[];
+  const dressGuard=(enemy:Combatant)=>{
+    if(!model||enemy.isBoss||!enemy.alive||enemy.mixer)return;
+    const copy=cloneSkeleton(model) as THREE.Group;
+    copy.rotation.y=0;
+    enemy.root.add(copy);
+    enemy.fallback.visible=false;
+    const mixer=new THREE.AnimationMixer(copy);
+    const idle=guardAnimations.find(clip=>/idle/i.test(clip.name));
+    const action=idle?mixer.clipAction(idle):null;
+    action?.play();
+    enemy.mixer=mixer;
+    enemy.action=action;
+  };
   const enemyFallback=(parent:THREE.Group,boss=false)=>{
     const g=new THREE.Group();parent.add(g);
     poly(g,boss?[1.65,1.5,1.0]:[.73,.87,.39],boss?trim:camo,[0,boss?1.42:1.29,0]);
@@ -320,14 +334,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         maxHp:boss?12:room.info.id==='archive'?4:room.info.id==='comms'?3:2,
         cooldown:3.2+i*.65,dying:0,alive:true,isBoss:boss,awareness:0,alerted:boss};
       room.enemies.push(enemy);guards.push(enemy);
-      if(model && !boss){
-        const copy=cloneSkeleton(model) as THREE.Group;
-        // All humanoids share one downloaded rig; geometry and textures are cached.
-        copy.rotation.y=0;
-        root.add(copy);
-        fall.visible=false;
-        // Remove weapon animation from guards only when their glTF rig exists.
-      }
+      dressGuard(enemy);
     }
     events.onThreats(guards.length);
   };
@@ -336,11 +343,13 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   gltfLoader.load('https://threejs.org/examples/models/gltf/Soldier.glb',gltf=>{
     if(loaderDisposed){gltf.scene.traverse(n=>{if(n instanceof THREE.Mesh)n.geometry.dispose();});return;}
     model=gltf.scene;
+    guardAnimations.push(...gltf.animations);
     model.scale.setScalar(.96);
     avatar.add(model);heroFallback.visible=false;
     modelMixer=new THREE.AnimationMixer(model);
     for(const anim of gltf.animations)clips.set(anim.name.toLowerCase(),modelMixer.clipAction(anim));
     modelAction=clips.get('idle')||null;modelAction?.play();
+    for(const guard of guards)dressGuard(guard);
     // Place weapon in the actual hand if the rig exposes a right-hand bone.
     let hand:THREE.Object3D|null=null;
     model.traverse(bone=>{
@@ -629,6 +638,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
 
     if(['combat','safes'].includes(phase)&&activeRoom){
       for(const guard of guards){
+        guard.mixer?.update(dt);
         if(!guard.alive){
           guard.dying+=dt;
           guard.root.rotation.z=THREE.MathUtils.damp(guard.root.rotation.z,Math.PI*.43,4,dt);
@@ -719,6 +729,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       window.removeEventListener('keydown',keyDown);
       window.removeEventListener('keyup',keyUp);
       modelMixer?.stopAllAction();
+      for(const enemy of guards)enemy.mixer?.stopAllAction();
       scene.traverse(obj=>{
         if(obj instanceof THREE.Mesh && !geometries.includes(obj.geometry))obj.geometry.dispose();
       });
