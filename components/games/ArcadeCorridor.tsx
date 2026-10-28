@@ -271,7 +271,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const accessible=SECRET_ROOMS.filter(r=>allowed.includes(r.id));
   const gear=completed.length;
   return (
-    <section className="qul-secret" dir={ar?'rtl':'ltr'}>
+    <section className={"qul-secret"+(phase==='safes'?" qul-secret-solving":"")} dir={ar?'rtl':'ltr'}>
       <div ref={host} className="qul-secret-scene" aria-label={ar?'منشأة العمليات ثلاثية الأبعاد':'3D tactical facility'} />
       <div className="qul-secret-shade" aria-hidden="true" />
       <div className="qul-secret-top">
