@@ -1,0 +1,250 @@
+/* Cassette-equivalent thermal printer; walnut + cream palette matches the ORIGINAL radio. */
+.qul-radio-printer-layout {
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  flex-direction:column;
+  gap:7px;
+  min-height:0;
+}
+.qul-radio-printer-layout .qul-original-radio-retouch{
+  width:min(100%,48rem,max(270px,calc((100dvh - 350px) * 1.6)));
+  max-width:48rem;
+  padding-top:clamp(16px,2.2vh,30px)!important;
+  flex-shrink:0;
+}
+.qul-radio-thermal-printer {
+  position:relative;
+  width:min(100%,48rem,max(270px,calc((100dvh - 350px) * 1.6)));
+  flex-shrink:0;
+  color:#e8d7b3;
+  font-family:"Tajawal",sans-serif;
+  isolation:isolate;
+}
+.qul-radio-thermal-printer *,.qul-radio-thermal-printer *::before,.qul-radio-thermal-printer *::after{box-sizing:border-box;}
+.qul-radio-thermal-printer button{cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.qul-radio-thermal-printer button:disabled{opacity:.4;cursor:not-allowed;}
+.qul-radio-thermal-printer button:focus-visible{outline:2px solid #eac388;outline-offset:1px;}
+.qul-radio-printer-surface{
+  position:relative;overflow:hidden;
+  border:6px solid #39251a;
+  border-radius:15px;
+  padding:9px 12px 8px;
+  background:
+    repeating-linear-gradient(179deg,transparent 0 2px,#f1b86a16 3px 4px,transparent 5px 12px),
+    radial-gradient(ellipse at 17% 0%,#9a6540 0%,transparent 59%),
+    linear-gradient(145deg,#69452f 0%,#483021 46%,#765037 79%,#38251c 100%);
+  box-shadow:inset 0 2px 2px #eac29766,inset 0 -5px 10px #170b0ab8,
+    0 2px 1px #21130d,0 7px 13px #30211675,0 16px 28px #20140d4e;
+}
+.qul-radio-printer-surface::before,.qul-radio-printer-surface::after {
+  content:"";position:absolute;z-index:2;width:7px;height:7px;
+  border-radius:50%;border:1px solid #61513e;
+  background:conic-gradient(#9d9788,#efdfbd,#776d5a,#c5ae8a,#9d9788);
+  box-shadow:inset 0 1px 2px #0007;
+}
+.qul-radio-printer-surface::before{top:5px;left:5px;}
+.qul-radio-printer-surface::after{bottom:5px;right:5px;}
+.qul-radio-printer-header{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  min-height:22px;padding:0 2px 5px;
+  border-bottom:1px solid #e1be8963;
+}
+.qul-radio-printer-status{
+  display:flex;align-items:center;gap:5px;white-space:nowrap;
+  color:#e5d3b2;font:900 10px "Tajawal",sans-serif;
+}
+.qul-radio-printer-status svg{color:#cde7b6;width:13px;}
+.qul-radio-printer-name{
+  color:#e0c39b;font:900 10px ui-monospace,monospace;
+  letter-spacing:.08em;white-space:nowrap;
+  text-shadow:0 1px 2px #0009;
+}
+.qul-radio-printer-fold{
+  display:grid;place-items:center;width:21px;height:21px;flex-shrink:0;
+  color:#e8d1aa;
+  border:1px solid #c4a07879;border-radius:4px;
+  background:linear-gradient(#745b42,#46362a);
+  box-shadow:inset 0 1px 1px #f7d2a44f,0 2px 2px #17100ba3;
+}
+.qul-radio-printer-paper-slot{
+  position:relative;
+  margin:8px 2px 0;
+  padding:3px 5px 0;
+  border:3px solid #2a211a;border-radius:5px 5px 2px 2px;
+  background:linear-gradient(180deg,#180f0b,#71553b 6%,#e8d6b7 9%,#d1ba96 100%);
+  box-shadow:inset 0 5px 6px #0e0a07cc,0 1px 1px #ebd2a880;
+}
+.qul-radio-printer-paper{
+  height:180px;
+  width:100%;
+  min-width:0;
+  color:#24201b;
+  overflow:hidden;
+  padding:6px 9px;
+  border:1px solid #d7ccba;
+  background:linear-gradient(180deg,#fffdf6 0%,#faf7ee 88%,#f5eedf 100%);
+  box-shadow:0 4px 11px #0005,inset 0 1px 1px #fff;
+  font-family:"Tajawal",sans-serif;
+}
+.qul-radio-printer-hardware{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  height:9px;margin-top:4px;
+}
+.qul-radio-printer-feed-pin{
+  width:8px;height:8px;border-radius:50%;
+  border:1px solid #514638;
+  background:radial-gradient(circle at 32% 29%,#f4eddf,#8c8f86 61%,#32362f);
+  box-shadow:0 1px 2px #100a06b3;
+}
+.qul-radio-printer-feed-line{
+  width:42%;height:3px;border-radius:3px;
+  background:linear-gradient(#17120d,#b69e79 40%,#33281d);
+  box-shadow:0 1px 1px #e1c29c38;
+}
+.qul-radio-printer-message{
+  height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;text-align:center;
+  padding:8px 6%;
+  color:#453527;
+  font:800 12px/1.6 "Tajawal",sans-serif;
+}
+.qul-radio-printer-message svg{color:#92704b;}
+.qul-radio-replay{
+  min-height:25px;padding:5px 12px;
+  color:#fff9e8;background:#3e3026;border:1px solid #2c2017;border-radius:4px;
+  font:800 11px "Tajawal",sans-serif;
+}
+.qul-radio-printer-question{
+  display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;
+  gap:3px;height:100%;width:100%;min-width:0;min-height:0;
+  color:#261f18;
+}
+.qul-radio-printer-step{
+  display:flex;align-items:center;justify-content:space-between;
+  color:#806d53;font:800 9px/1 "Tajawal",sans-serif;
+}
+.qul-radio-printer-question p{
+  margin:1px 0 2px;
+  color:#211b15;
+  font:900 11px/1.35 "Tajawal",sans-serif;
+  text-align:start;
+}
+.qul-radio-printer-options{
+  display:grid;grid-auto-rows:minmax(0,1fr);gap:3px;min-height:0;
+  align-content:stretch;
+}
+.qul-radio-printer-options button{
+  display:flex;align-items:center;min-width:0;
+  width:100%;min-height:0;
+  padding:2px 8px;
+  text-align:start;
+  color:#342820;background:#eee8db;
+  border:1px solid #c9bbaa;border-radius:4px;
+  font:800 10.5px/1.2 "Tajawal",sans-serif;
+  box-shadow:inset 0 1px 1px #fff,0 1px 1px #b1a48a38;
+}
+.qul-radio-printer-options button.selected{
+  color:#fffaf0;border-color:#473526;
+  background:linear-gradient(170deg,#795a3e,#4b3928);
+  box-shadow:inset 0 2px 5px #23150e85;
+}
+.qul-radio-printer-nav{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  min-height:21px;margin-top:1px;
+}
+.qul-radio-printer-nav button{
+  padding:3px 10px;min-height:21px;
+  color:#fff8e9;border:1px solid #322418;
+  border-radius:4px;
+  background:linear-gradient(#62503d,#30261c);
+  box-shadow:inset 0 1px 1px #dfb88955,0 2px 1px #9e907b61;
+  white-space:nowrap;
+  font:900 10px/1.1 "Tajawal",sans-serif;
+}
+.qul-radio-printed-receipt{
+  display:flex;align-items:center;justify-content:space-between;flex-direction:column;
+  height:100%;min-height:0;gap:1px;
+  padding:1px 3px;text-align:center;
+  color:#2d251d;background:#faf8f1;
+  border-inline:1px solid #d0c7b7;
+  box-shadow:0 2px 5px #74675a33;
+  transform:translateY(0);
+}
+.qul-radio-paper-overline{font:900 8px ui-monospace,monospace;letter-spacing:.08em;color:#7b6a57;}
+.qul-radio-ticket-heading{font:900 15px/1.1 "Tajawal",sans-serif;color:#2d241c;}
+.qul-radio-ticket-station{font:900 11px "Tajawal",sans-serif;}
+.qul-radio-ticket-line{border-top:1px dashed #ac9b84;width:100%;margin:2px 0;}
+.qul-radio-ticket-scores{display:flex;justify-content:space-around;gap:8px;width:100%;}
+.qul-radio-ticket-scores div{display:flex;align-items:center;flex-direction:column;gap:1px;}
+.qul-radio-ticket-scores small{font:800 9px "Tajawal",sans-serif;color:#6a5b4c;}
+.qul-radio-ticket-scores strong{font:900 17px/1 "Tajawal",sans-serif;color:#32281d;}
+.qul-radio-ticket-scores div:last-child strong{color:#517348;}
+.qul-radio-ticket-improvement{font:800 10px/1.1 "Tajawal",sans-serif;color:#4c6941;}
+.qul-radio-ticket-footnote{font:700 9px/1.2 "Tajawal",sans-serif;color:#5f5246;}
+.qul-radio-ticket-actions{width:100%;display:flex;align-items:center;justify-content:center;gap:4px;}
+.qul-radio-ticket-actions button{
+  flex:1;white-space:nowrap;
+  min-width:0;min-height:21px;
+  color:#392b1f;
+  border:1px solid #c7b8a3;border-radius:4px;
+  padding:3px 3px;background:#e8dfd1;
+  font:900 9px/1.1 "Tajawal",sans-serif;
+}
+.qul-radio-ticket-actions button:last-child{
+  color:#fff4e4;background:#473629;border-color:#33261c;
+}
+.qul-radio-words-view{
+  display:flex;flex-direction:column;align-items:center;
+  gap:5px;width:100%;height:100%;min-width:0;
+  color:#2d261c;
+}
+.qul-radio-words-view>strong{font:900 12px "Tajawal",sans-serif;}
+.qul-radio-words-view>span{font:700 9px "Tajawal",sans-serif;text-align:center;}
+.qul-radio-words-grid{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;flex:1;min-height:0;}
+.qul-radio-word-row{
+  display:flex;align-items:center;gap:4px;
+  border:1px solid #cbbb9e;border-radius:3px;
+  padding:3px 4px;min-width:0;color:#3b2b1d;background:#f1e9da;
+}
+.qul-radio-word-row strong{flex:1;min-width:0;text-align:right;font:900 10px/1.2 "Tajawal",sans-serif;}
+.qul-radio-word-row span{flex:1;min-width:0;text-align:left;font:800 9px/1.2 "Tajawal",sans-serif;color:#685342;}
+.qul-radio-word-row button{
+  flex-shrink:0;width:20px;height:20px;
+  border-radius:3px;border:1px solid #937c5e;
+  background:#e2d2b8;color:#3b2c20;
+  font:900 12px ui-monospace,monospace;
+}
+.qul-radio-vocab-error{color:#a12f2f!important;}
+.qul-radio-return-ticket{
+  color:#5b442e;border:0;background:transparent;
+  text-decoration:underline;font:800 10px "Tajawal",sans-serif;
+}
+.qul-radio-thermal-printer.minimized .qul-radio-printer-surface{padding-bottom:7px;}
+@media(max-width:600px){
+  .qul-radio-printer-layout{gap:5px;}
+  .qul-radio-printer-surface{border-width:4px;padding:7px 6px 5px;}
+  .qul-radio-printer-name{font-size:8px;letter-spacing:.03em;}
+  .qul-radio-printer-status{font-size:9px;}
+  .qul-radio-printer-paper-slot{margin-top:5px;padding:2px 2px 0;border-width:2px;}
+  .qul-radio-printer-paper{height:185px;padding:5px 6px;}
+  .qul-radio-printer-question p{font-size:10.5px;line-height:1.25;}
+  .qul-radio-printer-options button{font-size:10px;line-height:1.14;padding:2px 5px;}
+  .qul-radio-printer-hardware{height:5px;margin-top:3px;}
+  .qul-radio-printer-nav button{font-size:9px;}
+  .qul-radio-ticket-actions button{font-size:8.5px;padding:3px 2px;}
+  .qul-radio-ticket-heading{font-size:14px;}
+}
+@media(max-height:710px){
+  .qul-radio-printer-layout .qul-original-radio-retouch{padding-top:18px!important;}
+  .qul-radio-printer-paper{height:164px;}
+  .qul-radio-printer-question p{font-size:10px;line-height:1.21;}
+  .qul-radio-printer-options button{font-size:9.5px;}
+  .qul-radio-ticket-heading{font-size:13px;}
+  .qul-radio-ticket-scores strong{font-size:15px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .qul-radio-printed-receipt{animation:none!important;transition:none!important;}
+}
