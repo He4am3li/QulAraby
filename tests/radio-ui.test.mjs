@@ -77,13 +77,22 @@ const finishQuiz=async()=>{for(let i=0;i<5;i++){await click(container.querySelec
 const errors=[];const originalError=console.error;console.error=(...args)=>{errors.push(args.join(' '));originalError(...args);};
 try {
   await mount();await tune();
+  const initialPanels=container.querySelectorAll('.qul-original-radio-speaker');
+  assert.ok(initialPanels[0].querySelector('[lang=en]')?.textContent.trim(), 'Translation visible before playback');
+  assert.ok(initialPanels[1].querySelector('[lang=ar]')?.textContent.trim(), 'Arabic visible before playback');
+  assert.match(container.querySelector('.qul-radio-printer-name').textContent,/راديو قُل/);
+  const dial=container.querySelector('[role=slider]');
+  await click(dial); assert.equal(dial.getAttribute('aria-valuenow'),'60');
+  await act(async()=>dial.dispatchEvent(new window.KeyboardEvent('keydown',{key:'End',bubbles:true})));
+  assert.equal(dial.getAttribute('aria-valuenow'),'100');
   await click('تشغيل الراديو');assert.match(container.querySelector('[role=alert]').textContent,/لا يوجد صوت عربي/);
   assert.equal(container.querySelector('.qul-radio-printer-question'),null);
   voices=[{name:'Local Arabic Enhanced',voiceURI:'local-ar',lang:'ar-SA',localService:true},{name:'Cloud Arabic',voiceURI:'cloud',lang:'ar-SA',localService:false}];
   await act(async()=>window.speechSynthesis.dispatchEvent(new Event('voiceschanged')));
   assert.equal(container.querySelectorAll('.qul-radio-audio-options select')[0].options.length,1);
   await click('جرّب الصوت');await finishSpeech();assert.equal(container.querySelector('.qul-radio-printer-question'),null,'Preview must not complete first listen');
-  await click('تشغيل الراديو');await click('إيقاف مؤقت');assert.equal(window.speechSynthesis.paused,true);
+  await click('تشغيل الراديو');assert.equal(currentSpeech.volume,1);await click(dial);assert.equal(currentSpeech.volume,0);
+  await act(async()=>dial.dispatchEvent(new window.KeyboardEvent('keydown',{key:'End',bubbles:true})));assert.equal(currentSpeech.volume,1);await click('إيقاف مؤقت');assert.equal(window.speechSynthesis.paused,true);
   await click('تشغيل الراديو');await finishSpeech();assert.ok(container.querySelector('.qul-radio-printer-question'));
   await finishQuiz();await click('الاستماع الثاني');await finishSpeech();
   const panels=container.querySelectorAll('.qul-original-radio-speaker');
