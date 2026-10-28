@@ -1020,9 +1020,11 @@ export const Listening: React.FC = () => {
                                     setRadioPlaybackEndCount(0);
                                     stopAudio();
                                 }
-                                if (topic.id === 'cassette_stories') {
+                                if (topic.id !== 'radio') {
+                                    // Leaving radio invalidates a pending five-second tune.
                                     radioStationRequestRef.current++;
                                     stopAudio();
+                                    setLoading(false);
                                 }
                                 if (topic.id === 'emotions') loadEmotions();
                                 if (topic.id === 'dictation') loadDictation();
@@ -1053,7 +1055,19 @@ export const Listening: React.FC = () => {
                     {LEVELS.map(level => (
                         <button
                             key={level.id}
-                            onClick={() => setSelectedLevel(level)}
+                            onClick={() => {
+                              if (selectedLevel?.id !== level.id && selectedTopic?.id === 'radio') {
+                                radioStationRequestRef.current++;
+                                stopAudio();
+                                setLoading(false);
+                                setRadioFrequency(0);
+                                setRadioTextTitle('');
+                                setRadioContent(null);
+                                setRadioListenStage('first');
+                                setRadioPlaybackEndCount(0);
+                              }
+                              setSelectedLevel(level);
+                            }}
                             className={`w-full px-4 py-3 rounded-xl text-xs font-black transition-all flex items-center justify-between ${selectedLevel?.id === level.id ? 'bg-[#2563eb] text-white shadow-md' : 'bg-white text-slate-400 hover:text-slate-600 border border-slate-100'}`}
                         >
                             <span className="arabic-font leading-none">{level.ar}</span>
