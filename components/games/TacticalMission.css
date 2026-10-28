@@ -12,8 +12,8 @@
 .qul-ops-world canvas { display: block; height: 100%; width: 100%; touch-action: none; }
 .qul-ops-vignette {
   position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: radial-gradient(ellipse 80% 65% at 50% 44%, transparent 34%, rgba(1,8,13,.65) 100%),
-    linear-gradient(180deg,rgba(5,13,18,.44), transparent 22%, transparent 65%,rgba(3,11,17,.55));
+  background: radial-gradient(ellipse 90% 79% at 50% 48%, transparent 51%, rgba(1,8,13,.22) 100%),
+    linear-gradient(180deg,rgba(5,13,18,.23), transparent 22%, transparent 77%,rgba(3,11,17,.17));
 }
 .qul-ops-header {
   position: absolute; z-index: 15; top: 0; inset-inline: 0;
@@ -231,4 +231,83 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .qul-ops *, .qul-ops *::before, .qul-ops *::after { transition: none!important; animation: none!important; }
+}
+
+/* Readable, tactile mission progression and visible energy-pulse mechanic. */
+.qul-ops-learning-goal {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 9px;
+  margin: -5px 0 15px; padding: 8px 10px;
+  background: rgba(89,148,168,.15); border-inline-start: 3px solid #8ed9e9;
+}
+.qul-ops-learning-goal strong {
+  font: 800 10px Inter,"Tajawal",sans-serif; color: #eed2a7; letter-spacing: .02em;
+}
+.qul-ops-learning-goal span { font: 600 11px "Tajawal",sans-serif; color: #d2ebee; }
+.qul-ops-map-list button:disabled {
+  background: #192a3199; border-color: #4a626a4d;
+  color: #758c96; opacity: .66; cursor: not-allowed;
+}
+.qul-ops-map-list button:disabled span { color: #8798a3; }
+.qul-ops-map-list button.next {
+  background: #3b5f6bd9; border-color: #a9e5e2;
+  box-shadow: inset 3px 0 0 #b7d9e9;
+}
+.qul-ops-shields {
+  display: flex; gap: 7px; align-items: center;
+  padding: 8px 0 10px; font: 800 12px "Tajawal",sans-serif; color: #dfeefa;
+}
+.qul-ops-shields svg.charged { color: #96e9c1; fill: #2a8b6455; }
+.qul-ops-shields svg.spent { color: #667782; opacity: .55; }
+.qul-ops-shields small { color: #f0d19f; font: 700 10px Inter,sans-serif; }
+.qul-ops-target-step {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 10px; padding: 15px 13px; background: #22526759;
+  border: 1px solid #77c7deaa; text-align: start;
+}
+.qul-ops-target-step > svg { color: #91f6ff; filter: drop-shadow(0 0 7px #39c9e8aa); }
+.qul-ops-target-step strong { font: 900 17px "Tajawal",sans-serif; color: #e2fdff; }
+.qul-ops-target-step p {
+  margin: 0; font: 600 14px/1.55 "Tajawal",sans-serif; color: #d7eaf2;
+}
+.qul-ops-target-step small { font-size: 10px; color: #a7c3d1; }
+.qul-ops-fire {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 46px; padding: 11px 20px;
+  background: #b5eaf0; border: 1px solid #e4fcff;
+  color: #0d3242; font: 900 14px "Tajawal",sans-serif;
+  box-shadow: 0 0 24px rgba(79,196,238,.25);
+}
+.qul-ops-fire:hover { background: #e8ffff; }
+.qul-ops-failed {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 10px; padding: 15px; color: #f8d4c2;
+  background: rgba(94,44,40,.47); border: 1px solid #e6a29b96;
+}
+.qul-ops-failed h3 { font: 900 21px "Tajawal",sans-serif; margin: 0; }
+.qul-ops-failed p { font: 600 14px/1.7 "Tajawal",sans-serif; margin: 0 0 8px; }
+.qul-ops-failed > svg { color: #f1b69b; }
+.qul-ops-reward small { font-size: 12px; color: #b6ead1; }
+.qul-ops-victory {
+  position: absolute; z-index: 18; left: 50%; top: 49%;
+  transform: translate(-50%,-50%);
+  width: min(420px,calc(100% - 25px)); padding: 25px;
+  display: flex; align-items: center; flex-direction: column; gap: 13px;
+  background: #0f3b38f0; border: 2px solid #a3e4c0;
+  color: #f4fcf9; text-align: center;
+  box-shadow: 0 23px 80px #021114ac;
+}
+.qul-ops-victory > svg { color: #a9f3ca; }
+.qul-ops-victory h2 { font: 900 28px "Tajawal",sans-serif; margin: 0; }
+.qul-ops-victory p { font: 600 14px/1.7 "Tajawal",sans-serif; margin: 0; }
+.qul-ops-victory strong { color: #f4c787; font: 900 20px Inter,sans-serif; }
+@media (max-width:900px) {
+  .qul-ops-learning-goal { padding: 6px 8px; margin: -4px 0 7px; gap: 5px; }
+  .qul-ops-learning-goal span { font-size: 10px; }
+  .qul-ops-shields { padding: 5px 0 7px; gap: 5px; font-size: 11px; }
+  .qul-ops-target-step { padding: 10px; gap: 8px; }
+  .qul-ops-target-step p { font-size: 12px; }
+  .qul-ops-fire { min-height: 41px; padding: 9px 14px; }
+  .qul-ops-failed { padding: 10px; }
+  .qul-ops-failed h3 { font-size: 18px; }
+  .qul-ops-victory { padding: 15px; }
 }
