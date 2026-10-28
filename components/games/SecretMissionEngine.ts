@@ -19,7 +19,7 @@ export type SecretEvents = {
   onShot: (hit:boolean) => void;
   onError: (message:string) => void;
 };
-type Combatant = { root:THREE.Group; body:THREE.Group; fallback:THREE.Group; mixer:THREE.AnimationMixer|null; action:THREE.AnimationAction|null; hp:number; maxHp:number; cooldown:number; dying:number; alive:boolean; isBoss:boolean; };
+type Combatant = { root:THREE.Group; body:THREE.Group; fallback:THREE.Group; mixer:THREE.AnimationMixer|null; action:THREE.AnimationAction|null; hp:number; maxHp:number; cooldown:number; dying:number; alive:boolean; isBoss:boolean; awareness:number; alerted:boolean; };
 type Room = { info:typeof SECRET_ROOMS[number]; group:THREE.Group; door:THREE.Group; doorAngle:number; doorTarget:number; safes:{door:THREE.Group; opened:number; target:number; name:THREE.Sprite}[]; enemies:Combatant[]; prepared:boolean;};
 type Traverse = {type:'intro'|'enter'|'exit';time:number;duration:number;from:THREE.Vector3;to:THREE.Vector3;fromYaw:number;toYaw:number; room?:Room};
 type Trail = { mesh:THREE.Mesh; age:number; lifespan:number };
@@ -266,7 +266,6 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const sight=poly(heroWeapon,[.08,.09,.1],amber,[0,.2,-.49]);
   let model:THREE.Group|null=null,modelMixer:THREE.AnimationMixer|null=null,modelAction:THREE.AnimationAction|null=null;
   const clips=new Map<string,THREE.AnimationAction>();
-  const guardTemplate:THREE.Group[]=[];
   const guards:Combatant[]=[];
   const enemyFallback=(parent:THREE.Group,boss=false)=>{
     const g=new THREE.Group();parent.add(g);
@@ -296,9 +295,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       const hitRing=new THREE.Mesh(geometry(new THREE.TorusGeometry(boss?.54:.31,.065,8,24)),boss?red:amber);
       hitRing.rotation.x=Math.PI/2;hitRing.position.set(0,boss?2.55:2.18,0);root.add(hitRing);
       const enemy:Combatant={root,body:root,fallback:fall,mixer:null,action:null,
-        hp:boss?8:2,maxHp:boss?8:2,cooldown:2.3+i*.6,dying:0,alive:true,isBoss:boss};
+        hp:boss?12:room.info.id==='archive'?4:room.info.id==='comms'?3:2,
+        maxHp:boss?12:room.info.id==='archive'?4:room.info.id==='comms'?3:2,
+        cooldown:3.2+i*.65,dying:0,alive:true,isBoss:boss,awareness:0,alerted:boss};
       room.enemies.push(enemy);guards.push(enemy);
-      if(model){
+      if(model && !boss){
         const copy=cloneSkeleton(model) as THREE.Group;
         // All humanoids share one downloaded rig; geometry and textures are cached.
         copy.rotation.y=0;
@@ -463,11 +464,13 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       if(dot>threshold&&dot>closestAngle){best=enemy;closestAngle=dot;}
     }
     const hit=Boolean(best);
+    // Gunfire reveals the player's position to every surviving guard.
+    for(const other of guards)if(other.alive){other.alerted=true;other.awareness=1;}
     const end=best?best.root.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,best.isBoss?1.7:1.35,0))
       :origin.clone().addScaledVector(direction,15);
     makeTrail(origin,end,cyan,.17);
     if(best){
-      const damage=best.isBoss? (weaponTier>=3?1:0) : 1;
+      const damage=best.isBoss? (weaponTier>=3?3:0) : weaponTier>=2?2:1;
       best.hp-=damage;
       if(best.hp<=0){
         best.alive=false;best.dying=0;
@@ -531,7 +534,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(disposed||document.hidden||paused){last=now;return;}
     if(phone&&now-last<1000/30)return;
     const dt=clamp((now-last)/1000,0,.045);last=now;time+=dt;
-    gateProgress=clamp(gateProgress+dt*.55,0,1);
+    if(phase!=='intro')gateProgress=clamp(gateProgress+dt*.55,0,1);
     hinges.forEach((h,i)=>h.rotation.y=(i?1:-1)*ease(gateProgress)*1.55);
     gate.visible=phase==='intro'||(phase==='entering'&&player.z>17.0);
     for(const room of rooms){
@@ -566,7 +569,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       const right=Number(controls.has('d')||controls.has('arrowright'))-Number(controls.has('a')||controls.has('arrowleft'));
       let f=clamp(input.forward+up,-1,1),r=clamp(input.strafe+right,-1,1);
       const norm=Math.hypot(f,r)||1;f/=norm;r/=norm;
-      const speed=crouch?1.05:sprint?5.8:3.2;
+      const speed=crouch?.95:sprint?5.8:3.2;
       player.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*r)*dt*speed;
       player.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*r)*dt*speed;
       if(phase==='hall')limitCorridor(player);
@@ -579,7 +582,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     }
     playerRoot.position.copy(player);
     playerRoot.rotation.y=yaw;
-    avatar.scale.y=THREE.MathUtils.damp(avatar.scale.y,crouch?.67:1,8,dt);
+    // Prone crawling: the operator's torso rolls almost horizontal and lowers to the floor.
+    avatar.rotation.x=THREE.MathUtils.damp(avatar.rotation.x,crouch?-1.22:0,7,dt);
+    avatar.position.y=THREE.MathUtils.damp(avatar.position.y,crouch?.46:0,7,dt);
+    avatar.position.z=THREE.MathUtils.damp(avatar.position.z,crouch?.32:0,7,dt);
+    avatar.scale.y=THREE.MathUtils.damp(avatar.scale.y,crouch?.9:1,8,dt);
     if(!model)chest.rotation.x=moving?Math.sin(time*(sprint?14:9))*.08:Math.sin(time*1.2)*.02;
     // Grip a weapon in front of the character even if the remote skeletal rig fails.
     if(heroWeapon.parent===playerRoot){
@@ -602,6 +609,18 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
           continue;
         }
         const dist=guard.root.getWorldPosition(new THREE.Vector3()).distanceTo(player);
+        // Suspenseful stealth: patrols only engage after detecting the operator,
+        // unless gunfire has already triggered the alarm. Prone movement hides better.
+        const detectRadius=guard.isBoss?16:crouch?3.8:sprint?11:7.0;
+        if(!guard.alerted){
+          if(dist<detectRadius)guard.awareness+=dt*(crouch?.55:sprint?2.8:1.6);
+          else guard.awareness=Math.max(0,guard.awareness-dt*.55);
+          if(guard.awareness>1.1)guard.alerted=true;
+          if(!guard.alerted){
+            guard.root.rotation.y+=Math.sin(time*.63+guard.cooldown)*dt*.17;
+            continue;
+          }
+        }
         const gh=guard.root.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.32,0));
         const ph=player.clone().add(new THREE.Vector3(0,crouch?.92:1.38,0));
         const dir=ph.sub(gh).normalize();
@@ -612,7 +631,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         }
         guard.cooldown-=dt;
         if(dist<13&&guard.cooldown<=0){
-          const risk=guard.isBoss?13:8;
+          const risk=guard.isBoss?14:activeRoom.info.id==='archive'?10:8;
           const base=guard.isBoss?2.1:2.55;
           guard.cooldown=base + Math.random()*.9;
           const from=guard.root.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.38,0));
@@ -636,9 +655,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const forward=new THREE.Vector3(-Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch));
     const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
     const head=player.clone().add(new THREE.Vector3(0,crouch?1:1.55,0));
-    const camTarget=head.clone().addScaledVector(forward,-4.4).addScaledVector(right,1.15);
-    camTarget.y+=1.0;
-    const lookTarget=head.clone().addScaledVector(forward,4.5);
+    const roomView=Boolean(activeRoom) && phase!=='hall';
+    const camTarget=head.clone().addScaledVector(forward,roomView?-2.65:-4.4)
+      .addScaledVector(right,roomView?.62:1.15);
+    camTarget.y+=roomView?.82:1.0;
+    const lookTarget=head.clone().addScaledVector(forward,roomView?5.1:4.5);
     camera.position.lerp(camTarget,clamp(dt*8,0,1));
     const existingView=camFollow?lookTarget:lookTarget;
     camera.lookAt(existingView);
