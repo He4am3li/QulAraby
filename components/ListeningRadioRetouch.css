@@ -1,0 +1,205 @@
+/*
+ * RADIO RETOUCH — VISUAL PAINT ONLY.
+ * The original Listening.tsx radio markup, order, dimensions, positions,
+ * animations, audio, volume, station selection, quiz and call controls remain
+ * identical to the version before PR #16. Selectors below only add surface
+ * material, lighting and depth to the existing elements.
+ *
+ * Deliberately no display/grid/flex/width/height/margin/padding/position changes.
+ */
+
+/* Original radio's wooden enclosure, with subdued end-grain and lacquer. */
+.qul-original-radio-retouch .qul-original-radio-cabinet {
+  border-color: #2a1a10 !important;
+  background-color: #473022 !important;
+  background-image:
+    repeating-linear-gradient(
+      179deg,
+      transparent 0px,
+      rgba(255,221,167,.045) 2px,
+      rgba(34,15,8,.12) 3px,
+      transparent 4px,
+      rgba(228,171,102,.045) 8px,
+      transparent 13px,
+      rgba(32,15,10,.11) 18px,
+      transparent 23px
+    ),
+    repeating-linear-gradient(
+      88deg,
+      rgba(20,9,5,.035) 0px,
+      rgba(193,122,58,.035) 4px,
+      transparent 8px,
+      transparent 21px
+    ),
+    radial-gradient(ellipse at 23% 4%, rgba(214,148,83,.28), transparent 63%),
+    linear-gradient(135deg, #765038 0%, #4a3023 35%, #65442c 66%, #3c281f 100%) !important;
+  box-shadow:
+    inset 1px 2px 2px rgba(255,212,141,.38),
+    inset 0 -7px 12px rgba(15,8,6,.38),
+    inset 9px 0 12px rgba(17,8,5,.29),
+    inset -8px 0 10px rgba(15,8,7,.24),
+    0 2px 1px rgba(20,11,6,.65),
+    0 8px 15px rgba(28,17,11,.25),
+    0 34px 60px -18px rgba(21,13,8,.58),
+    0 45px 80px -33px rgba(22,13,6,.42) !important;
+}
+
+/* Original carry handle — the same shape, now with a worn leather rim. */
+.qul-original-radio-retouch .qul-original-radio-handle {
+  border-color: #291a13 !important;
+  background-image: linear-gradient(180deg,#7b5640 0%,#4c3227 38%,#30231f 100%);
+  box-shadow:
+    inset 0 3px 3px rgba(247,201,146,.28),
+    inset 0 -2px 4px rgba(0,0,0,.6),
+    0 3px 5px rgba(20,11,7,.35) !important;
+}
+
+/* Telescopic chrome aerial; preserve its existing animation and exact location. */
+.qul-original-radio-retouch .qul-original-radio-antenna {
+  background-image: linear-gradient(90deg,#465054 0%,#b9c4c5 22%,#f8faf2 44%,#98a8ac 62%,#47545b 100%) !important;
+  box-shadow:
+    inset -1px 0 1px rgba(14,25,30,.6),
+    2px 0 3px rgba(21,15,11,.46),
+    4px 3px 9px rgba(9,7,5,.25) !important;
+}
+
+/* Recessed left and right grille; no speaker placement or size changes. */
+.qul-original-radio-retouch .qul-original-radio-speaker {
+  border-color: #24170e !important;
+  background-image:
+    radial-gradient(ellipse at 50% 50%,rgba(9,19,15,.67),transparent 70%),
+    linear-gradient(135deg,#1b1916 0%,#30271e 48%,#120f0d 100%) !important;
+  box-shadow:
+    inset 0 5px 16px rgba(0,0,0,.92),
+    inset 4px 0 6px rgba(0,0,0,.72),
+    inset -2px -2px 6px rgba(91,74,49,.22),
+    0 2px 1px rgba(245,191,113,.18),
+    0 5px 7px rgba(10,7,5,.29) !important;
+}
+
+/* Perforated woven fabric, behind the original notes and transcript.
+   Existing text remains on its original layer (relative z-10). */
+.qul-original-radio-retouch .qul-original-radio-speaker::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle,rgba(7,13,11,.72) 1px,rgba(86,80,63,.40) 1.55px,transparent 2.5px) 0 0/7px 7px,
+    radial-gradient(circle at 45% 38%,rgba(174,142,95,.08),rgba(4,8,7,.2) 72%),
+    linear-gradient(145deg,rgba(184,145,95,.16),rgba(15,18,14,.12));
+  opacity: .58;
+  pointer-events: none;
+  box-shadow: inset 0 4px 11px rgba(0,0,0,.75);
+}
+.qul-original-radio-retouch .qul-original-radio-speaker::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(139deg,rgba(245,203,141,.055),transparent 22% 72%,rgba(0,0,0,.2));
+  pointer-events: none;
+}
+
+/* Original central cream face: enamel-coated metal under a glass surface. */
+.qul-original-radio-retouch .qul-original-radio-dial {
+  border-color: #2c211a !important;
+  background-color: #d4c19c !important;
+  background-image:
+    repeating-linear-gradient(
+      0deg,rgba(63,53,33,.022) 0 1px,transparent 1px 4px
+    ),
+    radial-gradient(ellipse at 25% 12%,rgba(255,250,224,.7),transparent 67%),
+    linear-gradient(151deg,#eee2bc 0%,#d6c59d 37%,#c3ad82 100%) !important;
+  box-shadow:
+    inset 0 4px 10px rgba(50,32,18,.48),
+    inset 0 1px 2px rgba(10,10,9,.47),
+    inset 0 -3px 5px rgba(90,69,35,.24),
+    0 1px 1px rgba(255,235,177,.42),
+    0 5px 8px rgba(27,16,10,.27) !important;
+}
+.qul-original-radio-retouch .qul-original-radio-dial::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(151deg,rgba(255,255,255,.17) 0%,rgba(255,255,255,.035) 29%,transparent 36%,rgba(67,48,29,.045) 84%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Same original bottom control strip, with subtle molded Bakelite relief. */
+.qul-original-radio-retouch .qul-original-radio-controls {
+  background-color: rgba(17,12,8,.14) !important;
+  background-image:
+    linear-gradient(180deg,rgba(248,216,154,.11),rgba(23,12,7,.14) 87%),
+    repeating-linear-gradient(90deg,transparent 0 6px,rgba(255,255,255,.012) 6px 7px);
+  border-color: rgba(230,188,126,.16) !important;
+  box-shadow:
+    inset 0 3px 7px rgba(10,5,4,.32),
+    inset 0 -2px 2px rgba(255,218,165,.07),
+    0 1px 1px rgba(249,211,159,.12) !important;
+}
+
+/* Preserve the old knob geometry and red pointer, give the metal real depth. */
+.qul-original-radio-retouch .qul-original-radio-volume {
+  border-color: #241c17 !important;
+  background-image:
+    repeating-conic-gradient(from 0deg at 50% 50%,rgba(19,26,27,.08) 0deg 5deg,rgba(255,255,255,.05) 5deg 9deg),
+    radial-gradient(circle at 33% 25%,#f4f5ed 0%,#bcc7ca 22%,#929e9f 53%,#576669 76%,#333d41 100%) !important;
+  box-shadow:
+    inset 0 3px 5px rgba(255,255,255,.48),
+    inset 0 -4px 5px rgba(17,23,24,.47),
+    0 1px 1px rgba(246,213,168,.3),
+    0 6px 9px rgba(6,6,5,.48),
+    0 12px 13px -8px rgba(0,0,0,.42) !important;
+}
+
+/* Same preset button size, position, labels and selected state. */
+.qul-original-radio-retouch .qul-original-radio-preset {
+  border-color: rgba(45,37,29,.58) !important;
+  background-image: linear-gradient(165deg,#f7f4e9 0%,#d2cdc1 52%,#aaa69d 100%) !important;
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,.78),
+    inset 0 -3px 4px rgba(49,44,36,.2),
+    0 3px 3px rgba(7,8,7,.39),
+    0 1px 0 rgba(255,240,211,.3) !important;
+  text-shadow: 0 1px 0 rgba(255,255,255,.28);
+}
+.qul-original-radio-retouch .qul-original-radio-preset:is(.bg-slate-600) {
+  background-image: linear-gradient(170deg,#62666b,#454b50 60%,#30373c 100%) !important;
+  border-color: #272523 !important;
+  box-shadow:
+    inset 0 3px 7px rgba(0,0,0,.65),
+    inset 0 1px 2px rgba(0,0,0,.45),
+    0 1px 1px rgba(251,235,209,.18) !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,.6);
+}
+
+/* Original play button: polished edge and dark lacquer. */
+.qul-original-radio-retouch .qul-original-radio-play {
+  border-color: #241b16 !important;
+  background-image: radial-gradient(circle at 29% 23%,#f5f4e9 0%,#d7d6c9 24%,#aeb3b1 57%,#5b6667 92%) !important;
+  box-shadow:
+    inset 0 3px 3px rgba(255,255,255,.62),
+    inset 0 -3px 6px rgba(12,17,19,.38),
+    0 2px 1px rgba(241,210,156,.34),
+    0 6px 10px rgba(0,0,0,.42) !important;
+}
+
+/* Keep the original assessment button where it was, just refine its finish. */
+.qul-original-radio-retouch .qul-original-radio-quiz {
+  background-image: linear-gradient(165deg,#3c4959,#202a39 57%,#141d2d) !important;
+  border-color: rgba(232,241,250,.22) !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,.19),
+    inset 0 -3px 4px rgba(0,0,0,.34),
+    0 7px 15px rgba(15,20,30,.26) !important;
+}
+@media(prefers-reduced-motion:reduce) {
+  .qul-original-radio-retouch .qul-original-radio-preset,
+  .qul-original-radio-retouch .qul-original-radio-volume,
+  .qul-original-radio-retouch .qul-original-radio-play {
+    transition: none !important;
+  }
+}
