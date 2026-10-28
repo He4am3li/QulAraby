@@ -9,12 +9,15 @@ import {
   Phone, Mic, PhoneOff, MicOff, Compass, ArrowUpRight, Check, X, RefreshCw, Heart,
   PenTool, UserCircle, Speech, Disc
 } from 'lucide-react';
-import { generateListeningExercise, generateSpeech, decodeAudioData, generateWordIllustration, evaluateCallIn } from '../services/gemini';
+import { prepareRadioExerciseFromSource, generateSpeech, decodeAudioData, generateWordIllustration, evaluateCallIn } from '../services/gemini';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CassettePlayer } from '../components/CassettePlayer';
 import { RadioThermalPrinter, RadioLearningStage } from '../components/RadioThermalPrinter';
 import '../components/ListeningRadioRetouch.css';
 import { STORY_CASSETTES } from '../src/data/storyCassettes';
+import { drawRadioCorpusText } from '../src/data/radioShuffleBag';
+import type { RadioCorpusType } from '../src/data/radioTextCorpus';
+import { useAuth } from '../components/AuthProvider';
 
 const LEVELS = [
   { id: 'beginner', ar: 'مبتدئ', en: 'Beginner', icon: Zap, color: 'blue', prompt: 'Use very simple Arabic words and short sentences for children.' },
@@ -50,6 +53,7 @@ const RADIO_STATIONS = [
 
 export const Listening: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [lang, setLang] = React.useState<'ar' | 'en'>(
     (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar'
   );
@@ -68,6 +72,8 @@ export const Listening: React.FC = () => {
   
   // Radio State
   const [radioFrequency, setRadioFrequency] = React.useState(0);
+  const [radioTextTitle, setRadioTextTitle] = React.useState('');
+  const [radioTextSerial, setRadioTextSerial] = React.useState(0);
   const [radioContent, setRadioContent] = React.useState<any>(null);
   const [radioAudio, setRadioAudio] = React.useState<AudioBuffer | null>(null);
   const [isRadioPlaying, setIsRadioPlaying] = React.useState(false);
@@ -452,7 +458,13 @@ export const Listening: React.FC = () => {
     // Only the latest station request may update audio or questions.
     // This keeps the name, spoken text and printed exercise tied to one station.
     const requestId = ++radioStationRequestRef.current;
+    const category: Record<number, RadioCorpusType> = {
+      1: 'scenario', 2: 'dialogue', 3: 'story', 4: 'riddle', 5: 'news'
+    };
     setRadioFrequency(stationId);
+    setRadioTextTitle('');
+    setRadioTextSerial(v => v + 1);
+    setError(null);
     setLoading(true);
     setRadioContent(null);
     setRadioAudio(null);
@@ -461,8 +473,16 @@ export const Listening: React.FC = () => {
     stopAudio();
     startStatic();
     try {
-      const prompt = `Create a ${station.type} listening exercise in Arabic. Level: ${selectedLevel.en}. ${selectedLevel.prompt}. Use a natural coherent transcript, then write EXACTLY FIVE comprehension questions strictly about the actual transcript, with EXACTLY THREE answer options per question and one exact correctAnswer from those options. Vary the correct option position. Keep every question short (maximum 14 Arabic words) and each choice concise (maximum 6 Arabic words) so all options fit on a compact printed ticket with NO scrolling. Keep all options equally unvowelled, to avoid highlighting the answer. Provide accurate wordMap translations in English.`;
-      const data = await generateListeningExercise(selectedLevel.en, prompt, lang);
+      // Draw from the uploaded bilingual corpus, independently shuffled for
+      // this student's selected level and radio category; no replacement
+      // until all ten source texts in that category have been consumed.
+      const source = drawRadioCorpusText(
+        selectedLevel.id as 'beginner' | 'intermediate' | 'advanced',
+        category[stationId],
+        user?.uid || 'guest'
+      );
+      setRadioTextTitle(source.titleAr);
+      const data = await prepareRadioExerciseFromSource(source);
       if (requestId !== radioStationRequestRef.current) return;
       setRadioContent(data);
       const audioBytes = await generateSpeech(data.transcript, 'ar');
@@ -898,6 +918,7 @@ export const Listening: React.FC = () => {
                                 if (topic.id === 'radio') {
                                     radioStationRequestRef.current++;
                                     setRadioFrequency(0);
+                                    setRadioTextTitle('');
                                     setRadioContent(null);
                                     setRadioListenStage('first');
                                     setRadioPlaybackEndCount(0);
@@ -1068,6 +1089,11 @@ export const Listening: React.FC = () => {
                                                         <h4 className="text-lg font-black text-[#2a1d15] arabic-font">
                                                             {RADIO_STATIONS.find(s => s.id === radioFrequency)?.[lang]}
                                                         </h4>
+                                                        {radioTextTitle && (
+                                                          <p className="text-[10px] font-black text-[#4a3423] arabic-font mt-1" dir="rtl">
+                                                            {radioTextTitle}
+                                                          </p>
+                                                        )}
                                                     </motion.div>
                                                 ) : (
                                                     <motion.div key="empty" className="text-[#2a1d15]/40 flex flex-col items-center text-center">
@@ -1143,10 +1169,10 @@ export const Listening: React.FC = () => {
                         </div>
 
                         <RadioThermalPrinter
-                            key={selectedLevel.id + ':' + radioFrequency}
+                            key={selectedLevel.id + ':' + radioFrequency + ':' + radioTextSerial}
                             lang={lang}
                             stationId={radioFrequency}
-                            stationTitle={RADIO_STATIONS.find(station => station.id === radioFrequency)?.[lang] || (lang === 'ar' ? 'الراديو' : 'Radio')}
+                            stationTitle={radioTextTitle || RADIO_STATIONS.find(station => station.id === radioFrequency)?.[lang] || (lang === 'ar' ? 'الراديو' : 'Radio')}
                             content={radioContent}
                             loading={loading}
                             audioReady={Boolean(radioAudio)}
