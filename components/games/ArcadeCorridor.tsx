@@ -92,12 +92,18 @@ const MISSIONS:Record<SecretRoomId,{subtitle:Bilingual; briefing:Bilingual;skill
   }
 };
 const sequence=SECRET_ROOMS.map(x=>x.id);
+const REWARDS:Record<SecretRoomId,Bilingual>={
+  depot:{ar:'قاذف الطاقة MK-II',en:'Energy Blaster MK-II'},
+  comms:{ar:'ماسح الاستهداف MK-III',en:'Targeting Scanner MK-III'},
+  archive:{ar:'مقوّي النبضات MK-IV',en:'Pulse Amplifier MK-IV'},
+  vault:{ar:'الوثائق السرية المستردّة',en:'Recovered Classified Documents'}
+};
 const storageKey=(uid:string)=>'qul_secret_documents_v2_'+uid;
 function readProgress(key:string):SecretRoomId[]{
   try{
     const value=JSON.parse(localStorage.getItem(key)||'[]');
     if(!Array.isArray(value))return [];
-    return sequence.filter((x,i)=>i<3&&value.includes(x));
+    return sequence.filter(x=>value.includes(x));
   }catch{return [];}
 }
 type Input={forward:number;strafe:number;run:boolean};
@@ -116,6 +122,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const [selectedPin,setSelectedPin]=useState<string|null>(null);
   const [hitFlash,setHitFlash]=useState(false);
   const [documents,setDocuments]=useState(false);
+  const [rewardToast,setRewardToast]=useState<SecretRoomId|null>(null);
   const [score,setScore]=useState(0);
   const [ready,setReady]=useState(false);
   const [error,setError]=useState('');
@@ -131,6 +138,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const lastThreats=useRef(0);
   const safeRef=useRef(0);
   const flashTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+  const rewardTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const currentRoom=room?MISSIONS[room]:null;
   const next=sequence.find(x=>!completed.includes(x))??'vault';
   const allowed=[...completed,next];
@@ -159,7 +167,12 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
               setDocuments(true);
               setScore(v=>v+900);
               // 4/4 is awarded only after the final physical vault and document pickup.
-              setCompleted(prev=>prev.includes('vault')?prev:[...prev,'vault']);
+              setCompleted(prev=>{
+                if(prev.includes('vault'))return prev;
+                const updated=[...prev,'vault'];
+                try{localStorage.setItem(key,JSON.stringify(updated));}catch{}
+                return updated;
+              });
             }
           },
           onHealth(value){if(!stopped)setHealth(value);},
@@ -198,7 +211,12 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   useEffect(()=>engine.current?.setMovement(input.forward,input.strafe,input.run),[input,ready]);
   useEffect(()=>engine.current?.setCrouch(crouch),[crouch,ready]);
   useEffect(()=>engine.current?.setPaused(paused),[paused,ready]);
-  useEffect(()=>()=>{if(flashTimer.current)clearTimeout(flashTimer.current);},[]);
+  useEffect(()=>()=>{if(flashTimer.current)clearTimeout(flashTimer.current);if(rewardTimer.current)clearTimeout(rewardTimer.current);},[]);
+  const announceReward=(id:SecretRoomId)=>{
+    setRewardToast(id);
+    if(rewardTimer.current)clearTimeout(rewardTimer.current);
+    rewardTimer.current=setTimeout(()=>setRewardToast(null),4100);
+  };
 
   const answer=(idx:number)=>{
     if(!room||phase!=='safes'||opened[activeSafe]||selectedPin!==null)return;
@@ -219,13 +237,14 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
     if(activeSafe<3){
       const index=activeSafe+1;safeRef.current=index;setActiveSafe(index);setSelectedPin(null);return;
     }
+    // Claim the visible 3D item from the final safe before recording success.
+    if(!opened.every(Boolean)||!engine.current?.collectReward())return;
     if(room==='vault'){
-      // The documents exist only after all four physical vaults have been opened.
-      if(!opened.every(Boolean))return;
       const success=engine.current?.finish();
-      if(success)setDocuments(true);
+      if(success){setDocuments(true);announceReward('vault');}
       return;
     }
+    announceReward(room);
     setCompleted(prev=>{
       if(prev.includes(room))return prev;
       const value=[...prev,room];
@@ -252,7 +271,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const accessible=SECRET_ROOMS.filter(r=>allowed.includes(r.id));
   const gear=completed.length;
   return (
-    <section className="qul-secret" dir={ar?'rtl':'ltr'}>
+    <section className={"qul-secret"+(phase==='safes'?" qul-secret-solving":"")} dir={ar?'rtl':'ltr'}>
       <div ref={host} className="qul-secret-scene" aria-label={ar?'منشأة العمليات ثلاثية الأبعاد':'3D tactical facility'} />
       <div className="qul-secret-shade" aria-hidden="true" />
       <div className="qul-secret-top">
@@ -307,7 +326,13 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
           </button>)}
         </div>}
 
-      {ready&&phase==='combat'&&room&&<div className="qul-secret-combat">
+      {ready&&rewardToast&&phase!=='victory'&&<div className="qul-secret-reward-toast" role="status">
+         <Zap size={25}/>
+         <div><small>{ar?'تطوير جديد للمعدات':'EQUIPMENT UNLOCKED'}</small>
+           <strong>{REWARDS[rewardToast][lang]}</strong></div>
+         <span>MK-{Math.min(5,completed.length+1)}</span>
+       </div>}
+       {ready&&phase==='combat'&&room&&<div className="qul-secret-combat">
         <strong><ShieldAlert size={20}/>{ar?'تحذير: حراس مسلحون':'HOSTILES DETECTED'}</strong>
         <p>{MISSIONS[room].briefing[lang]}</p>
         <span>{ar?'الحراس المتبقون':'HOSTILES REMAINING'}: {threats}</span>
@@ -336,9 +361,13 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
               <strong>{ar?'فتحت الخزنة بنجاح':'SAFE UNLOCKED'}</strong>
               <span>PIN: {selectedPin}</span>
               <p>{ar?'وجدت:':'Recovered:'} <b>{MISSIONS[room].safes[activeSafe].loot[lang]}</b></p>
+              {activeSafe===3&&<div className="qul-secret-equipment-reveal">
+                <Zap size={22}/><span>{ar?'المكافأة التي ستجمعها:':'REWARD TO COLLECT:'}</span>
+                <strong>{REWARDS[room][lang]}</strong>
+              </div>}
               <button className="qul-secret-primary" onClick={advanceSafe}>
-                {room==='vault'&&activeSafe===3?(ar?'استرد الأوراق السرية':'RECOVER DOCUMENTS'):
-                  activeSafe===3?(ar?'أكمل العملية وافتح الباب التالي':'COMPLETE ROOM & UNLOCK NEXT'):
+                {room==='vault'&&activeSafe===3?(ar?'اجمع الوثائق السرية':'COLLECT CLASSIFIED DOCUMENTS'):
+                  activeSafe===3?(ar?'اجمع التجهيز الجديد واخرج':'COLLECT UPGRADE & EXIT'):
                     (ar?'الخزنة التالية':'NEXT SAFE')}
                 <ChevronLeft size={17}/>
               </button>

@@ -283,14 +283,22 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const weaponBarrel=poly(heroWeapon,[.15,.16,.91],black,[0,0,-.33]);
   poly(heroWeapon,[.26,.14,.55],steel,[0,.11,-.18]);
   poly(heroWeapon,[.13,.32,.16],black,[0,-.22,.06]);
-  const muzzle=poly(heroWeapon,[.19,.19,.25],cyan,[0,.02,-.86]);
-  const sight=poly(heroWeapon,[.08,.09,.1],amber,[0,.2,-.49]);
+  const weaponLight=material(new THREE.MeshBasicMaterial({color:'#a6effa'}));
+  const muzzle=poly(heroWeapon,[.19,.19,.25],weaponLight,[0,.02,-.86]);
+  poly(heroWeapon,[.08,.09,.1],amber,[0,.2,-.49]);
+  // Visible, gameplay-earned upgrades, not a number-only weapon level.
+  const upgradeRail=poly(heroWeapon,[.28,.065,.7],steel,[0,.24,-.36]);
+  const upgradeCoil=round(heroWeapon,.17,.36,weaponLight,[0,.02,-.68],12);
+  upgradeCoil.rotation.x=Math.PI/2;
+  const upgradeScope=poly(heroWeapon,[.19,.16,.34],black,[0,.34,-.4]);
+  const upgradeEmitter=poly(heroWeapon,[.29,.14,.3],amber,[0,.01,-.87]);
+  upgradeRail.visible=upgradeCoil.visible=upgradeScope.visible=upgradeEmitter.visible=false;
   let model:THREE.Group|null=null,modelMixer:THREE.AnimationMixer|null=null,modelAction:THREE.AnimationAction|null=null;
   const clips=new Map<string,THREE.AnimationAction>();
   const guards:Combatant[]=[];
   const guardAnimations:THREE.AnimationClip[]=[];
   const dressGuard=(enemy:Combatant)=>{
-    if(!model||enemy.isBoss||!enemy.alive||enemy.mixer)return;
+    if(phone||!model||enemy.isBoss||!enemy.alive||enemy.mixer)return;
     const copy=cloneSkeleton(model) as THREE.Group;
     copy.rotation.y=0;
     enemy.root.add(copy);
@@ -337,15 +345,37 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     poly(g,[.22,.23,.19],boss?red:amber,[.39,1.22,-.87]);
     return g;
   };
+  // Retain one set of combatants per room. Previously, every re-entry or
+  // retry created fresh meshes, cloned rigs and animation mixers; mobile GPU
+  // memory and frame time would grow with every attempt.
   const spawnGuards=(room:Room)=>{
-    for(const existing of guards){existing.root.parent?.remove(existing.root);}
-    guards.length=0;room.enemies=[];
+    guards.length=0;
     const boss=room.info.id==='vault';
     const count=boss?1:room.info.guards;
+    if(room.enemies.length===count){
+      room.enemies.forEach((enemy,i)=>{
+        enemy.root.visible=true;
+        enemy.root.position.set((i-(count-1)/2)*2.45,0,boss?-1.75:-.6-(i%2)*.6);
+        enemy.root.rotation.set(0,Math.PI,0);
+        enemy.root.scale.set(1,1,1);
+        enemy.hp=enemy.maxHp;
+        enemy.cooldown=3.2+i*.65;
+        enemy.dying=0;
+        enemy.alive=true;
+        enemy.awareness=0;
+        enemy.alerted=boss;
+        enemy.mixer?.stopAllAction();
+        enemy.action?.reset().play();
+        dressGuard(enemy);
+        guards.push(enemy);
+      });
+      events.onThreats(guards.length);
+      return;
+    }
+    room.enemies=[];
     for(let i=0;i<count;i++){
       const root=new THREE.Group();room.group.add(root);
       root.position.set((i-(count-1)/2)*2.45,0,boss?-1.75:-.6-(i%2)*.6);
-      // Models face into the room, while the player enters from the side corridor.
       root.rotation.y=Math.PI;
       const fall=enemyFallback(root,boss);
       const hitRing=new THREE.Mesh(geometry(new THREE.TorusGeometry(boss?.54:.31,.065,8,24)),boss?red:amber);
@@ -387,9 +417,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
 
   // Weapon effects (energy bolt, recoil flash, tracers) pooled to avoid allocations.
   const trails:Trail[]=[];
+  const spareTrails:THREE.Mesh[]=[];
   const boltGeo=geometry(new THREE.CylinderGeometry(.055,.07,1,8));
   const makeTrail=(from:THREE.Vector3,to:THREE.Vector3,color:THREE.Material,life=.22)=>{
-    const beam=new THREE.Mesh(boltGeo,color);
+    // Reuse tracer meshes instead of allocating each time anyone fires.
+    const beam=spareTrails.pop() ?? new THREE.Mesh(boltGeo,color);
+    beam.material=color;
     const middle=from.clone().add(to).multiplyScalar(.5);
     const delta=to.clone().sub(from);
     beam.position.copy(middle);
@@ -412,6 +445,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let weaponTier=0;
   let gateProgress=0;
   let safeIndex=0;
+  let rewardCollected=false;
   let last=performance.now(),frame=0,time=0;
   let paused=false,disposed=false;
   const emit=(next:SecretPhase,id?:SecretRoomId)=>{phase=next;events.onPhase(next,id);};
@@ -464,6 +498,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     activeRoom.safes.forEach(s=>{s.target=0;s.opened=0;});
     activeRoom.reward.visible=false;
     safeIndex=0;
+    rewardCollected=false;
     spawnGuards(activeRoom);
     emit('combat',activeRoom.info.id);
   };
@@ -481,7 +516,21 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     safeIndex++;
     return true;
   };
-  const setWeaponTier=(tier:number)=>{weaponTier=clamp(tier,0,4);muzzle.scale.setScalar(1+tier*.19);};
+  const collectReward=()=>{
+    if(phase!=='safes'||!activeRoom||safeIndex<4||rewardCollected)return false;
+    rewardCollected=true;
+    activeRoom.reward.visible=false;
+    return true;
+  };
+  const setWeaponTier=(tier:number)=>{
+    weaponTier=clamp(tier,0,4);
+    muzzle.scale.setScalar(1+weaponTier*.19);
+    upgradeRail.visible=weaponTier>=1;
+    upgradeCoil.visible=weaponTier>=2;
+    upgradeScope.visible=weaponTier>=3;
+    upgradeEmitter.visible=weaponTier>=4;
+    weaponLight.color.setHex(weaponTier>=3?0xf1ba6c:weaponTier>=2?0x9cf3b4:0xa6effa);
+  };
   const setMovement=(forward:number,strafe:number,run:boolean)=>{input.forward=clamp(forward,-1,1);input.strafe=clamp(strafe,-1,1);sprint=run;};
   const look=(dx:number,dy:number)=>{
     if(!['hall','combat','safes'].includes(phase))return;
@@ -711,7 +760,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     for(let i=trails.length-1;i>=0;i--){
       const obj=trails[i];obj.age+=dt;
       if(obj.age>=obj.lifespan){
-        obj.mesh.parent?.remove(obj.mesh);trails.splice(i,1);
+        obj.mesh.parent?.remove(obj.mesh);trails.splice(i,1);spareTrails.push(obj.mesh);
       }else obj.mesh.scale.x=obj.mesh.scale.z=.75*(1-obj.age/obj.lifespan)+.18;
     }
     const currentNearby=phase==='hall' ?
@@ -741,9 +790,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   events.onThreats(0);
   const setLanguage=(value:'ar'|'en')=>{language=value;};
   const restartRoom=()=>{if(!activeRoom)return;resetThreats();player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);};
-  const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4)return false;emit('victory','vault');return true;};
+  const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4||!rewardCollected)return false;emit('victory','vault');return true;};
   return {
-    start,travelTo,enterRoom,exitRoom,openSafe,fire,jump,look,setCrouch,setMovement,setWeaponTier,
+    start,travelTo,enterRoom,exitRoom,openSafe,collectReward,fire,jump,look,setCrouch,setMovement,setWeaponTier,
     restartRoom,finish,setAllowed,setLanguage,
     getRoom(){return activeRoom?.info.id??null;},
     setPaused(value:boolean){paused=value;last=performance.now();},
