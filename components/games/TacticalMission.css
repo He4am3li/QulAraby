@@ -1,0 +1,234 @@
+/* QUL OPS — standalone third-person educational action adventure */
+.qul-ops {
+  position: fixed; inset: 0; height: 100dvh; width: 100%; overflow: hidden;
+  background: #101b24; color: #eef5f6;
+  font-family: "Tajawal", Inter, sans-serif; isolation: isolate;
+  user-select: none; -webkit-user-select: none;
+}
+.qul-ops *, .qul-ops *::before, .qul-ops *::after { box-sizing: border-box; }
+.qul-ops button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.qul-ops button:focus-visible { outline: 2px solid #7fdbf2; outline-offset: 3px; }
+.qul-ops-world { position: absolute; inset: 0; z-index: 0; }
+.qul-ops-world canvas { display: block; height: 100%; width: 100%; touch-action: none; }
+.qul-ops-vignette {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse 80% 65% at 50% 44%, transparent 34%, rgba(1,8,13,.65) 100%),
+    linear-gradient(180deg,rgba(5,13,18,.44), transparent 22%, transparent 65%,rgba(3,11,17,.55));
+}
+.qul-ops-header {
+  position: absolute; z-index: 15; top: 0; inset-inline: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: max(14px, env(safe-area-inset-top)) 22px 12px;
+  background: linear-gradient(180deg,#08141bf0,#08141b40 90%,transparent);
+  pointer-events: none;
+}
+.qul-ops-header > * { pointer-events: auto; }
+.qul-ops-brand { display: flex; align-items: center; gap: 10px; direction: ltr; color: #f1f4f0; }
+.qul-ops-brand > svg { color: #d8a762; }
+.qul-ops-brand span { display: flex; flex-direction: column; gap: 2px; }
+.qul-ops-brand strong { font: 900 21px/1 Inter,sans-serif; letter-spacing: .07em; }
+.qul-ops-brand strong em { font-style: normal; color: #e4af6c; }
+.qul-ops-brand small { font: 9px Inter,sans-serif; letter-spacing: .11em; color: #bdcbd1; }
+.qul-ops-header-actions { display: flex; align-items: center; gap: 14px; }
+.qul-ops-header-actions > span { font: 800 12px Inter,sans-serif; color: #e8ba74; letter-spacing: .08em; }
+.qul-ops-header-actions button {
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 13px;
+  border: 1px solid #a8b9c34a; border-radius: 5px;
+  background: rgba(10,25,34,.78); color: #f3f6f5; font: 700 12px "Tajawal",sans-serif;
+}
+.qul-ops-intro {
+  position: absolute; z-index: 5; top: 50%; left: 50%; transform: translate(-50%,-35%);
+  text-align: center; max-width: 610px; width: calc(100% - 28px);
+  padding: clamp(22px,4vw,48px) 22px;
+  background: linear-gradient(140deg,rgba(6,22,32,.86),rgba(10,28,37,.61));
+  border: 1px solid #7c9aa65e; border-inline-start: 4px solid #d7a663;
+  box-shadow: 0 14px 65px rgba(1,8,14,.5);
+}
+.qul-ops-intro small { font: 700 11px Inter,sans-serif; letter-spacing: .25em; color: #ebb46e; }
+.qul-ops-intro h1 {
+  font: 900 clamp(36px,6vw,66px)/1.2 "Tajawal",sans-serif;
+  margin: 15px 0 8px; color: #fff;
+}
+.qul-ops-intro p { font: 500 clamp(13px,1.5vw,17px)/1.8 "Tajawal",sans-serif; color: #ccdae2; margin: 8px 0 24px; }
+.qul-ops-action {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 46px; padding: 11px 22px; border: 1px solid #e5b16e;
+  border-radius: 4px; background: #dfa860; color: #10212b;
+  font: 900 15px "Tajawal",sans-serif; box-shadow: 0 8px 27px #0005;
+}
+.qul-ops-action:hover { background: #eec48e; }
+.qul-ops-loader {
+  position: absolute; z-index: 40; inset: 0; display: flex; flex-direction: column;
+  gap: 16px; justify-content: center; align-items: center;
+  background: #111e28; text-align: center; padding: 25px;
+}
+.qul-ops-loader svg { color: #e1b178; }
+.qul-ops-loader strong { font-size: 16px; }
+.qul-ops-loader button { display: flex; align-items: center; gap: 6px; color: #fff;
+  background: #243743; padding: 11px 17px; border: 1px solid #617984; border-radius: 5px; }
+.qul-ops-status {
+  position: absolute; z-index: 8; top: 17%; left: 50%; transform: translateX(-50%);
+  min-width: min(350px,80%); text-align: center; color: #f4d4a5;
+  padding: 12px; background: #091923bd; border: 1px solid #d7a66366;
+  font: 800 13px "Tajawal",sans-serif;
+}
+.qul-ops-objective {
+  position: absolute; z-index: 6; top: 88px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 9px; align-items: center; justify-content: center;
+  min-width: 220px; max-width: calc(100% - 35px); padding: 10px 16px;
+  background: #06131ed1; border: 1px solid #63828e88; border-radius: 3px;
+  color: #e2e7e6; font: 700 13px "Tajawal",sans-serif;
+  text-shadow: 0 1px #000a;
+}
+.qul-ops-led { width: 9px; height: 9px; flex-shrink: 0; background: #66dbbd; border-radius: 50%; box-shadow: 0 0 9px #5effd1; }
+.qul-ops-enter {
+  position: absolute; z-index: 12; top: 152px; left: 50%; transform: translateX(-50%);
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  background: #dfa860; border: 1px solid #f5ca8c; color: #1d2b34;
+  min-height: 42px; padding: 8px 18px; border-radius: 3px;
+  font: 900 14px "Tajawal",sans-serif;
+  box-shadow: 0 6px 28px rgba(0,0,0,.45);
+}
+.qul-ops-map {
+  position: absolute; z-index: 7; right: 24px; top: 135px; width: 265px;
+  background: rgba(8,21,30,.88); border: 1px solid #698a95a1;
+  box-shadow: 0 10px 32px #050b10a8; padding: 10px;
+  backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px);
+  direction: ltr;
+}
+.qul-ops-map-title { display: flex; align-items: center; justify-content: space-between;
+  color: #e0b677; font: 800 11px Inter,sans-serif; letter-spacing: .08em;
+  padding: 3px 3px 9px; border-bottom: 1px solid #5b738154;
+}
+.qul-ops-map-list { display: grid; grid-template-columns: 1fr; gap: 5px; margin-top: 9px; }
+.qul-ops-map-list button {
+  display: flex; align-items: center; gap: 9px; min-height: 38px;
+  padding: 5px 9px; text-align: start; color: #edf4f6;
+  border: 1px solid #6b849440; background: #263a4680; font: 600 11px "Tajawal",sans-serif;
+}
+.qul-ops-map-list button span { font: 800 10px Inter,sans-serif; color: #ddb47c; }
+.qul-ops-map-list button strong { flex: 1; }
+.qul-ops-map-list button.completed { border-color: #73d7a7a3; background: #2e584cad; }
+.qul-ops-map-list button:hover { border-color: #e1bb81; background: #53616c; }
+.qul-ops-mission {
+  position: absolute; z-index: 9; top: 50%; right: clamp(20px,5.5vw,85px);
+  transform: translateY(-48%); width: min(440px,calc(100% - 35px));
+  max-height: min(76dvh,670px); overflow-y: auto; padding: 20px 22px;
+  background: linear-gradient(140deg,rgba(8,24,34,.96),rgba(24,43,51,.91));
+  border: 1px solid #78919e; border-top: 3px solid #e3ac6b;
+  box-shadow: 0 23px 75px #01090fd9;
+}
+.qul-ops-mission-top { display: flex; align-items: center; justify-content: space-between;
+  color: #e4b773; font: 800 11px Inter,sans-serif; letter-spacing: .12em; }
+.qul-ops-mission-top button { background: #edf3f31b; color: #e5ebef;
+  border: 1px solid #aabec74d; padding: 7px; display: flex; align-items: center; justify-content: center; }
+.qul-ops-mission h2 { font: 900 clamp(23px,2.6vw,33px)/1.25 "Tajawal",sans-serif; margin: 10px 0 14px; }
+.qul-ops-stage { display: flex; align-items: center; gap: 11px; color: #e9b779;
+  font: 800 11px Inter,sans-serif; letter-spacing: .04em; margin-bottom: 12px; }
+.qul-ops-stage span { display: flex; gap: 5px; flex: 1; }
+.qul-ops-stage i { display: block; flex: 1; height: 4px; background: #51636e; }
+.qul-ops-stage i.on { background: #e5b779; }
+.qul-ops-mission > p { font: 700 clamp(14px,1.65vw,19px)/1.65 "Tajawal",sans-serif; margin: 6px 0 17px; color: #e9f0f4; }
+.qul-ops-answers { display: grid; gap: 8px; }
+.qul-ops-answers button { width: 100%; min-height: 42px;
+  display: flex; align-items: center; gap: 10px; text-align: start;
+  padding: 9px 11px; border: 1px solid #6b879680; color: #f0f4f3;
+  background: #294350a6; font: 600 14px/1.5 "Tajawal",sans-serif;
+}
+.qul-ops-answers button span { flex-shrink: 0; border: 1px solid #c7a577;
+  width: 23px; height: 23px; display: grid; place-items: center;
+  color: #f1cf96; font: 900 11px Inter,sans-serif; }
+.qul-ops-answers button:hover { background: #456270; border-color: #d7ad76; }
+.qul-ops-answers button.correct { border-color: #6de5ac; background: #20543bbd; }
+.qul-ops-answers button.wrong { border-color: #e7a091; }
+.qul-ops-feedback { margin-top: 9px; padding: 7px 10px; font-weight: 800; font-size: 13px; }
+.qul-ops-feedback.correct { background: #1c614787; color: #9ef3c0; }
+.qul-ops-feedback.wrong { background: #6d2e2e91; color: #ffd0bf; }
+.qul-ops-audio { display: inline-flex; align-items: center; gap: 7px; color: #d8f7fd;
+  border: 1px solid #4ea8bf; background: #21536779; padding: 8px 12px; margin-bottom: 9px;
+  font: 800 12px "Tajawal",sans-serif; }
+.qul-ops-reward { display: flex; flex-direction: column; gap: 12px; align-items: flex-start;
+  color: #e9f6eb; }
+.qul-ops-reward svg { color: #92eac5; }
+.qul-ops-reward h3 { margin: 0; font: 900 27px "Tajawal",sans-serif; }
+.qul-ops-reward p { font-size: 13px; margin: 0; color: #c7d8df; }
+.qul-ops-reward strong { font: 800 18px "Tajawal",sans-serif; color: #f4be79; }
+.qul-ops-stats {
+  position: absolute; z-index: 7; left: 24px; top: 86px; display: flex;
+  gap: 12px; direction: ltr;
+}
+.qul-ops-stats span { padding: 8px 11px; min-width: 75px;
+  display: flex; gap: 7px; align-items: center; justify-content: center;
+  font: 800 11px Inter,sans-serif; color: #f5f2e7;
+  background: #0a1f2bce; border: 1px solid #8499a35e; }
+.qul-ops-stats svg { color: #e1b471; }
+.qul-ops-controls { position: absolute; bottom: 23px; left: 24px; right: 25px;
+  display: flex; justify-content: space-between; align-items: flex-end;
+  z-index: 11; pointer-events: none; direction: ltr; }
+.qul-ops-controls button { pointer-events: auto; }
+.qul-ops-dpad { display: none; }
+.qul-ops-run { display: none; }
+.qul-ops-desktop-instructions {
+  font: 800 11px Inter,"Tajawal",sans-serif; letter-spacing: .03em;
+  color: #efefdf; background: #091a26a8; border: 1px solid #70828c60;
+  padding: 8px 15px; text-shadow: 0 1px #000;
+}
+.qul-ops-crosshair { position: absolute; top: 48%; left: 50%;
+  transform: translate(-50%,-50%); font: 24px/1 Inter,sans-serif;
+  color: #b4daddaa; pointer-events: none; text-shadow: 0 0 6px #58d1cd; z-index: 2; }
+.qul-ops-pause {
+  position: absolute; z-index: 11; bottom: 22px; right: 20px;
+  padding: 8px 13px; border: 1px solid #6b8490;
+  background: #0b222fc9; color: #dee9eb; border-radius: 3px;
+  font: 700 11px "Tajawal",sans-serif;
+}
+@media (max-width: 900px) {
+  .qul-ops-header { padding: max(8px, env(safe-area-inset-top)) 10px 8px; }
+  .qul-ops-header-actions { gap: 9px; }
+  .qul-ops-header-actions button { font-size: 11px; padding: 7px 9px; }
+  .qul-ops-brand strong { font-size: 18px; }
+  .qul-ops-brand small { font-size: 8px; }
+  .qul-ops-stats { left: 9px; top: 65px; gap: 4px; }
+  .qul-ops-stats span { padding: 6px 7px; min-width: 53px; font-size: 9px; gap: 4px; }
+  .qul-ops-stats svg { width: 13px; }
+  .qul-ops-objective { top: 105px; font-size: 11px; padding: 7px 10px; min-width: 0; }
+  .qul-ops-enter { top: 148px; min-height: 37px; font-size: 12px; padding: 8px 12px; }
+  .qul-ops-map { left: 9px; right: 9px; top: auto; bottom: 126px; width: auto; padding: 7px; }
+  .qul-ops-map-title { padding-bottom: 5px; font-size: 9px; }
+  .qul-ops-map-list { grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 5px; }
+  .qul-ops-map-list button { min-height: 32px; padding: 4px 6px; gap: 5px; font-size: 10px; }
+  .qul-ops-controls { bottom: max(10px, env(safe-area-inset-bottom)); left: 12px; right: 12px; }
+  .qul-ops-dpad { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+  .qul-ops-dpad > div { display: flex; gap: 5px; justify-content: center; }
+  .qul-ops-direction { display: flex; align-items: center; justify-content: center;
+    width: 43px; height: 43px; border: 1px solid #91b2c1b1;
+    color: #edf7f6; background: #0d293cbd; border-radius: 8px;
+    touch-action: none !important; }
+  .qul-ops-direction:active,.qul-ops-run:active { background: #9c6a3b; }
+  .qul-ops-run { display: flex; align-items: center; justify-content: center;
+    width: 52px; height: 52px; margin-bottom: 10px; border: 1px solid #d8a66c;
+    border-radius: 50%; background: #a47135c7; color: #fff3e4; touch-action: none !important; }
+  .qul-ops-desktop-instructions { display: none; }
+  .qul-ops-pause { bottom: 15px; right: 80px; font-size: 9px; padding: 7px 8px; }
+  .qul-ops-mission { top: auto; bottom: max(66px,env(safe-area-inset-bottom) + 58px);
+    transform: none; left: 9px; right: 9px; width: auto; max-height: calc(100dvh - 180px); overflow: auto;
+    padding: 12px 13px; }
+  .qul-ops-mission h2 { font-size: 22px; margin: 6px 0 9px; }
+  .qul-ops-mission > p { font-size: 13px; line-height: 1.5; margin: 4px 0 10px; }
+  .qul-ops-answers { gap: 5px; }
+  .qul-ops-answers button { padding: 6px 8px; min-height: 35px; font-size: 12px; }
+  .qul-ops-stage { font-size: 10px; margin-bottom: 7px; }
+  .qul-ops-intro { padding: 20px 16px; }
+  .qul-ops-intro h1 { font-size: 34px; }
+  .qul-ops-intro p { font-size: 13px; margin-bottom: 14px; }
+  .qul-ops-status { top: 20%; font-size: 12px; }
+  .qul-ops-crosshair { top: 42%; }
+}
+@media (max-width: 430px) and (max-height: 740px) {
+  .qul-ops-mission { bottom: 54px; max-height: calc(100dvh - 136px); }
+  .qul-ops-pause { bottom: 4px; }
+  .qul-ops-map { bottom: 115px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qul-ops *, .qul-ops *::before, .qul-ops *::after { transition: none!important; animation: none!important; }
+}
