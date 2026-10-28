@@ -22,6 +22,8 @@ type Callbacks = {
   onPhase: (phase: GamePhase, id?: MissionId) => void;
   onNearby: (id: MissionId | null) => void;
   onError: (reason: string) => void;
+  onTargetHit: () => void;
+  canEnter: (id: MissionId) => boolean;
 };
 
 type Door = {
@@ -36,6 +38,7 @@ type Door = {
   target: number;
   glow: THREE.Mesh;
   sign: THREE.Mesh;
+  targetMesh: THREE.Mesh;
 };
 type Transition = {
   name: 'start' | 'enter' | 'exit';
@@ -86,25 +89,25 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 0.95 : 1.5));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.18;
+  renderer.toneMappingExposure = mobile ? 1.72 : 1.52;
   host.appendChild(renderer.domElement);
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#101b24');
-  scene.fog = new THREE.FogExp2('#101b24', 0.019);
+  scene.background = new THREE.Color('#384852');
+  scene.fog = new THREE.FogExp2('#384852', 0.012);
   const camera = new THREE.PerspectiveCamera(mobile ? 69 : 63, 1, 0.08, 100);
   camera.position.set(1.1, 2.65, 24.4);
   const cameraLook = new THREE.Vector3(0, 1.32, 18);
   const temp = new THREE.Vector3();
   const desiredCamera = new THREE.Vector3();
   const desiredLook = new THREE.Vector3();
-  scene.add(new THREE.HemisphereLight('#b7d7e6', '#2c312e', 2.2));
-  const fill = new THREE.DirectionalLight('#bed0dc', 2.2);
+  scene.add(new THREE.HemisphereLight('#f2f7ff', '#8499a4', 3.7));
+  const fill = new THREE.DirectionalLight('#ecf5ff', 3.8);
   fill.position.set(2, 9, 10);
   scene.add(fill);
-  const rim = new THREE.PointLight('#5cbdd4', 19, 18, 2);
+  const rim = new THREE.PointLight('#b5e7f2', 28, 26, 2);
   rim.position.set(-2.4, 2.8, -20);
   scene.add(rim);
-  const alarm = new THREE.PointLight('#d16a4f', 14, 15, 2);
+  const alarm = new THREE.PointLight('#f3bd94', 19, 23, 2);
   alarm.position.set(2.6, 2.7, -46);
   scene.add(alarm);
 
@@ -113,10 +116,10 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
   const textures: THREE.Texture[] = [];
   const geo = <T extends THREE.BufferGeometry>(value: T) => (geometries.push(value), value);
   const mat = <T extends THREE.Material>(value: T) => (materials.push(value), value);
-  const metal = mat(new THREE.MeshStandardMaterial({ color: '#2f3b44', metalness: .58, roughness: .48 }));
-  const steel = mat(new THREE.MeshStandardMaterial({ color: '#586774', metalness: .69, roughness: .39 }));
-  const concrete = mat(new THREE.MeshStandardMaterial({ color: '#37434c', metalness: .12, roughness: .84 }));
-  const black = mat(new THREE.MeshStandardMaterial({ color: '#10191d', metalness: .38, roughness: .55 }));
+  const metal = mat(new THREE.MeshStandardMaterial({ color: '#586b76', metalness: .37, roughness: .55 }));
+  const steel = mat(new THREE.MeshStandardMaterial({ color: '#899ca6', metalness: .52, roughness: .42 }));
+  const concrete = mat(new THREE.MeshStandardMaterial({ color: '#697a83', metalness: .1, roughness: .8 }));
+  const black = mat(new THREE.MeshStandardMaterial({ color: '#283a44', metalness: .3, roughness: .55 }));
   const bright = mat(new THREE.MeshStandardMaterial({ color: '#c7d5db', metalness: .22, roughness: .46 }));
   const orange = mat(new THREE.MeshBasicMaterial({ color: '#eab46e' }));
   const cyan = mat(new THREE.MeshBasicMaterial({ color: '#7bdbf2' }));
@@ -124,7 +127,7 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
   const violet = mat(new THREE.MeshBasicMaterial({ color: '#b893ee' }));
   const skin = mat(new THREE.MeshStandardMaterial({ color: '#b7957a', roughness: .94 }));
   const cloth = mat(new THREE.MeshStandardMaterial({ color: '#556251', roughness: .88 }));
-  const camo = mat(new THREE.MeshStandardMaterial({ color: '#303e37', roughness: .91 }));
+  const camo = mat(new THREE.MeshStandardMaterial({ color: '#596558', roughness: .91 }));
   const emitter = mat(new THREE.MeshBasicMaterial({ color: '#61c9e5' }));
 
   const cube = (parent: THREE.Object3D, sx: number, sy: number, sz: number,
@@ -251,12 +254,14 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
     // A glowing mission target reacts to completing the learning objective.
     const target = new THREE.Mesh(geo(new THREE.TorusGeometry(.42,.08,7,24)),[cyan,violet,orange,red][i]);
     target.position.set(side*.72,1.64,-1.95);
+    target.rotation.y=Math.PI/2; // face the player entering from the corridor
     interior.add(target);
-    const roomLight = new THREE.PointLight([0xd8a76e,0x70c5e2,0xc1a7eb,0xee896f][i], mobile ? 5 : 9, 9, 2);
+    target.visible = false; // appears once the educational answer unlocks it
+    const roomLight = new THREE.PointLight([0xf5d39b,0xabe9f5,0xe0c5fa,0xffc4ac][i], mobile ? 16 : 22, 13, 2);
     roomLight.position.set(side*.7,2.75,0);
     interior.add(roomLight);
     interior.visible = false;
-    doors.push({id:spec.id,side,z:spec.z,pivot,root,hit,interior,opened:0,target:0,glow,sign});
+    doors.push({id:spec.id,side,z:spec.z,pivot,root,hit,interior,opened:0,target:0,glow,sign,targetMesh:target});
   }
 
   // Massive entrance gate opens before the soldier enters the facility.
@@ -325,7 +330,9 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
         return;
       }
       gltf.scene.scale.setScalar(.96);
-      gltf.scene.rotation.y=Math.PI;
+      // Soldier.glb faces down the playable -Z direction by default.
+      // The previous PI flip made the run cycle appear backwards.
+      gltf.scene.rotation.y=0;
       operator.add(gltf.scene);
       loadedSoldier = gltf.scene;
       mannequin.visible=false;
@@ -352,6 +359,17 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
   let holdingKeys=new Set<string>();
   let upgrade=1;
   let pulseTime=0;
+  let targetArmed=false;
+  let shotProgress=0;
+  let shotActive=false;
+  let shotWillHit=false;
+  const shotFrom=new THREE.Vector3();
+  const shotTo=new THREE.Vector3();
+  const projectile = new THREE.Mesh(geo(new THREE.SphereGeometry(.12,10,8)),
+    mat(new THREE.MeshBasicMaterial({color:'#b4f7ff'})));
+  projectile.visible=false;
+  scene.add(projectile);
+  let flashTime=0;
   let gateOpen=0;
   let gateTarget=0;
   let paused=false;
@@ -383,7 +401,10 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
   const focusRoom=(door:Door)=>{
     if(phase!=='corridor')return;
     selected=null;
+    if(!callbacks.canEnter(door.id))return;
     active=door;
+    targetArmed=false;
+    door.targetMesh.visible=false;
     door.target=door.side*1.55;
     const x=door.side*8;
     makeTransition('enter',
@@ -395,6 +416,7 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
   const travelTo=(id:MissionId)=>{
     if(phase==='entrance'){start();selected=doors.find(d=>d.id===id)??null;return;}
     if(phase==='room'||phase==='entering'||phase==='leaving')return;
+    if(!callbacks.canEnter(id))return;
     const door=doors.find(d=>d.id===id);
     if(!door)return;
     selected=door;
@@ -407,12 +429,16 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
       if(dist>4.8)return closest;
       return !closest||dist<Math.abs(closest.z-operator.position.z)?d:closest;
     },null);
-    if(door)focusRoom(door);
+    if(door && callbacks.canEnter(door.id))focusRoom(door);
   };
   const leave=()=>{
     if(phase!=='room'||!active)return;
     const door=active;
     targetZ=door.z+2.15;
+    targetArmed=false;
+    door.targetMesh.visible=false;
+    shotActive=false;
+    projectile.visible=false;
     makeTransition('exit',
       new THREE.Vector3(0,0,targetZ),
       new THREE.Vector3(1.05,2.6,targetZ+4.2),
@@ -425,10 +451,34 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
     barrel.scale.z=1+(upgrade-1)*.25;
     (barrel.material as THREE.MeshBasicMaterial).color.setHex(upgrade>2?0xf7be65:0x79ddfb);
   };
-  const pulse=()=>{
-    pulseTime=.28;
-    gunTip.intensity=9+upgrade*4;
+  const armTarget=(armed:boolean)=>{
+    targetArmed=armed && phase==='room' && Boolean(active);
+    if(active) {
+      active.targetMesh.visible=targetArmed;
+      active.targetMesh.scale.setScalar(1);
+    }
   };
+  // Real in-world plasma bolt; a correct answer unlocks a holographic target.
+  // Shots before solving the question still animate, but cannot clear the task.
+  const fire=()=>{
+    if(phase!=='room'||!active||shotActive)return false;
+    operator.updateMatrixWorld(true);
+    gunTip.getWorldPosition(shotFrom);
+    shotWillHit=targetArmed;
+    if(shotWillHit){
+      active.targetMesh.getWorldPosition(shotTo);
+    }else{
+      shotTo.copy(shotFrom).add(new THREE.Vector3(active.side * 5.2, 0, -1.7));
+    }
+    shotActive=true;
+    shotProgress=0;
+    projectile.position.copy(shotFrom);
+    projectile.visible=true;
+    pulseTime=.18;
+    gunTip.intensity=8+upgrade*3;
+    return true;
+  };
+  const pulse=fire;
   const setLanguage=(next:'ar'|'en')=>{
     lang=next;
     for(const ref of signs) {
@@ -445,7 +495,8 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
     if((e.target as HTMLElement)?.closest('input,textarea,select,button,[role="dialog"]'))return;
     holdingKeys.add(e.key.toLowerCase());
     if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(e.key.toLowerCase()))e.preventDefault();
-    if(e.key.toLowerCase()==='e'){if(phase==='room')pulse();else enterNearest();}
+    if(e.key.toLowerCase()==='e'&&phase==='corridor')enterNearest();
+    if(e.code==='Space'&&phase==='room'&&!e.repeat)fire();
     if(e.key==='Escape'&&phase==='room')leave();
     if(e.key==='Enter'&&phase==='entrance')start();
   };
@@ -457,6 +508,7 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
   const onPointerUp=(e:PointerEvent)=>{
     if(Math.abs(e.clientX-pointerDown.x)+Math.abs(e.clientY-pointerDown.y)>18)return;
     if(phase==='entrance'){start();return;}
+    if(phase==='room'){fire();return;}
     if(phase!=='corridor')return;
     const rect=renderer.domElement.getBoundingClientRect();
     pointer.set((e.clientX-rect.left)/rect.width*2-1,-((e.clientY-rect.top)/rect.height*2-1));
@@ -583,7 +635,7 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
       // Retain a stable over-the-shoulder view of the console.
       desiredLook.set(active?.side?active.side*9.4:0,1.42,(active?.z??0)-1.55);
       cameraLook.lerp(desiredLook,clamp(dt*3,0,1));
-      operator.rotation.y=THREE.MathUtils.damp(operator.rotation.y,active?.side===1?Math.PI/2:-Math.PI/2,4,dt);
+      operator.rotation.y=THREE.MathUtils.damp(operator.rotation.y,active?.side===1?-Math.PI/2:Math.PI/2,4,dt);
     }
     if(modelMixer){
       modelMixer.update(dt);
@@ -597,6 +649,24 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
       // Fallback operator breathes/steps when a model cannot be downloaded.
       torso.rotation.x=walking?Math.sin(clock*11)*.06:Math.sin(clock*1.6)*.018;
     }
+    if(shotActive){
+      shotProgress = Math.min(1,shotProgress+dt*(upgrade*.55+2.8));
+      projectile.position.lerpVectors(shotFrom,shotTo,shotProgress);
+      const size=1+(1-shotProgress)*.7;
+      projectile.scale.setScalar(size);
+      if(shotProgress>=1){
+        shotActive=false;
+        projectile.visible=false;
+        if(shotWillHit && targetArmed && active){
+          active.targetMesh.visible=false;
+          targetArmed=false;
+          flashTime=.32;
+          callbacks.onTargetHit();
+        }
+      }
+    }
+    if(flashTime>0){flashTime=Math.max(0,flashTime-dt);rim.intensity=28+flashTime*85;}
+    else rim.intensity=28;
     if(pulseTime>0){
       pulseTime=Math.max(0,pulseTime-dt);
       gunTip.intensity=pulseTime*48;
@@ -608,7 +678,7 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
   callbacks.onPhase('entrance');
 
   return {
-    start,travelTo,enterNearest,leave,setInput,setUpgrade,pulse,setLanguage,
+    start,travelTo,enterNearest,leave,setInput,setUpgrade,pulse,fire,armTarget,setLanguage,
     setPaused(value:boolean){paused=value;},
     dispose(){
       disposed=true;disposalStarted=true;

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowUp, ArrowDown, ArrowRight, Check, ChevronLeft,
-  Crosshair, DoorOpen, RotateCcw, ShieldCheck, Zap, Volume2, X } from 'lucide-react';
+  Crosshair, DoorOpen, RotateCcw, ShieldCheck, Zap, Target, LockKeyhole, X } from 'lucide-react';
 import { useAuth } from '../AuthProvider';
 import { MISSIONS } from './TacticalMissionScene';
 import type { GamePhase, MissionId, createTacticalScene } from './TacticalMissionScene';
@@ -9,39 +9,60 @@ import './TacticalMission.css';
 type Language = 'ar' | 'en';
 type Question = { ar: string; en: string; choices: { ar: string; en: string }[]; correct: number };
 const TASKS: Record<MissionId, Question[]> = {
+  // Learning difficulty rises by room: A1 vocabulary -> A2 directions ->
+  // B1 evidence and syntax -> B2 reasoning and safe decisions.
   warehouse: [
-    { ar: 'حدّد الكلمة التي تعني KEY لفتح صندوق الإمدادات.', en: 'Select the Arabic word for KEY to unlock the supply crate.',
-      choices: [{ar:'النافذة',en:'Window'},{ar:'المفتاح',en:'Key'},{ar:'الكرسي',en:'Chair'}], correct: 1 },
-    { ar: 'أي كلمة تدل على شيء نرتديه في الرأس؟', en: 'Which word names something worn on the head?',
-      choices: [{ar:'القبعة',en:'Hat'},{ar:'الحقيبة',en:'Bag'},{ar:'الحذاء',en:'Shoe'}], correct: 0 },
-    { ar: 'أكمل الأمر: «_____ البابَ»', en: 'Complete the command: “_____ the door.”',
-      choices: [{ar:'يسافر',en:'Travels'},{ar:'أغلقْ',en:'Close!'},{ar:'جميل',en:'Beautiful'}], correct: 1 },
+    {ar:'باب المخزن مغلق. ما الأداة التي تحتاج إليها لفتحه؟',
+      en:'The depot door is locked. Which tool do you need to open it?',
+      choices:[{ar:'المصباح',en:'Flashlight'},{ar:'المفتاح',en:'Key'},{ar:'القلم',en:'Pen'}],correct:1},
+    {ar:'قال المسؤول: «ضع الخوذة على رأسك». ماذا يرتدي الجندي؟',
+      en:'The officer says “Put the helmet on your head.” What should the soldier wear?',
+      choices:[{ar:'الخوذة',en:'Helmet'},{ar:'الحذاء',en:'Shoe'},{ar:'القفاز',en:'Glove'}],correct:0},
+    {ar:'بعد دخول المخزن، ما الأمر المناسب لحماية المكان؟',
+      en:'After entering the depot, which instruction will secure it?',
+      choices:[{ar:'اجلس على الأرض',en:'Sit on the floor'},{ar:'أغلق الباب',en:'Close the door'},{ar:'اكتب اسمك',en:'Write your name'}],correct:1},
   ],
   signals: [
-    { ar: 'استمع إلى الأمر، ثم اختر معناه: «افتح الباب الأزرق».', en: 'Listen and identify: “Open the blue door.”',
-      choices: [{ar:'افتح الباب الأحمر',en:'Open the red door'},{ar:'أغلق الباب الأزرق',en:'Close the blue door'},{ar:'افتح الباب الأزرق',en:'Open the blue door'}], correct: 2 },
-    { ar: 'ما معنى «اتّجه إلى اليمين»؟', en: 'What does “اتّجه إلى اليمين” mean?',
-      choices: [{ar:'اتجه إلى اليمين',en:'Turn right'},{ar:'عد إلى الخلف',en:'Go back'},{ar:'توقّف',en:'Stop'}], correct: 0 },
-    { ar: 'اختر الجملة التي تعبّر عن طلب المساعدة.', en: 'Choose the sentence requesting help.',
-      choices: [{ar:'السماء صافية',en:'The sky is clear'},{ar:'هل يمكنك مساعدتي؟',en:'Can you help me?'},{ar:'أنا في المدرسة',en:'I am at school'}], correct: 1 },
+    {ar:'تقول رسالة التحكم: «افتح الباب الأزرق ثم اقترب من الجهاز». ماذا تفعل أولًا؟',
+      en:'Control says “Open the blue door, then approach the device.” What comes first?',
+      choices:[{ar:'أقترب من الجهاز',en:'Approach the device'},{ar:'أفتح الباب الأزرق',en:'Open the blue door'},{ar:'أغلق النافذة',en:'Close the window'}],correct:1},
+    {ar:'تظهر على الشاشة عبارة: «لا تلمس الزر الأحمر». ما التصرف الصحيح؟',
+      en:'The screen reads “Do not touch the red button.” What should you do?',
+      choices:[{ar:'أبتعد عن الزر الأحمر',en:'Avoid the red button'},{ar:'أضغط الزر الأحمر',en:'Press the red button'},{ar:'أفصل الشاشة',en:'Disconnect the screen'}],correct:0},
+    {ar:'إذا كانت الإشارة خضراء فتقدم، وإذا كانت حمراء فتوقف. الإشارة الآن حمراء. ماذا تفعل؟',
+      en:'Green means advance and red means stop. The signal is now red. What do you do?',
+      choices:[{ar:'أتقدم بسرعة',en:'Advance quickly'},{ar:'أعود إلى المخزن',en:'Return to the depot'},{ar:'أتوقف وأنتظر',en:'Stop and wait'}],correct:2},
   ],
   archive: [
-    { ar: 'اختر معنى «وجد المحقق الدليل».', en: 'Choose the meaning of “وجد المحقق الدليل”.',
-      choices: [{ar:'أضاع المحقق المفتاح',en:'The detective lost the key'},{ar:'غادر المحقق',en:'The detective left'},{ar:'وجد المحقق الدليل',en:'The detective found the clue'}], correct: 2 },
-    { ar: 'ما جمع كلمة «رسالة»؟', en: 'What is the plural of “رسالة” (letter)?',
-      choices: [{ar:'رسائل',en:'Letters'},{ar:'رُسُل',en:'Messengers'},{ar:'مدارس',en:'Schools'}], correct: 0 },
-    { ar: 'اختر الجملة الصحيحة التي تفتح الأرشيف.', en: 'Choose the grammatically correct sentence.',
-      choices: [{ar:'الطالبُ يقرأُ الكتابَ',en:'The student reads the book'},{ar:'الطالبُ تقرأُ الكتابَ',en:'Incorrect agreement'},{ar:'الطالبةُ يقرأُ الكتابَ',en:'Incorrect agreement'}], correct: 0 },
+    {ar:'وجد المحقق بطاقة قرب النافذة، لكنه لم يجد المفتاح. ما الشيء الذي عثر عليه؟',
+      en:'The detective found a card by the window, but not the key. What did he find?',
+      choices:[{ar:'المفتاح',en:'The key'},{ar:'النافذة',en:'The window'},{ar:'البطاقة',en:'The card'}],correct:2},
+    {ar:'اختر الفعل الصحيح: «الجنديان .... التقرير».',
+      en:'Choose the correct verb: “The two soldiers .... the report.”',
+      choices:[{ar:'يقرؤون',en:'They (plural) read'},{ar:'يقرآن',en:'The two read'},{ar:'تقرأ',en:'She reads'}],correct:1},
+    {ar:'الباب مغلق، والمفتاح في درج المكتب. ما الخطوة المنطقية قبل فتح الباب؟',
+      en:'The door is locked; the key is in the desk drawer. What should you do first?',
+      choices:[{ar:'أفتح الدرج وآخذ المفتاح',en:'Get the key from the drawer'},{ar:'أحطم النافذة',en:'Break the window'},{ar:'أنتظر دون محاولة',en:'Wait and do nothing'}],correct:0},
   ],
   command: [
-    { ar: 'أي جملة تعبّر عن السبب والنتيجة؟', en: 'Which sentence expresses cause and effect?',
-      choices: [{ar:'المدينة جميلة',en:'The city is beautiful'},{ar:'نجح لأنه درس جيدًا',en:'He succeeded because he studied'},{ar:'كان الجو باردًا',en:'The weather was cold'}], correct: 1 },
-    { ar: 'إذا انطفأت الأضواء، فما أول تصرف آمن؟', en: 'If the lights go out, what is a safe first response?',
-      choices: [{ar:'أركض بلا انتباه',en:'Run without looking'},{ar:'أكسر الباب',en:'Break the door'},{ar:'أبحث عن ضوء الطوارئ',en:'Find emergency lighting'}], correct: 2 },
-    { ar: 'أي عبارة تدل على التعاون؟', en: 'Which expression shows cooperation?',
-      choices: [{ar:'سنتعاون لنحل المشكلة',en:'We will work together to solve it'},{ar:'لن أساعد أحدًا',en:'I will not help anyone'},{ar:'سأترك الفريق',en:'I will leave the team'}], correct: 0 },
+    {ar:'توقفت الكهرباء، فأطفأ القائد الأجهزة غير الضرورية. لماذا اتخذ هذا القرار؟',
+      en:'Power failed, so the commander shut down nonessential devices. Why?',
+      choices:[{ar:'ليزيد عدد الأجهزة',en:'To use more devices'},{ar:'ليحافظ على طاقة المولد',en:'To save generator power'},{ar:'ليغلق جميع الأبواب',en:'To lock every door'}],correct:1},
+    {ar:'سمع الحارس صوتًا خلف الباب، ففحص الكاميرا قبل فتحه. ما السلوك الذي يدل عليه هذا التصرف؟',
+      en:'A guard checks the camera before opening a noisy door. What does this show?',
+      choices:[{ar:'التسرع',en:'Rushing'},{ar:'الإهمال',en:'Negligence'},{ar:'الحذر والتحقق',en:'Caution and verification'}],correct:2},
+    {ar:'وصلت رسالة بلغة لا تفهمها، لكن زميلك يعرفها. ما القرار الأنسب لإنقاذ الفريق؟',
+      en:'A message arrives in a language you do not know, but your teammate does. What is best?',
+      choices:[{ar:'أطلب مساعدته وأتعاون معه',en:'Ask for help and work together'},{ar:'أتجاهل الرسالة',en:'Ignore the message'},{ar:'أخمن معناها وحدي',en:'Guess alone'}],correct:0},
   ],
 };
+const LEVELS: Record<MissionId,{ar:string;en:string;goalAr:string;goalEn:string}> = {
+  warehouse:{ar:'01 · تأسيس / A1',en:'01 · FOUNDATION / A1',goalAr:'المفردات وفهم الأوامر المباشرة',goalEn:'Vocabulary and simple commands'},
+  signals:{ar:'02 · تطبيق / A2',en:'02 · APPLICATION / A2',goalAr:'تتبّع التعليمات وترتيب الخطوات',goalEn:'Following multi-step instructions'},
+  archive:{ar:'03 · تحليل / B1',en:'03 · ANALYSIS / B1',goalAr:'فهم الأدلة والتراكيب اللغوية',goalEn:'Evidence, grammar and inference'},
+  command:{ar:'04 · استنتاج / B2',en:'04 · REASONING / B2',goalAr:'التفسير واتخاذ القرار والتعاون',goalEn:'Inference, decisions and collaboration'}
+};
+
 const REWARDS: Record<MissionId, {ar:string;en:string}> = {
   warehouse: {ar:'موجّه الطاقة MK-II',en:'Energy Focus MK-II'},
   signals: {ar:'ماسح الإشارات MK-III',en:'Signal Scanner MK-III'},
@@ -69,6 +90,9 @@ export const ArcadeCorridor: React.FC<Props> = ({lang,onBack}) => {
   const [attempt,setAttempt]=useState(0);
   const [round,setRound]=useState(0);
   const [feedback,setFeedback]=useState<'correct'|'wrong'|null>(null);
+  const [armed,setArmed]=useState(false);
+  const [shield,setShield]=useState(3);
+  const [failed,setFailed]=useState(false);
   const [reward,setReward]=useState(false);
   const [score,setScore]=useState(0);
   const [input,setInput]=useState<Input>({x:0,z:0,sprint:false});
@@ -76,6 +100,11 @@ export const ArcadeCorridor: React.FC<Props> = ({lang,onBack}) => {
   const host=useRef<HTMLDivElement>(null);
   const engine=useRef<ReturnType<typeof createTacticalScene>|null>(null);
   const timer=useRef<ReturnType<typeof setTimeout>|null>(null);
+  const completedRef=useRef(completed);
+  completedRef.current=completed;
+  const progressRef=useRef<{room:MissionId|null;round:number;armed:boolean}>({room:null,round:0,armed:false});
+  const unlocked=(id:MissionId)=>completedRef.current.includes(id)||MISSIONS.find(m=>!completedRef.current.includes(m.id))?.id===id;
+  const nextMission=MISSIONS.find(m=>!completed.includes(m.id))?.id;
   useEffect(()=>setCompleted(savedMissions(key)),[key]);
 
   useEffect(()=>{
@@ -92,11 +121,15 @@ export const ArcadeCorridor: React.FC<Props> = ({lang,onBack}) => {
             if(cancelled)return;
             setPhase(next);
             if(next==='room'){
+              progressRef.current={room:id??null,round:0,armed:false};
               setRoom(id??null);setRound(0);setReward(false);setFeedback(null);
+              setArmed(false);setFailed(false);setShield(3);
             }
-            if(next==='corridor')setRoom(null);
+            if(next==='corridor'){setRoom(null);progressRef.current.armed=false;setArmed(false);}
           },
           onNearby(id){if(!cancelled)setNearby(id);},
+          onTargetHit(){if(!cancelled)handleTargetHit();},
+          canEnter(id){return completedRef.current.includes(id)||MISSIONS.find(m=>!completedRef.current.includes(m.id))?.id===id;},
           onError(message){if(!cancelled)setError(message);}
         });
         engine.current=scene;
@@ -119,35 +152,52 @@ export const ArcadeCorridor: React.FC<Props> = ({lang,onBack}) => {
   const current=room?TASKS[room][round]:null;
   const info=room?MISSIONS.find(m=>m.id===room):null;
   const near=nearby?MISSIONS.find(m=>m.id===nearby):null;
+  const handleTargetHit=()=>{
+    const progress=progressRef.current;
+    if(!progress.armed||!progress.room)return;
+    const missionId=progress.room;
+    progress.armed=false;
+    setArmed(false);
+    setFeedback(null);
+    setScore(previous=>previous+100);
+    if(progress.round===TASKS[missionId].length-1){
+      setReward(true);
+      const next=completedRef.current.includes(missionId)
+        ? completedRef.current : [...completedRef.current,missionId];
+      completedRef.current=next;
+      setCompleted(next);
+      try{localStorage.setItem(key,JSON.stringify(next));}catch{}
+    }else{
+      progress.round+=1;
+      setRound(progress.round);
+    }
+  };
   const answer=(index:number)=>{
-    if(!room||phase!=='room'||!current||feedback||reward)return;
+    if(!room||phase!=='room'||!TASKS[room][round]||feedback||reward||armed||failed)return;
+    const current=TASKS[room][round];
     if(index!==current.correct){
+      const remaining=Math.max(0,shield-1);
+      setShield(remaining);
       setFeedback('wrong');
-      timer.current=setTimeout(()=>setFeedback(null),800);
+      if(remaining===0){
+        setFailed(true);
+        return;
+      }
+      timer.current=setTimeout(()=>setFeedback(null),850);
       return;
     }
-    engine.current?.pulse();
-    setScore(p=>p+100);setFeedback('correct');
-    const completedRound=round===TASKS[room].length-1;
-    timer.current=setTimeout(()=>{
-      if(completedRound){
-        setReward(true);
-        setCompleted(prev=>{
-          if(prev.includes(room))return prev;
-          const next=[...prev,room];
-          try{localStorage.setItem(key,JSON.stringify(next));}catch{}
-          return next;
-        });
-      }else setRound(n=>n+1);
-      setFeedback(null);
-    },650);
+    // Answering gives permission to fire at the holographic target.
+    // Only a real projectile hit completes the stage and awards points.
+    progressRef.current.armed=true;
+    setArmed(true);
+    setFeedback('correct');
+    engine.current?.armTarget(true);
   };
-  const speak=()=>{
-    if(!window.speechSynthesis)return;
-    window.speechSynthesis.cancel();
-    const speech=new SpeechSynthesisUtterance('افتح الباب الأزرق');
-    speech.lang='ar';speech.rate=.8;
-    window.speechSynthesis.speak(speech);
+  const retry=()=>{
+    if(timer.current)clearTimeout(timer.current);
+    progressRef.current={room,round:0,armed:false};
+    engine.current?.armTarget(false);
+    setRound(0);setShield(3);setFailed(false);setFeedback(null);setReward(false);setArmed(false);
   };
   const direction=(type:'x'|'z',value:number,pressed:boolean)=>{
     setInput(prev=>({...prev,[type]:pressed?value:0}));
@@ -179,7 +229,7 @@ export const ArcadeCorridor: React.FC<Props> = ({lang,onBack}) => {
         <div className="qul-ops-intro">
           <small>QUL / TACTICAL MISSION</small>
           <h1>{ar?'المهمة السرية':'SECRET MISSION'}</h1>
-          <p>{ar?'ادخل المنشأة، واجتز الغرف، وحل المهمات اللغوية للحصول على معدات أكثر كفاءة.':'Explore the facility, solve language missions and earn equipment upgrades.'}</p>
+          <p>{ar?'أربع مهمات تتدرج من مفردات A1 إلى استنتاج B2. أجب، ثم أطلق طاقة على الهدف المضيء. لديك ثلاث وحدات درع في كل غرفة؛ ثلاث أخطاء تعني إعادة المحاولة.':'Four missions, from A1 vocabulary to B2 reasoning. Answer, then fire at the lit target. You have three shield cells per room; three errors mean a retry.'}</p>
           <button className="qul-ops-action" onClick={()=>engine.current?.start()}><DoorOpen size={20}/>{ar?'ابدأ المهمة':'START OPERATION'}</button>
         </div>
       )}
@@ -187,13 +237,17 @@ export const ArcadeCorridor: React.FC<Props> = ({lang,onBack}) => {
         <div className="qul-ops-status">{phase==='starting'?(ar?'جاري فتح البوابة...':'OPENING GATE...'):phase==='entering'?(ar?'دخول الغرفة...':'ENTERING ROOM...'):(ar?'مغادرة الغرفة...':'LEAVING ROOM...')}</div>}
       {ready&&phase==='corridor'&&(
         <>
-          <div className="qul-ops-objective"><span className="qul-ops-led"/>{near?(ar?'اقتربت من: '+near.ar:'NEAR: '+near.en):(ar?'ابحث عن باب المهمة':'FIND THE NEXT OBJECTIVE')}</div>
-          {nearby&&<button className="qul-ops-enter" onClick={()=>engine.current?.enterNearest()}><DoorOpen size={18}/>{ar?'افتح الباب':'OPEN DOOR'}</button>}
+          <div className="qul-ops-objective"><span className="qul-ops-led"/>{near?(ar?'اقتربت من: '+near.ar:'NEAR: '+near.en):(nextMission?(ar?'المهمة التالية: '+MISSIONS.find(m=>m.id===nextMission)?.ar:'NEXT: '+MISSIONS.find(m=>m.id===nextMission)?.en):(ar?'اكتملت جميع المهمات':'ALL MISSIONS COMPLETE'))}</div>
+          {nearby&&unlocked(nearby)&&<button className="qul-ops-enter" onClick={()=>engine.current?.enterNearest()}><DoorOpen size={18}/>{ar?'افتح الباب':'OPEN DOOR'}</button>}
           <nav className="qul-ops-map">
             <div className="qul-ops-map-title">MISSION SELECT <b>{completed.length}/4</b></div>
             <div className="qul-ops-map-list">
-              {MISSIONS.map((m,i)=><button key={m.id} className={completed.includes(m.id)?'completed':''} onClick={()=>engine.current?.travelTo(m.id)}>
-                <span>0{i+1}</span><strong>{ar?m.ar:m.en}</strong>{completed.includes(m.id)&&<Check size={13}/>}
+              {MISSIONS.map((m,i)=><button key={m.id}
+                disabled={!unlocked(m.id)}
+                className={completed.includes(m.id)?'completed':!unlocked(m.id)?'locked':'next'}
+                onClick={()=>engine.current?.travelTo(m.id)}>
+                <span>0{i+1}</span><strong>{ar?m.ar:m.en}</strong>
+                {completed.includes(m.id)?<Check size={13}/>:!unlocked(m.id)?<LockKeyhole size={13}/>:<Target size={13}/>}
               </button>)}
             </div>
           </nav>
@@ -203,28 +257,65 @@ export const ArcadeCorridor: React.FC<Props> = ({lang,onBack}) => {
         <aside className="qul-ops-mission">
           <div className="qul-ops-mission-top"><span>OBJECTIVE / 0{MISSIONS.findIndex(m=>m.id===room)+1}</span><button onClick={()=>{if(timer.current)clearTimeout(timer.current);engine.current?.leave();}} aria-label={ar?'عودة':'Back'}><ArrowLeft size={20}/></button></div>
           <h2>{ar?info?.ar:info?.en}</h2>
-          {!reward ? (
+          <div className="qul-ops-learning-goal">
+            <strong>{ar?LEVELS[room].ar:LEVELS[room].en}</strong>
+            <span>{ar?LEVELS[room].goalAr:LEVELS[room].goalEn}</span>
+          </div>
+          {failed ? (
+            <div className="qul-ops-failed">
+              <ShieldCheck size={32}/>
+              <h3>{ar?'فشلت هذه المحاولة':'MISSION FAILED'}</h3>
+              <p>{ar?'نفدت وحدات الدرع بسبب ثلاث إجابات غير صحيحة. احتفظت بإنجازات الغرف السابقة.':'Three incorrect answers used up your shield. Previous room achievements are safe.'}</p>
+              <button className="qul-ops-action" onClick={retry}><RotateCcw size={17}/>{ar?'أعد المهمة':'RETRY MISSION'}</button>
+            </div>
+          ) : !reward ? (
             <>
-              <div className="qul-ops-stage">MISSION {round+1} / 3 <span>{[0,1,2].map(i=><i key={i} className={i<=round?'on':''}/>)}</span></div>
-              <p>{ar?current?.ar:current?.en}</p>
-              {room==='signals'&&round===0&&<button className="qul-ops-audio" onClick={speak}><Volume2 size={17}/>{ar?'استمع للأمر':'LISTEN'}</button>}
-              <div className="qul-ops-answers">
-                {current?.choices.map((choice,i)=><button key={i} disabled={feedback==='correct'} onClick={()=>answer(i)} className={feedback==='correct'&&i===current.correct?'correct':feedback==='wrong'?'wrong':''}>
-                  <span>{String.fromCharCode(65+i)}</span>{ar?choice.ar:choice.en}
-                </button>)}
+              <div className="qul-ops-stage">
+                <strong>{ar?'المرحلة':'STAGE'} {round+1} / 3</strong>
+                <span>{[0,1,2].map(i=><i key={i} className={i<=round?'on':''}/>)}</span>
               </div>
-              {feedback&&<div className={'qul-ops-feedback '+feedback}>{feedback==='correct'?(ar?'✓ تم تعطيل القفل':'✓ ACCESS GRANTED'):(ar?'حاول مرة أخرى':'TRY AGAIN')}</div>}
+              <div className="qul-ops-shields" aria-label={ar?'الدرع المتبقي':'Remaining shield'}>
+                {ar?'الدرع:':'SHIELD:'} {Array.from({length:3},(_,i)=><ShieldCheck key={i} size={16} className={i<shield?'charged':'spent'}/>)}
+                <small>{shield}/3</small>
+              </div>
+              {!armed?(
+                <>
+                  <p>{ar?current?.ar:current?.en}</p>
+                  <div className="qul-ops-answers">
+                    {current?.choices.map((choice,i)=><button key={i}
+                      disabled={Boolean(feedback)}
+                      onClick={()=>answer(i)}
+                      className={feedback==='wrong'?'wrong':''}>
+                      <span>{String.fromCharCode(65+i)}</span>{ar?choice.ar:choice.en}
+                    </button>)}
+                  </div>
+                  {feedback==='wrong'&&<div className="qul-ops-feedback wrong">{ar?'إجابة غير صحيحة، حاول مرة أخرى':'Incorrect answer. Try again.'}</div>}
+                </>
+              ):(
+                <div className="qul-ops-target-step">
+                  <Target size={34}/>
+                  <strong>{ar?'فُتح قفل الطاقة!':'ENERGY TARGET UNLOCKED'}</strong>
+                  <p>{ar?'الهدف المضيء أمام الجندي. أطلق نبضة لإصابته وإكمال المرحلة.':'The holographic target is glowing. Fire a pulse to complete the stage.'}</p>
+                  <button className="qul-ops-fire" onClick={()=>engine.current?.fire()}>
+                    <Crosshair size={22}/>{ar?'إطلاق نبضة الطاقة':'FIRE ENERGY PULSE'}
+                  </button>
+                  <small>{ar?'أو اضغط مسافة / انقر داخل المشهد':'Or press SPACE / tap inside the scene'}</small>
+                </div>
+              )}
             </>
           ):(
             <div className="qul-ops-reward"><ShieldCheck size={42}/><h3>{ar?'مهمة ناجحة!':'MISSION COMPLETE'}</h3><p>{ar?'حصلت على تجهيز جديد:':'NEW EQUIPMENT UNLOCKED:'}</p>
               <strong>{ar?REWARDS[room].ar:REWARDS[room].en}</strong>
+              <small>{ar?'✓ أُنجزت مراحل الغرفة الثلاث وأُتيح الباب التالي':'✓ Three stages cleared; the next room is unlocked'}</small>
               <button className="qul-ops-action" onClick={()=>engine.current?.leave()}>{ar?'العودة للممر':'CONTINUE'}<ChevronLeft size={18}/></button>
             </div>
           )}
         </aside>
       )}
       <div className="qul-ops-stats">
-        <span><Crosshair size={16}/><b>{score}</b> XP</span><span><ShieldCheck size={16}/>{completed.length}/4</span><span><Zap size={16}/>100%</span>
+        <span><Crosshair size={16}/><b>{score}</b> XP</span>
+        <span><ShieldCheck size={16}/>{completed.length}/4</span>
+        <span><Zap size={16}/>{phase==='room'?shield:3}/3</span>
       </div>
       {ready&&phase==='corridor'&&(
         <div className="qul-ops-controls">
@@ -239,10 +330,19 @@ export const ArcadeCorridor: React.FC<Props> = ({lang,onBack}) => {
             onPointerUp={()=>setInput(v=>({...v,sprint:false}))}
             onPointerCancel={()=>setInput(v=>({...v,sprint:false}))}
             onLostPointerCapture={()=>setInput(v=>({...v,sprint:false}))}><Zap size={22}/></button>
-          <div className="qul-ops-desktop-instructions">WASD / ↑↓ {ar?'للحركة':'MOVE'} · SHIFT {ar?'للجري':'RUN'} · E {ar?'للدخول':'ENTER'}</div>
+          <div className="qul-ops-desktop-instructions">WASD / ↑↓ {ar?'للحركة':'MOVE'} · SHIFT {ar?'للجري':'RUN'} · E {ar?'للدخول':'ENTER'} · SPACE {ar?'للإطلاق':'FIRE'}</div>
         </div>
       )}
       {ready&&phase==='corridor'&&<div className="qul-ops-crosshair" aria-hidden="true">+</div>}
+      {ready&&phase==='corridor'&&completed.length===4&&(
+        <div className="qul-ops-victory" role="status">
+          <ShieldCheck size={35}/>
+          <h2>{ar?'تم إنجاز العملية!':'OPERATION COMPLETE!'}</h2>
+          <p>{ar?'أنهيت الغرف الأربع، وأثبتّ تطورك من المفردات إلى الاستنتاج.':'You cleared all four rooms, progressing from vocabulary to reasoning.'}</p>
+          <strong>{score} XP</strong>
+          <button className="qul-ops-action" onClick={onBack}>{ar?'العودة للألعاب':'BACK TO GAMES'}</button>
+        </div>
+      )}
       {ready&&<button className="qul-ops-pause" onClick={()=>setPaused(v=>!v)}>{paused?(ar?'استئناف':'RESUME'):(ar?'إيقاف مؤقت':'PAUSE')}</button>}
     </div>
   );
