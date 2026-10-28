@@ -461,7 +461,7 @@ export const Listening: React.FC = () => {
     stopAudio();
     startStatic();
     try {
-      const prompt = `Create a ${station.type} listening exercise in Arabic. Level: ${selectedLevel.en}. ${selectedLevel.prompt}. Use a natural coherent transcript, then write EXACTLY FIVE comprehension questions strictly about the actual transcript, with EXACTLY THREE answer options per question and one exact correctAnswer from those options. Vary the correct option position. Keep all options equally unvowelled, to avoid highlighting the answer. Provide accurate wordMap translations in English.`;
+      const prompt = `Create a ${station.type} listening exercise in Arabic. Level: ${selectedLevel.en}. ${selectedLevel.prompt}. Use a natural coherent transcript, then write EXACTLY FIVE comprehension questions strictly about the actual transcript, with EXACTLY THREE answer options per question and one exact correctAnswer from those options. Vary the correct option position. Keep every question short (maximum 14 Arabic words) and each choice concise (maximum 6 Arabic words) so all options fit on a compact printed ticket with NO scrolling. Keep all options equally unvowelled, to avoid highlighting the answer. Provide accurate wordMap translations in English.`;
       const data = await generateListeningExercise(selectedLevel.en, prompt, lang);
       if (requestId !== radioStationRequestRef.current) return;
       setRadioContent(data);
