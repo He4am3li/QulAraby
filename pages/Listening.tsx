@@ -337,6 +337,17 @@ export const Listening: React.FC = () => {
     synth.speak(utterance);
   };
 
+  React.useEffect(() => {
+    return () => {
+      radioStationRequestRef.current += 1;
+      radioNarrationTokenRef.current += 1;
+      if (radioNarrationRef.current && 'speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch {}
+        radioNarrationRef.current = null;
+      }
+    };
+  }, []);
+
   const stopAudio = () => {
     stopRadioNarration();
     if (sourceNodeRef.current) {
@@ -1164,7 +1175,10 @@ export const Listening: React.FC = () => {
                                                     </motion.div>
                                                 ) : loading ? (
                                                     <motion.div key="loading" className="flex flex-col items-center gap-3">
-                                                        <Loader2 size={40} className="animate-spin text-[#2a1d15]/60" />
+                                                        <Loader2 size={34} className="animate-spin text-[#2a1d15]/60" />
+                                                        <span className="text-[10px] font-black text-[#2a1d15]/80" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                                                          {lang === 'ar' ? 'جارٍ البحث عن محطة...' : 'Searching radio frequencies...'}
+                                                        </span>
                                                     </motion.div>
                                                 ) : radioContent ? (
                                                     <motion.div key="content" className="text-center">
@@ -1192,7 +1206,13 @@ export const Listening: React.FC = () => {
                                         <div className="absolute bottom-4 left-4 right-4 h-8 bg-[#2a1d15]/10 rounded-lg border border-[#2a1d15]/20 flex items-center px-4 shadow-inner">
                                             <div className="flex-1 h-0.5 bg-[#2a1d15]/30 relative">
                                                 <motion.div 
-                                                    animate={{ left: radioFrequency === 0 ? '50%' : `${(radioFrequency - 1) * 25}%` }}
+                                                    initial={false}
+                                                    animate={{
+                                                      left: loading
+                                                        ? ['7%', '83%', '23%', '92%', radioFrequency === 0 ? '50%' : `${(radioFrequency - 1) * 25}%`]
+                                                        : radioFrequency === 0 ? '50%' : `${(radioFrequency - 1) * 25}%`
+                                                    }}
+                                                    transition={{ duration: loading ? 4.9 : 0.35, ease: loading ? 'linear' : 'easeOut' }}
                                                     className="absolute top-1/2 -translate-y-1/2 w-1 h-8 bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.8)] z-30" 
                                                 />
                                             </div>
