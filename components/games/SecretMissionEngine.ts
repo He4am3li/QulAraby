@@ -290,7 +290,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const guards:Combatant[]=[];
   const guardAnimations:THREE.AnimationClip[]=[];
   const dressGuard=(enemy:Combatant)=>{
-    if(!model||enemy.isBoss||!enemy.alive||enemy.mixer)return;
+    if(phone||!model||enemy.isBoss||!enemy.alive||enemy.mixer)return;
     const copy=cloneSkeleton(model) as THREE.Group;
     copy.rotation.y=0;
     enemy.root.add(copy);
@@ -337,15 +337,37 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     poly(g,[.22,.23,.19],boss?red:amber,[.39,1.22,-.87]);
     return g;
   };
+  // Retain one set of combatants per room. Previously, every re-entry or
+  // retry created fresh meshes, cloned rigs and animation mixers; mobile GPU
+  // memory and frame time would grow with every attempt.
   const spawnGuards=(room:Room)=>{
-    for(const existing of guards){existing.root.parent?.remove(existing.root);}
-    guards.length=0;room.enemies=[];
+    guards.length=0;
     const boss=room.info.id==='vault';
     const count=boss?1:room.info.guards;
+    if(room.enemies.length===count){
+      room.enemies.forEach((enemy,i)=>{
+        enemy.root.visible=true;
+        enemy.root.position.set((i-(count-1)/2)*2.45,0,boss?-1.75:-.6-(i%2)*.6);
+        enemy.root.rotation.set(0,Math.PI,0);
+        enemy.root.scale.set(1,1,1);
+        enemy.hp=enemy.maxHp;
+        enemy.cooldown=3.2+i*.65;
+        enemy.dying=0;
+        enemy.alive=true;
+        enemy.awareness=0;
+        enemy.alerted=boss;
+        enemy.mixer?.stopAllAction();
+        enemy.action?.reset().play();
+        dressGuard(enemy);
+        guards.push(enemy);
+      });
+      events.onThreats(guards.length);
+      return;
+    }
+    room.enemies=[];
     for(let i=0;i<count;i++){
       const root=new THREE.Group();room.group.add(root);
       root.position.set((i-(count-1)/2)*2.45,0,boss?-1.75:-.6-(i%2)*.6);
-      // Models face into the room, while the player enters from the side corridor.
       root.rotation.y=Math.PI;
       const fall=enemyFallback(root,boss);
       const hitRing=new THREE.Mesh(geometry(new THREE.TorusGeometry(boss?.54:.31,.065,8,24)),boss?red:amber);
@@ -387,9 +409,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
 
   // Weapon effects (energy bolt, recoil flash, tracers) pooled to avoid allocations.
   const trails:Trail[]=[];
+  const spareTrails:THREE.Mesh[]=[];
   const boltGeo=geometry(new THREE.CylinderGeometry(.055,.07,1,8));
   const makeTrail=(from:THREE.Vector3,to:THREE.Vector3,color:THREE.Material,life=.22)=>{
-    const beam=new THREE.Mesh(boltGeo,color);
+    // Reuse tracer meshes instead of allocating each time anyone fires.
+    const beam=spareTrails.pop() ?? new THREE.Mesh(boltGeo,color);
+    beam.material=color;
     const middle=from.clone().add(to).multiplyScalar(.5);
     const delta=to.clone().sub(from);
     beam.position.copy(middle);
@@ -711,7 +736,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     for(let i=trails.length-1;i>=0;i--){
       const obj=trails[i];obj.age+=dt;
       if(obj.age>=obj.lifespan){
-        obj.mesh.parent?.remove(obj.mesh);trails.splice(i,1);
+        obj.mesh.parent?.remove(obj.mesh);trails.splice(i,1);spareTrails.push(obj.mesh);
       }else obj.mesh.scale.x=obj.mesh.scale.z=.75*(1-obj.age/obj.lifespan)+.18;
     }
     const currentNearby=phase==='hall' ?
