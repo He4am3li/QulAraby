@@ -210,7 +210,9 @@ export const RadioThermalPrinter:React.FC<Props>=({
           stage==='second'?message(ar?'الاستماع الثاني مع النص. ستبدأ المراجعة بعد انتهاء التسجيل.':'Second listening with transcript. Review begins afterward.',
             <button className="qul-radio-replay" onClick={onReplay}>{ar?'إعادة الاستماع':'REPLAY'}</button>):
           question?(
-            <div className="qul-radio-printer-question">
+            <div className={'qul-radio-printer-question' +
+              (question.question.length > 135 ? ' very-long-question' :
+                question.question.length > 92 ? ' long-question' : '')}>
               <div className="qul-radio-printer-step"><span>{stage==='final'?(ar?'المراجعة النهائية':'FINAL REVIEW'):(ar?'اختبار الفهم الأول':'FIRST LISTEN QUIZ')}</span><span>{questionIndex+1}/{count}</span></div>
               <p>{question.question}</p>
               <div className="qul-radio-printer-options">
