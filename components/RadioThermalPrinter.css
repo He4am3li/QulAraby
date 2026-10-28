@@ -9,14 +9,14 @@
   min-height:0;
 }
 .qul-radio-printer-layout .qul-original-radio-retouch{
-  width:min(100%,48rem,max(270px,calc((100dvh - 350px) * 1.6)));
+  width:min(100%,48rem,max(270px,calc(160dvh - 560px)));
   max-width:48rem;
   padding-top:clamp(16px,2.2vh,30px)!important;
   flex-shrink:0;
 }
 .qul-radio-thermal-printer {
   position:relative;
-  width:min(100%,48rem,max(270px,calc((100dvh - 350px) * 1.6)));
+  width:min(100%,48rem,max(270px,calc(160dvh - 560px)));
   flex-shrink:0;
   color:#e8d7b3;
   font-family:"Tajawal",sans-serif;
@@ -248,3 +248,5 @@
 @media(prefers-reduced-motion:reduce){
   .qul-radio-printed-receipt{animation:none!important;transition:none!important;}
 }
+
+.qul-radio-studio-call{margin-inline-start:auto;}
