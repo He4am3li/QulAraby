@@ -9,7 +9,7 @@ import {
   Phone, Mic, PhoneOff, MicOff, Compass, ArrowUpRight, Check, X, RefreshCw, Heart,
   PenTool, UserCircle, Speech, Disc
 } from 'lucide-react';
-import { generateSpeech, decodeAudioData, generateWordIllustration, evaluateCallIn } from '../services/gemini';
+import { generateSpeech, decodeAudioData, generateWordIllustration } from '../services/gemini';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CassettePlayer } from '../components/CassettePlayer';
 import { RadioThermalPrinter, RadioLearningStage } from '../components/RadioThermalPrinter';
@@ -17,6 +17,7 @@ import '../components/ListeningRadioRetouch.css';
 import { STORY_CASSETTES } from '../src/data/storyCassettes';
 import { drawRadioCorpusText } from '../src/data/radioShuffleBag';
 import { RADIO_AUTHORED_EXERCISES } from '../src/data/radioAuthoredExercises';
+import { getRadioDifficultWords } from '../src/data/radioVocabulary';
 import type { RadioCorpusType } from '../src/data/radioTextCorpus';
 import { useAuth } from '../components/AuthProvider';
 
@@ -77,6 +78,8 @@ export const Listening: React.FC = () => {
   const [radioTextSerial, setRadioTextSerial] = React.useState(0);
   const [radioContent, setRadioContent] = React.useState<any>(null);
   const [radioAudio, setRadioAudio] = React.useState<AudioBuffer | null>(null);
+  const [radioRecordingUrl, setRadioRecordingUrl] = React.useState<string | null>(null);
+  const radioRecordingRef = React.useRef<HTMLAudioElement | null>(null);
   const [isRadioPlaying, setIsRadioPlaying] = React.useState(false);
   const [radioListenStage, setRadioListenStage] = React.useState<RadioLearningStage>('first');
   const [radioPlaybackEndCount, setRadioPlaybackEndCount] = React.useState(0);
@@ -95,8 +98,9 @@ export const Listening: React.FC = () => {
   const [isCalling, setIsCalling] = React.useState(false);
   const [isIncomingCall, setIsIncomingCall] = React.useState(false);
   const [isRecording, setIsRecording] = React.useState(false);
-  const [callFeedback, setCallFeedback] = React.useState<any>(null);
-  const [isEvaluating, setIsEvaluating] = React.useState(false);
+  const [callAudioUrl, setCallAudioUrl] = React.useState<string | null>(null);
+  const callAudioUrlRef = React.useRef<string | null>(null);
+  const [callError, setCallError] = React.useState('');
   const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
   const audioChunksRef = React.useRef<Blob[]>([]);
   const callTimerRef = React.useRef<any>(null);
@@ -139,6 +143,7 @@ export const Listening: React.FC = () => {
     if (staticGainNodeRef.current) {
       staticGainNodeRef.current.gain.value = volume * 0.3;
     }
+    if (radioRecordingRef.current) radioRecordingRef.current.volume = volume;
   }, [volume]);
 
   React.useEffect(() => {
@@ -265,15 +270,55 @@ export const Listening: React.FC = () => {
 
   const stopRadioNarration = () => {
     radioNarrationTokenRef.current += 1;
+    if (radioRecordingRef.current) {
+      radioRecordingRef.current.pause();
+      radioRecordingRef.current.currentTime = 0;
+      radioRecordingRef.current.onended = null;
+    }
     if (radioNarrationRef.current && 'speechSynthesis' in window) {
       try { window.speechSynthesis.cancel(); } catch {}
     }
     radioNarrationRef.current = null;
   };
 
-  // Radio narration is handled entirely by the learner's browser/device.
-  // Never call Gemini, paid TTS, or any text generation when tuning a station.
+  // Prefer a pre-recorded human/natural MP3 when /public/assets/radio/<id>.mp3
+  // exists. Static playback consumes ZERO AI tokens. When it does not exist,
+  // fall back to the device's Arabic Web Speech voice (quality is OS-dependent).
   const playRadioNarration = (restart = false) => {
+    if (radioRecordingUrl) {
+      const recording = radioRecordingRef.current || new Audio();
+      radioRecordingRef.current = recording;
+      if (recording.src !== new URL(radioRecordingUrl, window.location.href).href) {
+        recording.pause();
+        recording.src = radioRecordingUrl;
+      }
+      recording.volume = volume;
+      if (restart) recording.currentTime = 0;
+      else if (!recording.paused) {
+        recording.pause();
+        setIsRadioPlaying(false);
+        setIsPaused(true);
+        return;
+      }
+      const token = radioNarrationTokenRef.current;
+      recording.onended = () => {
+        if (token !== radioNarrationTokenRef.current) return;
+        setIsRadioPlaying(false); setIsPaused(false);
+        setRadioPlaybackEndCount(n => n + 1);
+      };
+      void recording.play().then(() => {
+        if (token === radioNarrationTokenRef.current) {
+          setIsRadioPlaying(true); setIsPaused(false); setError(null);
+        }
+      }).catch(() => {
+        setRadioRecordingUrl(null);
+        if (token === radioNarrationTokenRef.current) setError(
+          lang === 'ar' ? 'تعذّر تشغيل التسجيل؛ استخدم الصوت المتاح على جهازك.' :
+          'Recording unavailable; use your device voice.'
+        );
+      });
+      return;
+    }
     if (!radioContent?.transcript || !('speechSynthesis' in window) ||
         typeof SpeechSynthesisUtterance === 'undefined') {
       setError(lang === 'ar'
@@ -345,6 +390,9 @@ export const Listening: React.FC = () => {
         try { window.speechSynthesis.cancel(); } catch {}
         radioNarrationRef.current = null;
       }
+      radioRecordingRef.current?.pause();
+      radioRecordingRef.current = null;
+      if (callAudioUrlRef.current) URL.revokeObjectURL(callAudioUrlRef.current);
     };
   }, []);
 
@@ -557,6 +605,7 @@ export const Listening: React.FC = () => {
     setLoading(true);
     setRadioContent(null);
     setRadioAudio(null);
+    setRadioRecordingUrl(null);
     setRadioListenStage('first');
     setRadioPlaybackEndCount(0);
     stopAudio();
@@ -581,11 +630,21 @@ export const Listening: React.FC = () => {
       // No AI-generated text or quiz. The document's Arabic wording and
       // five authored questions are paired by one stable corpus ID.
       setRadioTextTitle(source.titleAr);
+      // A recording is optional. The HEAD request never delays the five-second
+      // station search, and it never reaches Gemini or any paid TTS API.
+      const recordingPath = '/assets/radio/' + source.id + '.mp3';
+      void fetch(recordingPath, { method: 'HEAD' }).then(response => {
+        if (requestId !== radioStationRequestRef.current) return;
+        const mime = response.headers.get('content-type') || '';
+        if (response.ok && /audio\/|mpeg|octet-stream/i.test(mime)) {
+          setRadioRecordingUrl(recordingPath);
+        }
+      }).catch(() => {});
       setRadioContent({
         transcript: authored.transcript,
         translation: source.translationEn,
         quiz: authored.quiz,
-        wordMap: []
+        wordMap: getRadioDifficultWords(source, authored.transcript)
       });
     } catch (error) {
       console.error('Could not load the local radio corpus:', error);
@@ -663,32 +722,14 @@ export const Listening: React.FC = () => {
     }
   };
 
-  const handleWordClick = async (word: string) => {
-    if (!radioContent?.wordMap) return;
-    const cleanWord = word.replace(/[.,!?;:()]/g, '');
-    const mapping = radioContent.wordMap.find((m: any) => 
-      m.word === cleanWord || 
-      m.word.includes(cleanWord) || 
-      cleanWord.includes(m.word)
-    );
-    if (mapping) {
-      setSelectedWord(mapping);
-      setIsWordSpeaking(true);
-      try {
-        const audioBytes = await generateSpeech(cleanWord, 'ar');
-        if (audioBytes) {
-          const ctx = await initAudio();
-          const buffer = await decodeAudioData(audioBytes, ctx);
-          const source = ctx.createBufferSource();
-          source.buffer = buffer;
-          source.connect(gainNodeRef.current!);
-          source.onended = () => setIsWordSpeaking(false);
-          source.start(0);
-        }
-      } catch (e) {
-        setIsWordSpeaking(false);
-      }
-    }
+  const handleWordClick = (word: string) => {
+    // A local, approved gloss; never send a word to paid TTS/translation.
+    const key = (value: string) => value.normalize('NFKC')
+      .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+      .replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه')
+      .replace(/[^\u0621-\u064A]/g,'');
+    const match = radioContent?.wordMap?.find((item: any) => key(item.word) === key(word));
+    if (match) setSelectedWord(match);
   };
 
   // --- Renderers ---
@@ -1141,9 +1182,11 @@ export const Listening: React.FC = () => {
                                     <div className="w-1/4 h-full bg-[#120a05] rounded-2xl border-4 border-[#2a1d15] shadow-inner relative overflow-hidden flex flex-col qul-original-radio-speaker">
                                         <div className="p-4 h-full overflow-y-auto custom-scrollbar relative z-10">
                                             {radioContent && radioListenStage !== 'first' && radioListenStage !== 'questions' ? (
-                                                <p dir="ltr" lang="en" className="text-[10px] leading-relaxed font-bold text-emerald-400/80 text-left py-4">
-                                                    {radioContent.translation || "..."}
-                                                </p>
+                                                <div dir="rtl" lang="ar" className="text-xs leading-relaxed font-black text-amber-400/90 text-right arabic-font py-4 flex flex-wrap gap-x-1">
+                                                    {radioContent.transcript.split(' ').map((word: string, i: number) => (
+                                                        <span key={i} onClick={() => handleWordClick(word)} className="hover:text-white cursor-pointer inline-block">{word}</span>
+                                                    ))}
+                                                </div>
                                             ) : (
                                                 <div className="absolute inset-0 grid grid-cols-6 gap-px p-2 opacity-10">
                                                     {Array.from({ length: 120 }).map((_, i) => (
@@ -1236,11 +1279,9 @@ export const Listening: React.FC = () => {
                                     <div className="w-1/4 h-full bg-[#120a05] rounded-2xl border-4 border-[#2a1d15] shadow-inner relative overflow-hidden flex flex-col qul-original-radio-speaker">
                                         <div className="p-4 h-full overflow-y-auto custom-scrollbar relative z-10">
                                             {radioContent && radioListenStage !== 'first' && radioListenStage !== 'questions' && (
-                                                <div dir="rtl" lang="ar" className="text-xs leading-relaxed font-black text-amber-400/90 text-right arabic-font py-4 flex flex-wrap gap-x-1">
-                                                    {radioContent.transcript.split(' ').map((word: string, i: number) => (
-                                                        <span key={i} onClick={() => handleWordClick(word)} className="hover:text-white cursor-pointer inline-block">{word}</span>
-                                                    ))}
-                                                </div>
+                                                <p dir="ltr" lang="en" className="text-[10px] leading-relaxed font-bold text-emerald-400/80 text-left py-4">
+                                                    {radioContent.translation || "..."}
+                                                </p>
                                             )}
                                         </div>
                                     </div>
