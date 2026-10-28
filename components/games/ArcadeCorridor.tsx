@@ -155,7 +155,12 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
               setSelectedPin(null);setHealth(100);
             }
             if(state==='hall')setRoom(null);
-            if(state==='victory'){setDocuments(true);setScore(v=>v+900);}
+            if(state==='victory'){
+              setDocuments(true);
+              setScore(v=>v+900);
+              // 4/4 is awarded only after the final physical vault and document pickup.
+              setCompleted(prev=>prev.includes('vault')?prev:[...prev,'vault']);
+            }
           },
           onHealth(value){if(!stopped)setHealth(value);},
           onThreats(n){
