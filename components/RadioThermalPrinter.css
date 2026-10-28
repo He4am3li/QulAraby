@@ -303,3 +303,16 @@
   .qul-radio-printer-layout .qul-original-radio-cabinet{padding-top:11px!important;padding-bottom:11px!important;}
   .qul-radio-printer-layout .qul-original-radio-controls{height:76px!important;margin-top:8px!important;}
 }
+
+/* Existing fixed-size paper: keep all long, source-authored intermediate and
+   advanced completion questions visible without adding scrolling. */
+.qul-radio-printer-question.long-question { gap:2px; }
+.qul-radio-printer-question.long-question p { font-size:9.6px;line-height:1.24; }
+.qul-radio-printer-question.long-question .qul-radio-printer-options button { font-size:9.4px;line-height:1.08;padding:1px 6px; }
+.qul-radio-printer-question.very-long-question { gap:1px; }
+.qul-radio-printer-question.very-long-question p { font-size:8.8px;line-height:1.15; }
+.qul-radio-printer-question.very-long-question .qul-radio-printer-options button { font-size:9px;line-height:1.07;padding:1px 5px; }
+@media(max-width:600px){
+ .qul-radio-printer-question.long-question p { font-size:9.1px; }
+ .qul-radio-printer-question.very-long-question p { font-size:8.3px;line-height:1.15; }
+}
