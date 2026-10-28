@@ -106,7 +106,7 @@ export const ListeningSkeuoRadio: React.FC<Props> = ({
                     <div className="qul-radio-tuner-marks" />
                     <div
                       className={'qul-radio-tuner-needle ' + (loading ? 'searching' : '')}
-                      style={{ left: \`calc(8% + \${progress} * 0.84)\` }}
+                      style={{ left: `calc(8% + ${progress * 0.84}%)` }}
                     />
                   </div>
                   <div className="qul-radio-display-bottom">
@@ -177,7 +177,7 @@ export const ListeningSkeuoRadio: React.FC<Props> = ({
                   onClick={() => onTune(next)}
                   disabled={loading}
                 >
-                  <span className="qul-radio-knob-inner" style={{ transform: \`rotate(\${-128 + (progress / 100) * 256}deg)\` }}>
+                  <span className="qul-radio-knob-inner" style={{ transform: `rotate(${-128 + (progress / 100) * 256}deg)` }}>
                     <span className="qul-radio-knob-line" />
                     <span className="qul-radio-knob-core"/>
                   </span>
@@ -188,7 +188,7 @@ export const ListeningSkeuoRadio: React.FC<Props> = ({
               <div className="qul-radio-knob-unit">
                 <label className="qul-radio-hardware-label" htmlFor="qul-radio-volume">VOLUME</label>
                 <div className="qul-radio-knob-housing volume">
-                  <span className="qul-radio-knob-inner" style={{ transform: \`rotate(\${-130 + volume * 260}deg)\` }}>
+                  <span className="qul-radio-knob-inner" style={{ transform: `rotate(${-130 + volume * 260}deg)` }}>
                     <span className="qul-radio-knob-line"/>
                     <span className="qul-radio-knob-core"/>
                   </span>
@@ -202,7 +202,7 @@ export const ListeningSkeuoRadio: React.FC<Props> = ({
                     onChange={e => onVolume(Number(e.target.value))}
                     className="qul-radio-knob-range"
                     aria-label={ar ? 'ضبط مستوى الصوت' : 'Set radio volume'}
-                    aria-valuetext={\`\${Math.round(volume * 100)}%\`}
+                    aria-valuetext={`${Math.round(volume * 100)}%`}
                   />
                 </div>
                 <span className="qul-radio-hardware-sublabel">{Math.round(volume * 100)}%</span>
@@ -224,7 +224,7 @@ export const ListeningSkeuoRadio: React.FC<Props> = ({
                   type="button"
                   onClick={() => onTune(s.id)}
                   aria-pressed={stationId === s.id}
-                  aria-label={\`\${ar ? 'اختر محطة' : 'Select station'} \${s.id}: \${s[lang]}\`}
+                  aria-label={`${ar ? 'اختر محطة' : 'Select station'} ${s.id}: ${s[lang]}`}
                 >
                   <span className="qul-radio-preset-index">{pad(s.id)}</span>
                   <span className="qul-radio-preset-name">{s[lang]}</span>
