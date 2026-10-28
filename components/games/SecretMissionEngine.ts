@@ -20,7 +20,7 @@ export type SecretEvents = {
   onError: (message:string) => void;
 };
 type Combatant = { root:THREE.Group; body:THREE.Group; fallback:THREE.Group; mixer:THREE.AnimationMixer|null; action:THREE.AnimationAction|null; hp:number; maxHp:number; cooldown:number; dying:number; alive:boolean; isBoss:boolean; awareness:number; alerted:boolean; };
-type Room = { info:typeof SECRET_ROOMS[number]; group:THREE.Group; door:THREE.Group; doorAngle:number; doorTarget:number; safes:{door:THREE.Group; opened:number; target:number; name:THREE.Sprite}[]; enemies:Combatant[]; prepared:boolean;};
+type Room = { info:typeof SECRET_ROOMS[number]; group:THREE.Group; door:THREE.Group; doorAngle:number; doorTarget:number; safes:{door:THREE.Group; opened:number; target:number; name:THREE.Sprite}[]; reward:THREE.Group; enemies:Combatant[]; prepared:boolean;};
 type Traverse = {type:'intro'|'enter'|'exit';time:number;duration:number;from:THREE.Vector3;to:THREE.Vector3;fromYaw:number;toYaw:number; room?:Room};
 type Trail = { mesh:THREE.Mesh; age:number; lifespan:number };
 const lerp=THREE.MathUtils.lerp;
@@ -214,6 +214,27 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       label.position.set(0,2.53,.6);label.scale.set(1.36,.38,1);cabinet.add(label);
       safes.push({door:joint,opened:0,target:0,name:label});
     }
+    // Physical loot in cabinet four: each room provides a piece of the
+    // equipment required for the final defense, while the final vault holds papers.
+    const reward=new THREE.Group();
+    reward.position.set(-3.32+3*2.18,1.35,-3.05);
+    group.add(reward);
+    const isDocuments=info.id==='vault';
+    if(isDocuments){
+      for(let sheet=0;sheet<5;sheet++){
+        const page=poly(reward,[.84,.012,.59],material(new THREE.MeshStandardMaterial({
+          color:sheet%2?'#efe1c2':'#f6edda',roughness:.96
+        })),[0,sheet*.025,0]);
+        page.rotation.y=sheet*.08;
+      }
+      poly(reward,[.45,.02,.13],red,[0,.16,.1]);
+    }else{
+      poly(reward,[.92,.38,.55],steel,[0,0,0]);
+      poly(reward,[.86,.24,.41],black,[0,.07,0]);
+      poly(reward,[.69,.09,.12],info.id==='archive'?green:cyan,[0,.17,-.25]);
+      for(const x of [-.3,.3])round(reward,.09,.3,trim,[x,-.09,.2]);
+    }
+    reward.visible=false;
     // Screens and stowed equipment; no blank floating cubes.
     const rack=new THREE.Group();rack.position.set(-side*3.95,0,1.2);group.add(rack);
     poly(rack,[.85,2.75,2.5],trim,[0,1.4,0]);
@@ -227,7 +248,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     poly(console,[1.35,.86,.12],black,[0,1.51,-.36]);
     poly(console,[1.1,.54,.05],iColor(info.id),[0,1.52,-.28]);
     group.visible=false;
-    return {info,group,door:hinge,doorAngle:0,doorTarget:0,safes,enemies:[],prepared:false};
+    return {info,group,door:hinge,doorAngle:0,doorTarget:0,safes,reward,enemies:[],prepared:false};
   };
   function iColor(id:SecretRoomId):THREE.Material{return id==='vault'?red:id==='comms'?cyan:id==='archive'?green:amber;}
   for(const info of SECRET_ROOMS)rooms.push(makeRoom(info));
@@ -410,6 +431,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(!activeRoom)return;
     hp=100;events.onHealth(hp);
     activeRoom.safes.forEach(s=>{s.target=0;s.opened=0;});
+    activeRoom.reward.visible=false;
     safeIndex=0;
     spawnGuards(activeRoom);
     emit('combat',activeRoom.info.id);
@@ -424,6 +446,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(phase!=='safes'||!activeRoom||index!==safeIndex)return false;
     const box=activeRoom.safes[index];if(!box||box.target!==0)return false;
     box.target=-1.65;
+    if(index===3)activeRoom.reward.visible=true;
     safeIndex++;
     return true;
   };
@@ -544,6 +567,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       for(const s of room.safes){
         s.opened=THREE.MathUtils.damp(s.opened,s.target,4.3,dt);
         s.door.rotation.y=s.opened;
+      }
+      if(room.reward.visible){
+        room.reward.position.y=1.35+Math.sin(time*2.3)*.09;
+        room.reward.rotation.y+=dt*.7;
       }
     }
     let moving=false;
