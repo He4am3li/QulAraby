@@ -421,8 +421,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(Math.abs(player.z-available.info.z)>3.9)return false;
     activeRoom=available;
     available.doorTarget=available.info.side===1?1.6:-1.6;
+    // Turn sideways to pass through the doorway and face the guards at the end.
     transitionTo('enter',new THREE.Vector3(available.group.position.x,0,available.info.z+1.8),
-      -available.info.side*Math.PI/2,2.0,available);
+      0,2.0,available);
     emit('room-enter',available.info.id);
     return true;
   };
@@ -586,7 +587,13 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(transition){
       const t=clamp(transition.time/transition.duration,0,1);
       player.lerpVectors(transition.from,transition.to,ease(t));
-      yaw=lerp(transition.fromYaw,transition.toYaw,ease(t));
+      if(transition.type==='enter' && transition.room){
+        // Midway the operator faces through the side door; once inside they
+        // face the guards, safe cabinets and objective instead of a blank wall.
+        yaw=-transition.room.info.side * Math.PI/2 * Math.sin(Math.PI*ease(t));
+      }else{
+        yaw=lerp(transition.fromYaw,transition.toYaw,ease(t));
+      }
       transition.time+=dt;
       moving=true;
       if(t>=1){
