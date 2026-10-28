@@ -229,7 +229,7 @@ export const ArcadeCorridor: React.FC<Props> = ({lang,onBack}) => {
         <div className="qul-ops-intro">
           <small>QUL / TACTICAL MISSION</small>
           <h1>{ar?'المهمة السرية':'SECRET MISSION'}</h1>
-          <p>{ar?'ادخل المنشأة، واجتز الغرف، وحل المهمات اللغوية للحصول على معدات أكثر كفاءة.':'Explore the facility, solve language missions and earn equipment upgrades.'}</p>
+          <p>{ar?'أربع مهمات تتدرج من مفردات A1 إلى استنتاج B2. أجب، ثم أطلق طاقة على الهدف المضيء. لديك ثلاث وحدات درع في كل غرفة؛ ثلاث أخطاء تعني إعادة المحاولة.':'Four missions, from A1 vocabulary to B2 reasoning. Answer, then fire at the lit target. You have three shield cells per room; three errors mean a retry.'}</p>
           <button className="qul-ops-action" onClick={()=>engine.current?.start()}><DoorOpen size={20}/>{ar?'ابدأ المهمة':'START OPERATION'}</button>
         </div>
       )}
@@ -237,13 +237,17 @@ export const ArcadeCorridor: React.FC<Props> = ({lang,onBack}) => {
         <div className="qul-ops-status">{phase==='starting'?(ar?'جاري فتح البوابة...':'OPENING GATE...'):phase==='entering'?(ar?'دخول الغرفة...':'ENTERING ROOM...'):(ar?'مغادرة الغرفة...':'LEAVING ROOM...')}</div>}
       {ready&&phase==='corridor'&&(
         <>
-          <div className="qul-ops-objective"><span className="qul-ops-led"/>{near?(ar?'اقتربت من: '+near.ar:'NEAR: '+near.en):(ar?'ابحث عن باب المهمة':'FIND THE NEXT OBJECTIVE')}</div>
-          {nearby&&<button className="qul-ops-enter" onClick={()=>engine.current?.enterNearest()}><DoorOpen size={18}/>{ar?'افتح الباب':'OPEN DOOR'}</button>}
+          <div className="qul-ops-objective"><span className="qul-ops-led"/>{near?(ar?'اقتربت من: '+near.ar:'NEAR: '+near.en):(nextMission?(ar?'المهمة التالية: '+MISSIONS.find(m=>m.id===nextMission)?.ar:'NEXT: '+MISSIONS.find(m=>m.id===nextMission)?.en):(ar?'اكتملت جميع المهمات':'ALL MISSIONS COMPLETE'))}</div>
+          {nearby&&unlocked(nearby)&&<button className="qul-ops-enter" onClick={()=>engine.current?.enterNearest()}><DoorOpen size={18}/>{ar?'افتح الباب':'OPEN DOOR'}</button>}
           <nav className="qul-ops-map">
             <div className="qul-ops-map-title">MISSION SELECT <b>{completed.length}/4</b></div>
             <div className="qul-ops-map-list">
-              {MISSIONS.map((m,i)=><button key={m.id} className={completed.includes(m.id)?'completed':''} onClick={()=>engine.current?.travelTo(m.id)}>
-                <span>0{i+1}</span><strong>{ar?m.ar:m.en}</strong>{completed.includes(m.id)&&<Check size={13}/>}
+              {MISSIONS.map((m,i)=><button key={m.id}
+                disabled={!unlocked(m.id)}
+                className={completed.includes(m.id)?'completed':!unlocked(m.id)?'locked':'next'}
+                onClick={()=>engine.current?.travelTo(m.id)}>
+                <span>0{i+1}</span><strong>{ar?m.ar:m.en}</strong>
+                {completed.includes(m.id)?<Check size={13}/>:!unlocked(m.id)?<LockKeyhole size={13}/>:<Target size={13}/>}
               </button>)}
             </div>
           </nav>
@@ -253,28 +257,65 @@ export const ArcadeCorridor: React.FC<Props> = ({lang,onBack}) => {
         <aside className="qul-ops-mission">
           <div className="qul-ops-mission-top"><span>OBJECTIVE / 0{MISSIONS.findIndex(m=>m.id===room)+1}</span><button onClick={()=>{if(timer.current)clearTimeout(timer.current);engine.current?.leave();}} aria-label={ar?'عودة':'Back'}><ArrowLeft size={20}/></button></div>
           <h2>{ar?info?.ar:info?.en}</h2>
-          {!reward ? (
+          <div className="qul-ops-learning-goal">
+            <strong>{ar?LEVELS[room].ar:LEVELS[room].en}</strong>
+            <span>{ar?LEVELS[room].goalAr:LEVELS[room].goalEn}</span>
+          </div>
+          {failed ? (
+            <div className="qul-ops-failed">
+              <ShieldCheck size={32}/>
+              <h3>{ar?'فشلت هذه المحاولة':'MISSION FAILED'}</h3>
+              <p>{ar?'نفدت وحدات الدرع بسبب ثلاث إجابات غير صحيحة. احتفظت بإنجازات الغرف السابقة.':'Three incorrect answers used up your shield. Previous room achievements are safe.'}</p>
+              <button className="qul-ops-action" onClick={retry}><RotateCcw size={17}/>{ar?'أعد المهمة':'RETRY MISSION'}</button>
+            </div>
+          ) : !reward ? (
             <>
-              <div className="qul-ops-stage">MISSION {round+1} / 3 <span>{[0,1,2].map(i=><i key={i} className={i<=round?'on':''}/>)}</span></div>
-              <p>{ar?current?.ar:current?.en}</p>
-              {room==='signals'&&round===0&&<button className="qul-ops-audio" onClick={speak}><Volume2 size={17}/>{ar?'استمع للأمر':'LISTEN'}</button>}
-              <div className="qul-ops-answers">
-                {current?.choices.map((choice,i)=><button key={i} disabled={feedback==='correct'} onClick={()=>answer(i)} className={feedback==='correct'&&i===current.correct?'correct':feedback==='wrong'?'wrong':''}>
-                  <span>{String.fromCharCode(65+i)}</span>{ar?choice.ar:choice.en}
-                </button>)}
+              <div className="qul-ops-stage">
+                <strong>{ar?'المرحلة':'STAGE'} {round+1} / 3</strong>
+                <span>{[0,1,2].map(i=><i key={i} className={i<=round?'on':''}/>)}</span>
               </div>
-              {feedback&&<div className={'qul-ops-feedback '+feedback}>{feedback==='correct'?(ar?'✓ تم تعطيل القفل':'✓ ACCESS GRANTED'):(ar?'حاول مرة أخرى':'TRY AGAIN')}</div>}
+              <div className="qul-ops-shields" aria-label={ar?'الدرع المتبقي':'Remaining shield'}>
+                {ar?'الدرع:':'SHIELD:'} {Array.from({length:3},(_,i)=><ShieldCheck key={i} size={16} className={i<shield?'charged':'spent'}/>)}
+                <small>{shield}/3</small>
+              </div>
+              {!armed?(
+                <>
+                  <p>{ar?current?.ar:current?.en}</p>
+                  <div className="qul-ops-answers">
+                    {current?.choices.map((choice,i)=><button key={i}
+                      disabled={Boolean(feedback)}
+                      onClick={()=>answer(i)}
+                      className={feedback==='wrong'?'wrong':''}>
+                      <span>{String.fromCharCode(65+i)}</span>{ar?choice.ar:choice.en}
+                    </button>)}
+                  </div>
+                  {feedback==='wrong'&&<div className="qul-ops-feedback wrong">{ar?'إجابة غير صحيحة، حاول مرة أخرى':'Incorrect answer. Try again.'}</div>}
+                </>
+              ):(
+                <div className="qul-ops-target-step">
+                  <Target size={34}/>
+                  <strong>{ar?'فُتح قفل الطاقة!':'ENERGY TARGET UNLOCKED'}</strong>
+                  <p>{ar?'الهدف المضيء أمام الجندي. أطلق نبضة لإصابته وإكمال المرحلة.':'The holographic target is glowing. Fire a pulse to complete the stage.'}</p>
+                  <button className="qul-ops-fire" onClick={()=>engine.current?.fire()}>
+                    <Crosshair size={22}/>{ar?'إطلاق نبضة الطاقة':'FIRE ENERGY PULSE'}
+                  </button>
+                  <small>{ar?'أو اضغط مسافة / انقر داخل المشهد':'Or press SPACE / tap inside the scene'}</small>
+                </div>
+              )}
             </>
           ):(
             <div className="qul-ops-reward"><ShieldCheck size={42}/><h3>{ar?'مهمة ناجحة!':'MISSION COMPLETE'}</h3><p>{ar?'حصلت على تجهيز جديد:':'NEW EQUIPMENT UNLOCKED:'}</p>
               <strong>{ar?REWARDS[room].ar:REWARDS[room].en}</strong>
+              <small>{ar?'✓ أُنجزت مراحل الغرفة الثلاث وأُتيح الباب التالي':'✓ Three stages cleared; the next room is unlocked'}</small>
               <button className="qul-ops-action" onClick={()=>engine.current?.leave()}>{ar?'العودة للممر':'CONTINUE'}<ChevronLeft size={18}/></button>
             </div>
           )}
         </aside>
       )}
       <div className="qul-ops-stats">
-        <span><Crosshair size={16}/><b>{score}</b> XP</span><span><ShieldCheck size={16}/>{completed.length}/4</span><span><Zap size={16}/>100%</span>
+        <span><Crosshair size={16}/><b>{score}</b> XP</span>
+        <span><ShieldCheck size={16}/>{completed.length}/4</span>
+        <span><Zap size={16}/>{phase==='room'?shield:3}/3</span>
       </div>
       {ready&&phase==='corridor'&&(
         <div className="qul-ops-controls">
@@ -289,10 +330,19 @@ export const ArcadeCorridor: React.FC<Props> = ({lang,onBack}) => {
             onPointerUp={()=>setInput(v=>({...v,sprint:false}))}
             onPointerCancel={()=>setInput(v=>({...v,sprint:false}))}
             onLostPointerCapture={()=>setInput(v=>({...v,sprint:false}))}><Zap size={22}/></button>
-          <div className="qul-ops-desktop-instructions">WASD / ↑↓ {ar?'للحركة':'MOVE'} · SHIFT {ar?'للجري':'RUN'} · E {ar?'للدخول':'ENTER'}</div>
+          <div className="qul-ops-desktop-instructions">WASD / ↑↓ {ar?'للحركة':'MOVE'} · SHIFT {ar?'للجري':'RUN'} · E {ar?'للدخول':'ENTER'} · SPACE {ar?'للإطلاق':'FIRE'}</div>
         </div>
       )}
       {ready&&phase==='corridor'&&<div className="qul-ops-crosshair" aria-hidden="true">+</div>}
+      {ready&&phase==='corridor'&&completed.length===4&&(
+        <div className="qul-ops-victory" role="status">
+          <ShieldCheck size={35}/>
+          <h2>{ar?'تم إنجاز العملية!':'OPERATION COMPLETE!'}</h2>
+          <p>{ar?'أنهيت الغرف الأربع، وأثبتّ تطورك من المفردات إلى الاستنتاج.':'You cleared all four rooms, progressing from vocabulary to reasoning.'}</p>
+          <strong>{score} XP</strong>
+          <button className="qul-ops-action" onClick={onBack}>{ar?'العودة للألعاب':'BACK TO GAMES'}</button>
+        </div>
+      )}
       {ready&&<button className="qul-ops-pause" onClick={()=>setPaused(v=>!v)}>{paused?(ar?'استئناف':'RESUME'):(ar?'إيقاف مؤقت':'PAUSE')}</button>}
     </div>
   );
