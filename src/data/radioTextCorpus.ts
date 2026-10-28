@@ -8,7 +8,7 @@ export type RadioCorpusLevel = 'beginner' | 'intermediate' | 'advanced';
 export type RadioCorpusType = 'scenario' | 'dialogue' | 'story' | 'riddle' | 'news';
 export type RadioCorpusText = {
   id:string; level:RadioCorpusLevel; type:RadioCorpusType;
-  number:number; titleAr:string; sourceArabic:string; translationEn:string; page:number;
+  number:number; titleAr:string; sourceArabic:string; translationEn:string; page:number; riddleAnswerAr?:string;
 };
 export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
  {
@@ -319,7 +319,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "أوراق كثيرة",
   "sourceArabic": "تقرأ كلماتي. لكنني لست شجرة،لي أوراق كثيرة تجدني في المكتبة أو في حقيبة.وتنظر إلى صوري ما أنا؟.الطالب",
   "translationEn": "I have many pages, but I am not a tree. You read my words and look at my pictures. You find me in the library or a student’s bag. What am I?",
-  "page": 8
+  "page": 8,
+  "riddleAnswerAr": "الكتاب"
  },
  {
   "id": "beginner-riddle-02",
@@ -329,7 +330,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "على الحائط",
   "sourceArabic": ". أنظر إليك من الحائط. لكنني ال ألسع،لي عقربان ما أنا؟.تعرف الوقت عندما تنظر إلي",
   "translationEn": "I have two hands, but I cannot hold anything. I look at you from the wall. You know the time when you look at me. What am I?",
-  "page": 8
+  "page": 8,
+  "riddleAnswerAr": "الساعة ذات العقارب"
  },
  {
   "id": "beginner-riddle-03",
@@ -339,7 +341,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "في حقيبتك",
   "sourceArabic": "تمسكني بيدك.أعيش في حقيبتك أو على مكتبك ما أنا؟. لي حبر أزرق أحياًنا.وتكتب بي اسمك",
   "translationEn": "I live in your bag or on your desk. You hold me in your hand and write your name with me. Sometimes I have blue ink. What am I?",
-  "page": 8
+  "page": 8,
+  "riddleAnswerAr": "القلم"
  },
  {
   "id": "beginner-riddle-04",
@@ -349,7 +352,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "وقت المطر",
   "sourceArabic": "تحملني.تفتحني فوق رأسك عندما ينزل المطر . تغلقني بعد المطر. وأساعدك على البقاء جاًفا،بيدك ما أنا؟",
   "translationEn": "You open me above your head when it rains. You carry me in your hand, and I help you stay dry. You close me after the rain. What am I?",
-  "page": 8
+  "page": 8,
+  "riddleAnswerAr": "المظلة"
  },
  {
   "id": "beginner-riddle-05",
@@ -359,7 +363,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "صديق القدم",
   "sourceArabic": "أمشي معك إلى.تلبسني في قدمك قبل الخروج ما. تخلعني عندما تعود إلى البيت.المدرسة والحديقة أنا؟",
   "translationEn": "You put me on your foot before going out. I go with you to school and the park. You take me off when you return home. What am I?",
-  "page": 8
+  "page": 8,
+  "riddleAnswerAr": "الحذاء"
  },
  {
   "id": "beginner-riddle-06",
@@ -369,7 +374,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "بارد ولذيذ",
   "sourceArabic": "إذا تركتني في. تأكلني بالملعقة أحياًنا.أنا حلو وبارد ما أنا؟. أذوب بسرعة،الشمس",
   "translationEn": "I am sweet and cold. Sometimes you eat me with a spoon. If you leave me in the sun, I melt quickly. What am I?",
-  "page": 9
+  "page": 9,
+  "riddleAnswerAr": "المثلجات أو الآيس كريم"
  },
  {
   "id": "beginner-riddle-07",
@@ -379,7 +385,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "أحمل أغراضك",
   "sourceArabic": "تحملني على ظهرك.تضع في داخلي كتبك ودفاترك ما أنا؟. لي جيوب وحزامان.إلى المدرسة",
   "translationEn": "You put your books and notebooks inside me. You carry me on your back to school. I have pockets and two straps. What am I?",
-  "page": 9
+  "page": 9,
+  "riddleAnswerAr": "الحقيبة المدرسية"
  },
  {
   "id": "beginner-riddle-08",
@@ -389,7 +396,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "أمام المرآة",
   "sourceArabic": "تمسكني بيدك وترتب. لكنني ال آكل،لي أسنان كثيرة ما أنا؟.بي شعرك أمام المرآة",
   "translationEn": "I have many teeth, but I do not eat. You hold me in your hand and use me to tidy your hair in front of the mirror. What am I?",
-  "page": 9
+  "page": 9,
+  "riddleAnswerAr": "المشط"
  },
  {
   "id": "beginner-riddle-09",
@@ -399,7 +407,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "في السماء",
   "sourceArabic": "ال. أعطي األرض نوًر ا ودفًئا.أظهر في السماء نهاًر ا ما أنا؟. فنوري قوي،تنظر إلي مباشرة",
   "translationEn": "I appear in the sky during the day. I give Earth light and warmth. Do not look directly at me because my light is strong. What am I?",
-  "page": 9
+  "page": 9,
+  "riddleAnswerAr": "الشمس"
  },
  {
   "id": "beginner-riddle-10",
@@ -409,7 +418,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "أفتح الباب",
   "sourceArabic": "تضعني في القفل.أنا صغير ومصنوع من المعدن ما أنا؟. تحملني في جيبك أحياًنا.وتديرني لفتح الباب",
   "translationEn": "I am small and made of metal. You put me in the lock and turn me to open the door. Sometimes you carry me in your pocket. What am I?",
-  "page": 9
+  "page": 9,
+  "riddleAnswerAr": "المفتاح"
  },
  {
   "id": "beginner-news-01",
@@ -819,7 +829,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "مدن بال سكان",
   "sourceArabic": "لكنك ال تسمع في،أعرض لك مدًنا وطرًقا وأنهاًر ا يستخدمني.داخلي صوت سيارة وال ترى ماًء حقيقًيا قد أكون ورقة أو صورة.المسافر ليعرف االتجاهات ما أنا؟.على شاشة",
   "translationEn": "I show cities, roads, and rivers, but you cannot hear a car or see real water inside me. Travelers use me to find directions. I may be on paper or a screen. What am I?",
-  "page": 19
+  "page": 19,
+  "riddleAnswerAr": "الخريطة"
  },
  {
   "id": "intermediate-riddle-02",
@@ -829,7 +840,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "ضيف من الضوء",
   "sourceArabic": "وقد أطول أو،أرافقك عندما تقف في ضوء الشمس وقد، ال تستطيع اإلمساك بي.أقصر مع تغير مكانها ما أنا؟. أتحرك حين تتحرك.أختفي في الظالم التام",
   "translationEn": "I accompany you when you stand in sunlight and may grow longer or shorter as the sun changes position. You cannot hold me, and I may disappear in complete darkness. I move when you move. What am I?",
-  "page": 19
+  "page": 19,
+  "riddleAnswerAr": "الظل"
  },
  {
   "id": "intermediate-riddle-03",
@@ -839,7 +851,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "صوت يعود",
   "sourceArabic": "فتسمع صوًتا،تنادي في مكان واسع تحيط به الجبال ال يوجد شخص.يشبه صوتك يكرر كلماتك بعد لحظة ما اسم هذه. بل يعود الصوت إليك،آخر يجيبك الظاهرة؟",
   "translationEn": "You call out in an open place surrounded by mountains and hear a sound like your own repeating your words a moment later. No other person is answering. The sound is coming back to you. What is this phenomenon called?",
-  "page": 19
+  "page": 19,
+  "riddleAnswerAr": "الصدى"
  },
  {
   "id": "intermediate-riddle-04",
@@ -849,7 +862,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "زائر ذو عنوان",
   "sourceArabic": "قد أسافر.أحمل كلمات كتبها شخص إلى شخص آخر وقد أصل عبر البريد،داخل ظرف عليه عنوان وطابع ما. تحمل كلماتي سؤااًل أو خبًر ا أو تحية.اإللكتروني أنا؟",
   "translationEn": "I carry words written by one person to another. I may travel in an envelope with an address and a stamp, or arrive by email. My words may contain a question, news, or a greeting. What am I?",
-  "page": 19
+  "page": 19,
+  "riddleAnswerAr": "الرسالة"
  },
  {
   "id": "intermediate-riddle-05",
@@ -859,7 +873,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "بيت الكلمات",
   "sourceArabic": "يمكنك أن تبحث عنها بين صفحاتي،إذا لم تفهم كلمة وقد أقدم، أشرح المعاني.أو في نسختي اإللكترونية ُترتب كلماتي غالًبا حسب.أمثلة على االستعمال ما أنا؟.الحروف",
   "translationEn": "If you do not understand a word, you can look for it in my pages or electronic version. I explain meanings and may give examples of usage. My words are often arranged alphabetically. What am I?",
-  "page": 19
+  "page": 19,
+  "riddleAnswerAr": "القاموس أو المعجم"
  },
  {
   "id": "intermediate-riddle-06",
@@ -869,7 +884,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "أيام مرتبة",
   "sourceArabic": "تنظر.أجمع الشهور واألسابيع واأليام في مكان واحد قد تعلقني.إلي لتعرف تاريخ الرحلة أو يوم االختبار . وتكتب على بعض مربعاتي مواعيدك،على الحائط ما أنا؟",
   "translationEn": "I bring months, weeks, and days together in one place. You look at me to check the date of a trip or an exam. You may hang me on the wall and write appointments in some of my boxes. What am I?",
-  "page": 20
+  "page": 20,
+  "riddleAnswerAr": "التقويم"
  },
  {
   "id": "intermediate-riddle-07",
@@ -879,7 +895,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "الفتة بألوان",
   "sourceArabic": "أقف قرب تقاطع الطريق وأستخدم ثالثة ألوان يجب أن تتوقف، عندما يظهر األحمر.لتنظيم المرور تتحرك إذا كان، وعندما يظهر األخضر.السيارات ما أنا؟.الطريق آمًنا",
   "translationEn": "I stand near a road junction and use three colors to control traffic. When red appears, cars must stop. When green appears, they move if the road is safe. What am I?",
-  "page": 20
+  "page": 20,
+  "riddleAnswerAr": "إشارة المرور"
  },
  {
   "id": "intermediate-riddle-08",
@@ -889,7 +906,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "الماء الجامد",
   "sourceArabic": "ثم ُوضعت في مكان شديد البرودة، كنت ماًء سائاًل يضعني الناس في المشروبات.فأصبحت صلًبا . وأعود سائاًل عندما ترتفع حرارتي بما يكفي،لتبريدها ما أنا؟",
   "translationEn": "I was liquid water, then I was placed somewhere very cold and became solid. People put me in drinks to cool them. I turn into liquid again when my temperature rises enough. What am I?",
-  "page": 20
+  "page": 20,
+  "riddleAnswerAr": "الثلج"
  },
  {
   "id": "intermediate-riddle-09",
@@ -899,7 +917,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "عين المسافر",
   "sourceArabic": ".أنظر من خاللي إلى شيء بعيد فيبدو أكبر وأقرب يحملني بعض الناس لمشاهدة الطيور من دون ما أنا؟. لي عدستان تنظر فيهما بعينيك.االقتراب منها",
   "translationEn": "Look through me at something far away, and it appears larger and closer. Some people carry me to watch birds without approaching them. I have two eyepieces for you to look through. What am I?",
-  "page": 20
+  "page": 20,
+  "riddleAnswerAr": "المنظار الثنائي"
  },
  {
   "id": "intermediate-riddle-10",
@@ -909,7 +928,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "درجات بال أرقام",
   "sourceArabic": "تضع. لكنها ليست عالمات اختبار،لي درجات كثيرة .قدمك على درجة ثم األخرى لتصعد إلى طابق أعلى ما أنا؟.أظل ثابًتا بينما يتحرك الناس فوقي",
   "translationEn": "I have many steps, but they are not stages in a plan. You put your foot on one, then another, to reach a higher floor. I remain still while people move over me. What am I?",
-  "page": 20
+  "page": 20,
+  "riddleAnswerAr": "السلم أو الدرج"
  },
  {
   "id": "intermediate-news-01",
@@ -1319,7 +1339,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "حقيقة أم توقع",
   "sourceArabic": "مثل،أقول شيًئا يمكن التحقق منه بالرجوع إلى دليل قد تصح عبارتي أو.عدد الكتب على رف محدد لكنها ال تعبر عن ذوق شخصي،تخطئ بعد الفحص إذا كان، ما نوع العبارة التي أمثلها.مثل جمال الغالف معيار تمييزها إمكان اختبارها؟",
   "translationEn": "I state something that can be checked against evidence, such as the number of books on a particular shelf. My statement may prove true or false after checking, but it does not express a personal preference such as how attractive a cover is. What kind of statement am I, if my defining feature is testability?",
-  "page": 33
+  "page": 33,
+  "riddleAnswerAr": "عبارة خبرية قابلة للتحقق وليست بالضرورة صحيحة"
  },
  {
   "id": "advanced-riddle-02",
@@ -1329,7 +1350,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "مفتاح رقمي",
   "sourceArabic": "مع أنني ال أملك أسناًنا معدنية وال،أحمي حسابك قد أتكون من كلمات وحروف.أدخل في قفل حقيقي كلما سهل. وينبغي أال تشاركني مع اآلخرين،ورموز ما أنا في عالم.تخميني ضعفت الحماية التي أوفرها الحسابات الرقمية؟",
   "translationEn": "I protect your account, although I have no metal teeth and fit into no physical lock. I may consist of words, letters, and symbols, and you should not share me with others. The easier I am to guess, the weaker the protection I provide. What am I in the world of digital accounts?",
-  "page": 33
+  "page": 33,
+  "riddleAnswerAr": "كلمة المرور"
  },
  {
   "id": "advanced-riddle-03",
@@ -1339,7 +1361,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "قيمة تنمو ببطء",
   "sourceArabic": "أبنيها بيني وبينك عندما ألتزم بوعودي وأصدق في وقد تضعف، قد تستغرق وقًتا طوياًل لتنمو.كالمي ال يكفي أن أطلب، إذا تضررت.بسبب كذبة واحدة ما هذه. بل أحتاج إلى سلوك ثابت يبررها،عودتها العالقة المعنوية التي تجعلنا نطمئن إلى بعضنا؟",
   "translationEn": "I build it between us when I keep promises and speak truthfully. It may take a long time to grow and can weaken because of one lie. If damaged, asking for it back is insufficient; consistent behavior must justify it. What is this bond that allows us to rely on one another?",
-  "page": 33
+  "page": 33,
+  "riddleAnswerAr": "الثقة"
  },
  {
   "id": "advanced-riddle-04",
@@ -1349,7 +1372,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "شيء ال يسترجع",
   "sourceArabic": "مهما،تحصل كل يوم على أربع وعشرين ساعة مني ، تستطيع أن تنظم استعمالي.اختلف مقدار مالك .لكنك ال تستطيع ادخار ساعة مضت لتعيشها الحًقا ،يعرف الطالب قيمتي حين يقترب موعد التسليم ما أنا؟.ويضيع بعضي أثناء التأجيل",
   "translationEn": "You receive twenty-four hours of me each day, regardless of your wealth. You can organize how you use me, but cannot save a past hour to live later. Students recognize my value as a deadline approaches, and some of me is lost through procrastination. What am I?",
-  "page": 34
+  "page": 34,
+  "riddleAnswerAr": "الوقت"
  },
  {
   "id": "advanced-riddle-05",
@@ -1359,7 +1383,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "موقف بين طرفين",
   "sourceArabic": "وأحاول،أظهر حين أستمع إلى شخص يختلف معي ال.فهم وجهة نظره من دون أن أضطر إلى تبنيها بل احترام اإلنسان مع،أعني الموافقة على اإليذاء أساعد الجماعات المتنوعة على.إمكان نقد الفكرة ما القيمة التي أمثلها؟.العيش مًعا",
   "translationEn": "I appear when I listen to someone who disagrees with me and try to understand their view without having to adopt it. I do not mean accepting harm, but respecting the person while allowing criticism of the idea. I help diverse groups live together. What value do I represent?",
-  "page": 34
+  "page": 34,
+  "riddleAnswerAr": "التسامح"
  },
  {
   "id": "advanced-riddle-06",
@@ -1369,7 +1394,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "حلقة قابلة لالختبار",
   "sourceArabic": "أجمع. ثم أقترح تفسيًر ا يمكن اختباره،أبدأ بمالحظة وأعدل التفسير إذا،األدلة وأقارن النتائج بما توقعته ال أعدك بأن تكون فكرتي األولى.لم تؤيده البيانات ما المنهج. بل أعطيك طريقة لمراجعتها،صحيحة الذي تصفه هذه الخطوات؟",
   "translationEn": "I begin with an observation and propose a testable explanation. I collect evidence, compare results with predictions, and revise the explanation if the data do not support it. I do not promise that the first idea is correct; I offer a way to examine it. What method do these steps describe?",
-  "page": 34
+  "page": 34,
+  "riddleAnswerAr": "المنهج العلمي"
  },
  {
   "id": "advanced-riddle-07",
@@ -1379,7 +1405,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "خدمة باختيارك",
   "sourceArabic": "أقدم وقتي وجهدي لخدمة اآلخرين من دون أن يكون قد أنظم.األجر المالي هو المقابل المتفق عليه لكن عملي يحتاج،الكتب أو أساعد في تنظيف حديقة ما اسم هذا.إلى التزام وتنظيم رغم أنه اختياري النوع من المشاركة المجتمعية؟",
   "translationEn": "I offer time and effort to serve others without financial pay being the agreed return. I may organize books or help clean a park, but my work still requires commitment and organization even though it is voluntary. What is this type of community participation called?",
-  "page": 35
+  "page": 35,
+  "riddleAnswerAr": "التطوع"
  },
  {
   "id": "advanced-riddle-08",
@@ -1389,7 +1416,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "احتمال لم يثبت",
   "sourceArabic": "لكنني ال أطالبك بقبوله،أطرح تفسيًر ا أولًيا لظاهرة يجب أن تسمح صياغتي باختبار.لمجرد أنه يبدو مقنًعا ، أسبق النتيجة النهائية.قد يؤيدني أو يكشف ضعفي ما اسمي.وقد تتغير عبارتي حين تصل أدلة جديدة في البحث العلمي؟",
   "translationEn": "I offer an initial explanation of a phenomenon but do not ask you to accept it merely because it sounds convincing. My wording must allow a test that may support me or reveal weaknesses. I come before the final conclusion and may change when new evidence arrives. What am I called in scientific research?",
-  "page": 35
+  "page": 35,
+  "riddleAnswerAr": "الفرضية"
  },
  {
   "id": "advanced-riddle-09",
@@ -1399,7 +1427,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "صوت المستفيدين",
   "sourceArabic": "أنا أداة تتضمن أسئلة منظمة ُتوجه إلى مجموعة من قد أستخدم.الناس لمعرفة آرائهم أو تجاربهم تعتمد فائدة نتائجي.اختيارات محددة وأسئلة مفتوحة وال،على وضوح أسئلتي وطريقة اختيار المشاركين ما أنا؟.أمثل الجميع بالضرورة",
   "translationEn": "I am a tool containing structured questions addressed to a group of people to learn about their opinions or experiences. I may use fixed choices and open-ended questions. My usefulness depends on clear questions and participant selection, and I do not necessarily represent everyone. What am I?",
-  "page": 35
+  "page": 35,
+  "riddleAnswerAr": "الاستبيان"
  },
  {
   "id": "advanced-riddle-10",
@@ -1409,7 +1438,8 @@ export const RADIO_TEXT_CORPUS:RadioCorpusText[] = [
   "titleAr": "خطوات قبل التنفيذ",
   "sourceArabic": "،أحدد الهدف والمهام والموارد والوقت المتوقع ال أنجز.وأوضح من يتحمل مسؤولية كل عمل لكنني أساعد الفريق على معرفة،المشروع بنفسي يمكن تعديلي إذا تغيرت.الطريق ومراجعة التقدم ما أنا؟. بشرط أال ُينسى الهدف،الظروف",
   "translationEn": "I specify the goal, tasks, resources, expected time, and who is responsible for each action. I do not complete the project myself, but help the team understand the route and review progress. I can be adjusted when circumstances change, provided the goal is not forgotten. What am I?",
-  "page": 35
+  "page": 35,
+  "riddleAnswerAr": "خطة العمل"
  },
  {
   "id": "advanced-news-01",
