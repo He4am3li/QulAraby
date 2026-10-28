@@ -1,7 +1,5 @@
-// Hand-curated Arabic-English glosses; candidate words are included ONLY when
-// the Arabic appears in the actual source transcript AND the literal English
-// gloss is evidenced in the user-provided parallel English translation.
-// No model/API calls are made to select, gloss or save radio vocabulary.
+// Fixed bilingual glossary; words and glosses are used only when verified in
+// the user's actual Arabic transcript and parallel English translation.
 export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  [
   "صباح",
@@ -605,7 +603,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "القراءة",
-  "reading"
+  "reading",
+  "read"
  ],
  [
   "قرأ",
@@ -6398,5 +6397,21 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  [
   "نتائجي",
   "results"
+ ],
+ [
+  "مستعد",
+  "ready"
+ ],
+ [
+  "الكرسي",
+  "chair"
+ ],
+ [
+  "المجموعة",
+  "group"
+ ],
+ [
+  "شكرته",
+  "thanked"
  ]
 ];
