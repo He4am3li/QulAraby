@@ -307,6 +307,7 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
   const gunTip = new THREE.PointLight('#64cfff',0,3);
   gunTip.position.set(0,.02,-.91);gun.add(gunTip);
   let modelMixer: THREE.AnimationMixer | null=null;
+  let loadedSoldier: THREE.Group | null=null;
   const modelActions = new Map<string,THREE.AnimationAction>();
   let action: THREE.AnimationAction|null=null;
   let disposalStarted=false;
@@ -326,6 +327,7 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
       gltf.scene.scale.setScalar(.96);
       gltf.scene.rotation.y=Math.PI;
       operator.add(gltf.scene);
+      loadedSoldier = gltf.scene;
       mannequin.visible=false;
       modelMixer=new THREE.AnimationMixer(gltf.scene);
       for (const clip of gltf.animations) {
@@ -619,6 +621,25 @@ export function createTacticalScene(host: HTMLElement, callbacks: Callbacks) {
       window.removeEventListener('keydown',onKeyDown);
       window.removeEventListener('keyup',onKeyUp);
       modelMixer?.stopAllAction();
+      if(loadedSoldier) {
+        modelMixer?.uncacheRoot(loadedSoldier);
+        loadedSoldier.traverse(node => {
+          if(node instanceof THREE.Mesh) {
+            node.geometry?.dispose();
+            const mats=Array.isArray(node.material)?node.material:[node.material];
+            mats.forEach(material => {
+              if(!material)return;
+              const maps = ['map','normalMap','roughnessMap','metalnessMap','emissiveMap','aoMap'] as const;
+              for(const name of maps) {
+                const tex=(material as unknown as Record<string, unknown>)[name];
+                if(tex instanceof THREE.Texture)tex.dispose();
+              }
+              material.dispose();
+            });
+          }
+        });
+        loadedSoldier.parent?.remove(loadedSoldier);
+      }
       geometries.forEach(x=>x.dispose());
       materials.forEach(x=>x.dispose());
       textures.forEach(x=>x.dispose());
