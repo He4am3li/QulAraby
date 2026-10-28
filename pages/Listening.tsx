@@ -12,6 +12,7 @@ import {
 import { generateListeningExercise, generateSpeech, decodeAudioData, generateWordIllustration, evaluateCallIn } from '../services/gemini';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CassettePlayer } from '../components/CassettePlayer';
+import { RadioThermalPrinter, RadioLearningStage } from '../components/RadioThermalPrinter';
 import '../components/ListeningRadioRetouch.css';
 import { STORY_CASSETTES } from '../src/data/storyCassettes';
 
@@ -70,10 +71,9 @@ export const Listening: React.FC = () => {
   const [radioContent, setRadioContent] = React.useState<any>(null);
   const [radioAudio, setRadioAudio] = React.useState<AudioBuffer | null>(null);
   const [isRadioPlaying, setIsRadioPlaying] = React.useState(false);
-  const [radioQuizMode, setRadioQuizMode] = React.useState(false);
-  const [currentQuizIndex, setCurrentQuizIndex] = React.useState(0);
-  const [radioScore, setRadioScore] = React.useState(0);
-  const [radioFeedback, setRadioFeedback] = React.useState<any>(null);
+  const [radioListenStage, setRadioListenStage] = React.useState<RadioLearningStage>('first');
+  const [radioPlaybackEndCount, setRadioPlaybackEndCount] = React.useState(0);
+  const radioStationRequestRef = React.useRef(0);
   const [volume, setVolume] = React.useState(0.5);
   const [selectedWord, setSelectedWord] = React.useState<{ word: string, meaningEn: string, meaningAr: string } | null>(null);
   const [isWordSpeaking, setIsWordSpeaking] = React.useState(false);
@@ -265,10 +265,16 @@ export const Listening: React.FC = () => {
     stopStatic();
   };
 
-  const playBuffer = async (buffer: AudioBuffer) => {
+  const playBuffer = async (buffer: AudioBuffer, fromBeginning = false) => {
     const ctx = await initAudio();
-    
-    if (isRadioPlaying) {
+
+    if (fromBeginning) {
+      if (sourceNodeRef.current) {
+        try { sourceNodeRef.current.stop(); } catch {}
+        sourceNodeRef.current = null;
+      }
+      pausedAtRef.current = 0;
+    } else if (isRadioPlaying) {
       if (sourceNodeRef.current) {
         sourceNodeRef.current.stop();
         sourceNodeRef.current = null;
@@ -295,9 +301,14 @@ export const Listening: React.FC = () => {
         setIsPaused(false);
         pausedAtRef.current = 0;
         sourceNodeRef.current = null;
+        // Completion means the whole audio has finished naturally, never a pause
+        // or a station change. This advances the cassette-style printer steps.
+        if (selectedTopic?.id === 'radio' && radioAudio === buffer) {
+          setRadioPlaybackEndCount(previous => previous + 1);
+        }
       }
     };
-    
+
     sourceNodeRef.current = source;
     setIsRadioPlaying(true);
     setIsPaused(false);
@@ -438,32 +449,38 @@ export const Listening: React.FC = () => {
     if (!selectedLevel) return;
     const station = RADIO_STATIONS.find(s => s.id === stationId);
     if (!station) return;
+    // Only the latest station request may update audio or questions.
+    // This keeps the name, spoken text and printed exercise tied to one station.
+    const requestId = ++radioStationRequestRef.current;
     setRadioFrequency(stationId);
     setLoading(true);
     setRadioContent(null);
     setRadioAudio(null);
-    setRadioQuizMode(false);
-    setCurrentQuizIndex(0);
-    setRadioScore(0);
-    setRadioFeedback(null);
+    setRadioListenStage('first');
+    setRadioPlaybackEndCount(0);
     stopAudio();
     startStatic();
     try {
-      const prompt = `Create a ${station.type} listening exercise in Arabic. Level: ${selectedLevel.en}. ${selectedLevel.prompt}.`;
+      const prompt = `Create a ${station.type} listening exercise in Arabic. Level: ${selectedLevel.en}. ${selectedLevel.prompt}. Use a natural coherent transcript, then write EXACTLY FIVE comprehension questions strictly about the actual transcript, with EXACTLY THREE answer options per question and one exact correctAnswer from those options. Vary the correct option position. Keep every question short (maximum 14 Arabic words) and each choice concise (maximum 6 Arabic words) so all options fit on a compact printed ticket with NO scrolling. Keep all options equally unvowelled, to avoid highlighting the answer. Provide accurate wordMap translations in English.`;
       const data = await generateListeningExercise(selectedLevel.en, prompt, lang);
+      if (requestId !== radioStationRequestRef.current) return;
       setRadioContent(data);
       const audioBytes = await generateSpeech(data.transcript, 'ar');
+      if (requestId !== radioStationRequestRef.current) return;
       if (audioBytes) {
         const ctx = await initAudio();
         const buffer = await decodeAudioData(audioBytes, ctx);
+        if (requestId !== radioStationRequestRef.current) return;
         setRadioAudio(buffer);
       }
     } catch (e) {
       console.error(e);
-      setError("Failed to load radio station");
+      if (requestId === radioStationRequestRef.current) setError("Failed to load radio station");
     } finally {
-      setLoading(false);
-      stopStatic();
+      if (requestId === radioStationRequestRef.current) {
+        setLoading(false);
+        stopStatic();
+      }
     }
   };
 
@@ -879,11 +896,15 @@ export const Listening: React.FC = () => {
                             onClick={() => {
                                 setSelectedTopic(topic);
                                 if (topic.id === 'radio') {
+                                    radioStationRequestRef.current++;
                                     setRadioFrequency(0);
                                     setRadioContent(null);
+                                    setRadioListenStage('first');
+                                    setRadioPlaybackEndCount(0);
                                     stopAudio();
                                 }
                                 if (topic.id === 'cassette_stories') {
+                                    radioStationRequestRef.current++;
                                     stopAudio();
                                 }
                                 if (topic.id === 'emotions') loadEmotions();
@@ -926,7 +947,7 @@ export const Listening: React.FC = () => {
             </div>
         </aside>
 
-        <main className={`flex-1 flex flex-col relative scrollbar-hide ${selectedTopic?.id === 'cassette_stories' ? 'p-2 sm:p-4 lg:p-6 overflow-y-auto' : 'p-8 overflow-y-auto'}`}>
+        <main className={`flex-1 flex flex-col relative scrollbar-hide ${selectedTopic?.id === 'cassette_stories' ? 'p-2 sm:p-4 lg:p-6 overflow-y-auto' : selectedTopic?.id === 'radio' ? 'p-1.5 sm:p-2 overflow-hidden' : 'p-8 overflow-y-auto'}`}>
             <AnimatePresence mode="wait">
                 {!selectedLevel ? (
                     <motion.div 
@@ -965,93 +986,10 @@ export const Listening: React.FC = () => {
                         key="radio"
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="h-full flex flex-col items-center justify-center"
+                        className="h-full flex flex-col items-center justify-start qul-radio-printer-layout"
                     >
-                        {/* REALISTIC RADIO COMPONENT */}
+                        {/* Original radio, raised slightly to fit its matching printer below. */}
                         <div className="relative w-full max-w-3xl pt-12 qul-original-radio-retouch">
-                            {/* Quiz Overlay for Radio (Integrated) */}
-                            <AnimatePresence>
-                                {radioQuizMode && radioContent && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-                                        animate={{ opacity: 1, backdropFilter: 'blur(8px)' }}
-                                        exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-                                        className="absolute inset-0 z-50 flex items-center justify-center p-8"
-                                    >
-                                        <div className="absolute inset-0 bg-slate-900/40 rounded-[4rem]" onClick={() => setRadioQuizMode(false)} />
-                                        <motion.div 
-                                            initial={{ scale: 0.9, y: 20 }}
-                                            animate={{ scale: 1, y: 0 }}
-                                            className="relative w-full max-w-lg bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 overflow-hidden"
-                                        >
-                                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
-                                                        <RadioIcon size={18} />
-                                                    </div>
-                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quiz Time</span>
-                                                </div>
-                                                <button onClick={() => setRadioQuizMode(false)} className="text-slate-300 hover:text-slate-500 transition-colors"><XCircle size={24} /></button>
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                <div className="flex items-center justify-between">
-                                                    <h4 className="text-lg font-black text-slate-800 arabic-font leading-tight">{radioContent.quiz[currentQuizIndex].question}</h4>
-                                                    <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
-                                                        {currentQuizIndex + 1} / {radioContent.quiz.length}
-                                                    </span>
-                                                </div>
-                                                
-                                                <div className="grid grid-cols-1 gap-2">
-                                                    {radioContent.quiz[currentQuizIndex].options.map((opt: string, i: number) => (
-                                                        <button 
-                                                            key={i} 
-                                                            onClick={() => {
-                                                                if (radioFeedback) return;
-                                                                const correct = opt === radioContent.quiz[currentQuizIndex].correctAnswer;
-                                                                setRadioFeedback({ isCorrect: correct, selected: opt });
-                                                                if (correct) setRadioScore(prev => prev + 1);
-                                                            }}
-                                                            className={`p-3 rounded-xl border-2 font-bold text-xs transition-all text-right arabic-font ${radioFeedback ? (opt === radioContent.quiz[currentQuizIndex].correctAnswer ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : radioFeedback.selected === opt ? 'border-red-200 bg-red-50 text-red-600' : 'border-slate-50 opacity-40') : 'border-slate-50 bg-slate-50 hover:border-blue-200 hover:bg-white text-slate-700'}`}
-                                                        >
-                                                            {opt}
-                                                        </button>
-                                                    ))}
-                                                </div>
-
-                                                {radioFeedback && (
-                                                    <motion.div 
-                                                        initial={{ opacity: 0, y: 10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        className={`p-3 rounded-xl flex items-center gap-3 ${radioFeedback.isCorrect ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}
-                                                    >
-                                                        {radioFeedback.isCorrect ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
-                                                        <p className="font-black text-xs arabic-font flex-1">{radioFeedback.isCorrect ? t.wellDone : t.tryAgain}</p>
-                                                        <button 
-                                                            onClick={() => {
-                                                                if (currentQuizIndex < radioContent.quiz.length - 1) {
-                                                                    setCurrentQuizIndex(prev => prev + 1);
-                                                                    setRadioFeedback(null);
-                                                                } else {
-                                                                    setRadioQuizMode(false);
-                                                                    setRadioFeedback(null);
-                                                                    setTimeout(() => {
-                                                                        setIsIncomingCall(true);
-                                                                    }, 500);
-                                                                }
-                                                            }} 
-                                                            className="bg-white/20 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase hover:bg-white/30 transition-colors"
-                                                        >
-                                                            {currentQuizIndex < radioContent.quiz.length - 1 ? t.next : t.finish}
-                                                        </button>
-                                                    </motion.div>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-
                             {/* Radio Handle */}
                             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-12 border-[10px] border-[#1a110a] rounded-t-3xl z-0 qul-original-radio-handle" />
                             
@@ -1071,7 +1009,7 @@ export const Listening: React.FC = () => {
                                 <div className={`flex-[1_1_0%] min-h-0 flex gap-6 ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
                                     <div className="w-1/4 h-full bg-[#120a05] rounded-2xl border-4 border-[#2a1d15] shadow-inner relative overflow-hidden flex flex-col qul-original-radio-speaker">
                                         <div className="p-4 h-full overflow-y-auto custom-scrollbar relative z-10">
-                                            {radioContent ? (
+                                            {radioContent && radioListenStage !== 'first' && radioListenStage !== 'questions' ? (
                                                 <p className="text-[10px] leading-relaxed font-bold text-emerald-400/80 text-left py-4">
                                                     {radioContent.translation || "..."}
                                                 </p>
@@ -1152,7 +1090,7 @@ export const Listening: React.FC = () => {
 
                                     <div className="w-1/4 h-full bg-[#120a05] rounded-2xl border-4 border-[#2a1d15] shadow-inner relative overflow-hidden flex flex-col qul-original-radio-speaker">
                                         <div className="p-4 h-full overflow-y-auto custom-scrollbar relative z-10">
-                                            {radioContent && (
+                                            {radioContent && radioListenStage !== 'first' && radioListenStage !== 'questions' && (
                                                 <div dir="rtl" className="text-xs leading-relaxed font-black text-amber-400/90 text-right arabic-font py-4 flex flex-wrap gap-x-1">
                                                     {radioContent.transcript.split(' ').map((word: string, i: number) => (
                                                         <span key={i} onClick={() => handleWordClick(word)} className="hover:text-white cursor-pointer inline-block">{word}</span>
@@ -1204,17 +1142,21 @@ export const Listening: React.FC = () => {
                             </div>
                         </div>
 
-                        {radioContent && !loading && !radioQuizMode && (
-                            <motion.button 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                onClick={() => setRadioQuizMode(true)}
-                                className="mt-8 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm flex items-center gap-3 hover:scale-105 active:scale-95 shadow-xl shadow-slate-900/20 qul-original-radio-quiz"
-                            >
-                                {t.check}
-                                <ArrowUpRight size={18} />
-                            </motion.button>
-                        )}
+                        <RadioThermalPrinter
+                            key={selectedLevel.id + ':' + radioFrequency}
+                            lang={lang}
+                            stationId={radioFrequency}
+                            stationTitle={RADIO_STATIONS.find(station => station.id === radioFrequency)?.[lang] || (lang === 'ar' ? 'الراديو' : 'Radio')}
+                            content={radioContent}
+                            loading={loading}
+                            audioReady={Boolean(radioAudio)}
+                            audioPlaying={isRadioPlaying}
+                            playEndCount={radioPlaybackEndCount}
+                            onStageChange={setRadioListenStage}
+                            onStudioCall={() => setIsIncomingCall(true)}
+                            onReplay={() => { if (radioAudio) void playBuffer(radioAudio, true); }}
+                            onNextStation={() => { void loadRadioStation(radioFrequency === RADIO_STATIONS.length ? 1 : radioFrequency + 1); }}
+                        />
                     </motion.div>
                 ) : selectedTopic.id === 'cassette_stories' ? (
                     <motion.div
