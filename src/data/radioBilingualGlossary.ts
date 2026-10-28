@@ -1,6 +1,7 @@
-// Curated Arabic ↔ English glosses used only when BOTH the Arabic word occurs
-// in the student's transcript AND its English meaning is present in the
-// original user-supplied parallel translation. Nothing is generated on demand.
+// Hand-curated Arabic-English glosses; candidate words are included ONLY when
+// the Arabic appears in the actual source transcript AND the literal English
+// gloss is evidenced in the user-provided parallel English translation.
+// No model/API calls are made to select, gloss or save radio vocabulary.
 export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  [
   "صباح",
@@ -475,7 +476,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "الشمس",
-  "sun"
+  "sun",
+  "sunlight"
  ],
  [
   "السماء",
@@ -1022,7 +1024,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "الأم",
-  "mother"
+  "mother",
+  "mom"
  ],
  [
   "الأخ",
@@ -1160,7 +1163,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "تفسير",
-  "explanation"
+  "explanation",
+  "explanations"
  ],
  [
   "سبب",
@@ -1185,7 +1189,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  [
   "نتيجة",
   "result",
-  "score"
+  "score",
+  "outcome"
  ],
  [
   "النتائج",
@@ -1297,7 +1302,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
   "التحقق",
   "verifying",
   "verify",
-  "check"
+  "check",
+  "checked"
  ],
  [
   "تحققت",
@@ -1362,7 +1368,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
   "نشر",
   "published",
   "posting",
-  "publication"
+  "publication",
+  "posted"
  ],
  [
   "النشر",
@@ -2047,7 +2054,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "ادخار",
-  "saving"
+  "saving",
+  "save"
  ],
  [
   "يدخر",
@@ -2112,7 +2120,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "اختيار",
-  "choice"
+  "choice",
+  "selection"
  ],
  [
   "الخيارات",
@@ -2123,7 +2132,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
   "الخيار",
   "option",
   "choice",
-  "cucumber"
+  "cucumber",
+  "cucumbers"
  ],
  [
   "قائمة",
@@ -2176,7 +2186,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "مالك",
-  "owner"
+  "owner",
+  "wealth"
  ],
  [
   "صاحب",
@@ -2351,7 +2362,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "وضوح",
-  "clarity"
+  "clarity",
+  "clear"
  ],
  [
   "غموض",
@@ -2736,7 +2748,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "الاختبار",
-  "test"
+  "test",
+  "exam"
  ],
  [
   "البحث",
@@ -2821,7 +2834,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "الأثر",
-  "impact"
+  "impact",
+  "harm"
  ],
  [
   "الآثار",
@@ -4204,7 +4218,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  [
   "إصلاح",
   "repair",
-  "fix"
+  "fix",
+  "repairing"
  ],
  [
   "تصليح",
@@ -4262,7 +4277,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "شاشة",
-  "screen"
+  "screen",
+  "screenshot"
  ],
  [
   "الكتروني",
@@ -4535,7 +4551,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "وضعت",
-  "put"
+  "put",
+  "placed"
  ],
  [
   "دخل",
@@ -4642,7 +4659,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "انتظر",
-  "waited"
+  "waited",
+  "waiting"
  ],
  [
   "انتظرت",
@@ -4816,7 +4834,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "تضمن",
-  "included"
+  "included",
+  "guarantees"
  ],
  [
   "تنظمت",
@@ -4925,7 +4944,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "اظهر",
-  "showed"
+  "showed",
+  "appear"
  ],
  [
   "أظهرت",
@@ -5054,7 +5074,8 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  ],
  [
   "الاعتذار",
-  "apology"
+  "apology",
+  "apologizing"
  ],
  [
   "اعتذار",
@@ -5063,5 +5084,1319 @@ export const RADIO_BILINGUAL_GLOSSARY: ReadonlyArray<readonly string[]> = [
  [
   "مصيب",
   "correct"
+ ],
+ [
+  "جاء",
+  "came"
+ ],
+ [
+  "صفنا",
+  "class"
+ ],
+ [
+  "اسمي",
+  "name"
+ ],
+ [
+  "اسمك",
+  "name"
+ ],
+ [
+  "بجواري",
+  "beside"
+ ],
+ [
+  "قرأنا",
+  "read"
+ ],
+ [
+  "عطشان",
+  "thirsty"
+ ],
+ [
+  "شربت",
+  "drank"
+ ],
+ [
+  "غسلت",
+  "washed"
+ ],
+ [
+  "كوبا",
+  "cup"
+ ],
+ [
+  "الكوب",
+  "cup"
+ ],
+ [
+  "ألستريح",
+  "rest"
+ ],
+ [
+  "غرفتي",
+  "room"
+ ],
+ [
+  "كنت",
+  "was"
+ ],
+ [
+  "مرحبا",
+  "hello"
+ ],
+ [
+  "آدم",
+  "adam"
+ ],
+ [
+  "علي",
+  "ali"
+ ],
+ [
+  "حقيبتك",
+  "bag"
+ ],
+ [
+  "حقيبتي",
+  "bag"
+ ],
+ [
+  "الحمراء",
+  "red"
+ ],
+ [
+  "زرقاء",
+  "blue"
+ ],
+ [
+  "صغيرة",
+  "small"
+ ],
+ [
+  "الطاولة",
+  "table"
+ ],
+ [
+  "األب",
+  "father"
+ ],
+ [
+  "االبن",
+  "son"
+ ],
+ [
+  "تفعل",
+  "do"
+ ],
+ [
+  "تريد",
+  "would like",
+  "want"
+ ],
+ [
+  "العصر",
+  "afternoon"
+ ],
+ [
+  "تزورني",
+  "visit"
+ ],
+ [
+  "البرتقال",
+  "orange"
+ ],
+ [
+  "العصير",
+  "juice"
+ ],
+ [
+  "حسنا",
+  "good"
+ ],
+ [
+  "نقرأ",
+  "read"
+ ],
+ [
+  "ونشرب",
+  "drink"
+ ],
+ [
+  "تشرب",
+  "drink"
+ ],
+ [
+  "حار",
+  "hot"
+ ],
+ [
+  "الجو",
+  "weather"
+ ],
+ [
+  "ألبس",
+  "wear"
+ ],
+ [
+  "معطفي",
+  "coat"
+ ],
+ [
+  "قبعتك",
+  "hat"
+ ],
+ [
+  "أرز",
+  "rice"
+ ],
+ [
+  "أرزا",
+  "rice"
+ ],
+ [
+  "الأرز",
+  "rice"
+ ],
+ [
+  "االرز",
+  "rice"
+ ],
+ [
+  "سلطة",
+  "salad"
+ ],
+ [
+  "الطماطم",
+  "tomatoes"
+ ],
+ [
+  "قليلا",
+  "little"
+ ],
+ [
+  "وردة",
+  "flower"
+ ],
+ [
+  "حمراء",
+  "red"
+ ],
+ [
+  "أمي",
+  "mom"
+ ],
+ [
+  "ألمه",
+  "mom",
+  "mother"
+ ],
+ [
+  "الحائط",
+  "wall"
+ ],
+ [
+  "علقت",
+  "hung"
+ ],
+ [
+  "وعلقت",
+  "hung"
+ ],
+ [
+  "صنع",
+  "made"
+ ],
+ [
+  "كعكة",
+  "cake"
+ ],
+ [
+  "الكعكة",
+  "cake"
+ ],
+ [
+  "الفاكهة",
+  "fruit"
+ ],
+ [
+  "ابنته",
+  "daughter"
+ ],
+ [
+  "حول",
+  "around"
+ ],
+ [
+  "الجميع",
+  "everyone"
+ ],
+ [
+  "شكروا",
+  "thanked"
+ ],
+ [
+  "أكل",
+  "ate"
+ ],
+ [
+  "أكلوا",
+  "ate"
+ ],
+ [
+  "ساعدته",
+  "helped"
+ ],
+ [
+  "ركوب",
+  "ride"
+ ],
+ [
+  "دراجته",
+  "bicycle"
+ ],
+ [
+  "الجديدة",
+  "new"
+ ],
+ [
+  "البداية",
+  "first"
+ ],
+ [
+  "ساعده",
+  "helped"
+ ],
+ [
+  "أسبوع",
+  "week"
+ ],
+ [
+  "وحده",
+  "on his own"
+ ],
+ [
+  "السعادة",
+  "happy"
+ ],
+ [
+  "سعادة",
+  "happy"
+ ],
+ [
+  "رسمت",
+  "drew"
+ ],
+ [
+  "اللون",
+  "color"
+ ],
+ [
+  "األخضر",
+  "green"
+ ],
+ [
+  "أختها",
+  "sister"
+ ],
+ [
+  "أكملت",
+  "finished"
+ ],
+ [
+  "بيت",
+  "house"
+ ],
+ [
+  "بيتا",
+  "house"
+ ],
+ [
+  "عقربان",
+  "hands"
+ ],
+ [
+  "تعرف",
+  "know"
+ ],
+ [
+  "تنظر",
+  "look"
+ ],
+ [
+  "أعيش",
+  "live"
+ ],
+ [
+  "مكتبك",
+  "desk"
+ ],
+ [
+  "تمسكني",
+  "hold"
+ ],
+ [
+  "بيدك",
+  "hand"
+ ],
+ [
+  "تكتب",
+  "write"
+ ],
+ [
+  "حبر",
+  "ink"
+ ],
+ [
+  "تفتحني",
+  "open"
+ ],
+ [
+  "رأسك",
+  "head"
+ ],
+ [
+  "تحملني",
+  "carry"
+ ],
+ [
+  "البقاء",
+  "stay"
+ ],
+ [
+  "جافا",
+  "dry"
+ ],
+ [
+  "تغلقني",
+  "close"
+ ],
+ [
+  "ينزل",
+  "rains"
+ ],
+ [
+  "تلبسني",
+  "put on"
+ ],
+ [
+  "قدمك",
+  "foot"
+ ],
+ [
+  "الخروج",
+  "going out"
+ ],
+ [
+  "أمشي",
+  "go"
+ ],
+ [
+  "تخلعني",
+  "take off"
+ ],
+ [
+  "تعود",
+  "return"
+ ],
+ [
+  "داخلي",
+  "inside"
+ ],
+ [
+  "كتبك",
+  "books"
+ ],
+ [
+  "دفاترك",
+  "notebooks"
+ ],
+ [
+  "ظهرك",
+  "back"
+ ],
+ [
+  "حزامان",
+  "straps"
+ ],
+ [
+  "ترتب",
+  "tidy",
+  "arranged"
+ ],
+ [
+  "شعرك",
+  "hair"
+ ],
+ [
+  "نورا",
+  "light"
+ ],
+ [
+  "دفئا",
+  "warmth"
+ ],
+ [
+  "الارض",
+  "earth"
+ ],
+ [
+  "نهارا",
+  "day"
+ ],
+ [
+  "مباشرة",
+  "directly"
+ ],
+ [
+  "قوي",
+  "strong"
+ ],
+ [
+  "فنوري",
+  "light"
+ ],
+ [
+  "مصنوع",
+  "made of"
+ ],
+ [
+  "القفل",
+  "lock"
+ ],
+ [
+  "تديرني",
+  "turn"
+ ],
+ [
+  "جيبك",
+  "pocket"
+ ],
+ [
+  "فريقان",
+  "teams"
+ ],
+ [
+  "مباراة",
+  "match"
+ ],
+ [
+  "المباراة",
+  "match"
+ ],
+ [
+  "ودية",
+  "friendly"
+ ],
+ [
+  "اللاعبون",
+  "players"
+ ],
+ [
+  "صافح",
+  "shook hands"
+ ],
+ [
+  "صافحوا",
+  "shook hands"
+ ],
+ [
+  "بهدف",
+  "goal"
+ ],
+ [
+  "محفظة",
+  "wallet"
+ ],
+ [
+  "وجدت",
+  "found"
+ ],
+ [
+  "موظف",
+  "officer"
+ ],
+ [
+  "الأمن",
+  "security"
+ ],
+ [
+  "وصفت",
+  "described"
+ ],
+ [
+  "فاستعادها",
+  "received"
+ ],
+ [
+  "ملكيتها",
+  "ownership"
+ ],
+ [
+  "الطابور",
+  "queue"
+ ],
+ [
+  "طابورا",
+  "queue"
+ ],
+ [
+  "دوري",
+  "turn"
+ ],
+ [
+  "أخبرته",
+  "told"
+ ],
+ [
+  "الانتظار",
+  "waiting"
+ ],
+ [
+  "االنتظار",
+  "waiting"
+ ],
+ [
+  "بهدوء",
+  "calmly"
+ ],
+ [
+  "أصواتنا",
+  "voices"
+ ],
+ [
+  "تناسب",
+  "suits"
+ ],
+ [
+  "يناسب",
+  "suits"
+ ],
+ [
+  "مستواي",
+  "level"
+ ],
+ [
+  "العربية",
+  "arabic"
+ ],
+ [
+  "العلمية",
+  "science"
+ ],
+ [
+  "تفضلين",
+  "prefer"
+ ],
+ [
+  "القصص",
+  "stories"
+ ],
+ [
+  "الطويلة",
+  "long"
+ ],
+ [
+  "تصعب",
+  "difficult"
+ ],
+ [
+  "جربي",
+  "try"
+ ],
+ [
+  "فصوله",
+  "chapters"
+ ],
+ [
+  "قصيرة",
+  "short"
+ ],
+ [
+  "المسافر",
+  "travelers"
+ ],
+ [
+  "المسافرون",
+  "travelers"
+ ],
+ [
+  "االتجاهات",
+  "directions"
+ ],
+ [
+  "الاتجاهات",
+  "directions"
+ ],
+ [
+  "مدنا",
+  "cities"
+ ],
+ [
+  "طرقا",
+  "roads"
+ ],
+ [
+  "أنهارا",
+  "rivers"
+ ],
+ [
+  "حقيقيا",
+  "real"
+ ],
+ [
+  "أعرض",
+  "show"
+ ],
+ [
+  "عليها",
+  "there"
+ ],
+ [
+  "أرافقك",
+  "accompany"
+ ],
+ [
+  "تغير",
+  "changes"
+ ],
+ [
+  "مكانها",
+  "position"
+ ],
+ [
+  "أقصر",
+  "shorter"
+ ],
+ [
+  "أطول",
+  "longer"
+ ],
+ [
+  "الظلام",
+  "darkness"
+ ],
+ [
+  "أختفي",
+  "disappear"
+ ],
+ [
+  "أتحرك",
+  "move"
+ ],
+ [
+  "تتحرك",
+  "move"
+ ],
+ [
+  "ضوء",
+  "sunlight",
+  "light"
+ ],
+ [
+  "الإمساك",
+  "hold"
+ ],
+ [
+  "االمساك",
+  "hold"
+ ],
+ [
+  "تنادي",
+  "call out"
+ ],
+ [
+  "الجبال",
+  "mountains"
+ ],
+ [
+  "لحظة",
+  "moment"
+ ],
+ [
+  "صوتك",
+  "sound"
+ ],
+ [
+  "يشبه",
+  "like"
+ ],
+ [
+  "يكرر",
+  "repeating"
+ ],
+ [
+  "كلماتك",
+  "words"
+ ],
+ [
+  "يعود",
+  "coming back"
+ ],
+ [
+  "الصوت",
+  "sound"
+ ],
+ [
+  "الظاهرة",
+  "phenomenon"
+ ],
+ [
+  "يجيبك",
+  "answering"
+ ],
+ [
+  "صفحاتي",
+  "pages"
+ ],
+ [
+  "نسختي",
+  "version"
+ ],
+ [
+  "االلكترونية",
+  "electronic"
+ ],
+ [
+  "المعاني",
+  "meanings"
+ ],
+ [
+  "أمثلة",
+  "examples"
+ ],
+ [
+  "الحروف",
+  "alphabetically",
+  "letters"
+ ],
+ [
+  "مرتبة",
+  "arranged"
+ ],
+ [
+  "غالبا",
+  "often"
+ ],
+ [
+  "أقدم",
+  "give"
+ ],
+ [
+  "الشهور",
+  "months"
+ ],
+ [
+  "األسابيع",
+  "weeks"
+ ],
+ [
+  "الاسابيع",
+  "weeks"
+ ],
+ [
+  "األيام",
+  "days"
+ ],
+ [
+  "مربعاتي",
+  "boxes"
+ ],
+ [
+  "تعلقني",
+  "hang"
+ ],
+ [
+  "مواعيدك",
+  "appointments"
+ ],
+ [
+  "أجمع",
+  "bring together"
+ ],
+ [
+  "سائلا",
+  "liquid"
+ ],
+ [
+  "أصبحت",
+  "became"
+ ],
+ [
+  "صلبا",
+  "solid"
+ ],
+ [
+  "المشروبات",
+  "drinks"
+ ],
+ [
+  "لتبريدها",
+  "cool"
+ ],
+ [
+  "البرودة",
+  "cold"
+ ],
+ [
+  "شديد",
+  "very"
+ ],
+ [
+  "حرارتي",
+  "temperature"
+ ],
+ [
+  "ترتفع",
+  "rises"
+ ],
+ [
+  "أعود",
+  "turn into"
+ ],
+ [
+  "خلالي",
+  "through"
+ ],
+ [
+  "يبدو",
+  "appears"
+ ],
+ [
+  "أقرب",
+  "closer"
+ ],
+ [
+  "لمشاهدة",
+  "watch"
+ ],
+ [
+  "عدستان",
+  "eyepieces"
+ ],
+ [
+  "عينين",
+  "eyes"
+ ],
+ [
+  "بعينيك",
+  "eyes"
+ ],
+ [
+  "الاقتراب",
+  "approaching"
+ ],
+ [
+  "االقتراب",
+  "approaching"
+ ],
+ [
+  "درجات",
+  "steps"
+ ],
+ [
+  "درجة",
+  "step"
+ ],
+ [
+  "عالمات",
+  "marks"
+ ],
+ [
+  "العلامات",
+  "marks"
+ ],
+ [
+  "تصعد",
+  "reach"
+ ],
+ [
+  "طابق",
+  "floor"
+ ],
+ [
+  "أعلى",
+  "higher"
+ ],
+ [
+  "ثابتا",
+  "still"
+ ],
+ [
+  "يتحرك",
+  "move"
+ ],
+ [
+  "أظل",
+  "remain"
+ ],
+ [
+  "التسلسل",
+  "sequence"
+ ],
+ [
+  "لمحادثة",
+  "conversation"
+ ],
+ [
+  "لقطة",
+  "screenshot"
+ ],
+ [
+  "زميلين",
+  "classmates"
+ ],
+ [
+  "خلافا",
+  "disagreement"
+ ],
+ [
+  "امتنعت",
+  "declined"
+ ],
+ [
+  "شخصية",
+  "personal"
+ ],
+ [
+  "تلخيص",
+  "summarize"
+ ],
+ [
+  "للنقاش",
+  "discussion"
+ ],
+ [
+  "فضول",
+  "curiosity"
+ ],
+ [
+  "الفضول",
+  "curiosity"
+ ],
+ [
+  "ائتمنني",
+  "entrusted"
+ ],
+ [
+  "كشف",
+  "reveal"
+ ],
+ [
+  "الأصدقاء",
+  "friend"
+ ],
+ [
+  "تعلما",
+  "learning"
+ ],
+ [
+  "أفضل",
+  "better"
+ ],
+ [
+  "متكررة",
+  "repetitive"
+ ],
+ [
+  "يحتاج",
+  "requires"
+ ],
+ [
+  "إجابة",
+  "answer"
+ ],
+ [
+  "الفهم",
+  "understanding"
+ ],
+ [
+  "نقارن",
+  "compare"
+ ],
+ [
+  "الواجبات",
+  "homework"
+ ],
+ [
+  "واجبا",
+  "homework"
+ ],
+ [
+  "الحكم",
+  "judge"
+ ],
+ [
+  "غاضبا",
+  "angry"
+ ],
+ [
+  "نشرت",
+  "posted"
+ ],
+ [
+  "حذفت",
+  "deleted"
+ ],
+ [
+  "حذفتها",
+  "deleted"
+ ],
+ [
+  "صورته",
+  "photo"
+ ],
+ [
+  "إذنه",
+  "permission"
+ ],
+ [
+  "االعتذار",
+  "apologizing"
+ ],
+ [
+  "الحد",
+  "limit"
+ ],
+ [
+  "انتشارها",
+  "spread"
+ ],
+ [
+  "ثقته",
+  "trust"
+ ],
+ [
+  "من",
+  "from"
+ ],
+ [
+  "أقول",
+  "state"
+ ],
+ [
+  "عبارتي",
+  "statement"
+ ],
+ [
+  "العبارة",
+  "statement"
+ ],
+ [
+  "عبارة",
+  "statement"
+ ],
+ [
+  "الفحص",
+  "checking"
+ ],
+ [
+  "التحديد",
+  "defining"
+ ],
+ [
+  "الغلاف",
+  "cover"
+ ],
+ [
+  "تمييزها",
+  "defining"
+ ],
+ [
+  "إمكان",
+  "possible"
+ ],
+ [
+  "اختبارها",
+  "testability"
+ ],
+ [
+  "رف",
+  "shelf"
+ ],
+ [
+  "حسابك",
+  "account"
+ ],
+ [
+  "الحسابات",
+  "accounts"
+ ],
+ [
+  "معدنية",
+  "metal"
+ ],
+ [
+  "حقيقي",
+  "physical"
+ ],
+ [
+  "رموز",
+  "symbols"
+ ],
+ [
+  "حروف",
+  "letters"
+ ],
+ [
+  "تخميني",
+  "guess"
+ ],
+ [
+  "ضعفت",
+  "weaker"
+ ],
+ [
+  "ضعيف",
+  "weak"
+ ],
+ [
+  "الآخرين",
+  "others"
+ ],
+ [
+  "الرقمية",
+  "digital"
+ ],
+ [
+  "وعودي",
+  "promises"
+ ],
+ [
+  "أصدق",
+  "truthfully"
+ ],
+ [
+  "ألتزم",
+  "keep",
+  "commit"
+ ],
+ [
+  "كلامي",
+  "speak"
+ ],
+ [
+  "تستغرق",
+  "take"
+ ],
+ [
+  "تنمو",
+  "grow"
+ ],
+ [
+  "تضعف",
+  "weaken"
+ ],
+ [
+  "كذبة",
+  "lie"
+ ],
+ [
+  "تضررت",
+  "damaged"
+ ],
+ [
+  "سلوك",
+  "behavior"
+ ],
+ [
+  "ثابت",
+  "consistent"
+ ],
+ [
+  "يبررها",
+  "justify"
+ ],
+ [
+  "المعنوية",
+  "bond"
+ ],
+ [
+  "نطمئن",
+  "rely"
+ ],
+ [
+  "تستطيع",
+  "can"
+ ],
+ [
+  "اختلف",
+  "regardless"
+ ],
+ [
+  "مقدار",
+  "wealth"
+ ],
+ [
+  "يمضي",
+  "past"
+ ],
+ [
+  "مضت",
+  "past"
+ ],
+ [
+  "لاحقا",
+  "later"
+ ],
+ [
+  "يقترب",
+  "approaches"
+ ],
+ [
+  "التأجيل",
+  "procrastination"
+ ],
+ [
+  "يضيع",
+  "lost"
+ ],
+ [
+  "أسئلة",
+  "questions"
+ ],
+ [
+  "منظمة",
+  "structured"
+ ],
+ [
+  "توجه",
+  "addressed"
+ ],
+ [
+  "آرائهم",
+  "opinions"
+ ],
+ [
+  "تجاربهم",
+  "experiences"
+ ],
+ [
+  "اختيارات",
+  "choices"
+ ],
+ [
+  "مفتوحة",
+  "open-ended"
+ ],
+ [
+  "تعتمد",
+  "depends"
+ ],
+ [
+  "فائدة",
+  "usefulness"
+ ],
+ [
+  "المشاركين",
+  "participant"
+ ],
+ [
+  "بالضرورة",
+  "necessarily"
+ ],
+ [
+  "نتائجي",
+  "results"
  ]
 ];
