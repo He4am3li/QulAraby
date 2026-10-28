@@ -73,11 +73,11 @@ const CONSOLE_GAMES: GameDef[] = [
   {
     id: 'arcade-corridor',
     category: 'adventure', categoryAr: 'مغامرات ثلاثية الأبعاد', categoryEn: '3D Adventure',
-    titleAr: 'المهمة السرية', titleEn: 'QUL Tactical Mission',
-    descriptionAr: 'لعبة مغامرات مستقلة بمنظور خلف الشخصية، وغرف مهام تعليمية ومعدات تتطور بالإنجاز.',
-    descriptionEn: 'A standalone third-person learning adventure: explore rooms, complete language missions, and upgrade gear.',
-    detailsAr: 'عالم تكتيكي ثلاثي الأبعاد: شخصية تتحرك في منشأة محصنة، وتدخل أربع غرف لمهام لغوية مستقلة، وتحصل على تطويرات لمعدات طاقة خيالية. تحكم WASD للمكتب وأزرار لمس للموبايل.',
-    detailsEn: 'Third-person exploration in a futuristic facility, four independent Arabic missions, a reward system and mobile movement controls.',
+    titleAr: 'استرداد الأوراق السرية', titleEn: 'Secret Documents Mission',
+    descriptionAr: 'تسلل إلى منشأة محصنة، وتفادَ الحراس، وافتح 16 خزنة بشفرات لغوية، واستعد الوثائق السرية.',
+    descriptionEn: 'Third-person tactical mission: clear guarded rooms, crack 16 Arabic-language safes and recover stolen documents.',
+    detailsAr: 'أربع غرف تتدرج من A1 إلى B2، و4 خزائن في كل غرفة. تحرّك بحرية 360°، اركض، اقفز، ازحف، وأطلق طاقة ضد الحراس الافتراضيين. اجمع معدات من الخزائن لتخطي السلاح الأخير ثم استردّ الأوراق السرية. خسارتك عند نفاد الصحة، والفوز عند استخراج الوثائق.',
+    detailsEn: 'Infiltrate four rooms, defeat fictional guards, unlock four educational safes per room, collect equipment, defeat the final defense system and extract the stolen documents. Movement, sprint, jump, prone, shooting and mobile touch controls.'
     samples: [],
     cover: vibrantSpaceNebula, hero: vibrantSpaceNebula,
     color: 'from-emerald-800 via-amber-900 to-stone-950',
