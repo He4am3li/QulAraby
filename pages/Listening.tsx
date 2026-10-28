@@ -1137,11 +1137,11 @@ export const Listening: React.FC = () => {
                                 <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] opacity-30 pointer-events-none" />
                                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-black/20 pointer-events-none" />
                                 
-                                <div className={`flex-[1_1_0%] min-h-0 flex gap-6 ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
+                                <div dir="ltr" className="flex-[1_1_0%] min-h-0 flex gap-6">
                                     <div className="w-1/4 h-full bg-[#120a05] rounded-2xl border-4 border-[#2a1d15] shadow-inner relative overflow-hidden flex flex-col qul-original-radio-speaker">
                                         <div className="p-4 h-full overflow-y-auto custom-scrollbar relative z-10">
                                             {radioContent && radioListenStage !== 'first' && radioListenStage !== 'questions' ? (
-                                                <p className="text-[10px] leading-relaxed font-bold text-emerald-400/80 text-left py-4">
+                                                <p dir="ltr" lang="en" className="text-[10px] leading-relaxed font-bold text-emerald-400/80 text-left py-4">
                                                     {radioContent.translation || "..."}
                                                 </p>
                                             ) : (
@@ -1236,7 +1236,7 @@ export const Listening: React.FC = () => {
                                     <div className="w-1/4 h-full bg-[#120a05] rounded-2xl border-4 border-[#2a1d15] shadow-inner relative overflow-hidden flex flex-col qul-original-radio-speaker">
                                         <div className="p-4 h-full overflow-y-auto custom-scrollbar relative z-10">
                                             {radioContent && radioListenStage !== 'first' && radioListenStage !== 'questions' && (
-                                                <div dir="rtl" className="text-xs leading-relaxed font-black text-amber-400/90 text-right arabic-font py-4 flex flex-wrap gap-x-1">
+                                                <div dir="rtl" lang="ar" className="text-xs leading-relaxed font-black text-amber-400/90 text-right arabic-font py-4 flex flex-wrap gap-x-1">
                                                     {radioContent.transcript.split(' ').map((word: string, i: number) => (
                                                         <span key={i} onClick={() => handleWordClick(word)} className="hover:text-white cursor-pointer inline-block">{word}</span>
                                                     ))}
