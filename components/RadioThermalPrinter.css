@@ -250,3 +250,56 @@
 }
 
 .qul-radio-studio-call{margin-inline-start:auto;}
+
+/* Compact screens retain the original radio's EXACT element order and
+   left/center/right positions. Only existing padding/control sizes scale down
+   so the old cabinet stays usable with the printer on a small phone. */
+@media(max-width:600px){
+  .qul-radio-printer-layout .qul-original-radio-cabinet{
+    padding:9px!important;
+    border-width:6px!important;
+    border-radius:17px!important;
+  }
+  .qul-radio-printer-layout .qul-original-radio-cabinet>.flex{
+    gap:5px!important;
+  }
+  .qul-radio-printer-layout .qul-original-radio-speaker{
+    border-width:2px!important;
+    border-radius:9px!important;
+  }
+  .qul-radio-printer-layout .qul-original-radio-speaker>div{
+    padding:4px!important;
+  }
+  .qul-radio-printer-layout .qul-original-radio-dial{
+    padding:6px!important;
+    border-width:2px!important;
+    border-radius:9px!important;
+  }
+  .qul-radio-printer-layout .qul-original-radio-dial .w-16.h-16{
+    width:30px!important;height:30px!important;margin-bottom:4px!important;
+  }
+  .qul-radio-printer-layout .qul-original-radio-controls{
+    height:65px!important;
+    margin-top:7px!important;
+    padding:6px!important;
+    border-radius:12px!important;
+  }
+  .qul-radio-printer-layout .qul-original-radio-controls>.flex{
+    gap:5px!important;
+  }
+  .qul-radio-printer-layout .qul-original-radio-volume,
+  .qul-radio-printer-layout .qul-original-radio-play{
+    width:36px!important;height:36px!important;border-width:2px!important;
+  }
+  .qul-radio-printer-layout .qul-original-radio-preset{
+    height:34px!important;padding:3px 5px!important;
+    font-size:9px!important;border-radius:6px!important;
+  }
+  .qul-radio-printer-layout .qul-original-radio-controls .gap-6{
+    gap:6px!important;
+  }
+}
+@media(max-height:680px){
+  .qul-radio-printer-layout .qul-original-radio-cabinet{padding-top:11px!important;padding-bottom:11px!important;}
+  .qul-radio-printer-layout .qul-original-radio-controls{height:76px!important;margin-top:8px!important;}
+}
