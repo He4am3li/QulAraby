@@ -73,6 +73,7 @@ export const Listening: React.FC = () => {
   const [isRadioPlaying, setIsRadioPlaying] = React.useState(false);
   const [radioListenStage, setRadioListenStage] = React.useState<RadioLearningStage>('first');
   const [radioPlaybackEndCount, setRadioPlaybackEndCount] = React.useState(0);
+  const radioStationRequestRef = React.useRef(0);
   const [volume, setVolume] = React.useState(0.5);
   const [selectedWord, setSelectedWord] = React.useState<{ word: string, meaningEn: string, meaningAr: string } | null>(null);
   const [isWordSpeaking, setIsWordSpeaking] = React.useState(false);
@@ -448,6 +449,9 @@ export const Listening: React.FC = () => {
     if (!selectedLevel) return;
     const station = RADIO_STATIONS.find(s => s.id === stationId);
     if (!station) return;
+    // Only the latest station request may update audio or questions.
+    // This keeps the name, spoken text and printed exercise tied to one station.
+    const requestId = ++radioStationRequestRef.current;
     setRadioFrequency(stationId);
     setLoading(true);
     setRadioContent(null);
@@ -459,19 +463,24 @@ export const Listening: React.FC = () => {
     try {
       const prompt = `Create a ${station.type} listening exercise in Arabic. Level: ${selectedLevel.en}. ${selectedLevel.prompt}. Use a natural coherent transcript, then write EXACTLY FIVE comprehension questions strictly about the actual transcript, with EXACTLY THREE answer options per question and one exact correctAnswer from those options. Vary the correct option position. Keep all options equally unvowelled, to avoid highlighting the answer. Provide accurate wordMap translations in English.`;
       const data = await generateListeningExercise(selectedLevel.en, prompt, lang);
+      if (requestId !== radioStationRequestRef.current) return;
       setRadioContent(data);
       const audioBytes = await generateSpeech(data.transcript, 'ar');
+      if (requestId !== radioStationRequestRef.current) return;
       if (audioBytes) {
         const ctx = await initAudio();
         const buffer = await decodeAudioData(audioBytes, ctx);
+        if (requestId !== radioStationRequestRef.current) return;
         setRadioAudio(buffer);
       }
     } catch (e) {
       console.error(e);
-      setError("Failed to load radio station");
+      if (requestId === radioStationRequestRef.current) setError("Failed to load radio station");
     } finally {
-      setLoading(false);
-      stopStatic();
+      if (requestId === radioStationRequestRef.current) {
+        setLoading(false);
+        stopStatic();
+      }
     }
   };
 
@@ -887,13 +896,15 @@ export const Listening: React.FC = () => {
                             onClick={() => {
                                 setSelectedTopic(topic);
                                 if (topic.id === 'radio') {
+                                    radioStationRequestRef.current++;
                                     setRadioFrequency(0);
                                     setRadioContent(null);
-                            setRadioListenStage('first');
-                            setRadioPlaybackEndCount(0);
+                                    setRadioListenStage('first');
+                                    setRadioPlaybackEndCount(0);
                                     stopAudio();
                                 }
                                 if (topic.id === 'cassette_stories') {
+                                    radioStationRequestRef.current++;
                                     stopAudio();
                                 }
                                 if (topic.id === 'emotions') loadEmotions();
@@ -1142,6 +1153,7 @@ export const Listening: React.FC = () => {
                             audioPlaying={isRadioPlaying}
                             playEndCount={radioPlaybackEndCount}
                             onStageChange={setRadioListenStage}
+                            onStudioCall={() => setIsIncomingCall(true)}
                             onReplay={() => { if (radioAudio) void playBuffer(radioAudio, true); }}
                             onNextStation={() => { void loadRadioStation(radioFrequency === RADIO_STATIONS.length ? 1 : radioFrequency + 1); }}
                         />
