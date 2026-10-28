@@ -9,13 +9,14 @@ import {
   Phone, Mic, PhoneOff, MicOff, Compass, ArrowUpRight, Check, X, RefreshCw, Heart,
   PenTool, UserCircle, Speech, Disc
 } from 'lucide-react';
-import { prepareRadioExerciseFromSource, generateSpeech, decodeAudioData, generateWordIllustration, evaluateCallIn } from '../services/gemini';
+import { generateSpeech, decodeAudioData, generateWordIllustration, evaluateCallIn } from '../services/gemini';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CassettePlayer } from '../components/CassettePlayer';
 import { RadioThermalPrinter, RadioLearningStage } from '../components/RadioThermalPrinter';
 import '../components/ListeningRadioRetouch.css';
 import { STORY_CASSETTES } from '../src/data/storyCassettes';
 import { drawRadioCorpusText } from '../src/data/radioShuffleBag';
+import { RADIO_AUTHORED_EXERCISES } from '../src/data/radioAuthoredExercises';
 import type { RadioCorpusType } from '../src/data/radioTextCorpus';
 import { useAuth } from '../components/AuthProvider';
 
@@ -80,6 +81,8 @@ export const Listening: React.FC = () => {
   const [radioListenStage, setRadioListenStage] = React.useState<RadioLearningStage>('first');
   const [radioPlaybackEndCount, setRadioPlaybackEndCount] = React.useState(0);
   const radioStationRequestRef = React.useRef(0);
+  const radioNarrationRef = React.useRef<SpeechSynthesisUtterance | null>(null);
+  const radioNarrationTokenRef = React.useRef(0);
   const [volume, setVolume] = React.useState(0.5);
   const [selectedWord, setSelectedWord] = React.useState<{ word: string, meaningEn: string, meaningAr: string } | null>(null);
   const [isWordSpeaking, setIsWordSpeaking] = React.useState(false);
@@ -260,7 +263,82 @@ export const Listening: React.FC = () => {
     extraOscillatorsRef.current = [];
   };
 
+  const stopRadioNarration = () => {
+    radioNarrationTokenRef.current += 1;
+    if (radioNarrationRef.current && 'speechSynthesis' in window) {
+      try { window.speechSynthesis.cancel(); } catch {}
+    }
+    radioNarrationRef.current = null;
+  };
+
+  // Radio narration is handled entirely by the learner's browser/device.
+  // Never call Gemini, paid TTS, or any text generation when tuning a station.
+  const playRadioNarration = (restart = false) => {
+    if (!radioContent?.transcript || !('speechSynthesis' in window) ||
+        typeof SpeechSynthesisUtterance === 'undefined') {
+      setError(lang === 'ar'
+        ? 'المتصفح لا يدعم قراءة النص صوتيًا. جرّب متصفحًا أحدث.'
+        : 'This browser does not support speech playback.');
+      return;
+    }
+    const synth = window.speechSynthesis;
+    if (!restart && radioNarrationRef.current) {
+      if (synth.paused) {
+        synth.resume();
+        setIsRadioPlaying(true); setIsPaused(false);
+        return;
+      }
+      if (synth.speaking) {
+        synth.pause();
+        setIsRadioPlaying(false); setIsPaused(true);
+        return;
+      }
+    }
+    stopRadioNarration();
+    const token = radioNarrationTokenRef.current;
+    const requestId = radioStationRequestRef.current;
+    // Imported Word text has occasional isolated final alifs and legacy vowel
+    // glyphs. Clean only for pronunciation, never alter its stored questions.
+    const speechText = String(radioContent.transcript)
+      .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+      .replace(/([\u0621-\u064A])\s+ا(?=[\s،.!؟؛]|$)/g, '$1ا')
+      .replace(/\s+([،.؛:؟!])/g, '$1')
+      .replace(/([،.؛:؟!])(?=\S)/g, '$1 ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const utterance = new SpeechSynthesisUtterance(speechText);
+    utterance.lang = 'ar-SA';
+    utterance.rate = selectedLevel?.id === 'beginner' ? 0.83 : selectedLevel?.id === 'intermediate' ? 0.91 : 0.97;
+    utterance.pitch = 1;
+    utterance.volume = Math.max(0, Math.min(1, volume));
+    const voices = synth.getVoices().filter(v => /^ar([_-]|$)/i.test(v.lang));
+    const voice = voices.find(v => /natural|premium|enhanced|neural/i.test(v.name)) ||
+      voices.find(v => /google/i.test(v.name)) ||
+      voices.find(v => v.localService) || voices[0];
+    if (voice) utterance.voice = voice;
+    utterance.onend = () => {
+      if (token !== radioNarrationTokenRef.current ||
+          requestId !== radioStationRequestRef.current) return;
+      radioNarrationRef.current = null;
+      setIsRadioPlaying(false); setIsPaused(false);
+      setRadioPlaybackEndCount(n => n + 1);
+    };
+    utterance.onerror = event => {
+      if (token !== radioNarrationTokenRef.current ||
+          requestId !== radioStationRequestRef.current) return;
+      radioNarrationRef.current = null;
+      setIsRadioPlaying(false); setIsPaused(false);
+      if (event.error !== 'canceled' && event.error !== 'interrupted') {
+        setError(lang === 'ar' ? 'تعذّر تشغيل الصوت من جهازك.' : 'Speech playback failed on this device.');
+      }
+    };
+    radioNarrationRef.current = utterance;
+    setIsRadioPlaying(true); setIsPaused(false); setError(null);
+    synth.speak(utterance);
+  };
+
   const stopAudio = () => {
+    stopRadioNarration();
     if (sourceNodeRef.current) {
       try { sourceNodeRef.current.stop(); } catch(e) {}
       sourceNodeRef.current = null;
@@ -455,15 +533,15 @@ export const Listening: React.FC = () => {
     if (!selectedLevel) return;
     const station = RADIO_STATIONS.find(s => s.id === stationId);
     if (!station) return;
-    // Only the latest station request may update audio or questions.
-    // This keeps the name, spoken text and printed exercise tied to one station.
+
     const requestId = ++radioStationRequestRef.current;
     const category: Record<number, RadioCorpusType> = {
       1: 'scenario', 2: 'dialogue', 3: 'story', 4: 'riddle', 5: 'news'
     };
+
     setRadioFrequency(stationId);
     setRadioTextTitle('');
-    setRadioTextSerial(v => v + 1);
+    setRadioTextSerial(n => n + 1);
     setError(null);
     setLoading(true);
     setRadioContent(null);
@@ -471,31 +549,38 @@ export const Listening: React.FC = () => {
     setRadioListenStage('first');
     setRadioPlaybackEndCount(0);
     stopAudio();
-    startStatic();
+
+    // Exactly one five-second scanning interval; no API calls while tuning.
+    // Invalidated requests never consume another story in the shuffle-bag.
     try {
-      // Draw from the uploaded bilingual corpus, independently shuffled for
-      // this student's selected level and radio category; no replacement
-      // until all ten source texts in that category have been consumed.
+      startStatic();
+      await new Promise<void>(resolve => window.setTimeout(resolve, 5000));
+      if (requestId !== radioStationRequestRef.current) return;
       const source = drawRadioCorpusText(
         selectedLevel.id as 'beginner' | 'intermediate' | 'advanced',
         category[stationId],
         user?.uid || 'guest'
       );
-      setRadioTextTitle(source.titleAr);
-      const data = await prepareRadioExerciseFromSource(source);
-      if (requestId !== radioStationRequestRef.current) return;
-      setRadioContent(data);
-      const audioBytes = await generateSpeech(data.transcript, 'ar');
-      if (requestId !== radioStationRequestRef.current) return;
-      if (audioBytes) {
-        const ctx = await initAudio();
-        const buffer = await decodeAudioData(audioBytes, ctx);
-        if (requestId !== radioStationRequestRef.current) return;
-        setRadioAudio(buffer);
+      const authored = RADIO_AUTHORED_EXERCISES[source.id];
+      if (!authored || authored.quiz.length !== 5 ||
+          authored.quiz.some(q => q.options.length !== 3 ||
+            !q.options.includes(q.correctAnswer))) {
+        throw new Error('The source text is missing its five approved questions: ' + source.id);
       }
-    } catch (e) {
-      console.error(e);
-      if (requestId === radioStationRequestRef.current) setError("Failed to load radio station");
+      // No AI-generated text or quiz. The document's Arabic wording and
+      // five authored questions are paired by one stable corpus ID.
+      setRadioTextTitle(source.titleAr);
+      setRadioContent({
+        transcript: authored.transcript,
+        translation: source.translationEn,
+        quiz: authored.quiz,
+        wordMap: []
+      });
+    } catch (error) {
+      console.error('Could not load the local radio corpus:', error);
+      if (requestId === radioStationRequestRef.current) {
+        setError(lang === 'ar' ? 'تعذّر تحميل هذا النص من المكتبة المحلية.' : 'Unable to load this text from the local library.');
+      }
     } finally {
       if (requestId === radioStationRequestRef.current) {
         setLoading(false);
@@ -1157,8 +1242,8 @@ export const Listening: React.FC = () => {
 
                                     <div className="flex flex-col items-center gap-1">
                                         <div 
-                                            className={`w-16 h-16 rounded-full border-4 border-[#2a1d15] flex items-center justify-center relative cursor-pointer active:scale-95 transition-all qul-original-radio-play ${!radioAudio ? 'opacity-50' : 'bg-slate-100'}`}
-                                            onClick={() => radioAudio && playBuffer(radioAudio)}
+                                            className={`w-16 h-16 rounded-full border-4 border-[#2a1d15] flex items-center justify-center relative cursor-pointer active:scale-95 transition-all qul-original-radio-play ${!radioContent?.transcript ? 'opacity-50' : 'bg-slate-100'}`}
+                                            onClick={() => playRadioNarration()}
                                         >
                                             {isRadioPlaying ? <Pause size={24} className="text-slate-700" /> : <Play size={24} className="text-slate-700" />}
                                         </div>
@@ -1175,12 +1260,12 @@ export const Listening: React.FC = () => {
                             stationTitle={radioTextTitle || RADIO_STATIONS.find(station => station.id === radioFrequency)?.[lang] || (lang === 'ar' ? 'الراديو' : 'Radio')}
                             content={radioContent}
                             loading={loading}
-                            audioReady={Boolean(radioAudio)}
+                            audioReady={Boolean(radioContent?.transcript)}
                             audioPlaying={isRadioPlaying}
                             playEndCount={radioPlaybackEndCount}
                             onStageChange={setRadioListenStage}
                             onStudioCall={() => setIsIncomingCall(true)}
-                            onReplay={() => { if (radioAudio) void playBuffer(radioAudio, true); }}
+                            onReplay={() => playRadioNarration(true)}
                             onNextStation={() => { void loadRadioStation(radioFrequency === RADIO_STATIONS.length ? 1 : radioFrequency + 1); }}
                         />
                     </motion.div>
