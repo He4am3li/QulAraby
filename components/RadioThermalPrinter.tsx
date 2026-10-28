@@ -29,19 +29,12 @@ const stopWords=new Set(['الذي','التي','وكان','كان','كانت','�
   'عند','بعد','قبل','من','عن','في','حتى','وهو','وهي','وقد','أين','كيف','ماذا','لماذا','لأن','قال','فقال',
   'قالت','عليه','لها','له','كل','إن','أن','وإن','ثم','مع','أو','هل','أحد','اليوم','شيء'].map(normalize));
 const hardWords=(content:RadioExercise):Vocabulary[]=>{
-  const words=(content?.transcript||'').match(/[\u0621-\u064A\u064B-\u065F]+/g)||[];
-  const counts=new Map<string,number>();
-  words.forEach(w=>{const n=normalize(w);if(n)counts.set(n,(counts.get(n)||0)+1);});
   const found=new Set<string>();
-  return (content?.wordMap||[]).map(x=>{
-    const n=normalize(x.word||''),meaning=(x.meaningEn||'').trim();
-    if(!n||n.length<4||stopWords.has(n)||!counts.has(n)||found.has(n)||!meaning||
-      /vocabulary item|unknown|unavailable/i.test(meaning))return null;
-    found.add(n);
-    return {word:x.word,meaning,score:n.length*1.6+5/(counts.get(n)||1)};
-  }).filter((x):x is {word:string;meaning:string;score:number}=>x!==null)
-    .sort((a,b)=>b.score-a.score||a.word.localeCompare(b.word,'ar'))
-    .slice(0,4).map(({word,meaning})=>({word,meaning}));
+  return (content?.wordMap||[]).filter(item=>{
+    const k=normalize(item.word||'');
+    if(!k||found.has(k)||!item.meaningEn)return false;
+    found.add(k);return true;
+  }).slice(0,4).map(item=>({word:item.word,meaning:item.meaningEn}));
 };
 const printSound=()=>{
   if(!window.AudioContext)return;
@@ -191,7 +184,7 @@ export const RadioThermalPrinter:React.FC<Props>=({
             </div>
           ):(
             <div className="qul-radio-words-view">
-              <strong>{ar?'أربع مفردات صعبة من النص':'FOUR CHALLENGING WORDS'}</strong>
+              <strong>{ar?'أصعب ٤ مفردات من النص':'FOUR CHALLENGING WORDS'}</strong>
               {vocab.length?<div className="qul-radio-words-grid">
                 {vocab.map(({word,meaning})=><div className="qul-radio-word-row" dir="rtl" key={word}>
                   <strong>{word}</strong><span dir="ltr">{meaning}</span>
