@@ -168,7 +168,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
             if(stopped)return;
             if(hit){setHitFlash(true);if(flashTimer.current)clearTimeout(flashTimer.current);flashTimer.current=setTimeout(()=>setHitFlash(false),110);}
           },
-          onError(message){if(!stopped)setError(message);}
+          onError(message){if(!stopped){setError(message);setReady(false);}}
         },lang);
         engine.current=scene;
         scene.setAllowed([...completedRef.current,sequence.find(x=>!completedRef.current.includes(x))??'vault']);
