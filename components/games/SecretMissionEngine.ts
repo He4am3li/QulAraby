@@ -304,6 +304,27 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   };
   const enemyFallback=(parent:THREE.Group,boss=false)=>{
     const g=new THREE.Group();parent.add(g);
+    if(boss){
+      // Heavy autonomous multi-barrel defense cannon, visually different
+      // from the human guards and resistant to the starter energy weapon.
+      poly(g,[2.35,.3,2.2],black,[0,.23,0]);
+      for(const x of [-.95,.95])for(const z of [-.78,.78]){
+        poly(g,[.22,.58,.27],steel,[x,.42,z]);
+        poly(g,[.27,.12,.34],trim,[x,.12,z]);
+      }
+      round(g,.9,.52,trim,[0,.87,0],16);
+      poly(g,[1.95,.76,1.4],steel,[0,1.48,0]);
+      poly(g,[1.75,.51,.85],black,[0,1.51,-.63]);
+      poly(g,[.88,.31,.08],red,[0,1.64,-1.09]);
+      for(const x of [-.53,0,.53]){
+        const gun=round(g,.14,1.44,trim,[x,1.53,-1.43]);
+        gun.rotation.x=Math.PI/2;
+        const tip=round(g,.17,.14,red,[x,1.53,-2.2]);
+        tip.rotation.x=Math.PI/2;
+      }
+      poly(g,[.96,.25,.53],tan,[0,2.04,.1]);
+      return g;
+    }
     poly(g,boss?[1.65,1.5,1.0]:[.73,.87,.39],boss?trim:camo,[0,boss?1.42:1.29,0]);
     poly(g,boss?[1.5,.58,.7]:[.65,.48,.25],boss?black:armor,[0,boss?1.68:1.37,-.22]);
     round(g,boss?.43:.24,boss?.46:.31,boss?trim:skin,[0,boss?2.18:1.91,0]);
