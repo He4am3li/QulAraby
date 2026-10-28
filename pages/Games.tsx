@@ -77,7 +77,7 @@ const CONSOLE_GAMES: GameDef[] = [
     descriptionAr: 'تسلل إلى منشأة محصنة، وتفادَ الحراس، وافتح 16 خزنة بشفرات لغوية، واستعد الوثائق السرية.',
     descriptionEn: 'Third-person tactical mission: clear guarded rooms, crack 16 Arabic-language safes and recover stolen documents.',
     detailsAr: 'أربع غرف تتدرج من A1 إلى B2، و4 خزائن في كل غرفة. تحرّك بحرية 360°، اركض، اقفز، ازحف، وأطلق طاقة ضد الحراس الافتراضيين. اجمع معدات من الخزائن لتخطي السلاح الأخير ثم استردّ الأوراق السرية. خسارتك عند نفاد الصحة، والفوز عند استخراج الوثائق.',
-    detailsEn: 'Infiltrate four rooms, defeat fictional guards, unlock four educational safes per room, collect equipment, defeat the final defense system and extract the stolen documents. Movement, sprint, jump, prone, shooting and mobile touch controls.'
+    detailsEn: 'Infiltrate four rooms, defeat fictional guards, unlock four educational safes per room, collect equipment, defeat the final defense system and extract the stolen documents. Movement, sprint, jump, prone, shooting and mobile touch controls.',
     samples: [],
     cover: vibrantSpaceNebula, hero: vibrantSpaceNebula,
     color: 'from-emerald-800 via-amber-900 to-stone-950',
