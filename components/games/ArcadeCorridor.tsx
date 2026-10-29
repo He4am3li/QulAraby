@@ -242,6 +242,14 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   useEffect(()=>{
     if(phase==='safes'&&room&&safeStage==='approach')engine.current?.approachSafe(activeSafe);
   },[phase,room,activeSafe,safeStage]);
+  useEffect(()=>{
+    if(phase!=='safes'||safeStage!=='challenge'||!room)return;
+    const value=room==='comms'?frequency:room==='archive'?(archiveChoice??-1):room==='vault'?(defenseSequence.at(-1)??-1):0;
+    const correct=room==='comms'?frequency===(activeSafe*2+3)%8:
+      room==='archive'?archiveChoice===activeSafe%3:
+      room==='vault'?defenseSequence.join(',')===[activeSafe%3,(activeSafe+1)%3].join(','):true;
+    engine.current?.setInstrumentValue(activeSafe,value,correct);
+  },[phase,safeStage,room,activeSafe,frequency,archiveChoice,defenseSequence]);
   const answer=(idx:number)=>{
     if(paused||!room||phase!=='safes'||safeStage!=='challenge'||opened[activeSafe]||selectedPin!==null)return;
     const q=MISSIONS[room].safes[activeSafe];
