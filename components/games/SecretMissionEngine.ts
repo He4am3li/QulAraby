@@ -334,6 +334,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     enemy.mixer=mixer;
     enemy.action=action;
   };
+  // Separate tactical palettes remain visible even on low-end phones,
+  // where skeletal guard models are deliberately disabled for performance.
+  const guardCloth=material(new THREE.MeshStandardMaterial({color:'#65564b',roughness:.9}));
+  const guardVest=material(new THREE.MeshStandardMaterial({color:'#8c7564',roughness:.78}));
+  const guardHelmet=material(new THREE.MeshStandardMaterial({color:'#413b37',roughness:.85}));
   const enemyFallback=(parent:THREE.Group,boss=false)=>{
     const g=new THREE.Group();parent.add(g);
     if(boss){
@@ -357,13 +362,17 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       poly(g,[.96,.25,.53],tan,[0,2.04,.1]);
       return g;
     }
-    poly(g,boss?[1.65,1.5,1.0]:[.73,.87,.39],boss?trim:camo,[0,boss?1.42:1.29,0]);
-    poly(g,boss?[1.5,.58,.7]:[.65,.48,.25],boss?black:armor,[0,boss?1.68:1.37,-.22]);
+    if(!boss){
+      round(g,.32,.17,guardHelmet,[0,2.1,0]);
+      poly(g,[.64,.17,.12],guardHelmet,[0,1.99,-.2]);
+    }
+    poly(g,boss?[1.65,1.5,1.0]:[.73,.87,.39],boss?trim:guardCloth,[0,boss?1.42:1.29,0]);
+    poly(g,boss?[1.5,.58,.7]:[.65,.48,.25],boss?black:guardVest,[0,boss?1.68:1.37,-.22]);
     round(g,boss?.43:.24,boss?.46:.31,boss?trim:skin,[0,boss?2.18:1.91,0]);
     for(const side of [-1,1]){
-      const arm=round(g,boss?.22:.13,boss?.89:.72,boss?steel:armor,[side*(boss?.93:.46),boss?1.42:1.28,0]);
+      const arm=round(g,boss?.22:.13,boss?.89:.72,boss?steel:guardVest,[side*(boss?.93:.46),boss?1.42:1.28,0]);
       arm.rotation.z=side*.16;
-      round(g,boss?.25:.16,boss?1.0:.87,boss?trim:camo,[side*(boss?.42:.2),.55,0]);
+      round(g,boss?.25:.16,boss?1.0:.87,boss?trim:guardCloth,[side*(boss?.42:.2),.55,0]);
     }
     poly(g,[.22,.17,.77],black,[.39,1.19,-.45]);
     poly(g,[.22,.23,.19],boss?red:amber,[.39,1.22,-.87]);
