@@ -558,6 +558,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let safeDoorPending:{index:number;room:Room}|null=null;
   let safeInteractionStart=0;
   let safeInteractionEnd=0;
+  let safePickupUntil=0;
+  let safePickupIndex=-1;
   let safeLootPending:{index:number;at:number}|null=null;
   let ammo=24,reserveAmmo=96;
   const emitAmmo=()=>events.onAmmoChange?.(ammo,reserveAmmo);
@@ -653,6 +655,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     safeLootPending=null;
     safeDoorPending=null;
     safeInteractionStart=safeInteractionEnd=0;
+    safePickupUntil=0;safePickupIndex=-1;
     rewardCollected=false;
     spawnGuards(activeRoom);
     emit('combat',activeRoom.info.id);
@@ -876,6 +879,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     }
     if(safeLootPending&&now>=safeLootPending.at){
       const {index}=safeLootPending;safeLootPending=null;
+      safePickupIndex=index;
+      safePickupUntil=now+850;
       if(index===0){reserveAmmo+=36;reload();}
       if(index===1){hp=Math.min(100,hp+25);events.onHealth(Math.round(hp));}
       if(index===2){upgradeCoil.visible=true;}
@@ -943,6 +948,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       velocityX=velocityZ=0;
       moving=true;
     }else if(['hall','combat','safes'].includes(phase)){
+      const safeLocked=phase==='safes'&&(Boolean(safeApproach)||now<safePickupUntil||now<safeInteractionEnd);
+      if(safeLocked){velocityX=THREE.MathUtils.damp(velocityX,0,12,dt);velocityZ=THREE.MathUtils.damp(velocityZ,0,12,dt);}
+      else {
       const up=Number(controls.has('w')||controls.has('arrowup'))-Number(controls.has('s')||controls.has('arrowdown'));
       const right=Number(controls.has('d')||controls.has('arrowright'))-Number(controls.has('a')||controls.has('arrowleft'));
       let f=clamp(input.forward+up,-1,1),r=clamp(input.strafe+right,-1,1);
@@ -963,6 +971,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         vy-=13*dt;player.y+=vy*dt;
         if(player.y<0){player.y=0;vy=0;}
       }
+      }
     }
     playerRoot.position.copy(player);
     playerRoot.rotation.y=yaw;
@@ -978,16 +987,19 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     avatar.position.y=THREE.MathUtils.damp(avatar.position.y,crouch?.46:0,7,dt);
     avatar.position.z=THREE.MathUtils.damp(avatar.position.z,crouch?.32:0,7,dt);
     avatar.scale.y=THREE.MathUtils.damp(avatar.scale.y,crouch?.9:1,8,dt);
+    const pickupActive=phase==='safes'&&now<safePickupUntil;
+    const pickupProgress=pickupActive?1-(safePickupUntil-now)/850:0;
     const interactionElapsed=now-safeInteractionStart;
     const interactingSafe=phase==='safes'&&interactionElapsed>=0&&now<safeInteractionEnd;
-    const reach=interactingSafe?Math.sin(Math.PI*clamp(interactionElapsed/1500,0,1)):0;
+    const reach=interactingSafe?Math.sin(Math.PI*clamp(interactionElapsed/1500,0,1)):
+      pickupActive?Math.sin(Math.PI*pickupProgress)*.8:0;
     heroArms.forEach((arm,index)=>{
       arm.rotation.x=THREE.MathUtils.damp(arm.rotation.x,reach*(index===0?-1.15:-.72),12,dt);
       arm.rotation.z=THREE.MathUtils.damp(arm.rotation.z,(index===0?-.18:.18)+reach*(index===0?.25:-.24),12,dt);
     });
     // During lock interaction the weapon is holstered rather than clipping
     // through the safe door; it returns smoothly as the operator collects loot.
-    heroWeapon.visible=!interactingSafe;
+    heroWeapon.visible=!interactingSafe&&!pickupActive;
     // Procedural movement layers keep the fallback operator expressive even
     // before the external skeletal model is available on a slow connection.
     const danger=phase==='combat'&&guards.some(g=>g.alive&&g.alerted);
