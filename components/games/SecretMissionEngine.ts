@@ -240,6 +240,35 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       }
     }
     for(const xx of [-3.6,3.6])poly(group,[.13,.012,6.8],sectorStrip,[xx,-.025,0]);
+    // Distinct functional silhouettes make each sector readable without
+    // expensive textures or extra geometry outside the camera frustum.
+    if(info.id==='depot'){
+      for(const x of [-3.85,3.85]){
+        for(let level=0;level<3;level++){
+          poly(group,[.64,.1,2.7],steel,[x,.48+level*.68,1.05]);
+          for(const zz of [.12,1.1,1.95])poly(group,[.42,.42,.5],level===1?amber:armorPanel,[x,.76+level*.68,zz]);
+        }
+      }
+    }else if(info.id==='comms'){
+      for(const x of [-3.9,3.9]){
+        poly(group,[.62,1.95,2.25],black,[x,1.13,1.1]);
+        for(const zz of [.4,1.1,1.8])poly(group,[.07,.38,.45],cyan,[x-Math.sign(x)*.35,1.7,zz]);
+      }
+      for(const x of [-2.1,0,2.1])poly(group,[.95,.06,.65],steel,[x,2.93,1.5]);
+    }else if(info.id==='archive'){
+      for(const x of [-4.15,4.15]){
+        for(const zz of [-1.1,.3,1.7]){
+          poly(group,[.42,2.15,.78],trim,[x,1.12,zz]);
+          for(const h of [.58,1.1,1.62])poly(group,[.46,.08,.68],tan,[x,h,zz]);
+        }
+      }
+    }else{
+      for(const x of [-3.9,3.9]){
+        poly(group,[.55,2.75,1.15],black,[x,1.35,.45]);
+        for(const h of [.5,1.2,1.9])poly(group,[.6,.08,.85],red,[x,h,.45]);
+      }
+      round(group,.72,.2,red,[0,2.85,.7],12).rotation.x=Math.PI/2;
+    }
     // Actual articulated safes, each numbered and unlocked separately.
     const safes:Room['safes']=[];
     const farX=side*2.55;
@@ -1225,6 +1254,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         const behindCabinets=cabinetOccludes(guardWorld,player,activeRoom);
         const clearSight=visible&&!behindCabinets;
         if(!guard.alerted){
+          // The operator is unmistakably visible at close range. Avoid an
+          // orientation-dependent dead zone where guards never react.
+          if(dist<4.2)guard.alerted=true;
           if(dist<detectRadius&&clearSight)guard.awareness+=dt*(crouch?.55:sprint?2.8:1.6);
           else guard.awareness=Math.max(0,guard.awareness-dt*.55);
           if(guard.awareness>1.1)guard.alerted=true;
@@ -1310,7 +1342,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       local.z=clamp(local.z,-3.48,3.48);
       camTarget.copy(local.add(activeRoom.group.position));
     }else{
-      camTarget.x=clamp(camTarget.x,-2.55,2.55);
+      // The exit transition crosses the corridor wall. Keep the camera on
+      // the corridor side until the operator has fully cleared the doorway.
+      camTarget.x=clamp(camTarget.x,-2.15,2.15);
     }
     camTarget.y=clamp(camTarget.y,1.0,2.75);
     // Clamp the camera's desired position relative to the actual operator.
