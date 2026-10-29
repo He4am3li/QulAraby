@@ -1228,6 +1228,20 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
           clamp(locomotionBlend/(clipName.includes('run')?5.8:3.2),.55,1.4));
       }
       modelMixer.update(dt);
+      // Follow the real animated right hand in actor-local coordinates, but
+      // clamp the grip to the visible right side of the torso. This avoids
+      // off-screen / inside-mesh guns when GLB skeleton axes differ.
+      if(weaponGrip){
+        model.updateMatrixWorld(true);
+        playerRoot.updateMatrixWorld(true);
+        const handLocal=playerRoot.worldToLocal(weaponGrip.getWorldPosition(new THREE.Vector3()));
+        const gripTarget=new THREE.Vector3(
+          clamp(handLocal.x,-.05,.72),
+          clamp(handLocal.y,.84,1.55),
+          clamp(handLocal.z-.28,-.85,-.25)
+        );
+        heroWeapon.position.lerp(gripTarget,Math.min(1,dt*13));
+      }
       // Apply reach after animation sampling; the mixer otherwise resets the
       // hand bones on every frame. Use a bounded additive wrist rotation.
       if(skeletalHands.length){
