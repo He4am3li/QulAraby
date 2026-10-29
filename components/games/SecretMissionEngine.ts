@@ -832,8 +832,13 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         if(dist>3.1){
           const chase=(guard.isBoss?.12:.37)*dt;
           // Keep patrols inside the room; avoid guards clipping through walls.
-          guard.root.position.x=clamp(guard.root.position.x+dir.x*chase,-4.35,4.35);
-          guard.root.position.z=clamp(guard.root.position.z+dir.z*chase,-4.1,4.1);
+          const nextX=clamp(guard.root.position.x+dir.x*chase,-4.35,4.35);
+          const nextZ=clamp(guard.root.position.z+dir.z*chase,-4.1,4.1);
+          // The same solid cabinets that stop the operator must stop guards.
+          // Sliding along the front allows pursuit without walking through loot.
+          const cabinetBlocked=nextZ < -2.78 && [-3.32,-1.14,1.04,3.22].some(x=>Math.abs(nextX-x)<1.04);
+          guard.root.position.x=nextX;
+          guard.root.position.z=cabinetBlocked?Math.max(guard.root.position.z,-2.78):nextZ;
         }
         guard.cooldown-=dt;
         // A cabinet between the two characters is actual cover, not merely
