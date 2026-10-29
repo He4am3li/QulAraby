@@ -1398,9 +1398,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         const gh=guard.root.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.32,0));
         const ph=player.clone().add(new THREE.Vector3(0,crouch?.92:1.38,0));
         const dir=ph.sub(gh).normalize();
-        guard.root.rotation.y=Math.atan2(-dir.x,-dir.z);
-        if(dist>3.1){
-          const chase=(guard.isBoss?.12:.37)*dt;
+        const faceYaw=Math.atan2(-dir.x,-dir.z);
+        guard.root.rotation.y+=Math.atan2(Math.sin(faceYaw-guard.root.rotation.y),Math.cos(faceYaw-guard.root.rotation.y))*Math.min(1,dt*9);
+        if(dist>3.1&&phase==='combat'){
+          const chase=(guard.isBoss?.28:activeRoom.info.id==='archive'?2.0:1.55)*dt;
           // Keep patrols inside the room; avoid guards clipping through walls.
           const nextX=clamp(guard.root.position.x+dir.x*chase,-4.35,4.35);
           const nextZ=clamp(guard.root.position.z+dir.z*chase,-4.1,4.1);
@@ -1409,6 +1410,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
           const cabinetBlocked=nextZ < -2.78 && [-3.32,-1.14,1.04,3.22].some(x=>Math.abs(nextX-x)<1.04);
           guard.root.position.x=nextX;
           guard.root.position.z=cabinetBlocked?Math.max(guard.root.position.z,-2.78):nextZ;
+          // Pursuit uses a responsive but bounded speed, with room-specific
+          // pressure. Archive security advances faster than depot patrols.
         }
         guard.cooldown-=dt;
         // A cabinet between the two characters is actual cover, not merely
