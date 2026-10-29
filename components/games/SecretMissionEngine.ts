@@ -768,6 +768,14 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         obj.mesh.parent?.remove(obj.mesh);trails.splice(i,1);spareTrails.push(obj.mesh);
       }else obj.mesh.scale.x=obj.mesh.scale.z=.75*(1-obj.age/obj.lifespan)+.18;
     }
+    // Automatically enter the next unlocked room when the player approaches its doorway.
+    // This keeps manual navigation available but removes the mandatory interaction button.
+    if(phase==='hall'&&!transition){
+      const doorway=rooms.find(r=>allowedRooms.includes(r.info.id)&&
+        Math.abs(r.info.z-player.z)<1.65&&
+        Math.abs(player.x)<2.1);
+      if(doorway)enterRoom(doorway.info.id);
+    }
     const currentNearby=phase==='hall' ?
       rooms.find(r=>Math.abs(r.info.z-player.z)<3.9)?.info.id??null : null;
     if(currentNearby!==nearby){nearby=currentNearby;events.onNearby(nearby);}
@@ -778,6 +786,17 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const camTarget=head.clone().addScaledVector(forward,roomView?-2.65:-4.4)
       .addScaledVector(right,roomView?.62:1.15);
     camTarget.y+=roomView?.82:1.0;
+    // Keep the third-person camera inside the playable corridor or room,
+    // rather than letting it pass through walls and expose exterior geometry.
+    if(roomView&&activeRoom){
+      const local=camTarget.clone().sub(activeRoom.group.position);
+      local.x=clamp(local.x,-5.1,5.1);
+      local.z=clamp(local.z,-6.4,6.4);
+      camTarget.copy(local.add(activeRoom.group.position));
+    }else{
+      camTarget.x=clamp(camTarget.x,-2.55,2.55);
+    }
+    camTarget.y=clamp(camTarget.y,1.0,2.75);
     const lookTarget=head.clone().addScaledVector(forward,roomView?5.1:4.5);
     camera.position.lerp(camTarget,clamp(dt*8,0,1));
     const existingView=camFollow?lookTarget:lookTarget;
