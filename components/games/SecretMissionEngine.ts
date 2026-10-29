@@ -138,9 +138,28 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     mesh.position.set(...pos);mesh.castShadow=!phone;parent.add(mesh);return mesh;
   };
   const glows:THREE.Mesh[]=[];
-  const lightBar=(parent:THREE.Group,z:number)=>{
-    poly(parent,[3.8,.09,.31],trim,[0,3.46,z]);
-    poly(parent,[3.42,.035,.16],amber,[0,3.4,z]);
+  // Corridor ceiling strips are static and identical. Draw each strip
+  // type in one instanced batch instead of one draw call per ceiling fixture.
+  const ceilingStripPositions:number[]=[];
+  const lightBar=(_parent:THREE.Group,z:number)=>{
+    ceilingStripPositions.push(z);
+  };
+  const flushCeilingStrips=(parent:THREE.Group)=>{
+    const dummy=new THREE.Object3D();
+    for(const [dimensions,finish,y] of [
+      [[3.8,.09,.31] as [number,number,number],trim,3.46],
+      [[3.42,.035,.16] as [number,number,number],amber,3.4]
+    ] as const){
+      const batch=new THREE.InstancedMesh(sharedBox(dimensions),finish,ceilingStripPositions.length);
+      ceilingStripPositions.forEach((z,index)=>{
+        dummy.position.set(0,y,z);dummy.updateMatrix();
+        batch.setMatrixAt(index,dummy.matrix);
+      });
+      batch.instanceMatrix.needsUpdate=true;
+      batch.castShadow=!phone;batch.receiveShadow=!phone;
+      batch.computeBoundingSphere();
+      parent.add(batch);
+    }
   };
   const corridor=new THREE.Group();scene.add(corridor);
   poly(corridor,[6.6,.25,92],ground,[0,-.16,-20]);
@@ -169,6 +188,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       poly(crate,[.73,.06,.85],tan,[0,.32,0]);
     }
   }
+  flushCeilingStrips(corridor);
   // Cinematic visual identity: amber guidance runway, blue security conduits
   // and periodic red restricted-sector beacons. Emissive geometry is cheap on mobile.
   const guideGlow=material(new THREE.MeshBasicMaterial({color:'#d99a4f'}));
