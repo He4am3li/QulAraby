@@ -1491,6 +1491,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // Switch to corridor framing as soon as the operator reaches the exit
     // threshold. Holding room framing throughout exit pins the camera behind
     // the entrance bulkhead and obscures the player's view.
+    // Keep the exit camera on the same Z centerline as the actual door opening.
+    // Offsetting it 2.4 units placed the camera behind the solid wall.
     // A doorway is a narrow portal: switch to corridor camera only after
     // the operator has actually crossed the inner wall (x ~= +/-3).
     const crossingExit=phase==='room-exit'&&activeRoom&&Math.abs(player.x)<3.05;
@@ -1501,7 +1503,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       new THREE.Vector3(
         activeRoom.info.side*(Math.abs(player.x)>3.05?Math.max(3.4,Math.abs(player.x)-1.2):1.35),
         1.65,
-        activeRoom.info.z+2.4
+        activeRoom.info.z
       ):
       usingWorkstation&&activeRoom?
         new THREE.Vector3(activeRoom.group.position.x-3.32+safeIndex*2.18+1.05,2.16,activeRoom.info.z-.48):
@@ -1515,7 +1517,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       // camera: its position must never be clamped back behind a wall.
       const inside=Math.abs(player.x)>3.05;
       camTarget.x=inside?activeRoom.info.side*Math.max(3.5,Math.abs(player.x)-1.15):activeRoom.info.side*1.35;
-      camTarget.z=activeRoom.info.z+2.4;
+      camTarget.z=activeRoom.info.z;
     }else if(roomView&&activeRoom){
       const local=camTarget.clone().sub(activeRoom.group.position);
       // The playable interior is narrower than the room's decorative shell.
@@ -1551,7 +1553,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       const inside=Math.abs(player.x)>3.05;
       if(inside)camera.position.x=activeRoom.info.side*Math.max(3.5,Math.abs(camera.position.x));
       else camera.position.x=clamp(camera.position.x,-2.15,2.15);
-      camera.position.z=activeRoom.info.z+2.4;
+      camera.position.z=activeRoom.info.z;
     }else if(roomView&&activeRoom){
       const localCamera=camera.position.clone().sub(activeRoom.group.position);
       localCamera.x=clamp(localCamera.x,-4.05,4.05);
