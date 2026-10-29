@@ -86,11 +86,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   container.appendChild(renderer.domElement);
   renderer.domElement.style.touchAction='none';
   const scene=new THREE.Scene();
-  scene.background=new THREE.Color('#707d80');
-  scene.fog=new THREE.FogExp2('#9fa6a3',.009);
+  scene.background=new THREE.Color('#111b23');
+  scene.fog=new THREE.FogExp2('#182a32',.012);
   const camera=new THREE.PerspectiveCamera(phone?69:65,1,.07,140);
-  scene.add(new THREE.HemisphereLight('#f4f8f3','#72746f',3.6));
-  const mainLight=new THREE.DirectionalLight('#f5efd8',3.2);
+  scene.add(new THREE.HemisphereLight('#b4cbd5','#202c32',phone?1.65:1.95));
+  const mainLight=new THREE.DirectionalLight('#f4e3c8',phone?1.8:2.2);
   mainLight.position.set(-6,12,12);
   mainLight.castShadow=!phone;
   if(!phone){mainLight.shadow.mapSize.set(1024,1024);mainLight.shadow.camera.left=-20;mainLight.shadow.camera.right=20;mainLight.shadow.camera.top=20;mainLight.shadow.camera.bottom=-20;}
@@ -154,7 +154,21 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       poly(crate,[.73,.06,.85],tan,[0,.32,0]);
     }
   }
-  // Ducts, conduit and warning boards create a recognisable tactical facility.
+  // Cinematic visual identity: amber guidance runway, blue security conduits
+  // and periodic red restricted-sector beacons. Emissive geometry is cheap on mobile.
+  const guideGlow=material(new THREE.MeshBasicMaterial({color:'#d99a4f'}));
+  const securityGlow=material(new THREE.MeshBasicMaterial({color:'#5bbac7'}));
+  const alertGlow=material(new THREE.MeshBasicMaterial({color:'#dd6256'}));
+  for(let z=18;z>-65;z-=2.7){
+    for(const x of [-2.82,2.82])poly(corridor,[.045,.012,1.35],guideGlow,[x,-.02,z]);
+  }
+  for(let z=12;z>-65;z-=12){
+    for(const x of [-3.11,3.11]){
+      poly(corridor,[.08,.08,.62],alertGlow,[x,2.76,z]);
+      poly(corridor,[.08,.11,.78],securityGlow,[x,1.08,z-2.1]);
+    }
+  }
+    // Ducts, conduit and warning boards create a recognisable tactical facility.
   for(const x of [-2.65,2.65]){
     poly(corridor,[.14,.14,90],trim,[x,3.16,-20]);
     poly(corridor,[.085,.085,90],tan,[x,.5,-20]);
@@ -194,7 +208,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       poly(group,[.15,3.4,.14],trim,[x,1.74,-4.78]);
       poly(group,[.08,.08,9.3],steel,[x,3.2,0]);
     }
-    const point=new THREE.PointLight('#fff0cb',phone?15:22,13,2);
+    // Each sector has its own cinematic color signature and physical light strips.
+    const sectorColor=info.id==='depot'?'#e9aa61':info.id==='comms'?'#55d1df':info.id==='archive'?'#6bd5a3':'#ee6961';
+    const sectorStrip=material(new THREE.MeshBasicMaterial({color:sectorColor}));
+    for(const x of [-4.55,4.55])poly(group,[.09,.045,8.7],sectorStrip,[x,3.37,0]);
+    poly(group,[3.2,.04,.09],sectorStrip,[0,3.4,-4.72]);
+    const point=new THREE.PointLight(sectorColor,phone?9:16,13,2);
     point.position.set(0,2.8,1);group.add(point);
     // Actual articulated safes, each numbered and unlocked separately.
     const safes:Room['safes']=[];
