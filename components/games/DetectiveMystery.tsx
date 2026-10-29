@@ -59,6 +59,17 @@ import s22 from '/src/assets/images/suspect_batch2_hijabwoman_1791887031099.jpg'
 import s23 from '/src/assets/images/suspect_batch2_curlyboy_1791887055067.jpg';
 import s24 from '/src/assets/images/suspect_batch2_winterboy_1791887080832.jpg';
 
+// Universal portrait framing for every case and every difficulty level.
+// The investigation screen is shared by beginner, intermediate and advanced.
+const INVESTIGATION_PORTRAIT_SLOTS = [
+  { left: '69.7%', top: '16.1%', width: '12.2%', height: '23.0%' },
+  { left: '54.6%', top: '16.1%', width: '12.2%', height: '23.0%' },
+  { left: '39.4%', top: '16.1%', width: '12.2%', height: '23.0%' },
+  { left: '69.7%', top: '49.2%', width: '12.2%', height: '23.0%' },
+  { left: '54.6%', top: '49.2%', width: '12.2%', height: '23.0%' },
+  { left: '39.4%', top: '49.2%', width: '12.2%', height: '23.0%' },
+] as const;
+
 // ============================================================================
 // DYNAMIC MULTI-TRACK DETECTIVE AUDIO SYNTHESIZER (تغيير الموسيقى مع كل قضية)
 // ============================================================================
@@ -2143,16 +2154,7 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
 
         {/* The 6 Suspect Frames exactly positioned inside the 6 frames of ٨.jpeg */}
         <div className="absolute inset-0 z-20 pointer-events-none">
-          {[
-            // Row 0: Top Row (Col 2: right, Col 1: middle, Col 0: left)
-            { col: 2, row: 0, left: '69.7%', top: '16.1%', width: '12.2%', height: '23.0%' },
-            { col: 1, row: 0, left: '54.6%', top: '16.1%', width: '12.2%', height: '23.0%' },
-            { col: 0, row: 0, left: '39.4%', top: '16.1%', width: '12.2%', height: '23.0%' },
-            // Row 1: Bottom Row (Col 2: right, Col 1: middle, Col 0: left)
-            { col: 2, row: 1, left: '69.7%', top: '49.2%', width: '12.2%', height: '23.0%' },
-            { col: 1, row: 1, left: '54.6%', top: '49.2%', width: '12.2%', height: '23.0%' },
-            { col: 0, row: 1, left: '39.4%', top: '49.2%', width: '12.2%', height: '23.0%' },
-          ].map((pos, slotIdx) => {
+          {INVESTIGATION_PORTRAIT_SLOTS.map((pos, slotIdx) => {
             const suspect = caseSuspects[slotIdx];
             if (!suspect) return null;
 
@@ -2180,11 +2182,11 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
                 }}
               >
                 {/* Photo of the suspect: fitted cleanly without cutting top of head */}
-                <div className="relative w-full min-h-0 flex-1 overflow-hidden">
+                <div className="relative w-full min-h-0 flex-1 overflow-hidden bg-[#11181b]">
                   <img 
                     src={suspect.image} 
                     alt={suspect.name} 
-                    className={`absolute inset-0 w-full h-full object-cover object-[center_22%] pointer-events-none transition-all duration-300 ${
+                    className={`absolute inset-0 block w-full h-full max-w-none object-cover object-[center_18%] pointer-events-none transition-[filter] duration-300 ${
                       isEliminated ? 'filter brightness-40 grayscale contrast-75' : 'filter brightness-100'
                     }`}
                     loading="eager"
