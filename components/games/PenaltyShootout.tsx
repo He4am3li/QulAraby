@@ -590,7 +590,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
                 <div className="flex items-baseline gap-1.5 text-2xl sm:text-3xl font-black tabular-nums text-white drop-shadow-[0_0_12px_rgba(251,191,36,.45)]">
                   <span className="text-amber-300">{score}</span><span className="text-sm text-white/40">:</span><span>{totalRounds - score}</span>
                 </div>
-                <span className="text-[9px] text-slate-300">أهداف : متبقية / ضائعة</span>
+                <span className="text-[9px] text-slate-300">أهداف : غير مسجلة</span>
               </div>
               <div className="flex min-w-0 flex-col items-center gap-1.5">
                 <span className="text-[10px] sm:text-xs font-black text-white">الركلة {currentRound + 1} / {totalRounds}</span>
