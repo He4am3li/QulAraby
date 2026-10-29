@@ -756,8 +756,14 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         // Suspenseful stealth: patrols only engage after detecting the operator,
         // unless gunfire has already triggered the alarm. Prone movement hides better.
         const detectRadius=guard.isBoss?16:crouch?3.8:sprint?11:7.0;
+        // Awareness depends on line of sight, not distance alone. Guards
+        // investigate footsteps but cannot see the operator through cover.
+        const guardForward=new THREE.Vector3(0,0,-1).applyQuaternion(guard.root.getWorldQuaternion(new THREE.Quaternion()));
+        const toPlayer=player.clone().sub(guard.root.getWorldPosition(new THREE.Vector3()));
+        toPlayer.y=0;
+        const visible=toPlayer.lengthSq()<1.5||guardForward.dot(toPlayer.normalize())>-.15;
         if(!guard.alerted){
-          if(dist<detectRadius)guard.awareness+=dt*(crouch?.55:sprint?2.8:1.6);
+          if(dist<detectRadius&&visible)guard.awareness+=dt*(crouch?.55:sprint?2.8:1.6);
           else guard.awareness=Math.max(0,guard.awareness-dt*.55);
           if(guard.awareness>1.1)guard.alerted=true;
           if(!guard.alerted){
