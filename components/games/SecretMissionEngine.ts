@@ -795,9 +795,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     controls.clear();input.forward=input.strafe=0;velocityX=velocityZ=0;
     return true;
   };
+  let instrumentTouchUntil=0;
   const setInstrumentValue=(index:number,value:number,correct:boolean)=>{
     if(phase!=='safes'||!activeRoom||index!==safeIndex||!safeApproach?.ready)return;
     const unit=activeRoom.safes[index];
+    instrumentTouchUntil=performance.now()+620;
     if(activeRoom.info.id==='comms')unit.instrument.rotation.z=(value%8)*Math.PI/4;
     else if(activeRoom.info.id==='archive')unit.instrument.position.x=(value-1)*.16;
     else if(activeRoom.info.id==='vault')unit.instrument.rotation.y=(value%3-1)*.14;
@@ -1231,10 +1233,13 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       lamp.color.setHex(Math.sin((now-safeApproach.arrivedAt)*.028)>0?0xffc25a:0x86511e);
     }
     const probeProgress=probingSafe&&safeApproach?clamp((now-safeApproach.arrivedAt)/700,0,1):0;
+    const touchingInstrument=phase==='safes'&&Boolean(safeApproach?.ready)&&now<instrumentTouchUntil;
+    const touchProgress=clamp(1-(instrumentTouchUntil-now)/620,0,1);
     const reach=interactingSafe?Math.sin(Math.PI*clamp(interactionElapsed/(safeInteractionEnd-safeInteractionStart||1500),0,1)):
       pickupActive?Math.sin(Math.PI*pickupProgress)*.8:
+      touchingInstrument?Math.sin(Math.PI*touchProgress)*.7:
       probingSafe?Math.sin(Math.PI*probeProgress)*.65:0;
-    interactionHands.visible=Boolean(model)&&skeletalHands.length===0&&(interactingSafe||pickupActive||probingSafe);
+    interactionHands.visible=Boolean(model)&&skeletalHands.length===0&&(interactingSafe||pickupActive||probingSafe||touchingInstrument);
     if(interactionHands.visible){
       interactionHands.position.z=-reach*.24;
       interactionSleeves.forEach((sleeve,i)=>{sleeve.rotation.x=1.05-reach*.38;sleeve.rotation.z=(i===0?-.12:.12)*reach;});
@@ -1446,8 +1451,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // the entrance bulkhead and obscures the player's view.
     const crossingExit=phase==='room-exit'&&Math.abs(player.x)<4.65;
     const roomView=Boolean(activeRoom)&&phase!=='hall'&&!crossingExit;
-    const camTarget=head.clone().addScaledVector(forward,roomView?-2.65:-4.4)
-      .addScaledVector(right,roomView?.62:1.15);
+    const usingWorkstation=roomView&&phase==='safes'&&Boolean(safeApproach?.ready)&&Boolean(activeRoom);
+    const camTarget=head.clone().addScaledVector(forward,usingWorkstation?-2.2:roomView?-2.65:-4.4)
+      .addScaledVector(right,usingWorkstation?1.12:roomView?.62:1.15);
     camTarget.y+=roomView?.82:1.0;
     // Keep the third-person camera inside the playable corridor or room,
     // rather than letting it pass through walls and expose exterior geometry.
@@ -1470,7 +1476,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const cameraOffset=camTarget.clone().sub(head);
     const maxBoom=roomView?3.1:4.8;
     if(cameraOffset.length()>maxBoom)camTarget.copy(head).add(cameraOffset.setLength(maxBoom));
-    const lookTarget=head.clone().addScaledVector(forward,roomView?5.1:4.5);
+    const lookTarget=head.clone().addScaledVector(forward,usingWorkstation?2.6:roomView?5.1:4.5);
     lookTarget.y+=shotKick;
     // Snap after a room transition so interpolation never sweeps the camera
     // through corridor walls; otherwise ease the camera toward its target.
