@@ -341,8 +341,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   poly(heroFallback,[.68,.53,.2],camo,[0,1.23,-.25]);
   round(heroFallback,.25,.31,skin,[0,1.9,0]);
   round(heroFallback,.32,.2,camo,[0,2.06,.01]);
+  const heroArms:THREE.Mesh[]=[];
   for(const side of [-1,1]){
     const arm=round(heroFallback,.13,.75,armor,[side*.49,1.28,-.13]);arm.rotation.z=side*.18;
+    heroArms.push(arm);
     round(heroFallback,.17,.9,camo,[side*.20,.52,0]);
     poly(heroFallback,[.28,.2,.4],black,[side*.19,.12,-.1]);
   }
@@ -552,6 +554,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let safeIndex=0;
   let safeApproach:{index:number;ready:boolean}|null=null;
   let safeUnlockUntil=0;
+  let safeDoorReleaseAt=0;
+  let safeDoorPending:{index:number;room:Room}|null=null;
+  let safeInteractionStart=0;
+  let safeInteractionEnd=0;
   let safeLootPending:{index:number;at:number}|null=null;
   let ammo=24,reserveAmmo=96;
   const emitAmmo=()=>events.onAmmoChange?.(ammo,reserveAmmo);
@@ -645,6 +651,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     safeIndex=0;
     safeApproach=null;
     safeLootPending=null;
+    safeDoorPending=null;
+    safeInteractionStart=safeInteractionEnd=0;
     rewardCollected=false;
     spawnGuards(activeRoom);
     emit('combat',activeRoom.info.id);
@@ -664,14 +672,20 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const openSafe=(index:number)=>{
     if(phase!=='safes'||!activeRoom||index!==safeIndex||!safeApproach?.ready)return false;
     const box=activeRoom.safes[index];if(!box||box.target!==0)return false;
-    box.target=-1.65;
-    safeUnlockUntil=performance.now()+1100;
-    upgradePulseUntil=performance.now()+1700;
+    // First the operator keys the code, then physically releases the latch.
+    // The door motor does not start until the reach animation completes.
+    const now=performance.now();
+    safeInteractionStart=now;
+    safeInteractionEnd=now+2100;
+    safeDoorReleaseAt=now+600;
+    safeDoorPending={index,room:activeRoom};
+    safeUnlockUntil=now+1400;
+    upgradePulseUntil=now+2100;
     // Every cabinet contributes a tangible gameplay reward. The final one
     // unlocks the next weapon tier and updates its physical attachment rig.
     // Reward is granted only when the door has visibly opened, not when
     // the player merely answers the educational question.
-    safeLootPending={index,at:performance.now()+1250};
+    safeLootPending={index,at:performance.now()+2100};
     if(index===3)activeRoom.reward.visible=true;
     safeIndex++;
     safeApproach=null;
@@ -856,6 +870,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(now<hitFeedbackUntil)weaponLight.color.setHex(0xffe0a0);
     else weaponLight.color.setHex(weaponTier>=3?0xf1ba6c:weaponTier>=2?0x9cf3b4:0xa6effa);
     if(controls.has('f'))fire();
+    if(safeDoorPending&&now>=safeDoorReleaseAt){
+      safeDoorPending.room.safes[safeDoorPending.index].target=-1.65;
+      safeDoorPending=null;
+    }
     if(safeLootPending&&now>=safeLootPending.at){
       const {index}=safeLootPending;safeLootPending=null;
       if(index===0){reserveAmmo+=36;reload();}
@@ -955,12 +973,21 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     avatar.rotation.z=THREE.MathUtils.damp(avatar.rotation.z,targetLean,7,dt);
     // Reach toward the mechanical lock as its motor releases, then recover.
     const interacting=phase==='safes'&&now<safeUnlockUntil;
-    avatar.rotation.x=THREE.MathUtils.damp(avatar.rotation.x,interacting?-.18:0,9,dt);
-    // Prone crawling: the operator's torso rolls almost horizontal and lowers to the floor.
-    avatar.rotation.x=THREE.MathUtils.damp(avatar.rotation.x,crouch?-1.22:0,7,dt);
+    // Keep the interaction lean; the old prone layer overwrote it every frame.
+    avatar.rotation.x=THREE.MathUtils.damp(avatar.rotation.x,crouch?-1.22:interacting?-.22:0,7,dt);
     avatar.position.y=THREE.MathUtils.damp(avatar.position.y,crouch?.46:0,7,dt);
     avatar.position.z=THREE.MathUtils.damp(avatar.position.z,crouch?.32:0,7,dt);
     avatar.scale.y=THREE.MathUtils.damp(avatar.scale.y,crouch?.9:1,8,dt);
+    const interactionElapsed=now-safeInteractionStart;
+    const interactingSafe=phase==='safes'&&interactionElapsed>=0&&now<safeInteractionEnd;
+    const reach=interactingSafe?Math.sin(Math.PI*clamp(interactionElapsed/1500,0,1)):0;
+    heroArms.forEach((arm,index)=>{
+      arm.rotation.x=THREE.MathUtils.damp(arm.rotation.x,reach*(index===0?-1.15:-.72),12,dt);
+      arm.rotation.z=THREE.MathUtils.damp(arm.rotation.z,(index===0?-.18:.18)+reach*(index===0?.25:-.24),12,dt);
+    });
+    // During lock interaction the weapon is holstered rather than clipping
+    // through the safe door; it returns smoothly as the operator collects loot.
+    heroWeapon.visible=!interactingSafe;
     // Procedural movement layers keep the fallback operator expressive even
     // before the external skeletal model is available on a slow connection.
     const danger=phase==='combat'&&guards.some(g=>g.alive&&g.alerted);
