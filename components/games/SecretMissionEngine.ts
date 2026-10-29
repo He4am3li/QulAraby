@@ -305,6 +305,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   upgradeRail.visible=upgradeCoil.visible=upgradeScope.visible=upgradeEmitter.visible=false;
   let model:THREE.Group|null=null,modelMixer:THREE.AnimationMixer|null=null,modelAction:THREE.AnimationAction|null=null;
   const clips=new Map<string,THREE.AnimationAction>();
+  let locomotionState='idle';
+  let locomotionBlend=0;
   const guards:Combatant[]=[];
   const guardAnimations:THREE.AnimationClip[]=[];
   const dressGuard=(enemy:Combatant)=>{
@@ -433,7 +435,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     model.scale.setScalar(.96);
     avatar.add(model);heroFallback.visible=false;
     modelMixer=new THREE.AnimationMixer(model);
-    for(const anim of gltf.animations)clips.set(anim.name.toLowerCase(),modelMixer.clipAction(anim));
+    for(const anim of gltf.animations){
+      const action=modelMixer.clipAction(anim);
+      action.enabled=true;
+      clips.set(anim.name.toLowerCase(),action);
+    }
     modelAction=clips.get('idle')||null;modelAction?.play();
     for(const guard of guards)dressGuard(guard);
     // Place weapon in the actual hand if the rig exposes a right-hand bone.
@@ -827,6 +833,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // Procedural movement layers keep the fallback operator expressive even
     // before the external skeletal model is available on a slow connection.
     const danger=phase==='combat'&&guards.some(g=>g.alive&&g.alerted);
+    const grounded=player.y<=.025&&vy===0;
+    const horizontalSpeed=Math.hypot(velocityX,velocityZ);
     const gait=moving?(sprint?13:8):1.2;
     const stride=moving?Math.sin(time*gait):0;
     const caution=danger&&!sprint;
@@ -844,12 +852,31 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       heroWeapon.position.set(.4,crouch?.92:1.35+weaponLift,-.43);
       heroWeapon.rotation.set(-pitch*.4,0,0);
     }
-    modelMixer?.update(dt);
     if(modelMixer){
-      // Ease into locomotion clips without restarting the active action each frame.
-      const name=moving?(sprint?'run':'walk'):'idle';
-      const next=clips.get(name)||clips.get('idle')||null;
-      if(next!==modelAction&&next){modelAction?.fadeOut(.18);next.reset().fadeIn(.18).play();modelAction=next;}
+      // Finite-state locomotion: grounded, airborne, prone and transitions.
+      // Available Soldier.glb clips are blended, while missing actions fall
+      // back to procedural poses rather than freezing the character.
+      const desiredState=!grounded?'jump':crouch?(horizontalSpeed>.18?'crawl':'prone'):
+        horizontalSpeed<.18?'idle':horizontalSpeed>4.25?'run':'walk';
+      const candidates=desiredState==='jump'?['jump','running','run','idle']:
+        desiredState==='crawl'?['crawl','crouch','walk','idle']:
+        desiredState==='prone'?['prone','crouch','idle']:
+        desiredState==='run'?['run','running','walk','idle']:
+        desiredState==='walk'?['walk','walking','idle']:['idle','standing'];
+      const next=candidates.map(name=>clips.get(name)).find(Boolean)||null;
+      if(next&&next!==modelAction){
+        modelAction?.fadeOut(.22);
+        next.reset().setEffectiveWeight(1).fadeIn(.22).play();
+        modelAction=next;
+      }
+      locomotionState=desiredState;
+      locomotionBlend=THREE.MathUtils.damp(locomotionBlend,horizontalSpeed,8,dt);
+      if(modelAction){
+        const clipName=modelAction.getClip().name.toLowerCase();
+        if(/walk|run/.test(clipName))modelAction.setEffectiveTimeScale(
+          clamp(locomotionBlend/(clipName.includes('run')?5.8:3.2),.55,1.4));
+      }
+      modelMixer.update(dt);
     }
 
     if(['combat','safes'].includes(phase)&&activeRoom){
