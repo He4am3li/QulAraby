@@ -482,6 +482,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let nextShotAt=0;
   let shotKick=0;
   let muzzleFlashUntil=0;
+  let hitFeedbackUntil=0;
   let gateProgress=0;
   let safeIndex=0;
   let rewardCollected=false;
@@ -678,6 +679,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         }
       }
     }
+    if(hit)hitFeedbackUntil=performance.now()+125;
     events.onShot(hit);return hit;
   };
   const controls=new Set<string>();
@@ -733,6 +735,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const dt=clamp((now-last)/1000,0,.045);last=now;time+=dt;
     shotKick=THREE.MathUtils.damp(shotKick,0,13,dt);
     muzzle.scale.setScalar((1+weaponTier*.19)*(now<muzzleFlashUntil?1.8:1));
+    // A successful hit briefly changes the emitter color, giving immediate
+    // readable feedback even on small touch screens.
+    if(now<hitFeedbackUntil)weaponLight.color.setHex(0xffe0a0);
+    else weaponLight.color.setHex(weaponTier>=3?0xf1ba6c:weaponTier>=2?0x9cf3b4:0xa6effa);
     if(phase!=='intro')gateProgress=clamp(gateProgress+dt*.55,0,1);
     hinges.forEach((h,i)=>h.rotation.y=(i?1:-1)*ease(gateProgress)*1.55);
     gate.visible=phase==='intro'||(phase==='entering'&&player.z>17.0);
@@ -992,7 +998,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   events.onHealth(100);
   events.onThreats(0);
   const setLanguage=(value:'ar'|'en')=>{language=value;};
-  const restartRoom=()=>{if(!activeRoom||phase!=='dead')return;nextShotAt=0;shotKick=0;muzzleFlashUntil=0;controls.clear();input.forward=input.strafe=0;sprint=false;crouch=false;vy=0;player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);resetThreats();};
+  const restartRoom=()=>{if(!activeRoom||phase!=='dead')return;nextShotAt=0;shotKick=0;muzzleFlashUntil=0;hitFeedbackUntil=0;controls.clear();input.forward=input.strafe=0;sprint=false;crouch=false;vy=0;player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);resetThreats();};
   const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4||!rewardCollected)return false;emit('victory','vault');return true;};
   return {
     start,travelTo,enterRoom,exitRoom,openSafe,collectReward,fire,jump,look,setCrouch,setMovement,setWeaponTier,
