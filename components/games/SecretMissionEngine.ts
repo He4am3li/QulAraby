@@ -294,11 +294,14 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       poly(rack,[.86,.11,2.4],steel,[0,.3+j*.6,0]);
       poly(rack,[.09,.07,.12],j%2?amber:green,[-side*.49,.4+j*.6,-.86]);
     }
-    const console=new THREE.Group();console.position.set(side*.4,0,2.55);group.add(console);
-    poly(console,[1.9,.8,1.0],trim,[0,.52,0]);
-    poly(console,[1.74,.12,.95],steel,[0,.94,0]);
-    poly(console,[1.35,.86,.12],black,[0,1.51,-.36]);
-    poly(console,[1.1,.54,.05],iColor(info.id),[0,1.52,-.28]);
+    // Wall-mounted mission terminal replaces the large freestanding console.
+    // The old console sat directly between the third-person camera and hero,
+    // filling the foreground and hiding the playable operator.
+    const terminal=new THREE.Group();terminal.position.set(side*4.96,1.67,2.25);group.add(terminal);
+    poly(terminal,[.15,1.16,1.66],trim,[0,0,0]);
+    poly(terminal,[.17,.87,1.39],black,[-side*.02,0,0]);
+    poly(terminal,[.18,.12,1.12],iColor(info.id),[-side*.04,.21,0]);
+    for(let line=0;line<3;line++)poly(terminal,[.18,.035,.9-line*.17],sectorStrip,[-side*.05,-.03-line*.16,0]);
     group.visible=false;
     return {info,group,door:hinge,doorAngle:0,doorTarget:0,safes,reward,enemies:[],prepared:false};
   };
