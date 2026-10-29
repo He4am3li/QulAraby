@@ -195,6 +195,12 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
           onHealth(value){if(!stopped)setHealth(value);},
           onWeaponChange(tier){if(!stopped)setSelectedWeapon(tier);},
           onSafeReady(){if(!stopped)setSafeStage('challenge');},
+          onInstrumentTap(id){
+            if(stopped)return;
+            if(id==='comms')setFrequency(v=>(v+1)%8);
+            else if(id==='archive')setArchiveChoice(v=>v===null?0:(v+1)%3);
+            else if(id==='vault')setDefenseSequence(v=>[...v,(v.length?v[v.length-1]+1:0)%3].slice(-2));
+          },
           onAmmoChange(loaded,reserve){if(!stopped)setAmmo({loaded,reserve});},
           onLoot(){if(!stopped)setLootReady(true);},
           onThreats(n){
