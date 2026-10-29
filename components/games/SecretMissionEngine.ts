@@ -19,6 +19,8 @@ export type SecretEvents = {
   onShot: (hit:boolean) => void;
   onWeaponChange?: (tier:number) => void;
   onSafeReady?: (index:number) => void;
+  onAmmoChange?: (loaded:number,reserve:number) => void;
+  onLoot?: (index:number) => void;
   onError: (message:string) => void;
 };
 type Combatant = { root:THREE.Group; body:THREE.Group; fallback:THREE.Group; mixer:THREE.AnimationMixer|null; action:THREE.AnimationAction|null; hp:number; maxHp:number; cooldown:number; dying:number; alive:boolean; isBoss:boolean; awareness:number; alerted:boolean; };
@@ -550,6 +552,14 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let safeIndex=0;
   let safeApproach:{index:number;ready:boolean}|null=null;
   let safeUnlockUntil=0;
+  let safeLootPending:{index:number;at:number}|null=null;
+  let ammo=24,reserveAmmo=96;
+  const emitAmmo=()=>events.onAmmoChange?.(ammo,reserveAmmo);
+  const reload=()=>{
+    if(ammo>=24||reserveAmmo<=0||!['combat','safes'].includes(phase))return;
+    const amount=Math.min(24-ammo,reserveAmmo);
+    ammo+=amount;reserveAmmo-=amount;emitAmmo();
+  };
   let upgradePulseUntil=0;
   let rewardCollected=false;
   let last=performance.now(),frame=0,time=0;
@@ -634,6 +644,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     activeRoom.reward.visible=false;
     safeIndex=0;
     safeApproach=null;
+    safeLootPending=null;
     rewardCollected=false;
     spawnGuards(activeRoom);
     emit('combat',activeRoom.info.id);
@@ -658,10 +669,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     upgradePulseUntil=performance.now()+1700;
     // Every cabinet contributes a tangible gameplay reward. The final one
     // unlocks the next weapon tier and updates its physical attachment rig.
-    if(index===0)nextShotAt=0;
-    if(index===1){hp=Math.min(100,hp+20);events.onHealth(hp);}
-    if(index===2)upgradeCoil.visible=true;
-    if(index===3&&activeRoom.info.id!=='vault')setWeaponTier(Math.min(4,unlockedWeaponTier+1));
+    // Reward is granted only when the door has visibly opened, not when
+    // the player merely answers the educational question.
+    safeLootPending={index,at:performance.now()+1250};
     if(index===3)activeRoom.reward.visible=true;
     safeIndex++;
     safeApproach=null;
@@ -721,6 +731,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // combat progression. Upgraded weapons have faster trigger response.
     const now=performance.now();
     if(now<nextShotAt)return false;
+    if(ammo<=0){reload();return false;}
+    ammo--;emitAmmo();
     nextShotAt=now+(weaponTier>=3?210:weaponTier>=2?280:360);
     shotKick=Math.min(.22,shotKick+.11);
     muzzleFlashUntil=now+75;
@@ -783,6 +795,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(key==='c'&&!event.repeat)setCrouch(!crouch);
     if(key==='e'&&!event.repeat)enterRoom();
     if(key==='f'&&!event.repeat)fire();
+    if(key==='r'&&!event.repeat)reload();
     // 1–5 select only weapons already earned from educational objectives.
     if(/^[1-5]$/.test(key)&&!event.repeat){
       const selected=Number(key)-1;
@@ -843,6 +856,15 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(now<hitFeedbackUntil)weaponLight.color.setHex(0xffe0a0);
     else weaponLight.color.setHex(weaponTier>=3?0xf1ba6c:weaponTier>=2?0x9cf3b4:0xa6effa);
     if(controls.has('f'))fire();
+    if(safeLootPending&&now>=safeLootPending.at){
+      const {index}=safeLootPending;safeLootPending=null;
+      if(index===0){reserveAmmo+=36;reload();}
+      if(index===1){hp=Math.min(100,hp+25);events.onHealth(Math.round(hp));}
+      if(index===2){upgradeCoil.visible=true;}
+      if(index===3&&activeRoom?.info.id!=='vault')setWeaponTier(Math.min(4,unlockedWeaponTier+1));
+      upgradePulseUntil=now+1800;
+      events.onLoot?.(index);
+    }
     if(phase!=='intro')gateProgress=clamp(gateProgress+dt*.55,0,1);
     hinges.forEach((h,i)=>h.rotation.y=(i?1:-1)*ease(gateProgress)*1.55);
     gate.visible=phase==='intro'||(phase==='entering'&&player.z>17.0);
@@ -1153,12 +1175,13 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   frame=requestAnimationFrame(render);
   events.onPhase('intro');
   events.onHealth(100);
+  emitAmmo();
   events.onThreats(0);
   const setLanguage=(value:'ar'|'en')=>{language=value;};
   const restartRoom=()=>{if(!activeRoom||phase!=='dead')return;nextShotAt=0;shotKick=0;muzzleFlashUntil=0;hitFeedbackUntil=0;lastHitAt=-10000;controls.clear();input.forward=input.strafe=0;sprint=false;crouch=false;vy=0;player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);resetThreats();};
   const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4||!rewardCollected)return false;emit('victory','vault');return true;};
   return {
-    start,travelTo,enterRoom,exitRoom,approachSafe,openSafe,collectReward,fire,jump,look,setCrouch,setMovement,setWeaponTier,
+    start,travelTo,enterRoom,exitRoom,approachSafe,openSafe,collectReward,fire,reload,jump,look,setCrouch,setMovement,setWeaponTier,
     restartRoom,finish,setAllowed,setLanguage,
     getRoom(){return activeRoom?.info.id??null;},
     setPaused(value:boolean){paused=value;last=performance.now();},
