@@ -618,7 +618,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     muzzle.getWorldPosition(origin);
     if(!Number.isFinite(origin.x)||origin.distanceTo(player)>3)origin.copy(player).add(new THREE.Vector3(0,1.35,0));
     const direction=new THREE.Vector3(-Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch));
-    let best:Combatant|null=null,closestAngle=.42;
+    let best:Combatant|null=null,closestAngle=-1;
     const eye=player.clone().add(new THREE.Vector3(0,1.65,0));
     for(const enemy of guards){
       if(!enemy.alive)continue;
@@ -626,7 +626,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       const dist=eye.distanceTo(at);
       if(dist>20)continue;
       const dot=direction.dot(at.clone().sub(eye).normalize());
-      const threshold=phone?.5:.66; // mobile aim assistance
+      // Use the target's angular footprint: a nearby guard is easier to hit,
+      // while distant targets require a more accurate aim. Mobile keeps
+      // slightly more forgiving aiming without firing through cover.
+      const angularRadius=Math.atan2(enemy.isBoss?1.05:.46,Math.max(1,dist));
+      const aimCone=phone?.16:.105;
+      const threshold=Math.cos(angularRadius+aimCone);
       if(dot>threshold&&dot>closestAngle&&(!activeRoom||!cabinetOccludes(eye,at,activeRoom))){
         best=enemy;closestAngle=dot;
       }
