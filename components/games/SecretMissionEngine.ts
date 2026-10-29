@@ -479,6 +479,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let transition:Traverse|null=null;
   let hp=100;
   let weaponTier=0;
+  let nextShotAt=0;
   let gateProgress=0;
   let safeIndex=0;
   let rewardCollected=false;
@@ -627,7 +628,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     });
   };
   const fire=()=>{
-    if(!['combat','safes'].includes(phase)||hp<=0)return false;
+    if(!['combat','safes'].includes(phase)||hp<=0||paused||document.hidden)return false;
+    // Frame-independent fire cadence prevents input-spam from bypassing
+    // combat progression. Upgraded weapons have faster trigger response.
+    const now=performance.now();
+    if(now<nextShotAt)return false;
+    nextShotAt=now-(now%1)+(weaponTier>=3?210:weaponTier>=2?280:360);
     const origin=new THREE.Vector3();
     muzzle.getWorldPosition(origin);
     if(!Number.isFinite(origin.x)||origin.distanceTo(player)>3)origin.copy(player).add(new THREE.Vector3(0,1.35,0));
@@ -979,7 +985,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   events.onHealth(100);
   events.onThreats(0);
   const setLanguage=(value:'ar'|'en')=>{language=value;};
-  const restartRoom=()=>{if(!activeRoom||phase!=='dead')return;controls.clear();input.forward=input.strafe=0;sprint=false;crouch=false;vy=0;player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);resetThreats();};
+  const restartRoom=()=>{if(!activeRoom||phase!=='dead')return;nextShotAt=0;controls.clear();input.forward=input.strafe=0;sprint=false;crouch=false;vy=0;player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);resetThreats();};
   const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4||!rewardCollected)return false;emit('victory','vault');return true;};
   return {
     start,travelTo,enterRoom,exitRoom,openSafe,collectReward,fire,jump,look,setCrouch,setMovement,setWeaponTier,
