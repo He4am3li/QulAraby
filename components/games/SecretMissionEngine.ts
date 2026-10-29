@@ -584,6 +584,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     ammo+=amount;reserveAmmo-=amount;emitAmmo();
   };
   let upgradePulseUntil=0;
+  let weaponEvolutionStart=0;
+  let weaponEvolutionFrom=0;
+  let weaponEvolutionTo=0;
   let rewardCollected=false;
   let last=performance.now(),frame=0,time=0;
   let paused=false,disposed=false;
@@ -717,8 +720,15 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     return true;
   };
   const setWeaponTier=(tier:number)=>{
+    const previousTier=weaponTier;
     unlockedWeaponTier=Math.max(unlockedWeaponTier,clamp(tier,0,4));
     weaponTier=clamp(tier,0,unlockedWeaponTier);
+    if(previousTier!==weaponTier){
+      weaponEvolutionFrom=previousTier;
+      weaponEvolutionTo=weaponTier;
+      weaponEvolutionStart=performance.now();
+      upgradePulseUntil=weaponEvolutionStart+1600;
+    }
     events.onWeaponChange?.(weaponTier);
     muzzle.scale.setScalar(1+weaponTier*.19);
     upgradeRail.visible=weaponTier>=1;
@@ -882,8 +892,17 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // Hit-confirmation pulse gently fades; no additional geometry or textures.
     const hitAge=Math.max(0,now-lastHitAt);
     const hitPulse=hitAge<180?1+(.35*(1-hitAge/180)):1;
-    upgradeEmitter.scale.setScalar(hitPulse);
     muzzle.scale.setScalar((1+weaponTier*.19)*(now<muzzleFlashUntil?1.8:1)*(now<upgradePulseUntil?1.3:1));
+    // An actual 3D weapon transformation accompanies every earned tier.
+    const evolutionAge=now-weaponEvolutionStart;
+    const evolving=weaponEvolutionStart>0&&evolutionAge>=0&&evolutionAge<1600;
+    const evolutionPulse=evolving?Math.sin(Math.PI*evolutionAge/1600):0;
+    const tierShape=1+weaponTier*.075;
+    heroWeapon.scale.set(tierShape*(1+evolutionPulse*.16),tierShape*(1+evolutionPulse*.16),tierShape*(1+evolutionPulse*.24));
+    upgradeRail.scale.x=1+evolutionPulse*.4;
+    upgradeCoil.scale.setScalar(1+evolutionPulse*.5);
+    upgradeScope.scale.y=1+evolutionPulse*.45;
+    upgradeEmitter.scale.setScalar(hitPulse*(1+evolutionPulse*.6));
     // A successful hit briefly changes the emitter color, giving immediate
     // readable feedback even on small touch screens.
     if(now<hitFeedbackUntil)weaponLight.color.setHex(0xffe0a0);
