@@ -772,17 +772,21 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // First the operator keys the code, then physically releases the latch.
     // The door motor does not start until the reach animation completes.
     const now=performance.now();
+    // Each sector has a different physical interaction cadence: quick supply
+    // recovery, communications reboot, archive retrieval, defense override.
+    const operationMs=activeRoom.info.id==='depot'?1650:activeRoom.info.id==='comms'?2650:activeRoom.info.id==='archive'?2050:3100;
+    const releaseMs=activeRoom.info.id==='vault'?1350:activeRoom.info.id==='comms'?1000:600;
     safeInteractionStart=now;
-    safeInteractionEnd=now+2100;
-    safeDoorReleaseAt=now+600;
+    safeInteractionEnd=now+operationMs;
+    safeDoorReleaseAt=now+releaseMs;
     safeDoorPending={index,room:activeRoom};
-    safeUnlockUntil=now+1400;
-    upgradePulseUntil=now+2100;
+    safeUnlockUntil=now+operationMs;
+    upgradePulseUntil=now+operationMs;
     // Every cabinet contributes a tangible gameplay reward. The final one
     // unlocks the next weapon tier and updates its physical attachment rig.
     // Reward is granted only when the door has visibly opened, not when
     // the player merely answers the educational question.
-    safeLootPending={index,at:performance.now()+2100};
+    safeLootPending={index,at:now+operationMs};
     if(index===3)activeRoom.reward.visible=true;
     safeIndex++;
     safeApproach=null;
@@ -1165,7 +1169,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       lamp.color.setHex(Math.sin((now-safeApproach.arrivedAt)*.028)>0?0xffc25a:0x86511e);
     }
     const probeProgress=probingSafe&&safeApproach?clamp((now-safeApproach.arrivedAt)/700,0,1):0;
-    const reach=interactingSafe?Math.sin(Math.PI*clamp(interactionElapsed/1500,0,1)):
+    const reach=interactingSafe?Math.sin(Math.PI*clamp(interactionElapsed/(safeInteractionEnd-safeInteractionStart||1500),0,1)):
       pickupActive?Math.sin(Math.PI*pickupProgress)*.8:
       probingSafe?Math.sin(Math.PI*probeProgress)*.65:0;
     interactionHands.visible=Boolean(model)&&skeletalHands.length===0&&(interactingSafe||pickupActive||probingSafe);
