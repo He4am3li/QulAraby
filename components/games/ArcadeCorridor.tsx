@@ -265,9 +265,16 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
       flashTimer.current=setTimeout(()=>setSelectedPin(null),850);
       return;
     }
-    if(room==='comms'&&frequency!==(activeSafe*2+3)%8)return;
-    if(room==='archive'&&archiveChoice!==activeSafe%3)return;
-    if(room==='vault'&&defenseSequence.join(',')!==[activeSafe%3,(activeSafe+1)%3].join(','))return;
+    const deviceReady=room==='depot'||
+      (room==='comms'&&frequency===(activeSafe*2+3)%8)||
+      (room==='archive'&&archiveChoice===activeSafe%3)||
+      (room==='vault'&&defenseSequence.join(',')===[activeSafe%3,(activeSafe+1)%3].join(','));
+    if(!deviceReady){
+      setSelectedPin('device');
+      if(flashTimer.current)clearTimeout(flashTimer.current);
+      flashTimer.current=setTimeout(()=>setSelectedPin(null),1100);
+      return;
+    }
     if(!engine.current?.openSafe(activeSafe))return;
     setSelectedPin(q.pin);
     setLootReady(false);
@@ -407,8 +414,8 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
               {ar?task?.unitAr:task?.unitEn} {i+1}
             </div>)}
           </div>
-          {selectedPin==='wrong'&&<div className="qul-secret-error">{ar?'شفرة خاطئة، أعد التفكير.':'Incorrect code. Try again.'}</div>}
-          {opened[activeSafe]&&selectedPin&&selectedPin!=='wrong'?(
+          {(selectedPin==='wrong'||selectedPin==='device')&&<div className="qul-secret-error" role="status">{selectedPin==='device'?(ar?'أكمل ضبط الجهاز أولًا ثم اختر الإجابة.':'Complete the device controls before answering.'):(ar?'شفرة خاطئة، أعد التفكير.':'Incorrect code. Try again.')}</div>}
+          {opened[activeSafe]&&selectedPin&&selectedPin!=='wrong'&&selectedPin!=='device'?(
             <div className="qul-secret-safe-result">
               <ShieldCheck size={32}/>
               <strong>{!lootReady?(ar?'القفل يفتح الآن…':'UNLOCKING SAFE…'):(ar?'تم جمع الغنيمة':'LOOT COLLECTED')}</strong>
