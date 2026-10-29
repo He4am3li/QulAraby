@@ -119,8 +119,17 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const red=material(new THREE.MeshBasicMaterial({color:'#f87569'}));
   const green=material(new THREE.MeshBasicMaterial({color:'#9cf3b4'}));
   const transparentRed=material(new THREE.MeshBasicMaterial({color:'#ff7967',transparent:true,opacity:.7,depthWrite:false}));
+  // Reuse identical box geometry across corridor props and the four rooms.
+  // Geometry is immutable here: each mesh keeps its own transform and material.
+  const boxGeometryCache=new Map<string,THREE.BoxGeometry>();
+  const sharedBox=(dim:[number,number,number])=>{
+    const key=dim.join(',');
+    let shape=boxGeometryCache.get(key);
+    if(!shape){shape=geometry(new THREE.BoxGeometry(...dim));boxGeometryCache.set(key,shape);}
+    return shape;
+  };
   const poly=(parent:THREE.Object3D,dim:[number,number,number],mat:THREE.Material,pos:[number,number,number])=>{
-    const mesh=new THREE.Mesh(geometry(new THREE.BoxGeometry(...dim)),mat);
+    const mesh=new THREE.Mesh(sharedBox(dim),mat);
     mesh.position.set(...pos);mesh.castShadow=!phone;mesh.receiveShadow=!phone;
     parent.add(mesh);return mesh;
   };
