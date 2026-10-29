@@ -24,7 +24,7 @@ export type SecretEvents = {
   onError: (message:string) => void;
 };
 type Combatant = { root:THREE.Group; body:THREE.Group; fallback:THREE.Group; mixer:THREE.AnimationMixer|null; action:THREE.AnimationAction|null; hp:number; maxHp:number; cooldown:number; dying:number; alive:boolean; isBoss:boolean; awareness:number; alerted:boolean; };
-type Room = { info:typeof SECRET_ROOMS[number]; group:THREE.Group; door:THREE.Group; doorAngle:number; doorTarget:number; safes:{door:THREE.Group; opened:number; target:number; name:THREE.Sprite}[]; reward:THREE.Group; enemies:Combatant[]; prepared:boolean;};
+type Room = { info:typeof SECRET_ROOMS[number]; group:THREE.Group; door:THREE.Group; doorAngle:number; doorTarget:number; safes:{door:THREE.Group; opened:number; target:number; name:THREE.Sprite; indicator:THREE.MeshBasicMaterial; contents:THREE.Group}[]; reward:THREE.Group; enemies:Combatant[]; prepared:boolean;};
 type Traverse = {type:'intro'|'enter'|'exit';time:number;duration:number;from:THREE.Vector3;to:THREE.Vector3;fromYaw:number;toYaw:number; room?:Room};
 type Trail = { mesh:THREE.Mesh; age:number; lifespan:number };
 const lerp=THREE.MathUtils.lerp;
@@ -251,32 +251,35 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       poly(cabinet,[1.47,1.99,.1],black,[0,1.13,.78]);
       poly(cabinet,[1.38,.07,1.17],steel,[0,.57,.04]);
       poly(cabinet,[1.38,.07,1.17],steel,[0,1.28,.04]);
+      const contents=new THREE.Group();cabinet.add(contents);
       // Physical loot silhouettes: magazines, armor, targeting modules and
       // the final weapon cache are visible only after each door swings open.
       if(info.id!=='vault'){
         const lootColor=i===0?amber:i===1?green:i===2?cyan:steel;
         for(let n=0;n<(i===0?3:1);n++){
           const dims:[number,number,number]=i===0?[.16,.43,.23]:i===1?[.83,.62,.22]:i===2?[.55,.32,.5]:[1.1,.3,.5];
-          poly(cabinet,dims,lootColor,[(n-1)*.29,i===1?.86:1.37,.28]);
+          poly(contents,dims,lootColor,[(n-1)*.29,i===1?.86:1.37,.28]);
         }
       }
       for(let item=0;item<3;item++){
         const isPaper=info.id==='vault';
         const x=-.43+item*.43;
-        poly(cabinet,isPaper?[.31,.025,.48]:[.24,.35,.3],
+        poly(contents,isPaper?[.31,.025,.48]:[.24,.35,.3],
           isPaper?tan:item===2?amber:cyan,[x,isPaper?1.37:.82,.08]);
-        if(isPaper)poly(cabinet,[.24,.008,.025],black,[x,1.39,.1]);
+        if(isPaper)poly(contents,[.24,.008,.025],black,[x,1.39,.1]);
       }
       const joint=new THREE.Group();joint.position.set(-.72,0,.83);cabinet.add(joint);
       poly(joint,[1.43,1.97,.13],steel,[.71,1.13,0]);
       poly(joint,[1.16,.1,.05],i===3?amber:cyan,[.71,1.93,.1]);
       round(joint,.1,.13,black,[1.15,1.04,.11],12).rotation.x=Math.PI/2;
+      const indicator=material(new THREE.MeshBasicMaterial({color:0xff3c42}));
+      poly(joint,[.28,.08,.045],indicator,[1.13,1.48,.1]);
       poly(cabinet,[1.54,.09,.12],tan,[0,.11,.78]);
       const key=makeLabel(language==='ar'?'خزنة '+(i+1):'SAFE '+(i+1));
       textures.push(key);
       const label=new THREE.Sprite(material(new THREE.SpriteMaterial({map:key,transparent:true,depthWrite:false})));
       label.position.set(0,2.53,.6);label.scale.set(1.36,.38,1);cabinet.add(label);
-      safes.push({door:joint,opened:0,target:0,name:label});
+      safes.push({door:joint,opened:0,target:0,name:label,indicator,contents});
     }
     // Physical loot in cabinet four: each room provides a piece of the
     // equipment required for the final defense, while the final vault holds papers.
@@ -657,7 +660,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const resetThreats=()=>{
     if(!activeRoom)return;
     hp=100;events.onHealth(hp);
-    activeRoom.safes.forEach(s=>{s.target=0;s.opened=0;});
+    activeRoom.safes.forEach(s=>{s.target=0;s.opened=0;s.contents.visible=true;s.indicator.color.setHex(0xff3c42);});
     activeRoom.reward.visible=false;
     safeIndex=0;
     safeApproach=null;
@@ -885,6 +888,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(controls.has('f'))fire();
     if(safeDoorPending&&now>=safeDoorReleaseAt){
       safeDoorPending.room.safes[safeDoorPending.index].target=-1.65;
+      safeDoorPending.room.safes[safeDoorPending.index].indicator.color.setHex(0x6dffae);
       safeDoorPending=null;
     }
     if(safeLootPending&&now>=safeLootPending.at){
@@ -903,6 +907,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     }
     if(pickupAwardPending>=0&&now>=safePickupUntil){
       const index=pickupAwardPending;pickupAwardPending=-1;
+      if(activeRoom)activeRoom.safes[index].contents.visible=false;
       if(index===0){reserveAmmo+=36;reload();}
       if(index===1){hp=Math.min(100,hp+25);events.onHealth(Math.round(hp));}
       if(index===2)upgradeCoil.visible=true;
@@ -938,6 +943,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       yaw=THREE.MathUtils.damp(yaw,0,9,dt);
       if(distance<.13){
         safeApproach.ready=true;
+        activeRoom.safes[safeApproach.index].indicator.color.setHex(0xffbd54);
         events.onSafeReady?.(safeApproach.index);
       }
     }
