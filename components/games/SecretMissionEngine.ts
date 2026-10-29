@@ -600,6 +600,18 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       input.forward=input.strafe=0;
     }
   };
+  // Shared two-dimensional cabinet occlusion for player and enemy projectiles.
+  const cabinetOccludes=(from:THREE.Vector3,to:THREE.Vector3,room:Room)=>{
+    const a=room.group.worldToLocal(from.clone());
+    const b=room.group.worldToLocal(to.clone());
+    const dx=b.x-a.x,dz=b.z-a.z;
+    const lengthSq=dx*dx+dz*dz;
+    if(lengthSq<.0001)return false;
+    return [-3.32,-1.14,1.04,3.22].some(x=>{
+      const t=clamp(((x-a.x)*dx+(-3.95-a.z)*dz)/lengthSq,0,1);
+      return t>.02&&t<.98&&Math.hypot(a.x+t*dx-x,a.z+t*dz+3.95)<.87;
+    });
+  };
   const fire=()=>{
     if(!['combat','safes'].includes(phase)||hp<=0)return false;
     const origin=new THREE.Vector3();
@@ -615,7 +627,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       if(dist>20)continue;
       const dot=direction.dot(at.clone().sub(eye).normalize());
       const threshold=phone?.5:.66; // mobile aim assistance
-      if(dot>threshold&&dot>closestAngle){best=enemy;closestAngle=dot;}
+      if(dot>threshold&&dot>closestAngle&&(!activeRoom||!cabinetOccludes(eye,at,activeRoom))){
+        best=enemy;closestAngle=dot;
+      }
     }
     const hit=Boolean(best);
     // Gunfire reveals the player's position to every surviving guard.
@@ -816,7 +830,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
           const t=clamp(((x-originLocal.x)*dx+(z-originLocal.z)*dz)/lengthSq,0,1);
           return Math.hypot(originLocal.x+t*dx-x,originLocal.z+t*dz-z)<radius;
         };
-        const behindCabinets=[-3.32,-1.14,1.04,3.22].some(x=>crossesCover(x,-3.95,.86));
+        const behindCabinets=cabinetOccludes(guardWorld,player,activeRoom);
         const clearSight=visible&&!behindCabinets;
         if(!guard.alerted){
           if(dist<detectRadius&&clearSight)guard.awareness+=dt*(crouch?.55:sprint?2.8:1.6);
