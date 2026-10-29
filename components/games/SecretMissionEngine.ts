@@ -931,6 +931,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       camTarget.x=clamp(camTarget.x,-2.55,2.55);
     }
     camTarget.y=clamp(camTarget.y,1.0,2.75);
+    // Clamp the camera's desired position relative to the actual operator.
+    // This avoids long sweeps across geometry when a room loads or teleports.
+    const cameraOffset=camTarget.clone().sub(head);
+    const maxBoom=roomView?3.1:4.8;
+    if(cameraOffset.length()>maxBoom)camTarget.copy(head).add(cameraOffset.setLength(maxBoom));
     const lookTarget=head.clone().addScaledVector(forward,roomView?5.1:4.5);
     // Snap after a room transition so interpolation never sweeps the camera
     // through corridor walls; otherwise ease the camera toward its target.
