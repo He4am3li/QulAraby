@@ -13,6 +13,8 @@ import { ARABIC_ENGLISH_DICT } from '../src/data/arabicEnglishDict';
 import { useAuth } from './AuthProvider';
 import { db } from '../firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { CassetteLibrary, CassetteLibraryHandle } from './CassetteLibrary';
+import './RadioThermalPrinter.css';
 
 interface CassettePlayerProps {
   audioSrc?: string;
@@ -82,90 +84,6 @@ const SmokyAtmosphere: React.FC = () => {
         <path d="M0,360 C220,440 360,260 550,350 C740,440 880,280 1000,370 L1000,700 L0,700 Z" fill="url(#smokeGradB)" />
         <path d="M0,80 C150,140 350,20 520,100 C690,180 850,60 1000,110 L1000,0 L0,0 Z" fill="url(#smokeGradA)" opacity="0.65" />
       </svg>
-    </div>
-  );
-};
-
-/**
- * Authentic Vintage Cassette for the 4-Column Wooden Shelf Rack
- * Displays full Arabic title underneath without truncation
- */
-const ShelfCassetteItem: React.FC<{
-  tape: ShelfTape;
-  isActive: boolean;
-  isPlaying: boolean;
-  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
-}> = ({ tape, isActive, isPlaying, onClick }) => {
-  return (
-    <div className="flex flex-col items-center gap-1 w-full">
-      <button
-        data-tape-id={tape.id}
-        onClick={onClick}
-        title={`${tape.titleAr} (${tape.brand} ${tape.year}) - انقر للتشغيل`}
-        className={`group w-full rounded-md p-1.5 relative transition-all duration-200 flex flex-col justify-between overflow-hidden cursor-pointer shadow-md select-none ${
-          isActive
-            ? 'ring-2 ring-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.65)] scale-[1.03] border-amber-300'
-            : 'border-stone-800 hover:border-amber-300/80 hover:scale-[1.02] hover:shadow-lg'
-        } bg-gradient-to-r ${tape.tapeColor} border`}
-        style={{ aspectRatio: '1.68 / 1' }}
-      >
-        {/* Corner Screws */}
-        <div className="absolute top-0.5 left-0.5 w-1 h-1 rounded-full bg-stone-400/90" />
-        <div className="absolute top-0.5 right-0.5 w-1 h-1 rounded-full bg-stone-400/90" />
-        <div className="absolute bottom-0.5 left-0.5 w-1 h-1 rounded-full bg-stone-400/90" />
-        <div className="absolute bottom-0.5 right-0.5 w-1 h-1 rounded-full bg-stone-400/90" />
-
-        {/* Top Brand & Model Strip */}
-        <div className="flex items-center justify-between text-[7px] font-mono font-bold text-white/90 px-0.5 pt-0.5 border-b border-white/15 pb-0.5">
-          <span className="truncate max-w-[55px] font-black tracking-tight">{tape.brand}</span>
-          <span className="text-[6.5px] opacity-75 font-mono">{tape.year}</span>
-        </div>
-
-        {/* Center Acrylic Window with Dual Spool Teeth */}
-        <div className="bg-stone-950/95 rounded py-0.5 px-1.5 border border-black/80 flex items-center justify-center gap-3 my-auto shadow-inner">
-          <div
-            className="w-3.5 h-3.5 rounded-full bg-stone-200 border border-stone-400 flex items-center justify-center relative shadow-xs"
-            style={{
-              transform: isActive && isPlaying ? 'rotate(180deg)' : 'none',
-              transition: 'transform 0.5s linear'
-            }}
-          >
-            <div className="w-1 h-1 rounded-full bg-stone-950" />
-          </div>
-
-          <div className="w-5 h-0.5 bg-amber-950/90 rounded" />
-
-          <div
-            className="w-3.5 h-3.5 rounded-full bg-stone-200 border border-stone-400 flex items-center justify-center relative shadow-xs"
-            style={{
-              transform: isActive && isPlaying ? 'rotate(180deg)' : 'none',
-              transition: 'transform 0.5s linear'
-            }}
-          >
-            <div className="w-1 h-1 rounded-full bg-stone-950" />
-          </div>
-        </div>
-
-        {/* Bottom Format Marker */}
-        <div className="flex items-center justify-between text-[6px] font-mono text-stone-300 px-0.5">
-          <span>HIGH BIAS</span>
-          <span>90 MIN</span>
-        </div>
-      </button>
-
-      {/* FULL ARABIC TITLE PILL BADGE (No numbers, scaled so full name appears) */}
-      <div
-        className={`w-full min-h-[30px] flex items-center justify-center text-center px-1 py-0.5 rounded-md text-[8.5px] sm:text-[9px] font-black leading-tight border transition-all arabic-font ${
-          isActive
-            ? 'bg-amber-400 text-stone-950 border-amber-500 shadow-xs scale-102 font-black'
-            : 'bg-[#f7eedc] text-stone-900 border-stone-400/70 shadow-2xs hover:bg-white'
-        }`}
-        title={tape.titleAr}
-      >
-        <span className="line-clamp-2">
-          {tape.titleAr}
-        </span>
-      </div>
     </div>
   );
 };
@@ -366,6 +284,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
   const [questionIndex, setQuestionIndex] = useState(0);
   const [firstAttempt, setFirstAttempt] = useState<Record<number, number>>({});
   const [printerDismissed, setPrinterDismissed] = useState<boolean>(false);
+  const libraryRef = useRef<CassetteLibraryHandle>(null);
   const visibleTapes = useMemo(() => getShelfTapesForLevel(selectedLevel), [selectedLevel]);
 
   // Reuse the stepper-style receipt feed from KnowledgeSupermarket: short
@@ -945,9 +864,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
     const index = visibleTapes.findIndex(t => t.id === activeTapeId);
     const next = visibleTapes[index + 1];
     if (!next) return;
-    // Use the same real shelf click handler to preserve cassette insertion animation.
-    const shelf = document.querySelector<HTMLButtonElement>('[data-tape-id="' + next.id + '"]');
-    shelf?.click();
+    libraryRef.current?.selectTape(next.id);
   };
 
   const progressRatio = duration > 0 ? currentTime / duration : 0;
@@ -1019,44 +936,10 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
         )}
       </AnimatePresence>
 
-      {/* 2-SECTION BALANCED WORKBENCH */}
-      {/* IN RTL:
-          First child = RIGHT side (The 4-Column Wooden Cassette Rack Shelf)
-          Second child = LEFT side (Cassette Player Deck + Compact Thermal Quiz Printer)
-          This fulfills: "انقل المكتبة إلى اليمين"!
-      */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 items-stretch w-full">
-
-        {/* ======================================================== */}
-        {/* SECTION 1 (RIGHT SIDE): 4-COLUMN WOODEN CASSETTE RACK    */}
-        {/* Frame bottom is ALWAYS fully visible; scrolling is INSIDE */}
-        {/* ======================================================== */}
-        <div className="w-full lg:w-[54%] rounded-2xl border-[10px] border-[#c4a47c] bg-[#e6d5bc] shadow-2xl relative flex flex-col overflow-hidden h-[590px] lg:h-[605px]">
-
-          {/* Light Pine/Oak Wood Grain Overlay */}
-          <div
-            className="absolute inset-0 pointer-events-none opacity-40 mix-blend-multiply"
-            style={{
-              backgroundImage: `repeating-linear-gradient(90deg, #d8be9b 0px, #d8be9b 80px, #caa880 82px, #caa880 84px)`,
-            }}
-          />
-
-          {/* Internal Scrollable Cassette Grid (Bottom wooden frame is permanently fixed and visible!) */}
-          <div className="relative z-10 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-amber-800/40 scrollbar-track-transparent p-2.5 sm:p-3 pr-1.5">
-            <div className="grid grid-cols-3 gap-x-3 gap-y-4">
-              {visibleTapes.map((tape) => (
-                <ShelfCassetteItem
-                  key={tape.id}
-                  tape={tape}
-                  isActive={activeTapeId === tape.id}
-                  isPlaying={isPlaying && activeTapeId === tape.id}
-                  onClick={(event) => handleSelectShelfTape(tape, event)}
-                />
-              ))}
-            </div>
-          </div>
-
-        </div>
+        <CassetteLibrary key={selectedLevel || 'all'} ref={libraryRef} tapes={visibleTapes}
+          activeTapeId={activeTapeId} isPlaying={isPlaying} busy={isInserting || isClosingDoor}
+          onSelect={handleSelectShelfTape}/>
 
         {/* ======================================================== */}
         {/* SECTION 2 (LEFT SIDE): PLAYER DECK + COMPACT PRINTER     */}
@@ -1081,7 +964,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                     <span className="text-[7.5px] font-mono tracking-widest text-amber-400/80 uppercase font-bold">
                       AUTO REVERSE STEREO CASSETTE DECK
                     </span>
-                    <span className="text-[11px] font-black text-white arabic-font truncate max-w-[150px]">
+                    <span className="text-[13px] font-black text-white arabic-font leading-snug max-w-[180px]">
                       {currentStory?.titleAr || 'مشغل الكاسيت'}
                     </span>
                   </div>
@@ -1145,7 +1028,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
 
                     {/* Story Title & Subtitle */}
                     <div className="text-center py-0.5">
-                      <h3 className="text-sm sm:text-base font-black text-stone-950 arabic-font leading-snug">
+                      <h3 className="text-base sm:text-lg font-black text-stone-950 arabic-font leading-snug">
                         {currentStory.titleAr}
                       </h3>
                       <p className="text-[9px] text-stone-500 font-mono truncate">
@@ -1389,7 +1272,7 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                 </div>
 
                 {/* Compact Thermal Receipt Paper (Fits strictly within page, no scrolling needed!) */}
-                <div className="relative w-full bg-[#fcfbf7] border-x-2 border-stone-300 rounded-t-sm shadow-md p-2.5 font-mono text-stone-900 h-[170px] overflow-hidden flex flex-col justify-center">
+                <div className={`relative w-full bg-[#fcfbf7] border-x-2 border-stone-300 rounded-t-sm shadow-md p-2.5 font-mono text-stone-900 ${completionView === 'words' && quizSubmitted ? 'qul-cassette-vocabulary-paper' : 'h-[170px]'} overflow-hidden flex flex-col justify-center`}>
                   {quizSubmitted ? (
                     <div className="h-full flex flex-col justify-between gap-1 text-center arabic-font" dir="rtl">
                       {completionView === 'receipt' ? (
@@ -1411,28 +1294,28 @@ export const CassettePlayer: React.FC<CassettePlayerProps> = ({
                           <div className="text-[9px] text-stone-700">أحسنت! لقد أكملت الاستماع والمراجعة.</div>
                           <div className="text-[8px] text-stone-500">اكتملت الجلسة · لم تُحفظ النتيجة في حسابك بعد</div>
                           <div className="flex flex-row justify-center gap-1 w-full" dir="rtl">
-                            <button className="rounded bg-stone-200 px-2 py-1 text-[9px]" onClick={() => setCompletionView('words')}>المفردات الجيدة</button>
+                            <button className="rounded bg-stone-200 px-2 py-1 text-[9px]" onClick={() => setCompletionView('words')}>المفردات الجديدة</button>
                             <button className="rounded bg-stone-200 px-2 py-1 text-[9px]" onClick={startAgain}>أحاول مرة أخرى</button>
                             <button disabled={visibleTapes.findIndex(t => t.id === activeTapeId) >= visibleTapes.length - 1} className="rounded bg-stone-900 text-white px-2 py-1 text-[9px] disabled:opacity-40" onClick={nextTape}>الشريط التالي</button>
                           </div>
                         </div>
                       ) : (
-                        <>
-                          <div className="text-[10px] font-black">أربع مفردات متقدمة من النص</div>
+                        <div className="qul-radio-words-view">
+                          <strong>أربع مفردات متقدمة من النص</strong>
                           {suggestedWords.length ? (
-                            <div className="grid grid-cols-2 gap-1">
+                            <div className="qul-radio-words-grid">
                               {suggestedWords.map(({ word, meaning }) => (
-                                <div key={word} dir="rtl" className="flex items-center gap-1 border border-stone-300 rounded px-1 py-0.5 text-[9px]">
-                                  <strong className="min-w-0 flex-1 text-right text-[10px] leading-tight">{word}</strong>
-                                  <span className="min-w-0 flex-1 text-left text-[9px] text-stone-600 leading-tight" dir="ltr">{meaning}</span>
-                                  <button className="shrink-0 rounded border border-stone-400 px-1.5 py-0.5 font-bold" title="حفظ في المفردات" disabled={savingWord === word || savedVocabulary.includes(word)} onClick={() => saveWord(word, meaning)}>{savedVocabulary.includes(word) ? '✓' : '+'}</button>
+                                <div key={word} dir="rtl" className="qul-radio-word-row">
+                                  <strong>{word}</strong>
+                                  <span dir="ltr">{meaning}</span>
+                                  <button title="حفظ في المفردات" disabled={savingWord === word || savedVocabulary.includes(word)} onClick={() => saveWord(word, meaning)}>{savedVocabulary.includes(word) ? '✓' : savingWord === word ? '…' : '+'}</button>
                                 </div>
                               ))}
                             </div>
-                          ) : <div className="text-[10px]">لا تتوفر كلمات بمعانٍ موثوقة لهذا النص حاليًا.</div>}
-                          {vocabularyError && <div className="text-[9px] text-red-700">{vocabularyError}</div>}
-                          <button className="text-[10px] underline" onClick={() => setCompletionView('receipt')}>العودة إلى التذكرة</button>
-                        </>
+                          ) : <span>لا تتوفر كلمات بمعانٍ موثوقة لهذا النص حاليًا.</span>}
+                          {vocabularyError && <span className="qul-radio-vocab-error">{vocabularyError}</span>}
+                          <button className="qul-radio-return-ticket" onClick={() => setCompletionView('receipt')}>العودة إلى التذكرة</button>
+                        </div>
                       )}
                     </div>
                   ) : listeningStage === 'first' ? (

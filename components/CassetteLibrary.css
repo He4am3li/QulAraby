@@ -1,0 +1,56 @@
+.qul-cassette-archive{--archive-brass:#c6a776;position:relative;isolation:isolate;display:flex;flex-direction:column;width:100%;min-width:0;height:590px;padding:22px 20px 14px;color:#eadfc9;border:1px solid #4d4b44;border-radius:22px;background:repeating-linear-gradient(0deg,#ffffff02 0 1px,transparent 1px 4px),linear-gradient(140deg,#303439,#191c21 45%,#111418);box-shadow:inset 0 1px 0 #ffffff28,inset 0 0 0 5px #14171b,0 14px 30px #10182030;font-family:"Tajawal",sans-serif;}
+.qul-cassette-archive::before,.qul-cassette-archive::after{content:"";position:absolute;top:12px;width:5px;height:5px;border-radius:50%;background:linear-gradient(45deg,#a59b89 45%,#333 46% 56%,#a59b89 57%);box-shadow:0 1px 3px #000;}
+.qul-cassette-archive::before{right:12px}.qul-cassette-archive::after{left:12px}
+.qul-archive-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 4px 12px;}
+.qul-archive-eyebrow{display:block;color:var(--archive-brass);font:700 8px/1.5 ui-monospace,monospace;letter-spacing:.18em;}
+.qul-archive-header h2{margin:5px 0 0;font-size:23px;font-weight:900;line-height:1.3;color:#f4ead6;}
+.qul-archive-count{display:flex;align-items:center;gap:7px;color:#b8b2a7;}
+.qul-archive-count strong{font:400 28px/1 ui-monospace,monospace;color:var(--archive-brass);}
+.qul-archive-count span{font-size:11px;}
+.qul-archive-divider{display:flex;align-items:center;gap:12px;font-size:10px;color:#bab4a8;padding:0 4px 13px;}
+.qul-archive-divider i{height:1px;flex:1;background:linear-gradient(90deg,#bca27515,#bca27570);}
+.qul-archive-divider>span:last-child{font:9px ui-monospace,monospace;letter-spacing:.12em;}
+.qul-archive-drawer{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));flex:1;min-height:0;gap:12px 14px;padding:12px;border:1px solid #090b0e;border-radius:10px;background:linear-gradient(110deg,#06090ccf,#15191d);box-shadow:inset 0 4px 12px #0009,0 1px 0 #ffffff10;}
+.qul-archive-tape{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;text-align:inherit;padding:0 5px 5px;border-radius:5px;border:1px solid #58534a;background:linear-gradient(120deg,#ffffff10,#ffffff02);box-shadow:0 4px 6px #0008,inset 0 1px #ffffff20;cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s;}
+.qul-archive-tape:hover:not(:disabled){transform:translateY(-3px);border-color:var(--archive-brass);box-shadow:0 8px 12px #0009;}
+.qul-archive-tape.is-active{border-color:#e8be78;box-shadow:0 0 0 1px #c6a77670,0 4px 10px #0009;}
+.qul-archive-position{display:flex;justify-content:space-between;padding:3px 1px;color:#b7ad98;font:8px/1.2 ui-monospace,monospace;}
+.qul-archive-position>span{font-size:7px;letter-spacing:.12em;}
+.qul-archive-tape.is-active .qul-archive-position{color:#ffda94;}
+.qul-archive-shell{position:relative;display:flex;flex-direction:column;justify-content:space-between;flex:1;min-height:38px;border:1px solid #08090b;border-radius:4px;padding:3px 7px;box-shadow:inset 0 1px 1px #ffffff3b,inset 0 -3px 4px #0005;}
+.qul-archive-brand{display:flex;justify-content:space-between;gap:4px;color:#e8ddc8;font:7px/1.2 ui-monospace,monospace;}
+.qul-archive-brand>span{opacity:.7;}
+.qul-archive-window{display:flex;align-items:center;justify-content:space-around;gap:9px;width:80%;margin:3px auto;background:#111316;border:1px solid #080808;border-radius:20px;box-shadow:inset 0 2px 4px #000;padding:3px 9px;}
+.qul-archive-reel{width:19px;height:19px;flex-shrink:0;border-radius:50%;border:3px solid #c5bfae;background:repeating-conic-gradient(#b9b4a7 0 35deg,#292b2a 35deg 60deg);position:relative;}
+.qul-archive-reel::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#121518;}
+.qul-archive-reel.spinning{animation:qul-archive-spin 3s linear infinite;}
+.qul-archive-tape-line{height:3px;background:#654126;flex:1;box-shadow:0 1px #a77b4550;}
+.qul-archive-shell-foot{display:flex;justify-content:space-between;color:#ded6c5;font:6px/1 ui-monospace,monospace;}
+.qul-archive-label{display:flex;align-items:center;justify-content:space-between;gap:5px;min-height:34px;margin-top:4px;padding:4px 6px;background:linear-gradient(#f2e8d4,#dcd0b9);color:#2d2c29;border-radius:2px;box-shadow:inset 0 1px #fff8;}
+.qul-archive-label strong{font-size:12px;line-height:1.35;font-weight:900;overflow-wrap:anywhere;}
+.qul-archive-label small{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;font:8px ui-monospace,monospace;color:#67604f;}
+.qul-archive-label i{width:5px;height:5px;border-radius:50%;background:#9b9485;}
+.qul-archive-tape.is-active .qul-archive-label i{background:#547c3b;box-shadow:0 0 4px #547c3b50;}
+.qul-archive-footer{display:flex;align-items:center;justify-content:center;gap:22px;padding-top:13px;}
+.qul-archive-footer>span{font-size:11px;color:#c9bda8;min-width:80px;text-align:center;}
+.qul-archive-footer b{color:#f5ddae;}
+.qul-archive-footer button{display:grid;place-items:center;width:32px;height:28px;border:1px solid #76664b;border-radius:5px;color:#e5c48b;background:linear-gradient(#41413b,#252724);box-shadow:inset 0 1px #ffffff18,0 2px 3px #0005;cursor:pointer;}
+.qul-cassette-archive button:focus-visible{outline:2px solid #f4ca82;outline-offset:3px;}
+.qul-cassette-archive button:disabled{cursor:default;}
+.qul-archive-footer button:disabled{opacity:.3;}
+.qul-archive-empty{grid-column:1/-1;color:#d8ccb5;font-size:13px;text-align:center;}
+@keyframes qul-archive-spin{to{transform:rotate(360deg)}}
+@media(min-width:1024px){.qul-cassette-archive{width:54%;height:605px;}}
+@media(max-width:450px){.qul-cassette-archive{padding:18px 12px 12px;height:550px;}.qul-archive-drawer{gap:10px;padding:8px;}.qul-archive-label{padding:4px;}.qul-archive-label strong{font-size:11px;}.qul-archive-label small{font-size:7px;}.qul-archive-header h2{font-size:21px;}}
+@media(prefers-reduced-motion:reduce){.qul-archive-reel.spinning{animation:none;}.qul-archive-tape{transition:none;}}
+/* Match the radio's paper and inner spacing, not only its font sizes. */
+.qul-cassette-vocabulary-paper{height:180px;padding:6px 9px!important;}
+@media(max-width:600px){.qul-cassette-vocabulary-paper{height:185px;padding:5px 6px!important;}}
+@media(max-height:710px){.qul-cassette-vocabulary-paper{height:164px;}}
+.qul-archive-label{flex-shrink:0;}
+@media(max-width:450px){
+  .qul-archive-shell{min-height:0;}
+  .qul-archive-shell-foot{display:none;}
+  .qul-archive-window{padding:2px 6px;margin:2px auto;}
+  .qul-archive-reel{width:16px;height:16px;}
+}
