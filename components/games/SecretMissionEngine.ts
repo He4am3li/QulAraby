@@ -350,6 +350,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   // has no compatible hand bones. It is shown only during interactions.
   const interactionHands=new THREE.Group();playerRoot.add(interactionHands);
   const interactionSleeves:THREE.Mesh[]=[];
+  let skeletalHands:THREE.Bone[]=[];
+  const skeletalHandRest:THREE.Quaternion[]=[];
   for(const side of [-1,1]){
     const sleeve=round(interactionHands,.115,.48,armor,[side*.28,1.12,-.3]);
     sleeve.rotation.x=Math.PI/2.8;
@@ -510,6 +512,18 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     guardAnimations.push(...gltf.animations);
     model.scale.setScalar(.96);
     avatar.add(model);heroFallback.visible=false;
+    // Resolve actual skeleton hands once; when available, drive them through
+    // their existing joints instead of displaying detached overlay arms.
+    skeletalHands=[];skeletalHandRest.length=0;
+    for(const side of ['left','right']){
+      let candidate:THREE.Bone|null=null;
+      model.traverse(node=>{
+        if(candidate||!(node instanceof THREE.Bone))return;
+        const name=node.name.toLowerCase().replace(/[^a-z]/g,'');
+        if(name.includes(side)&&name.includes('hand'))candidate=node;
+      });
+      if(candidate){skeletalHands.push(candidate);skeletalHandRest.push(candidate.quaternion.clone());}
+    }
     modelMixer=new THREE.AnimationMixer(model);
     for(const anim of gltf.animations){
       const action=modelMixer.clipAction(anim);
@@ -1062,7 +1076,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const interactingSafe=phase==='safes'&&interactionElapsed>=0&&now<safeInteractionEnd;
     const reach=interactingSafe?Math.sin(Math.PI*clamp(interactionElapsed/1500,0,1)):
       pickupActive?Math.sin(Math.PI*pickupProgress)*.8:0;
-    interactionHands.visible=Boolean(model)&&(interactingSafe||pickupActive);
+    interactionHands.visible=Boolean(model)&&skeletalHands.length===0&&(interactingSafe||pickupActive);
     if(interactionHands.visible){
       interactionHands.position.z=-reach*.24;
       interactionSleeves.forEach((sleeve,i)=>{sleeve.rotation.x=1.05-reach*.38;sleeve.rotation.z=(i===0?-.12:.12)*reach;});
@@ -1135,6 +1149,14 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
           clamp(locomotionBlend/(clipName.includes('run')?5.8:3.2),.55,1.4));
       }
       modelMixer.update(dt);
+      // Apply reach after animation sampling; the mixer otherwise resets the
+      // hand bones on every frame. Use a bounded additive wrist rotation.
+      if(skeletalHands.length){
+        skeletalHands.forEach((hand,i)=>{
+          const tilt=new THREE.Quaternion().setFromEuler(new THREE.Euler(-reach*.38,(i===0?-.12:.12)*reach,0));
+          hand.quaternion.multiply(tilt);
+        });
+      }
     }
 
     if(['combat','safes'].includes(phase)&&activeRoom){
