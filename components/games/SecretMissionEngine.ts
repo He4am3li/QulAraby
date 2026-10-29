@@ -310,6 +310,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const dressGuard=(enemy:Combatant)=>{
     if(phone||!model||enemy.isBoss||!enemy.alive||enemy.mixer)return;
     const copy=cloneSkeleton(model) as THREE.Group;
+    // Keep the animated rig at the same scale as the playable operator.
+    copy.scale.copy(model.scale);
     // Enemy uniforms must not reuse the player's green military outfit.
     // Clone materials before tinting, otherwise the original hero changes too.
     copy.traverse(node=>{
@@ -599,7 +601,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     }
   };
   const fire=()=>{
-    if(!['combat','safes'].includes(phase))return false;
+    if(!['combat','safes'].includes(phase)||hp<=0)return false;
     const origin=new THREE.Vector3();
     muzzle.getWorldPosition(origin);
     if(!Number.isFinite(origin.x)||origin.distanceTo(player)>3)origin.copy(player).add(new THREE.Vector3(0,1.35,0));
