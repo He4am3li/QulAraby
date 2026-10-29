@@ -21,12 +21,13 @@ export function useRadioNarration(options: Options) {
   const utterance = useRef<SpeechSynthesisUtterance | null>(null);
   const audio = useRef<HTMLAudioElement | null>(null);
   const recordingURL = useRef('');
+  const refreshSpeechVolume = useRef<(() => void) | null>(null);
   const playback = useRef<'stopped' | 'playing' | 'paused'>('stopped');
 
   const stop = useCallback(() => {
     token.current++;
     if (utterance.current) window.speechSynthesis?.cancel();
-    utterance.current = null;
+    utterance.current = null; refreshSpeechVolume.current = null;
     if (audio.current) {
       audio.current.onended = null; audio.current.onerror = null;
       audio.current.pause(); audio.current.currentTime = 0;
@@ -70,7 +71,7 @@ export function useRadioNarration(options: Options) {
 
   useEffect(() => {
     if (audio.current) audio.current.volume = options.volume;
-    if (utterance.current) utterance.current.volume = options.volume;
+    refreshSpeechVolume.current?.();
   }, [options.volume]);
 
   const chooseVoice = (value: string) => {
@@ -103,7 +104,7 @@ export function useRadioNarration(options: Options) {
     const run = token.current;
     const ended = () => {
       if (run !== token.current) return;
-      playback.current = 'stopped'; utterance.current = null;
+      playback.current = 'stopped'; utterance.current = null; refreshSpeechVolume.current = null;
       onState(false, false); if (!sample) onEnd();
     };
     if (recordingURL.current && !sample) {
@@ -136,14 +137,23 @@ export function useRadioNarration(options: Options) {
     const speakNext = () => {
       if (run !== token.current) return;
       const speech = new SpeechSynthesisUtterance(chunks[index]);
-      speech.voice = voice; speech.lang = voice.lang; speech.rate = rate; speech.pitch = 1; speech.volume = volume;
+      speech.voice = voice; speech.lang = voice.lang; speech.rate = rate; speech.pitch = 1; speech.volume = current.current.volume;
       utterance.current = speech;
-      speech.onend = () => { if (run !== token.current) return; if (++index < chunks.length) speakNext(); else ended(); };
+      speech.onend = () => { if (run !== token.current || utterance.current !== speech) return; if (++index < chunks.length) speakNext(); else ended(); };
       speech.onerror = event => {
-        if (run !== token.current || ['canceled','interrupted'].includes(event.error)) return;
+        if (run !== token.current || utterance.current !== speech || ['canceled','interrupted'].includes(event.error)) return;
         stop(); onError(lang === 'ar' ? 'تعذّر تشغيل صوت الجهاز. جرّب صوتًا عربيًا آخر أو تسجيلًا محليًا.' : 'Device voice failed. Try another Arabic voice or a local recording.');
       };
       playback.current = 'playing'; onState(true, false); window.speechSynthesis.speak(speech);
+    };
+    refreshSpeechVolume.current = () => {
+      const wasPaused = playback.current === 'paused';
+      utterance.current = null;
+      window.speechSynthesis.cancel();
+      speakNext();
+      if (wasPaused) {
+        window.speechSynthesis.pause(); playback.current = 'paused'; onState(false, true);
+      }
     };
     speakNext();
   };

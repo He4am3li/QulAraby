@@ -145,7 +145,7 @@ export const RadioThermalPrinter:React.FC<Props>=({
           {loading?(ar?'تحميل المحطة':'TUNING'):stage==='receipt'?(ar?'اكتملت الجلسة':'COMPLETE'):
             audioPlaying?(ar?'جارٍ الاستماع':'LISTENING'):(ar?'جاهز للإجابة':'READY')}
         </span>
-        <span className="qul-radio-printer-name">QUIZ PRINTER · THERMAL TAPE</span>
+        <span className="qul-radio-printer-name">{ar ? 'راديو قُل · حصيلة الاستماع' : 'QUL RADIO · LISTENING LOG'}</span>
         {stage === 'receipt' && <button type="button" className="qul-radio-printer-fold qul-radio-studio-call"
           onClick={onStudioCall} title={ar ? 'تدريب شفهي: سجّل إجابتك واستمع إليها' : 'Speaking practice: record and replay'}
           aria-label={ar ? 'تدريب شفهي: سجّل إجابتك واستمع إليها' : 'Speaking practice: record and replay'}>
