@@ -144,6 +144,9 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const phaseRef=useRef<SecretPhase>('intro');
   const lastThreats=useRef(0);
   const safeRef=useRef(0);
+  // Prevent the automatic reward timer and a manual tap from advancing the
+  // same objective twice before React commits the next stage.
+  const advancingRef=useRef(false);
   const flashTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const rewardTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const currentRoom=room?MISSIONS[room]:null;
@@ -173,6 +176,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
             if(state==='combat'){
               setRoom(id||null);setOpened([false,false,false,false]);setActiveSafe(0);safeRef.current=0;
               setSelectedPin(null);setSafeStage('approach');setLootReady(false);setHealth(100);
+              advancingRef.current=false;
               setFrequency(0);setArchiveChoice(null);setDefenseSequence([]);
             }
             if(state==='hall'){
@@ -283,12 +287,14 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
     setScore(n=>n+125);
   };
   const advanceSafe=()=>{
-    if(paused||!room||phase!=='safes'||!lootReady||!opened[activeSafe]||selectedPin==='wrong')return;
+    if(advancingRef.current||paused||!room||phase!=='safes'||safeStage!=='unlock'||!lootReady||!opened[activeSafe]||selectedPin==='wrong'||selectedPin==='device')return;
     if(activeSafe<3){
+      advancingRef.current=true;
       const index=activeSafe+1;safeRef.current=index;setActiveSafe(index);setSelectedPin(null);setLootReady(false);setSafeStage('approach');setFrequency(0);setArchiveChoice(null);setDefenseSequence([]);return;
     }
     // Claim the visible 3D item from the final safe before recording success.
     if(!opened.every(Boolean)||!engine.current?.collectReward())return;
+    advancingRef.current=true;
     if(room==='vault'){
       const success=engine.current?.finish();
       if(success){setDocuments(true);announceReward('vault');}
@@ -304,6 +310,9 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
     setScore(v=>v+400);
     engine.current?.exitRoom();
   };
+  useEffect(()=>{
+    if(phase==='safes'&&safeStage==='approach')advancingRef.current=false;
+  },[phase,safeStage,activeSafe]);
   useEffect(()=>{
     if(phase!=='safes'||safeStage!=='unlock'||!opened[activeSafe]||!lootReady||paused)return;
     const timer=setTimeout(()=>advanceSafe(),2000);
