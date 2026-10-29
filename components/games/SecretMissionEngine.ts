@@ -497,10 +497,24 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // educational lock interaction reachable from the aisle.
     const localX=p.x-room.group.position.x;
     const localZ=p.z-room.info.z;
-    if(localZ < -2.86 && [-3.32,-1.14,1.04,3.22].some(x=>Math.abs(localX-x)<1.02)){
-      p.z=room.info.z-2.86;
-      if(velocityZ<0)velocityZ=0;
+    // Resolve against cabinet footprints, allowing sideways sliding instead
+    // of pinning the operator against an invisible wall across the aisle.
+    for(const cabinetX of [-3.32,-1.14,1.04,3.22]){
+      const dx=localX-cabinetX;
+      const dz=localZ+3.95;
+      const overlapX=1.02-Math.abs(dx);
+      const overlapZ=1.09-Math.abs(dz);
+      if(overlapX<=0||overlapZ<=0)continue;
+      if(overlapX<overlapZ){
+        p.x+=Math.sign(dx||1)*overlapX;
+        velocityX=0;
+      }else{
+        p.z+=Math.sign(dz||1)*overlapZ;
+        velocityZ=0;
+      }
     }
+    p.x=clamp(p.x,room.group.position.x-4.2,room.group.position.x+4.2);
+    p.z=clamp(p.z,room.info.z-3.65,room.info.z+3.65);
   };
   const transitionTo=(type:Traverse['type'],point:THREE.Vector3,toYaw:number,duration:number,room?:Room)=>{
     transition={type,time:0,duration,from:player.clone(),to:point,fromYaw:yaw,toYaw,room};
