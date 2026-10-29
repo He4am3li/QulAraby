@@ -560,6 +560,14 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let safeInteractionEnd=0;
   let safePickupUntil=0;
   let safePickupIndex=-1;
+  // A single reusable 3D pickup travels from the opened safe to the operator.
+  const pickupModel=new THREE.Group();scene.add(pickupModel);
+  const pickupCore=poly(pickupModel,[.32,.28,.32],amber,[0,0,0]);
+  const pickupRing=round(pickupModel,.25,.07,cyan,[0,0,0],12);
+  pickupRing.rotation.x=Math.PI/2;
+  pickupModel.visible=false;
+  let pickupOrigin=new THREE.Vector3();
+  let pickupStarted=0;
   let safeLootPending:{index:number;at:number}|null=null;
   let ammo=24,reserveAmmo=96;
   const emitAmmo=()=>events.onAmmoChange?.(ammo,reserveAmmo);
@@ -655,7 +663,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     safeLootPending=null;
     safeDoorPending=null;
     safeInteractionStart=safeInteractionEnd=0;
-    safePickupUntil=0;safePickupIndex=-1;
+    safePickupUntil=0;safePickupIndex=-1;pickupModel.visible=false;
     rewardCollected=false;
     spawnGuards(activeRoom);
     emit('combat',activeRoom.info.id);
@@ -748,6 +756,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // combat progression. Upgraded weapons have faster trigger response.
     const now=performance.now();
     if(now<nextShotAt)return false;
+    if(phase==='safes'&&(safeApproach||now<safeInteractionEnd||now<safePickupUntil))return false;
     if(ammo<=0){reload();return false;}
     ammo--;emitAmmo();
     nextShotAt=now+(weaponTier>=3?210:weaponTier>=2?280:360);
@@ -881,6 +890,13 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       const {index}=safeLootPending;safeLootPending=null;
       safePickupIndex=index;
       safePickupUntil=now+850;
+      pickupStarted=now;
+      if(activeRoom){
+        pickupOrigin.set(activeRoom.group.position.x-3.32+index*2.18,1.35,activeRoom.info.z-3.35);
+        pickupModel.position.copy(pickupOrigin);
+        pickupModel.visible=true;
+        pickupCore.material=index===0?amber:index===1?green:index===2?cyan:steel;
+      }
       if(index===0){reserveAmmo+=36;reload();}
       if(index===1){hp=Math.min(100,hp+25);events.onHealth(Math.round(hp));}
       if(index===2){upgradeCoil.visible=true;}
@@ -988,6 +1004,14 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     avatar.position.z=THREE.MathUtils.damp(avatar.position.z,crouch?.32:0,7,dt);
     avatar.scale.y=THREE.MathUtils.damp(avatar.scale.y,crouch?.9:1,8,dt);
     const pickupActive=phase==='safes'&&now<safePickupUntil;
+    if(pickupActive&&pickupModel.visible){
+      const t=clamp((now-pickupStarted)/850,0,1);
+      const destination=player.clone().add(new THREE.Vector3(0,1.27,-.38));
+      pickupModel.position.lerpVectors(pickupOrigin,destination,ease(t));
+      pickupModel.position.y+=Math.sin(Math.PI*t)*.38;
+      pickupModel.rotation.y+=dt*7;
+      pickupModel.scale.setScalar(Math.max(.04,1-t*.9));
+    }else if(pickupModel.visible){pickupModel.visible=false;pickupModel.scale.setScalar(1);}
     const pickupProgress=pickupActive?1-(safePickupUntil-now)/850:0;
     const interactionElapsed=now-safeInteractionStart;
     const interactingSafe=phase==='safes'&&interactionElapsed>=0&&now<safeInteractionEnd;
