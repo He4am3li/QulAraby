@@ -672,9 +672,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // Use a body-space grip as a reliable initial pose; the update loop
     // tracks the animated right hand without inheriting unpredictable GLB
     // wrist axes that can bury the rifle inside the soldier mesh.
-    heroWeapon.position.set(.38,1.15,-.48);
+    heroWeapon.position.set(.18,1.23,-.32);
     heroWeapon.rotation.set(-.18,-.12,0);
-    heroWeapon.scale.setScalar(.9);
+    heroWeapon.scale.setScalar(.57);
   },undefined,()=>{/* If remote GLB fails, use local 3D fallback. */});
 
   // Weapon effects (energy bolt, recoil flash, tracers) pooled to avoid allocations.
@@ -1014,6 +1014,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(event.code==='Space'&&!event.repeat)jump();
     if(key==='c'&&!event.repeat)setCrouch(!crouch);
     if(key==='e'&&!event.repeat)enterRoom();
+    if(key===' '&&!event.repeat&&phase==='combat'){event.preventDefault();fire();}
     if(key==='f'&&!event.repeat)fire();
     if(key==='r'&&!event.repeat)reload();
     // 1–5 select only weapons already earned from educational objectives.
@@ -1140,7 +1141,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const evolving=weaponEvolutionStart>0&&evolutionAge>=0&&evolutionAge<1600;
     const evolutionPulse=evolving?Math.sin(Math.PI*evolutionAge/1600):0;
     const tierShape=1+weaponTier*.075;
-    heroWeapon.scale.set(tierShape*(1+evolutionPulse*.16),tierShape*(1+evolutionPulse*.16),tierShape*(1+evolutionPulse*.24));
+    heroWeapon.scale.set(.57*tierShape*(1+evolutionPulse*.16),.57*tierShape*(1+evolutionPulse*.16),.57*tierShape*(1+evolutionPulse*.24));
     upgradeRail.scale.x=1+evolutionPulse*.4;
     upgradeCoil.scale.setScalar(1+evolutionPulse*.5);
     upgradeScope.scale.y=1+evolutionPulse*.45;
@@ -1193,6 +1194,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       if(!near)continue;
       room.doorAngle=THREE.MathUtils.damp(room.doorAngle,room.doorTarget,3,dt);
       room.door.rotation.y=room.doorAngle;
+      // Keep the entrance leaf out of the cabinet sightline during the mission.
+      room.door.visible=!(room===activeRoom&&['combat','safes','boss-defeated'].includes(phase));
       for(const safe of room.safes){
         if(Math.abs(safe.opened-safe.target)<.001)continue;
         safe.opened=THREE.MathUtils.damp(safe.opened,safe.target,4.3,dt);
@@ -1306,7 +1309,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       velocityZ=THREE.MathUtils.damp(velocityZ,desiredZ,response,dt);
       player.x+=velocityX*dt;
       player.z+=velocityZ*dt;
-      if(phase==='hall')limitCorridor(player);
+      if(phase==='hall'){
+        limitCorridor(player);
+        // Walking through an unlocked doorway triggers entry naturally.
+        const threshold=rooms.find(room=>allowedRooms.includes(room.info.id)&&Math.abs(player.z-room.info.z)<1.42&&Math.abs(player.x-room.info.side*2.42)<.55);
+        if(threshold)enterRoom(threshold.info.id);
+      }
       else if(activeRoom)roomBounds(player,activeRoom);
       moving=Math.abs(f)+Math.abs(r)>.04;
       if(player.y>0||vy>0){
@@ -1398,7 +1406,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const weaponLift=danger?.035:0;
     // Grip a weapon in front of the character even if the remote skeletal rig fails.
     if(heroWeapon.parent===playerRoot){
-      heroWeapon.position.set(.4,crouch?.92:1.35+weaponLift,-.43);
+      heroWeapon.position.set(.19,crouch?.94:1.24+weaponLift,-.30);
       heroWeapon.rotation.set(-pitch*.4,0,0);
     }
     if(modelMixer){
