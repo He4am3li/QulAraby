@@ -569,6 +569,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let vy=0,crouch=false,sprint=false;
   let velocityX=0,velocityZ=0;
   const input={forward:0,strafe:0};
+  let touchTriggerHeld=false;
   const camSpot=new THREE.Vector3();
   const lookSpot=new THREE.Vector3();
   let camFollow=true;
@@ -935,7 +936,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // readable feedback even on small touch screens.
     if(now<hitFeedbackUntil)weaponLight.color.setHex(0xffe0a0);
     else weaponLight.color.setHex(weaponTier>=3?0xf1ba6c:weaponTier>=2?0x9cf3b4:0xa6effa);
-    if(controls.has('f'))fire();
+    if(controls.has('f')||touchTriggerHeld)fire();
     if(safeDoorPending&&now>=safeDoorReleaseAt){
       safeDoorPending.room.safes[safeDoorPending.index].target=-1.65;
       safeDoorPending.room.safes[safeDoorPending.index].indicator.color.setHex(0x6dffae);
@@ -1366,11 +1367,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4||!rewardCollected)return false;emit('victory','vault');return true;};
   return {
     start,travelTo,enterRoom,exitRoom,approachSafe,openSafe,collectReward,fire,reload,jump,look,setCrouch,setMovement,setWeaponTier,
+    setTriggerHeld(value:boolean){touchTriggerHeld=value;},
     restartRoom,finish,setAllowed,setLanguage,
     getRoom(){return activeRoom?.info.id??null;},
     setPaused(value:boolean){paused=value;last=performance.now();},
     dispose(){
-      disposed=true;loaderDisposed=true;cancelAnimationFrame(frame);observer.disconnect();
+      disposed=true;touchTriggerHeld=false;loaderDisposed=true;cancelAnimationFrame(frame);observer.disconnect();
       canvas.removeEventListener('pointerdown',pointerStart);
       canvas.removeEventListener('pointermove',pointerMove);
       canvas.removeEventListener('pointerup',pointerEnd);
