@@ -337,20 +337,20 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
   const handleAnswerChoice = (option: { letter: string; text: string; correct: boolean }) => {
     if (shotPhase !== 'idle' || lastShotResult !== null) return;
 
-    // 1. اطلق الصافرة بعد اختيار الخيار مباشرة! (0ms delay)
-    soundRef.current.playWhistle();
+    // Begin the run-up on selection; reserve the kick sound for ball contact.
+    // The whistle is played at match start / between rounds, not on every click.
 
-    // 2. انطلاق اللاعب فوراً في الركض نحو الكرة
+    // 2. انطلاق اللاعب نحو الكرة
     setShotPhase('runup');
     const randomDive = Math.random() > 0.5 ? 'left' : 'right';
     setDiveSide(randomDive);
 
-    // 3. لحظة تسديد الكرة وركلها بقوة (بعد 260 ملي ثانية فقط)
+    // 3. A visible run-up gives the player time to anticipate the shot
     setTimeout(() => {
       setShotPhase('kick');
       soundRef.current.playPowerfulKick();
 
-      // 4. وصول الكرة للشباك أو تصدي الحارس (بعد 420 ملي ثانية من التسديد)
+      // 4. Allow the ball to travel before revealing the outcome
       setTimeout(() => {
         if (option.correct) {
           // هدف في الشباك
@@ -366,7 +366,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
           // الانتقال التلقائي للركلة التالية بعد ثانيتين
           setTimeout(() => {
             handleProceedNext(true);
-          }, 2100);
+          }, 2500);
         } else {
           // تصدي الحارس أو العارضة
           setShotPhase('miss');
@@ -376,8 +376,8 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
           setRoundsResult(prev => [...prev, 'miss']);
           setLastShotResult('miss');
         }
-      }, 420);
-    }, 260);
+      }, 900);
+    }, 850);
   };
 
   // Retry same question on miss
@@ -548,7 +548,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
           </div>
 
           {/* REALISTIC STRIKER FROM BEHIND (المسدد الرياضي - ظهره للمشاهد) */}
-          <div className={`absolute z-20 bottom-0 left-1/2 -translate-x-1/2 w-48 h-56 md:w-60 md:h-72 transition-all duration-300 ease-out ${
+          <div className={`absolute z-20 bottom-0 left-1/2 -translate-x-1/2 w-48 h-56 md:w-60 md:h-72 transition-all duration-700 ease-out ${
             shotPhase === 'idle'
               ? 'translate-y-0 scale-100'
               : shotPhase === 'runup'
