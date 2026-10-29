@@ -249,6 +249,15 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       poly(cabinet,[1.47,1.99,.1],black,[0,1.13,.78]);
       poly(cabinet,[1.38,.07,1.17],steel,[0,.57,.04]);
       poly(cabinet,[1.38,.07,1.17],steel,[0,1.28,.04]);
+      // Physical loot silhouettes: magazines, armor, targeting modules and
+      // the final weapon cache are visible only after each door swings open.
+      if(info.id!=='vault'){
+        const lootColor=i===0?amber:i===1?green:i===2?cyan:steel;
+        for(let n=0;n<(i===0?3:1);n++){
+          const dims:[number,number,number]=i===0?[.16,.43,.23]:i===1?[.83,.62,.22]:i===2?[.55,.32,.5]:[1.1,.3,.5];
+          poly(cabinet,dims,lootColor,[(n-1)*.29,i===1?.86:1.37,.28]);
+        }
+      }
       for(let item=0;item<3;item++){
         const isPaper=info.id==='vault';
         const x=-.43+item*.43;
@@ -922,6 +931,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const lateralSpeed=(-Math.cos(yaw)*velocityX+Math.sin(yaw)*velocityZ);
     const targetLean=crouch?0:clamp(lateralSpeed*.035,-.12,.12);
     avatar.rotation.z=THREE.MathUtils.damp(avatar.rotation.z,targetLean,7,dt);
+    // Reach toward the mechanical lock as its motor releases, then recover.
+    const interacting=phase==='safes'&&now<safeUnlockUntil;
+    avatar.rotation.x=THREE.MathUtils.damp(avatar.rotation.x,interacting?-.18:0,9,dt);
     // Prone crawling: the operator's torso rolls almost horizontal and lowers to the floor.
     avatar.rotation.x=THREE.MathUtils.damp(avatar.rotation.x,crouch?-1.22:0,7,dt);
     avatar.position.y=THREE.MathUtils.damp(avatar.position.y,crouch?.46:0,7,dt);
