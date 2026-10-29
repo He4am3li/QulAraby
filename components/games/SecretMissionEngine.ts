@@ -706,7 +706,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     }
     activeRoom=available;
     available.doorTarget=available.info.side===1?1.6:-1.6;
-    // Turn sideways to pass through the doorway and face the guards at the end.
+    // Two-beat breach: line up at the door, then cross the threshold
+    // before turning to face the threat. No sideways sliding animation.
     transitionTo('enter',new THREE.Vector3(available.group.position.x,0,available.info.z+1.8),
       0,2.0,available);
     emit('room-enter',available.info.id);
@@ -1043,13 +1044,29 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     let moving=false;
     if(transition){
       const t=clamp(transition.time/transition.duration,0,1);
-      player.lerpVectors(transition.from,transition.to,ease(t));
-      if(transition.type==='enter' && transition.room){
-        // Midway the operator faces through the side door; once inside they
-        // face the guards, safe cabinets and objective instead of a blank wall.
-        yaw=-transition.room.info.side * Math.PI/2 * Math.sin(Math.PI*ease(t));
+      if(transition.type==='enter'&&transition.room){
+        const r=transition.room;
+        const staging=new THREE.Vector3(0,0,r.info.z+1.8);
+        const through=new THREE.Vector3(r.group.position.x,0,r.info.z+1.8);
+        if(t<.36){
+          player.lerpVectors(transition.from,staging,ease(t/.36));
+          yaw=0;
+        }else if(t<.78){
+          player.lerpVectors(staging,through,ease((t-.36)/.42));
+          yaw=-r.info.side*Math.PI/2;
+        }else{
+          player.copy(through);
+          yaw=lerp(-r.info.side*Math.PI/2,0,ease((t-.78)/.22));
+        }
       }else{
-        yaw=lerp(transition.fromYaw,transition.toYaw,ease(t));
+        player.lerpVectors(transition.from,transition.to,ease(t));
+        if(transition.type==='exit'&&transition.room){
+          const dx=transition.to.x-transition.from.x;
+          const dz=transition.to.z-transition.from.z;
+          const facing=Math.atan2(-dx,-dz);
+          yaw=lerp(transition.fromYaw,facing,ease(Math.min(1,t*3)));
+          if(t>.8)yaw=lerp(facing,0,ease((t-.8)/.2));
+        }else yaw=lerp(transition.fromYaw,transition.toYaw,ease(t));
       }
       transition.time+=dt;
       moving=true;
