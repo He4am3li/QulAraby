@@ -1035,9 +1035,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         }else emit('hall');
       }
     }else if(phase==='safes'&&safeApproach&&!safeApproach.ready){
-      // Scripted sprint owns locomotion until the operator reaches the lock.
+      // The operator must stop running while testing the keypad; otherwise
+      // the walk/run animation continues in place during the lock close-up.
       velocityX=velocityZ=0;
-      moving=true;
+      moving=!safeApproach.arrivedAt;
     }else if(['hall','combat','safes'].includes(phase)){
       const safeLocked=phase==='safes'&&(Boolean(safeApproach)||now<safePickupUntil||now<safeInteractionEnd);
       if(safeLocked){velocityX=THREE.MathUtils.damp(velocityX,0,12,dt);velocityZ=THREE.MathUtils.damp(velocityZ,0,12,dt);}
@@ -1093,6 +1094,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const interactionElapsed=now-safeInteractionStart;
     const interactingSafe=phase==='safes'&&interactionElapsed>=0&&now<safeInteractionEnd;
     const probingSafe=phase==='safes'&&Boolean(safeApproach?.arrivedAt)&&!safeApproach?.ready;
+    if(probingSafe&&activeRoom&&safeApproach){
+      // The amber lock light blinks while the operator discovers the code
+      // requirement, then remains steady when the challenge appears.
+      const lamp=activeRoom.safes[safeApproach.index].indicator;
+      lamp.color.setHex(Math.sin((now-safeApproach.arrivedAt)*.028)>0?0xffc25a:0x86511e);
+    }
     const probeProgress=probingSafe&&safeApproach?clamp((now-safeApproach.arrivedAt)/700,0,1):0;
     const reach=interactingSafe?Math.sin(Math.PI*clamp(interactionElapsed/1500,0,1)):
       pickupActive?Math.sin(Math.PI*pickupProgress)*.8:
