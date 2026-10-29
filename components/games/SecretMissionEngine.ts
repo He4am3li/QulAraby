@@ -234,7 +234,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // Sector architecture: reinforced bulkhead ribs and illuminated floor
     // threshold. Shared materials avoid extra texture downloads on phones.
     for(const x of [-4.7,4.7]){
-      for(const zz of [-3.3,0,3.3]){
+      for(const zz of [0,3.3]){
         poly(group,[.18,2.6,.16],armorPanel,[x,1.4,zz]);
         poly(group,[.2,.055,.68],sectorStrip,[x,2.86,zz]);
       }
@@ -541,18 +541,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     }
     modelAction=clips.get('idle')||null;modelAction?.play();
     for(const guard of guards)dressGuard(guard);
-    // Place weapon in the actual hand if the rig exposes a right-hand bone.
-    let hand:THREE.Object3D|null=null;
-    model.traverse(bone=>{
-      if(!hand && /right.*hand|hand.*right|righthand/i.test(bone.name))hand=bone;
-    });
-    if(hand){
-      heroWeapon.parent?.remove(heroWeapon);
-      (hand as THREE.Object3D).add(heroWeapon);
-      heroWeapon.position.set(.05,-.11,-.06);
-      heroWeapon.rotation.set(.1,-.25,Math.PI/2);
-      heroWeapon.scale.setScalar(.82);
-    }
+    // Keep the gun at a reliably visible, body-relative carry position.
+    // Soldier.glb hand-bone axes vary with clips; parenting to the wrist
+    // previously made the weapon disappear inside the mesh.
+    heroWeapon.position.set(.38,1.15,-.48);
+    heroWeapon.rotation.set(-.18,-.12,0);
+    heroWeapon.scale.setScalar(.9);
   },undefined,()=>{/* If remote GLB fails, use local 3D fallback. */});
 
   // Weapon effects (energy bolt, recoil flash, tracers) pooled to avoid allocations.
@@ -953,6 +947,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       safePickupUntil=now+850;
       pickupStarted=now;
       if(activeRoom){
+        // Transfer the actual cabinet item into the flying pickup rather
+        // than showing a duplicate in the open safe.
+        activeRoom.safes[index].contents.visible=false;
         pickupOrigin.set(activeRoom.group.position.x-3.32+index*2.18,1.35,activeRoom.info.z-3.35);
         pickupModel.position.copy(pickupOrigin);
         pickupModel.visible=true;
@@ -996,7 +993,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       const distance=Math.hypot(dx,dz);
       const step=Math.min(distance,6.6*dt);
       if(distance>.001){player.x+=dx/distance*step;player.z+=dz/distance*step;}
-      yaw=THREE.MathUtils.damp(yaw,0,9,dt);
+      // Turn toward the next cabinet instead of strafing sideways.
+      // Once there, face the keypad squarely for the interaction.
+      const targetYaw=distance>.13?Math.atan2(-dx,-dz):0;
+      yaw+=Math.atan2(Math.sin(targetYaw-yaw),Math.cos(targetYaw-yaw))*Math.min(1,dt*11);
       if(distance<.13){
         if(!safeApproach.arrivedAt){
           safeApproach.arrivedAt=now;
