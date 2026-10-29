@@ -117,6 +117,8 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const [nearby,setNearby]=useState<SecretRoomId|null>(null);
   const [health,setHealth]=useState(100);
   const [selectedWeapon,setSelectedWeapon]=useState(0);
+  const [ammo,setAmmo]=useState({loaded:24,reserve:96});
+  const [lootReady,setLootReady]=useState(false);
   const [threats,setThreats]=useState(0);
   const [opened,setOpened]=useState([false,false,false,false]);
   const [activeSafe,setActiveSafe]=useState(0);
@@ -167,7 +169,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
             }
             if(state==='combat'){
               setRoom(id||null);setOpened([false,false,false,false]);setActiveSafe(0);safeRef.current=0;
-              setSelectedPin(null);setSafeStage('approach');setHealth(100);
+              setSelectedPin(null);setSafeStage('approach');setLootReady(false);setHealth(100);
             }
             if(state==='hall'){
               setRoom(null);
@@ -189,6 +191,8 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
           onHealth(value){if(!stopped)setHealth(value);},
           onWeaponChange(tier){if(!stopped)setSelectedWeapon(tier);},
           onSafeReady(){if(!stopped)setSafeStage('challenge');},
+          onAmmoChange(loaded,reserve){if(!stopped)setAmmo({loaded,reserve});},
+          onLoot(){if(!stopped)setLootReady(true);},
           onThreats(n){
             if(stopped)return;
             if(n<lastThreats.current)setScore(x=>x+(lastThreats.current-n)*150);
@@ -245,14 +249,15 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
     }
     if(!engine.current?.openSafe(activeSafe))return;
     setSelectedPin(q.pin);
+    setLootReady(false);
     setSafeStage('unlock');
     setOpened(prev=>prev.map((done,i)=>i===activeSafe?true:done));
     setScore(n=>n+125);
   };
   const advanceSafe=()=>{
-    if(paused||!room||phase!=='safes'||!opened[activeSafe]||selectedPin==='wrong')return;
+    if(paused||!room||phase!=='safes'||!lootReady||!opened[activeSafe]||selectedPin==='wrong')return;
     if(activeSafe<3){
-      const index=activeSafe+1;safeRef.current=index;setActiveSafe(index);setSelectedPin(null);setSafeStage('approach');return;
+      const index=activeSafe+1;safeRef.current=index;setActiveSafe(index);setSelectedPin(null);setLootReady(false);setSafeStage('approach');return;
     }
     // Claim the visible 3D item from the final safe before recording success.
     if(!opened.every(Boolean)||!engine.current?.collectReward())return;
@@ -272,10 +277,10 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
     engine.current?.exitRoom();
   };
   useEffect(()=>{
-    if(phase!=='safes'||safeStage!=='unlock'||!opened[activeSafe])return;
+    if(phase!=='safes'||safeStage!=='unlock'||!opened[activeSafe]||!lootReady||paused)return;
     const timer=setTimeout(()=>advanceSafe(),2000);
     return ()=>clearTimeout(timer);
-  },[phase,safeStage,activeSafe,opened,paused]);
+  },[phase,safeStage,activeSafe,opened,paused,lootReady]);
   const move=(kind:'forward'|'backward'|'left'|'right',down:boolean)=>{
     const axes:{[key:string]:Partial<Input>}={
       forward:{forward:down?1:0},backward:{forward:down?-1:0},
@@ -303,7 +308,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
       </div>
       {ready&&['hall','combat','safes'].includes(phase)&&<div className="qul-secret-tactical-hud">
         <div className="qul-secret-hud-vitals"><small>OPERATOR / STATUS</small><div className="qul-secret-hud-health"><ShieldCheck size={17}/><strong>{health}%</strong><div className="qul-secret-hud-meter"><i style={{width:health+'%'}}/></div></div><div className="qul-secret-hud-metrics"><span><Target size={13}/>{threats}</span><span><FileLock2 size={13}/>{completed.length}/4</span><span><Zap size={13}/>{score} XP</span></div></div>
-        <div className="qul-secret-hud-arsenal"><small>{ar?'منظومة التسليح':'TACTICAL LOADOUT'} / QUL OPS</small><div className="qul-secret-hud-weapon"><div className="qul-secret-hud-silhouette" aria-hidden="true"><span/></div><div><small>{ar?'السلاح النشط':'ACTIVE WEAPON'}</small><strong>{[ar?'قاذف الطاقة الأساسي':'STANDARD BLASTER',REWARDS.depot[lang],REWARDS.comms[lang],REWARDS.archive[lang],ar?'قاذف الطاقة المتقدم':'ADVANCED BLASTER'][selectedWeapon]}</strong><b>MK-{selectedWeapon+1}</b></div></div><div className="qul-secret-hud-slots" role="group" aria-label={ar?'اختيار السلاح':'Select weapon'}>{[0,1,2,3,4].map(tier=><button key={tier} disabled={tier>gear} className={selectedWeapon===tier?'selected':''} aria-pressed={selectedWeapon===tier} aria-label={(ar?'السلاح ':'Weapon ')+(tier+1)} onClick={()=>engine.current?.setWeaponTier(tier)}><span>{tier+1}</span>{tier>gear?<LockKeyhole size={13}/>:<Zap size={16}/>}</button>)}</div><div className="qul-secret-hud-hint">{ar?'1–5 لتبديل السلاح · F للإطلاق':'1–5 SWITCH WEAPON · F FIRE'}</div></div>
+        <div className="qul-secret-hud-arsenal"><small>{ar?'منظومة التسليح':'TACTICAL LOADOUT'} / QUL OPS</small><div className="qul-secret-hud-weapon"><div className="qul-secret-hud-silhouette" aria-hidden="true"><span/></div><div><small>{ar?'السلاح النشط':'ACTIVE WEAPON'}</small><strong>{[ar?'قاذف الطاقة الأساسي':'STANDARD BLASTER',REWARDS.depot[lang],REWARDS.comms[lang],REWARDS.archive[lang],ar?'قاذف الطاقة المتقدم':'ADVANCED BLASTER'][selectedWeapon]}</strong><b>MK-{selectedWeapon+1} · {ammo.loaded}/{ammo.reserve}</b></div></div><div className="qul-secret-hud-slots" role="group" aria-label={ar?'اختيار السلاح':'Select weapon'}>{[0,1,2,3,4].map(tier=><button key={tier} disabled={tier>gear} className={selectedWeapon===tier?'selected':''} aria-pressed={selectedWeapon===tier} aria-label={(ar?'السلاح ':'Weapon ')+(tier+1)} onClick={()=>engine.current?.setWeaponTier(tier)}><span>{tier+1}</span>{tier>gear?<LockKeyhole size={13}/>:<Zap size={16}/>}</button>)}</div><div className="qul-secret-hud-hint">{ar?'1–5 سلاح · F إطلاق · R تلقيم':'1–5 WEAPON · F FIRE · R RELOAD'}</div></div>
       </div>}
       {!ready&&<div className="qul-secret-loader" role="status"><Crosshair size={40}/>
         <h2>{error||(ar?'جارٍ تجهيز المهمة...':'Preparing your mission...')}</h2>
@@ -378,14 +383,14 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
           {opened[activeSafe]&&selectedPin&&selectedPin!=='wrong'?(
             <div className="qul-secret-safe-result">
               <ShieldCheck size={32}/>
-              <strong>{ar?'فُك القفل · الجندي يفتح الخزنة':'LOCK RELEASED · OPERATOR OPENING SAFE'}</strong>
+              <strong>{!lootReady?(ar?'القفل يفتح الآن…':'UNLOCKING SAFE…'):(ar?'تم جمع الغنيمة':'LOOT COLLECTED')}</strong>
               <span>PIN: {selectedPin}</span>
               <p>{ar?'الغنيمة:':'LOOT:'} <b>{activeSafe===0?(ar?'طلقات إضافية':'EXTRA AMMO'):activeSafe===1?(ar?'درع واقٍ':'ARMOR PLATE'):activeSafe===2?(ar?'وحدة تحسين التصويب':'AIM MODULE'):REWARDS[room][lang]}</b></p>
               {activeSafe===3&&<div className="qul-secret-equipment-reveal">
                 <Zap size={22}/><span>{ar?'المكافأة التي ستجمعها:':'REWARD TO COLLECT:'}</span>
                 <strong>{REWARDS[room][lang]}</strong>
               </div>}
-              <button className="qul-secret-primary" onClick={advanceSafe}>
+              <button className="qul-secret-primary" disabled={!lootReady} onClick={advanceSafe}>
                 {room==='vault'&&activeSafe===3?(ar?'اجمع الوثائق السرية':'COLLECT CLASSIFIED DOCUMENTS'):
                   activeSafe===3?(ar?'اجمع التجهيز الجديد واخرج':'COLLECT UPGRADE & EXIT'):
                     (ar?'الخزنة التالية':'NEXT SAFE')}
