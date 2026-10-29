@@ -27,6 +27,8 @@
 .qul-story-guide-left .qul-story-head {transform:rotate(-12deg) translateX(-5px);}
 .qul-story-guide-right .qul-story-head {transform:rotate(12deg) translateX(5px);}
 .qul-story-guide-center .qul-story-head {transform:translateY(-7px);}
+.qul-story-headset {transform-box:fill-box;transform-origin:center;transition:transform .85s cubic-bezier(.2,.75,.2,1),opacity .85s;}
+.qul-story-guide-center .qul-story-headset {transform:translateY(66px) scale(.84);opacity:.7;}
 .qul-story-eyes {transition:transform .65s;}
 .qul-story-guide-left .qul-story-eyes {transform:translateX(-7px);}
 .qul-story-guide-right .qul-story-eyes {transform:translateX(7px);}
