@@ -568,6 +568,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   pickupModel.visible=false;
   let pickupOrigin=new THREE.Vector3();
   let pickupStarted=0;
+  let pickupAwardPending=-1;
   let safeLootPending:{index:number;at:number}|null=null;
   let ammo=24,reserveAmmo=96;
   const emitAmmo=()=>events.onAmmoChange?.(ammo,reserveAmmo);
@@ -663,7 +664,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     safeLootPending=null;
     safeDoorPending=null;
     safeInteractionStart=safeInteractionEnd=0;
-    safePickupUntil=0;safePickupIndex=-1;pickupModel.visible=false;
+    safePickupUntil=0;safePickupIndex=-1;pickupAwardPending=-1;pickupModel.visible=false;
     rewardCollected=false;
     spawnGuards(activeRoom);
     emit('combat',activeRoom.info.id);
@@ -756,7 +757,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // combat progression. Upgraded weapons have faster trigger response.
     const now=performance.now();
     if(now<nextShotAt)return false;
-    if(phase==='safes'&&(safeApproach||now<safeInteractionEnd||now<safePickupUntil))return false;
+    if(phase==='safes'&&(safeApproach||now<safeInteractionEnd||now<safePickupUntil||pickupAwardPending>=0))return false;
     if(ammo<=0){reload();return false;}
     ammo--;emitAmmo();
     nextShotAt=now+(weaponTier>=3?210:weaponTier>=2?280:360);
@@ -897,11 +898,16 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         pickupModel.visible=true;
         pickupCore.material=index===0?amber:index===1?green:index===2?cyan:steel;
       }
+      // Do not award loot before its physical pickup animation completes.
+      pickupAwardPending=index;
+    }
+    if(pickupAwardPending>=0&&now>=safePickupUntil){
+      const index=pickupAwardPending;pickupAwardPending=-1;
       if(index===0){reserveAmmo+=36;reload();}
       if(index===1){hp=Math.min(100,hp+25);events.onHealth(Math.round(hp));}
-      if(index===2){upgradeCoil.visible=true;}
+      if(index===2)upgradeCoil.visible=true;
       if(index===3&&activeRoom?.info.id!=='vault')setWeaponTier(Math.min(4,unlockedWeaponTier+1));
-      upgradePulseUntil=now+1800;
+      upgradePulseUntil=now+1900;
       events.onLoot?.(index);
     }
     if(phase!=='intro')gateProgress=clamp(gateProgress+dt*.55,0,1);
