@@ -443,6 +443,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const player=new THREE.Vector3(0,0,24);
   let yaw=0,pitch=-.08;
   let vy=0,crouch=false,sprint=false;
+  let velocityX=0,velocityZ=0;
   const input={forward:0,strafe:0};
   const camSpot=new THREE.Vector3();
   const lookSpot=new THREE.Vector3();
@@ -481,6 +482,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const setAllowed=(items:SecretRoomId[])=>{allowedRooms=items;};
   const enterRoom=(id?:SecretRoomId)=>{
     if(phase!=='hall')return false;
+    velocityX=velocityZ=0;
     const available=rooms.find(r=>r.info.id===(id??nearby));
     if(!available||!roomAvailable(available.info.id,allowedRooms))return false;
     // Selecting a room from the mission map should work even when the player
@@ -698,8 +700,14 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       let f=clamp(input.forward+up,-1,1),r=clamp(input.strafe+right,-1,1);
       const norm=Math.hypot(f,r)||1;f/=norm;r/=norm;
       const speed=crouch?.95:sprint?5.8:3.2;
-      player.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*r)*dt*speed;
-      player.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*r)*dt*speed;
+      // Smooth acceleration/deceleration prevents robotic starts and stops.
+      const desiredX=(-Math.sin(yaw)*f+Math.cos(yaw)*r)*speed;
+      const desiredZ=(-Math.cos(yaw)*f-Math.sin(yaw)*r)*speed;
+      const response=sprint?7.5:crouch?5.2:9.5;
+      velocityX=THREE.MathUtils.damp(velocityX,desiredX,response,dt);
+      velocityZ=THREE.MathUtils.damp(velocityZ,desiredZ,response,dt);
+      player.x+=velocityX*dt;
+      player.z+=velocityZ*dt;
       if(phase==='hall')limitCorridor(player);
       else if(activeRoom)roomBounds(player,activeRoom);
       moving=Math.abs(f)+Math.abs(r)>.04;
