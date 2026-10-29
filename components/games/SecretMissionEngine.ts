@@ -1255,7 +1255,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     });
     // During lock interaction the weapon is holstered rather than clipping
     // through the safe door; it returns smoothly as the operator collects loot.
-    heroWeapon.visible=!interactingSafe&&!pickupActive&&!probingSafe;
+    heroWeapon.visible=!interactingSafe&&!pickupActive&&!probingSafe&&now>=instrumentTouchUntil;
     if(model&&interactionHands.visible){
       // Hide the fallback soldier's body, but keep its reach cue in the
       // correct local space for the loaded animated character.
@@ -1319,12 +1319,17 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         model.updateMatrixWorld(true);
         playerRoot.updateMatrixWorld(true);
         const handLocal=playerRoot.worldToLocal(weaponGrip.getWorldPosition(new THREE.Vector3()));
+        // Hand rigs vary by GLB: a grip inside the torso is visually lost.
+        // Keep the weapon just forward of the right hand and outside the chest.
         const gripTarget=new THREE.Vector3(
-          clamp(handLocal.x,-.05,.72),
-          clamp(handLocal.y,.84,1.55),
-          clamp(handLocal.z-.28,-.85,-.25)
+          clamp(handLocal.x+.16,.32,.72),
+          clamp(handLocal.y,.98,1.48),
+          clamp(handLocal.z-.35,-.88,-.48)
         );
         heroWeapon.position.lerp(gripTarget,Math.min(1,dt*13));
+        // Smooth weapon presentation without copying arbitrary wrist axes.
+        heroWeapon.rotation.x=THREE.MathUtils.damp(heroWeapon.rotation.x,-.14-shotKick*.22,12,dt);
+        heroWeapon.rotation.y=THREE.MathUtils.damp(heroWeapon.rotation.y,-.16,12,dt);
       }
       // Apply reach after animation sampling; the mixer otherwise resets the
       // hand bones on every frame. Use a bounded additive wrist rotation.
