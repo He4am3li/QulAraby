@@ -633,7 +633,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // combat progression. Upgraded weapons have faster trigger response.
     const now=performance.now();
     if(now<nextShotAt)return false;
-    nextShotAt=now-(now%1)+(weaponTier>=3?210:weaponTier>=2?280:360);
+    nextShotAt=now+(weaponTier>=3?210:weaponTier>=2?280:360);
     const origin=new THREE.Vector3();
     muzzle.getWorldPosition(origin);
     if(!Number.isFinite(origin.x)||origin.distanceTo(player)>3)origin.copy(player).add(new THREE.Vector3(0,1.35,0));
