@@ -202,7 +202,17 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       const safeX=-3.32+i*2.18;
       const cabinet=new THREE.Group();cabinet.position.set(safeX,0,-3.95);group.add(cabinet);
       poly(cabinet,[1.68,2.25,1.45],trim,[0,1.13,0]);
+      // Interior shelves and visible contents are revealed by the actual hinged door.
       poly(cabinet,[1.47,1.99,.1],black,[0,1.13,.78]);
+      poly(cabinet,[1.38,.07,1.17],steel,[0,.57,.04]);
+      poly(cabinet,[1.38,.07,1.17],steel,[0,1.28,.04]);
+      for(let item=0;item<3;item++){
+        const isPaper=info.id==='vault';
+        const x=-.43+item*.43;
+        poly(cabinet,isPaper?[.31,.025,.48]:[.24,.35,.3],
+          isPaper?tan:item===2?amber:cyan,[x,isPaper?1.37:.82,.08]);
+        if(isPaper)poly(cabinet,[.24,.008,.025],black,[x,1.39,.1]);
+      }
       const joint=new THREE.Group();joint.position.set(-.72,0,.83);cabinet.add(joint);
       poly(joint,[1.43,1.97,.13],steel,[.71,1.13,0]);
       poly(joint,[1.16,.1,.05],i===3?amber:cyan,[.71,1.93,.1]);
