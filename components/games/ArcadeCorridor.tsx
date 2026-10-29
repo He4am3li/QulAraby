@@ -144,6 +144,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const phaseRef=useRef<SecretPhase>('intro');
   const lastThreats=useRef(0);
   const safeRef=useRef(0);
+  const heldDirections=useRef(new Set<'forward'|'backward'|'left'|'right'>());
   // Prevent the automatic reward timer and a manual tap from advancing the
   // same objective twice before React commits the next stage.
   const advancingRef=useRef(false);
@@ -169,6 +170,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
             phaseRef.current=state;
             setPhase(state);
             if(state==='room-enter'){
+              heldDirections.current.clear();
               lastThreats.current=0;
               setInput({forward:0,strafe:0,run:false});
               setCrouch(false);
@@ -180,6 +182,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
               setFrequency(0);setArchiveChoice(null);setDefenseSequence([]);
             }
             if(state==='hall'){
+              heldDirections.current.clear();
               setRoom(null);
               setInput({forward:0,strafe:0,run:false});
               setCrouch(false);
@@ -319,11 +322,13 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
     return ()=>clearTimeout(timer);
   },[phase,safeStage,activeSafe,opened,paused,lootReady]);
   const move=(kind:'forward'|'backward'|'left'|'right',down:boolean)=>{
-    const axes:{[key:string]:Partial<Input>}={
-      forward:{forward:down?1:0},backward:{forward:down?-1:0},
-      left:{strafe:down?-1:0},right:{strafe:down?1:0}
-    };
-    setInput(prev=>({...prev,...axes[kind]}));
+    if(down)heldDirections.current.add(kind);
+    else heldDirections.current.delete(kind);
+    const held=heldDirections.current;
+    setInput(prev=>({...prev,
+      forward:Number(held.has('forward'))-Number(held.has('backward')),
+      strafe:Number(held.has('right'))-Number(held.has('left'))
+    }));
   };
   const hold=(kind:'forward'|'backward'|'left'|'right',icon:React.ReactNode)=>
     <button className="qul-secret-move" aria-label={kind}
