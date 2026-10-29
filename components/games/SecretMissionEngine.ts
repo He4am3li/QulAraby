@@ -467,6 +467,15 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const roomBounds=(p:THREE.Vector3,room:Room)=>{
     p.x=clamp(p.x,room.group.position.x-4.2,room.group.position.x+4.2);
     p.z=clamp(p.z,room.info.z-3.65,room.info.z+3.65);
+    // The four rear cabinets occupy physical floor space. Prevent the
+    // operator from walking through their fronts, while keeping the
+    // educational lock interaction reachable from the aisle.
+    const localX=p.x-room.group.position.x;
+    const localZ=p.z-room.info.z;
+    if(localZ < -2.86 && [-3.32,-1.14,1.04,3.22].some(x=>Math.abs(localX-x)<1.02)){
+      p.z=room.info.z-2.86;
+      if(velocityZ<0)velocityZ=0;
+    }
   };
   const transitionTo=(type:Traverse['type'],point:THREE.Vector3,toYaw:number,duration:number,room?:Room)=>{
     transition={type,time:0,duration,from:player.clone(),to:point,fromYaw:yaw,toYaw,room};
