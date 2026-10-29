@@ -216,3 +216,7 @@
 .qul-radio-recording-options input { max-width: 100%; font-weight: 400; }
 .qul-radio-recording-options [role=status] { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; overflow-wrap: anywhere; }
 .qul-radio-call-help { font-size: 10px; line-height: 1.5; text-align: center; margin: 5px 0; }
+
+.qul-radio-rotary-dial{touch-action:none;user-select:none;cursor:grab;}
+.qul-radio-rotary-dial:active{cursor:grabbing;}
+.qul-radio-rotary-dial:focus-visible{outline:2px solid #f3ce8c;outline-offset:4px;}
