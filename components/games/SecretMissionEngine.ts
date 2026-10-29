@@ -32,24 +32,24 @@ const tex=(kind:'wall'|'ground'|'wood'|'steel')=>{
   const g=canvas.getContext('2d')!;
   const ground=kind==='ground';const wall=kind==='wall';
   g.fillStyle=ground?'#9a9890':wall?'#8b9391':kind==='wood'?'#79644b':'#697477';
-  g.fillRect(0,0,512,512);
+  g.fillRect(0,0,256,256);
   // Deterministic speckled grime, joint lines, scratches and surface roughness.
-  for(let i=0;i<2400;i++){
-    const x=(i*97+19)%512,y=(i*151+31)%512,v=(i%9);
+  for(let i=0;i<1200;i++){
+    const x=(i*97+19)%256,y=(i*151+31)%256,v=(i%9);
     g.fillStyle=v<4?'rgba(24,30,31,.065)':'rgba(243,244,236,.07)';
     g.fillRect(x,y,1+(i%5),1+(i%3));
   }
   if(ground) {
-    for(let y=0;y<512;y+=72){g.strokeStyle='#30353530';g.lineWidth=2;g.beginPath();g.moveTo(0,y);g.lineTo(512,y);g.stroke();}
-    for(let x=0;x<512;x+=104){g.strokeStyle='#383c3940';g.beginPath();g.moveTo(x,0);g.lineTo(x,512);g.stroke();}
+    for(let y=0;y<256;y+=36){g.strokeStyle='#30353530';g.lineWidth=2;g.beginPath();g.moveTo(0,y);g.lineTo(256,y);g.stroke();}
+    for(let x=0;x<256;x+=52){g.strokeStyle='#383c3940';g.beginPath();g.moveTo(x,0);g.lineTo(x,256);g.stroke();}
   }else if(wall){
-    for(let y=0;y<512;y+=164){g.strokeStyle='#e2e6dd32';g.lineWidth=3;g.beginPath();g.moveTo(0,y);g.lineTo(512,y);g.stroke();}
-    for(let x=0;x<512;x+=200){g.strokeStyle='#343a3a28';g.lineWidth=2;g.beginPath();g.moveTo(x,0);g.lineTo(x,512);g.stroke();}
+    for(let y=0;y<256;y+=82){g.strokeStyle='#e2e6dd32';g.lineWidth=3;g.beginPath();g.moveTo(0,y);g.lineTo(256,y);g.stroke();}
+    for(let x=0;x<256;x+=100){g.strokeStyle='#343a3a28';g.lineWidth=2;g.beginPath();g.moveTo(x,0);g.lineTo(x,256);g.stroke();}
   }else{
     for(let i=0;i<38;i++){
       g.strokeStyle=i%2?'#ecddac15':'#2b303020';
       g.lineWidth=1+(i%3);
-      g.beginPath();g.moveTo(0,(i*37)%512);g.lineTo(512,((i*37)%512)+2);g.stroke();
+      g.beginPath();g.moveTo(0,(i*37)%256);g.lineTo(256,((i*37)%256)+2);g.stroke();
     }
   }
   const result=new THREE.CanvasTexture(canvas);
@@ -727,6 +727,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     }
     modelMixer?.update(dt);
     if(modelMixer){
+      // Ease into locomotion clips without restarting the active action each frame.
       const name=moving?(sprint?'run':'walk'):'idle';
       const next=clips.get(name)||clips.get('idle')||null;
       if(next!==modelAction&&next){modelAction?.fadeOut(.18);next.reset().fadeIn(.18).play();modelAction=next;}
