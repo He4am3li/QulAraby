@@ -1269,11 +1269,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         // horizontal segment test instead of per-frame scene-wide raycasts.
         const guardWorld=guard.root.getWorldPosition(new THREE.Vector3());
         const behindCabinets=cabinetOccludes(guardWorld,player,activeRoom);
-        const clearSight=visible&&!behindCabinets;
+        const clearSight=(dist<4.2||visible)&&!behindCabinets;
         if(!guard.alerted){
           // The operator is unmistakably visible at close range. Avoid an
           // orientation-dependent dead zone where guards never react.
-          if(dist<4.2)guard.alerted=true;
+          if(dist<4.2&&!behindCabinets)guard.alerted=true;
           if(dist<detectRadius&&clearSight)guard.awareness+=dt*(crouch?.55:sprint?2.8:1.6);
           else guard.awareness=Math.max(0,guard.awareness-dt*.55);
           if(guard.awareness>1.1)guard.alerted=true;
@@ -1344,7 +1344,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const forward=new THREE.Vector3(-Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch));
     const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
     const head=player.clone().add(new THREE.Vector3(0,crouch?1:1.55,0));
-    const roomView=Boolean(activeRoom) && phase!=='hall';
+    // Switch to corridor framing as soon as the operator reaches the exit
+    // threshold. Holding room framing throughout exit pins the camera behind
+    // the entrance bulkhead and obscures the player's view.
+    const crossingExit=phase==='room-exit'&&Math.abs(player.x)<4.65;
+    const roomView=Boolean(activeRoom)&&phase!=='hall'&&!crossingExit;
     const camTarget=head.clone().addScaledVector(forward,roomView?-2.65:-4.4)
       .addScaledVector(right,roomView?.62:1.15);
     camTarget.y+=roomView?.82:1.0;
