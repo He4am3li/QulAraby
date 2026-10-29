@@ -1489,7 +1489,13 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(!exitingPortal)camTarget.y+=roomView?.82:1.0;
     // Keep the third-person camera inside the playable corridor or room,
     // rather than letting it pass through walls and expose exterior geometry.
-    if(roomView&&activeRoom){
+    if(exitingPortal&&activeRoom){
+      // The portal shot is deliberately independent of the standard room
+      // camera: its position must never be clamped back behind a wall.
+      const inside=Math.abs(player.x)>3.05;
+      camTarget.x=inside?activeRoom.info.side*Math.max(3.5,Math.abs(player.x)-1.15):activeRoom.info.side*1.35;
+      camTarget.z=activeRoom.info.z+2.4;
+    }else if(roomView&&activeRoom){
       const local=camTarget.clone().sub(activeRoom.group.position);
       // The playable interior is narrower than the room's decorative shell.
       // Keep the camera inside the actual walkable footprint to avoid
@@ -1518,7 +1524,14 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // through corridor walls; otherwise ease the camera toward its target.
     if(transition||dt>.04)camera.position.copy(camTarget);
     else camera.position.lerp(camTarget,clamp(dt*8,0,1));
-    if(roomView&&activeRoom){
+    if(exitingPortal&&activeRoom){
+      // Clamp the *actual* portal camera to its current side of the doorway,
+      // without snapping it into a room cabinet or through the entrance wall.
+      const inside=Math.abs(player.x)>3.05;
+      if(inside)camera.position.x=activeRoom.info.side*Math.max(3.5,Math.abs(camera.position.x));
+      else camera.position.x=clamp(camera.position.x,-2.15,2.15);
+      camera.position.z=activeRoom.info.z+2.4;
+    }else if(roomView&&activeRoom){
       const localCamera=camera.position.clone().sub(activeRoom.group.position);
       localCamera.x=clamp(localCamera.x,-4.05,4.05);
       localCamera.z=clamp(localCamera.z,-3.48,3.48);
