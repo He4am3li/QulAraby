@@ -310,6 +310,20 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const dressGuard=(enemy:Combatant)=>{
     if(phone||!model||enemy.isBoss||!enemy.alive||enemy.mixer)return;
     const copy=cloneSkeleton(model) as THREE.Group;
+    // Enemy uniforms must not reuse the player's green military outfit.
+    // Clone materials before tinting, otherwise the original hero changes too.
+    copy.traverse(node=>{
+      if(!(node instanceof THREE.Mesh))return;
+      const recolor=(mat:THREE.Material):THREE.Material=>{
+        const own=mat.clone();
+        if(own instanceof THREE.MeshStandardMaterial){
+          own.color.multiply(new THREE.Color('#ad7d70'));
+          own.roughness=Math.max(.7,own.roughness);
+        }
+        return own;
+      };
+      node.material=Array.isArray(node.material)?node.material.map(recolor):recolor(node.material);
+    });
     copy.rotation.y=0;
     enemy.root.add(copy);
     enemy.fallback.visible=false;
