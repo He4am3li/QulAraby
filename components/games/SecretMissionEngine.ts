@@ -1076,7 +1076,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const pickupActive=phase==='safes'&&now<safePickupUntil;
     if(pickupActive&&pickupModel.visible){
       const t=clamp((now-pickupStarted)/850,0,1);
-      const destination=player.clone().add(new THREE.Vector3(0,1.27,-.38));
+      // Move toward the operator's forward-facing hand, even after the
+      // character turns. A world-fixed Z offset caused sideways pickups.
+      const destination=player.clone().add(new THREE.Vector3(-Math.sin(yaw)*.43,1.27,-Math.cos(yaw)*.43));
       pickupModel.position.lerpVectors(pickupOrigin,destination,ease(t));
       pickupModel.position.y+=Math.sin(Math.PI*t)*.38;
       pickupModel.rotation.y+=dt*7;
@@ -1163,15 +1165,16 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       // Apply reach after animation sampling; the mixer otherwise resets the
       // hand bones on every frame. Use a bounded additive wrist rotation.
       if(skeletalHands.length){
-        // Some GLTF clips never key wrist joints. Multiplying every frame
-        // would then accumulate rotation until the hands twist unnaturally.
+        // Blend the reach on top of the mixer pose, not the original rest pose:
+        // resetting to bind rotations each frame would freeze the soldier's
+        // hands during walking and combat animations.
         skeletalHands.forEach((hand,i)=>{
           const tilt=new THREE.Quaternion().setFromEuler(new THREE.Euler(-reach*.38,(i===0?-.12:.12)*reach,0));
-          hand.quaternion.copy(skeletalHandRest[i]).multiply(tilt);
+          hand.quaternion.multiply(tilt);
         });
         skeletalShoulders.forEach((shoulder,i)=>{
           const tilt=new THREE.Quaternion().setFromEuler(new THREE.Euler(-reach*.25,0,(i===0?-.1:.1)*reach));
-          shoulder.quaternion.copy(skeletalShoulderRest[i]).multiply(tilt);
+          shoulder.quaternion.multiply(tilt);
         });
       }
     }
