@@ -50,9 +50,9 @@ function QulGuide({ zone }: { zone: Zone }) {
           <path d="M265 241 L261 259 Q267 264 273 260" fill="none" stroke="#a36c57" strokeWidth="2" strokeLinecap="round"/>
           <path className="qul-story-smile" d="M246 276 Q265 288 285 275" fill="none" stroke="#7e4b42" strokeWidth="3.2" strokeLinecap="round"/>
           <path d="M208 224 Q194 213 196 240 Q197 256 216 256 M325 221 Q341 215 337 241 Q335 255 320 254" fill="url(#qul-hero-skin)"/>
-          <path d="M198 221 Q188 177 218 151 M327 221 Q343 179 320 149" fill="none" stroke="#b2dfd0" strokeWidth="5" strokeLinecap="round" opacity=".58"/>
+          <g className="qul-story-headset"><path d="M198 221 Q188 177 218 151 M327 221 Q343 179 320 149" fill="none" stroke="#b2dfd0" strokeWidth="5" strokeLinecap="round" opacity=".58"/>
           <rect x="181" y="211" width="18" height="38" rx="9" fill="#163741" stroke="#80c5c7" strokeWidth="2"/>
-          <rect x="335" y="211" width="18" height="38" rx="9" fill="#163741" stroke="#80c5c7" strokeWidth="2"/>
+          <rect x="335" y="211" width="18" height="38" rx="9" fill="#163741" stroke="#80c5c7" strokeWidth="2"/></g>
         </g>
         <g className="qul-story-greeting-arm">
           <path d="M358 340 Q405 333 430 280" fill="none" stroke="#102b37" strokeWidth="31" strokeLinecap="round"/>
