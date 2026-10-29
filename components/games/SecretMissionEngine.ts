@@ -345,9 +345,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   round(heroFallback,.25,.31,skin,[0,1.9,0]);
   round(heroFallback,.32,.2,camo,[0,2.06,.01]);
   const heroArms:THREE.Mesh[]=[];
+  const heroHands:THREE.Mesh[]=[];
   for(const side of [-1,1]){
     const arm=round(heroFallback,.13,.75,armor,[side*.49,1.28,-.13]);arm.rotation.z=side*.18;
     heroArms.push(arm);
+    const hand=round(heroFallback,.12,.24,skin,[side*.49,.84,-.22]);
+    heroHands.push(hand);
     round(heroFallback,.17,.9,camo,[side*.20,.52,0]);
     poly(heroFallback,[.28,.2,.4],black,[side*.19,.12,-.1]);
   }
@@ -1032,6 +1035,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     heroArms.forEach((arm,index)=>{
       arm.rotation.x=THREE.MathUtils.damp(arm.rotation.x,reach*(index===0?-1.15:-.72),12,dt);
       arm.rotation.z=THREE.MathUtils.damp(arm.rotation.z,(index===0?-.18:.18)+reach*(index===0?.25:-.24),12,dt);
+      // Position hands at the projected ends of the forearms so the operator
+      // visibly reaches forward instead of only rotating rigid shoulder pieces.
+      const extension=reach*.44;
+      heroHands[index].position.z=THREE.MathUtils.damp(heroHands[index].position.z,-.22-extension,12,dt);
+      heroHands[index].position.y=THREE.MathUtils.damp(heroHands[index].position.y,.84+reach*.35,12,dt);
     });
     // During lock interaction the weapon is holstered rather than clipping
     // through the safe door; it returns smoothly as the operator collects loot.
