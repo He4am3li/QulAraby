@@ -971,7 +971,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   };
   const keyUp=(e:KeyboardEvent)=>{controls.delete(e.key.toLowerCase());if(e.key.toLowerCase()==='shift')sprint=false;};
   // Release held keys when focus leaves the game to avoid stuck movement/fire.
-  const clearKeyboard=()=>{controls.clear();sprint=false;};
+  const clearKeyboard=()=>{controls.clear();sprint=false;touchTriggerHeld=false;input.forward=0;input.strafe=0;};
   window.addEventListener('blur',clearKeyboard);
   const canvas=renderer.domElement;
   let pointerDown:{x:number;y:number;time:number}|null=null;
@@ -1008,6 +1008,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     return true;
   };
   const pointerEnd=(e:PointerEvent)=>{
+    if(e.type==='pointercancel'){pointerDown=null;return;}
     if(pointerDown&&pointerDown.time>0&&performance.now()-pointerDown.time<280){
       if(phase==='intro')start();
       else if(phase==='safes')tapInstrument(e);
@@ -1033,7 +1034,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
 
   const render=(now:number)=>{
     frame=requestAnimationFrame(render);
-    if(disposed||document.hidden||paused){last=now;return;}
+    if(disposed||document.hidden||paused){
+      if(document.hidden){touchTriggerHeld=false;controls.clear();input.forward=0;input.strafe=0;}
+      last=now;return;
+    }
     if(phone&&now-last<1000/30)return;
     const dt=clamp((now-last)/1000,0,.045);last=now;time+=dt;
     shotKick=THREE.MathUtils.damp(shotKick,0,13,dt);
