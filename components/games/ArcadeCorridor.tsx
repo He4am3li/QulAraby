@@ -351,7 +351,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
       {ready&&phase==='safes'&&room&&
         <div className="qul-secret-vault-panel">
           <div className="qul-secret-vault-header">
-            <div><span>SECURE SAFE SYSTEM / {MISSIONS[room].subtitle.en}</span>
+            <div><span className="qul-secret-sector-clear"><ShieldCheck size={13}/>{ar?'تم تأمين الغرفة · انتهت مواجهة الحراس':'SECTOR SECURED · GUARDS CLEARED'}</span><span>SECURE SAFE SYSTEM / {MISSIONS[room].subtitle.en}</span>
               <h2>{ar?location?.ar:location?.en}</h2>
               <p>{ar?MISSIONS[room].skills.ar:MISSIONS[room].skills.en}</p>
             </div>
