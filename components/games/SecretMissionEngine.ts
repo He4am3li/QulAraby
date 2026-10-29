@@ -592,7 +592,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let lastHitAt=-10000;
   let gateProgress=0;
   let safeIndex=0;
-  let safeApproach:{index:number;ready:boolean}|null=null;
+  let safeApproach:{index:number;ready:boolean;arrivedAt:number}|null=null;
   let safeUnlockUntil=0;
   let safeDoorReleaseAt=0;
   let safeDoorPending:{index:number;room:Room}|null=null;
@@ -720,7 +720,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   };
   const approachSafe=(index:number)=>{
     if(phase!=='safes'||!activeRoom||index!==safeIndex||safeApproach)return false;
-    safeApproach={index,ready:false};
+    safeApproach={index,ready:false,arrivedAt:0};
     controls.clear();input.forward=input.strafe=0;velocityX=velocityZ=0;
     return true;
   };
@@ -998,9 +998,16 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       if(distance>.001){player.x+=dx/distance*step;player.z+=dz/distance*step;}
       yaw=THREE.MathUtils.damp(yaw,0,9,dt);
       if(distance<.13){
-        safeApproach.ready=true;
-        activeRoom.safes[safeApproach.index].indicator.color.setHex(0xffbd54);
-        events.onSafeReady?.(safeApproach.index);
+        if(!safeApproach.arrivedAt){
+          safeApproach.arrivedAt=now;
+          activeRoom.safes[safeApproach.index].indicator.color.setHex(0xffbd54);
+        }
+        // Give the operator time to touch the keypad and discover that it
+        // is code-locked before presenting the educational question.
+        if(now-safeApproach.arrivedAt>=700){
+          safeApproach.ready=true;
+          events.onSafeReady?.(safeApproach.index);
+        }
       }
     }
     let moving=false;
@@ -1085,9 +1092,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const pickupProgress=pickupActive?1-(safePickupUntil-now)/850:0;
     const interactionElapsed=now-safeInteractionStart;
     const interactingSafe=phase==='safes'&&interactionElapsed>=0&&now<safeInteractionEnd;
+    const probingSafe=phase==='safes'&&Boolean(safeApproach?.arrivedAt)&&!safeApproach?.ready;
+    const probeProgress=probingSafe&&safeApproach?clamp((now-safeApproach.arrivedAt)/700,0,1):0;
     const reach=interactingSafe?Math.sin(Math.PI*clamp(interactionElapsed/1500,0,1)):
-      pickupActive?Math.sin(Math.PI*pickupProgress)*.8:0;
-    interactionHands.visible=Boolean(model)&&skeletalHands.length===0&&(interactingSafe||pickupActive);
+      pickupActive?Math.sin(Math.PI*pickupProgress)*.8:
+      probingSafe?Math.sin(Math.PI*probeProgress)*.65:0;
+    interactionHands.visible=Boolean(model)&&skeletalHands.length===0&&(interactingSafe||pickupActive||probingSafe);
     if(interactionHands.visible){
       interactionHands.position.z=-reach*.24;
       interactionSleeves.forEach((sleeve,i)=>{sleeve.rotation.x=1.05-reach*.38;sleeve.rotation.z=(i===0?-.12:.12)*reach;});
@@ -1103,7 +1113,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     });
     // During lock interaction the weapon is holstered rather than clipping
     // through the safe door; it returns smoothly as the operator collects loot.
-    heroWeapon.visible=!interactingSafe&&!pickupActive;
+    heroWeapon.visible=!interactingSafe&&!pickupActive&&!probingSafe;
     if(model&&interactionHands.visible){
       // Hide the fallback soldier's body, but keep its reach cue in the
       // correct local space for the loaded animated character.
