@@ -863,7 +863,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         desiredState==='prone'?['prone','crouch','idle']:
         desiredState==='run'?['run','running','walk','idle']:
         desiredState==='walk'?['walk','walking','idle']:['idle','standing'];
-      const next=candidates.map(name=>clips.get(name)).find(Boolean)||null;
+      // Resolve clips by semantic names: asset packs often use names such as
+      // "Walking", "RunForward" or "Idle_01" rather than exact map keys.
+      const resolveClip=(name:string)=>clips.get(name)||
+        [...clips.entries()].find(([key])=>key.startsWith(name)||key.includes(name))?.[1];
+      const next=candidates.map(resolveClip).find(Boolean)||null;
       if(next&&next!==modelAction){
         modelAction?.fadeOut(.22);
         next.reset().setEffectiveWeight(1).fadeIn(.22).play();
