@@ -480,6 +480,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let hp=100;
   let weaponTier=0;
   let nextShotAt=0;
+  let shotKick=0;
+  let muzzleFlashUntil=0;
   let gateProgress=0;
   let safeIndex=0;
   let rewardCollected=false;
@@ -634,6 +636,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const now=performance.now();
     if(now<nextShotAt)return false;
     nextShotAt=now+(weaponTier>=3?210:weaponTier>=2?280:360);
+    shotKick=Math.min(.22,shotKick+.11);
+    muzzleFlashUntil=now+75;
     const origin=new THREE.Vector3();
     muzzle.getWorldPosition(origin);
     if(!Number.isFinite(origin.x)||origin.distanceTo(player)>3)origin.copy(player).add(new THREE.Vector3(0,1.35,0));
@@ -727,6 +731,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(disposed||document.hidden||paused){last=now;return;}
     if(phone&&now-last<1000/30)return;
     const dt=clamp((now-last)/1000,0,.045);last=now;time+=dt;
+    shotKick=THREE.MathUtils.damp(shotKick,0,13,dt);
+    muzzle.scale.setScalar((1+weaponTier*.19)*(now<muzzleFlashUntil?1.8:1));
     if(phase!=='intro')gateProgress=clamp(gateProgress+dt*.55,0,1);
     hinges.forEach((h,i)=>h.rotation.y=(i?1:-1)*ease(gateProgress)*1.55);
     gate.visible=phase==='intro'||(phase==='entering'&&player.z>17.0);
@@ -943,6 +949,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const maxBoom=roomView?3.1:4.8;
     if(cameraOffset.length()>maxBoom)camTarget.copy(head).add(cameraOffset.setLength(maxBoom));
     const lookTarget=head.clone().addScaledVector(forward,roomView?5.1:4.5);
+    lookTarget.y+=shotKick;
     // Snap after a room transition so interpolation never sweeps the camera
     // through corridor walls; otherwise ease the camera toward its target.
     if(transition||dt>.04)camera.position.copy(camTarget);
@@ -985,7 +992,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   events.onHealth(100);
   events.onThreats(0);
   const setLanguage=(value:'ar'|'en')=>{language=value;};
-  const restartRoom=()=>{if(!activeRoom||phase!=='dead')return;nextShotAt=0;controls.clear();input.forward=input.strafe=0;sprint=false;crouch=false;vy=0;player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);resetThreats();};
+  const restartRoom=()=>{if(!activeRoom||phase!=='dead')return;nextShotAt=0;shotKick=0;muzzleFlashUntil=0;controls.clear();input.forward=input.strafe=0;sprint=false;crouch=false;vy=0;player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);resetThreats();};
   const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4||!rewardCollected)return false;emit('victory','vault');return true;};
   return {
     start,travelTo,enterRoom,exitRoom,openSafe,collectReward,fire,jump,look,setCrouch,setMovement,setWeaponTier,
