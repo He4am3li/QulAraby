@@ -24,7 +24,7 @@ export type SecretEvents = {
   onError: (message:string) => void;
 };
 type Combatant = { root:THREE.Group; body:THREE.Group; fallback:THREE.Group; mixer:THREE.AnimationMixer|null; action:THREE.AnimationAction|null; hp:number; maxHp:number; cooldown:number; dying:number; alive:boolean; isBoss:boolean; awareness:number; alerted:boolean; };
-type Room = { info:typeof SECRET_ROOMS[number]; group:THREE.Group; door:THREE.Group; doorAngle:number; doorTarget:number; safes:{door:THREE.Group; opened:number; target:number; name:THREE.Sprite; indicator:THREE.MeshBasicMaterial; contents:THREE.Group}[]; reward:THREE.Group; enemies:Combatant[]; prepared:boolean;};
+type Room = { info:typeof SECRET_ROOMS[number]; group:THREE.Group; door:THREE.Group; doorAngle:number; doorTarget:number; safes:{door:THREE.Group; opened:number; target:number; name:THREE.Sprite; indicator:THREE.MeshBasicMaterial; contents:THREE.Group; instrument:THREE.Group}[]; reward:THREE.Group; enemies:Combatant[]; prepared:boolean;};
 type Traverse = {type:'intro'|'enter'|'exit';time:number;duration:number;from:THREE.Vector3;to:THREE.Vector3;fromYaw:number;toYaw:number; room?:Room};
 type Trail = { mesh:THREE.Mesh; age:number; lifespan:number };
 const lerp=THREE.MathUtils.lerp;
@@ -322,25 +322,27 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       textures.push(key);
       const label=new THREE.Sprite(material(new THREE.SpriteMaterial({map:key,transparent:true,depthWrite:false})));
       label.position.set(0,2.53,.6);label.scale.set(1.36,.38,1);cabinet.add(label);
+      const instrument=new THREE.Group();cabinet.add(instrument);
+      instrument.position.set(0,0,.035);
       // A visible interactive instrument belongs to the 3D world rather than
       // existing solely as an overlay: tuning knob, document tray, or breaker.
       if(info.id==='comms'){
-        const dial=round(cabinet,.19,.09,cyan,[.42,1.42,.85],16);
+        const dial=round(instrument,.19,.09,cyan,[.42,1.42,.85],16);
         dial.rotation.x=Math.PI/2;
-        poly(cabinet,[.03,.24,.045],amber,[.42,1.42,.96]);
+        poly(instrument,[.03,.24,.045],amber,[.42,1.42,.96]);
       }else if(info.id==='archive'){
         for(let sheet=0;sheet<3;sheet++){
-          const paper=poly(cabinet,[.38,.015,.26],sheet===i%3?green:tan,[-.35+sheet*.33,1.45,.88]);
+          const paper=poly(instrument,[.38,.015,.26],sheet===i%3?green:tan,[-.35+sheet*.33,1.45,.88]);
           paper.rotation.z=(sheet-1)*.12;
         }
       }else if(info.id==='vault'){
         for(let breaker=0;breaker<3;breaker++){
           const x=-.36+breaker*.36;
-          poly(cabinet,[.15,.31,.07],breaker===i%3?amber:red,[x,1.44,.88]);
-          poly(cabinet,[.07,.17,.11],steel,[x,1.45,.96]);
+          poly(instrument,[.15,.31,.07],breaker===i%3?amber:red,[x,1.44,.88]);
+          poly(instrument,[.07,.17,.11],steel,[x,1.45,.96]);
         }
       }
-      safes.push({door:joint,opened:0,target:0,name:label,indicator,contents});
+      safes.push({door:joint,opened:0,target:0,name:label,indicator,contents,instrument});
     }
     // Physical loot in cabinet four: each room provides a piece of the
     // equipment required for the final defense, while the final vault holds papers.
@@ -782,8 +784,18 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const approachSafe=(index:number)=>{
     if(phase!=='safes'||!activeRoom||index!==safeIndex||safeApproach)return false;
     safeApproach={index,ready:false,arrivedAt:0};
+    activeRoom.safes[index].instrument.position.set(0,0,.035);
+    activeRoom.safes[index].instrument.rotation.set(0,0,0);
     controls.clear();input.forward=input.strafe=0;velocityX=velocityZ=0;
     return true;
+  };
+  const setInstrumentValue=(index:number,value:number,correct:boolean)=>{
+    if(phase!=='safes'||!activeRoom||index!==safeIndex||!safeApproach?.ready)return;
+    const unit=activeRoom.safes[index];
+    if(activeRoom.info.id==='comms')unit.instrument.rotation.z=(value%8)*Math.PI/4;
+    else if(activeRoom.info.id==='archive')unit.instrument.position.x=(value-1)*.16;
+    else if(activeRoom.info.id==='vault')unit.instrument.rotation.y=(value%3-1)*.14;
+    unit.indicator.color.setHex(correct?0x5df7a2:0xffbd54);
   };
   const openSafe=(index:number)=>{
     if(phase!=='safes'||!activeRoom||index!==safeIndex||!safeApproach?.ready)return false;
@@ -1475,7 +1487,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const restartRoom=()=>{if(!activeRoom||phase!=='dead')return;nextShotAt=0;shotKick=0;muzzleFlashUntil=0;hitFeedbackUntil=0;lastHitAt=-10000;controls.clear();input.forward=input.strafe=0;sprint=false;crouch=false;vy=0;player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);resetThreats();};
   const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4||!rewardCollected)return false;emit('victory','vault');return true;};
   return {
-    start,travelTo,enterRoom,exitRoom,approachSafe,openSafe,collectReward,fire,reload,jump,look,setCrouch,setMovement,setWeaponTier,
+    start,travelTo,enterRoom,exitRoom,approachSafe,openSafe,collectReward,fire,reload,jump,look,setCrouch,setMovement,setWeaponTier,setInstrumentValue,
     setTriggerHeld(value:boolean){touchTriggerHeld=value;},
     restartRoom,finish,setAllowed,setLanguage,
     getRoom(){return activeRoom?.info.id??null;},
