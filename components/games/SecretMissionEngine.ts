@@ -495,21 +495,21 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // The four rear cabinets occupy physical floor space. Prevent the
     // operator from walking through their fronts, while keeping the
     // educational lock interaction reachable from the aisle.
-    const localX=p.x-room.group.position.x;
-    const localZ=p.z-room.info.z;
     // Resolve against cabinet footprints, allowing sideways sliding instead
     // of pinning the operator against an invisible wall across the aisle.
     for(const cabinetX of [-3.32,-1.14,1.04,3.22]){
-      const dx=localX-cabinetX;
-      const dz=localZ+3.95;
+      // Recompute after every correction: adjacent cabinet hitboxes can
+      // overlap and using the original coordinates causes jitter/sticking.
+      const dx=p.x-room.group.position.x-cabinetX;
+      const dz=p.z-room.info.z+3.95;
       const overlapX=1.02-Math.abs(dx);
       const overlapZ=1.09-Math.abs(dz);
       if(overlapX<=0||overlapZ<=0)continue;
       if(overlapX<overlapZ){
-        p.x+=Math.sign(dx||1)*overlapX;
+        p.x+=Math.sign(dx||1)*(overlapX+.002);
         velocityX=0;
       }else{
-        p.z+=Math.sign(dz||1)*overlapZ;
+        p.z+=Math.sign(dz||1)*(overlapZ+.002);
         velocityZ=0;
       }
     }
