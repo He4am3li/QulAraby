@@ -821,7 +821,18 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
           else guard.awareness=Math.max(0,guard.awareness-dt*.55);
           if(guard.awareness>1.1)guard.alerted=true;
           if(!guard.alerted){
-            guard.root.rotation.y+=Math.sin(time*.63+guard.cooldown)*dt*.17;
+            // Guards patrol short lanes, pause, and scan before engaging.
+            // Stable per-guard offsets avoid random jumps or extra allocations.
+            const patrolId=guards.indexOf(guard);
+            const patrolPhase=time*.52+patrolId*2.1;
+            const baseX=(patrolId-(guards.length-1)/2)*2.45;
+            const baseZ=-.6-(patrolId%2)*.6;
+            const targetX=clamp(baseX+Math.sin(patrolPhase)*.68,-4.15,4.15);
+            const targetZ=baseZ+Math.cos(patrolPhase*.73)*.36;
+            guard.root.position.x=THREE.MathUtils.damp(guard.root.position.x,targetX,1.4,dt);
+            guard.root.position.z=THREE.MathUtils.damp(guard.root.position.z,targetZ,1.4,dt);
+            const scanAngle=Math.PI+Math.sin(time*.8+patrolId*1.7)*.7;
+            guard.root.rotation.y=THREE.MathUtils.damp(guard.root.rotation.y,scanAngle,1.8,dt);
             continue;
           }
         }
