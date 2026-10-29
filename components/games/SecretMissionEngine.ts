@@ -18,6 +18,7 @@ export type SecretEvents = {
   onNearby: (room: SecretRoomId | null) => void;
   onShot: (hit:boolean) => void;
   onWeaponChange?: (tier:number) => void;
+  onSafeReady?: (index:number) => void;
   onError: (message:string) => void;
 };
 type Combatant = { root:THREE.Group; body:THREE.Group; fallback:THREE.Group; mixer:THREE.AnimationMixer|null; action:THREE.AnimationAction|null; hp:number; maxHp:number; cooldown:number; dying:number; alive:boolean; isBoss:boolean; awareness:number; alerted:boolean; };
@@ -538,6 +539,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let lastHitAt=-10000;
   let gateProgress=0;
   let safeIndex=0;
+  let safeApproach:{index:number;ready:boolean}|null=null;
+  let safeUnlockUntil=0;
+  let upgradePulseUntil=0;
   let rewardCollected=false;
   let last=performance.now(),frame=0,time=0;
   let paused=false,disposed=false;
@@ -620,6 +624,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     activeRoom.safes.forEach(s=>{s.target=0;s.opened=0;});
     activeRoom.reward.visible=false;
     safeIndex=0;
+    safeApproach=null;
     rewardCollected=false;
     spawnGuards(activeRoom);
     emit('combat',activeRoom.info.id);
@@ -630,17 +635,27 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     transitionTo('exit',new THREE.Vector3(0,0,r.info.z+2.45),0,1.8,r);
     emit('room-exit',r.info.id);
   };
+  const approachSafe=(index:number)=>{
+    if(phase!=='safes'||!activeRoom||index!==safeIndex||safeApproach)return false;
+    safeApproach={index,ready:false};
+    controls.clear();input.forward=input.strafe=0;velocityX=velocityZ=0;
+    return true;
+  };
   const openSafe=(index:number)=>{
-    if(phase!=='safes'||!activeRoom||index!==safeIndex)return false;
+    if(phase!=='safes'||!activeRoom||index!==safeIndex||!safeApproach?.ready)return false;
     const box=activeRoom.safes[index];if(!box||box.target!==0)return false;
     box.target=-1.65;
+    safeUnlockUntil=performance.now()+1100;
+    upgradePulseUntil=performance.now()+1700;
     if(index===3)activeRoom.reward.visible=true;
     safeIndex++;
+    safeApproach=null;
     return true;
   };
   const collectReward=()=>{
     if(phase!=='safes'||!activeRoom||safeIndex<4||rewardCollected)return false;
     rewardCollected=true;
+    upgradePulseUntil=performance.now()+2400;
     activeRoom.reward.visible=false;
     return true;
   };
@@ -807,7 +822,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const hitAge=Math.max(0,now-lastHitAt);
     const hitPulse=hitAge<180?1+(.35*(1-hitAge/180)):1;
     upgradeEmitter.scale.setScalar(hitPulse);
-    muzzle.scale.setScalar((1+weaponTier*.19)*(now<muzzleFlashUntil?1.8:1));
+    muzzle.scale.setScalar((1+weaponTier*.19)*(now<muzzleFlashUntil?1.8:1)*(now<upgradePulseUntil?1.3:1));
     // A successful hit briefly changes the emitter color, giving immediate
     // readable feedback even on small touch screens.
     if(now<hitFeedbackUntil)weaponLight.color.setHex(0xffe0a0);
@@ -827,6 +842,21 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       if(room.reward.visible){
         room.reward.position.y=1.35+Math.sin(time*2.3)*.09;
         room.reward.rotation.y+=dt*.7;
+      }
+    }
+    // After the guard fight, the operator physically rushes to each locked
+    // safe. The question appears only after reaching and testing the lock.
+    if(phase==='safes'&&activeRoom&&safeApproach&&!safeApproach.ready){
+      const targetX=activeRoom.group.position.x-3.32+safeApproach.index*2.18;
+      const targetZ=activeRoom.info.z-2.22;
+      const dx=targetX-player.x,dz=targetZ-player.z;
+      const distance=Math.hypot(dx,dz);
+      const step=Math.min(distance,6.6*dt);
+      if(distance>.001){player.x+=dx/distance*step;player.z+=dz/distance*step;}
+      yaw=THREE.MathUtils.damp(yaw,0,9,dt);
+      if(distance<.13){
+        safeApproach.ready=true;
+        events.onSafeReady?.(safeApproach.index);
       }
     }
     let moving=false;
@@ -1106,7 +1136,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const restartRoom=()=>{if(!activeRoom||phase!=='dead')return;nextShotAt=0;shotKick=0;muzzleFlashUntil=0;hitFeedbackUntil=0;lastHitAt=-10000;controls.clear();input.forward=input.strafe=0;sprint=false;crouch=false;vy=0;player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);resetThreats();};
   const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4||!rewardCollected)return false;emit('victory','vault');return true;};
   return {
-    start,travelTo,enterRoom,exitRoom,openSafe,collectReward,fire,jump,look,setCrouch,setMovement,setWeaponTier,
+    start,travelTo,enterRoom,exitRoom,approachSafe,openSafe,collectReward,fire,jump,look,setCrouch,setMovement,setWeaponTier,
     restartRoom,finish,setAllowed,setLanguage,
     getRoom(){return activeRoom?.info.id??null;},
     setPaused(value:boolean){paused=value;last=performance.now();},
