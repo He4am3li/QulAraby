@@ -81,7 +81,9 @@ function makeLabel(text:string,color='#e5d4aa'){
 export function createSecretMission(container:HTMLElement, events:SecretEvents, language:'ar'|'en') {
   const phone=window.matchMedia('(pointer:coarse), (max-width:900px)').matches;
   const renderer=new THREE.WebGLRenderer({antialias:!phone,alpha:false,powerPreference:phone?'low-power':'high-performance'});
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,phone?0.75:1.25));
+  const basePixelRatio=Math.min(devicePixelRatio||1,phone?0.75:1.25);
+  let renderPixelRatio=basePixelRatio;
+  renderer.setPixelRatio(renderPixelRatio);
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=1.35;
@@ -1043,6 +1045,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const lost=(e:Event)=>{e.preventDefault();paused=true;events.onError('Graphics context interrupted; use Restart');};
   canvas.addEventListener('webglcontextlost',lost);
 
+  // Adapt mobile render resolution only after sustained performance changes.
+  // Hysteresis prevents frequent GPU render-target reallocations and visual flicker.
+  let perfElapsed=0,perfFrames=0,perfCooldown=0;
   const render=(now:number)=>{
     frame=requestAnimationFrame(render);
     if(disposed||document.hidden||paused){
@@ -1050,7 +1055,22 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       last=now;return;
     }
     if(phone&&now-last<1000/30)return;
-    const dt=clamp((now-last)/1000,0,.045);last=now;time+=dt;
+    const frameMs=now-last;
+    const dt=clamp(frameMs/1000,0,.045);last=now;time+=dt;
+    if(phone&&phase!=='intro'&&phase!=='entering'){
+      perfElapsed+=frameMs;perfFrames++;
+      if(perfElapsed>=4500){
+        const averageMs=perfElapsed/perfFrames;
+        const nextRatio=averageMs>43?Math.max(.5,renderPixelRatio-.1):
+          averageMs<29?Math.min(basePixelRatio,renderPixelRatio+.05):renderPixelRatio;
+        if(now>=perfCooldown&&Math.abs(nextRatio-renderPixelRatio)>.001){
+          renderPixelRatio=nextRatio;
+          renderer.setPixelRatio(renderPixelRatio);
+          perfCooldown=now+9000;
+        }
+        perfElapsed=0;perfFrames=0;
+      }
+    }
     shotKick=THREE.MathUtils.damp(shotKick,0,13,dt);
     // Hit-confirmation pulse gently fades; no additional geometry or textures.
     const hitAge=Math.max(0,now-lastHitAt);
