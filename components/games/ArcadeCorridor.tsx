@@ -145,6 +145,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const lastThreats=useRef(0);
   const safeRef=useRef(0);
   const heldDirections=useRef(new Set<'forward'|'backward'|'left'|'right'>());
+  const directionPointers=useRef(new Map<number,'forward'|'backward'|'left'|'right'>());
   const firePointers=useRef(new Set<number>());
   // Prevent the automatic reward timer and a manual tap from advancing the
   // same objective twice before React commits the next stage.
@@ -171,7 +172,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
             phaseRef.current=state;
             setPhase(state);
             if(state==='room-enter'){
-              heldDirections.current.clear();
+              heldDirections.current.clear();directionPointers.current.clear();
               lastThreats.current=0;
               setInput({forward:0,strafe:0,run:false});
               setCrouch(false);
@@ -183,7 +184,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
               setFrequency(0);setArchiveChoice(null);setDefenseSequence([]);
             }
             if(state==='hall'){
-              heldDirections.current.clear();
+              heldDirections.current.clear();directionPointers.current.clear();
               setRoom(null);
               setInput({forward:0,strafe:0,run:false});
               setCrouch(false);
@@ -248,7 +249,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   useEffect(()=>{
     engine.current?.setPaused(paused);
     if(paused){
-      heldDirections.current.clear();firePointers.current.clear();
+      heldDirections.current.clear();directionPointers.current.clear();firePointers.current.clear();
       engine.current?.setTriggerHeld(false);
       setInput(prev=>({...prev,forward:0,strafe:0,run:false}));
     }
@@ -340,10 +341,12 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
     const timer=setTimeout(()=>advanceSafe(),2000);
     return ()=>clearTimeout(timer);
   },[phase,safeStage,activeSafe,opened,paused,lootReady]);
-  const move=(kind:'forward'|'backward'|'left'|'right',down:boolean)=>{
-    if(down)heldDirections.current.add(kind);
-    else heldDirections.current.delete(kind);
+  const move=(kind:'forward'|'backward'|'left'|'right',down:boolean,pointerId:number)=>{
+    if(down)directionPointers.current.set(pointerId,kind);
+    else directionPointers.current.delete(pointerId);
     const held=heldDirections.current;
+    held.clear();
+    directionPointers.current.forEach(direction=>held.add(direction));
     setInput(prev=>({...prev,
       forward:Number(held.has('forward'))-Number(held.has('backward')),
       strafe:Number(held.has('right'))-Number(held.has('left'))
@@ -351,10 +354,10 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   };
   const hold=(kind:'forward'|'backward'|'left'|'right',icon:React.ReactNode)=>
     <button className="qul-secret-move" aria-label={kind}
-      onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);move(kind,true);}}
-      onPointerUp={()=>move(kind,false)}
-      onPointerCancel={()=>move(kind,false)}
-      onLostPointerCapture={()=>move(kind,false)}>{icon}</button>;
+      onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);move(kind,true,e.pointerId);}}
+      onPointerUp={e=>move(kind,false,e.pointerId)}
+      onPointerCancel={e=>move(kind,false,e.pointerId)}
+      onLostPointerCapture={e=>move(kind,false,e.pointerId)}>{icon}</button>;
   const location=room?SECRET_ROOMS.find(x=>x.id===room):null;
   const taskLabels:Record<SecretRoomId,{ar:string;en:string;unitAr:string;unitEn:string}>={
     depot:{ar:'استعادة الإمدادات',en:'RECOVER SUPPLIES',unitAr:'صندوق',unitEn:'CRATE'},
