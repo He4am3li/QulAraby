@@ -974,14 +974,20 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const clearKeyboard=()=>{controls.clear();sprint=false;touchTriggerHeld=false;input.forward=0;input.strafe=0;};
   window.addEventListener('blur',clearKeyboard);
   const canvas=renderer.domElement;
-  let pointerDown:{x:number;y:number;time:number}|null=null;
-  const pointerStart=(e:PointerEvent)=>{pointerDown={x:e.clientX,y:e.clientY,time:performance.now()};canvas.setPointerCapture(e.pointerId);};
+  let pointerDown:{id:number;x:number;y:number;startX:number;startY:number;time:number}|null=null;
+  const pointerStart=(e:PointerEvent)=>{
+    // Only the first active pointer owns the camera. A second finger must
+    // not steal the drag or trigger an accidental world interaction.
+    if(pointerDown)return;
+    pointerDown={id:e.pointerId,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,time:performance.now()};
+    canvas.setPointerCapture(e.pointerId);
+  };
   const pointerMove=(e:PointerEvent)=>{
-    if(!pointerDown)return;
+    if(!pointerDown||e.pointerId!==pointerDown.id)return;
     const dx=e.clientX-pointerDown.x,dy=e.clientY-pointerDown.y;
-    look(dx,dy);
+    if(Math.abs(e.clientX-pointerDown.startX)>8||Math.abs(e.clientY-pointerDown.startY)>8)pointerDown.time=0;
+    if(dx||dy)look(dx,dy);
     pointerDown.x=e.clientX;pointerDown.y=e.clientY;
-    pointerDown.time=0;
   };
   const instrumentRay=new THREE.Raycaster();
   const instrumentPointer=new THREE.Vector2();
@@ -1008,8 +1014,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     return true;
   };
   const pointerEnd=(e:PointerEvent)=>{
+    if(!pointerDown||e.pointerId!==pointerDown.id)return;
     if(e.type==='pointercancel'){pointerDown=null;return;}
-    if(pointerDown&&pointerDown.time>0&&performance.now()-pointerDown.time<280){
+    if(pointerDown.time>0&&performance.now()-pointerDown.time<280){
       if(phase==='intro')start();
       else if(phase==='safes')tapInstrument(e);
       else if(phase==='combat')fire();
