@@ -483,6 +483,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let shotKick=0;
   let muzzleFlashUntil=0;
   let hitFeedbackUntil=0;
+  let lastHitAt=-10000;
   let gateProgress=0;
   let safeIndex=0;
   let rewardCollected=false;
@@ -679,7 +680,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         }
       }
     }
-    if(hit)hitFeedbackUntil=performance.now()+125;
+    if(hit){hitFeedbackUntil=performance.now()+125;lastHitAt=performance.now();}
     events.onShot(hit);return hit;
   };
   const controls=new Set<string>();
@@ -734,6 +735,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(phone&&now-last<1000/30)return;
     const dt=clamp((now-last)/1000,0,.045);last=now;time+=dt;
     shotKick=THREE.MathUtils.damp(shotKick,0,13,dt);
+    // Hit-confirmation pulse gently fades; no additional geometry or textures.
+    const hitAge=Math.max(0,now-lastHitAt);
+    const hitPulse=hitAge<180?1+(.35*(1-hitAge/180)):1;
+    upgradeEmitter.scale.setScalar(hitPulse);
     muzzle.scale.setScalar((1+weaponTier*.19)*(now<muzzleFlashUntil?1.8:1));
     // A successful hit briefly changes the emitter color, giving immediate
     // readable feedback even on small touch screens.
@@ -998,7 +1003,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   events.onHealth(100);
   events.onThreats(0);
   const setLanguage=(value:'ar'|'en')=>{language=value;};
-  const restartRoom=()=>{if(!activeRoom||phase!=='dead')return;nextShotAt=0;shotKick=0;muzzleFlashUntil=0;hitFeedbackUntil=0;controls.clear();input.forward=input.strafe=0;sprint=false;crouch=false;vy=0;player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);resetThreats();};
+  const restartRoom=()=>{if(!activeRoom||phase!=='dead')return;nextShotAt=0;shotKick=0;muzzleFlashUntil=0;hitFeedbackUntil=0;lastHitAt=-10000;controls.clear();input.forward=input.strafe=0;sprint=false;crouch=false;vy=0;player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);resetThreats();};
   const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4||!rewardCollected)return false;emit('victory','vault');return true;};
   return {
     start,travelTo,enterRoom,exitRoom,openSafe,collectReward,fire,jump,look,setCrouch,setMovement,setWeaponTier,
