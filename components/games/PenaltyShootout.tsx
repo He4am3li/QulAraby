@@ -496,17 +496,17 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
           <img
             src={stadiumPanorama}
             alt="Stadium Field"
-            className="w-full h-full object-cover filter brightness-[0.55]"
+            className="w-full h-full object-cover object-center filter brightness-[0.68] saturate-[1.15]"
           />
 
           {/* Stadium Floodlights & Green Pitch Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/40 via-transparent to-slate-950/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/35 via-transparent to-slate-950/75" />
 
           {/* The Goal Structure (إطار المرمى والشباك الواقعية في المنتصف) */}
-          <div className="absolute top-[28%] md:top-[26%] left-1/2 -translate-x-1/2 w-[82%] max-w-2xl h-44 md:h-52 border-x-8 border-t-8 border-white rounded-t-lg bg-white/[0.04] backdrop-blur-[1px] shadow-[0_20px_50px_rgba(0,0,0,0.9)] flex items-end justify-center">
+          <div className="absolute top-[28%] md:top-[26%] left-1/2 -translate-x-1/2 w-[82%] max-w-2xl h-44 md:h-52 border-x-[7px] border-t-[7px] border-white rounded-t-lg bg-white/[0.025] shadow-[0_15px_45px_rgba(0,0,0,0.75),0_0_16px_rgba(255,255,255,0.22)] flex items-end justify-center">
 
             {/* Real Goal Net Mesh Grid */}
-            <div className={`absolute inset-0 border-b-2 border-white/40 bg-[radial-gradient(#ffffff33_1px,transparent_1px)] [background-size:14px_14px] transition-all duration-300 ${
+            <div className={`absolute inset-0 border-b-2 border-white/40 bg-[linear-gradient(90deg,transparent_95%,rgba(255,255,255,.18)_96%),linear-gradient(0deg,transparent_94%,rgba(255,255,255,.18)_95%)] [background-size:21px_18px] transition-all duration-300 ${
               shotPhase === 'goal' ? 'scale-105 bg-white/[0.12] shadow-[inset_0_0_40px_rgba(16,185,129,0.5)]' : ''
             }`} />
 
@@ -583,36 +583,23 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
               {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
             </button>
 
-            {/* Stadium Match Counter */}
-            <div className="bg-slate-950/90 border border-amber-400/60 px-5 py-2 rounded-2xl backdrop-blur-xl shadow-2xl flex items-center gap-4">
-              <div className="text-right">
-                <div className="text-[10px] text-amber-400 font-bold">الركلة {currentRound + 1} من {totalRounds}</div>
-                <div className="text-sm md:text-base font-black text-white">الأهداف: {score}</div>
+            {/* Stadium scoreboard: interactive live match result, inspired by the supplied score-counter concept. */}
+            <div className="relative flex min-w-0 items-center gap-2 sm:gap-4 rounded-xl border border-amber-300/60 bg-[#071620]/95 px-3 sm:px-5 py-2 shadow-[0_10px_30px_rgba(0,0,0,.65),inset_0_1px_0_rgba(255,255,255,.15)] backdrop-blur-xl" aria-live="polite" aria-label={`لوحة النتيجة: ${score} أهداف، الركلة ${currentRound + 1} من ${totalRounds}`}>
+              <div className="flex flex-col items-center border-l border-white/15 pl-3 sm:pl-5">
+                <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-amber-300">النتيجة</span>
+                <div className="flex items-baseline gap-1.5 text-2xl sm:text-3xl font-black tabular-nums text-white drop-shadow-[0_0_12px_rgba(251,191,36,.45)]">
+                  <span className="text-amber-300">{score}</span><span className="text-sm text-white/40">:</span><span>{totalRounds - score}</span>
+                </div>
+                <span className="text-[9px] text-slate-300">أهداف : متبقية / ضائعة</span>
               </div>
-
-              <div className="h-5 w-px bg-white/20" />
-
-              {/* 5 Penalty Round Dots */}
-              <div className="flex items-center gap-1.5">
-                {[0, 1, 2, 3, 4].map(idx => {
-                  const res = roundsResult[idx];
-                  return (
-                    <span
-                      key={idx}
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${
-                        res === 'goal'
-                          ? 'bg-emerald-500 border-emerald-300 text-white shadow-[0_0_8px_#10b981]'
-                          : res === 'miss'
-                            ? 'bg-rose-600 border-rose-300 text-white'
-                            : idx === currentRound
-                              ? 'bg-amber-400/20 border-amber-400 text-amber-300 animate-pulse'
-                              : 'bg-slate-800 border-white/20 text-slate-500'
-                      }`}
-                    >
-                      {res === 'goal' ? '⚽' : res === 'miss' ? '✕' : idx + 1}
-                    </span>
-                  );
-                })}
+              <div className="flex min-w-0 flex-col items-center gap-1.5">
+                <span className="text-[10px] sm:text-xs font-black text-white">الركلة {currentRound + 1} / {totalRounds}</span>
+                <div className="flex gap-1 sm:gap-1.5" dir="ltr">
+                  {Array.from({ length: totalRounds }, (_, idx) => {
+                    const result = roundsResult[idx];
+                    return <span key={idx} className={`flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full border text-[10px] font-black ${result === 'goal' ? 'border-emerald-300 bg-emerald-600 text-white' : result === 'miss' ? 'border-rose-300 bg-rose-700 text-white' : idx === currentRound ? 'border-amber-300 bg-amber-300/20 text-amber-200 animate-pulse' : 'border-white/20 bg-slate-800 text-slate-400'}`}>{result === 'goal' ? '✓' : result === 'miss' ? '×' : idx + 1}</span>;
+                  })}
+                </div>
               </div>
             </div>
 
@@ -629,7 +616,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
           </div>
 
           {/* 2. The Orange Question Card: Right below the counter, above the goal net! */}
-          <div className="w-full max-w-2xl bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 border-2 border-amber-300/80 rounded-2xl px-5 py-3 text-center shadow-[0_10px_35px_rgba(245,158,11,0.5)] backdrop-blur-md">
+          <div className="w-full max-w-2xl bg-gradient-to-r from-[#152a32]/95 via-[#1d3640]/95 to-[#152a32]/95 border border-amber-300/60 rounded-2xl px-5 py-3 text-center shadow-[0_12px_35px_rgba(0,0,0,0.55)] backdrop-blur-md">
             <div className="text-[10px] md:text-xs font-black text-amber-100 uppercase tracking-widest mb-0.5 opacity-90">
               {currentQuestion.category}
             </div>
