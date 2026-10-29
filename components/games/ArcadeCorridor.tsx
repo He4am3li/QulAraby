@@ -295,6 +295,13 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
       onPointerCancel={()=>move(kind,false)}
       onLostPointerCapture={()=>move(kind,false)}>{icon}</button>;
   const location=room?SECRET_ROOMS.find(x=>x.id===room):null;
+  const taskLabels:Record<SecretRoomId,{ar:string;en:string;unitAr:string;unitEn:string}>={
+    depot:{ar:'استعادة الإمدادات',en:'RECOVER SUPPLIES',unitAr:'صندوق',unitEn:'CRATE'},
+    comms:{ar:'إعادة تشغيل الاتصالات',en:'RESTORE COMMUNICATIONS',unitAr:'محطة',unitEn:'TERMINAL'},
+    archive:{ar:'استرجاع الملفات السرية',en:'RECOVER CLASSIFIED FILES',unitAr:'ملف',unitEn:'FILE'},
+    vault:{ar:'تعطيل نظام الحماية',en:'DISABLE DEFENSE GRID',unitAr:'دائرة',unitEn:'CIRCUIT'}
+  };
+  const task=room?taskLabels[room]:null;
   const accessible=SECRET_ROOMS.filter(r=>allowed.includes(r.id));
   const gear=completed.length;
   return (
@@ -367,8 +374,8 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
       {ready&&phase==='safes'&&room&&safeStage!=='approach'&&
         <div className="qul-secret-vault-panel">
           <div className="qul-secret-vault-header">
-            <div><span className="qul-secret-sector-clear"><ShieldCheck size={13}/>{ar?'تم تأمين الغرفة · انتهت مواجهة الحراس':'SECTOR SECURED · GUARDS CLEARED'}</span><span>SECURE SAFE SYSTEM / {MISSIONS[room].subtitle.en}</span>
-              <h2>{ar?location?.ar:location?.en}</h2>
+            <div><span className="qul-secret-sector-clear"><ShieldCheck size={13}/>{ar?'تم تأمين الغرفة · انتهت مواجهة الحراس':'SECTOR SECURED · GUARDS CLEARED'}</span><span>{task?.en} / {MISSIONS[room].subtitle.en}</span>
+              <h2>{ar?task?.ar:task?.en}</h2>
               <p>{ar?MISSIONS[room].skills.ar:MISSIONS[room].skills.en}</p>
             </div>
             <div className="qul-secret-vault-progress">{opened.filter(Boolean).length}/4</div>
@@ -376,7 +383,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
           <div className="qul-secret-vault-tabs">
             {[0,1,2,3].map(i=><div key={i} className={opened[i]?'open':i===activeSafe?'active':'locked'}>
               {opened[i]?<Check size={14}/>:<LockKeyhole size={13}/>}
-              {ar?'خزنة':'SAFE'} {i+1}
+              {ar?task?.unitAr:task?.unitEn} {i+1}
             </div>)}
           </div>
           {selectedPin==='wrong'&&<div className="qul-secret-error">{ar?'شفرة خاطئة، أعد التفكير.':'Incorrect code. Try again.'}</div>}
