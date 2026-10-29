@@ -1107,12 +1107,17 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     hinges.forEach((h,i)=>h.rotation.y=(i?1:-1)*ease(gateProgress)*1.55);
     gate.visible=phase==='intro'||(phase==='entering'&&player.z>17.0);
     for(const room of rooms){
+      const near=room===activeRoom || Math.abs(player.z-room.info.z)<4.4;
+      // Distant rooms are culled already; skip their cabinet, loot and door
+      // animation updates as well. Keep the active room alive through exits.
+      if(room.group.visible!==near)room.group.visible=near;
+      if(!near)continue;
       room.doorAngle=THREE.MathUtils.damp(room.doorAngle,room.doorTarget,3,dt);
       room.door.rotation.y=room.doorAngle;
-      room.group.visible=room===activeRoom || Math.abs(player.z-room.info.z)<4.4;
-      for(const s of room.safes){
-        s.opened=THREE.MathUtils.damp(s.opened,s.target,4.3,dt);
-        s.door.rotation.y=s.opened;
+      for(const safe of room.safes){
+        if(Math.abs(safe.opened-safe.target)<.001)continue;
+        safe.opened=THREE.MathUtils.damp(safe.opened,safe.target,4.3,dt);
+        safe.door.rotation.y=safe.opened;
       }
       if(room.reward.visible){
         room.reward.position.y=1.35+Math.sin(time*2.3)*.09;
