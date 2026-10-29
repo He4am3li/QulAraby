@@ -1096,6 +1096,14 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const lost=(e:Event)=>{e.preventDefault();paused=true;events.onError('Graphics context interrupted; use Restart');};
   canvas.addEventListener('webglcontextlost',lost);
 
+  // Opt-in diagnostics: append ?perf=1 to the game URL. No overlay in normal play.
+  const showPerf=/(?:[?&])perf=1(?:&|$)/.test(window.location.search+'\u0026'+window.location.hash.replace('#','?'));
+  const perfPanel=showPerf?document.createElement('div'):null;
+  if(perfPanel){
+    perfPanel.style.cssText='position:absolute;top:8px;left:8px;z-index:30;padding:6px 9px;border-radius:6px;background:rgba(0,0,0,.76);color:#b8f6da;font:11px/1.5 monospace;pointer-events:none;white-space:pre;direction:ltr;text-align:left';
+    container.appendChild(perfPanel);
+  }
+  let statsTime=0,statsFrames=0,statsDrawCalls=0,statsTriangles=0;
   // Adapt mobile render resolution only after sustained performance changes.
   // Hysteresis prevents frequent GPU render-target reallocations and visual flicker.
   let perfElapsed=0,perfFrames=0,perfCooldown=0;
@@ -1662,6 +1670,18 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       if(turret)turret.root.rotation.y+=Math.sin(time*.7)*.006;
     }
     renderer.render(scene,camera);
+    if(perfPanel){
+      statsTime+=frameMs;statsFrames++;
+      statsDrawCalls+=renderer.info.render.calls;
+      statsTriangles+=renderer.info.render.triangles;
+      if(statsTime>=1500){
+        const fps=Math.round(statsFrames*1000/statsTime);
+        const draws=Math.round(statsDrawCalls/statsFrames);
+        const tris=Math.round(statsTriangles/statsFrames);
+        perfPanel.textContent='FPS '+fps+' | Draw '+draws+' | Tri '+tris+' | DPR '+renderPixelRatio.toFixed(2)+' | '+phase;
+        statsTime=0;statsFrames=0;statsDrawCalls=0;statsTriangles=0;
+      }
+    }
   };
   frame=requestAnimationFrame(render);
   events.onPhase('intro');
@@ -1709,6 +1729,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       materials.forEach(m=>m.dispose());
       textures.forEach(t=>t.dispose());
       renderer.dispose();
+      perfPanel?.remove();
       canvas.remove();
     }
   };
