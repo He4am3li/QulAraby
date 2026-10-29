@@ -1143,15 +1143,28 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
           player.copy(through);
           yaw=lerp(-r.info.side*Math.PI/2,0,ease((t-.78)/.22));
         }
+      }else if(transition.type==='exit'&&transition.room){
+        // Retrace the actual doorway instead of cutting diagonally through
+        // the room's entrance wall when exiting from the rear cabinets.
+        const r=transition.room;
+        const insideDoor=new THREE.Vector3(r.group.position.x,0,r.info.z+1.8);
+        const corridorDoor=new THREE.Vector3(0,0,r.info.z+1.8);
+        const sideFacing=-r.info.side*Math.PI/2;
+        if(t<.4){
+          player.lerpVectors(transition.from,insideDoor,ease(t/.4));
+          const dx=insideDoor.x-transition.from.x,dz=insideDoor.z-transition.from.z;
+          const facing=Math.atan2(-dx,-dz);
+          yaw=transition.fromYaw+Math.atan2(Math.sin(facing-transition.fromYaw),Math.cos(facing-transition.fromYaw))*ease(t/.4);
+        }else if(t<.82){
+          player.lerpVectors(insideDoor,corridorDoor,ease((t-.4)/.42));
+          yaw=sideFacing;
+        }else{
+          player.lerpVectors(corridorDoor,transition.to,ease((t-.82)/.18));
+          yaw=sideFacing+Math.atan2(Math.sin(-sideFacing),Math.cos(-sideFacing))*ease((t-.82)/.18);
+        }
       }else{
         player.lerpVectors(transition.from,transition.to,ease(t));
-        if(transition.type==='exit'&&transition.room){
-          const dx=transition.to.x-transition.from.x;
-          const dz=transition.to.z-transition.from.z;
-          const facing=Math.atan2(-dx,-dz);
-          yaw=lerp(transition.fromYaw,facing,ease(Math.min(1,t*3)));
-          if(t>.8)yaw=lerp(facing,0,ease((t-.8)/.2));
-        }else yaw=lerp(transition.fromYaw,transition.toYaw,ease(t));
+        yaw=lerp(transition.fromYaw,transition.toYaw,ease(t));
       }
       transition.time+=dt;
       moving=true;
