@@ -754,7 +754,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     available.doorTarget=available.info.side===1?1.6:-1.6;
     // Two-beat breach: line up at the door, then cross the threshold
     // before turning to face the threat. No sideways sliding animation.
-    transitionTo('enter',new THREE.Vector3(available.group.position.x,0,available.info.z+1.8),
+    transitionTo('enter',new THREE.Vector3(available.group.position.x,0,available.info.z),
       0,2.0,available);
     emit('room-enter',available.info.id);
     return true;
@@ -1150,8 +1150,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       const t=clamp(transition.time/transition.duration,0,1);
       if(transition.type==='enter'&&transition.room){
         const r=transition.room;
-        const staging=new THREE.Vector3(0,0,r.info.z+1.8);
-        const through=new THREE.Vector3(r.group.position.x,0,r.info.z+1.8);
+        const staging=new THREE.Vector3(0,0,r.info.z);
+        const through=new THREE.Vector3(r.group.position.x,0,r.info.z);
         if(t<.36){
           player.lerpVectors(transition.from,staging,ease(t/.36));
           yaw=0;
@@ -1163,11 +1163,13 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
           yaw=lerp(-r.info.side*Math.PI/2,0,ease((t-.78)/.22));
         }
       }else if(transition.type==='exit'&&transition.room){
+        // Cross at the center of the three-unit opening (z = room center),
+        // not z+1.8, which lies inside the solid entrance wall.
         // Retrace the actual doorway instead of cutting diagonally through
         // the room's entrance wall when exiting from the rear cabinets.
         const r=transition.room;
-        const insideDoor=new THREE.Vector3(r.group.position.x,0,r.info.z+1.8);
-        const corridorDoor=new THREE.Vector3(0,0,r.info.z+1.8);
+        const insideDoor=new THREE.Vector3(r.group.position.x,0,r.info.z);
+        const corridorDoor=new THREE.Vector3(0,0,r.info.z);
         const sideFacing=-r.info.side*Math.PI/2;
         if(t<.4){
           player.lerpVectors(transition.from,insideDoor,ease(t/.4));
