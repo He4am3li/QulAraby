@@ -120,6 +120,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const [threats,setThreats]=useState(0);
   const [opened,setOpened]=useState([false,false,false,false]);
   const [activeSafe,setActiveSafe]=useState(0);
+  const [safeStage,setSafeStage]=useState<'approach'|'challenge'|'unlock'>('approach');
   const [selectedPin,setSelectedPin]=useState<string|null>(null);
   const [hitFlash,setHitFlash]=useState(false);
   const [documents,setDocuments]=useState(false);
@@ -166,7 +167,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
             }
             if(state==='combat'){
               setRoom(id||null);setOpened([false,false,false,false]);setActiveSafe(0);safeRef.current=0;
-              setSelectedPin(null);setHealth(100);
+              setSelectedPin(null);setSafeStage('approach');setHealth(100);
             }
             if(state==='hall'){
               setRoom(null);
@@ -187,6 +188,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
           },
           onHealth(value){if(!stopped)setHealth(value);},
           onWeaponChange(tier){if(!stopped)setSelectedWeapon(tier);},
+          onSafeReady(){if(!stopped)setSafeStage('challenge');},
           onThreats(n){
             if(stopped)return;
             if(n<lastThreats.current)setScore(x=>x+(lastThreats.current-n)*150);
@@ -229,8 +231,11 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
     rewardTimer.current=setTimeout(()=>setRewardToast(null),4100);
   };
 
+  useEffect(()=>{
+    if(phase==='safes'&&room&&safeStage==='approach')engine.current?.approachSafe(activeSafe);
+  },[phase,room,activeSafe,safeStage]);
   const answer=(idx:number)=>{
-    if(paused||!room||phase!=='safes'||opened[activeSafe]||selectedPin!==null)return;
+    if(paused||!room||phase!=='safes'||safeStage!=='challenge'||opened[activeSafe]||selectedPin!==null)return;
     const q=MISSIONS[room].safes[activeSafe];
     if(idx!==q.answer){
       setSelectedPin('wrong');
@@ -240,13 +245,14 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
     }
     if(!engine.current?.openSafe(activeSafe))return;
     setSelectedPin(q.pin);
+    setSafeStage('unlock');
     setOpened(prev=>prev.map((done,i)=>i===activeSafe?true:done));
     setScore(n=>n+125);
   };
   const advanceSafe=()=>{
     if(paused||!room||phase!=='safes'||!opened[activeSafe]||selectedPin==='wrong')return;
     if(activeSafe<3){
-      const index=activeSafe+1;safeRef.current=index;setActiveSafe(index);setSelectedPin(null);return;
+      const index=activeSafe+1;safeRef.current=index;setActiveSafe(index);setSelectedPin(null);setSafeStage('approach');return;
     }
     // Claim the visible 3D item from the final safe before recording success.
     if(!opened.every(Boolean)||!engine.current?.collectReward())return;
@@ -265,6 +271,11 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
     setScore(v=>v+400);
     engine.current?.exitRoom();
   };
+  useEffect(()=>{
+    if(phase!=='safes'||safeStage!=='unlock'||!opened[activeSafe])return;
+    const timer=setTimeout(()=>advanceSafe(),2000);
+    return ()=>clearTimeout(timer);
+  },[phase,safeStage,activeSafe,opened,paused]);
   const move=(kind:'forward'|'backward'|'left'|'right',down:boolean)=>{
     const axes:{[key:string]:Partial<Input>}={
       forward:{forward:down?1:0},backward:{forward:down?-1:0},
@@ -348,7 +359,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
         <small>{ar?'استخدم التصويب وإطلاق نبضات الطاقة. المشي البطيء والزحف يقللان احتمال إصابتك.':'Aim and fire energy pulses. Crouching and moving reduce your exposure.'}</small>
       </div>}
 
-      {ready&&phase==='safes'&&room&&
+      {ready&&phase==='safes'&&room&&safeStage!=='approach'&&
         <div className="qul-secret-vault-panel">
           <div className="qul-secret-vault-header">
             <div><span className="qul-secret-sector-clear"><ShieldCheck size={13}/>{ar?'تم تأمين الغرفة · انتهت مواجهة الحراس':'SECTOR SECURED · GUARDS CLEARED'}</span><span>SECURE SAFE SYSTEM / {MISSIONS[room].subtitle.en}</span>
@@ -367,9 +378,9 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
           {opened[activeSafe]&&selectedPin&&selectedPin!=='wrong'?(
             <div className="qul-secret-safe-result">
               <ShieldCheck size={32}/>
-              <strong>{ar?'فتحت الخزنة بنجاح':'SAFE UNLOCKED'}</strong>
+              <strong>{ar?'فُك القفل · الجندي يفتح الخزنة':'LOCK RELEASED · OPERATOR OPENING SAFE'}</strong>
               <span>PIN: {selectedPin}</span>
-              <p>{ar?'وجدت:':'Recovered:'} <b>{MISSIONS[room].safes[activeSafe].loot[lang]}</b></p>
+              <p>{ar?'الغنيمة:':'LOOT:'} <b>{activeSafe===0?(ar?'طلقات إضافية':'EXTRA AMMO'):activeSafe===1?(ar?'درع واقٍ':'ARMOR PLATE'):activeSafe===2?(ar?'وحدة تحسين التصويب':'AIM MODULE'):REWARDS[room][lang]}</b></p>
               {activeSafe===3&&<div className="qul-secret-equipment-reveal">
                 <Zap size={22}/><span>{ar?'المكافأة التي ستجمعها:':'REWARD TO COLLECT:'}</span>
                 <strong>{REWARDS[room][lang]}</strong>
