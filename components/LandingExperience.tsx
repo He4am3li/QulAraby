@@ -113,6 +113,7 @@ export function LandingCinematicHero({ lang, onExplore, onEnter }: { lang: Langu
         <div className="qul-story-copy">
           <span className="qul-story-overline"><span className="qul-story-dot"/> QUL LANGUAGE EXPERIENCE</span>
           <h1>{isAr ? <>تعلّم العربية <em>بطريقة تشعر بها.</em></> : <>Experience Arabic <em>in a new way.</em></>}</h1>
+          <span className="qul-story-slogan">{isAr ? 'حتى تقول: أنا عربي' : 'Until you can say: ANA ARABI'}</span>
           <p>{isAr ? 'من أول حرف إلى أول حكاية، كل خطوة في قُل تجربة تستحق أن تعيشها.' : 'From your first letter to your first story, every step with QUL is an experience.'}</p>
           <div className="qul-story-hero-actions">
             <button type="button" onClick={onExplore} className="qul-story-primary">{isAr ? 'اكتشف الرحلة' : 'Explore the journey'} <ArrowDown size={18}/></button>
