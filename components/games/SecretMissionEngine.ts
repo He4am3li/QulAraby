@@ -715,6 +715,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(key==='escape')exitRoom();
   };
   const keyUp=(e:KeyboardEvent)=>{controls.delete(e.key.toLowerCase());if(e.key.toLowerCase()==='shift')sprint=false;};
+  // Release held keys when focus leaves the game to avoid stuck movement/fire.
+  const clearKeyboard=()=>{controls.clear();sprint=false;};
+  window.addEventListener('blur',clearKeyboard);
   const canvas=renderer.domElement;
   let pointerDown:{x:number;y:number;time:number}|null=null;
   const pointerStart=(e:PointerEvent)=>{pointerDown={x:e.clientX,y:e.clientY,time:performance.now()};canvas.setPointerCapture(e.pointerId);};
@@ -1070,6 +1073,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       canvas.removeEventListener('webglcontextlost',lost);
       window.removeEventListener('keydown',keyDown);
       window.removeEventListener('keyup',keyUp);
+      window.removeEventListener('blur',clearKeyboard);
       modelMixer?.stopAllAction();
       for(const room of rooms)for(const enemy of room.enemies)enemy.mixer?.stopAllAction();
       const externalGeometries=new Set<THREE.BufferGeometry>();
