@@ -325,6 +325,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       label.position.set(0,2.53,.6);label.scale.set(1.36,.38,1);cabinet.add(label);
       const instrument=new THREE.Group();cabinet.add(instrument);
       instrument.position.set(0,0,.035);
+      // Enlarged invisible touch surface for mobile without visual clutter.
+      if(info.id!=='depot'){
+        const touchMaterial=material(new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+        poly(instrument,[1.24,.88,.025],touchMaterial,[0,1.46,1.03]);
+      }
       // A visible interactive instrument belongs to the 3D world rather than
       // existing solely as an overlay: tuning knob, document tray, or breaker.
       if(info.id==='comms'){
@@ -984,15 +989,23 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     instrumentRay.setFromCamera(instrumentPointer,camera);
     const hits=instrumentRay.intersectObjects(unit.instrument.children,true);
     if(!hits.length)return false;
+    // Ignore touches on a device behind other solid room geometry.
+    const allHits=instrumentRay.intersectObjects(activeRoom.group.children,true);
+    const firstSolid=allHits.find(hit=>{
+      const mesh=hit.object;
+      if(!(mesh instanceof THREE.Mesh)||!mesh.visible)return false;
+      const mat=mesh.material;
+      return !Array.isArray(mat)&&mat.opacity>=.1;
+    });
+    if(firstSolid&&firstSolid.distance<hits[0].distance-.1)return false;
     events.onInstrumentTap?.(activeRoom.info.id,safeIndex);
     return true;
   };
   const pointerEnd=(e:PointerEvent)=>{
     if(pointerDown&&pointerDown.time>0&&performance.now()-pointerDown.time<280){
       if(phase==='intro')start();
-      else if(phase==='safes'){
-        if(!tapInstrument(e))fire();
-      }else if(phase==='combat')fire();
+      else if(phase==='safes')tapInstrument(e);
+      else if(phase==='combat')fire();
     }
     pointerDown=null;
   };
