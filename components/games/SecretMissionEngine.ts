@@ -959,6 +959,13 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     }else{
       camera.position.x=clamp(camera.position.x,-2.55,2.55);
     }
+    // A shoulder camera must never intersect the operator: bring it forward
+    // if interpolation or tight corners collapse the camera boom.
+    const separation=camera.position.clone().sub(head);
+    const separationLength=separation.length();
+    if(separationLength<.75){
+      camera.position.copy(head).addScaledVector(separationLength>.001?separation.normalize():forward.clone().negate(),.75);
+    }
     camera.lookAt(lookTarget);
     for(const room of rooms)if(room.info.id==='vault'){
       // rotating boss warning light outside the target room
