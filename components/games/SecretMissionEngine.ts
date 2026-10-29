@@ -380,6 +380,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const interactionHands=new THREE.Group();playerRoot.add(interactionHands);
   const interactionSleeves:THREE.Mesh[]=[];
   let skeletalHands:THREE.Bone[]=[];
+  let weaponGrip:THREE.Bone|null=null;
   let skeletalShoulders:THREE.Bone[]=[];
   const lastReachRotations=new Map<THREE.Bone,THREE.Quaternion>();
   for(const side of [-1,1]){
@@ -398,6 +399,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     poly(heroFallback,[.28,.2,.4],black,[side*.19,.12,-.1]);
   }
   const heroWeapon=new THREE.Group();playerRoot.add(heroWeapon);
+  // The body-mounted fallback remains visible even if a downloaded soldier
+  // lacks compatible hand bones. An articulated hand grip is added below.
   const weaponBarrel=poly(heroWeapon,[.15,.16,.91],black,[0,0,-.33]);
   poly(heroWeapon,[.26,.14,.55],steel,[0,.11,-.18]);
   poly(heroWeapon,[.13,.32,.16],black,[0,-.22,.06]);
@@ -544,7 +547,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     avatar.add(model);heroFallback.visible=false;
     // Resolve actual skeleton hands once; when available, drive them through
     // their existing joints instead of displaying detached overlay arms.
-    skeletalHands=[];skeletalShoulders=[];lastReachRotations.clear();
+    skeletalHands=[];skeletalShoulders=[];lastReachRotations.clear();weaponGrip=null;
     for(const side of ['left','right']){
       let candidate:THREE.Bone|null=null;
       model.traverse(node=>{
@@ -554,6 +557,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       });
       if(candidate){
         skeletalHands.push(candidate);
+        if(side==='right')weaponGrip=candidate;
         let upper:THREE.Object3D|null=candidate.parent;
         while(upper&&upper!==model){
           if(upper instanceof THREE.Bone&&/upper.?arm|shoulder/i.test(upper.name))break;
@@ -570,9 +574,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     }
     modelAction=clips.get('idle')||null;modelAction?.play();
     for(const guard of guards)dressGuard(guard);
-    // Keep the gun at a reliably visible, body-relative carry position.
-    // Soldier.glb hand-bone axes vary with clips; parenting to the wrist
-    // previously made the weapon disappear inside the mesh.
+    // Use a body-space grip as a reliable initial pose; the update loop
+    // tracks the animated right hand without inheriting unpredictable GLB
+    // wrist axes that can bury the rifle inside the soldier mesh.
     heroWeapon.position.set(.38,1.15,-.48);
     heroWeapon.rotation.set(-.18,-.12,0);
     heroWeapon.scale.setScalar(.9);
