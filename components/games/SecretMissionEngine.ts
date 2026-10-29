@@ -671,6 +671,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(best){
       const damage=best.isBoss? (weaponTier>=3?3:0) : weaponTier>=2?2:1;
       best.hp-=damage;
+      // Non-lethal impacts briefly stagger the guard, visibly confirming
+      // that the projectile connected without disrupting pursuit logic.
+      if(best.hp>0&&damage>0){
+        best.root.rotation.z=Math.min(.23,best.root.rotation.z+.13);
+        best.cooldown=Math.max(best.cooldown,.42);
+      }
       if(best.hp<=0){
         best.alive=false;best.dying=0;
         events.onThreats(guards.filter(g=>g.alive).length);
@@ -850,6 +856,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
           if(guard.dying>1.7)guard.root.visible=false;
           continue;
         }
+        guard.root.rotation.z=THREE.MathUtils.damp(guard.root.rotation.z,0,10,dt);
         const dist=guard.root.getWorldPosition(new THREE.Vector3()).distanceTo(player);
         // Suspenseful stealth: patrols only engage after detecting the operator,
         // unless gunfire has already triggered the alarm. Prone movement hides better.
