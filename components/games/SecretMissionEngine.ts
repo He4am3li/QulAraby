@@ -317,10 +317,29 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       const indicator=material(new THREE.MeshBasicMaterial({color:0xff3c42}));
       poly(joint,[.28,.08,.045],indicator,[1.13,1.48,.1]);
       poly(cabinet,[1.54,.09,.12],tan,[0,.11,.78]);
-      const key=makeLabel(language==='ar'?'خزنة '+(i+1):'SAFE '+(i+1));
+      const unitNames=info.id==='depot'?['صندوق','CRATE']:info.id==='comms'?['محطة','RADIO']:info.id==='archive'?['ملف','FILE']:['دائرة','CIRCUIT'];
+      const key=makeLabel((language==='ar'?unitNames[0]:unitNames[1])+' '+(i+1));
       textures.push(key);
       const label=new THREE.Sprite(material(new THREE.SpriteMaterial({map:key,transparent:true,depthWrite:false})));
       label.position.set(0,2.53,.6);label.scale.set(1.36,.38,1);cabinet.add(label);
+      // A visible interactive instrument belongs to the 3D world rather than
+      // existing solely as an overlay: tuning knob, document tray, or breaker.
+      if(info.id==='comms'){
+        const dial=round(cabinet,.19,.09,cyan,[.42,1.42,.85],16);
+        dial.rotation.x=Math.PI/2;
+        poly(cabinet,[.03,.24,.045],amber,[.42,1.42,.96]);
+      }else if(info.id==='archive'){
+        for(let sheet=0;sheet<3;sheet++){
+          const paper=poly(cabinet,[.38,.015,.26],sheet===i%3?green:tan,[-.35+sheet*.33,1.45,.88]);
+          paper.rotation.z=(sheet-1)*.12;
+        }
+      }else if(info.id==='vault'){
+        for(let breaker=0;breaker<3;breaker++){
+          const x=-.36+breaker*.36;
+          poly(cabinet,[.15,.31,.07],breaker===i%3?amber:red,[x,1.44,.88]);
+          poly(cabinet,[.07,.17,.11],steel,[x,1.45,.96]);
+        }
+      }
       safes.push({door:joint,opened:0,target:0,name:label,indicator,contents});
     }
     // Physical loot in cabinet four: each room provides a piece of the
