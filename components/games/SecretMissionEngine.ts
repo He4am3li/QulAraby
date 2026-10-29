@@ -485,6 +485,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let transition:Traverse|null=null;
   let hp=100;
   let weaponTier=0;
+  let unlockedWeaponTier=0;
   let nextShotAt=0;
   let shotKick=0;
   let muzzleFlashUntil=0;
@@ -599,7 +600,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     return true;
   };
   const setWeaponTier=(tier:number)=>{
-    weaponTier=clamp(tier,0,4);
+    unlockedWeaponTier=Math.max(unlockedWeaponTier,clamp(tier,0,4));
+    weaponTier=clamp(tier,0,unlockedWeaponTier);
     muzzle.scale.setScalar(1+weaponTier*.19);
     upgradeRail.visible=weaponTier>=1;
     upgradeCoil.visible=weaponTier>=2;
@@ -705,6 +707,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(key==='c'&&!event.repeat)setCrouch(!crouch);
     if(key==='e'&&!event.repeat)enterRoom();
     if(key==='f'&&!event.repeat)fire();
+    // 1–5 select only weapons already earned from educational objectives.
+    if(/^[1-5]$/.test(key)&&!event.repeat){
+      const selected=Number(key)-1;
+      if(selected<=unlockedWeaponTier)setWeaponTier(selected);
+    }
     if(key==='escape')exitRoom();
   };
   const keyUp=(e:KeyboardEvent)=>{controls.delete(e.key.toLowerCase());if(e.key.toLowerCase()==='shift')sprint=false;};
@@ -756,6 +763,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // readable feedback even on small touch screens.
     if(now<hitFeedbackUntil)weaponLight.color.setHex(0xffe0a0);
     else weaponLight.color.setHex(weaponTier>=3?0xf1ba6c:weaponTier>=2?0x9cf3b4:0xa6effa);
+    if(controls.has('f'))fire();
     if(phase!=='intro')gateProgress=clamp(gateProgress+dt*.55,0,1);
     hinges.forEach((h,i)=>h.rotation.y=(i?1:-1)*ease(gateProgress)*1.55);
     gate.visible=phase==='intro'||(phase==='entering'&&player.z>17.0);
