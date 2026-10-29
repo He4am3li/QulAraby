@@ -7,9 +7,9 @@ export type SecretPhase = 'intro' | 'entering' | 'hall' | 'room-enter' | 'combat
 
 export const SECRET_ROOMS: { id: SecretRoomId; ar: string; en: string; z: number; side: -1 | 1; guards: number }[] = [
   { id:'depot', ar:'مخزن الإمدادات', en:'Supply Depot', z:3, side:-1, guards:1 },
-  { id:'comms', ar:'غرفة الاتصالات', en:'Communications', z:-15, side:1, guards:2 },
-  { id:'archive', ar:'غرفة الأرشيف', en:'Classified Archive', z:-33, side:-1, guards:3 },
-  { id:'vault', ar:'حجرة الحماية', en:'Defense Chamber', z:-51, side:1, guards:0 },
+  { id:'comms', ar:'غرفة الاتصالات', en:'Communications', z:-25, side:1, guards:2 },
+  { id:'archive', ar:'غرفة الأرشيف', en:'Classified Archive', z:-53, side:-1, guards:3 },
+  { id:'vault', ar:'حجرة الحماية', en:'Defense Chamber', z:-81, side:1, guards:0 },
 ];
 export type SecretEvents = {
   onPhase: (phase: SecretPhase, room?: SecretRoomId) => void;
@@ -182,8 +182,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     staticInstances.clear();
   };
   const corridor=new THREE.Group();scene.add(corridor);
-  poly(corridor,[6.6,.25,92],ground,[0,-.16,-20]);
-  poly(corridor,[6.6,.17,92],concrete,[0,3.67,-20]);
+  poly(corridor,[6.6,.25,124],ground,[0,-.16,-36]);
+  poly(corridor,[6.6,.17,124],concrete,[0,3.67,-36]);
   const sideWalls:[number,number][]=[[-3.3,-1],[3.3,1]];
   const rooms:Room[]=[];
   for(const [x,side] of sideWalls){
@@ -193,11 +193,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       if(prev>z+1.55)poly(corridor,[.22,3.5,prev-(z+1.55)],concrete,[x,1.75,(prev+z+1.55)/2]);
       prev=z-1.55;
     }
-    poly(corridor,[.22,3.5,prev+67],concrete,[x,1.75,(prev-67)/2]);
-    poly(corridor,[.22,.15,92],trim,[x,3.48,-20]);
-    poly(corridor,[.22,.12,92],trim,[x,.15,-20]);
+    poly(corridor,[.22,3.5,prev+99],concrete,[x,1.75,(prev-99)/2]);
+    poly(corridor,[.22,.15,124],trim,[x,3.48,-36]);
+    poly(corridor,[.22,.12,124],trim,[x,.15,-36]);
   }
-  for(let z=17;z>-65;z-=5.1){
+  for(let z=17;z>-97;z-=5.1){
     lightBar(corridor,z);
     for(const side of [-1,1]){
       queueStatic('wall-ribs',[.2,3.38,.14],trim,[side*3.17,1.74,z]);
@@ -215,10 +215,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const guideGlow=material(new THREE.MeshBasicMaterial({color:'#d99a4f'}));
   const securityGlow=material(new THREE.MeshBasicMaterial({color:'#5bbac7'}));
   const alertGlow=material(new THREE.MeshBasicMaterial({color:'#dd6256'}));
-  for(let z=18;z>-65;z-=2.7){
+  for(let z=18;z>-97;z-=2.7){
     for(const x of [-2.82,2.82])queueStatic('floor-guides',[.045,.012,1.35],guideGlow,[x,-.02,z]);
   }
-  for(let z=12;z>-65;z-=12){
+  for(let z=12;z>-97;z-=12){
     for(const x of [-3.11,3.11]){
       queueStatic('alert-beacons',[.08,.08,.62],alertGlow,[x,2.76,z]);
       queueStatic('security-beacons',[.08,.11,.78],securityGlow,[x,1.08,z-2.1]);
@@ -228,7 +228,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   // ribs make the bunker read as a designed military facility, not a box maze.
   const armorPanel=material(new THREE.MeshStandardMaterial({color:'#293c43',metalness:.62,roughness:.48}));
   const cautionStripe=material(new THREE.MeshBasicMaterial({color:'#dc9b54'}));
-  for(let z=16;z>-65;z-=6){
+  for(let z=16;z>-97;z-=6){
     for(const side of [-1,1]){
       const x=side*3.08;
       queueStatic('armor-panels',[.08,1.24,2.1],armorPanel,[x,1.84,z]);
@@ -239,8 +239,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   }
     // Ducts, conduit and warning boards create a recognisable tactical facility.
   for(const x of [-2.65,2.65]){
-    poly(corridor,[.14,.14,90],trim,[x,3.16,-20]);
-    poly(corridor,[.085,.085,90],tan,[x,.5,-20]);
+    poly(corridor,[.14,.14,122],trim,[x,3.16,-36]);
+    poly(corridor,[.085,.085,122],tan,[x,.5,-36]);
   }
   flushStatic(corridor);
   const signMaterial=(texture:THREE.CanvasTexture)=>
@@ -749,7 +749,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let paused=false,disposed=false;
   const emit=(next:SecretPhase,id?:SecretRoomId)=>{phase=next;events.onPhase(next,id);};
   const limitCorridor=(p:THREE.Vector3)=>{
-    p.z=clamp(p.z,-61,15);
+    p.z=clamp(p.z,-93,15);
     p.x=clamp(p.x,-2.42,2.42);
   };
   const roomBounds=(p:THREE.Vector3,room:Room)=>{
@@ -1035,6 +1035,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // Only the first active pointer owns the camera. A second finger must
     // not steal the drag or trigger an accidental world interaction.
     if(pointerDown)return;
+    if(e.pointerType==='mouse'&&e.button===2){e.preventDefault();input.forward=1;return;}
     pointerDown={id:e.pointerId,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,time:performance.now()};
     canvas.setPointerCapture(e.pointerId);
   };
@@ -1071,6 +1072,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     return true;
   };
   const pointerEnd=(e:PointerEvent)=>{
+    if(e.pointerType==='mouse'&&e.button===2){input.forward=0;return;}
     if(!pointerDown||e.pointerId!==pointerDown.id)return;
     if(paused||document.hidden||!document.hasFocus()){pointerDown=null;return;}
     if(e.type==='pointercancel'){pointerDown=null;return;}
@@ -1088,6 +1090,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     camera.fov=w<650?71:65;camera.updateProjectionMatrix();
   };
   const observer=new ResizeObserver(resize);observer.observe(container);resize();
+  const preventMenu=(e:MouseEvent)=>e.preventDefault();
+  canvas.addEventListener('contextmenu',preventMenu);
   canvas.addEventListener('pointerdown',pointerStart);
   canvas.addEventListener('pointermove',pointerMove);
   canvas.addEventListener('pointerup',pointerEnd);
@@ -1707,6 +1711,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     setPaused(value:boolean){paused=value;if(value){touchTriggerHeld=false;controls.clear();input.forward=0;input.strafe=0;sprint=false;}last=performance.now();},
     dispose(){
       disposed=true;touchTriggerHeld=false;loaderDisposed=true;cancelAnimationFrame(frame);observer.disconnect();
+      canvas.removeEventListener('contextmenu',preventMenu);
       canvas.removeEventListener('pointerdown',pointerStart);
       canvas.removeEventListener('pointermove',pointerMove);
       canvas.removeEventListener('pointerup',pointerEnd);
