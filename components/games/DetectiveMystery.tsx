@@ -1986,12 +1986,12 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
             <button
               onClick={handleDownloadPdfReport}
               disabled={isGeneratingPdf}
-              className="absolute pointer-events-auto cursor-pointer rounded-xl transition-all duration-200 hover:bg-white/10 active:scale-[0.98] focus:outline-none"
+              className="absolute pointer-events-auto cursor-pointer rounded-xl transition-all duration-200 hover:bg-white/5 active:scale-[0.99] focus:outline-none"
               style={{
-                left: '28.5%',
-                width: '18.0%',
-                top: '84.0%',
-                height: '9.2%',
+                left: '45.9%',
+                width: '18.5%',
+                top: '74.5%',
+                height: '8.2%',
               }}
               title="تحميل الدليل TXT / PDF"
             />
@@ -1999,12 +1999,12 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
             {/* Button: القضية التالية - Right Button متمركز تماماً */}
             <button
               onClick={handleNextCase}
-              className="absolute pointer-events-auto cursor-pointer rounded-xl transition-all duration-200 hover:bg-white/10 active:scale-[0.98] focus:outline-none"
+              className="absolute pointer-events-auto cursor-pointer rounded-xl transition-all duration-200 hover:bg-white/5 active:scale-[0.99] focus:outline-none"
               style={{
-                left: '52.5%',
-                width: '18.0%',
-                top: '84.0%',
-                height: '9.2%',
+                left: '66.0%',
+                width: '18.6%',
+                top: '74.5%',
+                height: '8.2%',
               }}
               title="القضية التالية"
             />
