@@ -145,6 +145,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const lastThreats=useRef(0);
   const safeRef=useRef(0);
   const heldDirections=useRef(new Set<'forward'|'backward'|'left'|'right'>());
+  const firePointers=useRef(new Set<number>());
   // Prevent the automatic reward timer and a manual tap from advancing the
   // same objective twice before React commits the next stage.
   const advancingRef=useRef(false);
@@ -244,7 +245,25 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   useEffect(()=>engine.current?.setLanguage(lang),[lang,ready]);
   useEffect(()=>engine.current?.setMovement(input.forward,input.strafe,input.run),[input,ready]);
   useEffect(()=>engine.current?.setCrouch(crouch),[crouch,ready]);
-  useEffect(()=>engine.current?.setPaused(paused),[paused,ready]);
+  useEffect(()=>{
+    engine.current?.setPaused(paused);
+    if(paused){
+      heldDirections.current.clear();firePointers.current.clear();
+      engine.current?.setTriggerHeld(false);
+      setInput(prev=>({...prev,forward:0,strafe:0,run:false}));
+    }
+  },[paused,ready]);
+  useEffect(()=>{
+    const release=()=>{
+      heldDirections.current.clear();firePointers.current.clear();
+      engine.current?.setTriggerHeld(false);
+      setInput(prev=>({...prev,forward:0,strafe:0,run:false}));
+    };
+    window.addEventListener('blur',release);
+    const visibility=()=>{if(document.hidden)release();};
+    document.addEventListener('visibilitychange',visibility);
+    return ()=>{window.removeEventListener('blur',release);document.removeEventListener('visibilitychange',visibility);};
+  },[]);
   useEffect(()=>()=>{if(flashTimer.current)clearTimeout(flashTimer.current);if(rewardTimer.current)clearTimeout(rewardTimer.current);},[]);
   const announceReward=(id:SecretRoomId)=>{
     setRewardToast(id);
@@ -516,10 +535,10 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
               <Zap size={18}/><small>{ar?'ركض':'RUN'}</small>
             </button>
             <button className="qul-secret-action fire" disabled={phase==='hall'}
-              onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);engine.current?.setTriggerHeld(true);engine.current?.fire();}}
-              onPointerUp={()=>engine.current?.setTriggerHeld(false)}
-              onPointerCancel={()=>engine.current?.setTriggerHeld(false)}
-              onLostPointerCapture={()=>engine.current?.setTriggerHeld(false)}
+              onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);firePointers.current.add(e.pointerId);engine.current?.setTriggerHeld(true);engine.current?.fire();}}
+              onPointerUp={e=>{firePointers.current.delete(e.pointerId);engine.current?.setTriggerHeld(firePointers.current.size>0);}}
+              onPointerCancel={e=>{firePointers.current.delete(e.pointerId);engine.current?.setTriggerHeld(firePointers.current.size>0);}}
+              onLostPointerCapture={e=>{firePointers.current.delete(e.pointerId);engine.current?.setTriggerHeld(firePointers.current.size>0);}}
               aria-label={ar?'اضغط مطولًا لإطلاق النار':'Hold to fire'}><Crosshair size={26}/><small>{ar?'إطلاق مستمر':'HOLD FIRE'}</small></button>
           </div>
         </div>}
