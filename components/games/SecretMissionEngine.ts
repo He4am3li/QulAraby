@@ -921,8 +921,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // rather than letting it pass through walls and expose exterior geometry.
     if(roomView&&activeRoom){
       const local=camTarget.clone().sub(activeRoom.group.position);
-      local.x=clamp(local.x,-5.1,5.1);
-      local.z=clamp(local.z,-6.4,6.4);
+      // The playable interior is narrower than the room's decorative shell.
+      // Keep the camera inside the actual walkable footprint to avoid
+      // exposing exterior ceilings/walls when turning near a corner.
+      local.x=clamp(local.x,-4.05,4.05);
+      local.z=clamp(local.z,-3.48,3.48);
       camTarget.copy(local.add(activeRoom.group.position));
     }else{
       camTarget.x=clamp(camTarget.x,-2.55,2.55);
@@ -930,8 +933,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     camTarget.y=clamp(camTarget.y,1.0,2.75);
     const lookTarget=head.clone().addScaledVector(forward,roomView?5.1:4.5);
     camera.position.lerp(camTarget,clamp(dt*8,0,1));
-    const existingView=camFollow?lookTarget:lookTarget;
-    camera.lookAt(existingView);
+    camera.lookAt(lookTarget);
     for(const room of rooms)if(room.info.id==='vault'){
       // rotating boss warning light outside the target room
       const turret=room.enemies.find(g=>g.isBoss&&g.alive);
