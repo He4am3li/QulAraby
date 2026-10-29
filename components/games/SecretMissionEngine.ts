@@ -821,15 +821,6 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         // The room's fixed equipment blocks direct sight. Use a cheap
         // horizontal segment test instead of per-frame scene-wide raycasts.
         const guardWorld=guard.root.getWorldPosition(new THREE.Vector3());
-        const originLocal=activeRoom.group.worldToLocal(guardWorld.clone());
-        const playerLocal=activeRoom.group.worldToLocal(player.clone());
-        const crossesCover=(x:number,z:number,radius:number)=>{
-          const dx=playerLocal.x-originLocal.x,dz=playerLocal.z-originLocal.z;
-          const lengthSq=dx*dx+dz*dz;
-          if(lengthSq<.001)return false;
-          const t=clamp(((x-originLocal.x)*dx+(z-originLocal.z)*dz)/lengthSq,0,1);
-          return Math.hypot(originLocal.x+t*dx-x,originLocal.z+t*dz-z)<radius;
-        };
         const behindCabinets=cabinetOccludes(guardWorld,player,activeRoom);
         const clearSight=visible&&!behindCabinets;
         if(!guard.alerted){
