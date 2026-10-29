@@ -814,6 +814,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     }
     playerRoot.position.copy(player);
     playerRoot.rotation.y=yaw;
+    // Lean into strafing while running, giving the operator readable weight
+    // and direction without requiring another downloaded animation clip.
+    const lateralSpeed=(-Math.cos(yaw)*velocityX+Math.sin(yaw)*velocityZ);
+    const targetLean=crouch?0:clamp(lateralSpeed*.035,-.12,.12);
+    avatar.rotation.z=THREE.MathUtils.damp(avatar.rotation.z,targetLean,7,dt);
     // Prone crawling: the operator's torso rolls almost horizontal and lowers to the floor.
     avatar.rotation.x=THREE.MathUtils.damp(avatar.rotation.x,crouch?-1.22:0,7,dt);
     avatar.position.y=THREE.MathUtils.damp(avatar.position.y,crouch?.46:0,7,dt);
@@ -831,7 +836,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       chest.rotation.z=THREE.MathUtils.damp(chest.rotation.z,
         moving?Math.cos(time*gait*.5)*.045:0,7,dt);
       avatar.rotation.z=THREE.MathUtils.damp(avatar.rotation.z,
-        moving?Math.cos(time*gait)*.028:0,7,dt);
+        targetLean+(moving?Math.cos(time*gait)*.018:0),7,dt);
     }
     const weaponLift=danger?.035:0;
     // Grip a weapon in front of the character even if the remote skeletal rig fails.
