@@ -21,13 +21,12 @@ export function useRadioNarration(options: Options) {
   const utterance = useRef<SpeechSynthesisUtterance | null>(null);
   const audio = useRef<HTMLAudioElement | null>(null);
   const recordingURL = useRef('');
-  const refreshSpeechVolume = useRef<(() => void) | null>(null);
   const playback = useRef<'stopped' | 'playing' | 'paused'>('stopped');
 
   const stop = useCallback(() => {
     token.current++;
     if (utterance.current) window.speechSynthesis?.cancel();
-    utterance.current = null; refreshSpeechVolume.current = null;
+    utterance.current = null;
     if (audio.current) {
       audio.current.onended = null; audio.current.onerror = null;
       audio.current.pause(); audio.current.currentTime = 0;
@@ -70,8 +69,11 @@ export function useRadioNarration(options: Options) {
   }, [options.level, stop]);
 
   useEffect(() => {
+    // Adjust the playing audio immediately. Mutating the active speech utterance
+    // also keeps the next chunk at the selected volume without cancelling it.
+    // Cancelling on every dial movement used to restart the spoken sentence.
     if (audio.current) audio.current.volume = options.volume;
-    refreshSpeechVolume.current?.();
+    if (utterance.current) utterance.current.volume = options.volume;
   }, [options.volume]);
 
   const chooseVoice = (value: string) => {
@@ -104,7 +106,7 @@ export function useRadioNarration(options: Options) {
     const run = token.current;
     const ended = () => {
       if (run !== token.current) return;
-      playback.current = 'stopped'; utterance.current = null; refreshSpeechVolume.current = null;
+      playback.current = 'stopped'; utterance.current = null;
       onState(false, false); if (!sample) onEnd();
     };
     if (recordingURL.current && !sample) {
@@ -145,15 +147,6 @@ export function useRadioNarration(options: Options) {
         stop(); onError(lang === 'ar' ? 'تعذّر تشغيل صوت الجهاز. جرّب صوتًا عربيًا آخر أو تسجيلًا محليًا.' : 'Device voice failed. Try another Arabic voice or a local recording.');
       };
       playback.current = 'playing'; onState(true, false); window.speechSynthesis.speak(speech);
-    };
-    refreshSpeechVolume.current = () => {
-      const wasPaused = playback.current === 'paused';
-      utterance.current = null;
-      window.speechSynthesis.cancel();
-      speakNext();
-      if (wasPaused) {
-        window.speechSynthesis.pause(); playback.current = 'paused'; onState(false, true);
-      }
     };
     speakNext();
   };
