@@ -14,7 +14,11 @@ export function RadioVolumeDial({ value, onChange, lang }: Props) {
     <div className="w-16 h-16 bg-gradient-to-b from-slate-300 via-slate-100 to-slate-400 rounded-full border-4 border-[#2a1d15] shadow-[0_5px_15px_rgba(0,0,0,0.4)] flex items-center justify-center relative qul-original-radio-volume qul-radio-rotary-dial"
       role="slider" tabIndex={0} aria-label={lang === 'ar' ? 'مقبض صوت الراديو' : 'Radio volume dial'}
       aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value * 100)} aria-valuetext={`${Math.round(value * 100)}%`}
-      title={lang === 'ar' ? 'اسحب البكرة دائريًا لضبط الصوت' : 'Drag around the dial to adjust volume'}
+      title={lang === 'ar' ? 'أدر البكرة أو استخدم عجلة الفأرة لضبط الصوت' : 'Turn the dial or use the mouse wheel to adjust volume'}
+      onWheel={event => {
+        if (event.deltaY === 0) return;
+        onChange(clamp(value + (event.deltaY < 0 ? 0.05 : -0.05)));
+      }}
       onPointerDown={event => {
         if (event.button !== 0 || drag.current) return;
         const rect = event.currentTarget.getBoundingClientRect();
