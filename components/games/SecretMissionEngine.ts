@@ -762,8 +762,22 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         const toPlayer=player.clone().sub(guard.root.getWorldPosition(new THREE.Vector3()));
         toPlayer.y=0;
         const visible=toPlayer.lengthSq()<1.5||guardForward.dot(toPlayer.normalize())>-.15;
+        // The room's fixed equipment blocks direct sight. Use a cheap
+        // horizontal segment test instead of per-frame scene-wide raycasts.
+        const guardWorld=guard.root.getWorldPosition(new THREE.Vector3());
+        const originLocal=activeRoom.group.worldToLocal(guardWorld.clone());
+        const playerLocal=activeRoom.group.worldToLocal(player.clone());
+        const crossesCover=(x:number,z:number,radius:number)=>{
+          const dx=playerLocal.x-originLocal.x,dz=playerLocal.z-originLocal.z;
+          const lengthSq=dx*dx+dz*dz;
+          if(lengthSq<.001)return false;
+          const t=clamp(((x-originLocal.x)*dx+(z-originLocal.z)*dz)/lengthSq,0,1);
+          return Math.hypot(originLocal.x+t*dx-x,originLocal.z+t*dz-z)<radius;
+        };
+        const behindCabinets=[-3.32,-1.14,1.04,3.22].some(x=>crossesCover(x,-3.95,.86));
+        const clearSight=visible&&!behindCabinets;
         if(!guard.alerted){
-          if(dist<detectRadius&&visible)guard.awareness+=dt*(crouch?.55:sprint?2.8:1.6);
+          if(dist<detectRadius&&clearSight)guard.awareness+=dt*(crouch?.55:sprint?2.8:1.6);
           else guard.awareness=Math.max(0,guard.awareness-dt*.55);
           if(guard.awareness>1.1)guard.alerted=true;
           if(!guard.alerted){
