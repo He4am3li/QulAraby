@@ -791,10 +791,14 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         guard.root.rotation.y=Math.atan2(-dir.x,-dir.z);
         if(dist>3.1){
           const chase=(guard.isBoss?.12:.37)*dt;
-          guard.root.position.x+=dir.x*chase;guard.root.position.z+=dir.z*chase;
+          // Keep patrols inside the room; avoid guards clipping through walls.
+          guard.root.position.x=clamp(guard.root.position.x+dir.x*chase,-4.35,4.35);
+          guard.root.position.z=clamp(guard.root.position.z+dir.z*chase,-4.1,4.1);
         }
         guard.cooldown-=dt;
-        if(dist<13&&guard.cooldown<=0){
+        // A cabinet between the two characters is actual cover, not merely
+        // a visibility hint: enemies cannot damage the player through it.
+        if(dist<13&&clearSight&&guard.cooldown<=0){
           const risk=guard.isBoss?14:activeRoom.info.id==='archive'?10:8;
           const base=guard.isBoss?2.1:2.55;
           guard.cooldown=base + Math.random()*.9;
