@@ -2145,13 +2145,13 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
         <div className="absolute inset-0 z-20 pointer-events-none">
           {[
             // Row 0: Top Row (Col 2: right, Col 1: middle, Col 0: left)
-            { col: 2, row: 0, left: '69.2%', top: '13.5%', width: '13.5%', height: '26.0%' },
-            { col: 1, row: 0, left: '54.0%', top: '13.5%', width: '13.5%', height: '26.0%' },
-            { col: 0, row: 0, left: '38.8%', top: '13.5%', width: '13.5%', height: '26.0%' },
+            { col: 2, row: 0, left: '69.7%', top: '16.1%', width: '12.2%', height: '23.0%' },
+            { col: 1, row: 0, left: '54.6%', top: '16.1%', width: '12.2%', height: '23.0%' },
+            { col: 0, row: 0, left: '39.4%', top: '16.1%', width: '12.2%', height: '23.0%' },
             // Row 1: Bottom Row (Col 2: right, Col 1: middle, Col 0: left)
-            { col: 2, row: 1, left: '69.2%', top: '47.0%', width: '13.5%', height: '26.0%' },
-            { col: 1, row: 1, left: '54.0%', top: '47.0%', width: '13.5%', height: '26.0%' },
-            { col: 0, row: 1, left: '38.8%', top: '47.0%', width: '13.5%', height: '26.0%' },
+            { col: 2, row: 1, left: '69.7%', top: '49.2%', width: '12.2%', height: '23.0%' },
+            { col: 1, row: 1, left: '54.6%', top: '49.2%', width: '12.2%', height: '23.0%' },
+            { col: 0, row: 1, left: '39.4%', top: '49.2%', width: '12.2%', height: '23.0%' },
           ].map((pos, slotIdx) => {
             const suspect = caseSuspects[slotIdx];
             if (!suspect) return null;
@@ -2169,7 +2169,7 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
                     handleSuspectClick(suspect);
                   }
                 }}
-                className={`absolute pointer-events-auto rounded-md overflow-hidden cursor-pointer transition-all duration-300 select-none flex flex-col justify-between bg-stone-900/60 shadow-md ${
+                className={`absolute pointer-events-auto rounded-[3px] overflow-hidden cursor-pointer transition-transform duration-300 select-none flex flex-col bg-[#11181b] ring-1 ring-amber-200/35 ${
                   isJustStamped ? 'scale-95' : ''
                 } ${isShaking ? 'animate-[shake_0.4s_ease-in-out]' : ''}`}
                 style={{
@@ -2180,11 +2180,11 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
                 }}
               >
                 {/* Photo of the suspect: fitted cleanly without cutting top of head */}
-                <div className="relative w-full flex-1 overflow-hidden flex items-center justify-center p-0.5">
+                <div className="relative w-full min-h-0 flex-1 overflow-hidden">
                   <img 
                     src={suspect.image} 
                     alt={suspect.name} 
-                    className={`w-full h-full object-contain object-top pointer-events-none transition-all duration-300 ${
+                    className={`absolute inset-0 w-full h-full object-cover object-[center_22%] pointer-events-none transition-all duration-300 ${
                       isEliminated ? 'filter brightness-40 grayscale contrast-75' : 'filter brightness-100'
                     }`}
                     loading="eager"
@@ -2210,7 +2210,7 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
                 </div>
 
                 {/* Name Tag: pinned at the bottom floor of the frame just like Page 2 */}
-                <div className="w-full py-0.5 sm:py-1 bg-stone-950/95 border-t border-amber-600/50 flex items-center justify-center px-1 text-center shrink-0">
+                <div className="w-full h-[17%] min-h-0 bg-[#070b0d] border-t border-amber-600/60 flex items-center justify-center px-1 text-center shrink-0">
                   <span className={`font-black text-[11px] sm:text-xs md:text-sm truncate block tracking-wide ${isEliminated ? 'text-stone-500 line-through' : 'text-amber-200'}`}>
                     {suspect.name}
                   </span>
