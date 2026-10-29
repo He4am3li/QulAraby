@@ -198,6 +198,30 @@ class PenaltySoundEngine {
     } catch {}
   }
 
+  // Original, lightweight stadium cues (no externally licensed media required).
+  playCue(kind: 'select' | 'save' | 'countdown') {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const frequencies = kind === 'select' ? [540, 810] : kind === 'save' ? [320, 240, 170] : [660, 880];
+    frequencies.forEach((frequency, i) => {
+      const oscillator = ctx.createOscillator();
+      const volume = ctx.createGain();
+      const start = now + i * (kind === 'save' ? 0.13 : 0.085);
+      oscillator.type = kind === 'save' ? 'sawtooth' : 'sine';
+      oscillator.frequency.setValueAtTime(frequency, start);
+      volume.gain.setValueAtTime(0.0001, start);
+      volume.gain.exponentialRampToValueAtTime(kind === 'save' ? 0.065 : 0.09, start + 0.015);
+      volume.gain.exponentialRampToValueAtTime(0.0001, start + 0.17);
+      oscillator.connect(volume);
+      volume.connect(ctx.destination);
+      oscillator.start(start);
+      oscillator.stop(start + 0.18);
+    });
+  }
+
   playWoodworkHit() {
     if (this.muted) return;
     this.init();
@@ -331,12 +355,14 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
     setLastShotResult(null);
     setScreen('match');
     soundRef.current.playWhistle();
+    soundRef.current.playCue('countdown');
   };
 
   // User clicked an answer option - Instant reaction without delay!
   const handleAnswerChoice = (option: { letter: string; text: string; correct: boolean }) => {
     if (shotPhase !== 'idle' || lastShotResult !== null) return;
 
+    soundRef.current.playCue('select');
     // Begin the run-up on selection; reserve the kick sound for ball contact.
     // The whistle is played at match start / between rounds, not on every click.
 
@@ -371,7 +397,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
           // تصدي الحارس أو العارضة
           setShotPhase('miss');
           soundRef.current.playWoodworkHit();
-          soundRef.current.playDespairGasp();
+          soundRef.current.playCue('save');
 
           setRoundsResult(prev => [...prev, 'miss']);
           setLastShotResult('miss');
@@ -510,6 +536,8 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
               shotPhase === 'goal' ? 'scale-105 bg-white/[0.12] shadow-[inset_0_0_40px_rgba(16,185,129,0.5)]' : ''
             }`} />
 
+            {/* The crossbar and goal posts remain in the same perspective as the pitch. */}
+            <div className="absolute -top-[7px] left-0 right-0 h-[5px] rounded-full bg-gradient-to-b from-white via-slate-100 to-slate-400 shadow-[0_2px_7px_rgba(255,255,255,.5)]" />
             {/* REALISTIC ATHLETIC GOALKEEPER (حارس المرمى الواقعي) */}
             <div className={`relative z-10 w-28 h-36 md:w-36 md:h-44 transition-all duration-300 ${
               shotPhase === 'runup' || shotPhase === 'idle'
@@ -526,6 +554,9 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
             </div>
           </div>
 
+          {/* Floodlight spill and penalty-box perspective enhance depth without adding heavy 3D rendering. */}
+          <div className="absolute bottom-0 left-1/2 w-[110%] h-[43%] -translate-x-1/2 bg-[repeating-linear-gradient(0deg,rgba(255,255,255,.025)_0px,rgba(255,255,255,.025)_24px,transparent_24px,transparent_54px)] opacity-60" />
+          <div className="absolute bottom-0 left-1/2 w-[86%] h-[45%] -translate-x-1/2 border-x border-t border-white/20 [clip-path:polygon(24%_0,76%_0,100%_100%,0_100%)]" />
           {/* Pitch White Lines (نقطة الجزاء وقوس منطقة الجزاء) */}
           <div className="absolute bottom-[24%] left-1/2 -translate-x-1/2 w-48 h-24 border-t-2 border-white/40 rounded-t-full pointer-events-none" />
           <div className="absolute bottom-[20%] left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_15px_#ffffff] pointer-events-none" />
@@ -632,6 +663,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
         ===================================================== */}
         <div className="relative z-30 p-4 md:p-6 flex flex-col items-center gap-3 max-w-3xl mx-auto w-full pointer-events-auto">
 
+          {/* Cinematic goal callout appears after the ball reaches the net. */}
           {/* Goal Notification */}
           {lastShotResult === 'goal' && (
             <div className="w-full bg-emerald-600/95 border-2 border-emerald-300 rounded-2xl py-3 px-5 text-center shadow-[0_0_50px_rgba(16,185,129,0.7)] backdrop-blur-xl animate-bounce">
