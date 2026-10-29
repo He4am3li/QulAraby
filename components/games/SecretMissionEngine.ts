@@ -346,6 +346,17 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   round(heroFallback,.32,.2,camo,[0,2.06,.01]);
   const heroArms:THREE.Mesh[]=[];
   const heroHands:THREE.Mesh[]=[];
+  // A low-poly reach rig stays available even when the remote GLTF soldier
+  // has no compatible hand bones. It is shown only during interactions.
+  const interactionHands=new THREE.Group();playerRoot.add(interactionHands);
+  const interactionSleeves:THREE.Mesh[]=[];
+  for(const side of [-1,1]){
+    const sleeve=round(interactionHands,.115,.48,armor,[side*.28,1.12,-.3]);
+    sleeve.rotation.x=Math.PI/2.8;
+    interactionSleeves.push(sleeve);
+    round(interactionHands,.115,.18,skin,[side*.28,1.18,-.58]);
+  }
+  interactionHands.visible=false;
   for(const side of [-1,1]){
     const arm=round(heroFallback,.13,.75,armor,[side*.49,1.28,-.13]);arm.rotation.z=side*.18;
     heroArms.push(arm);
@@ -1051,6 +1062,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const interactingSafe=phase==='safes'&&interactionElapsed>=0&&now<safeInteractionEnd;
     const reach=interactingSafe?Math.sin(Math.PI*clamp(interactionElapsed/1500,0,1)):
       pickupActive?Math.sin(Math.PI*pickupProgress)*.8:0;
+    interactionHands.visible=Boolean(model)&&(interactingSafe||pickupActive);
+    if(interactionHands.visible){
+      interactionHands.position.z=-reach*.24;
+      interactionSleeves.forEach((sleeve,i)=>{sleeve.rotation.x=1.05-reach*.38;sleeve.rotation.z=(i===0?-.12:.12)*reach;});
+    }
     heroArms.forEach((arm,index)=>{
       arm.rotation.x=THREE.MathUtils.damp(arm.rotation.x,reach*(index===0?-1.15:-.72),12,dt);
       arm.rotation.z=THREE.MathUtils.damp(arm.rotation.z,(index===0?-.18:.18)+reach*(index===0?.25:-.24),12,dt);
@@ -1063,6 +1079,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // During lock interaction the weapon is holstered rather than clipping
     // through the safe door; it returns smoothly as the operator collects loot.
     heroWeapon.visible=!interactingSafe&&!pickupActive;
+    if(model&&interactionHands.visible){
+      // Hide the fallback soldier's body, but keep its reach cue in the
+      // correct local space for the loaded animated character.
+      heroFallback.visible=false;
+    }
     // Procedural movement layers keep the fallback operator expressive even
     // before the external skeletal model is available on a slow connection.
     const danger=phase==='combat'&&guards.some(g=>g.alive&&g.alerted);
