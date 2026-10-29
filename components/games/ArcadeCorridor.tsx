@@ -338,7 +338,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
       </div>}
       {ready&&phase==='hall'&&nearby&&allowed.includes(nearby)&&
         <button className="qul-secret-enter" onClick={()=>engine.current?.enterRoom(nearby)}>
-          <DoorOpen size={18}/>{ar?'ادخل الغرفة':'ENTER ROOM'}
+          <DoorOpen size={18}/>{ar?'اقتحام تكتيكي':'TACTICAL BREACH'}
         </button>}
       {ready&&phase==='hall'&&
         <div className="qul-secret-minimap">
@@ -453,11 +453,15 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
               <Zap size={18}/><small>{ar?'ركض':'RUN'}</small>
             </button>
             <button className="qul-secret-action fire" disabled={phase==='hall'}
-              onClick={()=>engine.current?.fire()}><Crosshair size={26}/><small>{ar?'إطلاق':'FIRE'}</small></button>
+              onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);engine.current?.setTriggerHeld(true);engine.current?.fire();}}
+              onPointerUp={()=>engine.current?.setTriggerHeld(false)}
+              onPointerCancel={()=>engine.current?.setTriggerHeld(false)}
+              onLostPointerCapture={()=>engine.current?.setTriggerHeld(false)}
+              aria-label={ar?'اضغط مطولًا لإطلاق النار':'Hold to fire'}><Crosshair size={26}/><small>{ar?'إطلاق مستمر':'HOLD FIRE'}</small></button>
           </div>
         </div>}
       {ready&&<div className="qul-secret-bottom-help">{ar?
-        'WASD للحركة · حرّك الكاميرا بالسحب · Shift للجري · Space للقفز · C للزحف · F للإطلاق · E للدخول':
+        'WASD حركة · الفأرة لتوجيه الكاميرا · Shift ركض · Space قفز · C انحناء · اضغط F للإطلاق · R تلقيم · E اقتحام':
         'WASD MOVE · DRAG CAMERA · SHIFT SPRINT · SPACE JUMP · C CROUCH · F FIRE · E ENTER'}</div>}
       {ready&&<button className="qul-secret-pause" onClick={()=>setPaused(p=>!p)}>
         {paused?(ar?'استئناف':'RESUME'):(ar?'إيقاف مؤقت':'PAUSE')}
