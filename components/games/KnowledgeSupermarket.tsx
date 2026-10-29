@@ -2636,6 +2636,8 @@ export const KnowledgeSupermarket: React.FC<KnowledgeSupermarketProps> = ({ onBa
 
     return (
       <div className="relative w-full h-full min-h-screen bg-slate-950 overflow-hidden flex items-center justify-center font-sans select-none" dir="rtl">
+        {/* All four hotspots share the source artwork's exact 16:9 coordinate system. */}
+        <div className="absolute inset-0 m-auto w-full max-h-full aspect-video" style={{ maxWidth: 'calc(100vh * 16 / 9)' }}>
         {/* Full-Width Uncut Supermarket Grand Aisle Image */}
         <img 
           src={aisleHallImg} 
@@ -2644,18 +2646,6 @@ export const KnowledgeSupermarket: React.FC<KnowledgeSupermarketProps> = ({ onBa
           decoding="sync"
           className="absolute inset-0 w-full h-full object-fill select-none pointer-events-none"
         />
-
-        {/* Top-Right Return Arrow (Unified Exit to Games List) */}
-        <div className="absolute top-4 right-4 z-50 pointer-events-auto">
-          <button 
-            onClick={onBack}
-            className="p-2.5 bg-black/60 hover:bg-black/85 backdrop-blur-md border border-white/20 text-white rounded-xl shadow-xl transition active:scale-95 cursor-pointer flex items-center justify-center"
-            title="العودة"
-            aria-label="العودة"
-          >
-            <ArrowRight size={18} />
-          </button>
-        </div>
 
         {/* Completely Invisible Clickable Hotspots: Zero frames, zero borders */}
         {boardsConfig.map(({ id, title, left, top, width, height }) => {
@@ -2671,7 +2661,7 @@ export const KnowledgeSupermarket: React.FC<KnowledgeSupermarketProps> = ({ onBa
                 width,
                 height
               }}
-              className="absolute cursor-pointer bg-transparent border-0 outline-none select-none focus:outline-none hover:bg-white/[0.04] active:scale-[0.99] transition-all rounded-xl"
+              className="absolute cursor-pointer bg-transparent border-0 outline-none select-none focus:outline-none hover:bg-white/[0.06] active:scale-[0.99] transition-all rounded-xl"
               title={title}
               aria-label={title}
             >
@@ -2683,6 +2673,20 @@ export const KnowledgeSupermarket: React.FC<KnowledgeSupermarketProps> = ({ onBa
             </button>
           );
         })}
+
+        </div>
+
+        {/* Top-Right Return Arrow (Unified Exit to Games List) */}
+        <div className="absolute top-4 right-4 z-50 pointer-events-auto">
+          <button 
+            onClick={onBack}
+            className="p-2.5 bg-black/60 hover:bg-black/85 backdrop-blur-md border border-white/20 text-white rounded-xl shadow-xl transition active:scale-95 cursor-pointer flex items-center justify-center"
+            title="العودة"
+            aria-label="العودة"
+          >
+            <ArrowRight size={18} />
+          </button>
+        </div>
 
         {/* Floating Sound Toggle at Bottom-Left */}
         <button 
