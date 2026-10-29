@@ -168,6 +168,19 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       poly(corridor,[.08,.11,.78],securityGlow,[x,1.08,z-2.1]);
     }
   }
+    // Architectural rhythm: recessed wall armor, warning stripes and overhead
+  // ribs make the bunker read as a designed military facility, not a box maze.
+  const armorPanel=material(new THREE.MeshStandardMaterial({color:'#293c43',metalness:.62,roughness:.48}));
+  const cautionStripe=material(new THREE.MeshBasicMaterial({color:'#dc9b54'}));
+  for(let z=16;z>-65;z-=6){
+    for(const side of [-1,1]){
+      const x=side*3.08;
+      poly(corridor,[.08,1.24,2.1],armorPanel,[x,1.84,z]);
+      poly(corridor,[.095,.055,1.78],cautionStripe,[x,2.56,z]);
+      poly(corridor,[.095,.055,1.78],securityGlow,[x,1.08,z]);
+    }
+    poly(corridor,[6.12,.17,.14],armorPanel,[0,3.39,z]);
+  }
     // Ducts, conduit and warning boards create a recognisable tactical facility.
   for(const x of [-2.65,2.65]){
     poly(corridor,[.14,.14,90],trim,[x,3.16,-20]);
@@ -215,6 +228,15 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     poly(group,[3.2,.04,.09],sectorStrip,[0,3.4,-4.72]);
     const point=new THREE.PointLight(sectorColor,phone?9:16,13,2);
     point.position.set(0,2.8,1);group.add(point);
+    // Sector architecture: reinforced bulkhead ribs and illuminated floor
+    // threshold. Shared materials avoid extra texture downloads on phones.
+    for(const x of [-4.7,4.7]){
+      for(const zz of [-3.3,0,3.3]){
+        poly(group,[.18,2.6,.16],armorPanel,[x,1.4,zz]);
+        poly(group,[.2,.055,.68],sectorStrip,[x,2.86,zz]);
+      }
+    }
+    for(const xx of [-3.6,3.6])poly(group,[.13,.012,6.8],sectorStrip,[xx,-.025,0]);
     // Actual articulated safes, each numbered and unlocked separately.
     const safes:Room['safes']=[];
     const farX=side*2.55;
