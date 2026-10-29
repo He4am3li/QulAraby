@@ -76,7 +76,7 @@ function makeLabel(text:string,color='#e5d4aa'){
 export function createSecretMission(container:HTMLElement, events:SecretEvents, language:'ar'|'en') {
   const phone=window.matchMedia('(pointer:coarse), (max-width:900px)').matches;
   const renderer=new THREE.WebGLRenderer({antialias:!phone,alpha:false,powerPreference:phone?'low-power':'high-performance'});
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,phone?1:1.65));
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,phone?.85:1.45));
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=1.35;
@@ -588,7 +588,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   };
   const controls=new Set<string>();
   const keyDown=(event:KeyboardEvent)=>{
-    if((event.target as HTMLElement)?.closest('input,textarea,select,button,[role=dialog]'))return;
+    if((event.target as HTMLElement)?.closest('input,textarea,select,[role=dialog]'))return;
     const key=event.key.toLowerCase();controls.add(key);
     if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(key))event.preventDefault();
     if(key==='shift')sprint=true;
@@ -789,7 +789,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   events.onHealth(100);
   events.onThreats(0);
   const setLanguage=(value:'ar'|'en')=>{language=value;};
-  const restartRoom=()=>{if(!activeRoom)return;resetThreats();player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);};
+  const restartRoom=()=>{if(!activeRoom||phase!=='dead')return;controls.clear();input.forward=input.strafe=0;sprint=false;crouch=false;vy=0;player.set(activeRoom.group.position.x,0,activeRoom.info.z+2.3);resetThreats();};
   const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4||!rewardCollected)return false;emit('victory','vault');return true;};
   return {
     start,travelTo,enterRoom,exitRoom,openSafe,collectReward,fire,jump,look,setCrouch,setMovement,setWeaponTier,
@@ -806,10 +806,23 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       window.removeEventListener('keydown',keyDown);
       window.removeEventListener('keyup',keyUp);
       modelMixer?.stopAllAction();
-      for(const enemy of guards)enemy.mixer?.stopAllAction();
+      for(const room of rooms)for(const enemy of room.enemies)enemy.mixer?.stopAllAction();
+      const externalGeometries=new Set<THREE.BufferGeometry>();
+      const externalMaterials=new Set<THREE.Material>();
       scene.traverse(obj=>{
-        if(obj instanceof THREE.Mesh && !geometries.includes(obj.geometry))obj.geometry.dispose();
+        if(!(obj instanceof THREE.Mesh))return;
+        if(!geometries.includes(obj.geometry))externalGeometries.add(obj.geometry);
+        const meshMaterials=Array.isArray(obj.material)?obj.material:[obj.material];
+        for(const m of meshMaterials)if(m&&!materials.includes(m))externalMaterials.add(m);
       });
+      for(const g of externalGeometries)g.dispose();
+      for(const m of externalMaterials){
+        for(const key of ['map','normalMap','roughnessMap','metalnessMap','emissiveMap','aoMap'] as const){
+          const tex=(m as unknown as Record<string,unknown>)[key];
+          if(tex instanceof THREE.Texture)tex.dispose();
+        }
+        m.dispose();
+      }
       geometries.forEach(g=>g.dispose());
       materials.forEach(m=>m.dispose());
       textures.forEach(t=>t.dispose());
