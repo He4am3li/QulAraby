@@ -473,7 +473,13 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(phase!=='hall')return false;
     const available=rooms.find(r=>r.info.id===(id??nearby));
     if(!available||!roomAvailable(available.info.id,allowedRooms))return false;
-    if(Math.abs(player.z-available.info.z)>3.9)return false;
+    // Selecting a room from the mission map should work even when the player
+    // is farther down the corridor. The guided transition avoids requiring
+    // precise movement on touch screens.
+    if(Math.abs(player.z-available.info.z)>3.9){
+      player.set(0,0,available.info.z+1.5);
+      controls.clear();input.forward=0;input.strafe=0;
+    }
     activeRoom=available;
     available.doorTarget=available.info.side===1?1.6:-1.6;
     // Turn sideways to pass through the doorway and face the guards at the end.
@@ -487,10 +493,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(!r||!allowedRooms.includes(id))return false;
     if(phase==='intro'){start();return true;}
     if(phase!=='hall')return false;
-    const goal=new THREE.Vector3(0,0,r.info.z+1.5);
-    transitionTo('intro',goal,0,Math.max(1.5,Math.abs(player.z-goal.z)/7));
-    // The intro transition in the hallway is a controlled guided walk.
-    return true;
+    // Mission-map selection enters the chosen room directly rather than
+    // forcing a second tap after a long corridor animation.
+    return enterRoom(id);
   };
   const resetThreats=()=>{
     if(!activeRoom)return;
