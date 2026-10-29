@@ -891,7 +891,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     });
   };
   const fire=()=>{
-    if(!['combat','safes'].includes(phase)||hp<=0||paused||document.hidden)return false;
+    if(!['combat','safes'].includes(phase)||hp<=0||paused||document.hidden||!document.hasFocus())return false;
     // Frame-independent fire cadence prevents input-spam from bypassing
     // combat progression. Upgraded weapons have faster trigger response.
     const now=performance.now();
@@ -1589,10 +1589,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const finish=()=>{if(phase!=='safes'||!activeRoom||activeRoom.info.id!=='vault'||safeIndex<4||!rewardCollected)return false;emit('victory','vault');return true;};
   return {
     start,travelTo,enterRoom,exitRoom,approachSafe,openSafe,collectReward,fire,reload,jump,look,setCrouch,setMovement,setWeaponTier,setInstrumentValue,
-    setTriggerHeld(value:boolean){touchTriggerHeld=value;},
+    setTriggerHeld(value:boolean){touchTriggerHeld=value&&!paused&&!document.hidden&&document.hasFocus();},
     restartRoom,finish,setAllowed,setLanguage,
     getRoom(){return activeRoom?.info.id??null;},
-    setPaused(value:boolean){paused=value;last=performance.now();},
+    setPaused(value:boolean){paused=value;if(value){touchTriggerHeld=false;controls.clear();input.forward=0;input.strafe=0;sprint=false;}last=performance.now();},
     dispose(){
       disposed=true;touchTriggerHeld=false;loaderDisposed=true;cancelAnimationFrame(frame);observer.disconnect();
       canvas.removeEventListener('pointerdown',pointerStart);
