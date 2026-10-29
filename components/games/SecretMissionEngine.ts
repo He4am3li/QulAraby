@@ -705,10 +705,24 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     avatar.position.y=THREE.MathUtils.damp(avatar.position.y,crouch?.46:0,7,dt);
     avatar.position.z=THREE.MathUtils.damp(avatar.position.z,crouch?.32:0,7,dt);
     avatar.scale.y=THREE.MathUtils.damp(avatar.scale.y,crouch?.9:1,8,dt);
-    if(!model)chest.rotation.x=moving?Math.sin(time*(sprint?14:9))*.08:Math.sin(time*1.2)*.02;
+    // Procedural movement layers keep the fallback operator expressive even
+    // before the external skeletal model is available on a slow connection.
+    const danger=phase==='combat'&&guards.some(g=>g.alive&&g.alerted);
+    const gait=moving?(sprint?13:8):1.2;
+    const stride=moving?Math.sin(time*gait):0;
+    const caution=danger&&!sprint;
+    if(!model){
+      chest.rotation.x=THREE.MathUtils.damp(chest.rotation.x,
+        (crouch?-.13:caution?-.085:0)+stride*(sprint?.13:.065),9,dt);
+      chest.rotation.z=THREE.MathUtils.damp(chest.rotation.z,
+        moving?Math.cos(time*gait*.5)*.045:0,7,dt);
+      avatar.rotation.z=THREE.MathUtils.damp(avatar.rotation.z,
+        moving?Math.cos(time*gait)*.028:0,7,dt);
+    }
+    const weaponLift=danger?.035:0;
     // Grip a weapon in front of the character even if the remote skeletal rig fails.
     if(heroWeapon.parent===playerRoot){
-      heroWeapon.position.set(.4,crouch?.92:1.35,-.43);
+      heroWeapon.position.set(.4,crouch?.92:1.35+weaponLift,-.43);
       heroWeapon.rotation.set(-pitch*.4,0,0);
     }
     modelMixer?.update(dt);
