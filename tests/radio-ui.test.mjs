@@ -82,7 +82,8 @@ try {
   assert.ok(initialPanels[1].querySelector('[lang=ar]')?.textContent.trim(), 'Arabic visible before playback');
   assert.match(container.querySelector('.qul-radio-printer-name').textContent,/راديو قُل/);
   const dial=container.querySelector('[role=slider]');
-  await click(dial); assert.equal(dial.getAttribute('aria-valuenow'),'60');
+  assert.equal(container.querySelector('#radio-volume'),null,'No extra volume range');
+  await act(async()=>dial.dispatchEvent(new window.KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}))); assert.equal(dial.getAttribute('aria-valuenow'),'55');
   await act(async()=>dial.dispatchEvent(new window.KeyboardEvent('keydown',{key:'End',bubbles:true})));
   assert.equal(dial.getAttribute('aria-valuenow'),'100');
   await click('تشغيل الراديو');assert.match(container.querySelector('[role=alert]').textContent,/لا يوجد صوت عربي/);
@@ -91,7 +92,7 @@ try {
   await act(async()=>window.speechSynthesis.dispatchEvent(new Event('voiceschanged')));
   assert.equal(container.querySelectorAll('.qul-radio-audio-options select')[0].options.length,1);
   await click('جرّب الصوت');await finishSpeech();assert.equal(container.querySelector('.qul-radio-printer-question'),null,'Preview must not complete first listen');
-  await click('تشغيل الراديو');assert.equal(currentSpeech.volume,1);await click(dial);assert.equal(currentSpeech.volume,0);
+  await click('تشغيل الراديو');assert.equal(currentSpeech.volume,1);await act(async()=>dial.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Home',bubbles:true})));assert.equal(currentSpeech.volume,0);
   await act(async()=>dial.dispatchEvent(new window.KeyboardEvent('keydown',{key:'End',bubbles:true})));assert.equal(currentSpeech.volume,1);await click('إيقاف مؤقت');assert.equal(window.speechSynthesis.paused,true);
   await click('تشغيل الراديو');await finishSpeech();assert.ok(container.querySelector('.qul-radio-printer-question'));
   await finishQuiz();await click('الاستماع الثاني');await finishSpeech();

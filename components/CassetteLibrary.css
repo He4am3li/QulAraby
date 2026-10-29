@@ -10,7 +10,7 @@
 .qul-archive-divider{display:flex;align-items:center;gap:12px;font-size:10px;color:#bab4a8;padding:0 4px 13px;}
 .qul-archive-divider i{height:1px;flex:1;background:linear-gradient(90deg,#bca27515,#bca27570);}
 .qul-archive-divider>span:last-child{font:9px ui-monospace,monospace;letter-spacing:.12em;}
-.qul-archive-drawer{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));flex:1;min-height:0;gap:12px 14px;padding:12px;border:1px solid #090b0e;border-radius:10px;background:linear-gradient(110deg,#06090ccf,#15191d);box-shadow:inset 0 4px 12px #0009,0 1px 0 #ffffff10;}
+.qul-archive-drawer{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:132px;align-content:start;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scrollbar-width:none;position:relative;flex:1;min-height:0;gap:12px 14px;padding:12px;border:1px solid #090b0e;border-radius:10px;background:linear-gradient(110deg,#06090ccf,#15191d);box-shadow:inset 0 4px 12px #0009,0 1px 0 #ffffff10;}
 .qul-archive-tape{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;text-align:inherit;padding:0 5px 5px;border-radius:5px;border:1px solid #58534a;background:linear-gradient(120deg,#ffffff10,#ffffff02);box-shadow:0 4px 6px #0008,inset 0 1px #ffffff20;cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s;}
 .qul-archive-tape:hover:not(:disabled){transform:translateY(-3px);border-color:var(--archive-brass);box-shadow:0 8px 12px #0009;}
 .qul-archive-tape.is-active{border-color:#e8be78;box-shadow:0 0 0 1px #c6a77670,0 4px 10px #0009;}
@@ -31,13 +31,8 @@
 .qul-archive-label small{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;font:8px ui-monospace,monospace;color:#67604f;}
 .qul-archive-label i{width:5px;height:5px;border-radius:50%;background:#9b9485;}
 .qul-archive-tape.is-active .qul-archive-label i{background:#547c3b;box-shadow:0 0 4px #547c3b50;}
-.qul-archive-footer{display:flex;align-items:center;justify-content:center;gap:22px;padding-top:13px;}
-.qul-archive-footer>span{font-size:11px;color:#c9bda8;min-width:80px;text-align:center;}
-.qul-archive-footer b{color:#f5ddae;}
-.qul-archive-footer button{display:grid;place-items:center;width:32px;height:28px;border:1px solid #76664b;border-radius:5px;color:#e5c48b;background:linear-gradient(#41413b,#252724);box-shadow:inset 0 1px #ffffff18,0 2px 3px #0005;cursor:pointer;}
 .qul-cassette-archive button:focus-visible{outline:2px solid #f4ca82;outline-offset:3px;}
 .qul-cassette-archive button:disabled{cursor:default;}
-.qul-archive-footer button:disabled{opacity:.3;}
 .qul-archive-empty{grid-column:1/-1;color:#d8ccb5;font-size:13px;text-align:center;}
 @keyframes qul-archive-spin{to{transform:rotate(360deg)}}
 @media(min-width:1024px){.qul-cassette-archive{width:54%;height:605px;}}
@@ -54,3 +49,9 @@
   .qul-archive-window{padding:2px 6px;margin:2px auto;}
   .qul-archive-reel{width:16px;height:16px;}
 }
+
+.qul-archive-drawer::-webkit-scrollbar{display:none;width:0;height:0;}
+.qul-archive-drawer:focus-visible{outline:2px solid #e5c48b;outline-offset:3px;}
+.qul-cassette-archive{background:radial-gradient(ellipse at 5% 0%,#bcd8eb24,transparent 58%),linear-gradient(135deg,#343d45e8,#151b22ee 52%,#252c34e8);border-color:#e2f0ff55;backdrop-filter:blur(18px) saturate(135%);-webkit-backdrop-filter:blur(18px) saturate(135%);box-shadow:inset 0 1px 1px #fff9,inset 1px 0 1px #fff3,inset 0 -1px 1px #d9e8ff40,0 14px 30px #10182030;}
+.qul-archive-glass{position:absolute;inset:3px;z-index:2;pointer-events:none;border-radius:19px;border:1px solid #ffffff24;background:linear-gradient(125deg,#fff2 0%,#fff0 27%,#ffffff09 45%,#fff0 46%,#fff0 73%,#ffffff0c 100%),radial-gradient(ellipse at 25% -15%,#ffffff28,transparent 55%);box-shadow:inset 0 2px 5px #ffffff24,inset 0 -1px 3px #d5eaff18;}
+@media(max-width:450px){.qul-archive-drawer{grid-auto-rows:124px;}}

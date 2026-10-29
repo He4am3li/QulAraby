@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CassettePlayer } from '../components/CassettePlayer';
 import { RadioThermalPrinter, RadioLearningStage } from '../components/RadioThermalPrinter';
 import '../components/ListeningRadioRetouch.css';
+import { RadioVolumeDial } from '../components/RadioVolumeDial';
 import { RadioAudioSettings } from '../components/RadioAudioSettings';
 import { useRadioNarration } from '../src/hooks/useRadioNarration';
 import { STORY_CASSETTES } from '../src/data/storyCassettes';
@@ -1216,27 +1217,7 @@ export const Listening: React.FC = () => {
                                             <div className={`w-3 h-3 rounded-full ${isRadioPlaying || isPaused ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]' : 'bg-red-900/40'}`} />
                                             <span className="text-[8px] font-black text-white/30 uppercase">Power</span>
                                         </div>
-                                        <div className="flex flex-col items-center gap-1">
-                                            <div className="w-16 h-16 bg-gradient-to-b from-slate-300 via-slate-100 to-slate-400 rounded-full border-4 border-[#2a1d15] shadow-[0_5px_15px_rgba(0,0,0,0.4)] flex items-center justify-center relative qul-original-radio-volume cursor-pointer" role="slider" tabIndex={0}
-                                              aria-label={lang === 'ar' ? 'مقبض صوت الراديو' : 'Radio volume dial'}
-                                              aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(volume * 100)}
-                                              onClick={() => setVolume(value => value >= 1 ? 0 : Math.min(1, Math.round((value + 0.1) * 100) / 100))}
-                                              onKeyDown={event => {
-                                                if (['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'Home', 'End'].includes(event.key)) {
-                                                  event.preventDefault();
-                                                  setVolume(value => event.key === 'Home' ? 0 : event.key === 'End' ? 1 : Math.max(0, Math.min(1, value + (['ArrowUp', 'ArrowRight'].includes(event.key) ? 0.05 : -0.05))));
-                                                }
-                                              }}>
-                                                <motion.div animate={{ rotate: volume * 360 }} className="w-full h-full flex items-center justify-center">
-                                                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-1.5 h-3 bg-red-600 rounded-full" />
-                                                </motion.div>
-                                            </div>
-                                            <label htmlFor="radio-volume" className="text-[8px] font-black text-white/70 uppercase">{lang === 'ar' ? 'الصوت' : 'Volume'} {Math.round(volume * 100)}%</label>
-                                            <input id="radio-volume" type="range" min="0" max="1" step="0.05" value={volume}
-                                              aria-label={lang === 'ar' ? 'مستوى صوت الراديو' : 'Radio volume'}
-                                              dir="ltr" className="w-20 accent-amber-500 cursor-pointer"
-                                              onChange={event => setVolume(Number(event.target.value))} />
-                                        </div>
+                                        <RadioVolumeDial value={volume} onChange={setVolume} lang={lang}/>
                                     </div>
 
                                     <div className="flex gap-2">
