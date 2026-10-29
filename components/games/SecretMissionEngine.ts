@@ -941,6 +941,16 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       localCamera.x=clamp(localCamera.x,-4.05,4.05);
       localCamera.z=clamp(localCamera.z,-3.48,3.48);
       camera.position.copy(localCamera.add(activeRoom.group.position));
+      // The camera is also a physical observer: do not place it inside
+      // rear safe cabinets when backing up against the objective wall.
+      for(const cabinetX of [-3.32,-1.14,1.04,3.22]){
+        const dx=localCamera.x-cabinetX;
+        const dz=localCamera.z+3.95;
+        if(Math.abs(dx)<1.04&&Math.abs(dz)<1.12){
+          camera.position.z=activeRoom.info.z-2.83;
+          break;
+        }
+      }
     }else{
       camera.position.x=clamp(camera.position.x,-2.55,2.55);
     }
