@@ -17,6 +17,7 @@ export type SecretEvents = {
   onThreats: (remaining: number) => void;
   onNearby: (room: SecretRoomId | null) => void;
   onShot: (hit:boolean) => void;
+  onWeaponChange?: (tier:number) => void;
   onError: (message:string) => void;
 };
 type Combatant = { root:THREE.Group; body:THREE.Group; fallback:THREE.Group; mixer:THREE.AnimationMixer|null; action:THREE.AnimationAction|null; hp:number; maxHp:number; cooldown:number; dying:number; alive:boolean; isBoss:boolean; awareness:number; alerted:boolean; };
@@ -602,6 +603,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const setWeaponTier=(tier:number)=>{
     unlockedWeaponTier=Math.max(unlockedWeaponTier,clamp(tier,0,4));
     weaponTier=clamp(tier,0,unlockedWeaponTier);
+    events.onWeaponChange?.(weaponTier);
     muzzle.scale.setScalar(1+weaponTier*.19);
     upgradeRail.visible=weaponTier>=1;
     upgradeCoil.visible=weaponTier>=2;
