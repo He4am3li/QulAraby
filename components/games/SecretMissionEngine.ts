@@ -932,7 +932,18 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     }
     camTarget.y=clamp(camTarget.y,1.0,2.75);
     const lookTarget=head.clone().addScaledVector(forward,roomView?5.1:4.5);
-    camera.position.lerp(camTarget,clamp(dt*8,0,1));
+    // Snap after a room transition so interpolation never sweeps the camera
+    // through corridor walls; otherwise ease the camera toward its target.
+    if(transition||dt>.04)camera.position.copy(camTarget);
+    else camera.position.lerp(camTarget,clamp(dt*8,0,1));
+    if(roomView&&activeRoom){
+      const localCamera=camera.position.clone().sub(activeRoom.group.position);
+      localCamera.x=clamp(localCamera.x,-4.05,4.05);
+      localCamera.z=clamp(localCamera.z,-3.48,3.48);
+      camera.position.copy(localCamera.add(activeRoom.group.position));
+    }else{
+      camera.position.x=clamp(camera.position.x,-2.55,2.55);
+    }
     camera.lookAt(lookTarget);
     for(const room of rooms)if(room.info.id==='vault'){
       // rotating boss warning light outside the target room
