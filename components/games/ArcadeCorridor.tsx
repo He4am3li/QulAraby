@@ -116,6 +116,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const [room,setRoom]=useState<SecretRoomId|null>(null);
   const [nearby,setNearby]=useState<SecretRoomId|null>(null);
   const [health,setHealth]=useState(100);
+  const [selectedWeapon,setSelectedWeapon]=useState(0);
   const [threats,setThreats]=useState(0);
   const [opened,setOpened]=useState([false,false,false,false]);
   const [activeSafe,setActiveSafe]=useState(0);
@@ -185,6 +186,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
             }
           },
           onHealth(value){if(!stopped)setHealth(value);},
+          onWeaponChange(tier){if(!stopped)setSelectedWeapon(tier);},
           onThreats(n){
             if(stopped)return;
             if(n<lastThreats.current)setScore(x=>x+(lastThreats.current-n)*150);
@@ -288,11 +290,9 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
         <div className="qul-secret-gear"><Zap size={15}/> MK-{gear+1}</div>
         <button className="qul-secret-exit" onClick={onBack}><X size={17}/>{ar?'خروج':'EXIT'}</button>
       </div>
-      <div className="qul-secret-stats">
-        <span><ShieldCheck size={16}/><b>{health}%</b></span>
-        <span><Target size={16}/>{threats} {ar?'حراس':'GUARDS'}</span>
-        <span><FileLock2 size={16}/>{completed.length}/4</span>
-        <span><Zap size={16}/>{score} XP</span>
+      {ready&&['hall','combat','safes'].includes(phase)&&<div className="qul-secret-tactical-hud">
+        <div className="qul-secret-hud-vitals"><small>OPERATOR / STATUS</small><div className="qul-secret-hud-health"><ShieldCheck size={17}/><strong>{health}%</strong><div className="qul-secret-hud-meter"><i style={{width:health+'%'}}/></div></div><div className="qul-secret-hud-metrics"><span><Target size={13}/>{threats}</span><span><FileLock2 size={13}/>{completed.length}/4</span><span><Zap size={13}/>{score} XP</span></div></div>
+        <div className="qul-secret-hud-arsenal"><small>{ar?'منظومة التسليح':'TACTICAL LOADOUT'} / QUL OPS</small><div className="qul-secret-hud-weapon"><div className="qul-secret-hud-silhouette" aria-hidden="true"><span/></div><div><small>{ar?'السلاح النشط':'ACTIVE WEAPON'}</small><strong>{[ar?'قاذف الطاقة الأساسي':'STANDARD BLASTER',REWARDS.depot[lang],REWARDS.comms[lang],REWARDS.archive[lang],ar?'قاذف الطاقة المتقدم':'ADVANCED BLASTER'][selectedWeapon]}</strong><b>MK-{selectedWeapon+1}</b></div></div><div className="qul-secret-hud-slots" role="group" aria-label={ar?'اختيار السلاح':'Select weapon'}>{[0,1,2,3,4].map(tier=><button key={tier} disabled={tier>gear} className={selectedWeapon===tier?'selected':''} aria-pressed={selectedWeapon===tier} aria-label={(ar?'السلاح ':'Weapon ')+(tier+1)} onClick={()=>engine.current?.setWeaponTier(tier)}><span>{tier+1}</span>{tier>gear?<LockKeyhole size={13}/>:<Zap size={16}/>}</button>)}</div><div className="qul-secret-hud-hint">{ar?'1–5 لتبديل السلاح · F للإطلاق':'1–5 SWITCH WEAPON · F FIRE'}</div></div>
       </div>
       {!ready&&<div className="qul-secret-loader" role="status"><Crosshair size={40}/>
         <h2>{error||(ar?'جارٍ تجهيز المهمة...':'Preparing your mission...')}</h2>
