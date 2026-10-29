@@ -216,12 +216,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const securityGlow=material(new THREE.MeshBasicMaterial({color:'#5bbac7'}));
   const alertGlow=material(new THREE.MeshBasicMaterial({color:'#dd6256'}));
   for(let z=18;z>-65;z-=2.7){
-    for(const x of [-2.82,2.82])poly(corridor,[.045,.012,1.35],guideGlow,[x,-.02,z]);
+    for(const x of [-2.82,2.82])queueStatic('floor-guides',[.045,.012,1.35],guideGlow,[x,-.02,z]);
   }
   for(let z=12;z>-65;z-=12){
     for(const x of [-3.11,3.11]){
-      poly(corridor,[.08,.08,.62],alertGlow,[x,2.76,z]);
-      poly(corridor,[.08,.11,.78],securityGlow,[x,1.08,z-2.1]);
+      queueStatic('alert-beacons',[.08,.08,.62],alertGlow,[x,2.76,z]);
+      queueStatic('security-beacons',[.08,.11,.78],securityGlow,[x,1.08,z-2.1]);
     }
   }
     // Architectural rhythm: recessed wall armor, warning stripes and overhead
@@ -231,17 +231,18 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   for(let z=16;z>-65;z-=6){
     for(const side of [-1,1]){
       const x=side*3.08;
-      poly(corridor,[.08,1.24,2.1],armorPanel,[x,1.84,z]);
-      poly(corridor,[.095,.055,1.78],cautionStripe,[x,2.56,z]);
-      poly(corridor,[.095,.055,1.78],securityGlow,[x,1.08,z]);
+      queueStatic('armor-panels',[.08,1.24,2.1],armorPanel,[x,1.84,z]);
+      queueStatic('caution-stripes',[.095,.055,1.78],cautionStripe,[x,2.56,z]);
+      queueStatic('security-stripes',[.095,.055,1.78],securityGlow,[x,1.08,z]);
     }
-    poly(corridor,[6.12,.17,.14],armorPanel,[0,3.39,z]);
+    queueStatic('overhead-ribs',[6.12,.17,.14],armorPanel,[0,3.39,z]);
   }
     // Ducts, conduit and warning boards create a recognisable tactical facility.
   for(const x of [-2.65,2.65]){
     poly(corridor,[.14,.14,90],trim,[x,3.16,-20]);
     poly(corridor,[.085,.085,90],tan,[x,.5,-20]);
   }
+  flushStatic(corridor);
   const signMaterial=(texture:THREE.CanvasTexture)=>
     material(new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,depthWrite:false}));
   const makeRoom=(info:typeof SECRET_ROOMS[number]):Room=>{
