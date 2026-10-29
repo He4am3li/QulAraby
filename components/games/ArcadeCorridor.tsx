@@ -158,11 +158,20 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
             if(stopped)return;
             phaseRef.current=state;
             setPhase(state);
+            if(state==='room-enter'){
+              lastThreats.current=0;
+              setInput({forward:0,strafe:0,run:false});
+              setCrouch(false);
+            }
             if(state==='combat'){
               setRoom(id||null);setOpened([false,false,false,false]);setActiveSafe(0);safeRef.current=0;
               setSelectedPin(null);setHealth(100);
             }
-            if(state==='hall')setRoom(null);
+            if(state==='hall'){
+              setRoom(null);
+              setInput({forward:0,strafe:0,run:false});
+              setCrouch(false);
+            }
             if(state==='victory'){
               setDocuments(true);
               setScore(v=>v+900);
@@ -219,7 +228,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   };
 
   const answer=(idx:number)=>{
-    if(!room||phase!=='safes'||opened[activeSafe]||selectedPin!==null)return;
+    if(paused||!room||phase!=='safes'||opened[activeSafe]||selectedPin!==null)return;
     const q=MISSIONS[room].safes[activeSafe];
     if(idx!==q.answer){
       setSelectedPin('wrong');
@@ -233,7 +242,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
     setScore(n=>n+125);
   };
   const advanceSafe=()=>{
-    if(!room)return;
+    if(paused||!room||phase!=='safes'||!opened[activeSafe]||selectedPin==='wrong')return;
     if(activeSafe<3){
       const index=activeSafe+1;safeRef.current=index;setActiveSafe(index);setSelectedPin(null);return;
     }
