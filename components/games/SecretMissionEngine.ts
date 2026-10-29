@@ -161,6 +161,26 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       parent.add(batch);
     }
   };
+  // Batch static corridor details by geometry and material; animated doors,
+  // props and interactable equipment still use individual meshes.
+  const staticInstances=new Map<string,{dim:[number,number,number];mat:THREE.Material;positions:[number,number,number][]}>();
+  const queueStatic=(key:string,dim:[number,number,number],mat:THREE.Material,pos:[number,number,number])=>{
+    let batch=staticInstances.get(key);
+    if(!batch){batch={dim,mat,positions:[]};staticInstances.set(key,batch);}
+    batch.positions.push(pos);
+  };
+  const flushStatic=(parent:THREE.Group)=>{
+    const dummy=new THREE.Object3D();
+    for(const {dim,mat,positions} of staticInstances.values()){
+      const mesh=new THREE.InstancedMesh(sharedBox(dim),mat,positions.length);
+      positions.forEach((p,i)=>{dummy.position.set(...p);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);});
+      mesh.instanceMatrix.needsUpdate=true;
+      mesh.castShadow=!phone;mesh.receiveShadow=!phone;
+      mesh.computeBoundingSphere();
+      parent.add(mesh);
+    }
+    staticInstances.clear();
+  };
   const corridor=new THREE.Group();scene.add(corridor);
   poly(corridor,[6.6,.25,92],ground,[0,-.16,-20]);
   poly(corridor,[6.6,.17,92],concrete,[0,3.67,-20]);
@@ -180,8 +200,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   for(let z=17;z>-65;z-=5.1){
     lightBar(corridor,z);
     for(const side of [-1,1]){
-      poly(corridor,[.2,3.38,.14],trim,[side*3.17,1.74,z]);
-      poly(corridor,[.26,.12,.28],steel,[side*3.18,.58,z]);
+      queueStatic('wall-ribs',[.2,3.38,.14],trim,[side*3.17,1.74,z]);
+      queueStatic('wall-base',[.26,.12,.28],steel,[side*3.18,.58,z]);
     }
     if(z%2>0) {
       const crate=poly(corridor,[.73,.6,.86],steel,[z%3>0?2.35:-2.35,.3,z-1.5]);
@@ -189,6 +209,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     }
   }
   flushCeilingStrips(corridor);
+  flushStatic(corridor);
   // Cinematic visual identity: amber guidance runway, blue security conduits
   // and periodic red restricted-sector beacons. Emissive geometry is cheap on mobile.
   const guideGlow=material(new THREE.MeshBasicMaterial({color:'#d99a4f'}));
