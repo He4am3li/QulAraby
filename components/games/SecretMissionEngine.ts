@@ -1470,14 +1470,23 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // Switch to corridor framing as soon as the operator reaches the exit
     // threshold. Holding room framing throughout exit pins the camera behind
     // the entrance bulkhead and obscures the player's view.
-    const crossingExit=phase==='room-exit'&&Math.abs(player.x)<4.65;
+    // A doorway is a narrow portal: switch to corridor camera only after
+    // the operator has actually crossed the inner wall (x ~= +/-3).
+    const crossingExit=phase==='room-exit'&&activeRoom&&Math.abs(player.x)<3.05;
     const roomView=Boolean(activeRoom)&&phase!=='hall'&&!crossingExit;
     const usingWorkstation=roomView&&phase==='safes'&&Boolean(safeApproach?.ready)&&Boolean(activeRoom);
-    const camTarget=usingWorkstation&&activeRoom?
-      new THREE.Vector3(activeRoom.group.position.x-3.32+safeIndex*2.18+1.05,2.16,activeRoom.info.z-.48):
-      head.clone().addScaledVector(forward,roomView?-2.65:-4.4)
-        .addScaledVector(right,roomView?.62:1.15);
-    camTarget.y+=roomView?.82:1.0;
+    const exitingPortal=phase==='room-exit'&&Boolean(activeRoom);
+    const camTarget=exitingPortal&&activeRoom?
+      new THREE.Vector3(
+        activeRoom.info.side*(Math.abs(player.x)>3.05?Math.max(3.4,Math.abs(player.x)-1.2):1.35),
+        1.65,
+        activeRoom.info.z+2.4
+      ):
+      usingWorkstation&&activeRoom?
+        new THREE.Vector3(activeRoom.group.position.x-3.32+safeIndex*2.18+1.05,2.16,activeRoom.info.z-.48):
+        head.clone().addScaledVector(forward,roomView?-2.65:-4.4)
+          .addScaledVector(right,roomView?.62:1.15);
+    if(!exitingPortal)camTarget.y+=roomView?.82:1.0;
     // Keep the third-person camera inside the playable corridor or room,
     // rather than letting it pass through walls and expose exterior geometry.
     if(roomView&&activeRoom){
@@ -1497,9 +1506,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // Clamp the camera's desired position relative to the actual operator.
     // This avoids long sweeps across geometry when a room loads or teleports.
     const cameraOffset=camTarget.clone().sub(head);
-    const maxBoom=usingWorkstation?4.0:roomView?3.1:4.8;
+    const maxBoom=exitingPortal?4.8:usingWorkstation?4.0:roomView?3.1:4.8;
     if(cameraOffset.length()>maxBoom)camTarget.copy(head).add(cameraOffset.setLength(maxBoom));
-    const lookTarget=usingWorkstation&&activeRoom?
+    const lookTarget=exitingPortal?
+      head.clone().add(new THREE.Vector3(0,.12,0)):
+      usingWorkstation&&activeRoom?
       new THREE.Vector3(activeRoom.group.position.x-3.32+safeIndex*2.18,1.45,activeRoom.info.z-3.05):
       head.clone().addScaledVector(forward,roomView?5.1:4.5);
     lookTarget.y+=shotKick;
