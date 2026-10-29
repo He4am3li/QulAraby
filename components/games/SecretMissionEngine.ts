@@ -782,8 +782,37 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const transitionTo=(type:Traverse['type'],point:THREE.Vector3,toYaw:number,duration:number,room?:Room)=>{
     transition={type,time:0,duration,from:player.clone(),to:point,fromYaw:yaw,toYaw,room};
   };
+  // Original, synthesized stealth ambience: no downloads or licensed tracks.
+  let audioContext:AudioContext|null=null;
+  let musicOutput:GainNode|null=null;
+  let musicEnabled=true;
+  const musicNodes:OscillatorNode[]=[];
+  const beginMusic=()=>{
+    if(!musicEnabled)return;
+    try{
+      if(audioContext){void audioContext.resume();return;}
+      const context=new AudioContext();audioContext=context;
+      const master=context.createGain();musicOutput=master;
+      master.gain.value=.055;master.connect(context.destination);
+      for(const [frequency,type,volume] of [[55,'sine',.42],[82.41,'triangle',.14],[110,'sine',.12]] as const){
+        const osc=context.createOscillator(),gain=context.createGain();
+        osc.type=type;osc.frequency.value=frequency;gain.gain.value=volume;
+        osc.connect(gain).connect(master);osc.start();musicNodes.push(osc);
+      }
+      const pulse=context.createOscillator(),pulseDepth=context.createGain();
+      pulse.type='sine';pulse.frequency.value=.32;pulseDepth.gain.value=.012;
+      pulse.connect(pulseDepth).connect(master.gain);pulse.start();musicNodes.push(pulse);
+      void context.resume();
+    }catch{/* Audio is optional if the browser blocks playback. */}
+  };
+  const toggleMusic=()=>{
+    musicEnabled=!musicEnabled;
+    if(musicEnabled)beginMusic();
+    if(musicOutput&&audioContext)musicOutput.gain.setTargetAtTime(musicEnabled?.055:0,audioContext.currentTime,.1);
+  };
   const start=()=>{
     if(phase!=='intro')return;
+    beginMusic();
     gateProgress=.001;
     transitionTo('intro',new THREE.Vector3(0,0,12),0,2.6);
     emit('entering');
@@ -1017,6 +1046,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(key===' '&&!event.repeat&&phase==='combat'){event.preventDefault();fire();}
     if(key==='f'&&!event.repeat)fire();
     if(key==='r'&&!event.repeat)reload();
+    if(key==='m'&&!event.repeat)toggleMusic();
     // 1–5 select only weapons already earned from educational objectives.
     if(/^[1-5]$/.test(key)&&!event.repeat){
       const selected=Number(key)-1;
@@ -1741,6 +1771,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       geometries.forEach(g=>g.dispose());
       materials.forEach(m=>m.dispose());
       textures.forEach(t=>t.dispose());
+      for(const node of musicNodes){try{node.stop();}catch{}}
+      if(audioContext)void audioContext.close();
       renderer.dispose();
       perfPanel?.remove();
       canvas.remove();
