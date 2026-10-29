@@ -28,7 +28,7 @@ const clamp=THREE.MathUtils.clamp;
 const ease=(n:number)=>n*n*(3-2*n);
 
 const tex=(kind:'wall'|'ground'|'wood'|'steel')=>{
-  const canvas=document.createElement('canvas');canvas.width=canvas.height=512;
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
   const g=canvas.getContext('2d')!;
   const ground=kind==='ground';const wall=kind==='wall';
   g.fillStyle=ground?'#9a9890':wall?'#8b9391':kind==='wood'?'#79644b':'#697477';
@@ -76,7 +76,7 @@ function makeLabel(text:string,color='#e5d4aa'){
 export function createSecretMission(container:HTMLElement, events:SecretEvents, language:'ar'|'en') {
   const phone=window.matchMedia('(pointer:coarse), (max-width:900px)').matches;
   const renderer=new THREE.WebGLRenderer({antialias:!phone,alpha:false,powerPreference:phone?'low-power':'high-performance'});
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,phone?.85:1.45));
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,phone?0.75:1.25));
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=1.35;
