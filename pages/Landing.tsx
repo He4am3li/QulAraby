@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../components/AuthProvider';
 import { translateAndExpand } from '../services/gemini';
+import { LandingCinematicHero, LandingJourney } from '../components/LandingExperience';
 
 const ARABIC_CHARS = ['ق', 'ل', 'ع', 'ر', 'ب', 'ي', 'أ', 'ن', 'ا', 'ح', 'ب', 'س', 'د', 'و', 'ك'];
 
@@ -425,130 +426,18 @@ export const Landing = () => {
         )}
       </AnimatePresence>
 
-      {/* Hero Section */}
-      <main className="relative z-10 pt-12 pb-20 px-6">
+      {/* A branded interactive hero and a guided chapter journey replace the former static slogan cards. */}
+      <main className="relative z-10 pb-20">
         <div className="w-full max-w-[1600px] mx-auto text-center space-y-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-6"
-          >
-            <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-blue-400 text-[10px] md:text-[14px] font-black uppercase tracking-wide">
-              {t.tagline}
-            </div>
-
-            {/* Slogan Design - Luxury Cinematic Card flanked by Account & Language Cards */}
-            <div className="flex items-center justify-center gap-4 py-4 w-full">
-              {/* Account Holder Rectangle - Right in Arabic (RTL), Left in English (LTR) */}
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
-                onClick={() => {
-                  if (user) {
-                    signOut();
-                  } else {
-                    signIn();
-                  }
-                }}
-                className="hidden lg:flex flex-col items-center justify-center px-6 py-8 rounded-[2rem] bg-black/40 border border-white/10 hover:border-blue-500/50 backdrop-blur-3xl w-56 text-center gap-3 shrink-0 shadow-2xl cursor-pointer group transition-all"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform overflow-hidden">
-                  {isSigningIn ? (
-                    <Loader2 size={22} className="animate-spin text-blue-400" />
-                  ) : user?.photoURL ? (
-                    <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover rounded-2xl" />
-                  ) : (
-                    <Users size={22} />
-                  )}
-                </div>
-                <span className="text-xs font-black text-white/90 truncate max-w-[180px]">
-                  {profile?.displayName || user?.displayName || (user ? user.email?.split('@')[0] : (lang === 'ar' ? 'صاحب الحساب' : 'Account Holder'))}
-                </span>
-                <span className="text-[9px] font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 px-3.5 py-1 rounded-full border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all">
-                  {isSigningIn ? (lang === 'ar' ? 'جاري الاتصال...' : 'Connecting...') : user ? (lang === 'ar' ? 'مسجل الدخول' : 'Logged In') : (lang === 'ar' ? 'دخول المنصة' : 'Sign In')}
-                </span>
-              </motion.div>
-
-              {/* Main "أنا عربي" Rectangle */}
-              <motion.div 
-                initial={{ scale: 0.98, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.8 }}
-                className="relative group w-full max-w-3xl"
-              >
-                {/* Animated Glow Backing */}
-                <div className="absolute -inset-8 bg-gradient-to-r from-blue-600/20 via-emerald-500/20 to-blue-600/20 rounded-[3rem] blur-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-1000 animate-pulse" />
-                
-                <div className="relative bg-black/40 backdrop-blur-3xl border border-white/10 px-8 md:px-16 py-8 md:py-12 rounded-[3rem] shadow-[0_30px_70px_rgba(0,0,0,0.6)] flex flex-col items-center gap-4 overflow-hidden">
-                  {/* Decorative Elements */}
-                  <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.05)_0%,_transparent_50%)] pointer-events-none" />
-                  <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.05)_0%,_transparent_50%)] pointer-events-none" />
-                  
-                  <div className="flex items-center gap-6 w-full">
-                    <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                    <p className="text-white font-black text-[10px] md:text-[16px] uppercase text-center whitespace-nowrap tracking-widest drop-shadow-[0_0_20px_rgba(255,255,255,0.9)]">
-                      {t.sloganPrefix}
-                    </p>
-                    <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                  </div>
-                  
-                  <h1 className="text-4xl md:text-7xl lg:text-8xl font-black font-aref relative whitespace-nowrap">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/60 drop-shadow-[0_10px_30px_rgba(255,255,255,0.4)]">
-                      {t.sloganMain}
-                    </span>
-                    {/* Subtle underline */}
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: '100%' }}
-                      transition={{ delay: 1, duration: 1.5 }}
-                      className="absolute -bottom-4 left-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent"
-                    />
-                  </h1>
-                </div>
-              </motion.div>
-
-              {/* Language Switcher Rectangle - Left in Arabic (RTL), Right in English (LTR) */}
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
-                onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
-                className="hidden lg:flex flex-col items-center justify-center px-6 py-8 rounded-[2rem] bg-black/40 border border-white/10 hover:border-emerald-500/50 backdrop-blur-3xl w-56 text-center gap-3 shrink-0 shadow-2xl cursor-pointer group transition-all"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
-                  <Globe size={22} />
-                </div>
-                <span className="text-xs font-black text-white/90">
-                  {lang === 'ar' ? 'تغيير اللغة' : 'Change Language'}
-                </span>
-                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3.5 py-1 rounded-full border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                  {lang === 'ar' ? 'English (EN)' : 'العربية (AR)'}
-                </span>
-              </motion.div>
-            </div>
-
-            <p className="text-[10px] md:text-[18px] text-slate-400 w-full mx-auto font-bold leading-relaxed opacity-70 lg:whitespace-nowrap overflow-hidden text-ellipsis">
-              {t.subTagline}
-            </p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-            className="pt-8"
-          >
-            <button 
-              onClick={() => setLoginOpen(true)}
-              className="group relative inline-flex items-center gap-4 bg-gradient-to-r from-blue-600 to-emerald-600 px-10 py-5 rounded-2xl font-black text-sm md:text-base uppercase tracking-widest shadow-2xl shadow-blue-900/40 hover:scale-105 transition-all"
-            >
-              {t.cta}
-              <ArrowRight className={`w-5 h-5 transition-transform group-hover:translate-x-2 ${lang === 'ar' ? 'rotate-180 group-hover:-translate-x-2' : ''}`} />
-            </button>
-          </motion.div>
-
+          <LandingCinematicHero
+            lang={lang as 'ar' | 'en'}
+            onExplore={() => document.getElementById('qul-journey')?.scrollIntoView({
+              behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+              block: 'start'
+            })}
+            onEnter={() => setLoginOpen(true)}
+          />
+          <LandingJourney lang={lang as 'ar' | 'en'} onEnter={() => setLoginOpen(true)} />
           {/* Instant AI Demo Section */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -564,113 +453,6 @@ export const Landing = () => {
               <InstantDemo lang={lang} />
             </div>
           </motion.div>
-
-          {/* Smart Mastery Labs Section */}
-          <div className="pt-24 space-y-10">
-            <div className="flex flex-col items-center gap-2">
-              <h2 className="text-2xl md:text-3xl font-black arabic-font text-white/90">{t.featuresTitle}</h2>
-              <div className="w-16 h-1 bg-blue-500 rounded-full" />
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-              <FeatureCard 
-                icon={Search} 
-                title={lang === 'ar' ? 'اختبار المستوى' : 'Placement Test'} 
-                desc={lang === 'ar' ? 'تحديد مستوى ذكي وشامل' : 'Smart comprehensive assessment'} 
-                color="from-slate-500 to-slate-800"
-                image="https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=800&q=80"
-                delay={0.1}
-              />
-              <FeatureCard 
-                icon={GraduationCap} 
-                title={lang === 'ar' ? 'الحروف الهجائية' : 'Alphabet'} 
-                desc={lang === 'ar' ? 'تعلم النطق والكتابة' : 'Learn pronunciation & writing'} 
-                color="from-blue-500 to-indigo-600"
-                image="https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0?auto=format&fit=crop&w=800&q=80"
-                delay={0.2}
-              />
-              <FeatureCard 
-                icon={Ear} 
-                title={lang === 'ar' ? 'الاستماع الذكي' : 'AI Listening'} 
-                desc={lang === 'ar' ? 'تطوير مهارات الاستيعاب' : 'Boost comprehension skills'} 
-                color="from-cyan-500 to-blue-600"
-                image="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80"
-                delay={0.3}
-              />
-              <FeatureCard 
-                icon={Mic} 
-                title={lang === 'ar' ? 'التحدث الصوتي' : 'AI Voice Chat'} 
-                desc={lang === 'ar' ? 'محادثة مباشرة مع الذكاء الاصطناعي' : 'Real-time AI conversation'} 
-                color="from-rose-500 to-red-600"
-                image="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=800&q=80"
-                delay={0.4}
-              />
-              <FeatureCard 
-                icon={BookOpen} 
-                title={lang === 'ar' ? 'القراءة التفاعلية' : 'Interactive Reading'} 
-                desc={lang === 'ar' ? 'قصص ونصوص ذكية' : 'Smart stories & texts'} 
-                color="from-emerald-500 to-teal-600"
-                image="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80"
-                delay={0.5}
-              />
-              <FeatureCard 
-                icon={PenTool} 
-                title={lang === 'ar' ? 'الكتابة الإبداعية' : 'Smart Writing'} 
-                desc={lang === 'ar' ? 'تصحيح ذكي وتعبير' : 'AI correction & composition'} 
-                color="from-violet-500 to-purple-600"
-                image="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80"
-                delay={0.6}
-              />
-              <FeatureCard 
-                icon={Languages} 
-                title={lang === 'ar' ? 'المترجم الذكي' : 'Smart Translator'} 
-                desc={lang === 'ar' ? 'تحليل لغوي عميق' : 'Deep linguistic analysis'} 
-                color="from-amber-500 to-orange-600"
-                image="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80"
-                delay={0.7}
-              />
-              <FeatureCard 
-                icon={Library} 
-                title={lang === 'ar' ? 'محرر القواعد' : 'Grammar Hub'} 
-                desc={lang === 'ar' ? 'معلم قواعد ذكي' : 'AI grammar tutor'} 
-                color="from-indigo-500 to-blue-700"
-                image="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80"
-                delay={0.8}
-              />
-              <FeatureCard 
-                icon={Gamepad2} 
-                title={lang === 'ar' ? 'الألعاب التعليمية' : 'Educational Games'} 
-                desc={lang === 'ar' ? 'تعلم بالمرح والتحدي' : 'Learn with fun & challenge'} 
-                color="from-orange-500 to-red-600"
-                image="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80"
-                delay={0.9}
-              />
-              <FeatureCard 
-                icon={Globe} 
-                title={lang === 'ar' ? 'اللهجات العربية' : 'Arabic Dialects'} 
-                desc={lang === 'ar' ? 'استكشف تنوع اللغة' : 'Explore language diversity'} 
-                color="from-cyan-600 to-blue-800"
-                image="https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=800&q=80"
-                delay={1.0}
-              />
-              <FeatureCard 
-                icon={FileText} 
-                title={lang === 'ar' ? 'أوراق العمل' : 'Worksheets'} 
-                desc={lang === 'ar' ? 'توليد تلقائي للتمارين' : 'Auto-generated exercises'} 
-                color="from-slate-600 to-slate-900"
-                image="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80"
-                delay={1.1}
-              />
-              <FeatureCard 
-                icon={Brain} 
-                title={lang === 'ar' ? 'الذاكرة الذكية' : 'Smart Memory'} 
-                desc={lang === 'ar' ? 'تتبع ومراجعة الأخطاء' : 'Track & review mistakes'} 
-                color="from-pink-500 to-rose-600"
-                image="https://images.unsplash.com/photo-1516534775068-ba3e7458af70?auto=format&fit=crop&w=800&q=80"
-                delay={1.2}
-              />
-            </div>
-          </div>
 
           {/* Teacher's Lab Section */}
           <motion.div 
