@@ -1452,8 +1452,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const crossingExit=phase==='room-exit'&&Math.abs(player.x)<4.65;
     const roomView=Boolean(activeRoom)&&phase!=='hall'&&!crossingExit;
     const usingWorkstation=roomView&&phase==='safes'&&Boolean(safeApproach?.ready)&&Boolean(activeRoom);
-    const camTarget=head.clone().addScaledVector(forward,usingWorkstation?-2.2:roomView?-2.65:-4.4)
-      .addScaledVector(right,usingWorkstation?1.12:roomView?.62:1.15);
+    const camTarget=usingWorkstation&&activeRoom?
+      new THREE.Vector3(activeRoom.group.position.x-3.32+safeIndex*2.18+1.05,2.16,activeRoom.info.z-.48):
+      head.clone().addScaledVector(forward,roomView?-2.65:-4.4)
+        .addScaledVector(right,roomView?.62:1.15);
     camTarget.y+=roomView?.82:1.0;
     // Keep the third-person camera inside the playable corridor or room,
     // rather than letting it pass through walls and expose exterior geometry.
@@ -1474,9 +1476,11 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     // Clamp the camera's desired position relative to the actual operator.
     // This avoids long sweeps across geometry when a room loads or teleports.
     const cameraOffset=camTarget.clone().sub(head);
-    const maxBoom=roomView?3.1:4.8;
+    const maxBoom=usingWorkstation?4.0:roomView?3.1:4.8;
     if(cameraOffset.length()>maxBoom)camTarget.copy(head).add(cameraOffset.setLength(maxBoom));
-    const lookTarget=head.clone().addScaledVector(forward,usingWorkstation?2.6:roomView?5.1:4.5);
+    const lookTarget=usingWorkstation&&activeRoom?
+      new THREE.Vector3(activeRoom.group.position.x-3.32+safeIndex*2.18,1.45,activeRoom.info.z-3.05):
+      head.clone().addScaledVector(forward,roomView?5.1:4.5);
     lookTarget.y+=shotKick;
     // Snap after a room transition so interpolation never sweeps the camera
     // through corridor walls; otherwise ease the camera toward its target.
