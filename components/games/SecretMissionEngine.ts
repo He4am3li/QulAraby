@@ -351,9 +351,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const interactionHands=new THREE.Group();playerRoot.add(interactionHands);
   const interactionSleeves:THREE.Mesh[]=[];
   let skeletalHands:THREE.Bone[]=[];
-  const skeletalHandRest:THREE.Quaternion[]=[];
   let skeletalShoulders:THREE.Bone[]=[];
-  const skeletalShoulderRest:THREE.Quaternion[]=[];
+  const lastReachRotations=new Map<THREE.Bone,THREE.Quaternion>();
   for(const side of [-1,1]){
     const sleeve=round(interactionHands,.115,.48,armor,[side*.28,1.12,-.3]);
     sleeve.rotation.x=Math.PI/2.8;
@@ -516,8 +515,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     avatar.add(model);heroFallback.visible=false;
     // Resolve actual skeleton hands once; when available, drive them through
     // their existing joints instead of displaying detached overlay arms.
-    skeletalHands=[];skeletalHandRest.length=0;
-    skeletalShoulders=[];skeletalShoulderRest.length=0;
+    skeletalHands=[];skeletalShoulders=[];lastReachRotations.clear();
     for(const side of ['left','right']){
       let candidate:THREE.Bone|null=null;
       model.traverse(node=>{
@@ -526,13 +524,13 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         if(name.includes(side)&&name.includes('hand'))candidate=node;
       });
       if(candidate){
-        skeletalHands.push(candidate);skeletalHandRest.push(candidate.quaternion.clone());
+        skeletalHands.push(candidate);
         let upper:THREE.Object3D|null=candidate.parent;
         while(upper&&upper!==model){
           if(upper instanceof THREE.Bone&&/upper.?arm|shoulder/i.test(upper.name))break;
           upper=upper.parent;
         }
-        if(upper instanceof THREE.Bone){skeletalShoulders.push(upper);skeletalShoulderRest.push(upper.quaternion.clone());}
+        if(upper instanceof THREE.Bone)skeletalShoulders.push(upper);
       }
     }
     modelMixer=new THREE.AnimationMixer(model);
@@ -1165,16 +1163,20 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       // Apply reach after animation sampling; the mixer otherwise resets the
       // hand bones on every frame. Use a bounded additive wrist rotation.
       if(skeletalHands.length){
-        // Blend the reach on top of the mixer pose, not the original rest pose:
-        // resetting to bind rotations each frame would freeze the soldier's
-        // hands during walking and combat animations.
+        // Undo our previous additive rotation first. Some animation clips do
+        // not key every bone, so simply multiplying a fresh tilt each frame
+        // causes unbounded twisting. This preserves the mixer pose as well.
+        const poseReach=(bone:THREE.Bone,tilt:THREE.Quaternion)=>{
+          const previous=lastReachRotations.get(bone);
+          if(previous)bone.quaternion.multiply(previous.clone().invert());
+          bone.quaternion.multiply(tilt);
+          lastReachRotations.set(bone,tilt);
+        };
         skeletalHands.forEach((hand,i)=>{
-          const tilt=new THREE.Quaternion().setFromEuler(new THREE.Euler(-reach*.38,(i===0?-.12:.12)*reach,0));
-          hand.quaternion.multiply(tilt);
+          poseReach(hand,new THREE.Quaternion().setFromEuler(new THREE.Euler(-reach*.38,(i===0?-.12:.12)*reach,0)));
         });
         skeletalShoulders.forEach((shoulder,i)=>{
-          const tilt=new THREE.Quaternion().setFromEuler(new THREE.Euler(-reach*.25,0,(i===0?-.1:.1)*reach));
-          shoulder.quaternion.multiply(tilt);
+          poseReach(shoulder,new THREE.Quaternion().setFromEuler(new THREE.Euler(-reach*.25,0,(i===0?-.1:.1)*reach)));
         });
       }
     }
