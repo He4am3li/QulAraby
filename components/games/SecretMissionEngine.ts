@@ -275,7 +275,20 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     for(let i=0;i<4;i++){
       const safeX=-3.32+i*2.18;
       const cabinet=new THREE.Group();cabinet.position.set(safeX,0,-3.95);group.add(cabinet);
-      poly(cabinet,[1.68,2.25,1.45],trim,[0,1.13,0]);
+      // Sector-specific cabinet hardware: depot supply crates, communications
+      // terminals, archive document lockers, and reinforced defense vaults.
+      const cabinetShell=info.id==='depot'?armorPanel:info.id==='comms'?black:info.id==='archive'?steel:trim;
+      poly(cabinet,[1.68,2.25,1.45],cabinetShell,[0,1.13,0]);
+      if(info.id==='depot'){
+        for(const y of [.35,1.02,1.72])poly(cabinet,[1.72,.075,1.5],amber,[0,y,0]);
+      }else if(info.id==='comms'){
+        poly(cabinet,[1.28,.34,.06],cyan,[0,1.83,.78]);
+        for(let led=0;led<4;led++)round(cabinet,.055,.025,led===i?amber:green,[-.48+led*.32,1.47,.78],8).rotation.x=Math.PI/2;
+      }else if(info.id==='archive'){
+        for(const y of [.55,1.1,1.65])poly(cabinet,[1.35,.045,.075],tan,[0,y,.78]);
+      }else{
+        for(const x of [-.61,.61])poly(cabinet,[.13,2.28,1.48],red,[x,1.14,0]);
+      }
       // Interior shelves and visible contents are revealed by the actual hinged door.
       poly(cabinet,[1.47,1.99,.1],black,[0,1.13,.78]);
       poly(cabinet,[1.38,.07,1.17],steel,[0,.57,.04]);
