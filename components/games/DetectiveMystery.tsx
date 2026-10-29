@@ -1751,12 +1751,12 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
             {/* Sound Icon Button (أقصى اليسار) */}
             <button
               onClick={handleToggleMute}
-              className="absolute pointer-events-auto cursor-pointer rounded-full transition-all duration-200 hover:ring-2 hover:ring-amber-400/80 hover:bg-amber-400/20 flex items-center justify-center active:scale-90"
+              className="absolute pointer-events-auto cursor-pointer rounded-full transition-all duration-200 hover:ring-1 hover:ring-amber-400/50 hover:bg-amber-400/10 flex items-center justify-center active:scale-90"
               style={{
-                left: '2.8%',
-                width: '4.4%',
-                top: '85.5%',
-                height: '8.5%',
+                left: '2.7%',
+                width: '4.5%',
+                top: '86.0%',
+                aspectRatio: '1 / 1',
               }}
               title={isMuted ? 'إلغاء كتم المؤثرات الصوتية' : 'كتم المؤثرات الصوتية'}
             >
@@ -1770,12 +1770,12 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
             {/* Music Icon Button (بجانب زر الصوت) */}
             <button
               onClick={handleToggleMusic}
-              className="absolute pointer-events-auto cursor-pointer rounded-full transition-all duration-200 hover:ring-2 hover:ring-amber-400/80 hover:bg-amber-400/20 flex items-center justify-center active:scale-90"
+              className="absolute pointer-events-auto cursor-pointer rounded-full transition-all duration-200 hover:ring-1 hover:ring-amber-400/50 hover:bg-amber-400/10 flex items-center justify-center active:scale-90"
               style={{
-                left: '9.0%',
-                width: '4.4%',
-                top: '85.5%',
-                height: '8.5%',
+                left: '8.9%',
+                width: '4.5%',
+                top: '86.0%',
+                aspectRatio: '1 / 1',
               }}
               title={isMusicPlaying ? 'إيقاف موسيقى التحري' : 'تشغيل موسيقى التحري'}
             >
