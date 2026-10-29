@@ -19,6 +19,7 @@ export type SecretEvents = {
   onShot: (hit:boolean) => void;
   onWeaponChange?: (tier:number) => void;
   onSafeReady?: (index:number) => void;
+  onInstrumentTap?: (room:SecretRoomId,index:number) => void;
   onAmmoChange?: (loaded:number,reserve:number) => void;
   onLoot?: (index:number) => void;
   onError: (message:string) => void;
@@ -971,10 +972,27 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     pointerDown.x=e.clientX;pointerDown.y=e.clientY;
     pointerDown.time=0;
   };
+  const instrumentRay=new THREE.Raycaster();
+  const instrumentPointer=new THREE.Vector2();
+  const tapInstrument=(e:PointerEvent)=>{
+    if(phase!=='safes'||!activeRoom||!safeApproach?.ready)return false;
+    const unit=activeRoom.safes[safeIndex];
+    if(!unit||activeRoom.info.id==='depot')return false;
+    const bounds=canvas.getBoundingClientRect();
+    if(!bounds.width||!bounds.height)return false;
+    instrumentPointer.set((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1);
+    instrumentRay.setFromCamera(instrumentPointer,camera);
+    const hits=instrumentRay.intersectObjects(unit.instrument.children,true);
+    if(!hits.length)return false;
+    events.onInstrumentTap?.(activeRoom.info.id,safeIndex);
+    return true;
+  };
   const pointerEnd=(e:PointerEvent)=>{
     if(pointerDown&&pointerDown.time>0&&performance.now()-pointerDown.time<280){
       if(phase==='intro')start();
-      else if(phase==='combat'||phase==='safes')fire();
+      else if(phase==='safes'){
+        if(!tapInstrument(e))fire();
+      }else if(phase==='combat')fire();
     }
     pointerDown=null;
   };
