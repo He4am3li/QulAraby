@@ -124,6 +124,9 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const [activeSafe,setActiveSafe]=useState(0);
   const [safeStage,setSafeStage]=useState<'approach'|'challenge'|'unlock'>('approach');
   const [selectedPin,setSelectedPin]=useState<string|null>(null);
+  const [frequency,setFrequency]=useState(0);
+  const [archiveChoice,setArchiveChoice]=useState<number|null>(null);
+  const [defenseSequence,setDefenseSequence]=useState<number[]>([]);
   const [hitFlash,setHitFlash]=useState(false);
   const [documents,setDocuments]=useState(false);
   const [rewardToast,setRewardToast]=useState<SecretRoomId|null>(null);
@@ -170,6 +173,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
             if(state==='combat'){
               setRoom(id||null);setOpened([false,false,false,false]);setActiveSafe(0);safeRef.current=0;
               setSelectedPin(null);setSafeStage('approach');setLootReady(false);setHealth(100);
+              setFrequency(0);setArchiveChoice(null);setDefenseSequence([]);
             }
             if(state==='hall'){
               setRoom(null);
@@ -247,6 +251,9 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
       flashTimer.current=setTimeout(()=>setSelectedPin(null),850);
       return;
     }
+    if(room==='comms'&&frequency!==(activeSafe*2+3)%8)return;
+    if(room==='archive'&&archiveChoice!==activeSafe%3)return;
+    if(room==='vault'&&defenseSequence.join(',')!==[activeSafe%3,(activeSafe+1)%3].join(','))return;
     if(!engine.current?.openSafe(activeSafe))return;
     setSelectedPin(q.pin);
     setLootReady(false);
@@ -257,7 +264,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const advanceSafe=()=>{
     if(paused||!room||phase!=='safes'||!lootReady||!opened[activeSafe]||selectedPin==='wrong')return;
     if(activeSafe<3){
-      const index=activeSafe+1;safeRef.current=index;setActiveSafe(index);setSelectedPin(null);setLootReady(false);setSafeStage('approach');return;
+      const index=activeSafe+1;safeRef.current=index;setActiveSafe(index);setSelectedPin(null);setLootReady(false);setSafeStage('approach');setFrequency(0);setArchiveChoice(null);setDefenseSequence([]);return;
     }
     // Claim the visible 3D item from the final safe before recording success.
     if(!opened.every(Boolean)||!engine.current?.collectReward())return;
@@ -408,6 +415,20 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
             <div className="qul-secret-safe-challenge">
               <span>{ar?'رمز الخزنة '+(activeSafe+1):'SAFE '+(activeSafe+1)+' CODE'}</span>
               <p>{MISSIONS[room].safes[activeSafe].prompt[lang]}</p>
+              {room==='comms'&&<div className="qul-secret-choices" aria-label={ar?'ضبط التردد':'Tune frequency'}>
+                <button onClick={()=>setFrequency(v=>(v+7)%8)}>−</button>
+                <strong>{ar?'التردد':'FREQUENCY'} {frequency+1} / 8</strong>
+                <button onClick={()=>setFrequency(v=>(v+1)%8)}>+</button>
+                <small>{ar?'اضبط على القناة':'TUNE TO CHANNEL'} {(activeSafe*2+3)%8+1}</small>
+              </div>}
+              {room==='archive'&&<div className="qul-secret-choices" aria-label={ar?'اختيار الملف':'Select document'}>
+                {[0,1,2].map(n=><button key={n} className={archiveChoice===n?'active':''} onClick={()=>setArchiveChoice(n)}>{ar?'ملف':'FILE'} {n+1} {archiveChoice===n?'✓':''}</button>)}
+                <small>{ar?'طابق رقم الملف المطلوب':'MATCH REQUIRED FILE'} {activeSafe%3+1}</small>
+              </div>}
+              {room==='vault'&&<div className="qul-secret-choices" aria-label={ar?'تسلسل التعطيل':'Override sequence'}>
+                {[0,1,2].map(n=><button key={n} onClick={()=>setDefenseSequence(v=>[...v,n].slice(-2))}>{ar?'دائرة':'CIRCUIT'} {n+1}</button>)}
+                <small>{ar?'تسلسل التعطيل':'OVERRIDE ORDER'} {activeSafe%3+1} → {(activeSafe+1)%3+1} · {defenseSequence.map(n=>n+1).join(' → ')}</small>
+              </div>}
               <div className="qul-secret-choices">
                 {MISSIONS[room].safes[activeSafe].choices.map((choice,i)=>
                   <button key={i} onClick={()=>answer(i)}>
