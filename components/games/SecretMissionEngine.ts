@@ -647,6 +647,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     box.target=-1.65;
     safeUnlockUntil=performance.now()+1100;
     upgradePulseUntil=performance.now()+1700;
+    // Every cabinet contributes a tangible gameplay reward. The final one
+    // unlocks the next weapon tier and updates its physical attachment rig.
+    if(index===0)nextShotAt=0;
+    if(index===1){hp=Math.min(100,hp+20);events.onHealth(hp);}
+    if(index===2)upgradeCoil.visible=true;
+    if(index===3&&activeRoom.info.id!=='vault')setWeaponTier(Math.min(4,unlockedWeaponTier+1));
     if(index===3)activeRoom.reward.visible=true;
     safeIndex++;
     safeApproach=null;
@@ -883,6 +889,10 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
           emit('hall');
         }else emit('hall');
       }
+    }else if(phase==='safes'&&safeApproach&&!safeApproach.ready){
+      // Scripted sprint owns locomotion until the operator reaches the lock.
+      velocityX=velocityZ=0;
+      moving=true;
     }else if(['hall','combat','safes'].includes(phase)){
       const up=Number(controls.has('w')||controls.has('arrowup'))-Number(controls.has('s')||controls.has('arrowdown'));
       const right=Number(controls.has('d')||controls.has('arrowright'))-Number(controls.has('a')||controls.has('arrowleft'));
