@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>قُل - المنصة التفاعلية والسبورة الذكية لتعليم اللغة العربية</title>
     <link rel="icon" type="image/png" href="/Logo.png" />
     <link rel="apple-touch-icon" href="/Logo.png" />
@@ -47,6 +47,16 @@
         margin: 0;
         overflow: hidden;
         overscroll-behavior: none;
+      }
+      /* Use the live visual viewport on mobile Safari when browser chrome or the keyboard changes size. */
+      @supports (height: 100dvh) {
+        html, body, #root { height: 100dvh; }
+      }
+      *, *::before, *::after { box-sizing: border-box; }
+      img, video, canvas, svg { max-width: 100%; }
+      button, input, select, textarea { font: inherit; }
+      @media (pointer: coarse) {
+        button, a, [role="button"] { touch-action: manipulation; }
       }
       body {
         font-family: 'Inter', 'Tajawal', sans-serif;
