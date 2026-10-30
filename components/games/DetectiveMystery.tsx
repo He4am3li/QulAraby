@@ -2186,7 +2186,7 @@ ${activeCase.evidenceTerms.map((t, i) => `${i + 1}. ${t.ar}  ---  [${t.en}]`).jo
                   <img 
                     src={suspect.image} 
                     alt={suspect.name} 
-                    className={`absolute inset-0 block w-full h-full max-w-none object-cover object-[center_18%] pointer-events-none transition-[filter] duration-300 ${
+                    className={`absolute inset-0 block w-full h-full max-w-none object-contain object-center pointer-events-none transition-[filter] duration-300 ${
                       isEliminated ? 'filter brightness-40 grayscale contrast-75' : 'filter brightness-100'
                     }`}
                     loading="eager"
