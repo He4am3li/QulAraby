@@ -10,6 +10,9 @@ import { LanguageToggle } from '../components/LanguageToggle';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { Interactive3DTutor } from '../components/Interactive3DTutor';
+import { DialectReferencePanel } from '../components/DialectReferencePanel';
+import { DialectVoiceOrb } from '../components/DialectVoiceOrb';
+import { DialectChatDock } from '../components/DialectChatDock';
 import { generateSpeech, decodeAudioData } from '../services/gemini';
 
 declare global {
@@ -1405,6 +1408,7 @@ export const Dialects: React.FC = () => {
     return saved ? JSON.parse(saved) : {};
   });
   const [isPassportOpen, setIsPassportOpen] = React.useState(false);
+  const [mobileCountryPanel, setMobileCountryPanel] = React.useState<'stage' | 'reference'>('stage');
   const [salmanSuccessSignal, setSalmanSuccessSignal] = React.useState(0);
 
   const getTutorGreeting = (countryId: string, char: any, isFemale: boolean, language: 'ar' | 'en') => {
@@ -1495,6 +1499,7 @@ export const Dialects: React.FC = () => {
   React.useEffect(() => {
     // Reset state and auto-select default tutor when country opens
     setChatInput('');
+    setMobileCountryPanel('stage');
     if (selectedCountry) {
       const defaultChar = selectedCountry.characterMale;
       setSelectedPersona(defaultChar);
@@ -1973,345 +1978,148 @@ export const Dialects: React.FC = () => {
               ))}
             </motion.div>
           ) : (
-            <motion.div 
+            <motion.div
               key="country-detail"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="max-w-[99%] mx-auto bg-white rounded-[2rem] overflow-hidden shadow-2xl border border-slate-100 w-full flex flex-col md:flex-row flex-1 h-full min-h-0"
+              exit={{ opacity: 0 }}
+              transition={{ duration: .25 }}
+              className="mx-auto flex h-full min-h-0 w-full max-w-[1680px] flex-1 flex-col overflow-hidden rounded-[24px] border border-slate-100 bg-[#f5f8f7] p-[clamp(6px,.85vh,11px)] shadow-[0_16px_50px_rgba(20,44,52,.11)]"
             >
-              {/* Left Column: Info & Culture */}
-              <div className="w-full md:w-1/2 flex flex-col overflow-y-auto custom-scroll border-l border-slate-100 h-full min-h-0">
-                {/* Hero Section */}
-                <div className="h-[140px] shrink-0 relative">
-                  <SafeImage src={selectedCountry.image} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/30" />
-                  <div className="absolute bottom-3 right-5 flex items-end gap-3">
-                    <div className="text-4xl drop-shadow-2xl">{selectedCountry.flag}</div>
-                      <div className="text-right">
-                        <h2 className="text-xl font-black text-slate-800 arabic-font mb-0">{selectedCountry.nameAr}</h2>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest" dir="ltr">{selectedCountry.nameEn}</p>
-                      </div>
-                  </div>
+              {/* On narrow devices, keep the page itself fixed and switch between the scene and reference. */}
+              <nav className="mb-2 grid h-[38px] shrink-0 grid-cols-2 gap-2 lg:hidden" aria-label={lang === 'ar' ? 'أقسام الدولة' : 'Country sections'}>
+                <button type="button" onClick={() => setMobileCountryPanel('stage')}
+                  aria-pressed={mobileCountryPanel === 'stage'}
+                  className={mobileCountryPanel === 'stage'
+                    ? 'rounded-xl bg-[#0d6f5e] text-white text-xs font-bold arabic-font'
+                    : 'rounded-xl bg-white text-slate-600 text-xs font-bold arabic-font border border-slate-200'}>
+                  {lang === 'ar' ? 'الشخصيات والمحادثة' : 'Characters & chat'}
+                </button>
+                <button type="button" onClick={() => setMobileCountryPanel('reference')}
+                  aria-pressed={mobileCountryPanel === 'reference'}
+                  className={mobileCountryPanel === 'reference'
+                    ? 'rounded-xl bg-[#0d6f5e] text-white text-xs font-bold arabic-font'
+                    : 'rounded-xl bg-white text-slate-600 text-xs font-bold arabic-font border border-slate-200'}>
+                  {lang === 'ar' ? 'الثقافة والمفردات' : 'Culture & words'}
+                </button>
+              </nav>
+
+              <div className="flex min-h-0 flex-1 flex-row gap-[clamp(6px,.8vw,13px)]">
+                {/* RTL: first is on the right. All eight words remain visible while speaking on desktop. */}
+                <div className={(mobileCountryPanel === 'reference' ? 'flex' : 'hidden') + ' min-h-0 min-w-0 w-full lg:flex lg:w-[42%] lg:shrink-0'}>
+                  <DialectReferencePanel
+                    key={selectedCountry.id}
+                    country={selectedCountry}
+                    lang={lang}
+                    onPronounce={text => { void playAudio(text); }}
+                    heroImage={<SafeImage src={selectedCountry.image} className="h-full w-full object-cover" alt={selectedCountry.nameAr}/>}
+                  />
                 </div>
 
-                <div className="p-5 space-y-6">
-                  {/* Culture Section */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-r-4 border-blue-600 pr-2">
-                      <h3 className="text-base font-black text-slate-800 arabic-font">{t.culture}</h3>
+                {/* The characters remain in one stage. No duplicate image or voice-screen overlay. */}
+                <section className={(mobileCountryPanel === 'stage' ? 'flex' : 'hidden') + ' h-full min-h-0 min-w-0 w-full flex-col lg:flex lg:w-[58%] lg:flex-1'}
+                  aria-label={lang === 'ar' ? 'الشخصيات والمحادثة' : 'Characters and conversation'}>
+                  <div className="flex h-[34px] shrink-0 items-center justify-between gap-3 px-2">
+                    <div className="min-w-0 flex flex-1 items-center gap-1.5" title={(() => {
+                      const rank = stampedCountries[selectedCountry.id] || 0;
+                      const missions = selectedCountry.missions;
+                      if (!missions) return '';
+                      return lang === 'ar'
+                        ? (rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar)
+                        : (rank === 0 ? missions.visitor.en : rank === 1 ? missions.resident.en : missions.native.en);
+                    })()}>
+                      <span className="shrink-0 rounded-lg bg-amber-100 px-2 py-1 text-[11px] font-bold text-amber-800 arabic-font">{t.mission}</span>
+                      <span className="truncate text-[11px] font-semibold text-slate-600 arabic-font">
+                        {(() => {
+                          const rank = stampedCountries[selectedCountry.id] || 0;
+                          const m = selectedCountry.missions;
+                          if (!m) return '';
+                          return lang === 'ar'
+                            ? (rank === 0 ? m.visitor.ar : rank === 1 ? m.resident.ar : m.native.ar)
+                            : (rank === 0 ? m.visitor.en : rank === 1 ? m.resident.en : m.native.en);
+                        })()}
+                      </span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {selectedCountry.culture.items.map((item: any, i: number) => (
-                        <div key={i} className="relative group">
-                          <div className="bg-slate-50 p-2 rounded-xl flex flex-col items-center text-center border border-slate-100 hover:shadow-sm transition-all group-hover:bg-blue-50/50 cursor-help">
-                            <span className="text-xl mb-0.5 group-hover:scale-110 transition-transform">{item.icon}</span>
-                            <h4 className="text-[10px] font-black text-slate-800 arabic-font truncate w-full">{item.nameAr}</h4>
-                            <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 truncate w-full" dir="ltr">{item.nameEn}</p>
-                          </div>
-                          
-                          {/* Tooltip Popup */}
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 z-50">
-                            <div className="bg-slate-900 text-white p-2.5 rounded-xl shadow-2xl border border-white/10 text-right">
-                              <p className="text-[9.5px] font-bold arabic-font leading-relaxed mb-1.5">{item.descAr}</p>
-                              <div className="pt-1 border-t border-white/10 text-left" dir="ltr">
-                                <p className="text-[8.5px] text-slate-400 font-medium leading-snug italic text-left" dir="ltr">{item.descEn}</p>
-                              </div>
-                              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Vocab Section */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-r-4 border-emerald-500 pr-2">
-                      <h3 className="text-base font-black text-slate-800 arabic-font">{t.vocab}</h3>
-                    </div>
-                    <div className="grid grid-cols-1 gap-2">
-                      {selectedCountry.vocab.slice(0, 8).map((v: any, i: number) => (
-                        <div key={i} className="bg-white border border-slate-100 p-3 rounded-xl flex items-center justify-between hover:border-emerald-200 transition-all shadow-sm group">
-                          <div className="flex items-center gap-4 flex-1">
-                            {/* Fusha */}
-                            <div className="text-right min-w-[60px]">
-                              <span className="text-[7px] font-black text-slate-300 uppercase block mb-0.5">{t.fusha}</span>
-                              <span className="text-[11px] font-black text-slate-400 arabic-font">{v.fusha}</span>
-                            </div>
-
-                            {/* Arrow */}
-                            <div className="w-5 h-5 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 group-hover:text-emerald-500 transition-colors shrink-0">
-                              <ArrowRight size={10} className={lang === 'ar' ? 'rotate-180' : ''} />
-                            </div>
-
-                            {/* Dialect + Romanized */}
-                            <div className="text-right flex-1">
-                              <span className="text-[7px] font-black text-emerald-500 uppercase block mb-0.5">{t.dialect}</span>
-                              <div className="flex flex-col">
-                                <span className="text-sm font-black text-emerald-600 arabic-font leading-tight">{v.dialect}</span>
-                                <span className="text-[9px] font-bold text-emerald-400 italic tracking-tight" dir="ltr">{v.roman}</span>
-                              </div>
-                            </div>
-
-                            {/* English Translation */}
-                            <div className="text-left border-r border-slate-100 pr-4 min-w-[80px]" dir="ltr">
-                              <span className="text-[7px] font-black text-slate-300 uppercase block mb-0.5">English</span>
-                              <span className="text-[10px] font-bold text-slate-500 italic">{v.en}</span>
-                            </div>
-                          </div>
-                          
-                          <button 
-                            onClick={() => playAudio(v.dialect)}
-                            className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm ml-4 shrink-0"
-                          >
-                            <Volume2 size={14} />
-                          </button>
-                        </div>
-                      ))}
+                    <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/75 px-2.5 py-1" title={lang === 'ar' ? 'مستواك الحالي' : 'Current rank'}>
+                      <Trophy size={13} className="text-amber-600"/>
+                      <span className="text-[11px] font-bold text-[#15594f] arabic-font">
+                        {stampedCountries[selectedCountry.id] === 2
+                          ? (lang === 'ar' ? 'روح البلد' : 'Native Spirit')
+                          : stampedCountries[selectedCountry.id] === 1
+                            ? (lang === 'ar' ? 'مقيم' : 'Resident')
+                            : (lang === 'ar' ? 'زائر' : 'Visitor')}
+                      </span>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Right Column: AI & Interaction */}
-              <div className="w-full md:w-1/2 flex flex-col bg-slate-50/50 h-full min-h-0 overflow-hidden">
-                {/* Personas & Chat */}
-                <div className="flex-1 flex flex-col overflow-hidden">
-                  <div className="p-4 border-b border-slate-100 bg-white shrink-0">
-                    {/* Did You Know Section (هل تعلم؟) */}
-                    <div className="mb-3.5 bg-gradient-to-l from-[#0f172a]/95 to-[#064e3b]/95 border border-white/20 text-white rounded-2xl p-4 shadow-lg shadow-slate-950/20 text-right relative overflow-hidden">
-                      {/* Subtle ambient light accent */}
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
-                      <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
-
-                      <div className="flex items-center justify-between gap-2 mb-2 relative z-10">
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-400/15 border border-emerald-400/30">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          <span className="text-[11px] font-black text-emerald-300 uppercase tracking-wider arabic-font">
-                            {t.didYouKnow}
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-bold text-emerald-100/60 uppercase tracking-widest" dir="ltr">
-                          Culture Note
-                        </span>
-                      </div>
-                      <p className="text-xs font-bold text-slate-100 arabic-font leading-relaxed relative z-10">
-                        {selectedCountry.culture.factAr}
-                      </p>
-                      {selectedCountry.culture.factEn && (
-                        <div className="mt-2.5 pt-2 border-t border-white/15 text-left relative z-10" dir="ltr">
-                          <p className="text-[10.5px] text-emerald-100/80 font-normal italic leading-snug text-left" dir="ltr">
-                            {selectedCountry.culture.factEn}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 3D Character Stage - Seamless without frames, borders, or boxes */}
-                    <div 
-                      className="relative py-2 px-2 overflow-visible flex items-end justify-center gap-6 sm:gap-14 min-h-[220px] sm:min-h-[250px]"
-                      style={{ perspective: '1000px' }}
-                    >
-                      {/* Realistic 3D Stage Floor Light & Depth (Frameless) */}
-                      <div className="absolute -bottom-1 inset-x-4 h-8 bg-gradient-to-t from-slate-200/40 via-slate-100/10 to-transparent rounded-full blur-md pointer-events-none" />
-                      
+                  <div className="relative min-h-0 flex-1 overflow-hidden rounded-[18px] bg-[radial-gradient(ellipse_at_50%_60%,rgba(218,239,231,.8),rgba(249,251,249,.65)_60%,rgba(235,242,240,.6))]">
+                    {/* Each character fills the available height. Figure click selects, central orb starts/stops voice. */}
+                    <div className="absolute inset-0 grid grid-cols-2 gap-[clamp(8px,2vw,36px)] px-[clamp(8px,2vw,38px)] pb-[64px] pt-2">
                       {[
                         { char: selectedCountry.characterMale, gender: 'male' as const, isFemale: false },
                         { char: selectedCountry.characterFemale, gender: 'female' as const, isFemale: true }
-                      ].map(({ char, gender, isFemale }, idx) => {
-                        const isSelected = selectedPersona?.nameEn === char.nameEn;
+                      ].map(({ char, gender, isFemale }, index) => {
+                        const chosen = selectedPersona?.nameEn === char.nameEn;
                         return (
                           <Interactive3DTutor
-                            key={idx}
+                            key={selectedCountry.id + gender}
                             countryId={selectedCountry.id}
                             character={char}
                             gender={gender}
                             successSignal={selectedCountry.id === 'saudi' && gender === 'male' ? salmanSuccessSignal : 0}
-                            isSelected={isSelected}
-                            isSpeaking={isSelected && isSpeaking}
-                            isListening={isSelected && isListening}
-                            isLoading={isSelected && isChatLoading}
-                            audioLevel={audioLevel}
+                            isSelected={chosen}
+                            isSpeaking={chosen && isSpeaking}
+                            isListening={chosen && isListening}
+                            isLoading={chosen && isChatLoading}
+                            audioLevel={chosen ? audioLevel : 0}
                             countryNameAr={selectedCountry.nameAr}
                             countryNameEn={selectedCountry.nameEn}
                             dialectName={selectedCountry.dialect}
-                            currentSpeechText={isSelected && isSpeaking ? currentSpeechText : undefined}
+                            currentSpeechText={chosen && isSpeaking ? currentSpeechText : undefined}
                             lang={lang}
                             onSelect={() => {
+                              const wasLive = isLiveActive;
+                              if (wasLive) stopLiveConversation();
                               setSelectedPersona(char);
-                              const greetingText = getTutorGreeting(selectedCountry.id, char, isFemale, lang);
-                              setChatMessages(prev => [...prev, { role: 'model', text: greetingText }]);
-                              playAudio(greetingText);
+                              const greeting = getTutorGreeting(selectedCountry.id, char, isFemale, lang);
+                              setChatMessages([{ role: 'model', text: greeting }]);
+                              if (!wasLive && !isSpeaking) void playAudio(greeting);
                             }}
-                            onQuickTalk={() => {
-                              const greetingText = getTutorGreeting(selectedCountry.id, char, isFemale, lang);
-                              playAudio(greetingText);
-                            }}
-                            onStartLive={() => startLiveConversation(char)}
                           />
                         );
                       })}
                     </div>
-
-                    {/* Quick Live Voice & Dialect Interaction Bar */}
-                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-                      <button
-                        onClick={() => startLiveConversation()}
-                        aria-label={isLiveActive ? (lang === 'ar' ? 'إيقاف الاتصال الصوتي' : 'Stop voice call') : (lang === 'ar' ? 'فتح الاتصال الصوتي' : 'Open voice call')}
-                        title={isLiveActive ? (lang === 'ar' ? 'إيقاف الاتصال الصوتي' : 'Stop voice call') : (lang === 'ar' ? 'فتح الاتصال الصوتي' : 'Open voice call')}
-                        aria-pressed={isLiveActive}
-                        className={`inline-flex shrink-0 w-9 h-9 items-center justify-center rounded-xl transition-all shadow-sm ${
-                          isLiveActive
-                            ? 'bg-rose-500 hover:bg-rose-600 text-white animate-pulse'
-                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-blue-500/20'
-                        }`}
-                      >
-                        {isLiveActive ? (
-                          <>
-                            <MicOff size={17} />
-                          </>
-                        ) : (
-                          <>
-                            <Mic size={17} />
-                          </>
-                        )}
-                      </button>
-
-                      {/* Quick Conversation Starters */}
-                      <div className="flex items-center gap-1.5 overflow-x-auto custom-scroll py-0.5">
-                        {[
-                          { ar: 'كيف حالك اليوم؟', en: 'How are you?' },
-                          { ar: 'علمني كلمة مميزة بلهجتكم', en: 'Teach me a unique word' },
-                          { ar: 'ما هي أشهر أكلة عندكم؟', en: 'What is your famous dish?' }
-                        ].map((prompt, pIdx) => (
-                          <button
-                            key={pIdx}
-                            onClick={() => handleAIChat(lang === 'ar' ? prompt.ar : prompt.en)}
-                            disabled={isChatLoading}
-                            className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-700 arabic-font transition-colors shrink-0 whitespace-nowrap border border-slate-200/60"
-                          >
-                            💬 {lang === 'ar' ? prompt.ar : prompt.en}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex-1 overflow-hidden flex flex-col relative">
-                    {/* Chat Messages */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll">
-                      {chatMessages.map((msg, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, x: msg.role === 'user' ? 20 : -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className={`flex items-end gap-2 ${msg.role === 'user' ? 'justify-start' : 'justify-end'}`}
-                        >
-                          {/* User Side (right in RTL / left in LTR) */}
-                          {msg.role === 'user' ? (
-                            <div className="max-w-[85%] p-3 rounded-2xl text-xs font-bold arabic-font shadow-sm bg-blue-600 text-white rounded-tr-none" dir="auto">
-                              {msg.text}
-                            </div>
-                          ) : (
-                            /* Model Tutor Side with Avatar & Voice button */
-                            <div className="flex items-end gap-2 max-w-[90%]">
-                              <button
-                                onClick={() => playAudio(msg.text)}
-                                title={lang === 'ar' ? 'استمع إلى النطق' : 'Listen to pronunciation'}
-                                className="w-7 h-7 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shrink-0 shadow-2xs"
-                              >
-                                <Volume2 size={13} />
-                              </button>
-                              <div className="p-3 rounded-2xl text-xs font-bold arabic-font shadow-sm bg-white text-slate-800 border border-slate-100 rounded-tl-none relative group" dir="auto">
-                                <div className="text-[9px] font-black text-blue-600 mb-1 flex items-center gap-1.5 border-b border-slate-50 pb-1">
-                                  <span>{selectedPersona?.nameAr || 'المعلم'}</span>
-                                  {isSpeaking && (
-                                    <span className="flex items-center gap-0.5">
-                                      <span className="w-1 h-2 bg-blue-500 rounded-full animate-bounce" />
-                                      <span className="w-1 h-3 bg-blue-500 rounded-full animate-bounce [animation-delay:0.1s]" />
-                                      <span className="w-1 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]" />
-                                    </span>
-                                  )}
-                                </div>
-                                {msg.text}
-                              </div>
-                              <div className="relative w-8 h-8 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 shadow-xs mb-0.5">
-                                <SafeImage src={selectedPersona?.image} className="w-full h-full object-cover object-top" />
-                                {isSpeaking && (
-                                  <div className="absolute inset-0 bg-blue-500/30 animate-pulse" />
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </motion.div>
-                      ))}
-                      {isChatLoading && (
-                        <div className="flex items-center justify-end gap-2">
-                          <div className="bg-white border border-slate-100 p-3 rounded-2xl rounded-tl-none flex items-center gap-2 shadow-xs">
-                            <span className="text-[10px] font-bold text-slate-400 arabic-font">
-                              {lang === 'ar' ? `${selectedPersona?.nameAr || 'المعلم'} يجهز الإجابة...` : 'Tutor is typing...'}
-                            </span>
-                            <div className="flex gap-1">
-                              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" />
-                              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:0.2s]" />
-                              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:0.4s]" />
-                            </div>
-                          </div>
-                          <div className="w-8 h-8 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 shadow-xs">
-                            <SafeImage src={selectedPersona?.image} className="w-full h-full object-cover object-top opacity-80" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Chat Input */}
-                    <div className="p-4 bg-white border-t border-slate-100 shrink-0">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={chatInput}
-                          onChange={(e) => setChatInput(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && handleAIChat()}
-                          placeholder={t.placeholder}
-                          className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-xs font-bold arabic-font focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    <div className="absolute inset-x-0 bottom-0 z-30 flex h-[65px] items-center justify-center pointer-events-none">
+                      <div className="pointer-events-auto">
+                        <DialectVoiceOrb
+                          active={isLiveActive}
+                          listening={isListening}
+                          speaking={isSpeaking}
+                          loading={isChatLoading}
+                          disabled={!selectedPersona}
+                          lang={lang}
+                          onToggle={() => { void startLiveConversation(); }}
                         />
-                        <button
-                          onClick={() => handleAIChat()}
-                          disabled={isChatLoading || !chatInput.trim()}
-                          className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50"
-                        >
-                          <Send size={18} />
-                        </button>
-                        <button
-                          onClick={startSTT}
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-md ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                        >
-                          <Mic size={18} />
-                        </button>
                       </div>
-                    </div>
-
-                    {/* The active voice session updates the selected tutor in its original stage.
-                         No duplicate avatar or fullscreen overlay covers chat or footer. */}
-                  </div>
-                </div>
-
-                {/* Bottom Action Bar */}
-                <div className="px-4 py-2 bg-white border-t border-slate-100 flex items-center justify-end shrink-0">
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <div className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">
-                        {lang === 'ar' ? 'مستواك الحالي' : 'Current Rank'}
-                      </div>
-                      <div className="text-[10px] font-black text-amber-600 arabic-font">
-                        {stampedCountries[selectedCountry.id] === 2 ? (lang === 'ar' ? 'روح البلد' : 'Native Spirit') : stampedCountries[selectedCountry.id] === 1 ? (lang === 'ar' ? 'مقيم' : 'Resident') : (lang === 'ar' ? 'زائر' : 'Visitor')}
-                      </div>
-                    </div>
-                    <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
-                      <Trophy size={16} />
                     </div>
                   </div>
-                </div>
+
+                  {/* Fixed-height, paged transcript and input: the document never needs to scroll. */}
+                  <div className="mt-[clamp(6px,.75vh,9px)] h-[clamp(143px,29%,178px)] min-h-0 shrink-0">
+                    <DialectChatDock
+                      lang={lang}
+                      name={lang === 'ar' ? selectedPersona?.nameAr : selectedPersona?.nameEn}
+                      messages={chatMessages}
+                      value={chatInput}
+                      onChange={setChatInput}
+                      onSend={text => { void handleAIChat(text); }}
+                      onDictate={startSTT}
+                      onPronounce={text => { void playAudio(text); }}
+                      loading={isChatLoading}
+                      listening={isListening && !isLiveActive}
+                    />
+                  </div>
+                </section>
               </div>
             </motion.div>
           )}
