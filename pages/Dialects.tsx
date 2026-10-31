@@ -10,7 +10,7 @@ import { LanguageToggle } from '../components/LanguageToggle';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { Interactive3DTutor } from '../components/Interactive3DTutor';
-import { SalmanLayeredAvatar } from '../components/SalmanLayeredAvatar';
+import { Live3DCharacter } from '../components/Live3DCharacter';
 import { generateSpeech, decodeAudioData } from '../services/gemini';
 
 declare global {
@@ -2342,11 +2342,16 @@ export const Dialects: React.FC = () => {
                               <div className={`absolute inset-0 rounded-full blur-[80px] transition-all duration-500 ${isSpeaking ? 'bg-blue-500/30 scale-125' : 'bg-emerald-500/10 scale-100'}`} />
                               
                               {isSalmanActive ? (
-                                <SalmanLayeredAvatar
-                                  view="full"
+                                <Live3DCharacter
+                                  countryId="saudi"
+                                  gender="male"
+                                  isSelected={true}
                                   isSpeaking={isSpeaking}
                                   isListening={isListening}
                                   isLoading={isChatLoading}
+                                  audioLevel={audioLevel}
+                                  imageSrc={selectedPersona.image}
+                                  nameAr="سلمان"
                                   className="w-full h-full"
                                 />
                               ) : (
