@@ -1964,11 +1964,10 @@ export const Dialects: React.FC = () => {
               {t.back}
             </button>
             <button 
-              onClick={() => setIsPassportOpen(true)}
-              className="bg-amber-500/20 text-amber-400 px-4 py-1.5 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/30 border border-amber-500/30 backdrop-blur-md flex items-center gap-2"
+              onClick={() => { setPassportFocusId(null); setIsPassportOpen(true); }}
+              className="bg-amber-500/20 text-amber-100 px-3 py-1.5 rounded-xl transition-all text-[11px] font-black hover:bg-amber-500/30 border border-amber-500/30 backdrop-blur-md flex items-center gap-2"
             >
-              <Trophy size={14} />
-              {lang === 'ar' ? 'جواز السفر' : 'Passport'}
+              {lang === 'ar' ? 'جوازات قُل' : 'QUL Passports'}
             </button>
           </>
         }
@@ -2102,16 +2101,30 @@ export const Dialects: React.FC = () => {
                         })()}
                       </span>
                     </div>
-                    <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/75 px-2.5 py-1" title={lang === 'ar' ? 'مستواك الحالي' : 'Current rank'}>
-                      <Trophy size={13} className="text-amber-600"/>
-                      <span className="text-[11px] font-bold text-[#15594f] arabic-font">
-                        {stampedCountries[selectedCountry.id] === 2
-                          ? (lang === 'ar' ? 'روح البلد' : 'Native Spirit')
-                          : stampedCountries[selectedCountry.id] === 1
-                            ? (lang === 'ar' ? 'مقيم' : 'Resident')
-                            : (lang === 'ar' ? 'زائر' : 'Visitor')}
+                    <button type="button"
+                      onClick={() => { setPassportFocusId(selectedCountry.id); setIsPassportOpen(true); }}
+                      className={'group flex h-[37px] shrink-0 items-center gap-2 rounded-xl border px-2 py-0.5 shadow-sm transition-colors hover:border-amber-300 ' +
+                        ((passportLevels[selectedCountry.id] || 0) >= 1 ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white/80')}
+                      title={lang === 'ar' ? 'افتح جواز هذه الدولة' : 'Open this country passport'}
+                      aria-label={lang === 'ar' ? 'عرض جواز ' + selectedCountry.nameAr : 'View ' + selectedCountry.nameEn + ' passport'}>
+                      <div className="w-[26px] shrink-0">
+                        <DialectPassportCover country={selectedCountry} level={passportLevels[selectedCountry.id] || 0} compact/>
+                      </div>
+                      <span className="flex flex-col items-start gap-px">
+                        <span className="text-[11px] font-black leading-tight text-emerald-900 arabic-font">
+                          {(passportLevels[selectedCountry.id] || 0) === 0
+                            ? (lang === 'ar' ? 'غير مفعّل' : 'Locked')
+                            : (passportLevels[selectedCountry.id] || 0) === 1
+                              ? (lang === 'ar' ? 'زائر' : 'Visitor')
+                              : (passportLevels[selectedCountry.id] || 0) === 2
+                                ? (lang === 'ar' ? 'مقيم' : 'Resident')
+                                : (lang === 'ar' ? 'روح البلد' : 'Native Spirit')}
+                        </span>
+                        <span className="text-[9px] font-semibold text-slate-400 arabic-font">
+                          {lang === 'ar' ? 'جواز قُل' : 'QUL Passport'}
+                        </span>
                       </span>
-                    </div>
+                    </button>
                   </div>
 
                   <div className="relative min-h-0 flex-1 overflow-hidden rounded-[18px] bg-[radial-gradient(ellipse_at_50%_60%,rgba(218,239,231,.8),rgba(249,251,249,.65)_60%,rgba(235,242,240,.6))]">
@@ -2144,7 +2157,7 @@ export const Dialects: React.FC = () => {
                               if (wasLive) stopLiveConversation();
                               setSelectedPersona(char);
                               const greeting = getTutorGreeting(selectedCountry.id, char, isFemale, lang);
-                              setChatMessages([{ role: 'model', text: greeting }]);
+                              setChatMessages([]);
                               if (!wasLive && !isSpeaking) void playAudio(greeting);
                             }}
                           />
@@ -2187,272 +2200,16 @@ export const Dialects: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Dialect Passport Modal */}
-        <AnimatePresence>
-          {isPassportOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsPassportOpen(false)}
-                className="absolute inset-0 bg-slate-900/90 backdrop-blur-xl"
-              />
-              <motion.div 
-                initial={{ scale: 0.9, opacity: 0, y: 50 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0, y: 50 }}
-                className="relative w-full max-w-6xl bg-[#fdfcf8] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-amber-200/50 h-[90vh]"
-              >
-                {/* Passport Left Side (Cover/Info) */}
-                <div className="w-full md:w-1/3 bg-[#6b1212] p-10 flex flex-col items-center justify-center text-center space-y-8 border-r border-amber-900/20 relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/az-subtle.png')]" />
-                  <div className="relative z-10 w-32 h-32 border-4 border-amber-400/30 rounded-full flex items-center justify-center text-amber-400 shadow-2xl shadow-black/20">
-                    <Globe size={64} strokeWidth={1} />
-                  </div>
-                  <div className="relative z-10 space-y-2">
-                    <h2 className="text-3xl font-black text-amber-400 arabic-font">
-                      {lang === 'ar' ? 'جواز سفر ثقافي' : 'Cultural Passport'}
-                    </h2>
-                    <p className="text-amber-400/60 font-bold uppercase tracking-[0.2em] text-[10px]">
-                      {lang === 'ar' ? 'جامعة الدول العربية' : 'League of Arab Nations'}
-                    </p>
-                  </div>
-                  <div className="relative z-10 bg-black/20 backdrop-blur-md p-6 rounded-2xl border border-white/10 w-full">
-                    <p className="text-amber-100/80 text-xs font-bold leading-relaxed arabic-font">
-                      {lang === 'ar' 
-                        ? 'هذا الجواز يمنح لحامله تقديراً لجهوده في استكشاف اللهجات العربية وتعلم ثقافات الشعوب.' 
-                        : 'This passport is granted to its holder in recognition of their efforts in exploring Arabic dialects and learning about diverse cultures.'}
-                    </p>
-                  </div>
-                  <div className="relative z-10 pt-10">
-                    <div className="text-5xl font-black text-amber-400/10 arabic-font">قُـل</div>
-                  </div>
-                </div>
-
-                {/* Passport Right Side (Stamps Grid) */}
-                <div className="flex-1 p-8 md:p-12 overflow-y-auto custom-scroll bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]">
-                  <div className="flex items-center justify-between mb-12">
-                    <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
-                      <h3 className="text-3xl font-black text-slate-800 arabic-font">
-                        {lang === 'ar' ? 'أختام الدول' : 'Country Stamps'}
-                      </h3>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                        {lang === 'ar' ? 'رحلتك عبر الوطن العربي' : 'Your Journey Across the Arab World'}
-                      </p>
-                    </div>
-                    <div className="bg-amber-100 px-6 py-3 rounded-2xl border border-amber-200 shadow-sm flex flex-col items-center">
-                      <span className="text-amber-700 font-black text-xl leading-none">
-                        {Object.values(stampedCountries).filter(r => r >= 1).length} / 22
-                      </span>
-                      <span className="text-[8px] font-black text-amber-600/60 uppercase mt-1 tracking-tighter">Explored</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8">
-                    {COUNTRY_DATA.map(country => {
-                      const rank = stampedCountries[country.id] || 0;
-                      const isStamped = rank >= 1;
-                      
-                      // Define passport colors based on real country passport colors
-                      const passportColors: Record<string, string> = {
-                        uae: 'bg-[#002043]', egypt: 'bg-[#006241]', saudi: 'bg-[#006241]', 
-                        morocco: 'bg-[#006241]', jordan: 'bg-[#002043]', lebanon: 'bg-[#002043]',
-                        palestine: 'bg-[#1a1a1a]', iraq: 'bg-[#002043]', tunisia: 'bg-[#c8102e]',
-                        algeria: 'bg-[#006241]', libya: 'bg-[#002043]', syria: 'bg-[#002043]',
-                        sudan: 'bg-[#006241]', oman: 'bg-[#8b1a1a]', kuwait: 'bg-[#002043]',
-                        qatar: 'bg-[#8b1a1a]', bahrain: 'bg-[#c8102e]', yemen: 'bg-[#002043]',
-                        mauritania: 'bg-[#006241]', somalia: 'bg-[#4189dd]', djibouti: 'bg-[#006241]',
-                        comoros: 'bg-[#006241]'
-                      };
-
-                      const countryCrests: Record<string, string> = {
-                        uae: 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Emblem_of_the_United_Arab_Emirates.svg',
-                        egypt: 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Coat_of_arms_of_Egypt_%28Official%29.svg',
-                        saudi: 'https://upload.wikimedia.org/wikipedia/commons/9/99/Emblem_of_Saudi_Arabia.svg',
-                        morocco: 'https://upload.wikimedia.org/wikipedia/commons/d/d5/Coat_of_arms_of_Morocco.svg',
-                        jordan: 'https://upload.wikimedia.org/wikipedia/commons/d/d1/Coat_of_arms_of_Jordan.svg',
-                        lebanon: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Coat_of_arms_of_Lebanon.svg',
-                        palestine: 'https://upload.wikimedia.org/wikipedia/commons/5/5d/Coat_of_arms_of_Palestine_%28alternative%29.svg',
-                        iraq: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Coat_of_arms_of_Iraq.svg',
-                        tunisia: 'https://upload.wikimedia.org/wikipedia/commons/8/80/Coat_of_arms_of_Tunisia.svg',
-                        algeria: 'https://upload.wikimedia.org/wikipedia/commons/9/91/Emblem_of_Algeria.svg',
-                        libya: 'https://upload.wikimedia.org/wikipedia/commons/a/af/Emblem_of_Libya.svg',
-                        syria: 'https://upload.wikimedia.org/wikipedia/commons/8/82/Coat_of_arms_of_Syria.svg',
-                        sudan: 'https://upload.wikimedia.org/wikipedia/commons/1/1e/Emblem_of_Sudan.svg',
-                        oman: 'https://upload.wikimedia.org/wikipedia/commons/7/7b/National_emblem_of_Oman.svg',
-                        kuwait: 'https://upload.wikimedia.org/wikipedia/commons/e/e3/Emblem_of_Kuwait.svg',
-                        qatar: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Emblem_of_Qatar.svg',
-                        bahrain: 'https://upload.wikimedia.org/wikipedia/commons/6/69/Emblem_of_Bahrain.svg',
-                        yemen: 'https://upload.wikimedia.org/wikipedia/commons/0/07/Emblem_of_Yemen.svg',
-                        mauritania: 'https://upload.wikimedia.org/wikipedia/commons/5/52/Seal_of_Mauritania.svg',
-                        somalia: 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Coat_of_arms_of_Somalia.svg',
-                        djibouti: 'https://upload.wikimedia.org/wikipedia/commons/8/8d/Emblem_of_Djibouti.svg',
-                        comoros: 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Seal_of_the_Comoros.svg'
-                      };
-
-                      const countryOfficialNames: Record<string, { ar: string, en: string }> = {
-                        uae: { ar: 'الإمارات العربية المتحدة', en: 'UNITED ARAB EMIRATES' },
-                        egypt: { ar: 'جمهورية مصر العربية', en: 'ARAB REPUBLIC OF EGYPT' },
-                        saudi: { ar: 'المملكة العربية السعودية', en: 'KINGDOM OF SAUDI ARABIA' },
-                        morocco: { ar: 'المملكة المغربية', en: 'KINGDOM OF MOROCCO' },
-                        jordan: { ar: 'المملكة الأردنية الهاشمية', en: 'HASHEMITE KINGDOM OF JORDAN' },
-                        lebanon: { ar: 'الجمهورية اللبنانية', en: 'LEBANESE REPUBLIC' },
-                        palestine: { ar: 'دولة فلسطين', en: 'STATE OF PALESTINE' },
-                        iraq: { ar: 'جمهورية العراق', en: 'REPUBLIC OF IRAQ' },
-                        tunisia: { ar: 'الجمهورية التونسية', en: 'REPUBLIC OF TUNISIA' },
-                        algeria: { ar: 'الجمهورية الجزائرية الديمقراطية الشعبية', en: 'PEOPLE\'S DEMOCRATIC REPUBLIC OF ALGERIA' },
-                        libya: { ar: 'دولة ليبيا', en: 'STATE OF LIBYA' },
-                        syria: { ar: 'الجمهورية العربية السورية', en: 'SYRIAN ARAB REPUBLIC' },
-                        sudan: { ar: 'جمهورية السودان', en: 'REPUBLIC OF THE SUDAN' },
-                        oman: { ar: 'سلطنة عمان', en: 'SULTANATE OF OMAN' },
-                        kuwait: { ar: 'دولة الكويت', en: 'STATE OF KUWAIT' },
-                        qatar: { ar: 'دولة قطر', en: 'STATE OF QATAR' },
-                        bahrain: { ar: 'مملكة البحرين', en: 'KINGDOM OF BAHRAIN' },
-                        yemen: { ar: 'الجمهورية اليمنية', en: 'REPUBLIC OF YEMEN' },
-                        mauritania: { ar: 'الجمهورية الإسلامية الموريتانية', en: 'ISLAMIC REPUBLIC OF MAURITANIA' },
-                        somalia: { ar: 'جمهورية الصومال الفيدرالية', en: 'FEDERAL REPUBLIC OF SOMALIA' },
-                        djibouti: { ar: 'جمهورية جيبوتي', en: 'REPUBLIC OF DJIBOUTI' },
-                        comoros: { ar: 'جمهورية القمر المتحدة', en: 'UNION OF THE COMOROS' }
-                      };
-
-                      return (
-                        <div 
-                          key={country.id}
-                          className={`relative group transition-all duration-500 ${isStamped ? 'scale-100' : 'scale-95 opacity-40 grayscale'}`}
-                        >
-                          {/* Passport Shape */}
-                          <div className={`aspect-[3/4.2] rounded-xl shadow-2xl overflow-hidden flex flex-col p-6 relative border border-white/10 ${passportColors[country.id] || 'bg-slate-800'}`}>
-                            <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/leather.png')]" />
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-                            
-                            {/* Passport Header (Official Name) */}
-                            <div className="text-center space-y-1 relative z-10">
-                              <h4 className="text-[10px] font-black text-amber-400/95 arabic-font leading-tight tracking-wider drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]">
-                                {countryOfficialNames[country.id]?.ar || country.nameAr}
-                              </h4>
-                              <p className="text-[7px] font-black text-amber-400/80 uppercase tracking-[0.15em] leading-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" dir="ltr">
-                                {countryOfficialNames[country.id]?.en || country.nameEn}
-                              </p>
-                            </div>
-
-                            {/* Passport Emblem (Official Crest) */}
-                            <div className="flex-1 flex flex-col items-center justify-center relative z-10 py-4">
-                              <div className="w-24 h-24 flex items-center justify-center relative">
-                                {/* Gold Foil Effect Glow */}
-                                <div className="absolute inset-0 bg-amber-400/10 blur-2xl rounded-full" />
-                                <SafeImage 
-                                  src={countryCrests[country.id]} 
-                                  className="w-full h-full object-contain brightness-0 invert sepia(1) saturate(10) hue-rotate(15deg) contrast(1.2) opacity-90 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" 
-                                  alt="Crest"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Passport Footer */}
-                            <div className="text-center relative z-10 space-y-4">
-                              <div className="flex flex-col items-center gap-2">
-                                <div className="flex items-center gap-4 w-full justify-center">
-                                  <div className="h-[1px] flex-1 bg-amber-400/30" />
-                                  <p className="text-[11px] text-amber-400 font-black tracking-[0.5em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" dir="ltr">
-                                    PASSPORT
-                                  </p>
-                                  <div className="h-[1px] flex-1 bg-amber-400/30" />
-                                </div>
-                                
-                                {/* Biometric Symbol */}
-                                <div className="w-8 h-5 border-2 border-amber-400/60 rounded-md flex items-center justify-center relative overflow-hidden bg-transparent shadow-[inset_0_0_4px_rgba(0,0,0,0.2)]">
-                                  <div className="w-4 h-2.5 border border-amber-400/60 rounded-sm flex items-center justify-center">
-                                    <div className="w-1.5 h-1.5 bg-amber-400/60 rounded-full" />
-                                  </div>
-                                  <div className="absolute left-0 right-0 h-[1px] bg-amber-400/60 top-1/2 -translate-y-1/2" />
-                                </div>
-                              </div>
-
-                              <div className="flex justify-between items-center px-2">
-                                <p className="text-[6px] text-amber-400/50 font-mono font-black tracking-widest">
-                                  {['A','B','C','L','P'][Math.floor(Math.random() * 5)]}{Math.floor(Math.random() * 90000000 + 10000000)}
-                                </p>
-                                <p className="text-[6px] text-amber-400/50 font-mono font-bold tracking-widest">
-                                  {stampedCountries[country.id] ? 'VALID' : 'ISSUED'}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Stamp Overlay */}
-                            {rank >= 1 && (
-                              <motion.div 
-                                initial={{ scale: 3, opacity: 0, rotate: -30 }}
-                                animate={{ scale: 1, opacity: 1, rotate: -15 }}
-                                className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
-                              >
-                                <div className={`w-32 h-32 border-[6px] rounded-[2.5rem] flex items-center justify-center rotate-[-15deg] bg-white/10 backdrop-blur-[2px] shadow-xl ${rank === 3 ? 'border-amber-500/50' : rank === 2 ? 'border-blue-500/40' : 'border-red-600/30'}`}>
-                                  <div className={`w-28 h-28 border-2 rounded-[2rem] flex flex-col items-center justify-center p-2 text-center ${rank === 3 ? 'border-amber-500/30 text-amber-600' : rank === 2 ? 'border-blue-500/30 text-blue-600' : 'border-red-600/20 text-red-700'}`}>
-                                    <div className="flex items-center gap-1 mb-1 opacity-60">
-                                      <Globe size={8} />
-                                      <span className="text-[6px] font-black tracking-widest uppercase">Wesal Immigration</span>
-                                    </div>
-                                    <div className="h-[1px] w-full bg-current opacity-20 mb-2" />
-                                    <span className="text-[12px] font-black uppercase tracking-tighter leading-none mb-1">
-                                      {rank === 3 ? 'NATIVE' : rank === 2 ? 'RESIDENT' : 'ENTRY'}
-                                    </span>
-                                    <span className="text-[8px] font-black tracking-widest mb-2">APPROVED</span>
-                                    <div className="h-[1px] w-full bg-current opacity-20 mt-1 mb-2" />
-                                    <div className="flex flex-col items-center opacity-70">
-                                      <span className="text-[7px] font-mono font-black">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}</span>
-                                      <Plane size={10} className="mt-1 rotate-45" />
-                                    </div>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
-                          </div>
-
-                          {/* Country Label Below (Flag + Name) */}
-                          <div className="mt-4 text-center space-y-1.5">
-                            <div className="flex items-center justify-center gap-2">
-                              <span className="text-xl drop-shadow-sm">{country.flag}</span>
-                              <span className="text-sm font-black text-slate-800 arabic-font">
-                                {lang === 'ar' ? country.nameAr : country.nameEn}
-                              </span>
-                            </div>
-                            {rank > 0 && (
-                              <div className="flex justify-center gap-0.5">
-                                {[1, 2, 3].map(star => (
-                                  <Star key={star} size={10} fill={star <= rank ? "#f59e0b" : "transparent"} className={star <= rank ? "text-amber-500" : "text-slate-200"} />
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Rank Badge */}
-                          {rank === 3 && (
-                            <div className="absolute -top-2 -right-2 z-30">
-                              <motion.div 
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-600 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white"
-                              >
-                                <Trophy size={14} fill="white" />
-                              </motion.div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <button 
-                  onClick={() => setIsPassportOpen(false)}
-                  className="absolute top-6 right-6 w-12 h-12 bg-white/80 hover:bg-white rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 transition-all shadow-xl border border-slate-200 z-[110]"
-                >
-                  <Square size={24} />
-                </button>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+        {/* One educational passport per country, with three independently earned seals. */}
+        {isPassportOpen && (
+          <DialectPassportLibrary
+            countries={COUNTRY_DATA}
+            levels={passportLevels}
+            initialCountryId={passportFocusId}
+            lang={lang}
+            onClose={() => setIsPassportOpen(false)}
+          />
+        )}
       </div>
     </div>
   );
