@@ -284,8 +284,8 @@ export const Live3DCharacter: React.FC<Props> = ({
       character.head.children.forEach(item => {
         if (item instanceof THREE.Mesh && item.geometry instanceof THREE.SphereGeometry &&
           item.position.y > 0.07 && item.position.y < 0.16 && Math.abs(item.position.x) > 0.12 && Math.abs(item.position.x) < 0.21) {
-          item.scale.y = blinking ? Math.min(item.scale.x * 0.12, 0.018) : item.userData.eyeHeight || item.scale.y;
-          if (!item.userData.eyeHeight) item.userData.eyeHeight = item.scale.y;
+          if (item.userData.eyeHeight === undefined) item.userData.eyeHeight = item.scale.y;
+          item.scale.y = blinking ? Math.min(item.scale.x * 0.12, 0.018) : item.userData.eyeHeight;
         }
       });
       character.root.rotation.y = movement * Math.sin(t * 0.33) * 0.04 + (gender === 'male' ? 0.04 : -0.04);
