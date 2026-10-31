@@ -58,11 +58,9 @@ export const DialectChatDock: React.FC<Props> = ({
       <div className="flex h-[19px] shrink-0 items-center justify-between gap-2">
         <div className="min-w-0 flex items-center gap-2">
           <span className="shrink-0 text-[clamp(11px,.94vw,13px)] font-black text-[#155a4c] arabic-font">
-            {historyOpen ? (ar ? 'سجل الحوار' : 'Conversation history') : (ar ? 'تدرّب على المهمة' : 'Mission practice')}
+            {historyOpen ? (ar ? 'سجل الحوار' : 'Conversation history') : (ar ? 'تدرّب على المهمة مع ' + (name || 'المعلم') : 'Practice the mission with ' + (name || 'your tutor'))}
           </span>
-          {!historyOpen && name && <span className="min-w-0 truncate text-[10px] font-semibold text-slate-400 arabic-font">
-            {ar ? 'مع ' + name : 'with ' + name}
-          </span>}
+
         </div>
         <button type="button" onClick={() => setHistoryOpen(v => !v)}
           className="shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50 arabic-font"
