@@ -1425,7 +1425,7 @@ export const Dialects: React.FC = () => {
   const [recentStamp, setRecentStamp] = React.useState<{countryId: string; level: number} | null>(null);
   const [isPassportOpen, setIsPassportOpen] = React.useState(false);
   const [mobileCountryPanel, setMobileCountryPanel] = React.useState<'stage' | 'reference'>('stage');
-  const [salmanSuccessSignal, setSalmanSuccessSignal] = React.useState(0);
+  const [tutorSuccess, setTutorSuccess] = React.useState<{ countryId: string; personaName: string; count: number } | null>(null);
 
   const getTutorGreeting = (countryId: string, char: any, isFemale: boolean, language: 'ar' | 'en') => {
     if (language === 'en') {
@@ -1633,7 +1633,14 @@ export const Dialects: React.FC = () => {
     passportLevelsRef.current = updated;
     setPassportLevels(updated);
     setRecentStamp({ countryId, level: stage });
-    if (countryId === 'saudi') setSalmanSuccessSignal(value => value + 1);
+    // The actual selected tutor receives the achievement animation in every country.
+    if (selectedCountryRef.current?.id === countryId && selectedPersona) {
+      setTutorSuccess(previous => ({
+        countryId,
+        personaName: selectedPersona.nameEn,
+        count: (previous?.count || 0) + 1
+      }));
+    }
   };
 
   const checkMissionCompletion = async (country: any, level: number) => {
@@ -2227,7 +2234,7 @@ export const Dialects: React.FC = () => {
                             countryId={selectedCountry.id}
                             character={char}
                             gender={gender}
-                            successSignal={selectedCountry.id === 'saudi' && gender === 'male' ? salmanSuccessSignal : 0}
+                            successSignal={tutorSuccess?.countryId === selectedCountry.id && tutorSuccess?.personaName === char.nameEn ? tutorSuccess.count : 0}
                             isSelected={chosen}
                             isSpeaking={chosen && isSpeaking}
                             isListening={chosen && isListening}
