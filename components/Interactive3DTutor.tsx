@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, Mic, Sparkles, MessageCircle, Smile, Zap, Play, VolumeX } from 'lucide-react';
-import { CountryTutorAvatar } from './CountryTutorAvatar';
+import { Live3DCharacter } from './Live3DCharacter';
 
 interface TutorCharacter {
   nameAr: string;
@@ -217,41 +217,19 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
         {/* Character Visual Wrapper */}
         <div className="relative w-36 sm:w-48 h-44 sm:h-56 overflow-visible flex items-end justify-center">
           
-          {/* Main 3D Avatar Image & Vector Hybrid matching authentic national character */}
-          <CountryTutorAvatar
+          {/* Actual transparent WebGL character, with facial and gesture animation. */}
+          <Live3DCharacter
             countryId={countryId}
             gender={gender}
-            isSpeaking={isSelected && isSpeaking}
-            isListening={isSelected && isListening}
+            isSelected={isSelected}
+            isSpeaking={isSpeaking}
+            isListening={isListening}
+            isLoading={isLoading}
+            audioLevel={audioLevel}
             imageSrc={character.image}
             nameAr={character.nameAr}
-            className="max-h-full w-auto object-contain object-bottom pointer-events-none select-none transition-transform duration-300"
+            className="w-full h-full"
           />
-
-          {/* Procedural Reactive 3D Animated Talking Mouth (Lip-Sync Overlay) */}
-          {isSelected && isSpeaking && (
-            <motion.div
-              animate={{
-                scaleY: [1, 2.8, 1.4, 3.2, 1],
-                scaleX: [1, 1.25, 0.95, 1.3, 1],
-                opacity: [0.85, 1, 0.9, 1, 0.85]
-              }}
-              transition={{
-                duration: 0.16,
-                repeat: Infinity,
-                ease: 'easeInOut'
-              }}
-              className="absolute top-[34%] sm:top-[33%] left-1/2 -translate-x-1/2 w-4 sm:w-5 h-2 rounded-full bg-gradient-to-r from-red-600/70 via-rose-700/80 to-red-600/70 blur-[1px] shadow-[0_0_8px_rgba(239,68,68,0.4)] pointer-events-none"
-            >
-              {/* Inner mouth cavity & teeth gleam */}
-              <div className="w-2.5 h-0.5 bg-white/70 rounded-full mx-auto mt-0.5" />
-            </motion.div>
-          )}
-
-          {/* Procedural Natural Eye Blinking Layer */}
-          {isSelected && isBlinking && (
-            <div className="absolute top-[26%] sm:top-[25%] left-1/2 -translate-x-1/2 w-10 sm:w-12 h-1 bg-amber-950/40 rounded-full blur-[0.5px] pointer-events-none" />
-          )}
 
           {/* Procedural Audio Equalizer Bar floating above feet when speaking */}
           {isSelected && isSpeaking && (
