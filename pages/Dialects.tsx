@@ -3,14 +3,13 @@ import {
   Globe, MessageSquare, ChevronRight, ChevronLeft, 
   Volume2, Info, ArrowRight, ArrowLeft, Sparkles, Map as MapIcon,
   Gamepad2, Trophy, Star, Mic, MicOff, Play, Square, Loader2,
-  MessageCircle, Send, Zap, Plane
+  MessageCircle, Send, Plane
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LanguageToggle } from '../components/LanguageToggle';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { Interactive3DTutor } from '../components/Interactive3DTutor';
-import { SalmanLayeredAvatar } from '../components/SalmanLayeredAvatar';
 import { generateSpeech, decodeAudioData } from '../services/gemini';
 
 declare global {
@@ -1407,7 +1406,6 @@ export const Dialects: React.FC = () => {
   });
   const [isPassportOpen, setIsPassportOpen] = React.useState(false);
   const [salmanSuccessSignal, setSalmanSuccessSignal] = React.useState(0);
-  const isSalmanActive = selectedCountry?.id === 'saudi' && selectedPersona?.nameEn === selectedCountry?.characterMale?.nameEn;
 
   const getTutorGreeting = (countryId: string, char: any, isFemale: boolean, language: 'ar' | 'en') => {
     if (language === 'en') {
@@ -2161,6 +2159,7 @@ export const Dialects: React.FC = () => {
                         onClick={() => startLiveConversation()}
                         aria-label={isLiveActive ? (lang === 'ar' ? 'إيقاف الاتصال الصوتي' : 'Stop voice call') : (lang === 'ar' ? 'فتح الاتصال الصوتي' : 'Open voice call')}
                         title={isLiveActive ? (lang === 'ar' ? 'إيقاف الاتصال الصوتي' : 'Stop voice call') : (lang === 'ar' ? 'فتح الاتصال الصوتي' : 'Open voice call')}
+                        aria-pressed={isLiveActive}
                         className={`inline-flex shrink-0 w-9 h-9 items-center justify-center rounded-xl transition-all shadow-sm ${
                           isLiveActive
                             ? 'bg-rose-500 hover:bg-rose-600 text-white animate-pulse'
@@ -2292,159 +2291,13 @@ export const Dialects: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Live Conversation Overlay (Upgraded to Immersive Stage) */}
-                    <AnimatePresence>
-                      {isLiveActive && (
-                        <motion.div 
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="absolute inset-0 bg-slate-900 z-40 flex flex-col overflow-hidden"
-                        >
-                          {/* 3D Stage Background */}
-                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#1e293b_0%,#020617_100%)]" />
-                          <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none" />
-                          
-                          {/* Animated Grid Floor */}
-                          <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-[linear-gradient(to_bottom,transparent,#3b82f620)] perspective-[1000px]">
-                            <div className="absolute inset-0 bg-[linear-gradient(90deg,#3b82f610_1px,transparent_1px),linear-gradient(0deg,#3b82f610_1px,transparent_1px)] bg-[size:40px_40px] [transform:rotateX(60deg)_translateY(-50%)]" />
-                          </div>
-
-                          {/* Character Interaction Stage */}
-                          <div className="flex-1 relative flex flex-col items-center justify-center p-8">
-                            <motion.div
-                              animate={isSalmanActive
-                                ? { y: 0, rotate: 0, scale: 1 }
-                                : {
-                                    y: isSpeaking ? [0, -8, 0] : [0, -4, 0],
-                                    rotate: isSpeaking ? [-1, 1, -1] : [-0.5, 0.5, -0.5],
-                                    scale: isSpeaking ? [1, 1.01, 1] : 1
-                                  }}
-                              transition={isSalmanActive
-                                ? { duration: 0.2 }
-                                : { duration: isSpeaking ? 0.4 : 4, repeat: Infinity, ease: "easeInOut" }}
-                              className="relative w-full max-w-[320px] aspect-[2/3] z-10"
-                            >
-                              {/* Robot Glow Aura */}
-                              <div className={`absolute inset-0 rounded-full blur-[80px] transition-all duration-500 ${isSpeaking ? 'bg-blue-500/30 scale-125' : 'bg-emerald-500/10 scale-100'}`} />
-                              
-                              {isSalmanActive ? (
-                                <SalmanLayeredAvatar
-                                  view="full"
-                                  isSpeaking={isSpeaking}
-                                  isListening={isListening}
-                                  isLoading={isChatLoading}
-                                  className="w-full h-full"
-                                />
-                              ) : (
-                                <SafeImage
-                                  src={selectedPersona.image}
-                                  className={`w-full h-full object-contain transition-all duration-300 ${isSpeaking ? 'brightness-110 drop-shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'brightness-90 opacity-80'}`}
-                                />
-                              )}
-
-                              {/* The layer rig handles Salman's mouth. Keep the old overlay for other tutors only. */}
-                              {isSpeaking && !isSalmanActive && (
-                                <motion.div 
-                                  animate={{ 
-                                    scaleY: [1, 2.5, 1.2, 3, 1],
-                                    opacity: [0.6, 1, 0.8, 1, 0.6]
-                                  }}
-                                  transition={{ duration: 0.12, repeat: Infinity }}
-                                  className="absolute top-[38%] left-1/2 -translate-x-1/2 w-6 h-1.5 bg-blue-400 rounded-full blur-[2px] shadow-[0_0_10px_#60a5fa]"
-                                />
-                              )}
-
-                              {/* Do not cover Salman's original artwork with the scanline overlay. */}
-                              {!isSalmanActive && (
-                                <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
-                                  <motion.div
-                                    animate={{ y: [-100, 400] }}
-                                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                                    className="w-full h-1 bg-gradient-to-b from-transparent via-blue-400 to-transparent"
-                                  />
-                                </div>
-                              )}
-                            </motion.div>
-
-                            {/* HUD Info */}
-                            <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-20">
-                              <div className="bg-black/40 backdrop-blur-md p-3 rounded-2xl border border-white/10">
-                                <h4 className="text-lg font-black text-white arabic-font leading-none mb-1">{selectedPersona.nameAr}</h4>
-                                <div className="flex items-center gap-1.5">
-                                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
-                                  <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Active Link</span>
-                                </div>
-                              </div>
-
-                              <div className="bg-black/40 backdrop-blur-md p-3 rounded-2xl border border-white/10 text-right max-w-[180px]">
-                                <span className="text-[8px] font-black text-amber-400 uppercase tracking-widest block mb-1">{t.mission}</span>
-                                <p className="text-[10px] text-white/80 font-bold arabic-font leading-tight">
-                                  {(() => {
-                                    const rank = stampedCountries[selectedCountry.id] || 0;
-                                    const missions = (selectedCountry as any).missions;
-                                    return rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar;
-                                  })()}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Status Text */}
-                            <div className="mt-8 text-center z-20">
-                              <h3 className="text-xl font-black text-white arabic-font mb-2">
-                                {isSpeaking ? (lang === 'ar' ? 'المعلم يتحدث...' : 'Tutor is speaking...') : (lang === 'ar' ? 'أنا أسمعك...' : 'I am listening...')}
-                              </h3>
-                              <div className="flex items-center justify-center gap-1 h-8">
-                                {[...Array(12)].map((_, i) => (
-                                  <motion.div 
-                                    key={i}
-                                    animate={{ 
-                                      height: isLiveActive ? [4, 4 + (audioLevel * 80 * (0.4 + Math.random())), 4] : 2 
-                                    }}
-                                    transition={{ duration: 0.1, repeat: Infinity }}
-                                    className={`w-1 rounded-full ${isSpeaking ? 'bg-blue-400' : 'bg-emerald-400'}`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Control Bar */}
-                          <div className="p-8 bg-gradient-to-t from-black to-transparent flex flex-col items-center gap-4 z-20">
-                            <button 
-                              onClick={stopLiveConversation}
-                              className="w-full max-w-xs py-4 bg-rose-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-700 transition-all shadow-2xl shadow-rose-600/20 flex items-center justify-center gap-3"
-                            >
-                              <MicOff size={18} />
-                              {lang === 'ar' ? 'إنهاء المحادثة' : 'End Conversation'}
-                            </button>
-                            
-                            <button 
-                              onClick={stopLiveConversation}
-                              className="text-white/30 hover:text-white/60 text-[10px] font-black uppercase tracking-widest transition-colors"
-                            >
-                              Switch to Text Mode
-                            </button>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    {/* The active voice session updates the selected tutor in its original stage.
+                         No duplicate avatar or fullscreen overlay covers chat or footer. */}
                   </div>
                 </div>
 
                 {/* Bottom Action Bar */}
-                <div className="p-4 bg-white border-t border-slate-100 flex items-center justify-between shrink-0">
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => startLiveConversation()}
-                      aria-label={lang === 'ar' ? 'فتح الاتصال الصوتي' : 'Open voice call'}
-                      title={lang === 'ar' ? 'فتح الاتصال الصوتي' : 'Open voice call'}
-                      className="w-9 h-9 inline-flex items-center justify-center bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20"
-                    >
-                      <Zap size={17} className="text-amber-300" />
-                    </button>
-                  </div>
-                  
+                <div className="px-4 py-2 bg-white border-t border-slate-100 flex items-center justify-end shrink-0">
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <div className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">
