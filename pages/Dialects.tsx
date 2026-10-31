@@ -1739,61 +1739,74 @@ export const Dialects: React.FC = () => {
     }
   };
 
-  const startLiveConversation = async (personaOverride?: any, retryCount = 0) => {
+  const startLiveConversation = async (personaOverride?: any) => {
     const persona = personaOverride || selectedPersona;
-    if (!persona) return;
-
-    if (isLiveActive) {
+    const country = selectedCountryRef.current;
+    if (!persona || !country) return;
+    // Rapid double-clicks must toggle even while the connection opens.
+    if (isLiveActiveRef.current || liveConnectingRef.current) {
       stopLiveConversation();
       return;
     }
-
+    stopOneShotAudio();
+    clearLiveAudio();
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (_) {}
+      recognitionRef.current = null;
+    }
+    liveConnectingRef.current = true;
+    const generation = ++liveGenerationRef.current;
+    const stillCurrent = () => generation === liveGenerationRef.current;
     try {
       const { GoogleGenAI, Modality } = await import("@google/genai");
+      if (!stillCurrent()) return;
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-      
-      const rank = passportLevelsRef.current[selectedCountry.id] || 0;
-      const missions = (selectedCountry as any).missions;
+      const rank = passportLevelsRef.current[country.id] || 0;
+      const missions = country.missions;
       const currentMission = missions ? (rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar) : "Learn the dialect";
-      const liveCountry = selectedCountry;
       liveInputBufferRef.current = '';
       const flushLiveInput = () => {
+        if (!stillCurrent()) return;
         const speech = liveInputBufferRef.current.replace(/\s+/g, ' ').trim();
         liveInputBufferRef.current = '';
         if (speech.length < 3) return;
-        captureMissionTurn(liveCountry.id, { role: 'user', text: speech, authored: true });
-        if (selectedCountryRef.current?.id === liveCountry.id) {
+        captureMissionTurn(country.id, { role: 'user', text: speech, authored: true });
+        if (selectedCountryRef.current?.id === country.id) {
           setChatMessages(prev => [...prev, { role: 'user', text: speech }]);
         }
-        void checkMissionCompletion(liveCountry, passportLevelsRef.current[liveCountry.id] || 0);
+        void checkMissionCompletion(country, passportLevelsRef.current[country.id] || 0);
       };
-
       const sessionPromise = ai.live.connect({
         model: "gemini-3.8-live",
         config: {
           responseModalities: [Modality.AUDIO],
           inputAudioTranscription: {},
           speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: persona.nameEn === selectedCountry.characterFemale.nameEn ? "Kore" : "Puck" } },
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: persona.nameEn === country.characterFemale.nameEn ? "Kore" : "Puck" } },
           },
-          systemInstruction: `You are ${persona.nameEn} from ${selectedCountry.nameEn}, a patient language teacher. 
-          Respond ONLY in ${selectedCountry.dialect}. 
-          Current Mission: ${currentMission}. 
-          Correct the student's mistakes immediately. 
-          Keep responses short and conversational.`,
+          systemInstruction: 'You are ' + persona.nameEn + ' from ' + country.nameEn +
+            ', a patient language teacher. Respond ONLY in ' + country.dialect +
+            '. Current Mission: ' + currentMission +
+            '. Correct the student mistakes immediately. Keep responses short and conversational.',
         },
         callbacks: {
           onopen: () => {
+            if (!stillCurrent()) return;
+            liveConnectingRef.current = false;
             isLiveActiveRef.current = true;
             setIsLiveActive(true);
             setIsListening(true);
-            sessionPromise.then(async (session) => {
+            void sessionPromise.then(async session => {
+              if (!stillCurrent()) return;
               const cleanup = await setupMicrophone(session);
-              if (cleanup) micCleanupRef.current = cleanup;
-            });
+              if (cleanup) {
+                if (stillCurrent()) micCleanupRef.current = cleanup;
+                else cleanup();
+              }
+            }).catch(console.error);
           },
-          onmessage: async (message: any) => {
-            // Transcript of the student's speech is eligible evidence for stamps.
+          onmessage: (message: any) => {
+            if (!stillCurrent()) return;
             const spokenText = message.serverContent?.inputTranscription?.text;
             if (typeof spokenText === 'string' && spokenText.trim()) {
               liveInputBufferRef.current += ' ' + spokenText.trim();
@@ -1801,48 +1814,44 @@ export const Dialects: React.FC = () => {
             if (message.serverContent?.turnComplete && liveInputBufferRef.current.trim()) {
               flushLiveInput();
             }
-            if (message.serverContent?.modelTurn?.parts[0]?.inlineData?.data) {
-              const base64Audio = message.serverContent.modelTurn.parts[0].inlineData.data;
-              setIsSpeaking(true);
-              playLiveAudio(base64Audio);
+            // An audio message may contain several independent PCM parts.
+            const parts = message.serverContent?.modelTurn?.parts || [];
+            for (const part of parts) {
+              const base64Audio = part?.inlineData?.data;
+              if (typeof base64Audio === 'string' && base64Audio) {
+                const version = livePlaybackVersionRef.current;
+                liveDecodeQueueRef.current = liveDecodeQueueRef.current
+                  .catch(() => {})
+                  .then(() => playLiveAudio(base64Audio, generation, version));
+              }
             }
-            if (message.serverContent?.interrupted) {
-              setIsSpeaking(false);
-            }
+            if (message.serverContent?.interrupted) clearLiveAudio();
           },
           onclose: () => {
+            if (!stillCurrent()) return;
             flushLiveInput();
-            isLiveActiveRef.current = false;
-            if (micCleanupRef.current) {
-              micCleanupRef.current();
-              micCleanupRef.current = null;
-            }
-            setIsLiveActive(false);
-            setIsListening(false);
-            setIsSpeaking(false);
+            stopLiveConversation();
           },
-          onerror: (e) => {
-            isLiveActiveRef.current = false;
-            console.error("Live API Error:", e);
-            if (retryCount < 2) {
-              console.warn("Live Session failed, retrying...");
-              setTimeout(() => startLiveConversation(persona, retryCount + 1), 2000);
-            } else {
-              setIsLiveActive(false);
-              setIsListening(false);
-              setIsSpeaking(false);
-            }
+          onerror: (e: any) => {
+            if (!stillCurrent()) return;
+            console.error("Live conversation audio error:", e);
+            stopLiveConversation();
           }
         }
       });
-      
-      sessionPromise.then(session => {
-        liveSessionRef.current = session;
+      void sessionPromise.then(session => {
+        if (stillCurrent()) liveSessionRef.current = session;
+        else { try { session.close(); } catch (_) {} }
+      }).catch(e => {
+        if (stillCurrent()) {
+          console.error('Live connection failed:', e);
+          stopLiveConversation();
+        }
       });
     } catch (err) {
-      console.error("Live API Error:", err);
-      if (retryCount < 2) {
-        setTimeout(() => startLiveConversation(persona, retryCount + 1), 2000);
+      if (stillCurrent()) {
+        console.error("Live connection error:", err);
+        stopLiveConversation();
       }
     }
   };
@@ -1860,7 +1869,11 @@ export const Dialects: React.FC = () => {
       const processor = audioContext.createScriptProcessor(4096, 1, 1);
 
       source.connect(processor);
-      processor.connect(audioContext.destination);
+      // Keep ScriptProcessor active, but never echo the microphone through speakers.
+      const silentOutput = audioContext.createGain();
+      silentOutput.gain.value = 0;
+      processor.connect(silentOutput);
+      silentOutput.connect(audioContext.destination);
 
       processor.onaudioprocess = (e) => {
         // Read the current session state through a ref. A captured React state
@@ -1899,7 +1912,9 @@ export const Dialects: React.FC = () => {
 
       // Store cleanup function
       const cleanup = () => {
+        processor.onaudioprocess = null;
         processor.disconnect();
+        silentOutput.disconnect();
         source.disconnect();
         stream.getTracks().forEach(track => track.stop());
       };
@@ -1910,68 +1925,82 @@ export const Dialects: React.FC = () => {
     }
   };
 
-  const playLiveAudio = async (base64: string) => {
-    setIsSpeaking(true);
+  // Decode and schedule successive PCM chunks sequentially, without overlap.
+  const playLiveAudio = async (base64: string, generation: number, version: number) => {
+    const current = () => generation === liveGenerationRef.current
+      && version === livePlaybackVersionRef.current && isLiveActiveRef.current;
+    if (!current()) return;
     try {
       const audioContext = getAudioContext();
-      if (audioContext.state === 'suspended') {
-        await audioContext.resume();
-      }
-      
-      const binaryString = atob(base64);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-      }
+      if (audioContext.state === 'suspended') await audioContext.resume();
+      if (!current()) return;
+      const bytes = Uint8Array.from(atob(base64), char => char.charCodeAt(0));
       const audioData = await decodeAudioData(bytes, audioContext);
+      if (!current()) return;
       const source = audioContext.createBufferSource();
       source.buffer = audioData;
       source.connect(audioContext.destination);
+      const playAt = Math.max(audioContext.currentTime + .018, livePlaybackHeadRef.current);
+      livePlaybackHeadRef.current = playAt + audioData.duration;
       liveAudioSourcesRef.current.add(source);
+      setIsSpeaking(true);
       source.onended = () => {
         liveAudioSourcesRef.current.delete(source);
-        if (!liveAudioSourcesRef.current.size) {
+        try { source.disconnect(); } catch (_) {}
+        if (current() && liveAudioSourcesRef.current.size === 0) {
           setIsSpeaking(false);
           setCurrentSpeechText('');
         }
       };
-      source.start(0);
+      source.start(playAt);
     } catch (err) {
-      console.error("Live audio playback error:", err);
-      setIsSpeaking(false);
-      setCurrentSpeechText('');
+      if (current()) {
+        console.error('Live audio playback error:', err);
+        clearLiveAudio();
+      }
     }
   };
 
   const playAudio = async (text: string) => {
-    if (isSpeaking) return;
+    if (!text.trim() || isLiveActiveRef.current || liveConnectingRef.current) return;
+    // Latest-request-wins for synthesis, decoding and playback.
+    stopOneShotAudio();
+    const token = oneShotGenerationRef.current;
+    const current = () => token === oneShotGenerationRef.current
+      && !isLiveActiveRef.current && !liveConnectingRef.current;
     setIsSpeaking(true);
     setCurrentSpeechText(text);
     try {
       const audioBytes = await generateSpeech(text, 'ar');
-      if (audioBytes) {
-        const audioContext = getAudioContext();
-        if (audioContext.state === 'suspended') {
-          await audioContext.resume();
-        }
-        
-        const audioData = await decodeAudioData(audioBytes, audioContext);
-        const source = audioContext.createBufferSource();
-        source.buffer = audioData;
-        source.connect(audioContext.destination);
-        source.start(0);
-        source.onended = () => {
-          setIsSpeaking(false);
-          setCurrentSpeechText('');
-        };
-      } else {
+      if (!current()) return;
+      if (!audioBytes) {
+        setIsSpeaking(false);
+        setCurrentSpeechText('');
+        return;
+      }
+      const audioContext = getAudioContext();
+      if (audioContext.state === 'suspended') await audioContext.resume();
+      if (!current()) return;
+      const audioData = await decodeAudioData(audioBytes, audioContext);
+      if (!current()) return;
+      const source = audioContext.createBufferSource();
+      source.buffer = audioData;
+      source.connect(audioContext.destination);
+      oneShotSourceRef.current = source;
+      source.onended = () => {
+        if (!current() || oneShotSourceRef.current !== source) return;
+        oneShotSourceRef.current = null;
+        try { source.disconnect(); } catch (_) {}
+        setIsSpeaking(false);
+        setCurrentSpeechText('');
+      };
+      source.start(0);
+    } catch (err) {
+      if (current()) {
+        console.error('Speech error:', err);
         setIsSpeaking(false);
         setCurrentSpeechText('');
       }
-    } catch (err) {
-      console.error('Speech error:', err);
-      setIsSpeaking(false);
-      setCurrentSpeechText('');
     }
   };
 
