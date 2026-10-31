@@ -26,7 +26,7 @@ const COUNTRY_DATA = [
     nameAr: 'الإمارات',
     nameEn: 'UAE',
     flag: '🇦🇪',
-    image: 'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Burj_Khalifa_Sunset.jpg?width=1600',
     dialect: 'Gulf (خليجي)',
     characterMale: { 
       nameAr: 'زايد', 
@@ -84,7 +84,7 @@ const COUNTRY_DATA = [
     nameAr: 'مصر',
     nameEn: 'Egypt',
     flag: '🇪🇬',
-    image: 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Giza_Pyramids_Panorama.jpg?width=1600',
     dialect: 'Egyptian (مصري)',
     characterMale: { 
       nameAr: 'أحمد', 
@@ -142,7 +142,7 @@ const COUNTRY_DATA = [
     nameAr: 'السعودية',
     nameEn: 'Saudi Arabia',
     flag: '🇸🇦',
-    image: 'https://images.unsplash.com/photo-1580418827493-f2b22c0a76cb?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Hegra_(Mada'in_Salih)%2C_the_kingdom's_second_Nabatean_capital_after_Petra%2C_Saudi_Arabia_-_53545733456.jpg?width=1600',
     dialect: 'Saudi (سعودي)',
     characterMale: { 
       nameAr: 'سلمان', 
@@ -200,7 +200,7 @@ const COUNTRY_DATA = [
     nameAr: 'المغرب',
     nameEn: 'Morocco',
     flag: '🇲🇦',
-    image: 'https://images.unsplash.com/photo-1539020140153-e479b8c22e70?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/The_Open_Area_of_Hassan_II_Mosque_-_Casablanca_Morocco.jpg?width=1600',
     dialect: 'Moroccan (مغربي)',
     characterMale: { 
       nameAr: 'ياسين', 
@@ -258,7 +258,7 @@ const COUNTRY_DATA = [
     nameAr: 'الأردن',
     nameEn: 'Jordan',
     flag: '🇯🇴',
-    image: 'https://images.unsplash.com/photo-1579606032822-4914a1a5e128?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Petra%2C_Jordan_-The_Treasury.JPG?width=1600',
     dialect: 'Jordanian (أردني)',
     characterMale: { 
       nameAr: 'نشمي', 
@@ -316,7 +316,7 @@ const COUNTRY_DATA = [
     nameAr: 'لبنان',
     nameEn: 'Lebanon',
     flag: '🇱🇧',
-    image: 'https://images.unsplash.com/photo-1528642463378-84226a17285c?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Jeita_Grotto_ITH044.jpg?width=1600',
     dialect: 'Levantine (لبناني)',
     characterMale: { 
       nameAr: 'جاد', 
@@ -374,7 +374,7 @@ const COUNTRY_DATA = [
     nameAr: 'فلسطين',
     nameEn: 'Palestine',
     flag: '🇵🇸',
-    image: 'https://images.unsplash.com/photo-1541464522988-31b320f681ba?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Exterior_of_the_Dome_of_the_Rock.jpg?width=1600',
     dialect: 'Palestinian (فلسطيني)',
     characterMale: { 
       nameAr: 'محمود', 
@@ -432,7 +432,7 @@ const COUNTRY_DATA = [
     nameAr: 'العراق',
     nameEn: 'Iraq',
     flag: '🇮🇶',
-    image: 'https://images.unsplash.com/photo-1552594411-92523277732a?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Ziggurate_of_Ur-_Iraq.jpg?width=1600',
     dialect: 'Iraqi (عراقي)',
     characterMale: { 
       nameAr: 'سنان', 
@@ -490,7 +490,7 @@ const COUNTRY_DATA = [
     nameAr: 'تونس',
     nameEn: 'Tunisia',
     flag: '🇹🇳',
-    image: 'https://images.unsplash.com/photo-1583275484611-274e575ccc33?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Sidi_Bou_Sa%C3%AFd_-_%D8%B3%D9%8A%D8%AF%D9%8A_%D8%A8%D9%88%D8%B3%D8%B9%D9%8A%D8%AF.jpg?width=1600',
     dialect: 'Tunisian (تونسي)',
     characterMale: { 
       nameAr: 'سامي', 
@@ -548,7 +548,7 @@ const COUNTRY_DATA = [
     nameAr: 'الجزائر',
     nameEn: 'Algeria',
     flag: '🇩🇿',
-    image: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Casbah_Alger_dz.jpg?width=1600',
     dialect: 'Algerian (جزائري)',
     characterMale: { 
       nameAr: 'أمين', 
@@ -606,7 +606,7 @@ const COUNTRY_DATA = [
     nameAr: 'ليبيا',
     nameEn: 'Libya',
     flag: '🇱🇾',
-    image: 'https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Leptis_Magna%2C_Libya.jpg?width=1600',
     dialect: 'Libyan (ليبي)',
     characterMale: { 
       nameAr: 'عمر', 
@@ -664,7 +664,7 @@ const COUNTRY_DATA = [
     nameAr: 'سوريا',
     nameEn: 'Syria',
     flag: '🇸🇾',
-    image: 'https://images.unsplash.com/photo-1542456455-f725a337580b?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Umayyad_Mosque%2C_Mount_Qasioun%2C_Old_Damascus.jpg?width=1600',
     dialect: 'Levantine (شامي)',
     characterMale: { 
       nameAr: 'باسل', 
@@ -722,7 +722,7 @@ const COUNTRY_DATA = [
     nameAr: 'السودان',
     nameEn: 'Sudan',
     flag: '🇸🇩',
-    image: 'https://images.unsplash.com/photo-1583340050186-09556ae53835?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Merowe_Pyramids_1.jpg?width=1600',
     dialect: 'Sudanese (سوداني)',
     characterMale: { 
       nameAr: 'مازن', 
@@ -780,7 +780,7 @@ const COUNTRY_DATA = [
     nameAr: 'عمان',
     nameEn: 'Oman',
     flag: '🇴🇲',
-    image: 'https://images.unsplash.com/photo-1578922746465-3a80a228f223?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Sultan_Qaboos_Grand_Mosque_close_up_view.jpg?width=1600',
     dialect: 'Omani (عماني)',
     characterMale: { 
       nameAr: 'هيثم', 
@@ -838,7 +838,7 @@ const COUNTRY_DATA = [
     nameAr: 'الكويت',
     nameEn: 'Kuwait',
     flag: '🇰🇼',
-    image: 'https://images.unsplash.com/photo-1541336032412-248a9795c3dd?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Kuwait_Towers2025.jpg?width=1600',
     dialect: 'Gulf (كويتي)',
     characterMale: { 
       nameAr: 'فهد', 
@@ -896,7 +896,7 @@ const COUNTRY_DATA = [
     nameAr: 'قطر',
     nameEn: 'Qatar',
     flag: '🇶🇦',
-    image: 'https://images.unsplash.com/photo-1553531384-cc64ac80f931?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Museum_of_Islamic_Art%2C_Doha_(54704206856).jpg?width=1600',
     dialect: 'Gulf (قطري)',
     characterMale: { 
       nameAr: 'جاسم', 
@@ -954,7 +954,7 @@ const COUNTRY_DATA = [
     nameAr: 'البحرين',
     nameEn: 'Bahrain',
     flag: '🇧🇭',
-    image: 'https://images.unsplash.com/photo-1549944850-84e00be4203b?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Bahrain_Fort_(6).jpg?width=1600',
     dialect: 'Gulf (بحريني)',
     characterMale: { 
       nameAr: 'حمد', 
@@ -1012,7 +1012,7 @@ const COUNTRY_DATA = [
     nameAr: 'اليمن',
     nameEn: 'Yemen',
     flag: '🇾🇪',
-    image: 'https://images.unsplash.com/photo-1580619305218-8423a7ef79b4?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Old_Sana'a_City_-_Yemen.jpg?width=1600',
     dialect: 'Yemeni (يمني)',
     characterMale: { 
       nameAr: 'قحطان', 
@@ -1070,7 +1070,7 @@ const COUNTRY_DATA = [
     nameAr: 'موريتانيا',
     nameEn: 'Mauritania',
     flag: '🇲🇷',
-    image: 'https://images.unsplash.com/photo-1548651811-e73715dfbbe2?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Chinguetti_(panorama).jpg?width=1600',
     dialect: 'Hassaniya (حساني)',
     characterMale: { 
       nameAr: 'المختار', 
@@ -1128,7 +1128,7 @@ const COUNTRY_DATA = [
     nameAr: 'الصومال',
     nameEn: 'Somalia',
     flag: '🇸🇴',
-    image: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Laas_Geel_rock_paintings.JPG?width=1600',
     dialect: 'Somali Arabic (صومالي)',
     characterMale: { 
       nameAr: 'عبدي', 
@@ -1186,7 +1186,7 @@ const COUNTRY_DATA = [
     nameAr: 'جيبوتي',
     nameEn: 'Djibouti',
     flag: '🇩🇯',
-    image: 'https://images.unsplash.com/photo-1576485290814-1c72aa4bbb8e?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Lake_Assal_1-Djibouti.jpg?width=1600',
     dialect: 'Djiboutian (جيبوتي)',
     characterMale: { 
       nameAr: 'برخاد', 
@@ -1244,7 +1244,7 @@ const COUNTRY_DATA = [
     nameAr: 'جزر القمر',
     nameEn: 'Comoros',
     flag: '🇰🇲',
-    image: 'https://images.unsplash.com/photo-1532009255024-ed4d63be9924?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Hiking_to_Karthala_crater.jpg?width=1600',
     dialect: 'Comorian (قمري)',
     characterMale: { 
       nameAr: 'سعيد', 
@@ -1298,52 +1298,6 @@ const COUNTRY_DATA = [
     }
   }
 ];
-
-
-// All 22 country gateways feature documentary photos of REAL landmarks.
-// Source pages expose authors and photo licenses; no synthetic place imagery is used.
-type Landmark = { ar:string; en:string; taglineAr:string; taglineEn:string; file:string; author:string; license:string };
-const LANDMARKS: Record<string,Landmark> = {
-  uae: {ar:"برج خليفة",en:"Burj Khalifa",taglineAr:"اكتشف الرمسة الإماراتية من قلب دبي",taglineEn:"Discover Emirati Arabic from Dubai",file:"Burj Khalifa Sunset.jpg",author:"Aadubai",license:"CC BY-SA 4.0"},
-  egypt: {ar:"أهرامات الجيزة",en:"Giza Pyramids",taglineAr:"ابدأ رحلتك باللهجة المصرية من أرض الحضارة",taglineEn:"Discover Egyptian Arabic among the pyramids",file:"Giza Pyramids Panorama.jpg",author:"Benjamin Inbar",license:"CC BY-SA 4.0"},
-  saudi: {ar:"الحِجر في العلا",en:"Hegra, AlUla",taglineAr:"اكتشف اللهجة السعودية من قلب العلا",taglineEn:"Discover Saudi Arabic from AlUla",file:"Hegra (Mada'in Salih), the kingdom's second Nabatean capital after Petra, Saudi Arabia - 53545733456.jpg",author:"Carole Raddato",license:"CC BY-SA 2.0"},
-  morocco: {ar:"مسجد الحسن الثاني",en:"Hassan II Mosque",taglineAr:"استكشف الدارجة المغربية من ساحل الدار البيضاء",taglineEn:"Explore Moroccan Darija from Casablanca",file:"The Open Area of Hassan II Mosque - Casablanca Morocco.jpg",author:"Ayman.mesa25",license:"CC BY-SA 4.0"},
-  jordan: {ar:"الخزنة في البتراء",en:"The Treasury, Petra",taglineAr:"تعرّف على اللهجة الأردنية بين الصخور الوردية",taglineEn:"Explore Jordanian Arabic at Petra",file:"Petra, Jordan -The Treasury.JPG",author:"Davidchocron",license:"CC BY-SA 4.0"},
-  lebanon: {ar:"مغارة جعيتا",en:"Jeita Grotto",taglineAr:"استكشف اللهجة اللبنانية في قلب الطبيعة",taglineEn:"Explore Lebanese Arabic at Jeita Grotto",file:"Jeita Grotto ITH044.jpg",author:"Dennis Chanter",license:"CC BY 4.0"},
-  palestine: {ar:"قبة الصخرة",en:"Dome of the Rock",taglineAr:"من القدس تبدأ رحلتك باللهجة الفلسطينية",taglineEn:"Discover Palestinian Arabic from Jerusalem",file:"Exterior of the Dome of the Rock.jpg",author:"Antoine Taveneaux",license:"See source"},
-  iraq: {ar:"زقورة أور",en:"Ziggurat of Ur",taglineAr:"استكشف اللهجة العراقية من أرض الحضارات",taglineEn:"Discover Iraqi Arabic in ancient Ur",file:"Ziggurate of Ur- Iraq.jpg",author:"Hassaan Ahmed",license:"See source"},
-  tunisia: {ar:"سيدي بوسعيد",en:"Sidi Bou Said",taglineAr:"بين الأبيض والأزرق اكتشف اللهجة التونسية",taglineEn:"Explore Tunisian Arabic in Sidi Bou Said",file:"Sidi Bou Saïd - سيدي بوسعيد.jpg",author:"Ali bannour",license:"See source"},
-  algeria: {ar:"قصبة الجزائر",en:"Casbah of Algiers",taglineAr:"اكتشف الدارجة الجزائرية بين الأزقة العتيقة",taglineEn:"Discover Algerian Darija in the Casbah",file:"Casbah Alger dz.jpg",author:"Joy ndr",license:"See source"},
-  libya: {ar:"لبدة الكبرى",en:"Leptis Magna",taglineAr:"من آثار المتوسط استكشف اللهجة الليبية",taglineEn:"Discover Libyan Arabic at Leptis Magna",file:"Leptis Magna, Libya.jpg",author:"Wikimedia Commons",license:"See source"},
-  syria: {ar:"الجامع الأموي",en:"Umayyad Mosque",taglineAr:"استكشف اللهجة السورية من قلب دمشق",taglineEn:"Discover Syrian Arabic from Damascus",file:"Umayyad Mosque, Mount Qasioun, Old Damascus.jpg",author:"Mohamad Emad Basha",license:"See source"},
-  sudan: {ar:"أهرامات مروي",en:"Pyramids of Meroë",taglineAr:"اكتشف اللهجة السودانية من أرض كوش",taglineEn:"Discover Sudanese Arabic at Meroë",file:"Merowe Pyramids 1.jpg",author:"Wikimedia Commons",license:"See source"},
-  oman: {ar:"جامع السلطان قابوس الأكبر",en:"Sultan Qaboos Grand Mosque",taglineAr:"تعرّف على اللهجة العُمانية من قلب مسقط",taglineEn:"Explore Omani Arabic from Muscat",file:"Sultan Qaboos Grand Mosque close up view.jpg",author:"Karananand2",license:"CC0"},
-  kuwait: {ar:"أبراج الكويت",en:"Kuwait Towers",taglineAr:"من الخليج اكتشف اللهجة الكويتية",taglineEn:"Discover Kuwaiti Arabic beside Kuwait Towers",file:"Kuwait Towers2025.jpg",author:"Gladiator2030",license:"CC BY-SA 4.0"},
-  qatar: {ar:"متحف الفن الإسلامي",en:"Museum of Islamic Art",taglineAr:"اكتشف اللهجة القطرية من قلب الدوحة",taglineEn:"Discover Qatari Arabic from Doha",file:"Museum of Islamic Art, Doha (54704206856).jpg",author:"Ninara",license:"CC BY 4.0"},
-  bahrain: {ar:"قلعة البحرين",en:"Bahrain Fort",taglineAr:"تعرّف على اللهجة البحرينية من بوابة التاريخ",taglineEn:"Discover Bahraini Arabic at Bahrain Fort",file:"Bahrain Fort (6).jpg",author:"Prof. Mortel",license:"See source"},
-  yemen: {ar:"صنعاء القديمة",en:"Old Sana'a",taglineAr:"استكشف اللهجة اليمنية من المدينة العتيقة",taglineEn:"Explore Yemeni Arabic in Old Sana'a",file:"Old Sana'a City - Yemen.jpg",author:"Ibrahim Alqousi",license:"CC BY-SA 4.0"},
-  mauritania: {ar:"شنقيط التاريخية",en:"Historic Chinguetti",taglineAr:"اكتشف الحسانية من مدينة العلم والرمال",taglineEn:"Discover Hassaniya Arabic in Chinguetti",file:"Chinguetti (panorama).jpg",author:"Viktor Pinchuk",license:"CC BY 4.0"},
-  somalia: {ar:"رسوم لاس جيل الصخرية",en:"Laas Geel Rock Art",taglineAr:"اكتشف تراث الصومال من الرسوم الصخرية",taglineEn:"Explore Somali heritage at Laas Geel",file:"Laas Geel rock paintings.JPG",author:"Theodor Hoffsten",license:"CC BY-SA 3.0"},
-  djibouti: {ar:"بحيرة عسل",en:"Lake Assal",taglineAr:"من طبيعة جيبوتي الفريدة تبدأ الرحلة",taglineEn:"Discover Djibouti at Lake Assal",file:"Lake Assal 1-Djibouti.jpg",author:"Fishercd",license:"Public domain"},
-  comoros: {ar:"جبل كارتالا",en:"Mount Karthala",taglineAr:"استكشف جزر القمر من مناظر البركان",taglineEn:"Discover the Comoros at Mount Karthala",file:"Hiking to Karthala crater.jpg",author:"Rokaso",license:"See source"},
-};
-const commonsFileUrl = (file: string, width: number) =>
-  `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file.replace(/ /g,'_'))}?width=${width}`;
-const commonsCreditUrl = (file: string) =>
-  `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(file.replace(/ /g,'_'))}`;
-
-// Never substitute an unrelated picture when a landmark photo is unavailable.
-const LandmarkImage: React.FC<{landmark:Landmark; className?:string; priority?:boolean}> = ({landmark,className='',priority=false}) => {
-  const [width,setWidth]=React.useState<number | null>(1600);
-  React.useEffect(()=>setWidth(1600),[landmark.file]);
-  if (width===null) return <div role="img" aria-label={landmark.ar}
-    className={`flex items-center justify-center bg-gradient-to-br from-slate-700 to-emerald-950 text-white ${className}`}>
-      <span className="font-black arabic-font text-center px-4">{landmark.ar}</span>
-    </div>;
-  return <img src={commonsFileUrl(landmark.file,width)} alt={landmark.ar}
-    className={className} loading={priority?'eager':'lazy'} decoding="async"
-    onError={()=>setWidth(w=>w===1600?960:null)} />;
-};
 
 interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   noBg?: boolean;
@@ -1895,7 +1849,7 @@ export const Dialects: React.FC = () => {
         }
       />
 
-      <div className={`flex-1 ${!selectedCountry ? 'overflow-y-auto custom-scroll p-3 sm:p-4 md:p-6' : 'overflow-y-auto lg:overflow-hidden p-2 md:p-3 flex flex-col'} relative bg-slate-50/30 min-h-0`}>
+      <div className={`flex-1 ${!selectedCountry ? 'overflow-y-auto custom-scroll p-4 md:p-6' : 'overflow-hidden p-2 md:p-3 flex flex-col'} relative bg-slate-50/30 min-h-0`}>
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 0.8px, transparent 0.8px)', backgroundSize: '24px 24px' }} />
         
         <AnimatePresence mode="wait">
@@ -1905,41 +1859,40 @@ export const Dialects: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             >
               {COUNTRY_DATA.map(country => (
-                <motion.article key={country.id} whileHover={{y:-5}}
-                  className="relative group h-[350px] sm:h-[375px] bg-slate-900 rounded-[1.8rem] overflow-hidden shadow-[0_12px_32px_rgba(15,23,42,0.18)] hover:shadow-[0_24px_50px_rgba(15,23,42,0.3)] transition-shadow">
-                  <motion.button type="button" whileTap={{scale:0.985}}
-                    onClick={()=>setSelectedCountry(country)}
-                    aria-label={`${lang==='ar'?'استكشف':'Explore'} ${country.nameAr}, ${LANDMARKS[country.id].ar}`}
-                    className="relative block h-full w-full overflow-hidden text-right focus-visible:outline-4 focus-visible:outline-amber-300">
-                    <LandmarkImage landmark={LANDMARKS[country.id]} priority={COUNTRY_DATA.indexOf(country)<4}
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.045]" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-black/10" />
-                    <span className="absolute top-4 right-4 z-10 text-3xl rounded-xl bg-black/35 border border-white/20 backdrop-blur-md p-2" aria-hidden="true">{country.flag}</span>
-                    <div className="absolute bottom-0 inset-x-0 z-10 text-white text-right p-5 sm:p-6">
-                      <span className="inline-flex text-[10px] font-bold bg-white/15 border border-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
-                        {lang==='ar'?'من معالم العالم العربي':'Arab world landmarks'}
-                      </span>
-                      <h3 className="mt-3 text-3xl font-black arabic-font leading-tight">{lang==='ar'?country.nameAr:country.nameEn}</h3>
-                      <p className="mt-1 text-base font-extrabold text-amber-200 arabic-font">{lang==='ar'?LANDMARKS[country.id].ar:LANDMARKS[country.id].en}</p>
-                      <p className="mt-2 text-xs sm:text-sm font-medium text-white/90 min-h-[2.5em] leading-relaxed arabic-font">
-                        {lang==='ar'?LANDMARKS[country.id].taglineAr:LANDMARKS[country.id].taglineEn}
-                      </p>
-                      <span className="mt-4 flex items-center justify-between rounded-xl border border-white/20 bg-white/15 group-hover:bg-white/25 backdrop-blur-md px-4 py-3 font-black text-xs sm:text-sm arabic-font">
-                        {lang==='ar'?'استكشف اللهجة':'Explore the dialect'}
-                        <ArrowRight size={17} className={lang==='ar'?'rotate-180':''} />
-                      </span>
+                <motion.button
+                  key={country.id}
+                  whileHover={{ y: -8, scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedCountry(country)}
+                  className="group bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col h-[380px] relative"
+                >
+                    <div className="h-48 relative overflow-hidden">
+                      <SafeImage src={country.image} alt={country.nameEn} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md p-2 rounded-xl border border-white/30 text-2xl">
+                      {country.flag}
                     </div>
-                  </motion.button>
-                  <a href={commonsCreditUrl(LANDMARKS[country.id].file)} target="_blank" rel="noopener noreferrer"
-                    title={`${LANDMARKS[country.id].author} · ${LANDMARKS[country.id].license} · Wikimedia Commons`}
-                    aria-label={lang==='ar'? `مصدر صورة ${LANDMARKS[country.id].ar}`:'Photo attribution'}
-                    className="absolute top-4 left-3 z-20 text-[10px] text-white/95 font-bold rounded-full bg-black/45 hover:bg-black/75 border border-white/20 backdrop-blur-sm px-3 py-1.5">
-                    {lang==='ar'?'مصدر الصورة':'Photo credit'}
-                  </a>
-                </motion.article>
+                  </div>
+                  <div className="p-6 flex flex-col flex-1 text-right">
+                    <h3 className="text-2xl font-black text-slate-800 arabic-font mb-1">{country.nameAr}</h3>
+                    <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-4" dir="ltr">{country.nameEn}</p>
+                    <div className="space-y-2 mb-6">
+                      <div className="flex items-center justify-between text-[10px] font-black">
+                        <span className="text-slate-400 uppercase tracking-tighter">{t.dialect}</span>
+                        <span className="text-blue-600">{country.dialect}</span>
+                      </div>
+                      <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="bg-blue-600 h-full w-full opacity-20" />
+                      </div>
+                    </div>
+                    <div className="mt-auto w-full py-3 bg-slate-50 text-slate-400 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                      {t.startJourney} <ArrowRight size={14} className={lang === 'ar' ? 'rotate-180' : ''} />
+                    </div>
+                  </div>
+                </motion.button>
               ))}
             </motion.div>
           ) : (
@@ -1947,28 +1900,21 @@ export const Dialects: React.FC = () => {
               key="country-detail"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="max-w-[99%] mx-auto bg-white rounded-[2rem] shadow-2xl border border-slate-100 w-full flex flex-col lg:flex-row flex-1 lg:h-full min-h-0"
+              className="max-w-[99%] mx-auto bg-white rounded-[2rem] overflow-hidden shadow-2xl border border-slate-100 w-full flex flex-col md:flex-row flex-1 h-full min-h-0"
             >
               {/* Left Column: Info & Culture */}
-              <div className="w-full lg:w-1/2 flex flex-col lg:overflow-y-auto custom-scroll border-l border-slate-100 lg:h-full min-h-0 shrink-0 lg:shrink">
-                {/* Landmark Hero: authentic photo, title and photo attribution */}
-                <div className="h-[215px] sm:h-[260px] lg:h-[240px] relative shrink-0 bg-slate-900">
-                  <LandmarkImage landmark={LANDMARKS[selectedCountry.id]} priority
-                    className="absolute inset-0 h-full w-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10" />
-                  <div className="absolute bottom-4 right-5 left-5 flex items-end gap-3 text-white">
-                    <span className="text-4xl drop-shadow-lg shrink-0" aria-hidden="true">{selectedCountry.flag}</span>
-                    <div className="min-w-0">
-                      <h2 className="text-2xl font-black arabic-font">{lang==='ar'?selectedCountry.nameAr:selectedCountry.nameEn}</h2>
-                      <p className="text-sm font-bold text-amber-200 arabic-font">{lang==='ar'?LANDMARKS[selectedCountry.id].ar:LANDMARKS[selectedCountry.id].en}</p>
-                      <p className="mt-1 text-[11px] font-medium text-white/90 arabic-font">{lang==='ar'?LANDMARKS[selectedCountry.id].taglineAr:LANDMARKS[selectedCountry.id].taglineEn}</p>
-                    </div>
+              <div className="w-full md:w-1/2 flex flex-col overflow-y-auto custom-scroll border-l border-slate-100 h-full min-h-0">
+                {/* Hero Section */}
+                <div className="h-[140px] shrink-0 relative">
+                  <SafeImage src={selectedCountry.image} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/30" />
+                  <div className="absolute bottom-3 right-5 flex items-end gap-3">
+                    <div className="text-4xl drop-shadow-2xl">{selectedCountry.flag}</div>
+                      <div className="text-right">
+                        <h2 className="text-xl font-black text-slate-800 arabic-font mb-0">{selectedCountry.nameAr}</h2>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest" dir="ltr">{selectedCountry.nameEn}</p>
+                      </div>
                   </div>
-                  <a href={commonsCreditUrl(LANDMARKS[selectedCountry.id].file)} target="_blank" rel="noopener noreferrer"
-                    title={`${LANDMARKS[selectedCountry.id].author} · ${LANDMARKS[selectedCountry.id].license} · Wikimedia Commons`}
-                    className="absolute top-3 left-3 z-10 rounded-full bg-black/45 hover:bg-black/75 backdrop-blur-md text-[10px] text-white px-3 py-1.5 border border-white/20">
-                    {lang==='ar'?'مصدر الصورة':'Photo credit'}
-                  </a>
                 </div>
 
                 <div className="p-5 space-y-6">
@@ -2051,7 +1997,7 @@ export const Dialects: React.FC = () => {
               </div>
 
               {/* Right Column: AI & Interaction */}
-              <div className="w-full lg:w-1/2 flex flex-col bg-slate-50/50 h-[min(80dvh,740px)] min-h-[470px] lg:h-full lg:min-h-0 overflow-hidden shrink-0 lg:shrink">
+              <div className="w-full md:w-1/2 flex flex-col bg-slate-50/50 h-full min-h-0 overflow-hidden">
                 {/* Personas & Chat */}
                 <div className="flex-1 flex flex-col overflow-hidden">
                   <div className="p-4 border-b border-slate-100 bg-white shrink-0">
