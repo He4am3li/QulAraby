@@ -1458,6 +1458,7 @@ export const Dialects: React.FC = () => {
   const audioContextRef = React.useRef<AudioContext | null>(null);
   const recognitionRef = React.useRef<any>(null);
   const micCleanupRef = React.useRef<(() => void) | null>(null);
+  const liveAudioSourcesRef = React.useRef<Set<AudioBufferSourceNode>>(new Set());
   const isLiveActiveRef = React.useRef(false);
 
   const getAudioContext = () => {
@@ -1477,8 +1478,15 @@ export const Dialects: React.FC = () => {
       micCleanupRef.current();
       micCleanupRef.current = null;
     }
+    for (const source of liveAudioSourcesRef.current) {
+      try { source.stop(); } catch (_) { /* Already finished. */ }
+      try { source.disconnect(); } catch (_) { /* Already disconnected. */ }
+    }
+    liveAudioSourcesRef.current.clear();
     setIsLiveActive(false);
     setIsListening(false);
+    setIsSpeaking(false);
+    setCurrentSpeechText('');
   }, []);
 
   React.useEffect(() => {
@@ -1812,11 +1820,15 @@ export const Dialects: React.FC = () => {
       const source = audioContext.createBufferSource();
       source.buffer = audioData;
       source.connect(audioContext.destination);
-      source.start(0);
+      liveAudioSourcesRef.current.add(source);
       source.onended = () => {
-        setIsSpeaking(false);
-        setCurrentSpeechText('');
+        liveAudioSourcesRef.current.delete(source);
+        if (!liveAudioSourcesRef.current.size) {
+          setIsSpeaking(false);
+          setCurrentSpeechText('');
+        }
       };
+      source.start(0);
     } catch (err) {
       console.error("Live audio playback error:", err);
       setIsSpeaking(false);
