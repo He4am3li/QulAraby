@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Live3DCharacter } from './Live3DCharacter';
+import { OriginalPortraitAvatar } from './OriginalPortraitAvatar';
 import { SalmanLayeredAvatar } from './SalmanLayeredAvatar';
 
 interface TutorCharacter {
@@ -102,7 +102,7 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
               className="h-full w-full"
             />
           ) : (
-            <Live3DCharacter
+            <OriginalPortraitAvatar
               countryId={countryId}
               gender={gender}
               isSelected={isSelected}
@@ -111,7 +111,7 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
               isLoading={isLoading}
               audioLevel={audioLevel}
               reaction={celebrating ? 'correct' : 'idle'}
-              imageSrc={character.image}
+              fallbackImage={character.image}
               nameAr={character.nameAr}
               className="h-full w-full"
             />
