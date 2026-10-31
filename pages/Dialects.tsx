@@ -1522,7 +1522,16 @@ export const Dialects: React.FC = () => {
 
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
-    recognition.lang = 'ar-SA';
+    // Browser speech recognizers use the country's locale where available.
+    const speechLocales: Record<string, string> = {
+      uae: 'ar-AE', egypt: 'ar-EG', saudi: 'ar-SA', morocco: 'ar-MA',
+      algeria: 'ar-DZ', tunisia: 'ar-TN', libya: 'ar-LY', jordan: 'ar-JO',
+      palestine: 'ar-PS', iraq: 'ar-IQ', lebanon: 'ar-LB', syria: 'ar-SY',
+      sudan: 'ar-SD', oman: 'ar-OM', yemen: 'ar-YE', kuwait: 'ar-KW',
+      qatar: 'ar-QA', bahrain: 'ar-BH', mauritania: 'ar-MR',
+      somalia: 'ar-SO', djibouti: 'ar-DJ', comoros: 'ar-KM'
+    };
+    recognition.lang = speechLocales[selectedCountry?.id] || 'ar-SA';
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -1647,7 +1656,7 @@ export const Dialects: React.FC = () => {
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } },
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: persona.nameEn === selectedCountry.characterFemale.nameEn ? "Kore" : "Puck" } },
           },
           systemInstruction: `You are ${persona.nameEn} from ${selectedCountry.nameEn}, a patient language teacher. 
           Respond ONLY in ${selectedCountry.dialect}. 
