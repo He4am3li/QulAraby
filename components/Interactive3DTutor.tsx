@@ -62,11 +62,6 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
     if (!isSelected) onSelect();
   };
 
-  const state = isSpeaking ? (lang === 'ar' ? 'يتحدث' : 'Speaking')
-    : isListening ? (lang === 'ar' ? 'يستمع' : 'Listening')
-      : isLoading ? (lang === 'ar' ? 'يفكر' : 'Thinking')
-        : (lang === 'ar' ? 'محدد' : 'Selected');
-
   return (
     <div
       onClick={choose}
@@ -135,10 +130,6 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
           {lang === 'ar' ? character.nameEn : character.nameAr}
         </span>
       </div>
-      {isSelected && (isSpeaking || isListening || isLoading) && (
-        <span className="absolute top-2 z-30 rounded-full border border-white/75 bg-white/80 px-3 py-1 text-[11px] font-semibold text-emerald-800 shadow-sm backdrop-blur-sm"
-          role="status">{state}</span>
-      )}
     </div>
   );
 };
