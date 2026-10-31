@@ -142,7 +142,7 @@ const COUNTRY_DATA = [
     nameAr: 'السعودية',
     nameEn: 'Saudi Arabia',
     flag: '🇸🇦',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Mada%27in_Saleh_2017.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/%D8%A7%D9%84%D9%85%D8%B3%D8%AC%D8%AF_%D8%A7%D9%84%D8%AD%D8%B1%D8%A7%D9%85_%D9%81%D9%8A_%D9%85%D9%83%D8%A9_%D8%A7%D9%84%D9%85%D9%83%D8%B1%D9%85%D8%A9.jpg?width=1600',
     dialect: 'Saudi (سعودي)',
     characterMale: { 
       nameAr: 'سلمان', 
@@ -780,7 +780,7 @@ const COUNTRY_DATA = [
     nameAr: 'عمان',
     nameEn: 'Oman',
     flag: '🇴🇲',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Muscat%2C_moschea_del_sultano_qaboos%2C_esterno_01.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Salalah_oman.jpg?width=1600",
     dialect: 'Omani (عماني)',
     characterMale: { 
       nameAr: 'هيثم', 
