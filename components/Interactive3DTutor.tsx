@@ -50,9 +50,9 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
   const isLayeredSalman = countryId === 'saudi' && gender === 'male';
 
   React.useEffect(() => {
-    if (previousSuccessRef.current === successSignal) return;
+    const previous = previousSuccessRef.current;
     previousSuccessRef.current = successSignal;
-    if (!isSelected) return;
+    if (!isSelected || successSignal <= previous) return;
     setCelebrating(true);
     const timeout = window.setTimeout(() => setCelebrating(false), 2400);
     return () => window.clearTimeout(timeout);
