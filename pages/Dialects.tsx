@@ -2109,6 +2109,7 @@ export const Dialects: React.FC = () => {
                       const rank = passportLevelsRef.current[selectedCountry.id] || 0;
                       const missions = selectedCountry.missions;
                       if (!missions) return '';
+                      if (rank >= 3) return lang === 'ar' ? 'أكملت المهام الثلاث' : 'All three missions completed';
                       return lang === 'ar'
                         ? (rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar)
                         : (rank === 0 ? missions.visitor.en : rank === 1 ? missions.resident.en : missions.native.en);
@@ -2119,6 +2120,7 @@ export const Dialects: React.FC = () => {
                           const rank = passportLevelsRef.current[selectedCountry.id] || 0;
                           const m = selectedCountry.missions;
                           if (!m) return '';
+                          if (rank >= 3) return lang === 'ar' ? 'أكملت المهام الثلاث' : 'All three missions completed';
                           return lang === 'ar'
                             ? (rank === 0 ? m.visitor.ar : rank === 1 ? m.resident.ar : m.native.ar)
                             : (rank === 0 ? m.visitor.en : rank === 1 ? m.resident.en : m.native.en);
@@ -2128,7 +2130,8 @@ export const Dialects: React.FC = () => {
                     <button type="button"
                       onClick={() => { setPassportFocusId(selectedCountry.id); setIsPassportOpen(true); }}
                       className={'group flex h-[37px] shrink-0 items-center gap-2 rounded-xl border px-2 py-0.5 shadow-sm transition-colors hover:border-amber-300 ' +
-                        ((passportLevels[selectedCountry.id] || 0) >= 1 ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white/80')}
+                        ((passportLevels[selectedCountry.id] || 0) >= 1 ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white/80') +
+                        (recentStamp?.countryId === selectedCountry.id ? ' ring-2 ring-amber-400 shadow-[0_0_22px_rgba(245,158,11,.35)]' : '')}
                       title={lang === 'ar' ? 'افتح جواز هذه الدولة' : 'Open this country passport'}
                       aria-label={lang === 'ar' ? 'عرض جواز ' + selectedCountry.nameAr : 'View ' + selectedCountry.nameEn + ' passport'}>
                       <div className="w-[26px] shrink-0">
