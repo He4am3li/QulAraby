@@ -1456,6 +1456,7 @@ export const Dialects: React.FC = () => {
   const audioContextRef = React.useRef<AudioContext | null>(null);
   const recognitionRef = React.useRef<any>(null);
   const micCleanupRef = React.useRef<(() => void) | null>(null);
+  const isLiveActiveRef = React.useRef(false);
 
   const getAudioContext = () => {
     if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
@@ -1465,6 +1466,7 @@ export const Dialects: React.FC = () => {
   };
 
   const stopLiveConversation = React.useCallback(() => {
+    isLiveActiveRef.current = false;
     if (liveSessionRef.current) {
       liveSessionRef.current.close();
       liveSessionRef.current = null;
@@ -1510,6 +1512,7 @@ export const Dialects: React.FC = () => {
       liveSessionRef.current.close();
       liveSessionRef.current = null;
     }
+    isLiveActiveRef.current = false;
     setIsLiveActive(false);
     setIsListening(false);
   }, [selectedCountry, lang]);
@@ -1672,6 +1675,7 @@ export const Dialects: React.FC = () => {
         },
         callbacks: {
           onopen: () => {
+            isLiveActiveRef.current = true;
             setIsLiveActive(true);
             setIsListening(true);
             sessionPromise.then(async (session) => {
@@ -1690,6 +1694,7 @@ export const Dialects: React.FC = () => {
             }
           },
           onclose: () => {
+            isLiveActiveRef.current = false;
             if (micCleanupRef.current) {
               micCleanupRef.current();
               micCleanupRef.current = null;
@@ -1699,6 +1704,7 @@ export const Dialects: React.FC = () => {
             setIsSpeaking(false);
           },
           onerror: (e) => {
+            isLiveActiveRef.current = false;
             console.error("Live API Error:", e);
             if (retryCount < 2) {
               console.warn("Live Session failed, retrying...");
@@ -1739,17 +1745,29 @@ export const Dialects: React.FC = () => {
       processor.connect(audioContext.destination);
 
       processor.onaudioprocess = (e) => {
-        if (!isLiveActive) return;
-        
+        // Read the current session state through a ref. A captured React state
+        // value here can remain false even after the live connection opens.
+        if (!isLiveActiveRef.current) return;
+
         const inputData = e.inputBuffer.getChannelData(0);
-        const pcmData = new Int16Array(inputData.length);
         let sum = 0;
-        for (let i = 0; i < inputData.length; i++) {
-          pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
-          sum += Math.abs(inputData[i]);
-        }
+        for (let i = 0; i < inputData.length; i++) sum += Math.abs(inputData[i]);
         setAudioLevel(sum / inputData.length);
-        
+
+        // Microphone sample rates vary by device. Always send genuine 16 kHz
+        // PCM, not 48 kHz samples labeled as 16 kHz.
+        const targetRate = 16000;
+        const step = audioContext.sampleRate / targetRate;
+        const pcmData = new Int16Array(Math.max(1, Math.floor(inputData.length / step)));
+        for (let i = 0; i < pcmData.length; i++) {
+          const offset = i * step;
+          const index = Math.floor(offset);
+          const fraction = offset - index;
+          const sample = inputData[index] * (1 - fraction)
+            + inputData[Math.min(index + 1, inputData.length - 1)] * fraction;
+          pcmData[i] = Math.round(Math.max(-1, Math.min(1, sample)) * 32767);
+        }
+
         const uint8 = new Uint8Array(pcmData.buffer);
         let binary = "";
         for (let i = 0; i < uint8.length; i++) {
