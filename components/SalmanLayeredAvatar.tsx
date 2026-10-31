@@ -62,16 +62,25 @@ export const SalmanLayeredAvatar: React.FC<SalmanLayeredAvatarProps> = ({
 
   return (
     <div className={`relative overflow-hidden ${className}`} role="img" aria-label="سلمان، معلم اللهجة السعودية، شخصية تفاعلية بتعبيرات الوجه الأصلية">
+      {/* Exact approved 42-layer appearance remains visible if the animation engine fails or is still loading. */}
+      <img
+        src="/avatars/salman-original.svg"
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+        style={{ opacity: ready ? 0 : 1, background: 'transparent' }}
+      />
       <iframe
         ref={frameRef}
         src={`/avatars/salman-layered.html?embed=1&view=${view}`}
         title="سلمان، معلم اللهجة السعودية"
-        loading="lazy"
+        loading="eager"
         scrolling="no"
         tabIndex={-1}
         aria-hidden="true"
         className="absolute inset-0 w-full h-full border-0 bg-transparent pointer-events-none"
-        style={{ border: 0, background: 'transparent', colorScheme: 'light' }}
+        style={{ border: 0, background: 'transparent', colorScheme: 'light', opacity: ready ? 1 : 0 }}
       />
       {!ready && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
