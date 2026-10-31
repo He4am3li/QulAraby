@@ -231,8 +231,8 @@ export const Live3DCharacter: React.FC<Props> = ({
     host.appendChild(renderer.domElement);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 50);
-    camera.position.set(0, 2.04, 7.35);
-    camera.lookAt(0, 1.66, 0);
+    camera.position.set(0, 1.8, 9.2);
+    camera.lookAt(0, 1.72, 0);
     scene.add(new THREE.HemisphereLight(0xfff8e8, 0x8a99ae, 2.0));
     const key = new THREE.DirectionalLight(0xffffff, 3.0);
     key.position.set(-3, 6, 5);
@@ -256,6 +256,12 @@ export const Live3DCharacter: React.FC<Props> = ({
       const height = Math.max(1, host.clientHeight);
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
+      // Fit the whole 3.7-unit figure to narrow portrait slots as well as large stages.
+      const visibleHeight = 4.45;
+      const verticalFov = THREE.MathUtils.degToRad(camera.fov);
+      const distanceForHeight = visibleHeight / (2 * Math.tan(verticalFov / 2));
+      const distanceForWidth = (2.3 / Math.max(camera.aspect, 0.1)) / (2 * Math.tan(verticalFov / 2));
+      camera.position.z = Math.max(distanceForHeight, distanceForWidth);
       camera.updateProjectionMatrix();
     };
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updateSize);
