@@ -102,16 +102,6 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
                   <span className="block w-fit max-w-full truncate rounded-md bg-[#e0f3ed]/75 px-1 text-[clamp(9px,.72vw,11px)] font-semibold leading-tight tracking-wide text-[#327e71]" title={v.roman}>{v.roman}</span>
                 </div>
               </div>
-                <button
-                  type="button"
-                  onClick={() => onPronounce(v.dialect)}
-                  aria-label={(ar ? 'نطق ' : 'Pronounce ') + v.dialect}
-                  title={v.roman + ' · ' + v.en}
-                  className="inline-flex h-[clamp(26px,3.1vh,33px)] w-[clamp(26px,3.1vh,33px)] shrink-0 items-center justify-center rounded-full text-emerald-700 transition-colors hover:bg-emerald-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500"
-                >
-                  <Volume2 size={15} aria-hidden="true" />
-                </button>
-              </div>
             ))}
           </div>
         </section>
