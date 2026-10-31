@@ -2137,27 +2137,16 @@ export const Dialects: React.FC = () => {
                     </section>
                     <button type="button"
                       onClick={() => { setPassportFocusId(selectedCountry.id); setIsPassportOpen(true); }}
-                      className={'group flex h-full w-[clamp(100px,12vw,146px)] shrink-0 items-center justify-center gap-[clamp(5px,.65vw,8px)] rounded-[13px] border px-1.5 py-1.5 shadow-sm transition-colors hover:border-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 ' +
+                      className={'group flex h-full w-[clamp(100px,12vw,146px)] shrink-0 flex-col items-center justify-center gap-[clamp(3px,.35vh,6px)] rounded-[13px] border px-2 py-1.5 shadow-sm transition-colors hover:border-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 ' +
                         ((passportLevels[selectedCountry.id] || 0) >= 1 ? 'border-amber-200 bg-[#fff9ec]' : 'border-slate-200 bg-white/85') +
                         (recentStamp?.countryId === selectedCountry.id ? ' ring-2 ring-amber-400 shadow-[0_0_22px_rgba(245,158,11,.35)]' : '')}
                       title={lang === 'ar' ? 'افتح جواز الدولة وأختام المهام' : 'Open passport and earned stamps'}
                       aria-label={lang === 'ar' ? 'عرض جواز ' + selectedCountry.nameAr : 'View ' + selectedCountry.nameEn + ' passport'}>
-                      <div className="w-[clamp(34px,4vw,48px)] shrink-0">
+                      <div className="mx-auto w-[clamp(35px,3.8vw,53px)] shrink-0">
                         <DialectPassportCover country={selectedCountry} level={passportLevels[selectedCountry.id] || 0} compact/>
                       </div>
-                      <span className="flex min-w-0 flex-1 flex-col items-start gap-1 text-start">
-                        <span className="w-full text-[clamp(10px,.9vw,12px)] font-black leading-tight text-emerald-950 arabic-font">
-                          {lang === 'ar' ? 'جواز ' + selectedCountry.nameAr : selectedCountry.nameEn + ' Passport'}
-                        </span>
-                        <span className="text-[clamp(9px,.8vw,11px)] font-semibold leading-tight text-slate-500 arabic-font">
-                          {(passportLevels[selectedCountry.id] || 0) === 0
-                            ? (lang === 'ar' ? 'لم يُفعّل بعد' : 'Not unlocked')
-                            : (passportLevels[selectedCountry.id] || 0) === 1
-                              ? (lang === 'ar' ? 'زائر' : 'Visitor')
-                              : (passportLevels[selectedCountry.id] || 0) === 2
-                                ? (lang === 'ar' ? 'مقيم' : 'Resident')
-                                : (lang === 'ar' ? 'روح البلد' : 'Native Spirit')}
-                        </span>
+                      <span className="block w-full whitespace-nowrap text-center text-[clamp(10px,.85vw,12px)] font-black leading-tight text-emerald-950 arabic-font" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                        {lang === 'ar' ? 'جواز ' + selectedCountry.nameAr : selectedCountry.nameEn + ' Passport'}
                       </span>
                     </button>
                   </div>
