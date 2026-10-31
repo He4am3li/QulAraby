@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, Mic, Sparkles, MessageCircle, Smile, Zap, Play, VolumeX } from 'lucide-react';
 import { Live3DCharacter } from './Live3DCharacter';
+import { SalmanLayeredAvatar } from './SalmanLayeredAvatar';
 
 interface TutorCharacter {
   nameAr: string;
@@ -233,18 +234,29 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
         <div className="relative w-36 sm:w-48 h-44 sm:h-56 overflow-visible flex items-end justify-center">
           
           {/* Salman alone uses his approved PSD facial layers. Other countries retain their existing tutor. */}
-          <Live3DCharacter
-            countryId={countryId}
-            gender={gender}
-            isSelected={isSelected}
-            isSpeaking={isSpeaking}
-            isListening={isListening}
-            isLoading={isLoading}
-            audioLevel={audioLevel}
-            imageSrc={character.image}
-            nameAr={character.nameAr}
-            className="w-full h-full"
-          />
+          {isLayeredSalman ? (
+            <SalmanLayeredAvatar
+              view="full"
+              isSpeaking={isSpeaking}
+              isListening={isListening}
+              isLoading={isLoading}
+              reaction={reactionState === 'happy' ? 'correct' : reactionState === 'greeting' ? 'greeting' : 'idle'}
+              className="w-full h-full"
+            />
+          ) : (
+            <Live3DCharacter
+              countryId={countryId}
+              gender={gender}
+              isSelected={isSelected}
+              isSpeaking={isSpeaking}
+              isListening={isListening}
+              isLoading={isLoading}
+              audioLevel={audioLevel}
+              imageSrc={character.image}
+              nameAr={character.nameAr}
+              className="w-full h-full"
+            />
+          )}
 
           {/* Procedural Audio Equalizer Bar floating above feet when speaking */}
           {isSelected && isSpeaking && (
