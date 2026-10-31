@@ -26,7 +26,7 @@ const COUNTRY_DATA = [
     nameAr: 'الإمارات',
     nameEn: 'UAE',
     flag: '🇦🇪',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Burj_Khalifa_Sunset.jpg?width=1600',
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Burj_Khalifa_Dubai%2C_UAE_at_Sunset_001_by_Eric_Chamchoum.jpg?width=1600",
     dialect: 'Gulf (خليجي)',
     characterMale: { 
       nameAr: 'زايد', 
@@ -84,7 +84,7 @@ const COUNTRY_DATA = [
     nameAr: 'مصر',
     nameEn: 'Egypt',
     flag: '🇪🇬',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Giza_Pyramids_Panorama.jpg?width=1600',
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/The_Sunset_behind_the_Pyramids.jpg?width=1600",
     dialect: 'Egyptian (مصري)',
     characterMale: { 
       nameAr: 'أحمد', 
@@ -200,7 +200,7 @@ const COUNTRY_DATA = [
     nameAr: 'المغرب',
     nameEn: 'Morocco',
     flag: '🇲🇦',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/The_Open_Area_of_Hassan_II_Mosque_-_Casablanca_Morocco.jpg?width=1600',
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Whispers_of_Gold_-_Hassan_II_Mosque_at_Dusk.jpg?width=1600",
     dialect: 'Moroccan (مغربي)',
     characterMale: { 
       nameAr: 'ياسين', 
@@ -316,7 +316,7 @@ const COUNTRY_DATA = [
     nameAr: 'لبنان',
     nameEn: 'Lebanon',
     flag: '🇱🇧',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Jeita_Grotto_ITH044.jpg?width=1600',
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Upper_Grotto.JPG?width=1600",
     dialect: 'Levantine (لبناني)',
     characterMale: { 
       nameAr: 'جاد', 
@@ -490,7 +490,7 @@ const COUNTRY_DATA = [
     nameAr: 'تونس',
     nameEn: 'Tunisia',
     flag: '🇹🇳',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Sidi_Bou_Sa%C3%AFd_-_%D8%B3%D9%8A%D8%AF%D9%8A_%D8%A8%D9%88%D8%B3%D8%B9%D9%8A%D8%AF.jpg?width=1600',
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/%D8%B3%D9%8A%D8%AF%D9%8A_%D8%A8%D9%88%D8%B3%D8%B9%D9%8A%D8%AF_-_sidi_bou_said.jpg?width=1600",
     dialect: 'Tunisian (تونسي)',
     characterMale: { 
       nameAr: 'سامي', 
@@ -548,7 +548,7 @@ const COUNTRY_DATA = [
     nameAr: 'الجزائر',
     nameEn: 'Algeria',
     flag: '🇩🇿',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Casbah_Alger_dz.jpg?width=1600',
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Algiers_Casbah_2024.jpg?width=1600",
     dialect: 'Algerian (جزائري)',
     characterMale: { 
       nameAr: 'أمين', 
@@ -606,7 +606,7 @@ const COUNTRY_DATA = [
     nameAr: 'ليبيا',
     nameEn: 'Libya',
     flag: '🇱🇾',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Leptis_Magna%2C_Libya.jpg?width=1600',
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Roman_columns_and_ruins_at_Leptis_Magna_with_sea_view_Libya.jpg?width=1600",
     dialect: 'Libyan (ليبي)',
     characterMale: { 
       nameAr: 'عمر', 
@@ -664,7 +664,7 @@ const COUNTRY_DATA = [
     nameAr: 'سوريا',
     nameEn: 'Syria',
     flag: '🇸🇾',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Umayyad_Mosque%2C_Mount_Qasioun%2C_Old_Damascus.jpg?width=1600',
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/The_Umayyad_Mosque_in_night.JPG?width=1600",
     dialect: 'Levantine (شامي)',
     characterMale: { 
       nameAr: 'باسل', 
@@ -780,7 +780,7 @@ const COUNTRY_DATA = [
     nameAr: 'عمان',
     nameEn: 'Oman',
     flag: '🇴🇲',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Sultan_Qaboos_Grand_Mosque_close_up_view.jpg?width=1600',
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Muscat%2C_moschea_del_sultano_qaboos%2C_esterno_01.jpg?width=1600",
     dialect: 'Omani (عماني)',
     characterMale: { 
       nameAr: 'هيثم', 
@@ -1012,7 +1012,7 @@ const COUNTRY_DATA = [
     nameAr: 'اليمن',
     nameEn: 'Yemen',
     flag: '🇾🇪',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Old_Sana%27a_City_-_Yemen.jpg?width=1600',
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Old_Sana%27a_at_dusk.jpg?width=1600",
     dialect: 'Yemeni (يمني)',
     characterMale: { 
       nameAr: 'قحطان', 
@@ -1128,7 +1128,7 @@ const COUNTRY_DATA = [
     nameAr: 'الصومال',
     nameEn: 'Somalia',
     flag: '🇸🇴',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Laas_Geel_rock_paintings.JPG?width=1600',
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Laas_Gaal_in_Somaliland.jpg?width=1600",
     dialect: 'Somali Arabic (صومالي)',
     characterMale: { 
       nameAr: 'عبدي', 
@@ -1186,7 +1186,7 @@ const COUNTRY_DATA = [
     nameAr: 'جيبوتي',
     nameEn: 'Djibouti',
     flag: '🇩🇯',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Lake_Assal_1-Djibouti.jpg?width=1600',
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Assal_Lake%2C_2024.jpg?width=1600",
     dialect: 'Djiboutian (جيبوتي)',
     characterMale: { 
       nameAr: 'برخاد', 
@@ -1244,7 +1244,7 @@ const COUNTRY_DATA = [
     nameAr: 'جزر القمر',
     nameEn: 'Comoros',
     flag: '🇰🇲',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Hiking_to_Karthala_crater.jpg?width=1600',
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Overviewing_to_Karthala_crater_from_top.jpg?width=1600",
     dialect: 'Comorian (قمري)',
     characterMale: { 
       nameAr: 'سعيد', 
@@ -1298,6 +1298,33 @@ const COUNTRY_DATA = [
     }
   }
 ];
+
+
+// Keep landmark subjects visible when the country cards crop images on phones and tablets.
+const COUNTRY_PHOTO_FOCUS: Record<string, string> = {
+  uae: 'center 47%',
+  egypt: 'center 57%',
+  saudi: 'center 49%',
+  morocco: 'center 52%',
+  jordan: 'center 45%',
+  lebanon: 'center 47%',
+  palestine: 'center 43%',
+  iraq: 'center 55%',
+  tunisia: 'center 47%',
+  algeria: 'center 48%',
+  libya: 'center 44%',
+  syria: 'center 45%',
+  sudan: 'center 55%',
+  oman: 'center 48%',
+  kuwait: 'center 44%',
+  qatar: 'center 45%',
+  bahrain: 'center 52%',
+  yemen: 'center 52%',
+  mauritania: 'center 54%',
+  somalia: 'center 45%',
+  djibouti: 'center 53%',
+  comoros: 'center 52%',
+};
 
 interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   noBg?: boolean;
@@ -1864,33 +1891,37 @@ export const Dialects: React.FC = () => {
               {COUNTRY_DATA.map(country => (
                 <motion.button
                   key={country.id}
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.985 }}
                   onClick={() => setSelectedCountry(country)}
-                  className="group bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col h-[380px] relative"
+                  aria-label={lang === 'ar' ? `استكشف ${country.nameAr}` : `Explore ${country.nameEn}`}
+                  className="group bg-white rounded-[1.8rem] overflow-hidden shadow-md hover:shadow-2xl transition-shadow duration-300 border border-slate-100 flex flex-col h-[320px] sm:h-[340px] relative text-right focus-visible:outline focus-visible:outline-4 focus-visible:outline-amber-400"
                 >
-                    <div className="h-48 relative overflow-hidden">
-                      <SafeImage src={country.image} alt={country.nameEn} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md p-2 rounded-xl border border-white/30 text-2xl">
+                  {/* The destination photo is the visual focus, about 79% of the card. */}
+                  <div className="relative flex-1 min-h-0 overflow-hidden bg-slate-200">
+                    <SafeImage
+                      src={country.image}
+                      alt={country.nameAr}
+                      loading="lazy"
+                      decoding="async"
+                      style={{ objectPosition: COUNTRY_PHOTO_FOCUS[country.id] || 'center 50%' }}
+                      className="w-full h-full object-cover brightness-[1.035] saturate-[1.09] contrast-[1.025] group-hover:scale-[1.045] transition-transform duration-700 ease-out"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 h-[22%] bg-gradient-to-t from-slate-950/30 to-transparent pointer-events-none" />
+                    <div className="absolute top-3 right-3 bg-white/85 backdrop-blur-md px-2 py-1 rounded-xl border border-white/70 text-2xl shadow-sm" aria-hidden="true">
                       {country.flag}
                     </div>
                   </div>
-                  <div className="p-6 flex flex-col flex-1 text-right">
-                    <h3 className="text-2xl font-black text-slate-800 arabic-font mb-1">{country.nameAr}</h3>
-                    <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-4" dir="ltr">{country.nameEn}</p>
-                    <div className="space-y-2 mb-6">
-                      <div className="flex items-center justify-between text-[10px] font-black">
-                        <span className="text-slate-400 uppercase tracking-tighter">{t.dialect}</span>
-                        <span className="text-blue-600">{country.dialect}</span>
-                      </div>
-                      <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="bg-blue-600 h-full w-full opacity-20" />
-                      </div>
+                  {/* Information is secondary; clicking anywhere on the card opens the country. */}
+                  <div className="h-[70px] sm:h-[72px] shrink-0 px-4 py-2.5 bg-white flex items-center justify-between gap-2 text-right">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-xl font-black text-slate-800 arabic-font leading-tight truncate">{country.nameAr}</h3>
+                      <p className="text-[10px] font-bold text-slate-400 leading-snug truncate" dir="ltr">{country.nameEn}</p>
                     </div>
-                    <div className="mt-auto w-full py-3 bg-slate-50 text-slate-400 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                      {t.startJourney} <ArrowRight size={14} className={lang === 'ar' ? 'rotate-180' : ''} />
-                    </div>
+                    <span className="max-w-[49%] text-[10px] sm:text-[11px] font-bold text-emerald-800 bg-emerald-50 rounded-lg px-2.5 py-1.5 text-center leading-snug arabic-font">
+                      {country.dialect}
+                    </span>
                   </div>
                 </motion.button>
               ))}
