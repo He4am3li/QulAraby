@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Bird, Gem, Sofa, Trees, Soup, Waves, ScrollText, Sailboat, Landmark,
+  Bird, Gem, Sofa, Trees, Soup, Waves, ScrollText, Sailboat, Landmark, Coffee,
   Mountain, Castle, Utensils, Fish, Music2, House, Flower2, Shirt,
   ShoppingBag, Leaf, Droplets, IceCreamCone, Ship, DoorOpen, Paintbrush,
   Tent, BookOpen, Turtle, Flame, CookingPot, Cookie, TreePine,
@@ -18,6 +18,8 @@ export const DialectCulturePictogram: React.FC<Props> = ({ nameAr, nameEn, class
   const isDallah = /دلة|الدلة|Arabic Coffee|Qatari Coffee/i.test(label);
   const isDhow = /الفلوكة|السفن التقليدية|Felucca|Dhows/i.test(label);
   const isKhanjar = /الخنجر|الجنبية|Khanjar|Janbiya/i.test(label);
+  const isCamel = /الإبل|Camels/i.test(label);
+  const isOryx = /المها العربي|Arabian Oryx/i.test(label);
 
   // A simplified authentic incense burner, not a smoke/wind emoji.
   const custom = isIncense ? (
@@ -61,6 +63,22 @@ export const DialectCulturePictogram: React.FC<Props> = ({ nameAr, nameEn, class
       <path d="M25 8h8M23 5h11" stroke="#786146" strokeWidth="3" strokeLinecap="round"/>
       <path d="M15 22c5 1 15 0 22-3" stroke="#816e4c" strokeWidth="3.4" strokeLinecap="round"/>
     </svg>
+  ) : isCamel ? (
+    <svg viewBox="0 0 48 48" fill="none" className="h-[29px] w-[29px]" aria-hidden="true">
+      <path d="M8 20c3 0 5 2 6 5 3-1 4-8 7-9 4 0 4 9 8 9 3-1 4-6 7-6l5 5v7H9L8 20Z"
+        fill="#b8915b" stroke="#84633e" strokeWidth="1.4" strokeLinejoin="round"/>
+      <path d="M7 21C6 16 3 17 3 14l4 1 3 4 1 10M11 31v12M21 31v12M33 31v12M41 30v13" stroke="#84633e" strokeWidth="2.5" strokeLinecap="round"/>
+      <path d="M7 23l-4 2" stroke="#84633e" strokeWidth="1.5"/>
+    </svg>
+  ) : isOryx ? (
+    <svg viewBox="0 0 48 48" fill="none" className="h-[29px] w-[29px]" aria-hidden="true">
+      <path d="M22 17 18 2M28 17l4-15" stroke="#554837" strokeWidth="2.5" strokeLinecap="round"/>
+      <path d="M19 18c-6 0-9 4-8 10 1 7 8 13 13 15 6-3 13-10 13-17 0-5-3-8-8-8l-5 4-5-4Z"
+        fill="#f2e7d3" stroke="#8c7b63" strokeWidth="1.5" strokeLinejoin="round"/>
+      <path d="M17 19 7 13l4 14M31 19l10-6-4 14" fill="#e8d6b4" stroke="#8c7b63" strokeWidth="1.5"/>
+      <path d="M18 29h2M29 29h2" stroke="#544f48" strokeWidth="3" strokeLinecap="round"/>
+      <path d="M22 35l2 2 2-2" stroke="#786d5c" strokeWidth="1.4" strokeLinecap="round"/>
+    </svg>
   ) : null;
 
   const iconMap: Array<[RegExp, LucideIcon]> = [
@@ -68,7 +86,7 @@ export const DialectCulturePictogram: React.FC<Props> = ({ nameAr, nameEn, class
     [/اللؤلؤ|Pearls|Pearl/i, Shell],
     [/المجلس|الديوانية|Majlis|Diwaniya/i, Sofa],
     [/التمور|النخيل|الواحات|Palm|Dates|Oasis/i, Trees],
-    [/الكشري|كسكسي|الكسرة|المسكوف|الجبنة|الكسكس|الكبسة|مجبوس|الطاجين|المنسف|المقلوبة|البازين|العصيدة|السلتة|Maru|Koshary|Kabsa|Mansaf|Maqluba|Tagine|Bazin|Couscous|Machboos|Asida|Saltah/i, CookingPot],
+    [/الكشري|كسكسي|الكسرة|الجبنة|الكسكس|الكبسة|مجبوس|الطاجين|المنسف|المقلوبة|البازين|العصيدة|السلتة|Maru|Koshary|Kabsa|Mansaf|Maqluba|Tagine|Bazin|Couscous|Machboos|Asida|Saltah/i, CookingPot],
     [/الفانوس|Fanous/i, Flame],
     [/النيل|البحر|بحيرة|Dead Sea|Nile|Lake|Waves/i, Waves],
     [/البردي|الشعر|Papyrus|Poetry/i, ScrollText],
@@ -89,16 +107,14 @@ export const DialectCulturePictogram: React.FC<Props> = ({ nameAr, nameEn, class
     [/ملوية|أبراج|منارة|Minaret|Towers|Lighthouse/i, Building2],
     [/الياسمين|اليلانغ|Jasmine|Ylang/i, Flower2],
     [/الرندة|البروكار|السدو|التطريز|Randa|Brocade|Sadu|Embroidery/i, Paintbrush],
-    [/الشاي|Tea/i, Soup],
+    [/الشاي|Tea/i, Coffee],
     [/السوق|Souq|Market/i, ShoppingBag],
     [/متحف|Museum|بيت القرآن|Beit Al Quran/i, BookOpen],
     [/سيدي|القصبة|غدامس|شنقيط|Sidi|Casbah|Ghadames|Chinguetti/i, House],
     [/بوابة|باب البحرين|Darwaza|Gate|Bab Al Bahrain/i, DoorOpen],
-    [/المها|Oryx/i, Sprout],
-    [/الإبل|Camel/i, Mountain],
-    [/السمك|الحوت|Fish/i, Fish],
+    [/المسكوف|السمك|الحوت|Fish/i, Fish],
     [/السفن|الميناء|Ship|Port/i, Ship],
-    [/البن|القهوة|Coffee/i, Soup],
+    [/البن|القهوة|Coffee/i, Coffee],
     [/البركان|Volcano/i, Flame],
     [/السلاحف|Turtles/i, Turtle],
     [/الشواطئ|Beaches/i, Sun],
