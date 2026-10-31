@@ -142,7 +142,7 @@ const COUNTRY_DATA = [
     nameAr: 'السعودية',
     nameEn: 'Saudi Arabia',
     flag: '🇸🇦',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/%D8%A7%D9%84%D9%85%D8%B3%D8%AC%D8%AF_%D8%A7%D9%84%D8%AD%D8%B1%D8%A7%D9%85_%D9%81%D9%8A_%D9%85%D9%83%D8%A9_%D8%A7%D9%84%D9%85%D9%83%D8%B1%D9%85%D8%A9.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Masjidul-HaramAerealView.jpg?width=1600',
     dialect: 'Saudi (سعودي)',
     characterMale: { 
       nameAr: 'سلمان', 
@@ -780,7 +780,7 @@ const COUNTRY_DATA = [
     nameAr: 'عمان',
     nameEn: 'Oman',
     flag: '🇴🇲',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Salalah_oman.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Beautiful_waterfall_in_salalah_oman.jpg?width=1600",
     dialect: 'Omani (عماني)',
     characterMale: { 
       nameAr: 'هيثم', 
@@ -1304,7 +1304,7 @@ const COUNTRY_DATA = [
 const COUNTRY_PHOTO_FOCUS: Record<string, string> = {
   uae: 'center 47%',
   egypt: 'center 57%',
-  saudi: 'center 49%',
+  saudi: 'center 45%',
   morocco: 'center 52%',
   jordan: 'center 45%',
   lebanon: 'center 47%',
@@ -1315,7 +1315,7 @@ const COUNTRY_PHOTO_FOCUS: Record<string, string> = {
   libya: 'center 44%',
   syria: 'center 45%',
   sudan: 'center 55%',
-  oman: 'center 48%',
+  oman: 'center 42%',
   kuwait: 'center 44%',
   qatar: 'center 45%',
   bahrain: 'center 52%',
