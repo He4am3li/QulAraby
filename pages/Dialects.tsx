@@ -142,7 +142,7 @@ const COUNTRY_DATA = [
     nameAr: 'السعودية',
     nameEn: 'Saudi Arabia',
     flag: '🇸🇦',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Hegra_(Mada'in_Salih)%2C_the_kingdom's_second_Nabatean_capital_after_Petra%2C_Saudi_Arabia_-_53545733456.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Hegra_(Mada%27in_Salih)%2C_the_kingdom%27s_second_Nabatean_capital_after_Petra%2C_Saudi_Arabia_-_53545733456.jpg?width=1600',
     dialect: 'Saudi (سعودي)',
     characterMale: { 
       nameAr: 'سلمان', 
@@ -1012,7 +1012,7 @@ const COUNTRY_DATA = [
     nameAr: 'اليمن',
     nameEn: 'Yemen',
     flag: '🇾🇪',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Old_Sana'a_City_-_Yemen.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Old_Sana%27a_City_-_Yemen.jpg?width=1600',
     dialect: 'Yemeni (يمني)',
     characterMale: { 
       nameAr: 'قحطان', 
