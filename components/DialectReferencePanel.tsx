@@ -43,7 +43,7 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
           </div>
         </section>
 
-        <section aria-label={ar ? 'الثقافة' : 'Culture'} className="min-h-0 flex flex-col gap-1">
+        <section aria-label={ar ? 'الثقافة' : 'Culture'} className="relative min-h-0 flex flex-col gap-1">
           <div className="flex h-6 shrink-0 items-center justify-between gap-2 px-1">
             <h3 className="font-black text-[13px] text-slate-800 arabic-font">{ar ? 'الثقافة' : 'Culture'}</h3>
             <span className="h-px flex-1 bg-gradient-to-l from-amber-400/50 to-transparent" />
@@ -68,7 +68,7 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
           {/* A culture tile can reveal its description without navigating away. */}
           {chosenCulture !== null && country.culture.items[chosenCulture] && (
             <div className="absolute z-30 max-w-[min(380px,85vw)] rounded-xl border border-emerald-200 bg-white/95 p-2 shadow-xl backdrop-blur-sm text-[12px] text-slate-700"
-                 style={{ top: '29%', insetInlineStart: '3%' }} role="status">
+                 style={{ top: 'calc(100% + 4px)', insetInlineStart: '3%' }} role="status">
               <button className="float-left px-1 font-bold text-slate-500" onClick={() => setChosenCulture(null)} aria-label={ar ? 'إغلاق' : 'Close'}>×</button>
               {ar ? country.culture.items[chosenCulture].descAr : country.culture.items[chosenCulture].descEn}
             </div>
@@ -81,14 +81,15 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
             <h3 className="font-black text-[13px] text-slate-800 arabic-font">{ar ? 'المفردات الشائعة' : 'Common phrases'}</h3>
             <span className="ms-auto text-[10px] text-slate-400" dir="ltr">08</span>
           </div>
-          <div className="grid flex-1 min-h-0 grid-cols-2 grid-rows-4 gap-[5px]" role="table"
+          <div className="grid flex-1 min-h-0 grid-cols-2 grid-rows-4 gap-[5px]"
                aria-label={ar ? 'ثماني كلمات باللهجة ومعناها' : 'Eight dialect phrases with translations'}>
             {country.vocab.slice(0, 8).map((v, i) => (
-              <div role="cell" key={i}
+              <div key={i}
                    className="flex min-w-0 min-h-0 items-center justify-between gap-1 overflow-hidden rounded-[10px] border border-emerald-100/85 bg-gradient-to-l from-emerald-50/75 to-white px-[clamp(5px,.6vw,9px)]">
                 <div className="flex min-w-0 flex-1 flex-col justify-center gap-[1px]">
                   <span className="truncate text-[clamp(11px,1.16vw,15px)] font-black text-[#0e695f] arabic-font" title={v.dialect} dir="rtl">{v.dialect}</span>
-                  <span className="truncate text-[clamp(10px,.86vw,12px)] font-medium text-slate-600 arabic-font" title={ar ? v.fusha : v.en}>{ar ? v.fusha : v.en}</span>
+                  <span className="truncate text-[clamp(10px,.86vw,12px)] font-medium leading-tight text-slate-600 arabic-font" title={v.fusha} dir="rtl">{v.fusha}</span>
+                  <span className="truncate text-[clamp(9px,.7vw,11px)] font-medium leading-tight text-slate-400" title={v.en} dir="ltr">{v.en}</span>
                 </div>
                 <button
                   type="button"
