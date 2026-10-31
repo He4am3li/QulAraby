@@ -20,18 +20,18 @@ interface Props {
 const GUIDE = [
   [
     { ar: 'السلام عليكم', en: 'Hello' },
-    { ar: 'أين أشهر معلم عندكم؟', en: 'What landmark should I visit?' },
+    { ar: 'ما أشهر مكان سياحي هنا؟', en: 'What place should I visit?' },
     { ar: 'ممكن تساعدني؟', en: 'Can you help me?' }
   ],
   [
-    { ar: 'وش تنصحني أجرب؟', en: 'What do you recommend?' },
+    { ar: 'ما الذي تنصحني بتجربته؟', en: 'What do you recommend?' },
     { ar: 'كيف أطلب هذا؟', en: 'How can I order this?' },
     { ar: 'بكم السعر؟', en: 'How much is it?' }
   ],
   [
-    { ar: 'وش رأيك في هالفكرة؟', en: 'What is your opinion?' },
-    { ar: 'وش أفضل خطة؟', en: 'What is the best plan?' },
-    { ar: 'ليش اخترت هالحل؟', en: 'Why that solution?' }
+    { ar: 'ما رأيك في هذه الفكرة؟', en: 'What is your opinion?' },
+    { ar: 'ما أفضل خطة؟', en: 'What is the best plan?' },
+    { ar: 'لماذا اخترت هذا الحل؟', en: 'Why that solution?' }
   ]
 ];
 
@@ -42,7 +42,8 @@ export const DialectChatDock: React.FC<Props> = ({
   const ar = lang === 'ar';
   const [historyOpen, setHistoryOpen] = React.useState(false);
   const [olderPages, setOlderPages] = React.useState(0);
-  React.useEffect(() => { setOlderPages(0); }, [messages.length, name]);
+  React.useEffect(() => { setOlderPages(0); }, [messages.length]);
+  React.useEffect(() => { setHistoryOpen(false); }, [name]);
   const lastTutorReply = [...messages].reverse().find(msg => msg.role !== 'user')?.text || '';
   const totalPages = Math.max(1, Math.ceil(messages.length / 2));
   const offset = Math.min(olderPages, totalPages - 1);
