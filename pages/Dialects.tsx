@@ -84,7 +84,7 @@ const COUNTRY_DATA = [
     nameAr: 'مصر',
     nameEn: 'Egypt',
     flag: '🇪🇬',
-    image: "https://images.pexels.com/photos/32902075/pexels-photo-32902075/free-photo-of-great-sphinx-and-pyramid-of-giza-at-sunset.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Sunset_in_egypt_with_the_pyramids.jpg?width=1600",
     dialect: 'Egyptian (مصري)',
     characterMale: { 
       nameAr: 'أحمد', 
@@ -1899,20 +1899,16 @@ export const Dialects: React.FC = () => {
                   className="group bg-white rounded-[1.8rem] overflow-hidden shadow-md hover:shadow-2xl transition-shadow duration-300 border border-slate-100 flex flex-col h-[320px] sm:h-[340px] relative text-right focus-visible:outline focus-visible:outline-4 focus-visible:outline-amber-400"
                 >
                   {/* The destination photo is the visual focus, about 79% of the card. */}
-                  <div className={`relative flex-1 min-h-0 overflow-hidden ${country.id === 'oman' ? 'bg-[#233a33]' : 'bg-slate-200'}`}>
+                  <div className="relative flex-1 min-h-0 overflow-hidden bg-slate-200">
                     <SafeImage
                       src={country.image}
                       alt={country.nameAr}
                       loading="lazy"
                       decoding="async"
                       style={{ objectPosition: COUNTRY_PHOTO_FOCUS[country.id] || 'center 50%' }}
-                      className={country.id === 'oman'
-                        ? "block w-full h-full object-contain bg-transparent brightness-[1.035] saturate-[1.09] contrast-[1.025] transition-transform duration-700 ease-out"
-                        : country.id === 'egypt'
-                          ? "w-full h-full object-cover brightness-[1.09] saturate-[1.18] contrast-[1.05] group-hover:scale-[1.035] transition-transform duration-700 ease-out"
-                          : "w-full h-full object-cover brightness-[1.035] saturate-[1.09] contrast-[1.025] group-hover:scale-[1.045] transition-transform duration-700 ease-out"}
+                      className="w-full h-full object-cover brightness-[1.035] saturate-[1.09] contrast-[1.025] group-hover:scale-[1.045] transition-transform duration-700 ease-out"
                     />
-                    {country.id !== 'oman' && <div className="absolute inset-x-0 bottom-0 h-[22%] bg-gradient-to-t from-slate-950/30 to-transparent pointer-events-none" />}
+                    <div className="absolute inset-x-0 bottom-0 h-[22%] bg-gradient-to-t from-slate-950/30 to-transparent pointer-events-none" />
                     <div className="absolute top-3 right-3 bg-white/85 backdrop-blur-md px-2 py-1 rounded-xl border border-white/70 text-2xl shadow-sm" aria-hidden="true">
                       {country.flag}
                     </div>
@@ -1940,9 +1936,9 @@ export const Dialects: React.FC = () => {
               {/* Left Column: Info & Culture */}
               <div className="w-full md:w-1/2 flex flex-col overflow-y-auto custom-scroll border-l border-slate-100 h-full min-h-0">
                 {/* Hero Section */}
-                <div className={`h-[140px] shrink-0 relative ${selectedCountry.id === 'oman' ? 'bg-[#233a33]' : ''}`}>
-                  <SafeImage src={selectedCountry.image} className={selectedCountry.id === 'oman' ? "block w-full h-full object-contain" : "w-full h-full object-cover"} />
-                  {selectedCountry.id !== 'oman' && <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/30" />}
+                <div className="h-[140px] shrink-0 relative">
+                  <SafeImage src={selectedCountry.image} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/30" />
                   <div className="absolute bottom-3 right-5 flex items-end gap-3">
                     <div className="text-4xl drop-shadow-2xl">{selectedCountry.flag}</div>
                       <div className="text-right">
