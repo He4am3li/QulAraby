@@ -1,4 +1,5 @@
 import React from 'react';
+import { DialectCulturePictogram } from './DialectCulturePictogram';
 
 interface CultureItem { icon: string; nameAr: string; nameEn: string; descAr: string; descEn: string }
 interface VocabItem { dialect: string; fusha: string; en: string; roman: string }
@@ -59,7 +60,7 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
                 className={'group min-w-0 min-h-0 flex flex-col items-center justify-center gap-0.5 rounded-[9px] border px-1 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 ' +
                   (chosenCulture === i ? 'border-emerald-400 bg-emerald-50' : 'border-slate-100 bg-[#f5f7f7] hover:border-emerald-200 hover:bg-emerald-50/60')}
               >
-                <span className="text-[clamp(15px,2.1vh,21px)] leading-none" aria-hidden="true">{item.icon}</span>
+                <DialectCulturePictogram nameAr={item.nameAr} nameEn={item.nameEn} />
                 <span className="w-full truncate text-center text-[clamp(10px,1.15vh,12px)] font-bold text-slate-800 arabic-font">{ar ? item.nameAr : item.nameEn}</span>
               </button>
             ))}
