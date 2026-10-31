@@ -1906,8 +1906,19 @@ export const Dialects: React.FC = () => {
                       loading="lazy"
                       decoding="async"
                       style={{ objectPosition: COUNTRY_PHOTO_FOCUS[country.id] || 'center 50%' }}
-                      className="w-full h-full object-cover brightness-[1.035] saturate-[1.09] contrast-[1.025] group-hover:scale-[1.045] transition-transform duration-700 ease-out"
+                      className={country.id === 'egypt'
+                        ? "w-full h-full object-cover brightness-[1.07] saturate-[1.12] contrast-[1.04] group-hover:scale-[1.035] transition-transform duration-700 ease-out"
+                        : "w-full h-full object-cover brightness-[1.035] saturate-[1.09] contrast-[1.025] group-hover:scale-[1.045] transition-transform duration-700 ease-out"}
                     />
+                    {country.id === 'egypt' && (
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-0 pointer-events-none mix-blend-screen"
+                        style={{
+                          background: "radial-gradient(circle at 32% 24%, rgba(255, 224, 190, 0.16), transparent 42%), linear-gradient(to top, rgba(255, 186, 120, 0.07), transparent 48%)"
+                        }}
+                      />
+                    )}
                     <div className="absolute inset-x-0 bottom-0 h-[22%] bg-gradient-to-t from-slate-950/30 to-transparent pointer-events-none" />
                     <div className="absolute top-3 right-3 bg-white/85 backdrop-blur-md px-2 py-1 rounded-xl border border-white/70 text-2xl shadow-sm" aria-hidden="true">
                       {country.flag}
