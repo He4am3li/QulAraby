@@ -10,6 +10,7 @@ import { LanguageToggle } from '../components/LanguageToggle';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { Interactive3DTutor } from '../components/Interactive3DTutor';
+import { SalmanLayeredAvatar } from '../components/SalmanLayeredAvatar';
 import { generateSpeech, decodeAudioData } from '../services/gemini';
 
 declare global {
@@ -1405,6 +1406,8 @@ export const Dialects: React.FC = () => {
     return saved ? JSON.parse(saved) : {};
   });
   const [isPassportOpen, setIsPassportOpen] = React.useState(false);
+  const [salmanSuccessSignal, setSalmanSuccessSignal] = React.useState(0);
+  const isSalmanActive = selectedCountry?.id === 'saudi' && selectedPersona?.nameEn === selectedCountry?.characterMale?.nameEn;
 
   const getTutorGreeting = (countryId: string, char: any, isFemale: boolean, language: 'ar' | 'en') => {
     if (language === 'en') {
@@ -1618,6 +1621,9 @@ export const Dialects: React.FC = () => {
       
       if (currentRank === 0 && userMessageCount >= 3) {
         updateRank(selectedCountry.id, 1);
+        if (selectedCountry.id === 'saudi' && currentPersona.nameEn === selectedCountry.characterMale.nameEn) {
+          setSalmanSuccessSignal(value => value + 1);
+        }
         setChatMessages(prev => [...prev, { 
           role: 'model', 
           text: lang === 'ar' 
@@ -2116,6 +2122,7 @@ export const Dialects: React.FC = () => {
                             countryId={selectedCountry.id}
                             character={char}
                             gender={gender}
+                            successSignal={selectedCountry.id === 'saudi' && gender === 'male' ? salmanSuccessSignal : 0}
                             isSelected={isSelected}
                             isSpeaking={isSelected && isSpeaking}
                             isListening={isSelected && isListening}
@@ -2300,29 +2307,39 @@ export const Dialects: React.FC = () => {
 
                           {/* Character Interaction Stage */}
                           <div className="flex-1 relative flex flex-col items-center justify-center p-8">
-                            <motion.div 
-                              animate={{ 
-                                y: isSpeaking ? [0, -8, 0] : [0, -4, 0],
-                                rotate: isSpeaking ? [-1, 1, -1] : [-0.5, 0.5, -0.5],
-                                scale: isSpeaking ? [1, 1.01, 1] : 1
-                              }}
-                              transition={{ 
-                                duration: isSpeaking ? 0.4 : 4, 
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                              }}
+                            <motion.div
+                              animate={isSalmanActive
+                                ? { y: 0, rotate: 0, scale: 1 }
+                                : {
+                                    y: isSpeaking ? [0, -8, 0] : [0, -4, 0],
+                                    rotate: isSpeaking ? [-1, 1, -1] : [-0.5, 0.5, -0.5],
+                                    scale: isSpeaking ? [1, 1.01, 1] : 1
+                                  }}
+                              transition={isSalmanActive
+                                ? { duration: 0.2 }
+                                : { duration: isSpeaking ? 0.4 : 4, repeat: Infinity, ease: "easeInOut" }}
                               className="relative w-full max-w-[320px] aspect-[2/3] z-10"
                             >
                               {/* Robot Glow Aura */}
                               <div className={`absolute inset-0 rounded-full blur-[80px] transition-all duration-500 ${isSpeaking ? 'bg-blue-500/30 scale-125' : 'bg-emerald-500/10 scale-100'}`} />
                               
-                              <SafeImage 
-                                src={selectedPersona.image} 
-                                className={`w-full h-full object-contain transition-all duration-300 ${isSpeaking ? 'brightness-110 drop-shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'brightness-90 opacity-80'}`} 
-                              />
+                              {isSalmanActive ? (
+                                <SalmanLayeredAvatar
+                                  view="full"
+                                  isSpeaking={isSpeaking}
+                                  isListening={isListening}
+                                  isLoading={isChatLoading}
+                                  className="w-full h-full"
+                                />
+                              ) : (
+                                <SafeImage
+                                  src={selectedPersona.image}
+                                  className={`w-full h-full object-contain transition-all duration-300 ${isSpeaking ? 'brightness-110 drop-shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'brightness-90 opacity-80'}`}
+                                />
+                              )}
 
-                              {/* Lip-Sync Visualizer (Mouth Area) */}
-                              {isSpeaking && (
+                              {/* The layer rig handles Salman's mouth. Keep the old overlay for other tutors only. */}
+                              {isSpeaking && !isSalmanActive && (
                                 <motion.div 
                                   animate={{ 
                                     scaleY: [1, 2.5, 1.2, 3, 1],
@@ -2333,14 +2350,16 @@ export const Dialects: React.FC = () => {
                                 />
                               )}
 
-                              {/* Robotic Data Stream Overlay */}
-                              <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
-                                <motion.div 
-                                  animate={{ y: [-100, 400] }}
-                                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                                  className="w-full h-1 bg-gradient-to-b from-transparent via-blue-400 to-transparent"
-                                />
-                              </div>
+                              {/* Do not cover Salman's original artwork with the scanline overlay. */}
+                              {!isSalmanActive && (
+                                <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
+                                  <motion.div
+                                    animate={{ y: [-100, 400] }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                    className="w-full h-1 bg-gradient-to-b from-transparent via-blue-400 to-transparent"
+                                  />
+                                </div>
+                              )}
                             </motion.div>
 
                             {/* HUD Info */}
