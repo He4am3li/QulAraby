@@ -1395,6 +1395,8 @@ export const Dialects: React.FC = () => {
 
   
   const [selectedCountry, setSelectedCountry] = React.useState<any>(null);
+  const selectedCountryRef = React.useRef<any>(null);
+  selectedCountryRef.current = selectedCountry;
   const [selectedPersona, setSelectedPersona] = React.useState<any>(null);
   const [chatMessages, setChatMessages] = React.useState<{role: string, text: string}[]>([]);
   const [chatInput, setChatInput] = React.useState('');
@@ -1720,11 +1722,24 @@ export const Dialects: React.FC = () => {
       const rank = passportLevelsRef.current[selectedCountry.id] || 0;
       const missions = (selectedCountry as any).missions;
       const currentMission = missions ? (rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar) : "Learn the dialect";
+      const liveCountry = selectedCountry;
+      liveInputBufferRef.current = '';
+      const flushLiveInput = () => {
+        const speech = liveInputBufferRef.current.replace(/\s+/g, ' ').trim();
+        liveInputBufferRef.current = '';
+        if (speech.length < 3) return;
+        captureMissionTurn(liveCountry.id, { role: 'user', text: speech, authored: true });
+        if (selectedCountryRef.current?.id === liveCountry.id) {
+          setChatMessages(prev => [...prev, { role: 'user', text: speech }]);
+        }
+        void checkMissionCompletion(liveCountry, passportLevelsRef.current[liveCountry.id] || 0);
+      };
 
       const sessionPromise = ai.live.connect({
         model: "gemini-3.8-live",
         config: {
           responseModalities: [Modality.AUDIO],
+          inputAudioTranscription: {},
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: persona.nameEn === selectedCountry.characterFemale.nameEn ? "Kore" : "Puck" } },
           },
@@ -1745,6 +1760,14 @@ export const Dialects: React.FC = () => {
             });
           },
           onmessage: async (message: any) => {
+            // Transcript of the student's speech is eligible evidence for stamps.
+            const spokenText = message.serverContent?.inputTranscription?.text;
+            if (typeof spokenText === 'string' && spokenText.trim()) {
+              liveInputBufferRef.current += ' ' + spokenText.trim();
+            }
+            if (message.serverContent?.turnComplete && liveInputBufferRef.current.trim()) {
+              flushLiveInput();
+            }
             if (message.serverContent?.modelTurn?.parts[0]?.inlineData?.data) {
               const base64Audio = message.serverContent.modelTurn.parts[0].inlineData.data;
               setIsSpeaking(true);
@@ -1755,6 +1778,7 @@ export const Dialects: React.FC = () => {
             }
           },
           onclose: () => {
+            flushLiveInput();
             isLiveActiveRef.current = false;
             if (micCleanupRef.current) {
               micCleanupRef.current();
