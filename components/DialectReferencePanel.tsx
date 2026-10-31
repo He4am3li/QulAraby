@@ -1,5 +1,4 @@
 import React from 'react';
-import { Volume2 } from 'lucide-react';
 
 interface CultureItem { icon: string; nameAr: string; nameEn: string; descAr: string; descEn: string }
 interface VocabItem { dialect: string; fusha: string; en: string; roman: string }
@@ -28,7 +27,7 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
       className="h-full min-h-0 w-full overflow-hidden rounded-[22px] border border-slate-200/75 bg-white shadow-[0_15px_50px_rgba(15,23,42,0.045)]"
     >
       <div className="grid h-full min-h-0 gap-[clamp(5px,0.75vh,9px)] p-[clamp(7px,1vh,10px)]"
-        style={{ gridTemplateRows: 'minmax(84px,1.05fr) minmax(115px,1.15fr) minmax(222px,2.28fr) minmax(109px,1.26fr)' }}
+        style={{ gridTemplateRows: 'minmax(78px,1fr) minmax(112px,1.12fr) minmax(216px,2.27fr) minmax(112px,1.28fr)' }}
       >
         {/* Matching rounded photo header and photographic fact footer. */}
         <section className="relative min-h-0 overflow-hidden rounded-t-[17px] rounded-b-[9px] bg-slate-200">
@@ -81,42 +80,41 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
             <span className="h-px flex-1 bg-gradient-to-l from-amber-400/50 to-transparent" />
           </div>
           <div className="grid flex-1 min-h-0 grid-cols-2 grid-rows-4 gap-[5px]"
-               aria-label={ar ? 'ثماني كلمات باللهجة ومعناها' : 'Eight dialect phrases with translations'}>
+            aria-label={ar ? 'ثماني مفردات عربية، مع النطق والإنجليزية' : 'Eight bilingual dialect phrases'}>
             {country.vocab.slice(0, 8).map((v, i) => (
-              <div key={i}
-                className="grid min-h-0 min-w-0 grid-cols-[minmax(0,1fr)_24px_minmax(0,1fr)] items-center gap-1 overflow-hidden rounded-[10px] border border-emerald-100/85 bg-gradient-to-l from-emerald-50/75 to-white px-[clamp(5px,.6vw,9px)]"
-                dir="rtl">
-                <div className="min-w-0 text-right">
-                  <span className="block truncate text-[clamp(11px,1.07vw,14px)] font-black leading-tight text-[#0e695f] arabic-font" title={v.dialect}>{v.dialect}</span>
-                  <span className="block truncate text-[clamp(9px,.8vw,11px)] font-medium leading-tight text-slate-500 arabic-font" title={v.fusha}>{v.fusha}</span>
-                </div>
-                <button type="button"
-                  onClick={() => onPronounce(v.dialect)}
-                  aria-label={(ar ? 'نطق ' : 'Pronounce ') + v.dialect}
-                  title={v.roman}
-                  className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-emerald-600 transition-colors hover:bg-emerald-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500">
-                  <Volume2 size={14} aria-hidden="true"/>
-                </button>
-                <div className="min-w-0 text-left" dir="ltr">
-                  <span className="block truncate text-[clamp(10px,.88vw,12px)] font-semibold leading-tight text-slate-700" title={v.en}>{v.en}</span>
-                  <span className="block w-fit max-w-full truncate rounded-md bg-[#e0f3ed]/75 px-1 text-[clamp(9px,.72vw,11px)] font-semibold leading-tight tracking-wide text-[#327e71]" title={v.roman}>{v.roman}</span>
-                </div>
-              </div>
+              <button
+                type="button"
+                key={i}
+                title={(ar ? 'استمع: ' : 'Pronounce: ') + v.dialect}
+                aria-label={v.dialect + ', ' + v.roman + ', ' + v.fusha + ', ' + v.en}
+                onClick={() => onPronounce(v.dialect)}
+                className="group grid min-h-0 min-w-0 grid-cols-2 grid-rows-2 items-center gap-x-2 gap-y-0 overflow-hidden rounded-[9px] border border-emerald-100/90 bg-gradient-to-l from-emerald-50/70 to-white px-[clamp(7px,.7vw,11px)] py-1 text-right transition-colors hover:border-emerald-300 hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500"
+                dir="rtl"
+              >
+                <span className="min-w-0 truncate text-[clamp(11px,1.04vw,14px)] font-black leading-[1.3] text-[#096653] arabic-font" dir="rtl" title={v.dialect}>{v.dialect}</span>
+                <span className="min-w-0 truncate text-left text-[clamp(10px,.95vw,13px)] font-bold leading-[1.3] tracking-[.01em] text-[#407e76]" dir="ltr" title={v.roman}>{v.roman}</span>
+                <span className="min-w-0 truncate text-[clamp(10px,.88vw,12px)] font-medium leading-[1.3] text-slate-600 arabic-font" dir="rtl" title={v.fusha}>{v.fusha}</span>
+                <span className="min-w-0 truncate text-left text-[clamp(10px,.85vw,12px)] font-medium leading-[1.3] text-slate-500" dir="ltr" title={v.en}>{v.en}</span>
+              </button>
             ))}
           </div>
         </section>
 
-        <section className="relative min-h-0 overflow-hidden rounded-b-[17px] rounded-t-[9px] bg-[#0c463d] text-white"
+        <section className="relative min-h-0 overflow-hidden rounded-b-[17px] rounded-t-[9px] bg-[#e9efe8]"
           aria-label={ar ? 'هل تعلم؟' : 'Did you know?'}>
-          <div className="absolute inset-0 opacity-[0.19] [&>img]:h-full [&>img]:w-full [&>img]:object-cover" aria-hidden="true">
-            <img src={country.image} alt="" className="h-full w-full object-cover" loading="lazy" />
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-l from-[#07362f]/95 via-[#0d5548]/85 to-[#163e42]/80" />
-          <div className="relative z-10 flex h-full min-h-0 flex-col justify-center gap-[3px] px-3 py-1.5">
-            <h3 className={'text-[13px] font-black text-amber-100 arabic-font ' + (ar ? 'text-right' : 'text-left')}>{ar ? 'هل تعلم؟' : 'Did you know?'}</h3>
-            <p className="line-clamp-2 text-right text-[clamp(11px,.89vw,13px)] font-semibold leading-[1.35] text-white/95 arabic-font" dir="rtl" title={country.culture.factAr}>{country.culture.factAr}</p>
+          {/* Same image and soft white photographic fade as the hero, descending from the TOP. */}
+          <img src={country.image} alt="" loading="lazy" aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover opacity-65" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/95 via-white/88 to-[#edf1e9]/80" />
+          <div className="relative z-10 flex h-full min-h-0 flex-col justify-center gap-[clamp(3px,.6vh,7px)] px-3 py-1.5">
+            <h3 className={'text-[clamp(12px,1.06vw,15px)] font-black text-[#0a493e] arabic-font ' + (ar ? 'text-right' : 'text-left')}>
+              {ar ? 'هل تعلم؟' : 'Did you know?'}
+            </h3>
+            <p className="line-clamp-2 text-right text-[clamp(10px,.91vw,13px)] font-bold leading-[1.35] text-slate-900 arabic-font"
+              dir="rtl" title={country.culture.factAr}>{country.culture.factAr}</p>
             {country.culture.factEn && (
-              <p className="line-clamp-2 text-left text-[clamp(10px,.81vw,12px)] font-medium leading-[1.35] text-emerald-50/80" dir="ltr" title={country.culture.factEn}>{country.culture.factEn}</p>
+              <p className="line-clamp-2 text-left text-[clamp(10px,.84vw,12px)] font-medium leading-[1.35] text-[#45615c]"
+                dir="ltr" title={country.culture.factEn}>{country.culture.factEn}</p>
             )}
           </div>
         </section>
