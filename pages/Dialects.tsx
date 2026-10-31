@@ -142,7 +142,7 @@ const COUNTRY_DATA = [
     nameAr: 'السعودية',
     nameEn: 'Saudi Arabia',
     flag: '🇸🇦',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Masjidul-HaramAerialView_(cropped).jpg?width=1600',
+    image: '/images/dialects/saudi-kaaba.avif',
     dialect: 'Saudi (سعودي)',
     characterMale: { 
       nameAr: 'سلمان', 
