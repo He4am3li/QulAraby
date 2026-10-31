@@ -26,7 +26,7 @@ const COUNTRY_DATA = [
     nameAr: 'الإمارات',
     nameEn: 'UAE',
     flag: '🇦🇪',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Burj_Khalifa_Dubai%2C_UAE_at_Sunset_001_by_Eric_Chamchoum.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Sunset_with_Burj_Khalifa.jpg?width=1600",
     dialect: 'Gulf (خليجي)',
     characterMale: { 
       nameAr: 'زايد', 
@@ -84,7 +84,7 @@ const COUNTRY_DATA = [
     nameAr: 'مصر',
     nameEn: 'Egypt',
     flag: '🇪🇬',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/The_Sunset_behind_the_Pyramids.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Sunset_in_egypt_with_the_pyramids.jpg?width=1600",
     dialect: 'Egyptian (مصري)',
     characterMale: { 
       nameAr: 'أحمد', 
@@ -142,7 +142,7 @@ const COUNTRY_DATA = [
     nameAr: 'السعودية',
     nameEn: 'Saudi Arabia',
     flag: '🇸🇦',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Hegra_(Mada%27in_Salih)%2C_the_kingdom%27s_second_Nabatean_capital_after_Petra%2C_Saudi_Arabia_-_53545733456.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Qasr_al-Farid%2C_a_1st-century_AD_Nabatean_unfinished_tomb_carved_into_a_giant_boulder_in_Hegra_(Mada%27in_Salih)%2C_the_kingdom%27s_second_Nabatean_capital_after_Petra%2C_Saudi_Arabia_-_53534952258.jpg?width=1600',
     dialect: 'Saudi (سعودي)',
     characterMale: { 
       nameAr: 'سلمان', 
@@ -200,7 +200,7 @@ const COUNTRY_DATA = [
     nameAr: 'المغرب',
     nameEn: 'Morocco',
     flag: '🇲🇦',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Whispers_of_Gold_-_Hassan_II_Mosque_at_Dusk.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Mezquita_Hassan_II_(reflejo_en_agua).jpg?width=1600",
     dialect: 'Moroccan (مغربي)',
     characterMale: { 
       nameAr: 'ياسين', 
@@ -258,7 +258,7 @@ const COUNTRY_DATA = [
     nameAr: 'الأردن',
     nameEn: 'Jordan',
     flag: '🇯🇴',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Petra%2C_Jordan_-The_Treasury.JPG?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Petra_treasury.jpg?width=1600',
     dialect: 'Jordanian (أردني)',
     characterMale: { 
       nameAr: 'نشمي', 
@@ -316,7 +316,7 @@ const COUNTRY_DATA = [
     nameAr: 'لبنان',
     nameEn: 'Lebanon',
     flag: '🇱🇧',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Upper_Grotto.JPG?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Pigeon_Rocks_at_sunset%2C_Beirut%2C_Lebanon.jpg?width=1600",
     dialect: 'Levantine (لبناني)',
     characterMale: { 
       nameAr: 'جاد', 
@@ -374,7 +374,7 @@ const COUNTRY_DATA = [
     nameAr: 'فلسطين',
     nameEn: 'Palestine',
     flag: '🇵🇸',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Exterior_of_the_Dome_of_the_Rock.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Dome_of_the_Rock_in_sunset.JPG?width=1600',
     dialect: 'Palestinian (فلسطيني)',
     characterMale: { 
       nameAr: 'محمود', 
@@ -432,7 +432,7 @@ const COUNTRY_DATA = [
     nameAr: 'العراق',
     nameEn: 'Iraq',
     flag: '🇮🇶',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Ziggurate_of_Ur-_Iraq.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Sunset_in_Baghdad%2C_Iraq.jpg?width=1600',
     dialect: 'Iraqi (عراقي)',
     characterMale: { 
       nameAr: 'سنان', 
@@ -490,7 +490,7 @@ const COUNTRY_DATA = [
     nameAr: 'تونس',
     nameEn: 'Tunisia',
     flag: '🇹🇳',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/%D8%B3%D9%8A%D8%AF%D9%8A_%D8%A8%D9%88%D8%B3%D8%B9%D9%8A%D8%AF_-_sidi_bou_said.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/%D9%85%D9%8A%D9%86%D8%A7%D8%A1_%D9%85%D8%AF%D9%8A%D9%86%D8%A9_%D8%B3%D9%8A%D8%AF%D9%8A_%D8%A8%D9%88%D8%B3%D8%B9%D9%8A%D8%AF.jpg?width=1600",
     dialect: 'Tunisian (تونسي)',
     characterMale: { 
       nameAr: 'سامي', 
@@ -548,7 +548,7 @@ const COUNTRY_DATA = [
     nameAr: 'الجزائر',
     nameEn: 'Algeria',
     flag: '🇩🇿',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Algiers_Casbah_2024.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Casbah_of_Algiers%2C_the_heart_of_the_city.jpg?width=1600",
     dialect: 'Algerian (جزائري)',
     characterMale: { 
       nameAr: 'أمين', 
@@ -606,7 +606,7 @@ const COUNTRY_DATA = [
     nameAr: 'ليبيا',
     nameEn: 'Libya',
     flag: '🇱🇾',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Roman_columns_and_ruins_at_Leptis_Magna_with_sea_view_Libya.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Sunset_at_Leptis_Magna.jpg?width=1600",
     dialect: 'Libyan (ليبي)',
     characterMale: { 
       nameAr: 'عمر', 
@@ -664,7 +664,7 @@ const COUNTRY_DATA = [
     nameAr: 'سوريا',
     nameEn: 'Syria',
     flag: '🇸🇾',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/The_Umayyad_Mosque_in_night.JPG?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Umayyad_Mosque_at_night.jpg?width=1600",
     dialect: 'Levantine (شامي)',
     characterMale: { 
       nameAr: 'باسل', 
@@ -722,7 +722,7 @@ const COUNTRY_DATA = [
     nameAr: 'السودان',
     nameEn: 'Sudan',
     flag: '🇸🇩',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Merowe_Pyramids_1.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Mer%C3%B6e_Pyramids_at_sunset_(4)_(34274606794).jpg?width=1600',
     dialect: 'Sudanese (سوداني)',
     characterMale: { 
       nameAr: 'مازن', 
@@ -780,7 +780,7 @@ const COUNTRY_DATA = [
     nameAr: 'عمان',
     nameEn: 'Oman',
     flag: '🇴🇲',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Muscat%2C_moschea_del_sultano_qaboos%2C_esterno_01.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Muscat%2C_moschea_del_sultano_qaboos%2C_esterno%2C_giardini_01.jpg?width=1600",
     dialect: 'Omani (عماني)',
     characterMale: { 
       nameAr: 'هيثم', 
@@ -838,7 +838,7 @@ const COUNTRY_DATA = [
     nameAr: 'الكويت',
     nameEn: 'Kuwait',
     flag: '🇰🇼',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Kuwait_Towers2025.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Kuwait_tower_at_dusk.jpg?width=1600',
     dialect: 'Gulf (كويتي)',
     characterMale: { 
       nameAr: 'فهد', 
@@ -896,7 +896,7 @@ const COUNTRY_DATA = [
     nameAr: 'قطر',
     nameEn: 'Qatar',
     flag: '🇶🇦',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Museum_of_Islamic_Art%2C_Doha_(54704206856).jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Doha_skyline_at_night.jpg?width=1600',
     dialect: 'Gulf (قطري)',
     characterMale: { 
       nameAr: 'جاسم', 
@@ -954,7 +954,7 @@ const COUNTRY_DATA = [
     nameAr: 'البحرين',
     nameEn: 'Bahrain',
     flag: '🇧🇭',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Bahrain_Fort_(6).jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Bahrain_World_Trade_Center_(30040380192).jpg?width=1600',
     dialect: 'Gulf (بحريني)',
     characterMale: { 
       nameAr: 'حمد', 
@@ -1012,7 +1012,7 @@ const COUNTRY_DATA = [
     nameAr: 'اليمن',
     nameEn: 'Yemen',
     flag: '🇾🇪',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Old_Sana%27a_at_dusk.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Old_Sana%27a_at_dusk_-_2338425736.jpg?width=1600",
     dialect: 'Yemeni (يمني)',
     characterMale: { 
       nameAr: 'قحطان', 
@@ -1070,7 +1070,7 @@ const COUNTRY_DATA = [
     nameAr: 'موريتانيا',
     nameEn: 'Mauritania',
     flag: '🇲🇷',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Chinguetti_(panorama).jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/%D9%85%D8%B3%D8%AC%D8%AF_%D8%B4%D9%86%D9%82%D9%8A%D8%B7_%D8%A7%D9%84%D8%AA%D8%A7%D8%B1%D9%8A%D8%AE%D9%8A.jpg?width=1600',
     dialect: 'Hassaniya (حساني)',
     characterMale: { 
       nameAr: 'المختار', 
@@ -1128,7 +1128,7 @@ const COUNTRY_DATA = [
     nameAr: 'الصومال',
     nameEn: 'Somalia',
     flag: '🇸🇴',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Laas_Gaal_in_Somaliland.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Lido_Beach_2023C.jpg?width=1600",
     dialect: 'Somali Arabic (صومالي)',
     characterMale: { 
       nameAr: 'عبدي', 
@@ -1186,7 +1186,7 @@ const COUNTRY_DATA = [
     nameAr: 'جيبوتي',
     nameEn: 'Djibouti',
     flag: '🇩🇯',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Assal_Lake%2C_2024.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Lac_assal_(cropped).JPG?width=1600",
     dialect: 'Djiboutian (جيبوتي)',
     characterMale: { 
       nameAr: 'برخاد', 
@@ -1244,7 +1244,7 @@ const COUNTRY_DATA = [
     nameAr: 'جزر القمر',
     nameEn: 'Comoros',
     flag: '🇰🇲',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Overviewing_to_Karthala_crater_from_top.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Shores_in_Mitsamiouli.jpg?width=1600",
     dialect: 'Comorian (قمري)',
     characterMale: { 
       nameAr: 'سعيد', 
