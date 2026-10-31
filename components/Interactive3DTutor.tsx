@@ -110,6 +110,7 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
               isListening={isListening}
               isLoading={isLoading}
               audioLevel={audioLevel}
+              reaction={celebrating ? 'correct' : 'idle'}
               imageSrc={character.image}
               nameAr={character.nameAr}
               className="h-full w-full"
