@@ -26,7 +26,7 @@ const COUNTRY_DATA = [
     nameAr: 'الإمارات',
     nameEn: 'UAE',
     flag: '🇦🇪',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Abu_dhabi%2C_Moschea_dello_Sceicco_Zayed%2C_atrio_meridionale%2C_01.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Burj_Khalifa_Sunset.jpg?width=1600",
     dialect: 'Gulf (خليجي)',
     characterMale: { 
       nameAr: 'زايد', 
@@ -490,7 +490,7 @@ const COUNTRY_DATA = [
     nameAr: 'تونس',
     nameEn: 'Tunisia',
     flag: '🇹🇳',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Sidi_Bousaid_2023.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Sidi_Bousaid_blue_window.jpg?width=1600",
     dialect: 'Tunisian (تونسي)',
     characterMale: { 
       nameAr: 'سامي', 
