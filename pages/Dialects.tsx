@@ -142,7 +142,7 @@ const COUNTRY_DATA = [
     nameAr: 'السعودية',
     nameEn: 'Saudi Arabia',
     flag: '🇸🇦',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Masjidul-HaramAerealView.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Masjidul-HaramAerialView_(cropped).jpg?width=1600',
     dialect: 'Saudi (سعودي)',
     characterMale: { 
       nameAr: 'سلمان', 
@@ -780,7 +780,7 @@ const COUNTRY_DATA = [
     nameAr: 'عمان',
     nameEn: 'Oman',
     flag: '🇴🇲',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Beautiful_waterfall_in_salalah_oman.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Salalah_oman_2.jpg?width=1600",
     dialect: 'Omani (عماني)',
     characterMale: { 
       nameAr: 'هيثم', 
@@ -1304,7 +1304,7 @@ const COUNTRY_DATA = [
 const COUNTRY_PHOTO_FOCUS: Record<string, string> = {
   uae: 'center 47%',
   egypt: 'center 57%',
-  saudi: 'center 45%',
+  saudi: 'center 48%',
   morocco: 'center 52%',
   jordan: 'center 45%',
   lebanon: 'center 47%',
@@ -1315,7 +1315,7 @@ const COUNTRY_PHOTO_FOCUS: Record<string, string> = {
   libya: 'center 44%',
   syria: 'center 45%',
   sudan: 'center 55%',
-  oman: 'center 42%',
+  oman: 'center 50%',
   kuwait: 'center 44%',
   qatar: 'center 45%',
   bahrain: 'center 52%',
@@ -1900,13 +1900,22 @@ export const Dialects: React.FC = () => {
                 >
                   {/* The destination photo is the visual focus, about 79% of the card. */}
                   <div className="relative flex-1 min-h-0 overflow-hidden bg-slate-200">
+                    {country.id === 'oman' && (
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-[-16px] scale-110 blur-[18px] brightness-75"
+                        style={{ backgroundImage: `url("${country.image}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+                      />
+                    )}
                     <SafeImage
                       src={country.image}
                       alt={country.nameAr}
                       loading="lazy"
                       decoding="async"
                       style={{ objectPosition: COUNTRY_PHOTO_FOCUS[country.id] || 'center 50%' }}
-                      className="w-full h-full object-cover brightness-[1.035] saturate-[1.09] contrast-[1.025] group-hover:scale-[1.045] transition-transform duration-700 ease-out"
+                      className={country.id === 'oman'
+                        ? "relative w-full h-full object-contain bg-transparent brightness-[1.035] saturate-[1.09] contrast-[1.025] transition-transform duration-700 ease-out"
+                        : "w-full h-full object-cover brightness-[1.035] saturate-[1.09] contrast-[1.025] group-hover:scale-[1.045] transition-transform duration-700 ease-out"}
                     />
                     <div className="absolute inset-x-0 bottom-0 h-[22%] bg-gradient-to-t from-slate-950/30 to-transparent pointer-events-none" />
                     <div className="absolute top-3 right-3 bg-white/85 backdrop-blur-md px-2 py-1 rounded-xl border border-white/70 text-2xl shadow-sm" aria-hidden="true">
