@@ -8,7 +8,7 @@ import { AVATAR_CONFIGS, CountryTutorAvatar } from './CountryTutorAvatar';
  * Keep this scene transparent so the characters stand inside the current dialect UI.
  */
 type Gender = 'male' | 'female';
-type Mood = { isSelected: boolean; isSpeaking: boolean; isListening: boolean; isLoading: boolean; audioLevel: number };
+type Mood = { isSelected: boolean; isSpeaking: boolean; isListening: boolean; isLoading: boolean; audioLevel: number; reaction?: 'idle' | 'correct' | 'retry' | 'greeting' };
 
 interface Props extends Mood {
   countryId: string;
@@ -16,6 +16,7 @@ interface Props extends Mood {
   imageSrc?: string;
   nameAr?: string;
   className?: string;
+  reaction?: 'idle' | 'correct' | 'retry' | 'greeting';
 }
 
 const sphere = (parent: THREE.Object3D, material: THREE.Material, x: number, y: number, z: number, sx: number, sy: number, sz: number) => {
@@ -35,7 +36,7 @@ const cylinder = (parent: THREE.Object3D, material: THREE.Material, top: number,
   return object;
 };
 
-const line = (parent: THREE.Object3D, points: THREE.Vector3[], color: string, thickness = 0.012) => {
+const line = (parent: THREE.Object3D, points: THREE.Vector3[], color: string, thickness = 0.012): THREE.Mesh => {
   const curve = new THREE.CatmullRomCurve3(points);
   const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 20, thickness, 8, false), new THREE.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.25 }));
   parent.add(mesh);
@@ -80,6 +81,9 @@ const createCharacter = (countryId: string, gender: Gender) => {
   const rose = new THREE.MeshStandardMaterial({ color: '#8a414b', roughness: 0.7 });
   const cheek = new THREE.MeshStandardMaterial({ color: '#cf806d', transparent: true, opacity: 0.26, roughness: 0.9 });
   const shoes = new THREE.MeshStandardMaterial({ color: male ? '#493127' : outfit.accentColor, roughness: 0.45 });
+  const eyes: THREE.Group[] = [];
+  const gazeGroups: THREE.Group[] = [];
+  const brows: THREE.Mesh[] = [];
 
   // Feet and continuous cloth surfaces keep the silhouettes readable at mobile sizes.
   for (const side of [-1, 1]) sphere(body, shoes, side * 0.27, 0.14, 0.15, 0.22, 0.12, 0.35);
@@ -136,22 +140,31 @@ const createCharacter = (countryId: string, gender: Gender) => {
     sphere(head, hair, 0, 0.13, -0.05, 0.43, 0.47, 0.36);
   }
   sphere(head, skin, 0, -0.035, 0.14, 0.365, 0.435, 0.29);
-  // Soft face cheeks, eyebrows, eye whites, and iris highlights.
+  // Independent eye whites, pupils, highlights and brows.
+  // Shared with all 43 characters; eye blinking never moves the entire face.
   for (const side of [-1, 1]) {
     sphere(head, cheek, side * 0.23, -0.11, 0.379, 0.092, 0.052, 0.012);
-    const eye = sphere(head, white, side * 0.161, 0.095, 0.392, 0.100, 0.121, 0.055);
-    const pupil = sphere(head, iris, side * 0.153, 0.087, 0.441, 0.058, 0.078, 0.038);
-    sphere(head, black, side * 0.153, 0.087, 0.472, 0.033, 0.052, 0.017);
-    sphere(head, white, side * 0.136, 0.12, 0.484, 0.016, 0.020, 0.008);
-    line(head, [
+    const eyeGroup = new THREE.Group();
+    eyeGroup.position.set(side * 0.161, 0.095, 0.392);
+    head.add(eyeGroup);
+    sphere(eyeGroup, white, 0, 0, 0, 0.100, 0.121, 0.055);
+    const gaze = new THREE.Group();
+    gaze.position.set(0, -0.008, 0.049);
+    eyeGroup.add(gaze);
+    sphere(gaze, iris, 0, 0, 0, 0.058, 0.078, 0.038);
+    sphere(gaze, black, 0, 0, 0.031, 0.033, 0.052, 0.017);
+    sphere(gaze, white, side * 0.018, 0.033, 0.043, 0.016, 0.020, 0.008);
+    eyes.push(eyeGroup);
+    gazeGroups.push(gaze);
+    brows.push(line(head, [
       new THREE.Vector3(side * 0.088, 0.241, 0.394),
       new THREE.Vector3(side * 0.159, 0.267, 0.395),
       new THREE.Vector3(side * 0.243, 0.236, 0.365)
-    ], outfit.hairColor, 0.021);
+    ], outfit.hairColor, 0.021));
   }
   sphere(head, skin, 0, -0.07, 0.44, 0.064, 0.10, 0.085);
   const mouth = sphere(head, rose, 0, -0.222, 0.415, 0.116, 0.022, 0.015);
-  line(head, [
+  const smileLine = line(head, [
     new THREE.Vector3(-0.115, -0.218, 0.413),
     new THREE.Vector3(0, -0.246, 0.436),
     new THREE.Vector3(0.115, -0.218, 0.413)
@@ -196,16 +209,16 @@ const createCharacter = (countryId: string, gender: Gender) => {
     cylinder(head, trim, 0.27, 0.33, 0.39, 0, 0.5, -0.07);
   }
 
-  return { root, body, head, arms, mouth };
+  return { root, body, head, arms, mouth, smileLine, eyes, gazeGroups, brows };
 };
 
 export const Live3DCharacter: React.FC<Props> = ({
-  countryId, gender, isSelected, isSpeaking, isListening, isLoading, audioLevel, imageSrc, nameAr, className = ''
+  countryId, gender, isSelected, isSpeaking, isListening, isLoading, audioLevel, reaction = 'idle', imageSrc, nameAr, className = ''
 }) => {
   const mountRef = React.useRef<HTMLDivElement>(null);
-  const stateRef = React.useRef<Mood>({ isSelected, isSpeaking, isListening, isLoading, audioLevel });
+  const stateRef = React.useRef<Mood>({ isSelected, isSpeaking, isListening, isLoading, audioLevel, reaction });
   const [failed, setFailed] = React.useState(false);
-  stateRef.current = { isSelected, isSpeaking, isListening, isLoading, audioLevel };
+  stateRef.current = { isSelected, isSpeaking, isListening, isLoading, audioLevel, reaction };
 
   React.useEffect(() => {
     const host = mountRef.current;
@@ -275,26 +288,58 @@ export const Live3DCharacter: React.FC<Props> = ({
       const t = clock.getElapsedTime();
       const mood = stateRef.current;
       const movement = reduceMotion ? 0 : 1;
-      character.body.position.y = movement * Math.sin(t * 1.55) * (mood.isSpeaking ? 0.023 : 0.012);
-      character.body.rotation.y = movement * Math.sin(t * 0.65) * 0.035;
-      character.head.rotation.y = movement * (mood.isListening ? Math.sin(t * 2) * 0.08 : Math.sin(t * 0.9) * 0.038);
-      character.head.rotation.x = movement * (mood.isListening ? -0.07 + Math.sin(t * 3) * 0.048 : Math.sin(t * 1.4) * 0.025);
-      // Welcoming gestures, attentive micro-nods, and speech-linked hand movement.
-      character.arms[0].rotation.z = -0.66 + movement * Math.sin(t * 1.15) * 0.095;
-      character.arms[1].rotation.z = 0.66 + movement * Math.sin(t * (mood.isSpeaking ? 3.5 : 1.25)) * (mood.isSpeaking ? 0.22 : 0.08);
-      character.arms[1].rotation.x = movement * (mood.isSpeaking ? Math.sin(t * 2.8) * 0.10 : 0);
-      character.mouth.scale.y = mood.isSpeaking ? 0.7 + (Math.max(0, mood.audioLevel) * 1.6) + movement * Math.abs(Math.sin(t * 14)) * 1.15 : 1;
-      character.mouth.scale.x = mood.isSpeaking ? 0.88 : 1;
-      const blinking = movement > 0 && (t % 4.3) > 4.17;
-      // Blink by briefly flattening eye meshes; eye highlights follow naturally.
-      character.head.children.forEach(item => {
-        if (item instanceof THREE.Mesh && item.geometry instanceof THREE.SphereGeometry &&
-          item.position.y > 0.07 && item.position.y < 0.16 && Math.abs(item.position.x) > 0.12 && Math.abs(item.position.x) < 0.21) {
-          if (item.userData.eyeHeight === undefined) item.userData.eyeHeight = item.scale.y;
-          item.scale.y = blinking ? Math.min(item.scale.x * 0.12, 0.018) : item.userData.eyeHeight;
-        }
-      });
-      character.root.rotation.y = movement * Math.sin(t * 0.33) * 0.04 + (gender === 'male' ? 0.04 : -0.04);
+      const speaking = mood.isSpeaking;
+      const listening = mood.isListening && !speaking;
+      const thinking = mood.isLoading && !speaking && !listening;
+      const celebrating = mood.reaction === 'correct';
+      const focused = mood.isSelected;
+      // Only the selected tutor reacts strongly. The other character stays present,
+      // blinking and breathing subtly, rather than becoming grey or disappearing.
+      const activity = focused ? 1 : 0.37;
+      const breath = movement * Math.sin(t * 1.38) * 0.012;
+      const talkPulse = speaking ? Math.abs(Math.sin(t * 10.6)) : 0;
+      const energy = THREE.MathUtils.clamp(mood.audioLevel * 5, 0, 1);
+      character.body.position.y = breath + movement * activity * (speaking ? Math.sin(t * 5.2) * 0.011 : 0);
+      character.body.rotation.y = movement * Math.sin(t * 0.53) * (focused ? 0.025 : 0.012);
+      character.body.rotation.z = movement * (celebrating ? Math.sin(t * 4.2) * 0.032 : Math.sin(t * 0.74) * 0.009);
+      character.head.rotation.y = movement * activity * (listening ? -0.085 + Math.sin(t * 1.3) * 0.025
+        : thinking ? 0.07 + Math.sin(t * 0.6) * 0.012 : Math.sin(t * 0.9) * 0.038);
+      character.head.rotation.x = movement * activity * (listening ? -0.045 + Math.sin(t * 2.1) * 0.029
+        : thinking ? 0.09 : speaking ? Math.sin(t * 3.4) * 0.03 : Math.sin(t * 1.2) * 0.02);
+      character.arms[0].rotation.z = -0.65 + movement * activity * (celebrating ? Math.sin(t * 6.2) * 0.25 : Math.sin(t * 1.1) * 0.06);
+      character.arms[1].rotation.z = 0.65 + movement * activity * (celebrating ? Math.sin(t * 6.2 + 0.6) * 0.31 :
+        speaking ? Math.sin(t * 3.1) * 0.22 : listening ? Math.sin(t * 1.1) * 0.042 : Math.sin(t * 1.25) * 0.075);
+      character.arms[1].rotation.x = movement * activity * (speaking ? Math.sin(t * 2.8) * 0.10 : 0);
+      // Named approximate mouth shapes. Not claimed to be phoneme-synced Live2D:
+      // this rig has no timestamps per speech sound.
+      const shapeIndex = Math.floor((t * (2.75 + energy * 1.2)) % 6);
+      const shapes: Array<[number, number]> = [
+        [0.11, 0.022], // closed
+        [0.112, 0.07], // E
+        [0.075, 0.12], // O
+        [0.135, 0.105], // A
+        [0.115, 0.16], // open
+        [0.12, 0.024] // rest
+      ];
+      const [mouthWidth, mouthHeight] = speaking ? shapes[shapeIndex] : [0.115, 0.023];
+      character.mouth.scale.set(mouthWidth, mouthHeight * (speaking ? (0.9 + energy * 0.26) : 1), 0.015);
+      character.smileLine.visible = !speaking;
+      character.mouth.position.y = speaking ? -0.242 : -0.222;
+      // Independent blink: the two eyes and their pupils close together,
+      // without compressing the brows or other facial geometry.
+      const blinkCycle = (t + (gender === 'female' ? 1.8 : 0.3)) % 4.25;
+      const blink = movement && blinkCycle > 4.04 ? Math.sin(((blinkCycle - 4.04) / 0.21) * Math.PI) : 0;
+      for (const eye of character.eyes) eye.scale.y = 1 - 0.94 * blink;
+      const look = thinking ? 0.018 : listening ? -0.015 : speaking ? 0.009 : 0;
+      for (let i = 0; i < character.gazeGroups.length; i++) {
+        const gaze = character.gazeGroups[i];
+        gaze.position.x = look * activity + movement * Math.sin(t * 0.8) * 0.003;
+        gaze.position.y = -0.008 + (thinking ? 0.015 : 0);
+      }
+      for (let i = 0; i < character.brows.length; i++) {
+        character.brows[i].position.y = (thinking ? 0.025 : listening ? -0.005 : celebrating ? 0.02 : 0) * activity;
+      }
+      character.root.rotation.y = movement * Math.sin(t * 0.31) * 0.026 + (gender === 'male' ? 0.04 : -0.04);
       renderer.render(scene, camera);
     };
     animate();
