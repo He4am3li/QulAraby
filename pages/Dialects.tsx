@@ -13,6 +13,8 @@ import { Interactive3DTutor } from '../components/Interactive3DTutor';
 import { DialectReferencePanel } from '../components/DialectReferencePanel';
 import { DialectVoiceOrb } from '../components/DialectVoiceOrb';
 import { DialectChatDock } from '../components/DialectChatDock';
+import { DialectPassportCover, DialectPassportLibrary } from '../components/DialectPassports';
+import { assessDialectMission, type MissionTurn } from '../services/dialectMissionAssessment';
 import { generateSpeech, decodeAudioData } from '../services/gemini';
 
 declare global {
@@ -1403,10 +1405,22 @@ export const Dialects: React.FC = () => {
   const [isLiveActive, setIsLiveActive] = React.useState(false);
   const [audioLevel, setAudioLevel] = React.useState(0);
   const liveSessionRef = React.useRef<any>(null);
-  const [stampedCountries, setStampedCountries] = React.useState<Record<string, number>>(() => {
-    const saved = localStorage.getItem('dialect_ranks');
-    return saved ? JSON.parse(saved) : {};
+  // V2 passports are awarded by assessed mission mastery. Old message-count
+  // rankings remain untouched in legacy storage but do not unlock new passports.
+  const [passportLevels, setPassportLevels] = React.useState<Record<string, number>>(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('qul_dialect_passports_v2') || '{}');
+      return stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+    } catch { return {}; }
   });
+  const passportLevelsRef = React.useRef(passportLevels);
+  passportLevelsRef.current = passportLevels;
+  const missionEvidenceRef = React.useRef<Record<string, MissionTurn[]>>({});
+  const lastAssessmentCountRef = React.useRef<Record<string, number>>({});
+  const assessmentPendingRef = React.useRef(false);
+  const liveInputBufferRef = React.useRef('');
+  const [passportFocusId, setPassportFocusId] = React.useState<string | null>(null);
+  const [recentStamp, setRecentStamp] = React.useState<{countryId: string; level: number} | null>(null);
   const [isPassportOpen, setIsPassportOpen] = React.useState(false);
   const [mobileCountryPanel, setMobileCountryPanel] = React.useState<'stage' | 'reference'>('stage');
   const [salmanSuccessSignal, setSalmanSuccessSignal] = React.useState(0);
@@ -1501,8 +1515,14 @@ export const Dialects: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
-    localStorage.setItem('dialect_ranks', JSON.stringify(stampedCountries));
-  }, [stampedCountries]);
+    localStorage.setItem('qul_dialect_passports_v2', JSON.stringify(passportLevels));
+  }, [passportLevels]);
+
+  React.useEffect(() => {
+    if (!recentStamp) return;
+    const id = window.setTimeout(() => setRecentStamp(null), 3500);
+    return () => window.clearTimeout(id);
+  }, [recentStamp]);
 
   React.useEffect(() => {
     // Reset state and auto-select default tutor when country opens
@@ -1514,7 +1534,8 @@ export const Dialects: React.FC = () => {
       const greetingText = lang === 'ar'
         ? `مرحباً بك في ${selectedCountry.nameAr}! أنا ${defaultChar.nameAr}، يسعدني التحدث معك بلهجتنا.`
         : `Welcome to ${selectedCountry.nameEn}! I'm ${defaultChar.nameEn}, happy to chat in our dialect.`;
-      setChatMessages([{ role: 'model', text: greetingText }]);
+      // Greeting remains available as speech from the selected tutor, not as a duplicate chat tile.
+      setChatMessages([]);
     } else {
       setSelectedPersona(null);
       setChatMessages([]);
@@ -1570,11 +1591,53 @@ export const Dialects: React.FC = () => {
     recognition.start();
   };
 
-  const updateRank = (countryId: string, rank: number) => {
-    const currentRank = stampedCountries[countryId] || 0;
-    if (rank > currentRank) {
-      setStampedCountries(prev => ({ ...prev, [countryId]: rank }));
+  const missionKey = (countryId: string, level: number) => countryId + ':' + level;
+
+  const awardPassportStamp = (countryId: string, stage: number) => {
+    const current = Math.max(0, Math.min(3, passportLevelsRef.current[countryId] || 0));
+    if (current !== stage - 1) return;
+    const updated = { ...passportLevelsRef.current, [countryId]: stage };
+    passportLevelsRef.current = updated;
+    setPassportLevels(updated);
+    setRecentStamp({ countryId, level: stage });
+    if (countryId === 'saudi') setSalmanSuccessSignal(value => value + 1);
+  };
+
+  const checkMissionCompletion = async (country: any, level: number) => {
+    if (!country || level >= 3 || assessmentPendingRef.current) return;
+    if ((passportLevelsRef.current[country.id] || 0) !== level) return;
+    const stage = Math.min(3, level + 1) as 1 | 2 | 3;
+    const key = missionKey(country.id, stage);
+    const evidence = missionEvidenceRef.current[key] || [];
+    const authored = evidence.filter(turn => turn.role === 'user' && turn.authored === true);
+    // Avoid repeated API calls after every short utterance or prompt button.
+    if (new Set(authored.map(turn => turn.text.trim().toLowerCase())).size < 2) return;
+    if (authored.length - (lastAssessmentCountRef.current[key] || 0) < 2) return;
+    lastAssessmentCountRef.current[key] = authored.length;
+    assessmentPendingRef.current = true;
+    try {
+      const mission = stage === 1 ? country.missions.visitor.ar
+        : stage === 2 ? country.missions.resident.ar : country.missions.native.ar;
+      const assessment = await assessDialectMission({
+        country: country.nameAr,
+        dialect: country.dialect,
+        mission,
+        stage,
+        turns: evidence.slice()
+      });
+      if (assessment.completed && (passportLevelsRef.current[country.id] || 0) === level) {
+        awardPassportStamp(country.id, stage);
+      }
+    } finally {
+      assessmentPendingRef.current = false;
     }
+  };
+
+  const captureMissionTurn = (countryId: string, turn: MissionTurn) => {
+    const nextStage = Math.min(3, (passportLevelsRef.current[countryId] || 0) + 1);
+    const key = missionKey(countryId, nextStage);
+    if (!missionEvidenceRef.current[key]) missionEvidenceRef.current[key] = [];
+    missionEvidenceRef.current[key].push(turn);
   };
 
   const handleAIChat = async (overrideInput?: string, persona?: any) => {
@@ -1585,15 +1648,17 @@ export const Dialects: React.FC = () => {
     if (!currentPersona) return;
 
     const userMsg = input;
+    const countryForTurn = selectedCountry;
     if (!overrideInput) setChatInput('');
     setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    captureMissionTurn(countryForTurn.id, { role: 'user', text: userMsg, authored: !overrideInput });
     setIsChatLoading(true);
 
     try {
       const { GoogleGenAI } = await import("@google/genai");
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
       
-      const rank = stampedCountries[selectedCountry.id] || 0;
+      const rank = passportLevelsRef.current[selectedCountry.id] || 0;
       const missions = (selectedCountry as any).missions;
       const currentMission = missions ? (rank === 0 ? (lang === 'ar' ? missions.visitor.ar : missions.visitor.en) : rank === 1 ? (lang === 'ar' ? missions.resident.ar : missions.resident.en) : (lang === 'ar' ? missions.native.ar : missions.native.en)) : "Learn the dialect";
 
@@ -1628,25 +1693,10 @@ export const Dialects: React.FC = () => {
 
       const modelText = response.text || "أعتذر، حدث خطأ ما.";
       setChatMessages(prev => [...prev, { role: 'model', text: modelText }]);
-      
-      const userMessages = chatMessages.filter(m => m.role === 'user');
-      const userMessageCount = userMessages.length + 1;
-      const currentRank = stampedCountries[selectedCountry.id] || 0;
-      
-      if (currentRank === 0 && userMessageCount >= 3) {
-        updateRank(selectedCountry.id, 1);
-        if (selectedCountry.id === 'saudi' && currentPersona.nameEn === selectedCountry.characterMale.nameEn) {
-          setSalmanSuccessSignal(value => value + 1);
-        }
-        setChatMessages(prev => [...prev, { 
-          role: 'model', 
-          text: lang === 'ar' 
-            ? "مبروك! لقد أتممت مهمة الزائر بنجاح وحصلت على التأشيرة. أنت الآن 'مقيم' في بلدنا." 
-            : "Congratulations! You have successfully completed the Visitor mission and obtained your visa." 
-        }]);
-      }
-
-      playAudio(modelText);
+      captureMissionTurn(countryForTurn.id, { role: 'model', text: modelText });
+      // Only authentic student work can unlock a passport. Never count prompts or replies.
+      void checkMissionCompletion(countryForTurn, rank);
+      void playAudio(modelText);
     } catch (error) {
       console.error("AI Chat Error:", error);
     } finally {
@@ -1667,7 +1717,7 @@ export const Dialects: React.FC = () => {
       const { GoogleGenAI, Modality } = await import("@google/genai");
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
       
-      const rank = stampedCountries[selectedCountry.id] || 0;
+      const rank = passportLevelsRef.current[selectedCountry.id] || 0;
       const missions = (selectedCountry as any).missions;
       const currentMission = missions ? (rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar) : "Learn the dialect";
 
@@ -2033,7 +2083,7 @@ export const Dialects: React.FC = () => {
                   aria-label={lang === 'ar' ? 'الشخصيات والمحادثة' : 'Characters and conversation'}>
                   <div className="flex h-[34px] shrink-0 items-center justify-between gap-3 px-2">
                     <div className="min-w-0 flex flex-1 items-center gap-1.5" title={(() => {
-                      const rank = stampedCountries[selectedCountry.id] || 0;
+                      const rank = passportLevelsRef.current[selectedCountry.id] || 0;
                       const missions = selectedCountry.missions;
                       if (!missions) return '';
                       return lang === 'ar'
@@ -2043,7 +2093,7 @@ export const Dialects: React.FC = () => {
                       <span className="shrink-0 rounded-lg bg-amber-100 px-2 py-1 text-[11px] font-bold text-amber-800 arabic-font">{t.mission}</span>
                       <span className="truncate text-[11px] font-semibold text-slate-600 arabic-font">
                         {(() => {
-                          const rank = stampedCountries[selectedCountry.id] || 0;
+                          const rank = passportLevelsRef.current[selectedCountry.id] || 0;
                           const m = selectedCountry.missions;
                           if (!m) return '';
                           return lang === 'ar'
