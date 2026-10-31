@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, Mic, Sparkles, MessageCircle, Smile, Zap, Play, VolumeX } from 'lucide-react';
 import { Live3DCharacter } from './Live3DCharacter';
+import { SalmanLayeredAvatar } from './SalmanLayeredAvatar';
 
 interface TutorCharacter {
   nameAr: string;
@@ -28,6 +29,7 @@ interface Interactive3DTutorProps {
   onSelect: () => void;
   onQuickTalk?: () => void;
   onStartLive?: () => void;
+  successSignal?: number;
 }
 
 export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
@@ -46,11 +48,23 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
   lang,
   onSelect,
   onQuickTalk,
-  onStartLive
+  onStartLive,
+  successSignal = 0
 }) => {
   // Eye blinking state machine
   const [isBlinking, setIsBlinking] = React.useState(false);
   const [reactionState, setReactionState] = React.useState<'idle' | 'happy' | 'nod' | 'greeting'>('idle');
+  const isLayeredSalman = countryId === 'saudi' && gender === 'male';
+  const previousSuccessRef = React.useRef(successSignal);
+
+  React.useEffect(() => {
+    if (successSignal === previousSuccessRef.current) return;
+    previousSuccessRef.current = successSignal;
+    if (!isLayeredSalman || !isSelected) return;
+    setReactionState('happy');
+    const timer = window.setTimeout(() => setReactionState('idle'), 5000);
+    return () => window.clearTimeout(timer);
+  }, [successSignal, isLayeredSalman, isSelected]);
 
   // Periodic natural blinking
   React.useEffect(() => {
@@ -77,6 +91,8 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
   // Handle click on character
   const handleCharacterClick = () => {
     if (!isSelected) {
+      setReactionState('greeting');
+      window.setTimeout(() => setReactionState('idle'), 1800);
       onSelect();
     } else if (onQuickTalk) {
       setReactionState('greeting');
@@ -203,9 +219,9 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
 
       {/* 3D Animated Standee Figure with Cutout, Physics & Rigged Facial Layers */}
       <motion.div
-        animate={getAnimationVariants()}
-        whileHover={!isSelected ? { scale: 0.95, opacity: 0.92 } : { scale: 1.19 }}
-        whileTap={{ scale: 1.14 }}
+        animate={isLayeredSalman ? { scale: isSelected ? 1 : 0.93, y: 0, rotateX: 0, rotateZ: 0, transition: { duration: 0.25 } } : getAnimationVariants()}
+        whileHover={isLayeredSalman ? undefined : (!isSelected ? { scale: 0.95, opacity: 0.92 } : { scale: 1.19 })}
+        whileTap={isLayeredSalman ? undefined : { scale: 1.14 }}
         className="relative flex items-end justify-center perspective-[1000px]"
         style={{
           opacity: isSelected ? 1 : 0.68,
@@ -217,19 +233,29 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
         {/* Character Visual Wrapper */}
         <div className="relative w-36 sm:w-48 h-44 sm:h-56 overflow-visible flex items-end justify-center">
           
-          {/* Actual transparent WebGL character, with facial and gesture animation. */}
-          <Live3DCharacter
-            countryId={countryId}
-            gender={gender}
-            isSelected={isSelected}
-            isSpeaking={isSpeaking}
-            isListening={isListening}
-            isLoading={isLoading}
-            audioLevel={audioLevel}
-            imageSrc={character.image}
-            nameAr={character.nameAr}
-            className="w-full h-full"
-          />
+          {/* Salman alone uses his approved PSD facial layers. Other countries retain their existing tutor. */}
+          {isLayeredSalman ? (
+            <SalmanLayeredAvatar
+              isSpeaking={isSpeaking}
+              isListening={isListening}
+              isLoading={isLoading}
+              reaction={reactionState === 'happy' ? 'correct' : reactionState === 'greeting' ? 'greeting' : 'idle'}
+              className="w-full h-full"
+            />
+          ) : (
+            <Live3DCharacter
+              countryId={countryId}
+              gender={gender}
+              isSelected={isSelected}
+              isSpeaking={isSpeaking}
+              isListening={isListening}
+              isLoading={isLoading}
+              audioLevel={audioLevel}
+              imageSrc={character.image}
+              nameAr={character.nameAr}
+              className="w-full h-full"
+            />
+          )}
 
           {/* Procedural Audio Equalizer Bar floating above feet when speaking */}
           {isSelected && isSpeaking && (
