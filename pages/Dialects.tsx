@@ -84,7 +84,7 @@ const COUNTRY_DATA = [
     nameAr: 'مصر',
     nameEn: 'Egypt',
     flag: '🇪🇬',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Sunset_in_egypt_with_the_pyramids.jpg?width=1600",
+    image: "https://images.pexels.com/photos/15127306/pexels-photo-15127306/free-photo-of-pyramids-and-sphinx-statue-in-desert.jpeg?auto=compress&cs=tinysrgb&w=1600",
     dialect: 'Egyptian (مصري)',
     characterMale: { 
       nameAr: 'أحمد', 
@@ -1912,6 +1912,10 @@ export const Dialects: React.FC = () => {
                     <div className="absolute top-3 right-3 bg-white/85 backdrop-blur-md px-2 py-1 rounded-xl border border-white/70 text-2xl shadow-sm" aria-hidden="true">
                       {country.flag}
                     </div>
+                  </div>
+                  {/* Restored original mastery-strip appearance, without altering the photo and text settings. */}
+                  <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden shrink-0" aria-hidden="true">
+                    <div className="bg-blue-600 h-full w-full opacity-20" />
                   </div>
                   {/* Information is secondary; clicking anywhere on the card opens the country. */}
                   <div className="h-[70px] sm:h-[72px] shrink-0 px-4 py-2.5 bg-white flex items-center justify-between gap-2 text-right">
