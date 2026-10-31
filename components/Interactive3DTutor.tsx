@@ -158,7 +158,7 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
     >
       {/* Dynamic Status & Floating Speech Reaction Badge */}
       <AnimatePresence>
-        {isSelected && (
+        {isSelected && (isSpeaking || isListening || isLoading) && (
           <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.85 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -181,7 +181,7 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
                 </span>
                 <Mic size={12} className="text-emerald-400" />
               </>
-            ) : isLoading ? (
+            ) : (
               <>
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
                 <span className="text-amber-300 font-bold">
@@ -189,11 +189,6 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
                 </span>
                 <Sparkles size={12} className="text-amber-400 animate-spin" />
               </>
-            ) : (
-              <div className="flex items-center gap-1 text-slate-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                <span>{lang === 'ar' ? 'معلمك الافتراضي المتفاعل' : 'Interactive Tutor'}</span>
-              </div>
             )}
           </motion.div>
         )}
@@ -329,12 +324,6 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
                 ({character.nameEn})
               </span>
             </div>
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className="text-[9.5px] font-black text-blue-600 arabic-font">
-                {dialectName} • {lang === 'ar' ? 'معلمك النشط' : 'Active Tutor'}
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            </div>
           </motion.div>
         ) : (
           <div className="flex flex-col items-center opacity-75 hover:opacity-100 transition-opacity">
@@ -344,9 +333,6 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
                 ({character.nameEn})
               </span>
             </div>
-            <span className="text-[8.5px] font-bold text-slate-400 mt-0.5 arabic-font">
-              {lang === 'ar' ? 'انقر لتعيينه معلماً' : 'Click to select tutor'}
-            </span>
           </div>
         )}
       </div>
