@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, ChevronLeft, ChevronRight, LockKeyhole, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LockKeyhole, X } from 'lucide-react';
 
 export interface PassportCountry { id: string; nameAr: string; nameEn: string; flag: string }
 export type PassportLevels = Record<string, number>;
@@ -23,36 +23,144 @@ const STAGES = [
   { ar: 'روح البلد', en: 'NATIVE SPIRIT', noteAr: 'المهمة الثالثة', noteEn: 'Mission 3' }
 ];
 
+const OFFICIAL_NAMES: Record<string, [string, string]> = {
+  "saudi": [
+    "المملكة العربية السعودية",
+    "KINGDOM OF SAUDI ARABIA"
+  ],
+  "uae": [
+    "الإمارات العربية المتحدة",
+    "UNITED ARAB EMIRATES"
+  ],
+  "egypt": [
+    "جمهورية مصر العربية",
+    "ARAB REPUBLIC OF EGYPT"
+  ],
+  "morocco": [
+    "المملكة المغربية",
+    "KINGDOM OF MOROCCO"
+  ],
+  "jordan": [
+    "المملكة الأردنية الهاشمية",
+    "HASHEMITE KINGDOM OF JORDAN"
+  ],
+  "lebanon": [
+    "الجمهورية اللبنانية",
+    "LEBANESE REPUBLIC"
+  ],
+  "palestine": [
+    "دولة فلسطين",
+    "STATE OF PALESTINE"
+  ],
+  "iraq": [
+    "جمهورية العراق",
+    "REPUBLIC OF IRAQ"
+  ],
+  "tunisia": [
+    "الجمهورية التونسية",
+    "REPUBLIC OF TUNISIA"
+  ],
+  "algeria": [
+    "الجمهورية الجزائرية",
+    "REPUBLIC OF ALGERIA"
+  ],
+  "libya": [
+    "دولة ليبيا",
+    "STATE OF LIBYA"
+  ],
+  "syria": [
+    "الجمهورية العربية السورية",
+    "SYRIAN ARAB REPUBLIC"
+  ],
+  "sudan": [
+    "جمهورية السودان",
+    "REPUBLIC OF THE SUDAN"
+  ],
+  "oman": [
+    "سلطنة عُمان",
+    "SULTANATE OF OMAN"
+  ],
+  "kuwait": [
+    "دولة الكويت",
+    "STATE OF KUWAIT"
+  ],
+  "qatar": [
+    "دولة قطر",
+    "STATE OF QATAR"
+  ],
+  "bahrain": [
+    "مملكة البحرين",
+    "KINGDOM OF BAHRAIN"
+  ],
+  "yemen": [
+    "الجمهورية اليمنية",
+    "REPUBLIC OF YEMEN"
+  ],
+  "mauritania": [
+    "الجمهورية الإسلامية الموريتانية",
+    "ISLAMIC REPUBLIC OF MAURITANIA"
+  ],
+  "somalia": [
+    "جمهورية الصومال الفيدرالية",
+    "FEDERAL REPUBLIC OF SOMALIA"
+  ],
+  "djibouti": [
+    "جمهورية جيبوتي",
+    "REPUBLIC OF DJIBOUTI"
+  ],
+  "comoros": [
+    "جمهورية القمر المتحدة",
+    "UNION OF THE COMOROS"
+  ]
+};
+
 export function DialectPassportCover({
   country, level, compact = false
 }: { country: PassportCountry; level: number; compact?: boolean }) {
   const unlocked = level >= 1;
   const [base, foil] = COLORS[country.id] || ['#174e43', '#e5ca91'];
+  const [officialAr, officialEn] = OFFICIAL_NAMES[country.id] || [country.nameAr, country.nameEn.toUpperCase()];
   return (
     <div
-      className={'relative isolate flex aspect-[3/4.2] w-full flex-col items-center justify-between overflow-hidden rounded-[13px] border border-white/20 text-center shadow-[0_11px_22px_rgba(15,23,42,.18)] transition-all duration-700 ' +
-        (compact ? 'px-[4px] py-[6px]' : 'px-3 py-3.5') +
-        (!unlocked ? ' grayscale-[.8] saturate-[.45] opacity-[.52]' : ' opacity-100')}
-      style={{ background: 'linear-gradient(145deg, ' + base + ', #092b2e 92%)', color: foil }}
+      className={'relative isolate flex aspect-[88/125] w-full flex-col items-center justify-between overflow-hidden rounded-[6px] border text-center shadow-[inset_3px_0_7px_rgba(255,255,255,.12),inset_-4px_0_7px_rgba(0,0,0,.24),0_9px_20px_rgba(15,23,42,.2)] transition-all duration-700 ' +
+        (compact ? 'px-[2px] py-[3px]' : 'px-[clamp(8px,1.1vw,16px)] py-[clamp(12px,1.3vw,20px)]') +
+        (unlocked ? ' border-amber-200/30 opacity-100' : ' border-slate-300/40 grayscale-[.85] saturate-[.4] opacity-50')}
+      style={{
+        backgroundColor: base,
+        backgroundImage: 'radial-gradient(ellipse at 65% 20%,rgba(255,255,255,.065),transparent 64%), repeating-linear-gradient(98deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 4px),linear-gradient(120deg,rgba(0,0,0,.18),transparent 12%,transparent 85%,rgba(0,0,0,.22))',
+        color: foil
+      }}
+      aria-label={country.nameAr + (unlocked ? '، جواز مفعّل' : '، جواز غير مفعّل')}
     >
-      <div className="pointer-events-none absolute inset-0 rounded-[13px] border-[3px] border-white/5" aria-hidden="true"/>
-      <div className="pointer-events-none absolute -left-[36%] -top-[30%] h-[92%] w-[150%] rotate-[-30deg] bg-gradient-to-b from-white/15 via-transparent to-transparent" aria-hidden="true"/>
-      <div className={'relative z-10 w-full font-bold arabic-font ' + (compact ? 'text-[5px]' : 'text-[clamp(8px,1vw,12px)]')}>
-        {country.nameAr}
+      {/* Thin bound spine and embossed cover edging, like a conventional passport booklet. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-[4%] bg-gradient-to-r from-black/30 via-white/10 to-transparent"/>
+      <div aria-hidden="true" className={'pointer-events-none absolute border border-current/35 ' + (compact ? 'inset-[3px] rounded-[3px]' : 'inset-[9px] rounded-[3px]')}/>
+      <div className={'relative z-10 flex w-full flex-col items-center gap-0.5 font-bold arabic-font ' + (compact ? 'text-[3.5px] leading-[1.2]' : 'text-[clamp(8px,1vw,12px)] leading-[1.35]')}>
+        <span className="max-w-full text-center">{officialAr}</span>
+        <span className={'max-w-full font-serif uppercase ' + (compact ? 'text-[3px] tracking-[0]' : 'text-[clamp(6px,.66vw,9px)] tracking-[.03em]')} dir="ltr">{officialEn}</span>
       </div>
-      <div className="relative z-10 flex flex-col items-center gap-1">
-        <span aria-hidden="true" className={compact ? 'text-[17px]' : 'text-[42px]'}>{country.flag}</span>
-        <div className={'rounded-[50%] border border-current/40 ' + (compact ? 'p-[2px]' : 'p-2')}>
-          <BookOpen size={compact ? 9 : 25} strokeWidth={1.25} aria-hidden="true"/>
-        </div>
-        <span className={'font-black tracking-[.16em] ' + (compact ? 'text-[5px]' : 'text-[11px]')} dir="ltr">QUL</span>
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center">
+        {/* Gold embossed educational crest, differentiated from an official state emblem. */}
+        <svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true" className={compact ? 'h-[17px] w-[18px]' : 'h-[min(26vw,100px)] w-[min(24vw,92px)] max-h-[42%]'}
+          fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 80 C4 69 4 33 26 21 M78 80 C96 69 96 33 74 21" strokeWidth="2.2"/>
+          <path d="M19 70 l-9 -4 M15 59 l-10 -7 M15 47 l-7 -10 M19 36 l-4 -10 M25 27 l-1 -10 M81 70 l9 -4 M85 59 l10 -7 M85 47 l7 -10 M81 36 l4 -10 M75 27 l1 -10" strokeWidth="2"/>
+          <ellipse cx="50" cy="51" rx="28" ry="31" strokeWidth="2.5"/>
+          <ellipse cx="50" cy="51" rx="22" ry="25" strokeWidth="1"/>
+          <path d="M37 51 h26 M50 27 v48 M33 35 q17 16 34 0 M33 67 q17 -16 34 0" strokeWidth=".9" opacity=".6"/>
+          <path d="M34 87 h32 M41 92 h18 M46 98 h8" strokeWidth="1.4"/>
+        </svg>
+        <span className={'absolute drop-shadow-sm ' + (compact ? 'text-[9px]' : 'text-[clamp(18px,2.6vw,31px)]')} aria-hidden="true">{country.flag}</span>
       </div>
-      <div className={'relative z-10 w-full font-semibold uppercase tracking-[.12em] ' + (compact ? 'text-[5px]' : 'text-[9px]')} dir="ltr">
-        CULTURAL PASSPORT
+      <div className={'relative z-10 flex w-full flex-col items-center font-bold ' + (compact ? 'gap-[1px]' : 'gap-[3px]')}>
+        <span className={'arabic-font ' + (compact ? 'text-[5px]' : 'text-[clamp(12px,1.5vw,19px)]')}>جواز سفر</span>
+        <span className={'font-serif ' + (compact ? 'text-[4px] tracking-[0]' : 'text-[clamp(10px,1.2vw,16px)] tracking-[.16em]')} dir="ltr">PASSPORT</span>
+        {!compact && <span className="mt-1 font-semibold text-[clamp(5px,.58vw,8px)] tracking-[.14em] opacity-65" dir="ltr">EDUCATIONAL EDITION</span>}
       </div>
       {!unlocked && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/15">
-          <LockKeyhole size={compact ? 10 : 24} color="#f8f2e4" aria-hidden="true"/>
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-800/10" aria-hidden="true">
+          <LockKeyhole size={compact ? 10 : 24} className="drop-shadow-md" color="#eee7d6"/>
         </div>
       )}
     </div>
@@ -83,7 +191,7 @@ export function DialectPassportLibrary({
         className="relative flex h-[min(92dvh,850px)] w-full max-w-6xl flex-col overflow-hidden rounded-[23px] border border-amber-200/30 bg-[#f9f8f3] shadow-2xl">
         <header className="flex h-[66px] shrink-0 items-center justify-between gap-3 border-b border-amber-900/10 bg-[#0b473d] px-4 text-white sm:px-7">
           <div className="min-w-0">
-            <h2 className="truncate text-[17px] font-black arabic-font">{active ? (ar ? active.nameAr : active.nameEn) : (ar ? 'مكتبة جوازات قُل' : 'QUL Passport Library')}</h2>
+            <h2 className="truncate text-[17px] font-black arabic-font">{active ? (ar ? active.nameAr : active.nameEn) : (ar ? 'مكتبة جوازات الدول' : 'Country Passport Library')}</h2>
             <p className="text-[10px] font-semibold text-emerald-100/75">
               {active ? (ar ? 'رحلتك التعليمية في هذه الدولة' : 'Your learning journey') :
                 (ar ? earned + ' جوازات مفعّلة، ' + totalStamps + ' ختمًا مكتسبًا' : earned + ' unlocked passports, ' + totalStamps + ' stamps')}
@@ -144,8 +252,8 @@ export function DialectPassportLibrary({
                 })}
               </div>
               <p className="text-center text-[11px] leading-relaxed text-slate-500 arabic-font">
-                {ar ? 'جواز تعليمي من قُل، مستوحى من هوية الدولة وليس وثيقة سفر حكومية.' :
-                  'A QUL educational passport, inspired by the country, not a government-issued document.'}
+                {ar ? 'جواز تعليمي مستوحى من غلاف وثيقة السفر، وليس جوازًا حكوميًا صالحًا للاستخدام.' :
+                  'An educational passport cover, not an official travel document.'}
               </p>
             </div>
           </div>
