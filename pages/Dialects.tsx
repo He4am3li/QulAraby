@@ -2109,18 +2109,6 @@ export const Dialects: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse" />
-                        <h3 className="text-sm font-black text-slate-800 arabic-font">
-                          {lang === 'ar' ? 'اختر معلمك' : 'Choose Your Tutor'}
-                        </h3>
-                      </div>
-                      <span className="text-[10px] font-bold text-blue-600 arabic-font bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100/80">
-                        {lang === 'ar' ? 'انقر على المعلم للتحدث' : 'Tap tutor to talk'}
-                      </span>
-                    </div>
-
                     {/* 3D Character Stage - Seamless without frames, borders, or boxes */}
                     <div 
                       className="relative py-2 px-2 overflow-visible flex items-end justify-center gap-6 sm:gap-14 min-h-[220px] sm:min-h-[250px]"
@@ -2171,7 +2159,9 @@ export const Dialects: React.FC = () => {
                     <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
                       <button
                         onClick={() => startLiveConversation()}
-                        className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-xl font-black text-xs arabic-font transition-all shadow-sm ${
+                        aria-label={isLiveActive ? (lang === 'ar' ? 'إيقاف الاتصال الصوتي' : 'Stop voice call') : (lang === 'ar' ? 'فتح الاتصال الصوتي' : 'Open voice call')}
+                        title={isLiveActive ? (lang === 'ar' ? 'إيقاف الاتصال الصوتي' : 'Stop voice call') : (lang === 'ar' ? 'فتح الاتصال الصوتي' : 'Open voice call')}
+                        className={`inline-flex shrink-0 w-9 h-9 items-center justify-center rounded-xl transition-all shadow-sm ${
                           isLiveActive
                             ? 'bg-rose-500 hover:bg-rose-600 text-white animate-pulse'
                             : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-blue-500/20'
@@ -2179,14 +2169,11 @@ export const Dialects: React.FC = () => {
                       >
                         {isLiveActive ? (
                           <>
-                            <MicOff size={14} />
-                            <span>{lang === 'ar' ? 'إنهاء المحادثة المباشرة' : 'End Live Chat'}</span>
+                            <MicOff size={17} />
                           </>
                         ) : (
                           <>
-                            <Mic size={14} />
-                            <span>{lang === 'ar' ? 'تحدث صوتياً مع المعلم' : 'Live Voice Talk'}</span>
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping ml-1" />
+                            <Mic size={17} />
                           </>
                         )}
                       </button>
@@ -2450,10 +2437,11 @@ export const Dialects: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={() => startLiveConversation()}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20"
+                      aria-label={lang === 'ar' ? 'فتح الاتصال الصوتي' : 'Open voice call'}
+                      title={lang === 'ar' ? 'فتح الاتصال الصوتي' : 'Open voice call'}
+                      className="w-9 h-9 inline-flex items-center justify-center bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20"
                     >
-                      <Zap size={14} className="text-amber-300" />
-                      {lang === 'ar' ? 'بدء محادثة صوتية حية' : 'Start Live Voice Chat'}
+                      <Zap size={17} className="text-amber-300" />
                     </button>
                   </div>
                   
