@@ -780,7 +780,7 @@ const COUNTRY_DATA = [
     nameAr: 'عمان',
     nameEn: 'Oman',
     flag: '🇴🇲',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Salalah_oman_2.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Wadi_Darbat.jpg?width=1600",
     dialect: 'Omani (عماني)',
     characterMale: { 
       nameAr: 'هيثم', 
