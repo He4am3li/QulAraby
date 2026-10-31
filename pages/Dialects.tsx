@@ -1475,6 +1475,13 @@ export const Dialects: React.FC = () => {
   const recognitionRef = React.useRef<any>(null);
   const micCleanupRef = React.useRef<(() => void) | null>(null);
   const liveAudioSourcesRef = React.useRef<Set<AudioBufferSourceNode>>(new Set());
+  const oneShotSourceRef = React.useRef<AudioBufferSourceNode | null>(null);
+  const oneShotGenerationRef = React.useRef(0);
+  const liveGenerationRef = React.useRef(0);
+  const livePlaybackVersionRef = React.useRef(0);
+  const livePlaybackHeadRef = React.useRef(0);
+  const liveDecodeQueueRef = React.useRef<Promise<void>>(Promise.resolve());
+  const liveConnectingRef = React.useRef(false);
   const isLiveActiveRef = React.useRef(false);
 
   const getAudioContext = () => {
@@ -1484,26 +1491,52 @@ export const Dialects: React.FC = () => {
     return audioContextRef.current;
   };
 
+  // A single owner for pre-generated speech and a separate serialized live stream.
+  // Cancel pending TTS generation as well as already-playing audio.
+  const stopOneShotAudio = React.useCallback(() => {
+    oneShotGenerationRef.current++;
+    const playing = oneShotSourceRef.current;
+    oneShotSourceRef.current = null;
+    if (playing) {
+      playing.onended = null;
+      try { playing.stop(); } catch (_) { /* Already stopped */ }
+      try { playing.disconnect(); } catch (_) { /* Already disconnected */ }
+    }
+    setIsSpeaking(false);
+    setCurrentSpeechText('');
+  }, []);
+
+  const clearLiveAudio = React.useCallback(() => {
+    livePlaybackVersionRef.current++;
+    livePlaybackHeadRef.current = 0;
+    for (const source of liveAudioSourcesRef.current) {
+      source.onended = null;
+      try { source.stop(); } catch (_) { /* Already finished */ }
+      try { source.disconnect(); } catch (_) { /* Already disconnected */ }
+    }
+    liveAudioSourcesRef.current.clear();
+    setIsSpeaking(false);
+  }, []);
+
   const stopLiveConversation = React.useCallback(() => {
+    liveGenerationRef.current++;
     isLiveActiveRef.current = false;
-    if (liveSessionRef.current) {
-      liveSessionRef.current.close();
-      liveSessionRef.current = null;
+    liveConnectingRef.current = false;
+    const session = liveSessionRef.current;
+    liveSessionRef.current = null;
+    if (session) {
+      try { session.close(); } catch (_) { /* Session already closed */ }
     }
     if (micCleanupRef.current) {
       micCleanupRef.current();
       micCleanupRef.current = null;
     }
-    for (const source of liveAudioSourcesRef.current) {
-      try { source.stop(); } catch (_) { /* Already finished. */ }
-      try { source.disconnect(); } catch (_) { /* Already disconnected. */ }
-    }
-    liveAudioSourcesRef.current.clear();
+    clearLiveAudio();
+    stopOneShotAudio();
     setIsLiveActive(false);
     setIsListening(false);
-    setIsSpeaking(false);
-    setCurrentSpeechText('');
-  }, []);
+    setAudioLevel(0);
+  }, [clearLiveAudio, stopOneShotAudio]);
 
   React.useEffect(() => {
     return () => {
@@ -1542,17 +1575,15 @@ export const Dialects: React.FC = () => {
       setSelectedPersona(null);
       setChatMessages([]);
     }
-    if (liveSessionRef.current) {
-      liveSessionRef.current.close();
-      liveSessionRef.current = null;
-    }
-    isLiveActiveRef.current = false;
-    setIsLiveActive(false);
-    setIsListening(false);
-  }, [selectedCountry, lang]);
+    // Switching destinations or languages cancels the previous tutor's
+    // pending speech and live session, including audio still being generated.
+    stopLiveConversation();
+  }, [selectedCountry, lang, stopLiveConversation]);
 
   const startSTT = () => {
     if (recognitionRef.current) return;
+    if (isLiveActiveRef.current || liveConnectingRef.current) stopLiveConversation();
+    stopOneShotAudio();
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -1649,6 +1680,8 @@ export const Dialects: React.FC = () => {
     const currentPersona = persona || selectedPersona;
     if (!currentPersona) return;
 
+    if (isLiveActiveRef.current || liveConnectingRef.current) stopLiveConversation();
+    stopOneShotAudio();
     const userMsg = input;
     const countryForTurn = selectedCountry;
     if (!overrideInput) setChatInput('');
@@ -2177,12 +2210,9 @@ export const Dialects: React.FC = () => {
                             currentSpeechText={chosen && isSpeaking ? currentSpeechText : undefined}
                             lang={lang}
                             onSelect={() => {
-                              const wasLive = isLiveActive;
-                              if (wasLive) stopLiveConversation();
+                              stopLiveConversation();
                               setSelectedPersona(char);
-                              const greeting = getTutorGreeting(selectedCountry.id, char, isFemale, lang);
                               setChatMessages([]);
-                              if (!wasLive && !isSpeaking) void playAudio(greeting);
                             }}
                           />
                         );
