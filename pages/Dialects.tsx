@@ -1991,7 +1991,7 @@ export const Dialects: React.FC = () => {
               onClick={() => { setPassportFocusId(null); setIsPassportOpen(true); }}
               className="bg-amber-500/20 text-amber-100 px-3 py-1.5 rounded-xl transition-all text-[11px] font-black hover:bg-amber-500/30 border border-amber-500/30 backdrop-blur-md flex items-center gap-2"
             >
-              {lang === 'ar' ? 'جوازات قُل' : 'QUL Passports'}
+              {lang === 'ar' ? 'جوازات الدول' : 'Country Passports'}
             </button>
           </>
         }
@@ -2104,51 +2104,59 @@ export const Dialects: React.FC = () => {
                 {/* The characters remain in one stage. No duplicate image or voice-screen overlay. */}
                 <section className={(mobileCountryPanel === 'stage' ? 'flex' : 'hidden') + ' h-full min-h-0 min-w-0 w-full flex-col lg:flex lg:w-[58%] lg:flex-1'}
                   aria-label={lang === 'ar' ? 'الشخصيات والمحادثة' : 'Characters and conversation'}>
-                  <div className="flex h-[34px] shrink-0 items-center justify-between gap-3 px-2">
-                    <div className="min-w-0 flex flex-1 items-center gap-1.5" title={(() => {
-                      const rank = passportLevelsRef.current[selectedCountry.id] || 0;
-                      const missions = selectedCountry.missions;
-                      if (!missions) return '';
-                      if (rank >= 3) return lang === 'ar' ? 'أكملت المهام الثلاث' : 'All three missions completed';
-                      return lang === 'ar'
-                        ? (rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar)
-                        : (rank === 0 ? missions.visitor.en : rank === 1 ? missions.resident.en : missions.native.en);
-                    })()}>
-                      <span className="shrink-0 rounded-lg bg-amber-100 px-2 py-1 text-[11px] font-bold text-amber-800 arabic-font">{t.mission}</span>
-                      <span className="truncate text-[11px] font-semibold text-slate-600 arabic-font">
-                        {(() => {
-                          const rank = passportLevelsRef.current[selectedCountry.id] || 0;
-                          const m = selectedCountry.missions;
-                          if (!m) return '';
-                          if (rank >= 3) return lang === 'ar' ? 'أكملت المهام الثلاث' : 'All three missions completed';
-                          return lang === 'ar'
-                            ? (rank === 0 ? m.visitor.ar : rank === 1 ? m.resident.ar : m.native.ar)
-                            : (rank === 0 ? m.visitor.en : rank === 1 ? m.resident.en : m.native.en);
-                        })()}
-                      </span>
-                    </div>
+                  {/* Clear bilingual mission brief, paired with a physical-style country passport. */}
+                  <div className="mb-[clamp(5px,.75vh,9px)] flex h-[clamp(104px,15vh,124px)] shrink-0 gap-[clamp(5px,.8vw,11px)]">
+                    <section
+                      className="flex min-w-0 flex-1 flex-col justify-center overflow-hidden rounded-[13px] border border-emerald-100/80 bg-white px-[clamp(9px,1.2vw,16px)] py-[clamp(6px,.8vh,11px)] shadow-sm"
+                      aria-label={lang === 'ar' ? 'المهمة الحالية وترجمتها' : 'Current mission and translation'}>
+                      <div className="mb-1 flex shrink-0 items-center justify-between gap-2">
+                        <h3 className="text-[clamp(12px,1.04vw,15px)] font-black text-emerald-900 arabic-font">
+                          {lang === 'ar' ? 'المهمة الحالية' : 'Current mission'}
+                        </h3>
+                        <span className="shrink-0 rounded-full border border-amber-200/80 bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-800" dir="ltr">
+                          {(passportLevels[selectedCountry.id] || 0) >= 3 ? '03 / 03 ✓' : ('0' + Math.min(3, (passportLevels[selectedCountry.id] || 0) + 1) + ' / 03')}
+                        </span>
+                      </div>
+                      {(() => {
+                        const level = Math.max(0, Math.min(3, passportLevels[selectedCountry.id] || 0));
+                        const mission = level === 0 ? selectedCountry.missions?.visitor : level === 1 ? selectedCountry.missions?.resident : selectedCountry.missions?.native;
+                        return level >= 3 ? (
+                          <div className="flex flex-1 flex-col justify-center gap-1">
+                            <p className="text-[13px] font-black text-emerald-800 arabic-font" dir="rtl">أكملت المهام الثلاث بنجاح، وأصبحت روح البلد!</p>
+                            <p className="text-[11px] font-medium text-slate-600" dir="ltr">All three missions completed. You earned Native Spirit!</p>
+                          </div>
+                        ) : (
+                          <div className="flex min-h-0 flex-1 flex-col justify-center gap-[clamp(3px,.5vh,6px)]">
+                            <p className="line-clamp-2 text-right text-[clamp(11px,1vw,13px)] font-bold leading-[1.4] text-slate-800 arabic-font"
+                              dir="rtl" title={mission?.ar}>{mission?.ar}</p>
+                            <p className="line-clamp-2 text-left text-[clamp(10px,.87vw,12px)] font-medium leading-[1.4] text-slate-500"
+                              dir="ltr" title={mission?.en}>{mission?.en}</p>
+                          </div>
+                        );
+                      })()}
+                    </section>
                     <button type="button"
                       onClick={() => { setPassportFocusId(selectedCountry.id); setIsPassportOpen(true); }}
-                      className={'group flex h-[37px] shrink-0 items-center gap-2 rounded-xl border px-2 py-0.5 shadow-sm transition-colors hover:border-amber-300 ' +
-                        ((passportLevels[selectedCountry.id] || 0) >= 1 ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white/80') +
+                      className={'group flex h-full w-[clamp(100px,12vw,146px)] shrink-0 items-center justify-center gap-[clamp(5px,.65vw,8px)] rounded-[13px] border px-1.5 py-1.5 shadow-sm transition-colors hover:border-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 ' +
+                        ((passportLevels[selectedCountry.id] || 0) >= 1 ? 'border-amber-200 bg-[#fff9ec]' : 'border-slate-200 bg-white/85') +
                         (recentStamp?.countryId === selectedCountry.id ? ' ring-2 ring-amber-400 shadow-[0_0_22px_rgba(245,158,11,.35)]' : '')}
-                      title={lang === 'ar' ? 'افتح جواز هذه الدولة' : 'Open this country passport'}
+                      title={lang === 'ar' ? 'افتح جواز الدولة وأختام المهام' : 'Open passport and earned stamps'}
                       aria-label={lang === 'ar' ? 'عرض جواز ' + selectedCountry.nameAr : 'View ' + selectedCountry.nameEn + ' passport'}>
-                      <div className="w-[26px] shrink-0">
+                      <div className="w-[clamp(34px,4vw,48px)] shrink-0">
                         <DialectPassportCover country={selectedCountry} level={passportLevels[selectedCountry.id] || 0} compact/>
                       </div>
-                      <span className="flex flex-col items-start gap-px">
-                        <span className="text-[11px] font-black leading-tight text-emerald-900 arabic-font">
+                      <span className="flex min-w-0 flex-1 flex-col items-start gap-1 text-start">
+                        <span className="w-full text-[clamp(10px,.9vw,12px)] font-black leading-tight text-emerald-950 arabic-font">
+                          {lang === 'ar' ? 'جواز ' + selectedCountry.nameAr : selectedCountry.nameEn + ' Passport'}
+                        </span>
+                        <span className="text-[clamp(9px,.8vw,11px)] font-semibold leading-tight text-slate-500 arabic-font">
                           {(passportLevels[selectedCountry.id] || 0) === 0
-                            ? (lang === 'ar' ? 'غير مفعّل' : 'Locked')
+                            ? (lang === 'ar' ? 'لم يُفعّل بعد' : 'Not unlocked')
                             : (passportLevels[selectedCountry.id] || 0) === 1
                               ? (lang === 'ar' ? 'زائر' : 'Visitor')
                               : (passportLevels[selectedCountry.id] || 0) === 2
                                 ? (lang === 'ar' ? 'مقيم' : 'Resident')
                                 : (lang === 'ar' ? 'روح البلد' : 'Native Spirit')}
-                        </span>
-                        <span className="text-[9px] font-semibold text-slate-400 arabic-font">
-                          {lang === 'ar' ? 'جواز قُل' : 'QUL Passport'}
                         </span>
                       </span>
                     </button>
@@ -2207,7 +2215,7 @@ export const Dialects: React.FC = () => {
                   </div>
 
                   {/* Fixed-height, paged transcript and input: the document never needs to scroll. */}
-                  <div className="mt-[clamp(6px,.75vh,9px)] h-[clamp(143px,29%,178px)] min-h-0 shrink-0">
+                  <div className="mt-[clamp(6px,.75vh,9px)] h-[clamp(163px,26%,186px)] min-h-0 shrink-0">
                     <DialectChatDock
                       lang={lang}
                       name={lang === 'ar' ? selectedPersona?.nameAr : selectedPersona?.nameEn}
@@ -2219,6 +2227,8 @@ export const Dialects: React.FC = () => {
                       onPronounce={text => { void playAudio(text); }}
                       loading={isChatLoading}
                       listening={isListening && !isLiveActive}
+                      level={passportLevels[selectedCountry.id] || 0}
+                      countryName={selectedCountry.nameAr}
                     />
                   </div>
                 </section>
