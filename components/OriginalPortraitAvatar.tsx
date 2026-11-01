@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Live3DCharacter } from './Live3DCharacter';
 
 /**
@@ -37,7 +37,6 @@ export const OriginalPortraitAvatar: React.FC<Props> = ({
 }) => {
   const source = basePath(countryId, gender);
   const [load, setLoad] = React.useState<LoadState>('loading');
-  const reducedMotion = useReducedMotion();
 
   React.useEffect(() => {
     let alive = true;
@@ -67,35 +66,35 @@ export const OriginalPortraitAvatar: React.FC<Props> = ({
     );
   }
 
+  // Whole-image swaying and repeated scaling made the portrait appear to float.
+  // An approved layered face/body rig is required before introducing lip, eye
+  // or arm motion. Until then keep the original image and feet stable.
   return (
     <div
       className={'relative h-full w-full overflow-visible ' + className}
       role="img"
       aria-label={nameAr + '، الشخصية الأصلية المعتمدة'}
     >
-      <div className="pointer-events-none absolute inset-x-[25%] bottom-[1.2%] h-[3%] rounded-[50%] bg-slate-900/20 blur-[7px]" aria-hidden="true" />
-      <motion.img
-        key={source}
-        src={source}
-        alt=""
-        draggable={false}
-        loading="eager"
-        className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain object-bottom"
-        style={{ transformOrigin: 'center bottom' }}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{
-          opacity: isSelected ? 1 : .96,
-          y: reducedMotion ? 0 : (reaction === 'correct' ? [-1,-7,0] : [0,-2,0]),
-          scale: reducedMotion ? 1 : (isSpeaking ? [1.003,1.012,1.003] : [1,1.005,1]),
-          rotate: reducedMotion ? 0 : (isListening ? [0,-.32,0] : [0,.14,0]),
-        }}
-        transition={{
-          opacity: { duration: .28 },
-          y: { duration: reaction === 'correct' ? .5 : 3.3, repeat: reaction === 'correct' ? 0 : Infinity, ease: 'easeInOut' },
-          scale: { duration: isSpeaking ? 1.0 : 3.7, repeat: Infinity, ease: 'easeInOut' },
-          rotate: { duration: 3.8, repeat: Infinity, ease: 'easeInOut' },
-        }}
-      />
+      <div aria-hidden="true"
+        className="pointer-events-none absolute inset-x-[26%] bottom-[0.3%] h-[3.3%] rounded-[50%] bg-[#284c43]/20 blur-[9px]" />
+      <motion.div
+        className="pointer-events-none absolute inset-0"
+        initial={false}
+        animate={{ opacity: isSelected ? 1 : .96 }}
+        transition={{ duration: .22 }}
+      >
+        <img
+          src={source}
+          alt=""
+          draggable={false}
+          loading="eager"
+          decoding="async"
+          className="absolute inset-0 h-full w-full select-none object-contain object-bottom"
+        />
+      </motion.div>
+      {isSelected && (isSpeaking || isListening) && (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-[24%] bottom-[1%] h-[4px] rounded-full bg-emerald-400/35 blur-[7px]" />
+      )}
     </div>
   );
 };
