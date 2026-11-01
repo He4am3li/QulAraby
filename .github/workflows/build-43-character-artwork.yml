@@ -70,11 +70,14 @@ jobs:
         with:
           name: QUL-43-original-pixel-editable-ORA-drafts
           path: artifacts/qul-43-layer-drafts
-      - name: Install Krita headless editor and PSD audit tools
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Krita and pinned compatible PSD audit dependencies
         run: |
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq krita xvfb
-          python3 -m pip install --disable-pip-version-check 'pillow>=10' 'numpy<2' 'psd-tools==1.10.0'
+          python -m pip install --disable-pip-version-check 'pillow==11.3.0' 'numpy==1.26.4' 'psd-tools==1.10.0'
       - name: Export actual multilayer PSD files and test source image fidelity
         env:
           QT_LOGGING_RULES: "*.debug=false"
