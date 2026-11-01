@@ -1,0 +1,439 @@
+{
+  "model": "u2net_human_seg",
+  "total": 43,
+  "transparent": 43,
+  "rejected": 0,
+  "characters": {
+    "algeria_female": {
+      "status": "ok",
+      "area_ratio": 0.381,
+      "visible_height": 0.969,
+      "size": [
+        361,
+        766
+      ],
+      "bytes": 84204
+    },
+    "algeria_male": {
+      "status": "ok",
+      "area_ratio": 0.401,
+      "visible_height": 0.974,
+      "size": [
+        361,
+        768
+      ],
+      "bytes": 48434
+    },
+    "bahrain_female": {
+      "status": "ok",
+      "area_ratio": 0.387,
+      "visible_height": 0.969,
+      "size": [
+        331,
+        766
+      ],
+      "bytes": 89484
+    },
+    "bahrain_male": {
+      "status": "ok",
+      "area_ratio": 0.347,
+      "visible_height": 0.973,
+      "size": [
+        279,
+        767
+      ],
+      "bytes": 36818
+    },
+    "comoros_female": {
+      "status": "ok",
+      "area_ratio": 0.308,
+      "visible_height": 0.945,
+      "size": [
+        252,
+        752
+      ],
+      "bytes": 78596
+    },
+    "comoros_male": {
+      "status": "ok",
+      "area_ratio": 0.311,
+      "visible_height": 0.978,
+      "size": [
+        257,
+        768
+      ],
+      "bytes": 51120
+    },
+    "djibouti_female": {
+      "status": "ok",
+      "area_ratio": 0.38,
+      "visible_height": 0.962,
+      "size": [
+        329,
+        762
+      ],
+      "bytes": 99506
+    },
+    "djibouti_male": {
+      "status": "ok",
+      "area_ratio": 0.326,
+      "visible_height": 0.966,
+      "size": [
+        301,
+        763
+      ],
+      "bytes": 72238
+    },
+    "egypt_female": {
+      "status": "ok",
+      "area_ratio": 0.375,
+      "visible_height": 0.982,
+      "size": [
+        381,
+        768
+      ],
+      "bytes": 73022
+    },
+    "egypt_male": {
+      "status": "ok",
+      "area_ratio": 0.338,
+      "visible_height": 0.982,
+      "size": [
+        294,
+        768
+      ],
+      "bytes": 77810
+    },
+    "iraq_female": {
+      "status": "ok",
+      "area_ratio": 0.479,
+      "visible_height": 0.999,
+      "size": [
+        391,
+        768
+      ],
+      "bytes": 119662
+    },
+    "iraq_male": {
+      "status": "ok",
+      "area_ratio": 0.389,
+      "visible_height": 0.974,
+      "size": [
+        303,
+        768
+      ],
+      "bytes": 67750
+    },
+    "jordan_female": {
+      "status": "ok",
+      "area_ratio": 0.371,
+      "visible_height": 0.96,
+      "size": [
+        324,
+        762
+      ],
+      "bytes": 73548
+    },
+    "jordan_male": {
+      "status": "ok",
+      "area_ratio": 0.404,
+      "visible_height": 0.982,
+      "size": [
+        328,
+        768
+      ],
+      "bytes": 53254
+    },
+    "kuwait_female": {
+      "status": "ok",
+      "area_ratio": 0.383,
+      "visible_height": 0.977,
+      "size": [
+        328,
+        768
+      ],
+      "bytes": 103282
+    },
+    "kuwait_male": {
+      "status": "ok",
+      "area_ratio": 0.355,
+      "visible_height": 0.975,
+      "size": [
+        284,
+        768
+      ],
+      "bytes": 28970
+    },
+    "lebanon_female": {
+      "status": "ok",
+      "area_ratio": 0.398,
+      "visible_height": 0.978,
+      "size": [
+        337,
+        767
+      ],
+      "bytes": 109408
+    },
+    "lebanon_male": {
+      "status": "ok",
+      "area_ratio": 0.322,
+      "visible_height": 0.974,
+      "size": [
+        286,
+        762
+      ],
+      "bytes": 48224
+    },
+    "libya_female": {
+      "status": "ok",
+      "area_ratio": 0.386,
+      "visible_height": 0.984,
+      "size": [
+        312,
+        768
+      ],
+      "bytes": 94992
+    },
+    "libya_male": {
+      "status": "ok",
+      "area_ratio": 0.356,
+      "visible_height": 0.986,
+      "size": [
+        289,
+        768
+      ],
+      "bytes": 41932
+    },
+    "mauritania_female": {
+      "status": "ok",
+      "area_ratio": 0.357,
+      "visible_height": 0.982,
+      "size": [
+        288,
+        768
+      ],
+      "bytes": 74932
+    },
+    "mauritania_male": {
+      "status": "ok",
+      "area_ratio": 0.344,
+      "visible_height": 0.971,
+      "size": [
+        317,
+        762
+      ],
+      "bytes": 59344
+    },
+    "morocco_female": {
+      "status": "ok",
+      "area_ratio": 0.393,
+      "visible_height": 0.975,
+      "size": [
+        396,
+        766
+      ],
+      "bytes": 101928
+    },
+    "morocco_male": {
+      "status": "ok",
+      "area_ratio": 0.362,
+      "visible_height": 0.984,
+      "size": [
+        312,
+        768
+      ],
+      "bytes": 72640
+    },
+    "oman_female": {
+      "status": "ok",
+      "area_ratio": 0.395,
+      "visible_height": 0.974,
+      "size": [
+        343,
+        764
+      ],
+      "bytes": 107364
+    },
+    "oman_male": {
+      "status": "ok",
+      "area_ratio": 0.346,
+      "visible_height": 0.977,
+      "size": [
+        284,
+        768
+      ],
+      "bytes": 36158
+    },
+    "palestine_female": {
+      "status": "ok",
+      "area_ratio": 0.334,
+      "visible_height": 0.94,
+      "size": [
+        277,
+        748
+      ],
+      "bytes": 75548
+    },
+    "palestine_male": {
+      "status": "ok",
+      "area_ratio": 0.344,
+      "visible_height": 0.966,
+      "size": [
+        276,
+        762
+      ],
+      "bytes": 40150
+    },
+    "qatar_female": {
+      "status": "ok",
+      "area_ratio": 0.381,
+      "visible_height": 0.965,
+      "size": [
+        346,
+        758
+      ],
+      "bytes": 104884
+    },
+    "qatar_male": {
+      "status": "ok",
+      "area_ratio": 0.353,
+      "visible_height": 0.975,
+      "size": [
+        271,
+        768
+      ],
+      "bytes": 30018
+    },
+    "saudi_female": {
+      "status": "ok",
+      "area_ratio": 0.348,
+      "visible_height": 0.967,
+      "size": [
+        341,
+        765
+      ],
+      "bytes": 75656
+    },
+    "somalia_female": {
+      "status": "ok",
+      "area_ratio": 0.342,
+      "visible_height": 0.923,
+      "size": [
+        282,
+        735
+      ],
+      "bytes": 91836
+    },
+    "somalia_male": {
+      "status": "ok",
+      "area_ratio": 0.314,
+      "visible_height": 0.965,
+      "size": [
+        260,
+        756
+      ],
+      "bytes": 79684
+    },
+    "sudan_female": {
+      "status": "ok",
+      "area_ratio": 0.313,
+      "visible_height": 0.967,
+      "size": [
+        262,
+        763
+      ],
+      "bytes": 84462
+    },
+    "sudan_male": {
+      "status": "ok",
+      "area_ratio": 0.329,
+      "visible_height": 0.962,
+      "size": [
+        311,
+        759
+      ],
+      "bytes": 35076
+    },
+    "syria_female": {
+      "status": "ok",
+      "area_ratio": 0.38,
+      "visible_height": 0.971,
+      "size": [
+        323,
+        768
+      ],
+      "bytes": 79570
+    },
+    "syria_male": {
+      "status": "ok",
+      "area_ratio": 0.293,
+      "visible_height": 0.944,
+      "size": [
+        277,
+        751
+      ],
+      "bytes": 40340
+    },
+    "tunisia_female": {
+      "status": "ok",
+      "area_ratio": 0.408,
+      "visible_height": 0.984,
+      "size": [
+        372,
+        768
+      ],
+      "bytes": 99220
+    },
+    "tunisia_male": {
+      "status": "ok",
+      "area_ratio": 0.344,
+      "visible_height": 0.945,
+      "size": [
+        312,
+        752
+      ],
+      "bytes": 58620
+    },
+    "uae_female": {
+      "status": "ok",
+      "area_ratio": 0.35,
+      "visible_height": 0.956,
+      "size": [
+        299,
+        756
+      ],
+      "bytes": 75404
+    },
+    "uae_male": {
+      "status": "ok",
+      "area_ratio": 0.37,
+      "visible_height": 0.979,
+      "size": [
+        297,
+        768
+      ],
+      "bytes": 46452
+    },
+    "yemen_female": {
+      "status": "ok",
+      "area_ratio": 0.36,
+      "visible_height": 0.967,
+      "size": [
+        289,
+        761
+      ],
+      "bytes": 88090
+    },
+    "yemen_male": {
+      "status": "ok",
+      "area_ratio": 0.361,
+      "visible_height": 0.98,
+      "size": [
+        297,
+        768
+      ],
+      "bytes": 71004
+    }
+  },
+  "note": "Original photos retained. Rejected outputs use the existing 3D tutor."
+}
