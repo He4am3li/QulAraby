@@ -1828,7 +1828,7 @@ export const Dialects: React.FC = () => {
               model: 'gemini-3.8-flash',
               contents: [{ role: 'user', parts: [{ text:
                 'Translate the following live speech transcript into precise, natural ' +
-                (/[\\u0600-\\u06ff]/.test(snapshot.text) ? 'English' : 'Arabic') +
+                (/[\u0600-\u06ff]/.test(snapshot.text) ? 'English' : 'Arabic') +
                 '. Preserve the meaning, names and local dialect. The transcript may end mid-sentence: ' +
                 'translate only what is spoken, do not guess missing words. Output ONLY the translation.\\n' + snapshot.text
               }] }],
