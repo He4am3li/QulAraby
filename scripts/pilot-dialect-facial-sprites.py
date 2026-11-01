@@ -114,7 +114,7 @@ for ident in SAMPLES:
     by1=max(0,int(min(pts[10,1],pts[33,1])-12))
     by2=min(h,int(pts[152,1]+24))
     preview.crop((bx1,by1,bx2,by2)).resize(((bx2-bx1)*4,(by2-by1)*4)).save(PROBE/(ident.replace("/","_")+"_face.png"))
-    report[ident]={"status":"ok","dimensions":[w,h],"eyes":infos,"mouth":[float(cx),float(cy),float(width)],"mouthCovered":masked,"mouthShapes":bytesByShape}
+    report[ident]={"status":"ok","dimensions":[w,h],"eyes":[[float(v) for v in eye] for eye in infos],"mouth":[float(cx),float(cy),float(width)],"mouthCovered":masked,"mouthShapes":bytesByShape}
 
 (PROBE/"facial-pilot.json").write_text(json.dumps(report,indent=2),encoding="utf-8")
 mesh.close()
