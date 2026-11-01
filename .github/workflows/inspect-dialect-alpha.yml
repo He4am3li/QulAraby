@@ -1,0 +1,50 @@
+name: Inspect cutout alpha channel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-dialect-alpha.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  metrics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: true}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install pillow numpy
+      - name: Read alpha at suspected background locations
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          import numpy as np,json
+          from pathlib import Path
+          base=Path('public/avatars/original-rigs')
+          out={}
+          for case in ['uae/male','saudi/female','syria/male','egypt/male','morocco/female']:
+              x={}
+              for suffix in ['cutout.webp','source.webp']:
+                  p=base/case/suffix
+                  if not p.exists():continue
+                  im=Image.open(p).convert('RGBA');a=np.asarray(im)[:,:,3];h,w=a.shape
+                  coords=[(.92,.10),(.92,.25),(.92,.45),(.92,.60),(.92,.80),(.5,.5),(.02,.02)]
+                  x[suffix]={'width':w,'height':h,'samples':[int(a[min(h-1,int(h*y)),min(w-1,int(w*x))]) for x,y in coords],
+                    'alpha_zero_fraction':float(np.mean(a==0)),
+                    'alpha_full_fraction':float(np.mean(a>=245))}
+              out[case]=x
+          p=Path('public/avatars/edge-review/alpha-diagnostics.json')
+          p.write_text(json.dumps(out,indent=2))
+          print(p.read_text())
+          PY
+      - name: Save inspection
+        run: |
+          git config user.name "QUL Image Inspection"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/avatars/edge-review/alpha-diagnostics.json
+          git commit -m "Record transparent-pixel alpha quality metrics"
+          git push origin HEAD:main
