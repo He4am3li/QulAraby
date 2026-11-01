@@ -1,0 +1,356 @@
+{
+  "schema": "qul.original-portraits.v1",
+  "character_count": 43,
+  "countries": 22,
+  "verified_live2d_rigs": 0,
+  "approved_rig": [
+    "saudi_male"
+  ],
+  "assets": [
+    {
+      "id": "algeria_female",
+      "path": "/avatars/original-rigs/algeria/female/source.webp",
+      "bytes": 66592,
+      "sha256": "cca610efc558c28d25bc1c18555d1e9ada04531d9ff98f7381b96766b84e7033",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "algeria_male",
+      "path": "/avatars/original-rigs/algeria/male/source.webp",
+      "bytes": 27628,
+      "sha256": "7e0abb44bc5ef1e7f170b8eca168abc43e6d70c258eb261d2bf94f80f937307a",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "bahrain_female",
+      "path": "/avatars/original-rigs/bahrain/female/source.webp",
+      "bytes": 70692,
+      "sha256": "a26efd06373ffbf15c860707bc48f7c175c64015512f92e30b8139e7314b9fad",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "bahrain_male",
+      "path": "/avatars/original-rigs/bahrain/male/source.webp",
+      "bytes": 22172,
+      "sha256": "ecf81a6effef471b8a7399aaf58a7b4427727cb5946fccdf6da7262133e52fd0",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "comoros_female",
+      "path": "/avatars/original-rigs/comoros/female/source.webp",
+      "bytes": 64066,
+      "sha256": "3dd3051e706cabfbdd6f4a988a14df2982573eec5e34f54c677c9f4290486899",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "comoros_male",
+      "path": "/avatars/original-rigs/comoros/male/source.webp",
+      "bytes": 33198,
+      "sha256": "232ec45a4f81e066c498a57886d1e4cf2f4e3b9ade624b9266b470b39a034630",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "djibouti_female",
+      "path": "/avatars/original-rigs/djibouti/female/source.webp",
+      "bytes": 72348,
+      "sha256": "c7dded2c2967bc57275ad5e09585679e0799c22cbdc1626474de2e2bc337131b",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "djibouti_male",
+      "path": "/avatars/original-rigs/djibouti/male/source.webp",
+      "bytes": 54454,
+      "sha256": "f3fc297a352b09a1029df3c9a83691073a51ef6b5004e9ad21f7eb83ea92d870",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "egypt_female",
+      "path": "/avatars/original-rigs/egypt/female/source.webp",
+      "bytes": 55518,
+      "sha256": "519cca54fa60458deb0faa7036423a7814e59cd01b59847dd23820443c257fd8",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "egypt_male",
+      "path": "/avatars/original-rigs/egypt/male/source.webp",
+      "bytes": 51338,
+      "sha256": "9ffd805d5742ea38abe4073f1515b2f0fa0e4ce41d307fd2c744f5e34d25216f",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "iraq_female",
+      "path": "/avatars/original-rigs/iraq/female/source.webp",
+      "bytes": 83072,
+      "sha256": "64a3bffa82c5e5d9d7a99aef9db06811d9ce4fbd109d1bea5badf22f0a1d4985",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "iraq_male",
+      "path": "/avatars/original-rigs/iraq/male/source.webp",
+      "bytes": 41560,
+      "sha256": "fd44fddb212de9d8f9550e3c459fc77cb3702852a55377a5825c83f195f8aef2",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "jordan_female",
+      "path": "/avatars/original-rigs/jordan/female/source.webp",
+      "bytes": 55482,
+      "sha256": "73bdec5466441365aad535ec29e60712644774cc2e737dc63b579f2c09c9e5a6",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "jordan_male",
+      "path": "/avatars/original-rigs/jordan/male/source.webp",
+      "bytes": 33010,
+      "sha256": "140cf16c8c0f3fa64118586336727605f5e9e07918b53e7b069f7d997cc3ff86",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "kuwait_female",
+      "path": "/avatars/original-rigs/kuwait/female/source.webp",
+      "bytes": 74236,
+      "sha256": "e55fc23920019071457fa639da438443eafa78149a522b46a5652bbcdec2e3a9",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "kuwait_male",
+      "path": "/avatars/original-rigs/kuwait/male/source.webp",
+      "bytes": 14938,
+      "sha256": "7b458bbbb21b1a5a55bbbf70378f390a8d1506d0f0e28b5abb415d33aea83dd1",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "lebanon_female",
+      "path": "/avatars/original-rigs/lebanon/female/source.webp",
+      "bytes": 80682,
+      "sha256": "fbfe8ad89ef38bc481692819e8d1c7c14f10924741a2f839446d88d88f11cefc",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "lebanon_male",
+      "path": "/avatars/original-rigs/lebanon/male/source.webp",
+      "bytes": 30082,
+      "sha256": "8dbefbb1723e2679111109c448181fb7f03ae587efe5a0e1ba58c6408e22b40d",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "libya_female",
+      "path": "/avatars/original-rigs/libya/female/source.webp",
+      "bytes": 74960,
+      "sha256": "67069049d8a40a4958f9e1f7c2c75e6b7d40db017a06a6b246f5c105843efb8f",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "libya_male",
+      "path": "/avatars/original-rigs/libya/male/source.webp",
+      "bytes": 25500,
+      "sha256": "29a4f02db82878ef239d259d0d6ac76b6831c93d6b6260ebe4f646366cbd2094",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "mauritania_female",
+      "path": "/avatars/original-rigs/mauritania/female/source.webp",
+      "bytes": 52158,
+      "sha256": "2980996edb4abece3133965a43150dfdc959b3aa022d4411b3991d0eb0ca1a6c",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "mauritania_male",
+      "path": "/avatars/original-rigs/mauritania/male/source.webp",
+      "bytes": 34162,
+      "sha256": "85a6692070d73e9617724949310a443e609f0d3b58a87ddfa70b0c4792ea2886",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "morocco_female",
+      "path": "/avatars/original-rigs/morocco/female/source.webp",
+      "bytes": 67178,
+      "sha256": "2caaf4eeaf56ed7b24348b842f496f614e297f990bb4211f96af3dff598fbce1",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "morocco_male",
+      "path": "/avatars/original-rigs/morocco/male/source.webp",
+      "bytes": 48926,
+      "sha256": "bc67e28e580932e25482133c5d9f549416b4e024537acc49cf781235dca2c997",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "oman_female",
+      "path": "/avatars/original-rigs/oman/female/source.webp",
+      "bytes": 77820,
+      "sha256": "2bfeb424d98b20de2884d78cc28d30da87a68fb1f996e81ca7a7c7ea60e39f0c",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "oman_male",
+      "path": "/avatars/original-rigs/oman/male/source.webp",
+      "bytes": 21850,
+      "sha256": "68a8756f23c6ede14297f459224c3f133040dd5f02c43eba969b83928912030b",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "palestine_female",
+      "path": "/avatars/original-rigs/palestine/female/source.webp",
+      "bytes": 52404,
+      "sha256": "70f6617220c91259db725089005914f434eb9095936fcac78b9341d109d1c2ca",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "palestine_male",
+      "path": "/avatars/original-rigs/palestine/male/source.webp",
+      "bytes": 24730,
+      "sha256": "48b749122c8e367451afa77da9d1720925a7f0713b2d1dec514a6202dd89533f",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "qatar_female",
+      "path": "/avatars/original-rigs/qatar/female/source.webp",
+      "bytes": 75056,
+      "sha256": "99a6ea1aa9b3bb9b5d7820955d5ba78fe9b7a20b548e267538dd6439f599694f",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "qatar_male",
+      "path": "/avatars/original-rigs/qatar/male/source.webp",
+      "bytes": 17588,
+      "sha256": "49afffca86c2659160aa9007aae054e1bdb80b541405333db1d744774ac23a2d",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "saudi_female",
+      "path": "/avatars/original-rigs/saudi/female/source.webp",
+      "bytes": 53942,
+      "sha256": "05a322b6d7bf73ec68907a684e004cb8e4e74332462cdfd51a71d4e4b8ede004",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "somalia_female",
+      "path": "/avatars/original-rigs/somalia/female/source.webp",
+      "bytes": 62818,
+      "sha256": "d2d676670d721c74361048cb190f128b6f0f62eefa5df2d0ead0571f8b10025e",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "somalia_male",
+      "path": "/avatars/original-rigs/somalia/male/source.webp",
+      "bytes": 53538,
+      "sha256": "62cad48e785b0bb121cc14be95a80ec2a793b3d470e2286c8460bec6b739641c",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "sudan_female",
+      "path": "/avatars/original-rigs/sudan/female/source.webp",
+      "bytes": 62458,
+      "sha256": "4f7f0693a959806a8f7a57ad1ad6f8bf13395647e916af42471b363ba6b24367",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "sudan_male",
+      "path": "/avatars/original-rigs/sudan/male/source.webp",
+      "bytes": 18548,
+      "sha256": "325a3f00f37303581619fc666bcc97b6fab85416ced4403e88915be78d0c8c03",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "syria_female",
+      "path": "/avatars/original-rigs/syria/female/source.webp",
+      "bytes": 53820,
+      "sha256": "b70859b8c9c13ce7cd17d59f654bd39b2dcd78918ea8316d0a338ca045b864c7",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "syria_male",
+      "path": "/avatars/original-rigs/syria/male/source.webp",
+      "bytes": 23124,
+      "sha256": "ff3ec560be87fb94ed78e339966649d6f3262b811d27ef74f85d60a6b12b55ae",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "tunisia_female",
+      "path": "/avatars/original-rigs/tunisia/female/source.webp",
+      "bytes": 77986,
+      "sha256": "53e896c32611f5b63525392c746af6daf91823abf1542ee1240bc1cb99a7527a",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "tunisia_male",
+      "path": "/avatars/original-rigs/tunisia/male/source.webp",
+      "bytes": 34732,
+      "sha256": "13cdc95045ea5e9f97576a45d857e20e7d496f421c1a7c4c92176664548dc7d3",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "uae_female",
+      "path": "/avatars/original-rigs/uae/female/source.webp",
+      "bytes": 57296,
+      "sha256": "1aba2ce40b25e12b83b509832f452fa4fa5a65b88f341f11701e6f8bbb492fcc",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "uae_male",
+      "path": "/avatars/original-rigs/uae/male/source.webp",
+      "bytes": 25892,
+      "sha256": "352702b9134f15ae31ba4f4be212d391dd0a9cfa53c9efe3198ae7dae6ad3bfa",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "yemen_female",
+      "path": "/avatars/original-rigs/yemen/female/source.webp",
+      "bytes": 62848,
+      "sha256": "89a1bfc5f44c5675e95fdab26ab4a46f19275a938c66bb0e9106b24f2ce7a332",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    },
+    {
+      "id": "yemen_male",
+      "path": "/avatars/original-rigs/yemen/male/source.webp",
+      "bytes": 45912,
+      "sha256": "867776681ca04272b1063a19190eeb1c51c190e269b2e312c47e60d5545e82bb",
+      "source_quality": "512x768 original-pixel resized",
+      "live2d_ready": false
+    }
+  ],
+  "note": "Approved original portraits reduced to lossless-in-identity WebP display resolution, not independent Live2D sprite rigs."
+}
