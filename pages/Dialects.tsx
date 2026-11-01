@@ -1398,7 +1398,7 @@ export const Dialects: React.FC = () => {
   const selectedCountryRef = React.useRef<any>(null);
   selectedCountryRef.current = selectedCountry;
   const [selectedPersona, setSelectedPersona] = React.useState<any>(null);
-  const [chatMessages, setChatMessages] = React.useState<{role: string, text: string, translationEn?: string}[]>([]);
+  const [chatMessages, setChatMessages] = React.useState<{role: string, text: string, translationEn?: string, liveTurnKey?: string}[]>([]);
   const [chatInput, setChatInput] = React.useState('');
   const [isChatLoading, setIsChatLoading] = React.useState(false);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
@@ -1797,28 +1797,61 @@ export const Dialects: React.FC = () => {
       const currentMission = missions ? (rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar) : "Learn the dialect";
       liveInputBufferRef.current = '';
       let liveTutorText = '';
-      // Translate completed utterances, not every audio chunk, to reduce model calls.
-      const translateLiveReply = async (arabic: string) => {
-        if (!arabic.trim() || !stillCurrent()) return;
-        try {
-          const result = await ai.models.generateContent({
-            model: 'gemini-3.8-flash',
-            contents: [{
-              role: 'user',
-              parts: [{ text: 'Translate this spoken Arabic dialect faithfully into simple English. Return only the translation, without commentary.\\n' + arabic.slice(0, 500) }]
-            }],
-            config: { temperature: 0.1 }
-          });
-          const translation = (result.text || '').trim().slice(0, 650);
-          if (!translation || !stillCurrent() || selectedCountryRef.current?.id !== country.id) return;
-          setChatMessages(prev => {
-            const index = prev.findLastIndex(m => m.role === 'live-model' && m.text === arabic);
-            if (index < 0) return prev;
-            return prev.map((m, i) => i === index ? { ...m, translationEn: translation } : m);
-          });
-        } catch (error) {
-          console.warn('Live dialogue translation unavailable.', error);
-        }
+      // Throttled progressive translation of live transcription snapshots.
+      // A single in-flight request per speaker prevents high-frequency API bursts.
+      let tutorTurnId = 0;
+      let studentTurnId = 0;
+      const translationStreams: Record<'tutor' | 'student', {
+        timer: ReturnType<typeof setTimeout> | null; busy: boolean;
+        pending: { text: string; id: number } | null;
+        lastRequested: string; lastId: number;
+      }> = {
+        tutor: { timer: null, busy: false, pending: null, lastRequested: '', lastId: -1 },
+        student: { timer: null, busy: false, pending: null, lastRequested: '', lastId: -1 }
+      };
+      const requestTranslation = (speaker: 'tutor' | 'student', text: string, id: number, immediate = false) => {
+        if (!text.trim() || !stillCurrent()) return;
+        const queue = translationStreams[speaker];
+        queue.pending = { text: text.trim().slice(0, 850), id };
+        if (queue.timer) clearTimeout(queue.timer);
+        const run = async () => {
+          queue.timer = null;
+          if (queue.busy || !queue.pending || !stillCurrent()) return;
+          const snapshot = queue.pending;
+          if (queue.lastRequested === snapshot.text && queue.lastId === snapshot.id) return;
+          queue.pending = null;
+          queue.lastRequested = snapshot.text;
+          queue.lastId = snapshot.id;
+          queue.busy = true;
+          try {
+            const result = await ai.models.generateContent({
+              model: 'gemini-3.8-flash',
+              contents: [{ role: 'user', parts: [{ text:
+                'Translate the following live speech transcript into precise, natural ' +
+                (/[\\u0600-\\u06ff]/.test(snapshot.text) ? 'English' : 'Arabic') +
+                '. Preserve the meaning, names and local dialect. The transcript may end mid-sentence: ' +
+                'translate only what is spoken, do not guess missing words. Output ONLY the translation.\\n' + snapshot.text
+              }] }],
+              config: { temperature: 0.1 }
+            });
+            const translation = (result.text || '').trim().slice(0, 1100);
+            if (translation && stillCurrent() && selectedCountryRef.current?.id === country.id) {
+              setChatMessages(prev => {
+                const index = prev.findLastIndex(msg => msg.liveTurnKey === speaker + ':' + snapshot.id);
+                if (index < 0 || prev[index].text !== snapshot.text) return prev;
+                return prev.map((msg, i) => i === index ? { ...msg, translationEn: translation } : msg);
+              });
+            }
+          } catch (error) {
+            console.warn('Progressive live translation unavailable', error);
+          } finally {
+            queue.busy = false;
+            if (queue.pending && stillCurrent()) {
+              queue.timer = setTimeout(run, 300);
+            }
+          }
+        };
+        if (!queue.busy) queue.timer = setTimeout(run, immediate ? 0 : 850);
       };
       const flushLiveInput = () => {
         if (!stillCurrent()) return;
@@ -1827,7 +1860,9 @@ export const Dialects: React.FC = () => {
         if (speech.length < 3) return;
         captureMissionTurn(country.id, { role: 'user', text: speech, authored: true });
         if (selectedCountryRef.current?.id === country.id) {
-          setChatMessages(prev => [...prev, { role: 'user', text: speech }]);
+          setChatMessages(prev => [...prev, { role: 'user', text: speech, liveTurnKey: 'student:' + studentTurnId }]);
+          requestTranslation('student', speech, studentTurnId, true);
+          studentTurnId++;
         }
         void checkMissionCompletion(country, passportLevelsRef.current[country.id] || 0);
       };
@@ -1881,19 +1916,21 @@ export const Dialects: React.FC = () => {
                 : previous.endsWith(fragment) ? previous : (previous ? previous + ' ' + fragment : fragment);
               const caption = liveTutorText.trim();
               setCurrentSpeechText(caption);
+              requestTranslation('tutor', caption, tutorTurnId);
               if (selectedCountryRef.current?.id === country.id) {
                 setChatMessages(prev => {
                   const last = prev[prev.length - 1];
-                  if (last?.role === 'live-model') return [...prev.slice(0, -1), { ...last, text: caption }];
-                  return [...prev, { role: 'live-model', text: caption }];
+                  if (last?.role === 'live-model' && last.liveTurnKey === 'tutor:' + tutorTurnId) return [...prev.slice(0, -1), { ...last, text: caption, translationEn: last.text === caption ? last.translationEn : undefined }];
+                  return [...prev, { role: 'live-model', text: caption, liveTurnKey: 'tutor:' + tutorTurnId }];
                 });
               }
             }
             if (message.serverContent?.turnComplete) {
               if (liveInputBufferRef.current.trim()) flushLiveInput();
               const completedTutorReply = liveTutorText.trim();
-              if (completedTutorReply) void translateLiveReply(completedTutorReply);
+              if (completedTutorReply) requestTranslation('tutor', completedTutorReply, tutorTurnId, true);
               liveTutorText = '';
+              tutorTurnId++;
             }
             // An audio message may contain several independent PCM parts.
             const parts = message.serverContent?.modelTurn?.parts || [];
@@ -1909,6 +1946,7 @@ export const Dialects: React.FC = () => {
             if (message.serverContent?.interrupted) {
               clearLiveAudio();
               liveTutorText = '';
+              tutorTurnId++;
               setCurrentSpeechText('');
             }
           },
