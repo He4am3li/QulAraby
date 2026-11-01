@@ -16,6 +16,8 @@ import { DialectChatDock } from '../components/DialectChatDock';
 import { DialectPassportCover, DialectPassportLibrary } from '../components/DialectPassports';
 import { assessDialectMission, type MissionTurn } from '../services/dialectMissionAssessment';
 import { generateSpeech, decodeAudioData } from '../services/gemini';
+import { getDialectTextDirection, getDialectVoiceDirection, getDialectVoiceName } from '../services/dialectVoiceProfiles';
+import { parseBilingualTutorReply, translateDialectToEnglish } from '../services/dialectTranslation';
 
 declare global {
   interface Window {
@@ -1398,7 +1400,10 @@ export const Dialects: React.FC = () => {
   const selectedCountryRef = React.useRef<any>(null);
   selectedCountryRef.current = selectedCountry;
   const [selectedPersona, setSelectedPersona] = React.useState<any>(null);
-  const [chatMessages, setChatMessages] = React.useState<{role: string, text: string}[]>([]);
+  const [chatMessages, setChatMessages] = React.useState<{role: string, text: string, translationEn?: string, id?: string}[]>([]);
+  const [liveTranscript, setLiveTranscript] = React.useState('');
+  const [liveTranslation, setLiveTranslation] = React.useState('');
+  const [liveTranslating, setLiveTranslating] = React.useState(false);
   const [chatInput, setChatInput] = React.useState('');
   const [isChatLoading, setIsChatLoading] = React.useState(false);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
@@ -1421,6 +1426,10 @@ export const Dialects: React.FC = () => {
   const lastAssessmentCountRef = React.useRef<Record<string, number>>({});
   const assessmentPendingRef = React.useRef(false);
   const liveInputBufferRef = React.useRef('');
+  const liveOutputBufferRef = React.useRef('');
+  const liveCaptionTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const liveCaptionEpochRef = React.useRef(0);
+  const liveTranslationCallsRef = React.useRef(0);
   const [passportFocusId, setPassportFocusId] = React.useState<string | null>(null);
   const [recentStamp, setRecentStamp] = React.useState<{countryId: string; level: number} | null>(null);
   const [isPassportOpen, setIsPassportOpen] = React.useState(false);
@@ -1533,6 +1542,14 @@ export const Dialects: React.FC = () => {
     }
     clearLiveAudio();
     stopOneShotAudio();
+    if (liveCaptionTimerRef.current) clearTimeout(liveCaptionTimerRef.current);
+    liveCaptionTimerRef.current = null;
+    liveCaptionEpochRef.current++;
+    liveTranslationCallsRef.current = 0;
+    liveOutputBufferRef.current = '';
+    setLiveTranscript('');
+    setLiveTranslation('');
+    setLiveTranslating(false);
     setIsLiveActive(false);
     setIsListening(false);
     setAudioLevel(0);
@@ -2282,6 +2299,9 @@ export const Dialects: React.FC = () => {
                       lang={lang}
                       name={lang === 'ar' ? selectedPersona?.nameAr : selectedPersona?.nameEn}
                       messages={chatMessages}
+                       liveTranscript={liveTranscript}
+                       liveTranslation={liveTranslation}
+                       liveTranslating={liveTranslating}
                       value={chatInput}
                       onChange={setChatInput}
                       onSend={text => { void handleAIChat(text); }}
