@@ -1,0 +1,23 @@
+name: QUL dialect rig safety
+on:
+  pull_request:
+    paths:
+      - "components/OriginalPortraitAvatar.tsx"
+      - "public/avatars/original-rigs/**"
+      - "scripts/audit-dialect-rigs.mjs"
+      - "package.json"
+      - ".github/workflows/dialect-rig-safety.yml"
+  workflow_dispatch:
+
+jobs:
+  validate-original-artwork:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Audit all 43 original portraits and approved expression layers
+        run: npm run audit:dialects
