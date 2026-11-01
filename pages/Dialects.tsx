@@ -1398,7 +1398,7 @@ export const Dialects: React.FC = () => {
   const selectedCountryRef = React.useRef<any>(null);
   selectedCountryRef.current = selectedCountry;
   const [selectedPersona, setSelectedPersona] = React.useState<any>(null);
-  const [chatMessages, setChatMessages] = React.useState<{role: string, text: string}[]>([]);
+  const [chatMessages, setChatMessages] = React.useState<{role: string, text: string, translationEn?: string}[]>([]);
   const [chatInput, setChatInput] = React.useState('');
   const [isChatLoading, setIsChatLoading] = React.useState(false);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
@@ -1722,7 +1722,8 @@ export const Dialects: React.FC = () => {
          - Gradually increase complexity but stay within the mission's scope.
          - Act out the scenario naturally but keep the teaching goal in mind.
 
-      If this is the first message, introduce yourself briefly in the dialect and ask a simple question to start the mission.`;
+      If this is the first message, introduce yourself briefly in the dialect and ask a simple question to start the mission.
+      OUTPUT: Return a valid JSON object only, with keys \"dialectText\" (one or two short sentences in the local Arabic dialect) and \"translationEn\" (precise simple English translation). Keep English OUT of dialectText. Never translate a student message as though it were your reply.`;
 
       const response = await ai.models.generateContent({
         model: "gemini-3.8-flash",
@@ -1730,11 +1731,20 @@ export const Dialects: React.FC = () => {
           { role: 'user', parts: [{ text: systemPrompt }] },
           ...chatMessages.map(m => ({ role: m.role as any, parts: [{ text: m.text }] })),
           { role: 'user', parts: [{ text: userMsg }] }
-        ]
+        ],
+        config: { responseMimeType: 'application/json', temperature: 0.5 }
       });
 
-      const modelText = response.text || "أعتذر، حدث خطأ ما.";
-      setChatMessages(prev => [...prev, { role: 'model', text: modelText }]);
+      let modelText = 'أعتذر، حدث خطأ ما.';
+      let translationEn = '';
+      try {
+        const payload = JSON.parse((response.text || '').trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, ''));
+        if (typeof payload.dialectText === 'string' && payload.dialectText.trim()) modelText = payload.dialectText.trim();
+        if (typeof payload.translationEn === 'string') translationEn = payload.translationEn.trim();
+      } catch (parseError) {
+        console.warn('Dialect reply was not valid bilingual JSON.', parseError);
+      }
+      setChatMessages(prev => [...prev, { role: 'model', text: modelText, translationEn }]);
       captureMissionTurn(countryForTurn.id, { role: 'model', text: modelText });
       // Only authentic student work can unlock a passport. Never count prompts or replies.
       void checkMissionCompletion(countryForTurn, rank);
