@@ -105,16 +105,16 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
           aria-label={ar ? 'هل تعلم؟' : 'Did you know?'}>
           {/* Same image and soft white photographic fade as the hero, descending from the TOP. */}
           <img src={country.image} alt="" loading="lazy" aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-cover opacity-65" />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/95 via-white/88 to-[#edf1e9]/80" />
-          <div className="relative z-10 flex h-full min-h-0 flex-col justify-center gap-[clamp(3px,.6vh,7px)] px-3 py-1.5">
-            <h3 className={'text-[clamp(12px,1.06vw,15px)] font-black text-[#0a493e] arabic-font ' + (ar ? 'text-right' : 'text-left')}>
+            className="absolute inset-0 h-full w-full object-cover opacity-50" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/92 via-[#f5f9f4]/85 to-[#f3f8f3]/92" />
+          <div className="relative z-10 flex h-full min-h-0 flex-col justify-center gap-[clamp(3px,.6vh,6px)] px-3 py-1.5">
+            <h3 className={'text-[clamp(13px,1.12vw,16px)] font-black text-[#09493f] arabic-font ' + (ar ? 'text-right' : 'text-left')}>
               {ar ? 'هل تعلم؟' : 'Did you know?'}
             </h3>
-            <p className="line-clamp-2 text-right text-[clamp(10px,.91vw,13px)] font-bold leading-[1.35] text-slate-900 arabic-font"
+            <p className="line-clamp-2 text-right text-[clamp(11px,.95vw,13px)] font-extrabold leading-[1.4] text-[#112f2b] arabic-font"
               dir="rtl" title={country.culture.factAr}>{country.culture.factAr}</p>
             {country.culture.factEn && (
-              <p className="line-clamp-2 text-left text-[clamp(10px,.84vw,12px)] font-medium leading-[1.35] text-[#45615c]"
+              <p className="line-clamp-2 text-left text-[clamp(11px,.86vw,12px)] font-semibold leading-[1.4] text-[#304c47]"
                 dir="ltr" title={country.culture.factEn}>{country.culture.factEn}</p>
             )}
           </div>
