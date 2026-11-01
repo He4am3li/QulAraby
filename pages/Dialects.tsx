@@ -1716,10 +1716,10 @@ export const Dialects: React.FC = () => {
       3. ADAPTIVE TEACHING AND ENGLISH SUPPORT:
          - Detect when the learner asks in English, says "I don't understand", goes off track, or struggles repeatedly.
          - Understand the student's English fully. Do not punish a learner for using English to seek help.
-         - Keep dialectText in authentic, age-appropriate ${selectedCountry.dialect} Arabic; provide an accurate, easy English translationEn for EVERY tutor reply.
-         - When confused, explain the next step with the simplest possible local Arabic, show a very short example, and ask ONE manageable question. The English translation must make the example and instruction understandable.
+         - Teach authentic, age-appropriate ${selectedCountry.dialect} phrases; allow a simple English explanation in dialectText when the learner needs English support. Provide an accurate translationEn for each Arabic example.
+         - When confused, explain the next step in plain English first, then model the simplest possible local Arabic expression and ask ONE manageable question.
          - After English assistance, invite the learner to try the local Arabic phrase, without pretending the learner has completed the mission.
-         - Do not give long lectures, complex expressions, or several questions at once.
+         - Do not give long lectures, complex expressions, or several questions at once. Do not promote to a travel mission merely because a fixed number of chat messages has been exchanged.
       4. VISITOR GUIDELINES (Rank 0):
          - Goal: visitor passport stamp. Greet someone appropriately and engage with the specific place/landmark in the mission.
          - Use A1 vocabulary: one short instruction or question, no more than 10 simple Arabic words per sentence.
@@ -2259,7 +2259,7 @@ export const Dialects: React.FC = () => {
                       aria-label={lang === 'ar' ? 'المهمة الحالية وترجمتها' : 'Current mission and translation'}>
                       <div className="mb-1 flex shrink-0 items-center justify-between gap-2">
                         <h3 className="text-[clamp(12px,1.04vw,15px)] font-black text-emerald-900 arabic-font">
-                          {(passportLevels[selectedCountry.id] || 0) === 0 && chatMessages.length < 4 ? (lang === 'ar' ? 'اكتشف اللهجة أولًا' : 'Discover the dialect first') : (lang === 'ar' ? 'المهمة الحالية' : 'Current mission')}
+                          {(passportLevels[selectedCountry.id] || 0) === 0 && chatMessages.filter(message => message.role === 'user' && /[\u0600-\u06FF]/.test(message.text)).length < 2 ? (lang === 'ar' ? 'اكتشف اللهجة أولًا' : 'Discover the dialect first') : (lang === 'ar' ? 'المهمة الحالية' : 'Current mission')}
                         </h3>
                         <span className="shrink-0 rounded-full border border-amber-200/80 bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-800" dir="ltr">
                           {(passportLevels[selectedCountry.id] || 0) >= 3 ? '03 / 03 ✓' : ('0' + Math.min(3, (passportLevels[selectedCountry.id] || 0) + 1) + ' / 03')}
@@ -2268,7 +2268,7 @@ export const Dialects: React.FC = () => {
                       {(() => {
                         const level = Math.max(0, Math.min(3, passportLevels[selectedCountry.id] || 0));
                         const mission = level === 0 ? selectedCountry.missions?.visitor : level === 1 ? selectedCountry.missions?.resident : selectedCountry.missions?.native;
-                        return level === 0 && chatMessages.length < 4 ? (
+                        return level === 0 && chatMessages.filter(message => message.role === 'user' && /[\u0600-\u06FF]/.test(message.text)).length < 2 ? (
                           <div className="flex min-h-0 flex-1 flex-col justify-center gap-1">
                             <p className="text-right text-[clamp(11px,1vw,13px)] font-bold text-slate-800 arabic-font" dir="rtl">ابدأ بالتعارف، واستمع إلى تحية من لهجة البلد. ستتعرف على مهمة الزيارة بعد التدرّب.</p>
                             <p className="text-left text-[clamp(10px,.87vw,12px)] font-medium text-slate-500" dir="ltr">Meet your tutor and learn a local greeting first. Your visit challenge comes later.</p>
