@@ -2066,7 +2066,7 @@ export const Dialects: React.FC = () => {
         }
       />
 
-      <div className={`flex-1 ${!selectedCountry ? 'overflow-y-auto custom-scroll p-4 md:p-6' : 'overflow-hidden p-2 md:p-3 flex flex-col'} relative bg-slate-50/30 min-h-0`}>
+      <div className={`flex-1 ${!selectedCountry ? 'overflow-y-auto custom-scroll p-4 md:p-6' : 'overflow-hidden p-[clamp(5px,.7vh,9px)] flex flex-col'} relative bg-slate-50/30 min-h-0`}>
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 0.8px, transparent 0.8px)', backgroundSize: '24px 24px' }} />
         
         <AnimatePresence mode="wait">
@@ -2138,7 +2138,7 @@ export const Dialects: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: .25 }}
-              className="mx-auto flex h-full min-h-0 w-full max-w-[1680px] flex-1 flex-col overflow-hidden rounded-[24px] border border-slate-100 bg-[#f5f8f7] p-[clamp(6px,.85vh,11px)] shadow-[0_16px_50px_rgba(20,44,52,.11)]"
+              className="mx-auto flex h-full min-h-0 w-full max-w-[1680px] flex-1 flex-col overflow-hidden rounded-[20px] border border-slate-100 bg-[#f5f8f7] px-[clamp(6px,.85vh,11px)] pt-[clamp(6px,.85vh,11px)] pb-[clamp(18px,3vh,28px)] shadow-[0_16px_50px_rgba(20,44,52,.11)]"
             >
               {/* On narrow devices, keep the page itself fixed and switch between the scene and reference. */}
               <nav className="mb-2 grid h-[38px] shrink-0 grid-cols-2 gap-2 lg:hidden" aria-label={lang === 'ar' ? 'أقسام الدولة' : 'Country sections'}>
@@ -2174,7 +2174,7 @@ export const Dialects: React.FC = () => {
                 <section className={(mobileCountryPanel === 'stage' ? 'flex' : 'hidden') + ' h-full min-h-0 min-w-0 w-full flex-col lg:flex lg:w-[58%] lg:flex-1'}
                   aria-label={lang === 'ar' ? 'الشخصيات والمحادثة' : 'Characters and conversation'}>
                   {/* Clear bilingual mission brief, paired with a physical-style country passport. */}
-                  <div className="mb-[clamp(5px,.75vh,9px)] flex h-[clamp(104px,15vh,124px)] shrink-0 gap-[clamp(5px,.8vw,11px)]">
+                  <div className="mb-[clamp(5px,.75vh,9px)] flex h-[clamp(91px,11.5vh,108px)] shrink-0 gap-[clamp(5px,.8vw,11px)]">
                     <section
                       className="flex min-w-0 flex-1 flex-col justify-center overflow-hidden rounded-[13px] border border-emerald-100/80 bg-white px-[clamp(9px,1.2vw,16px)] py-[clamp(6px,.8vh,11px)] shadow-sm"
                       aria-label={lang === 'ar' ? 'المهمة الحالية وترجمتها' : 'Current mission and translation'}>
@@ -2206,23 +2206,29 @@ export const Dialects: React.FC = () => {
                     </section>
                     <button type="button"
                       onClick={() => { setPassportFocusId(selectedCountry.id); setIsPassportOpen(true); }}
-                      className={'group flex h-full w-[clamp(100px,12vw,146px)] shrink-0 flex-col items-center justify-center gap-[clamp(3px,.35vh,6px)] rounded-[13px] border px-2 py-1.5 shadow-sm transition-colors hover:border-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 ' +
+                      className={'group flex h-full w-[clamp(110px,11.8vw,148px)] shrink-0 flex-col items-center justify-center gap-[clamp(3px,.35vh,6px)] rounded-[13px] border px-2 py-1.5 shadow-sm transition-colors hover:border-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 ' +
                         ((passportLevels[selectedCountry.id] || 0) >= 1 ? 'border-amber-200 bg-[#fff9ec]' : 'border-slate-200 bg-white/85') +
                         (recentStamp?.countryId === selectedCountry.id ? ' ring-2 ring-amber-400 shadow-[0_0_22px_rgba(245,158,11,.35)]' : '')}
                       title={lang === 'ar' ? 'افتح جواز الدولة وأختام المهام' : 'Open passport and earned stamps'}
                       aria-label={lang === 'ar' ? 'عرض جواز ' + selectedCountry.nameAr : 'View ' + selectedCountry.nameEn + ' passport'}>
-                      <div className="mx-auto w-[clamp(35px,3.8vw,53px)] shrink-0">
+                      <div className="mx-auto w-[clamp(46px,4.4vw,59px)] shrink-0">
                         <DialectPassportCover country={selectedCountry} level={passportLevels[selectedCountry.id] || 0} compact/>
                       </div>
-                      <span className="block w-full whitespace-nowrap text-center text-[clamp(10px,.85vw,12px)] font-black leading-tight text-emerald-950 arabic-font" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                      <span className="block w-full whitespace-nowrap text-center text-[clamp(9px,.8vw,11px)] font-black leading-tight text-emerald-950 arabic-font" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
                         {lang === 'ar' ? 'جواز ' + selectedCountry.nameAr : selectedCountry.nameEn + ' Passport'}
                       </span>
                     </button>
                   </div>
 
-                  <div className="relative min-h-0 flex-1 overflow-hidden rounded-[18px] bg-[radial-gradient(ellipse_at_50%_60%,rgba(218,239,231,.8),rgba(249,251,249,.65)_60%,rgba(235,242,240,.6))]">
-                    {/* Each character fills the available height. Figure click selects, central orb starts/stops voice. */}
-                    <div className="absolute inset-0 grid grid-cols-2 gap-[clamp(8px,2vw,36px)] px-[clamp(8px,2vw,38px)] pb-[64px] pt-2">
+                  <div className="relative min-h-0 flex-1 overflow-hidden rounded-[18px] bg-[radial-gradient(ellipse_at_50%_45%,rgba(235,248,242,.9),rgba(247,250,248,.96)_55%,rgba(223,237,230,.95)_100%)]">
+                    {/* Diffuse ground light and soft contact shadows, without an artificial floor line. */}
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[29%] bg-gradient-to-t from-[#ddeae4]/50 to-transparent"/>
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-x-[7%] bottom-[36px] grid h-[25px] grid-cols-2 gap-[clamp(22px,4vw,60px)]">
+                      <div className="mx-auto h-[16px] w-[70%] rounded-[50%] bg-[#1c3c34]/15 blur-[10px]" />
+                      <div className="mx-auto h-[16px] w-[70%] rounded-[50%] bg-[#1c3c34]/15 blur-[10px]" />
+                    </div>
+                    {/* Reserve no unnecessary floor gap: the characters stand fully on the scene. */}
+                    <div className="absolute inset-0 grid grid-cols-2 gap-[clamp(23px,4vw,62px)] px-[clamp(5px,1vw,14px)] pb-[3px] pt-0">
                       {[
                         { char: selectedCountry.characterMale, gender: 'male' as const, isFemale: false },
                         { char: selectedCountry.characterFemale, gender: 'female' as const, isFemale: true }
@@ -2254,7 +2260,7 @@ export const Dialects: React.FC = () => {
                         );
                       })}
                     </div>
-                    <div className="absolute inset-x-0 bottom-0 z-30 flex h-[65px] items-center justify-center pointer-events-none">
+                    <div className="absolute inset-x-0 bottom-[3px] z-30 flex h-[60px] items-center justify-center pointer-events-none">
                       <div className="pointer-events-auto">
                         <DialectVoiceOrb
                           active={isLiveActive}
@@ -2270,7 +2276,7 @@ export const Dialects: React.FC = () => {
                   </div>
 
                   {/* Fixed-height, paged transcript and input: the document never needs to scroll. */}
-                  <div className="mt-[clamp(6px,.75vh,9px)] h-[clamp(163px,26%,186px)] min-h-0 shrink-0">
+                  <div className="mt-[clamp(6px,.75vh,9px)] h-[clamp(145px,18vh,158px)] min-h-0 shrink-0">
                     <DialectChatDock
                       lang={lang}
                       name={lang === 'ar' ? selectedPersona?.nameAr : selectedPersona?.nameEn}
