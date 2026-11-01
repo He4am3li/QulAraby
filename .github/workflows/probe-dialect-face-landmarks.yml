@@ -2,7 +2,8 @@ name: Probe preserved portrait face landmarks
 on:
   push:
     branches: [main]
-    paths: ['scripts/probe-dialect-face-landmarks.py']
+    paths: ['scripts/probe-dialect-face-landmarks.py', '.github/workflows/probe-dialect-face-landmarks.yml']
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
