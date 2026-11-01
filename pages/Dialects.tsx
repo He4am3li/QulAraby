@@ -2374,6 +2374,8 @@ export const Dialects: React.FC = () => {
                       listening={isListening && !isLiveActive}
                       level={passportLevels[selectedCountry.id] || 0}
                       countryName={selectedCountry.nameAr}
+                      liveActive={isLiveActive}
+                      vocabulary={selectedCountry.vocab}
                     />
                   </div>
                 </section>
