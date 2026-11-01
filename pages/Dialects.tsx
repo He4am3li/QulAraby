@@ -1705,13 +1705,13 @@ export const Dialects: React.FC = () => {
       const currentMission = missions ? (rank === 0 ? (lang === 'ar' ? missions.visitor.ar : missions.visitor.en) : rank === 1 ? (lang === 'ar' ? missions.resident.ar : missions.resident.en) : (lang === 'ar' ? missions.native.ar : missions.native.en)) : "Learn the dialect";
 
       const systemPrompt = `You are ${currentPersona.nameEn} from ${selectedCountry.nameEn}, acting as a helpful and patient language teacher.
-      Your goal is to help a BEGINNER student complete their current mission.
+      Your FIRST goal is to let a complete beginner discover and practice the selected country's dialect. Only AFTER the learner understands and tries basic expressions should you naturally introduce the passport mission. Learning the dialect is the purpose; the mission is a motivating application, never the opening topic.
       
       CURRENT MISSION: ${currentMission}
       STUDENT RANK: ${rank === 0 ? 'Visitor (Beginner)' : rank === 1 ? 'Resident (Intermediate)' : 'Native Spirit (Advanced)'}
       
       CRITICAL RULES:
-      1. STRICT DIALECT: You MUST respond ONLY in the ${selectedCountry.dialect} dialect of ${selectedCountry.nameEn}. Even if the student speaks in Modern Standard Arabic (Fusha) or English, you MUST answer in the local dialect to immerse them.
+      1. LANGUAGE BRIDGE: If the student writes in English, says they cannot speak Arabic, or requests an explanation in English, respond in clear, friendly ENGLISH first. Then teach ONE short, authentic ${selectedCountry.dialect} Arabic expression, explain exactly what it means in English, and invite them to try it. Never reply with unexplained Arabic to a complete beginner. If the student is comfortable in Arabic, teach conversationally in the local dialect.
       2. ERROR CORRECTION: If the student answers a question incorrectly, makes a grammatical mistake, or uses a word that doesn't fit the dialect, you MUST gently correct them. Provide the correct word/phrase in ${selectedCountry.dialect} and explain it simply.
       3. ADAPTIVE TEACHING AND ENGLISH SUPPORT:
          - Detect when the learner asks in English, says "I don't understand", goes off track, or struggles repeatedly.
@@ -1736,8 +1736,8 @@ export const Dialects: React.FC = () => {
          - Use the selected country's dialect, not a generic Gulf or Modern Standard Arabic accent.
          - If a phrase varies across regions, prefer a common intelligible variant and avoid invented regional claims.
 
-      If this is the first message, introduce yourself briefly in the dialect and ask a simple question to start the mission.
-      OUTPUT: Return a valid JSON object only, with keys \"dialectText\" (one or two short sentences in the local Arabic dialect) and \"translationEn\" (precise simple English translation). Keep English OUT of dialectText. Never translate a student message as though it were your reply.`;
+      On the first exchange, welcome the learner to ${selectedCountry.nameEn}, explain in English if they use English that they can explore its spoken dialect with you, and teach a short greeting before any travel task. Ask whether they want to try a greeting. Do NOT mention landmarks, mosques, attractions, mission requirements, or a passport stamp until the learner has practiced a basic phrase and signals readiness. If they ask about the mission later, explain it in simple English first when needed.
+      OUTPUT: Return valid JSON with keys \"dialectText\" and \"translationEn\". For English-speaking beginners, dialectText can start with ONE short English reassurance/instruction followed by ONE local Arabic phrase; translationEn must explain the meaning of that phrase in plain English. For Arabic-ready students, dialectText contains simple local Arabic and translationEn is its accurate English translation. Do not translate the student message as if it were your reply.`;
 
       const response = await ai.models.generateContent({
         model: "gemini-3.8-flash",
@@ -1841,10 +1841,10 @@ export const Dialects: React.FC = () => {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: persona.nameEn === country.characterFemale.nameEn ? "Kore" : "Puck" } },
           },
           systemInstruction: 'You are ' + persona.nameEn + ' from ' + country.nameEn +
-            ', a patient language teacher. Respond ONLY in ' + country.dialect +
+            ', a patient language teacher. Teach authentic ' + country.dialect +
             '. Current Mission: ' + currentMission +
-            '. Explain the current passport mission in very simple local Arabic. Speak one short sentence or question at a time. ' +
-            'If the student speaks English or seems confused, understand the English, give a tiny local Arabic example, and guide them back gently. ' +
+            '. FIRST introduce the country and its dialect; teach a greeting and let the student try it BEFORE introducing any passport mission or landmark. Speak one short sentence or question at a time. ' +
+            'If the student speaks English, says they know no Arabic, or appears lost, SPEAK ENGLISH FIRST: reassure them, explain one simple local Arabic phrase in English, and ask them to try it. Never answer their English-only confusion with unexplained Arabic. ' +
             'Do not award passport stamps, and do not assume the student knows the language. Keep responses short and conversational.',
         },
         callbacks: {
@@ -2259,7 +2259,7 @@ export const Dialects: React.FC = () => {
                       aria-label={lang === 'ar' ? 'المهمة الحالية وترجمتها' : 'Current mission and translation'}>
                       <div className="mb-1 flex shrink-0 items-center justify-between gap-2">
                         <h3 className="text-[clamp(12px,1.04vw,15px)] font-black text-emerald-900 arabic-font">
-                          {lang === 'ar' ? 'المهمة الحالية' : 'Current mission'}
+                          {(passportLevels[selectedCountry.id] || 0) === 0 && chatMessages.length < 4 ? (lang === 'ar' ? 'اكتشف اللهجة أولًا' : 'Discover the dialect first') : (lang === 'ar' ? 'المهمة الحالية' : 'Current mission')}
                         </h3>
                         <span className="shrink-0 rounded-full border border-amber-200/80 bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-800" dir="ltr">
                           {(passportLevels[selectedCountry.id] || 0) >= 3 ? '03 / 03 ✓' : ('0' + Math.min(3, (passportLevels[selectedCountry.id] || 0) + 1) + ' / 03')}
@@ -2268,7 +2268,12 @@ export const Dialects: React.FC = () => {
                       {(() => {
                         const level = Math.max(0, Math.min(3, passportLevels[selectedCountry.id] || 0));
                         const mission = level === 0 ? selectedCountry.missions?.visitor : level === 1 ? selectedCountry.missions?.resident : selectedCountry.missions?.native;
-                        return level >= 3 ? (
+                        return level === 0 && chatMessages.length < 4 ? (
+                          <div className="flex min-h-0 flex-1 flex-col justify-center gap-1">
+                            <p className="text-right text-[clamp(11px,1vw,13px)] font-bold text-slate-800 arabic-font" dir="rtl">ابدأ بالتعارف، واستمع إلى تحية من لهجة البلد. ستتعرف على مهمة الزيارة بعد التدرّب.</p>
+                            <p className="text-left text-[clamp(10px,.87vw,12px)] font-medium text-slate-500" dir="ltr">Meet your tutor and learn a local greeting first. Your visit challenge comes later.</p>
+                          </div>
+                        ) : level >= 3 ? (
                           <div className="flex flex-1 flex-col justify-center gap-1">
                             <p className="text-[13px] font-black text-emerald-800 arabic-font" dir="rtl">أكملت المهام الثلاث بنجاح، وأصبحت روح البلد!</p>
                             <p className="text-[11px] font-medium text-slate-600" dir="ltr">All three missions completed. You earned Native Spirit!</p>
