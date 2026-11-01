@@ -1752,7 +1752,7 @@ export const Dialects: React.FC = () => {
       let modelText = 'أعتذر، حدث خطأ ما.';
       let translationEn = '';
       try {
-        const payload = JSON.parse((response.text || '').trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, ''));
+        const payload = JSON.parse((response.text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, ''));
         if (typeof payload.dialectText === 'string' && payload.dialectText.trim()) modelText = payload.dialectText.trim();
         if (typeof payload.translationEn === 'string') translationEn = payload.translationEn.trim();
       } catch (parseError) {
