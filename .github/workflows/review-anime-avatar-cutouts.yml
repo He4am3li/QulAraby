@@ -1,0 +1,50 @@
+name: Review cartoon character silhouettes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/review-anime-avatar-cutouts.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: true}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.rembg
+          key: rembg-isnet-anime-v1
+      - run: python -m pip install --disable-pip-version-check 'rembg[cpu]==2.0.80' pillow numpy opencv-python-headless
+      - name: Segment stylized cultural characters
+        env:
+          OMP_NUM_THREADS: '2'
+        run: |
+          python - <<'PY'
+          import importlib.util
+          from pathlib import Path
+          from rembg import new_session
+          spec=importlib.util.spec_from_file_location('cleaner','scripts/create-transparent-dialect-avatars.py')
+          module=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          session=new_session('isnet-anime')
+          for subject in ['uae/male','saudi/female','syria/male','egypt/male','morocco/female']:
+              source=Path('public/avatars/original-rigs')/subject/'source.webp'
+              dest=Path('public/avatars/edge-review')/(subject.replace('/','_')+'_anime.webp')
+              print(subject,module.prepare(source,dest,session),flush=True)
+          PY
+      - name: Save comparison samples
+        run: |
+          git config user.name "QUL Animated Portrait Review"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/avatars/edge-review
+          if git diff --cached --quiet;then exit 0;fi
+          git commit -m "Compare stylized-character segmentation on five original portraits"
+          git push origin HEAD:main
