@@ -1,7 +1,7 @@
 import React from 'react';
 import { Send, ChevronLeft, ChevronRight, Volume2, AudioLines } from 'lucide-react';
 
-export interface DialectChatMessage { role: string; text: string }
+export interface DialectChatMessage { role: string; text: string; translationEn?: string }
 interface Props {
   lang: 'ar' | 'en';
   name?: string;
@@ -44,7 +44,9 @@ export const DialectChatDock: React.FC<Props> = ({
   const [olderPages, setOlderPages] = React.useState(0);
   React.useEffect(() => { setOlderPages(0); }, [messages.length]);
   React.useEffect(() => { setHistoryOpen(false); }, [name]);
-  const lastTutorReply = [...messages].reverse().find(msg => msg.role !== 'user')?.text || '';
+  const lastTutorMessage = [...messages].reverse().find(msg => msg.role !== 'user');
+  const lastTutorReply = lastTutorMessage?.text || '';
+  const lastTranslation = lastTutorMessage?.translationEn || '';
   const totalPages = Math.max(1, Math.ceil(messages.length / 2));
   const offset = Math.min(olderPages, totalPages - 1);
   const end = Math.max(0, messages.length - offset * 2);
@@ -81,6 +83,7 @@ export const DialectChatDock: React.FC<Props> = ({
                   (msg.role === 'user' ? 'border-blue-100 bg-blue-50' : 'border-emerald-100 bg-emerald-50')}>
                 <span className="text-[9px] font-black text-emerald-700 arabic-font">{msg.role === 'user' ? (ar ? 'أنت' : 'You') : name}</span>
                 <span className="line-clamp-2 text-[11px] font-medium leading-[1.35] text-slate-800 arabic-font" dir="auto">{msg.text}</span>
+                {!!msg.translationEn && <span lang="en" dir="ltr" className="line-clamp-1 text-[10px] text-slate-600">{msg.translationEn}</span>}
               </div>
             ))}
             {messages.length === 0 && <span className="col-span-2 self-center text-center text-xs text-slate-400 arabic-font">{ar ? 'لا توجد رسائل بعد' : 'No messages yet'}</span>}
@@ -100,6 +103,7 @@ export const DialectChatDock: React.FC<Props> = ({
                 {loading ? (ar ? 'يحضّر الرد...' : 'Preparing a response...') :
                   lastTutorReply || (ar ? 'تحدث مع الشخصية أو اكتب سؤالك لبدء التدريب.' : 'Talk to the character or type to begin practicing.')}
               </p>
+              {!!lastTranslation && <p lang="en" dir="ltr" className="line-clamp-1 text-[clamp(9px,.82vw,11px)] font-medium text-emerald-800" title={lastTranslation}>{lastTranslation}</p>}
             </div>
             {!!lastTutorReply && (
               <button type="button" onClick={() => onPronounce(lastTutorReply)}
