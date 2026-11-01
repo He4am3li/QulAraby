@@ -1796,6 +1796,7 @@ export const Dialects: React.FC = () => {
       const missions = country.missions;
       const currentMission = missions ? (rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar) : "Learn the dialect";
       liveInputBufferRef.current = '';
+      let liveTutorText = '';
       const flushLiveInput = () => {
         if (!stillCurrent()) return;
         const speech = liveInputBufferRef.current.replace(/\s+/g, ' ').trim();
@@ -1812,13 +1813,16 @@ export const Dialects: React.FC = () => {
         config: {
           responseModalities: [Modality.AUDIO],
           inputAudioTranscription: {},
+          outputAudioTranscription: {},
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: persona.nameEn === country.characterFemale.nameEn ? "Kore" : "Puck" } },
           },
           systemInstruction: 'You are ' + persona.nameEn + ' from ' + country.nameEn +
             ', a patient language teacher. Respond ONLY in ' + country.dialect +
             '. Current Mission: ' + currentMission +
-            '. Correct the student mistakes immediately. Keep responses short and conversational.',
+            '. Explain the current passport mission in very simple local Arabic. Speak one short sentence or question at a time. ' +
+            'If the student speaks English or seems confused, understand the English, give a tiny local Arabic example, and guide them back gently. ' +
+            'Do not award passport stamps, and do not assume the student knows the language. Keep responses short and conversational.',
         },
         callbacks: {
           onopen: () => {
@@ -1842,8 +1846,23 @@ export const Dialects: React.FC = () => {
             if (typeof spokenText === 'string' && spokenText.trim()) {
               liveInputBufferRef.current += ' ' + spokenText.trim();
             }
-            if (message.serverContent?.turnComplete && liveInputBufferRef.current.trim()) {
-              flushLiveInput();
+            const tutorFragment = message.serverContent?.outputTranscription?.text;
+            if (typeof tutorFragment === 'string' && tutorFragment.trim()) {
+              // Native live transcription follows the generated voice in near real time.
+              liveTutorText += tutorFragment;
+              const caption = liveTutorText.trim();
+              setCurrentSpeechText(caption);
+              if (selectedCountryRef.current?.id === country.id) {
+                setChatMessages(prev => {
+                  const last = prev[prev.length - 1];
+                  if (last?.role === 'live-model') return [...prev.slice(0, -1), { ...last, text: caption }];
+                  return [...prev, { role: 'live-model', text: caption }];
+                });
+              }
+            }
+            if (message.serverContent?.turnComplete) {
+              if (liveInputBufferRef.current.trim()) flushLiveInput();
+              liveTutorText = '';
             }
             // An audio message may contain several independent PCM parts.
             const parts = message.serverContent?.modelTurn?.parts || [];
@@ -1856,7 +1875,11 @@ export const Dialects: React.FC = () => {
                   .then(() => playLiveAudio(base64Audio, generation, version));
               }
             }
-            if (message.serverContent?.interrupted) clearLiveAudio();
+            if (message.serverContent?.interrupted) {
+              clearLiveAudio();
+              liveTutorText = '';
+              setCurrentSpeechText('');
+            }
           },
           onclose: () => {
             if (!stillCurrent()) return;
