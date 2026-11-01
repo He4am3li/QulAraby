@@ -6,6 +6,7 @@ on:
       - feat/dialect-43-editable-artwork-batch-20261101
     paths:
       - 'scripts/build-43-character-artwork.py'
+      - 'scripts/character-artwork-requirements.txt'
       - '.github/workflows/build-43-character-artwork.yml'
   workflow_dispatch:
 
