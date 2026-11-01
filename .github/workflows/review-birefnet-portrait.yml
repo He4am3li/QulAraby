@@ -1,0 +1,49 @@
+name: Evaluate advanced portrait cutouts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/review-birefnet-portrait.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: true, fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.rembg
+          key: rembg-birefnet-portrait-v1
+      - run: python -m pip install --disable-pip-version-check 'rembg[cpu]==2.0.80' pillow numpy opencv-python-headless
+      - name: Compare advanced portrait masks for five difficult images
+        env:
+          OMP_NUM_THREADS: '2'
+        run: |
+          python - <<'PY'
+          import importlib.util
+          from pathlib import Path
+          from rembg import new_session
+          spec=importlib.util.spec_from_file_location('avatar_cut','scripts/create-transparent-dialect-avatars.py')
+          module=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          session=new_session('birefnet-portrait')
+          for subject in ['uae/male','saudi/female','syria/male','morocco/female','egypt/male']:
+              source=Path('public/avatars/original-rigs')/subject/'source.webp'
+              target=Path('public/avatars/edge-review')/(subject.replace('/','_')+'_birefnet.webp')
+              print(subject,module.prepare(source,target,session),flush=True)
+          PY
+      - name: Publish advanced quality comparisons
+        run: |
+          git config user.name "QUL Portrait Quality Review"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/avatars/edge-review
+          git commit -m "Compare high-fidelity portrait matting on five sample characters"
+          git push origin HEAD:main
