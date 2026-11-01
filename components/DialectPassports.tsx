@@ -124,7 +124,7 @@ export function DialectPassportCover({
     <div
       className={'relative isolate flex aspect-[88/125] w-full flex-col items-center justify-between overflow-hidden rounded-[6px] border text-center shadow-[inset_3px_0_7px_rgba(255,255,255,.12),inset_-4px_0_7px_rgba(0,0,0,.24),0_9px_20px_rgba(15,23,42,.2)] transition-all duration-700 ' +
         (compact ? 'px-[2px] py-[3px]' : 'px-[clamp(8px,1.1vw,16px)] py-[clamp(12px,1.3vw,20px)]') +
-        (unlocked ? ' border-amber-200/30 opacity-100' : ' border-slate-300/40 grayscale-[.85] saturate-[.4] opacity-50')}
+        (unlocked ? ' border-amber-200/30 opacity-100' : ' border-amber-200/25 grayscale-[.38] saturate-[.64] opacity-[.79]')}
       style={{
         backgroundColor: base,
         backgroundImage: 'radial-gradient(ellipse at 65% 20%,rgba(255,255,255,.065),transparent 64%), repeating-linear-gradient(98deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 4px),linear-gradient(120deg,rgba(0,0,0,.18),transparent 12%,transparent 85%,rgba(0,0,0,.22))',
