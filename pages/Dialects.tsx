@@ -1804,9 +1804,9 @@ export const Dialects: React.FC = () => {
       const translationStreams: Record<'tutor' | 'student', {
         timer: ReturnType<typeof setTimeout> | null; busy: boolean;
         pending: { text: string; id: number } | null;
-        lastRequested: string; lastId: number;
+        lastRequested: string; lastId: number; lastDeliveredLength: number;
       }> = {
-        tutor: { timer: null, busy: false, pending: null, lastRequested: '', lastId: -1 },
+        tutor: { timer: null, busy: false, pending: null, lastRequested: '', lastId: -1, lastDeliveredLength: 0, lastDeliveredLength: 0 },
         student: { timer: null, busy: false, pending: null, lastRequested: '', lastId: -1 }
       };
       const requestTranslation = (speaker: 'tutor' | 'student', text: string, id: number, immediate = false) => {
@@ -1821,6 +1821,7 @@ export const Dialects: React.FC = () => {
           if (queue.lastRequested === snapshot.text && queue.lastId === snapshot.id) return;
           queue.pending = null;
           queue.lastRequested = snapshot.text;
+          if (queue.lastId !== snapshot.id) queue.lastDeliveredLength = 0;
           queue.lastId = snapshot.id;
           queue.busy = true;
           try {
@@ -1838,7 +1839,11 @@ export const Dialects: React.FC = () => {
             if (translation && stillCurrent() && selectedCountryRef.current?.id === country.id) {
               setChatMessages(prev => {
                 const index = prev.findLastIndex(msg => msg.liveTurnKey === speaker + ':' + snapshot.id);
-                if (index < 0 || prev[index].text !== snapshot.text) return prev;
+                if (index < 0 || !prev[index].text.startsWith(snapshot.text)) return prev;
+                // Keep a useful partial translation on screen while newer words arrive.
+                // Never overwrite a newer result with a shorter, older snapshot.
+                if (queue.lastDeliveredLength > snapshot.text.length && queue.lastId === snapshot.id) return prev;
+                queue.lastDeliveredLength = snapshot.text.length;
                 return prev.map((msg, i) => i === index ? { ...msg, translationEn: translation } : msg);
               });
             }
@@ -1847,11 +1852,11 @@ export const Dialects: React.FC = () => {
           } finally {
             queue.busy = false;
             if (queue.pending && stillCurrent()) {
-              queue.timer = setTimeout(run, 300);
+              queue.timer = setTimeout(run, 180);
             }
           }
         };
-        if (!queue.busy) queue.timer = setTimeout(run, immediate ? 0 : 850);
+        if (!queue.busy) queue.timer = setTimeout(run, immediate ? 0 : 350);
       };
       const flushLiveInput = () => {
         if (!stillCurrent()) return;
@@ -1920,7 +1925,7 @@ export const Dialects: React.FC = () => {
               if (selectedCountryRef.current?.id === country.id) {
                 setChatMessages(prev => {
                   const last = prev[prev.length - 1];
-                  if (last?.role === 'live-model' && last.liveTurnKey === 'tutor:' + tutorTurnId) return [...prev.slice(0, -1), { ...last, text: caption, translationEn: last.text === caption ? last.translationEn : undefined }];
+                  if (last?.role === 'live-model' && last.liveTurnKey === 'tutor:' + tutorTurnId) return [...prev.slice(0, -1), { ...last, text: caption, translationEn: last.translationEn }];
                   return [...prev, { role: 'live-model', text: caption, liveTurnKey: 'tutor:' + tutorTurnId }];
                 });
               }
