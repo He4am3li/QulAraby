@@ -1872,7 +1872,13 @@ export const Dialects: React.FC = () => {
             const tutorFragment = message.serverContent?.outputTranscription?.text;
             if (typeof tutorFragment === 'string' && tutorFragment.trim()) {
               // Native live transcription follows the generated voice in near real time.
-              liveTutorText += tutorFragment;
+              const fragment = tutorFragment.trim();
+              // Live providers may send either deltas or cumulative transcript snapshots.
+              // Avoid repeating words when the next snapshot already includes previous text.
+              const previous = liveTutorText.trim();
+              liveTutorText = fragment.startsWith(previous) && previous
+                ? fragment
+                : previous.endsWith(fragment) ? previous : (previous ? previous + ' ' + fragment : fragment);
               const caption = liveTutorText.trim();
               setCurrentSpeechText(caption);
               if (selectedCountryRef.current?.id === country.id) {
