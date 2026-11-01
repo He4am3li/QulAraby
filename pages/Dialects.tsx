@@ -1805,6 +1805,50 @@ export const Dialects: React.FC = () => {
       const missions = country.missions;
       const currentMission = missions ? (rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar) : "Learn the dialect";
       liveInputBufferRef.current = '';
+      liveOutputBufferRef.current = '';
+      liveTranslationCallsRef.current = 0;
+      liveCaptionEpochRef.current++;
+      setLiveTranscript('');
+      setLiveTranslation('');
+      setLiveTranslating(false);
+
+      // Throttle translation calls; never request a translation for each audio sample.
+      const translatePartialCaption = () => {
+        if (!stillCurrent() || liveCaptionTimerRef.current || liveTranslationCallsRef.current >= 3) return;
+        if (liveOutputBufferRef.current.trim().length < 12) return;
+        const epoch = liveCaptionEpochRef.current;
+        liveCaptionTimerRef.current = setTimeout(() => {
+          liveCaptionTimerRef.current = null;
+          if (!stillCurrent() || epoch !== liveCaptionEpochRef.current) return;
+          const snapshot = liveOutputBufferRef.current.trim();
+          if (!snapshot) return;
+          liveTranslationCallsRef.current++;
+          setLiveTranslating(true);
+          void translateDialectToEnglish(country.id, snapshot).then(translation => {
+            if (stillCurrent() && epoch === liveCaptionEpochRef.current) setLiveTranslation(translation);
+          }).finally(() => {
+            if (stillCurrent() && epoch === liveCaptionEpochRef.current) setLiveTranslating(false);
+          });
+        }, 1050);
+      };
+      const commitLiveTutorTurn = () => {
+        if (liveCaptionTimerRef.current) clearTimeout(liveCaptionTimerRef.current);
+        liveCaptionTimerRef.current = null;
+        const completed = liveOutputBufferRef.current.replace(/\s+/g, ' ').trim();
+        liveOutputBufferRef.current = '';
+        liveCaptionEpochRef.current++;
+        liveTranslationCallsRef.current = 0;
+        setLiveTranscript('');
+        setLiveTranslation('');
+        setLiveTranslating(false);
+        if (!completed || !stillCurrent()) return;
+        const replyId = crypto.randomUUID();
+        setChatMessages(prev => [...prev, { role: 'model', text: completed, id: replyId }]);
+        void translateDialectToEnglish(country.id, completed).then(translationEn => {
+          if (selectedCountryRef.current?.id !== country.id) return;
+          setChatMessages(prev => prev.map(msg => msg.id === replyId ? { ...msg, translationEn } : msg));
+        });
+      };
       const flushLiveInput = () => {
         if (!stillCurrent()) return;
         const speech = liveInputBufferRef.current.replace(/\s+/g, ' ').trim();
@@ -1821,13 +1865,23 @@ export const Dialects: React.FC = () => {
         config: {
           responseModalities: [Modality.AUDIO],
           inputAudioTranscription: {},
+          outputAudioTranscription: {},
           speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: persona.nameEn === country.characterFemale.nameEn ? "Kore" : "Puck" } },
+            voiceConfig: { prebuiltVoiceConfig: {
+              voiceName: getDialectVoiceName(country.id, persona.nameEn === country.characterFemale.nameEn ? 'female' : 'male')
+            } },
           },
-          systemInstruction: 'You are ' + persona.nameEn + ' from ' + country.nameEn +
-            ', a patient language teacher. Respond ONLY in ' + country.dialect +
-            '. Current Mission: ' + currentMission +
-            '. Correct the student mistakes immediately. Keep responses short and conversational.',
+          systemInstruction: [
+            'You are ' + persona.nameEn + ' from ' + country.nameEn + ', a patient language teacher.',
+            getDialectTextDirection(country.id),
+            getDialectVoiceDirection(country.id, persona.nameEn === country.characterFemale.nameEn ? 'female' : 'male'),
+            'Current mission: ' + currentMission,
+            'Respond ONLY in the selected Arabic dialect and keep that local variety throughout.',
+            rank === 0
+              ? 'BEGINNER VISITOR: Speak one very short sentence at a time, preferably 4-10 simple words. Ask exactly one easy question per turn. Begin with a local greeting and guide the learner to complete the landmark mission through their own words. If confused, repeat slowly and give one simple phrase to imitate. Never claim the learner earned the passport stamp.'
+              : 'Keep replies short and mission-focused, and correct learner errors with a natural local example.',
+            'Do not read English translations aloud: subtitles appear separately.'
+          ].join(' '),
         },
         callbacks: {
           onopen: () => {
@@ -1851,8 +1905,16 @@ export const Dialects: React.FC = () => {
             if (typeof spokenText === 'string' && spokenText.trim()) {
               liveInputBufferRef.current += ' ' + spokenText.trim();
             }
-            if (message.serverContent?.turnComplete && liveInputBufferRef.current.trim()) {
-              flushLiveInput();
+            const outputText = message.serverContent?.outputTranscription?.text;
+            if (typeof outputText === 'string' && outputText.trim()) {
+              liveOutputBufferRef.current = (liveOutputBufferRef.current + ' ' + outputText.trim()).trim().slice(0, 1800);
+              setLiveTranscript(liveOutputBufferRef.current);
+              setCurrentSpeechText(liveOutputBufferRef.current);
+              translatePartialCaption();
+            }
+            if (message.serverContent?.turnComplete) {
+              if (liveInputBufferRef.current.trim()) flushLiveInput();
+              commitLiveTutorTurn();
             }
             // An audio message may contain several independent PCM parts.
             const parts = message.serverContent?.modelTurn?.parts || [];
@@ -1865,7 +1927,16 @@ export const Dialects: React.FC = () => {
                   .then(() => playLiveAudio(base64Audio, generation, version));
               }
             }
-            if (message.serverContent?.interrupted) clearLiveAudio();
+            if (message.serverContent?.interrupted) {
+              clearLiveAudio();
+              if (liveCaptionTimerRef.current) clearTimeout(liveCaptionTimerRef.current);
+              liveCaptionTimerRef.current = null;
+              liveOutputBufferRef.current = '';
+              liveCaptionEpochRef.current++;
+              setLiveTranscript('');
+              setLiveTranslation('');
+              setLiveTranslating(false);
+            }
           },
           onclose: () => {
             if (!stillCurrent()) return;
