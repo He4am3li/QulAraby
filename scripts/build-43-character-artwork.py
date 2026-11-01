@@ -54,11 +54,43 @@ def build_masks(image, pose_estimator, face_estimator):
     person_alpha = np.asarray(image.getchannel("A")) > 0
     masks = {part: np.zeros((h, w), np.uint8) for part in PARTS}
     notes = []
-    confidence = {"face": False, "pose": False, "arms": []}
+    confidence = {"face": False, "face_method": "none", "pose": False, "arms": []}
+    face = face_out.multi_face_landmarks[0].landmark if face_out.multi_face_landmarks else None
 
-    if face_out.multi_face_landmarks:
-        face = face_out.multi_face_landmarks[0].landmark
+    # Small full-body portraits make the face tiny. First recover a face-only
+    # high-resolution inference crop from the pose nose and shoulders.
+    # Upscaling here is ONLY for landmark detection; output pixels are untouched.
+    if face is None and pose_out.pose_landmarks:
+        from types import SimpleNamespace
+        landmarks = pose_out.pose_landmarks.landmark
+        nose, ls, rs = landmarks[0], landmarks[11], landmarks[12]
+        shoulders = max(38.0, math.dist((ls.x * w, ls.y * h), (rs.x * w, rs.y * h)))
+        if nose.visibility >= .25:
+            for multiplier in (1.0, 1.4, 1.9):
+                half_w = max(38, int(shoulders * .66 * multiplier))
+                half_h = max(49, int(shoulders * .89 * multiplier))
+                cx = int(nose.x * w)
+                cy = int(nose.y * h - .20 * half_h)
+                x0, x1 = max(0, cx - half_w), min(w, cx + half_w)
+                y0, y1 = max(0, cy - half_h), min(h, cy + half_h)
+                if x1 - x0 < 32 or y1 - y0 < 36:
+                    continue
+                crop = rgb[y0:y1, x0:x1]
+                upscale = min(6.0, max(1.0, 512.0 / max(crop.shape[:2])))
+                scan = cv2.resize(crop, None, fx=upscale, fy=upscale, interpolation=cv2.INTER_CUBIC)
+                candidate = face_estimator.process(scan)
+                if candidate.multi_face_landmarks:
+                    detected = candidate.multi_face_landmarks[0].landmark
+                    face = [SimpleNamespace(x=(x0 + point.x * (x1 - x0)) / w,
+                                            y=(y0 + point.y * (y1 - y0)) / h)
+                            for point in detected]
+                    confidence["face_method"] = "pose_guided_crop"
+                    break
+
+    if face is not None:
         confidence["face"] = True
+        if confidence["face_method"] == "none":
+            confidence["face_method"] = "full_portrait"
         xy = np.array([(p.x * w, p.y * h) for p in face], np.float32)
         xmin, ymin = xy.min(axis=0)
         xmax, ymax = xy.max(axis=0)
