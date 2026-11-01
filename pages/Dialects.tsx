@@ -1399,6 +1399,29 @@ export const Dialects: React.FC = () => {
   selectedCountryRef.current = selectedCountry;
   const [selectedPersona, setSelectedPersona] = React.useState<any>(null);
   const [chatMessages, setChatMessages] = React.useState<{role: string, text: string, translationEn?: string, liveTurnKey?: string}[]>([]);
+  type LearningJourney = { turns: {role: string; text: string; translationEn?: string}[]; lastPracticed: string; visits: number };
+  const [learningJourneys, setLearningJourneys] = React.useState<Record<string, LearningJourney>>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('qul_dialect_learning_journeys_v1') || '{}');
+      return saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {};
+    } catch { return {}; }
+  });
+  const learningJourneysRef = React.useRef(learningJourneys);
+  learningJourneysRef.current = learningJourneys;
+  React.useEffect(() => {
+    try { localStorage.setItem('qul_dialect_learning_journeys_v1', JSON.stringify(learningJourneys)); } catch (_) {}
+  }, [learningJourneys]);
+  const updateJourney = (countryId: string, turn: {role: string; text: string; translationEn?: string}) => {
+    if (!countryId || !turn.text.trim()) return;
+    setLearningJourneys(previous => ({
+      ...previous,
+      [countryId]: {
+        turns: [...(previous[countryId]?.turns || []), turn].slice(-24),
+        lastPracticed: new Date().toISOString(),
+        visits: previous[countryId]?.visits || 1
+      }
+    }));
+  };
   const [chatInput, setChatInput] = React.useState('');
   const [isChatLoading, setIsChatLoading] = React.useState(false);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
@@ -1570,7 +1593,16 @@ export const Dialects: React.FC = () => {
         ? `مرحباً بك في ${selectedCountry.nameAr}! أنا ${defaultChar.nameAr}، يسعدني التحدث معك بلهجتنا.`
         : `Welcome to ${selectedCountry.nameEn}! I'm ${defaultChar.nameEn}, happy to chat in our dialect.`;
       // Greeting remains available as speech from the selected tutor, not as a duplicate chat tile.
-      setChatMessages([]);
+      const previousJourney = learningJourneysRef.current[selectedCountry.id];
+      setChatMessages(previousJourney?.turns || []);
+      setLearningJourneys(previous => ({
+        ...previous,
+        [selectedCountry.id]: {
+          turns: previous[selectedCountry.id]?.turns || [],
+          lastPracticed: previous[selectedCountry.id]?.lastPracticed || '',
+          visits: (previous[selectedCountry.id]?.visits || 0) + 1
+        }
+      }));
     } else {
       setSelectedPersona(null);
       setChatMessages([]);
@@ -1693,6 +1725,7 @@ export const Dialects: React.FC = () => {
     const countryForTurn = selectedCountry;
     if (!overrideInput) setChatInput('');
     setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    updateJourney(countryForTurn.id, { role: 'user', text: userMsg });
     captureMissionTurn(countryForTurn.id, { role: 'user', text: userMsg, authored: !overrideInput });
     setIsChatLoading(true);
 
@@ -1704,7 +1737,16 @@ export const Dialects: React.FC = () => {
       const missions = (selectedCountry as any).missions;
       const currentMission = missions ? (rank === 0 ? (lang === 'ar' ? missions.visitor.ar : missions.visitor.en) : rank === 1 ? (lang === 'ar' ? missions.resident.ar : missions.resident.en) : (lang === 'ar' ? missions.native.ar : missions.native.en)) : "Learn the dialect";
 
-      const systemPrompt = `You are ${currentPersona.nameEn} from ${selectedCountry.nameEn}, acting as a helpful and patient language teacher.
+      const journey = learningJourneysRef.current[countryForTurn.id];
+      const priorTurns = journey?.turns || [];
+      const returning = (journey?.visits || 0) > 1 && priorTurns.length > 0;
+      const systemPrompt = `LEARNER CONTINUITY: ${returning ? 'RETURNING LEARNER. Do not introduce yourself again. Continue from previous practice, briefly acknowledge their return, and offer the next small step.' : 'New learner: introduce yourself once, without assuming their proficiency.'}
+      Last practice: ${journey?.lastPracticed || 'not recorded'}.
+      Recent learner history: ${JSON.stringify(priorTurns.slice(-12))}.
+      LEARNER LEVEL: A single correct dialect greeting NEVER proves fluency. Treat prior known phrases as isolated knowledge. If they greet you in Arabic, answer naturally in the local dialect with ONE short phrase and its easy English meaning, then ask a very simple question. If they hesitate, switch immediately to supportive English, model one phrase and ask them to repeat it. Never shame the learner or restart the whole lesson. Match the language of their most recent message; English-language questions get English guidance with small Arabic examples.
+      DISTINGUISH PASSPORT STAMPS FROM LANGUAGE PROFICIENCY. The passport stage is not a CEFR grade; keep scaffolding even after earning stamps.
+      Teach one item per turn, check comprehension, and remember what was already practiced.
+      You are ${currentPersona.nameEn} from ${selectedCountry.nameEn}, acting as a helpful and patient language teacher.
       Your FIRST goal is to let a complete beginner discover and practice the selected country's dialect. Only AFTER the learner understands and tries basic expressions should you naturally introduce the passport mission. Learning the dialect is the purpose; the mission is a motivating application, never the opening topic.
       
       CURRENT MISSION: ${currentMission}
@@ -1736,7 +1778,7 @@ export const Dialects: React.FC = () => {
          - Use the selected country's dialect, not a generic Gulf or Modern Standard Arabic accent.
          - If a phrase varies across regions, prefer a common intelligible variant and avoid invented regional claims.
 
-      On the first exchange, welcome the learner to ${selectedCountry.nameEn}, explain in English if they use English that they can explore its spoken dialect with you, and teach a short greeting before any travel task. Ask whether they want to try a greeting. Do NOT mention landmarks, mosques, attractions, mission requirements, or a passport stamp until the learner has practiced a basic phrase and signals readiness. If they ask about the mission later, explain it in simple English first when needed.
+      Only if this is a NEW learner, on the first exchange, welcome the learner to ${selectedCountry.nameEn}, explain in English if they use English that they can explore its spoken dialect with you, and teach a short greeting before any travel task. Ask whether they want to try a greeting. Do NOT mention landmarks, mosques, attractions, mission requirements, or a passport stamp until the learner has practiced a basic phrase and signals readiness. If they ask about the mission later, explain it in simple English first when needed.
       OUTPUT: Return valid JSON with keys \"dialectText\" and \"translationEn\". For English-speaking beginners, dialectText can start with ONE short English reassurance/instruction followed by ONE local Arabic phrase; translationEn must explain the meaning of that phrase in plain English. For Arabic-ready students, dialectText contains simple local Arabic and translationEn is its accurate English translation. Do not translate the student message as if it were your reply.`;
 
       const response = await ai.models.generateContent({
@@ -1759,6 +1801,7 @@ export const Dialects: React.FC = () => {
         console.warn('Dialect reply was not valid bilingual JSON.', parseError);
       }
       setChatMessages(prev => [...prev, { role: 'model', text: modelText, translationEn }]);
+      updateJourney(countryForTurn.id, { role: 'model', text: modelText, translationEn });
       captureMissionTurn(countryForTurn.id, { role: 'model', text: modelText });
       // Only authentic student work can unlock a passport. Never count prompts or replies.
       void checkMissionCompletion(countryForTurn, rank);
@@ -1795,6 +1838,9 @@ export const Dialects: React.FC = () => {
       const rank = passportLevelsRef.current[country.id] || 0;
       const missions = country.missions;
       const currentMission = missions ? (rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar) : "Learn the dialect";
+      const journey = learningJourneysRef.current[country.id];
+      const returningLearner = (journey?.visits || 0) > 1 && (journey?.turns?.length || 0) > 0;
+      const recentContext = (journey?.turns || []).slice(-10).map(t => t.role + ': ' + t.text.slice(0, 180)).join(' | ');
       liveInputBufferRef.current = '';
       let liveTutorText = '';
       // Throttled progressive translation of live transcription snapshots.
@@ -1864,6 +1910,7 @@ export const Dialects: React.FC = () => {
         liveInputBufferRef.current = '';
         if (speech.length < 3) return;
         captureMissionTurn(country.id, { role: 'user', text: speech, authored: true });
+        updateJourney(country.id, { role: 'user', text: speech });
         if (selectedCountryRef.current?.id === country.id) {
           setChatMessages(prev => [...prev, { role: 'user', text: speech, liveTurnKey: 'student:' + studentTurnId }]);
           requestTranslation('student', speech, studentTurnId, true);
@@ -1883,7 +1930,10 @@ export const Dialects: React.FC = () => {
           systemInstruction: 'You are ' + persona.nameEn + ' from ' + country.nameEn +
             ', a patient language teacher. Teach authentic ' + country.dialect +
             '. Current Mission: ' + currentMission +
-            '. FIRST introduce the country and its dialect; teach a greeting and let the student try it BEFORE introducing any passport mission or landmark. Speak one short sentence or question at a time. ' +
+            (returningLearner
+              ? '. RETURNING LEARNER: Do not introduce yourself or restart the greeting lesson. Continue naturally from their previously practiced expressions. Prior conversation: ' + recentContext + '. '
+              : '. NEW LEARNER: Introduce yourself once, teach one greeting and let the student try it before discussing passport missions or landmarks. ') +
+            'A learner who knows one greeting may still know no other Arabic. Reply briefly in the authentic local dialect, explain the meaning in easy English, ask ONE easy follow-up, and switch to English immediately when they hesitate or ask in English. Never assume fluency from one sentence. Speak one short sentence or question at a time. ' +
             'If the student speaks English, says they know no Arabic, or appears lost, SPEAK ENGLISH FIRST: reassure them, explain one simple local Arabic phrase in English, and ask them to try it. Never answer their English-only confusion with unexplained Arabic. ' +
             'Do not award passport stamps, and do not assume the student knows the language. Keep responses short and conversational.',
         },
@@ -1933,7 +1983,10 @@ export const Dialects: React.FC = () => {
             if (message.serverContent?.turnComplete) {
               if (liveInputBufferRef.current.trim()) flushLiveInput();
               const completedTutorReply = liveTutorText.trim();
-              if (completedTutorReply) requestTranslation('tutor', completedTutorReply, tutorTurnId, true);
+              if (completedTutorReply) {
+                requestTranslation('tutor', completedTutorReply, tutorTurnId, true);
+                updateJourney(country.id, { role: 'model', text: completedTutorReply });
+              }
               liveTutorText = '';
               tutorTurnId++;
             }
@@ -2381,7 +2434,7 @@ export const Dialects: React.FC = () => {
                             onSelect={() => {
                               stopLiveConversation();
                               setSelectedPersona(char);
-                              setChatMessages([]);
+                              setChatMessages(learningJourneysRef.current[selectedCountry.id]?.turns || []);
                             }}
                           />
                         );
