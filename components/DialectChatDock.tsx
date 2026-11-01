@@ -46,7 +46,7 @@ export const DialectChatDock: React.FC<Props> = ({
   const [olderPages, setOlderPages] = React.useState(0);
   React.useEffect(() => { setOlderPages(0); }, [messages.length]);
   React.useEffect(() => { setHistoryOpen(false); }, [name]);
-  React.useEffect(() => { if (liveActive) { setHistoryOpen(true); setOlderPages(0); } }, [liveActive]);
+  React.useEffect(() => { setHistoryOpen(liveActive); setOlderPages(0); }, [liveActive]);
   const lastTutorMessage = [...messages].reverse().find(msg => msg.role !== 'user');
   const lastTutorReply = lastTutorMessage?.text || '';
   const lastTranslation = lastTutorMessage?.translationEn || '';
@@ -79,8 +79,8 @@ export const DialectChatDock: React.FC<Props> = ({
           <button type="button" disabled={offset === totalPages - 1} onClick={() => setOlderPages(p => Math.min(totalPages - 1, p + 1))}
             className="rounded-lg border border-white/15 bg-white/10 p-1 text-cyan-100 hover:bg-white/20 disabled:opacity-20"
             aria-label={ar ? 'السابق' : 'Older'}><ChevronRight size={15}/></button>
-          <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden rounded-xl border border-cyan-300/15 bg-black/25 p-1.5" aria-live="polite">
-            <div className="grid grid-cols-2 gap-1 border-b border-white/15 pb-1 text-[10px] font-bold">
+          <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden rounded-xl border border-cyan-300/25 bg-[#061a27]/80 p-1.5 shadow-[inset_0_0_22px_rgba(34,211,238,.08)]" aria-live="polite">
+            <div className="grid grid-cols-2 gap-1 border-b border-cyan-300/25 pb-1 text-[10px] font-bold tracking-wide">
               <span className="text-right text-emerald-200" dir="rtl">العربية</span>
               <span className="text-left text-sky-200" dir="ltr">English</span>
             </div>
@@ -88,11 +88,11 @@ export const DialectChatDock: React.FC<Props> = ({
               <div key={end - visible.length + i} className={"grid min-h-0 flex-1 grid-cols-2 gap-1 rounded-xl border p-1.5 transition-colors " + (msg.role === "user" ? "border-sky-300/25 bg-sky-300/10" : "border-emerald-300/25 bg-emerald-300/10")}>
                 <div dir="rtl" className="min-w-0 text-right">
                   <span className="block text-[9px] font-bold text-emerald-300">{msg.role === 'user' ? 'الطالب' : (name || 'المعلم')}</span>
-                  <p className="line-clamp-2 text-[11px] leading-snug text-white arabic-font" lang="ar">{/[\u0600-\u06ff]/.test(msg.text) ? msg.text : '…'}</p>
+                  <p className="line-clamp-2 text-[11px] leading-snug text-white arabic-font" lang="ar">{/[\u0600-\u06ff]/.test(msg.text) ? msg.text : (msg.translationEn && /[\u0600-\u06ff]/.test(msg.translationEn) ? msg.translationEn : 'جارٍ ترجمة الكلام…')}</p>
                 </div>
                 <div dir="ltr" className="min-w-0 border-l border-white/15 pl-1.5 text-left">
                   <span className="block text-[9px] font-bold text-sky-300">{msg.role === 'user' ? 'Student' : 'Tutor'}</span>
-                  <p className="line-clamp-2 text-[11px] leading-snug text-white" lang="en">{msg.translationEn || (/^[^\u0600-\u06ff]+$/.test(msg.text) ? msg.text : 'Translation pending…')}</p>
+                  <p className="line-clamp-2 text-[11px] leading-snug text-white" lang="en">{!/[\u0600-\u06ff]/.test(msg.text) ? msg.text : (msg.translationEn && !/[\u0600-\u06ff]/.test(msg.translationEn) ? msg.translationEn : 'Translation pending…')}</p>
                 </div>
               </div>
             ))}
