@@ -28,3 +28,12 @@
 
 ## ضوابط النشر
 التصميم الأصلي للشخصية هو المرجع الوحيد. لا تنشر نموذجًا بديلًا على أنه الأصل؛ مرّر كل شخصية عبر الموافقة البصرية قبل التشغيل الحي.
+
+
+## Runtime integration, November 2026
+- components/OriginalPortraitAvatar.tsx checks each original portrait at /avatars/original-rigs/{country}/{gender}/source.webp. When present, the original portrait is used for conservative, identity-preserving breathing and selection motion. If absent, the current 3D tutor remains active.
+- components/Interactive3DTutor.tsx now uses this loader for the 43 characters other than Salman. Salman's original 42-layer rig remains unchanged.
+- QUL_original_portraits_for_GitHub.zip contains 43 source.webp images, 43 identity records, and an independently SHA-256 verified manifest. It is a GitHub-ready archive, not a Live2D rig.
+- .github/workflows/install-qul-original-portraits.yml installs the archive when it is uploaded to the root of main, checks every expected portrait's checksum and ZIP path, then commits the portraits so Vercel can deploy them.
+- Do not claim portrait installation until the GitHub Actions workflow has succeeded and the images are returned by the live site. The GitHub connector's text-only create_file API cannot directly upload the prepared local binary portraits. Without the archive upload, the website safely keeps its 3D fallbacks.
+- The animation available from a whole original photo is limited to modest full-body breathing, tilt and selection. True synchronized eyelid, lip, head, hands and arms animation still requires manually reviewed multi-layer source artwork, as with Salman.
