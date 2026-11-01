@@ -1,0 +1,72 @@
+name: Install QUL original character portraits
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'QUL_original_portraits_for_GitHub.zip'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: install-qul-original-portraits
+  cancel-in-progress: false
+
+jobs:
+  install:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Verify and install 43 original character portraits
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f QUL_original_portraits_for_GitHub.zip ]; then
+            echo 'Nothing to install'
+            exit 0
+          fi
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, zipfile
+          root=pathlib.Path.cwd()
+          archive=root/'QUL_original_portraits_for_GitHub.zip'
+          with zipfile.ZipFile(archive) as z:
+              manifest=json.loads(z.read('public/avatars/original-rigs/manifest.json'))
+              assets=manifest['assets']
+              assert len(assets)==43, 'Expected exactly 43 original portraits'
+              valid={a['path'].lstrip('/').replace('avatars/', 'public/avatars/', 1):a for a in assets}
+              for name,info in valid.items():
+                  raw=z.read(name)
+                  assert len(raw)==info['bytes'], name
+                  assert hashlib.sha256(raw).hexdigest()==info['sha256'], name
+                  assert raw[:4]==b'RIFF' and raw[8:12]==b'WEBP', name
+              for info in z.infolist():
+                  name=info.filename
+                  if name=='README_FIRST_AR.txt': continue
+                  assert not name.startswith('/') and '..' not in pathlib.PurePosixPath(name).parts, name
+                  assert (name.startswith('public/avatars/original-rigs/') and
+                      (name.endswith('/source.webp') or name.endswith('/identity.json') or name.endswith('/manifest.json'))), name
+                  assert info.file_size < 300_000, name
+              for info in z.infolist():
+                  if info.filename.startswith('public/avatars/original-rigs/'):
+                      dst=root/info.filename
+                      dst.parent.mkdir(parents=True,exist_ok=True)
+                      dst.write_bytes(z.read(info))
+              print('Validated and installed',len(assets),'original portraits')
+          PY
+          git config user.name "QUL Avatar Publisher"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/avatars/original-rigs
+          git rm -f -- QUL_original_portraits_for_GitHub.zip
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git commit -m "Publish 43 original approved dialect portraits"
+          git push origin HEAD:main
