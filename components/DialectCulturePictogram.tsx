@@ -136,7 +136,7 @@ export const DialectCulturePictogram: React.FC<Props> = ({ nameAr, nameEn, class
       : isDallah ? 'from-[#fcf2d9] to-[#f3e7d5]'
         : 'from-[#e7f3ef] to-[#f5f9f7]';
   return (
-    <span aria-hidden="true" className={'inline-flex h-[34px] w-[37px] shrink-0 items-center justify-center rounded-[9px] border border-white/80 bg-gradient-to-br ' + tint + ' text-[#18725f] shadow-[inset_0_1px_2px_rgba(255,255,255,.75)] ' + className}>
+    <span aria-hidden="true" className={'inline-flex h-[clamp(22px,3.3vh,34px)] w-[clamp(25px,3.6vh,37px)] shrink-0 items-center justify-center rounded-[9px] [&>svg]:max-h-full [&>svg]:max-w-full border border-white/80 bg-gradient-to-br ' + tint + ' text-[#18725f] shadow-[inset_0_1px_2px_rgba(255,255,255,.75)] ' + className}>
       {custom || <Icon size={23} strokeWidth={1.75} className="drop-shadow-[0_1px_1px_rgba(0,0,0,.06)]"/>}
     </span>
   );
