@@ -1,7 +1,7 @@
 import React from 'react';
 import { Send, ChevronLeft, ChevronRight, Volume2, AudioLines } from 'lucide-react';
 
-export interface DialectChatMessage { role: string; text: string }
+export interface DialectChatMessage { role: string; text: string; translationEn?: string; id?: string }
 interface Props {
   lang: 'ar' | 'en';
   name?: string;
@@ -15,6 +15,9 @@ interface Props {
   listening: boolean;
   level?: number;
   countryName?: string;
+  liveTranscript?: string;
+  liveTranslation?: string;
+  liveTranslating?: boolean;
 }
 
 const GUIDE = [
@@ -37,14 +40,19 @@ const GUIDE = [
 
 /** Training console: focused last reply, mission prompts and one input. History opens inside the same surface. */
 export const DialectChatDock: React.FC<Props> = ({
-  lang, name, messages, value, onChange, onSend, onDictate, onPronounce, loading, listening, level = 0
+  lang, name, messages, value, onChange, onSend, onDictate, onPronounce, loading, listening, level = 0,
+  liveTranscript = '', liveTranslation = '', liveTranslating = false
 }) => {
   const ar = lang === 'ar';
   const [historyOpen, setHistoryOpen] = React.useState(false);
   const [olderPages, setOlderPages] = React.useState(0);
   React.useEffect(() => { setOlderPages(0); }, [messages.length]);
   React.useEffect(() => { setHistoryOpen(false); }, [name]);
-  const lastTutorReply = [...messages].reverse().find(msg => msg.role !== 'user')?.text || '';
+  const lastTutorMessage = [...messages].reverse().find(msg => msg.role !== 'user');
+  const lastTutorReply = liveTranscript || lastTutorMessage?.text || '';
+  const lastTranslation = liveTranscript ? liveTranslation : (lastTutorMessage?.translationEn || '');
+  const translationPending = liveTranscript ? liveTranslating : loading;
+
   const totalPages = Math.max(1, Math.ceil(messages.length / 2));
   const offset = Math.min(olderPages, totalPages - 1);
   const end = Math.max(0, messages.length - offset * 2);
@@ -80,7 +88,8 @@ export const DialectChatDock: React.FC<Props> = ({
                 className={'flex min-w-0 flex-col justify-center overflow-hidden rounded-lg border px-2 py-1 ' +
                   (msg.role === 'user' ? 'border-blue-100 bg-blue-50' : 'border-emerald-100 bg-emerald-50')}>
                 <span className="text-[9px] font-black text-emerald-700 arabic-font">{msg.role === 'user' ? (ar ? 'أنت' : 'You') : name}</span>
-                <span className="line-clamp-2 text-[11px] font-medium leading-[1.35] text-slate-800 arabic-font" dir="auto">{msg.text}</span>
+                <span className="line-clamp-1 text-[11px] font-medium leading-[1.35] text-slate-800 arabic-font" dir="auto">{msg.text}</span>
+                {msg.translationEn && <span className="line-clamp-1 text-[10px] text-blue-700" dir="ltr" lang="en">{msg.translationEn}</span>}
               </div>
             ))}
             {messages.length === 0 && <span className="col-span-2 self-center text-center text-xs text-slate-400 arabic-font">{ar ? 'لا توجد رسائل بعد' : 'No messages yet'}</span>}
@@ -92,14 +101,25 @@ export const DialectChatDock: React.FC<Props> = ({
       ) : (
         <>
           <div className="flex min-h-0 flex-1 items-center gap-2 rounded-xl border border-slate-100 bg-[#f5f9f7] px-2.5 py-1" aria-live="polite">
-            <div className="min-w-0 flex-1">
-              <span className="block text-[10px] font-black text-emerald-800 arabic-font">
-                {ar ? 'آخر رد' : 'Latest reply'} {name ? (ar ? 'من ' + name : 'from ' + name) : ''}
-              </span>
-              <p className="line-clamp-2 text-[clamp(10px,.91vw,12px)] font-semibold leading-[1.3] text-slate-700 arabic-font" dir="auto" title={lastTutorReply}>
-                {loading ? (ar ? 'يحضّر الرد...' : 'Preparing a response...') :
-                  lastTutorReply || (ar ? 'تحدث مع الشخصية أو اكتب سؤالك لبدء التدريب.' : 'Talk to the character or type to begin practicing.')}
-              </p>
+            <div className="grid min-w-0 flex-1 grid-cols-1 gap-[2px]">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="shrink-0 text-[9px] font-black text-emerald-800 arabic-font">
+                  {ar ? 'باللهجة' : 'Dialect'}
+                </span>
+                <p className="min-w-0 flex-1 truncate text-[clamp(10px,.91vw,12px)] font-semibold text-slate-700 arabic-font" dir="rtl" lang="ar" title={lastTutorReply}>
+                  {loading && !liveTranscript ? (ar ? 'يحضّر الرد...' : 'Preparing a response...') :
+                    lastTutorReply || (ar ? 'تحدث مع الشخصية لبدء التدريب.' : 'Talk to the tutor to begin.')}
+                </p>
+              </div>
+              <div className="flex min-w-0 items-center gap-2 border-t border-emerald-100 pt-[1px]">
+                <span className="shrink-0 text-[9px] font-bold text-blue-700">English</span>
+                <p className="min-w-0 flex-1 truncate text-[clamp(10px,.87vw,11px)] font-medium text-blue-800" dir="ltr" lang="en"
+                  title={lastTranslation || ''}>
+                  {lastTranslation || (lastTutorReply
+                    ? (translationPending ? 'Translating speech...' : 'Translation not available yet')
+                    : 'Your translation will appear here.')}
+                </p>
+              </div>
             </div>
             {!!lastTutorReply && (
               <button type="button" onClick={() => onPronounce(lastTutorReply)}
