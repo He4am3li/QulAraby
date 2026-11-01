@@ -80,12 +80,11 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
     >
       <motion.div
         animate={{
-          opacity: isSelected ? 1 : 0.91,
-          y: celebrating ? -5 : 0,
-          scale: isSelected ? 1 : 0.975
+          opacity: isSelected ? 1 : 0.97,
+          scale: 1
         }}
         transition={{ duration: .32, ease: 'easeOut' }}
-        className="relative w-full min-h-0 flex-1"
+        className="relative w-full min-h-0 flex-1 overflow-visible"
       >
         {isSelected && (
           <div className="absolute inset-x-[14%] top-[19%] bottom-[5%] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(73,187,163,.16),transparent_71%)] pointer-events-none" aria-hidden="true"/>
@@ -119,7 +118,7 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
         </div>
       </motion.div>
 
-      <div className="relative z-10 flex h-[45px] shrink-0 flex-col items-center justify-center gap-[1px] text-center">
+      <div className="relative z-10 flex h-[38px] shrink-0 flex-col items-center justify-center gap-[1px] text-center">
         <div className="flex items-center justify-center gap-1.5">
           {isSelected && <span className="h-[6px] w-[6px] rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,.65)]" aria-hidden="true"/>}
           <span className={'text-[clamp(16px,1.65vw,22px)] font-black leading-tight arabic-font ' +
