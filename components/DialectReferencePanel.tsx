@@ -28,7 +28,7 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
       className="h-full min-h-0 w-full overflow-hidden rounded-[22px] border border-slate-200/75 bg-white shadow-[0_15px_50px_rgba(15,23,42,0.045)]"
     >
       <div className="grid h-full min-h-0 gap-[clamp(5px,0.75vh,9px)] p-[clamp(7px,1vh,10px)]"
-        style={{ gridTemplateRows: 'minmax(78px,1fr) minmax(112px,1.12fr) minmax(216px,2.27fr) minmax(112px,1.28fr)' }}
+        style={{ gridTemplateRows: 'minmax(66px,1fr) minmax(98px,1.12fr) minmax(181px,2.27fr) minmax(90px,1.28fr)' }}
       >
         {/* Matching rounded photo header and photographic fact footer. */}
         <section className="relative min-h-0 overflow-hidden rounded-t-[17px] rounded-b-[9px] bg-slate-200">
