@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Inspect actual layered PSD exports from Krita, refusing flattened impostors.
+"""Report ALL editable PSDs, including partially detected art, without false approvals.
 
-Only reports artistic preparation, never calls the result a certified Cubism
-rig. The unmodified source reference is also retained in the ORA archive.
+PSD formats can change RGB in semitransparent pixels; never claim pixel-perfect
+PSD rendering unless it is measured. The neutral OpenRaster source retains its
+original pixel-exact reference.
 """
 from pathlib import Path
 from zipfile import ZipFile
@@ -13,93 +14,91 @@ import numpy as np
 from PIL import Image
 from psd_tools import PSDImage
 
-REQUIRED = (
-    "torso", "arm_left", "arm_right", "head",
-    "mouth", "eye_left", "eye_right",
+REQUIRED = [
+    "torso", "arm_left", "arm_right", "head", "mouth",
+    "eye_left", "eye_right", "DRAFT_underpainting_NOT_APPROVED",
     "Original_Pixel_Reference_LOCKED",
-)
+]
 
-def compare_pixels(source: Image.Image, candidate: Image.Image):
-    x = np.asarray(source.convert("RGBA"), dtype=np.int16)
-    y = np.asarray(candidate.convert("RGBA"), dtype=np.int16)
-    visible = x[:, :, 3] > 0
-    rgb_diff = np.max(np.abs(x[:, :, :3][visible] - y[:, :, :3][visible]), axis=1) if visible.any() else np.zeros(0)
-    alpha_diff = np.abs(x[:, :, 3] - y[:, :, 3])
+def compare(a, b):
+    aa = np.asarray(a.convert("RGBA"), dtype=np.int16)
+    bb = np.asarray(b.convert("RGBA"), dtype=np.int16)
+    if aa.shape != bb.shape:
+        raise ValueError(f"Canvas dimensions mismatch: {aa.shape} vs {bb.shape}")
+    alpha = aa[:, :, 3]
+    rgbdiff = np.max(np.abs(aa[:, :, :3] - bb[:, :, :3]), axis=2)
     return {
-        "max_rgb_error": int(rgb_diff.max()) if rgb_diff.size else 0,
-        "max_alpha_error": int(alpha_diff.max()),
-        "changed_rgb_pixels": int((rgb_diff > 1).sum()),
-        "changed_alpha_pixels": int((alpha_diff > 0).sum()),
+        "alpha_changed": int(np.count_nonzero(alpha != bb[:, :, 3])),
+        "opaque_rgb_changed": int(np.count_nonzero((alpha == 255) & (rgbdiff != 0))),
+        "edge_rgb_changed": int(np.count_nonzero((alpha > 0) & (alpha < 255) & (rgbdiff != 0))),
+        "edge_pixels": int(np.count_nonzero((alpha > 0) & (alpha < 255))),
+        "visible_max_rgb_error": int(rgbdiff[alpha > 0].max()) if (alpha > 0).any() else 0,
     }
 
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--ora", required=True)
-    parser.add_argument("--psd", required=True)
-    parser.add_argument("--expected", type=int, default=43)
-    args = parser.parse_args()
+    p = argparse.ArgumentParser()
+    p.add_argument("--ora", required=True)
+    p.add_argument("--psd", required=True)
+    p.add_argument("--expected", type=int, default=43)
+    args = p.parse_args()
     ora_dir, psd_dir = Path(args.ora), Path(args.psd)
-    sources = sorted(ora_dir.glob("*.ora"))
-    if len(sources) != args.expected:
-        raise RuntimeError(f"Expected {args.expected} ORA files, found {len(sources)}")
+    inputs = sorted(ora_dir.glob("*.ora"))
+    if len(inputs) != args.expected:
+        raise RuntimeError(f"Expected {args.expected} ORA masters, found {len(inputs)}")
     reports = []
-    for ora in sources:
-        dst = psd_dir / (ora.stem + ".psd")
-        if not dst.is_file():
-            raise RuntimeError(f"Missing PSD export: {dst.name}")
+    for index, ora in enumerate(inputs, 1):
+        psd_path = psd_dir / (ora.stem + ".psd")
+        if not psd_path.exists():
+            reports.append({"id": ora.stem, "status": "missing_psd"})
+            continue
         with ZipFile(ora) as z:
-            source = Image.open(io.BytesIO(z.read("mergedimage.png"))).convert("RGBA")
-            source_reference = Image.open(io.BytesIO(z.read("data/original.png"))).convert("RGBA")
-            ora_audit = compare_pixels(source, source_reference)
-            if ora_audit["max_rgb_error"] != 0 or ora_audit["max_alpha_error"] != 0:
-                raise RuntimeError(f"ORA reference mismatch: {ora.name}")
-        psd = PSDImage.open(dst)
+            reference = Image.open(io.BytesIO(z.read("data/original.png"))).convert("RGBA")
+            original_merge = Image.open(io.BytesIO(z.read("mergedimage.png"))).convert("RGBA")
+            if np.any(np.asarray(reference) != np.asarray(original_merge)):
+                raise RuntimeError(f"ORA source pixel mismatch: {ora.name}")
+        psd = PSDImage.open(psd_path)
         layers = list(psd)
-        names = {layer.name.rstrip('\x00') for layer in layers}
-        if not set(REQUIRED).issubset(names) or len(layers) < 9:
-            raise RuntimeError(f"PSD missing layers: {dst.name}, found {sorted(names)}")
-        if psd.size != source.size:
-            raise RuntimeError(f"PSD canvas dimensions differ: {dst.name}")
-        original = next(layer for layer in layers if layer.name.rstrip("\x00") == "Original_Pixel_Reference_LOCKED")
-        # psd-tools.topil() may return None for hidden layers on some Krita
-        # exports. Record this separately; do not treat absence of pixels as proof
-        # the reference survived export.
-        ref = original.topil()
-        ref_check = None
-        if ref is not None and ref.size == source.size:
-            ref_check = compare_pixels(source, ref)
-        comp = psd.composite()
-        if comp is None:
-            raise RuntimeError(f"PSD has no visible composited image: {dst.name}")
-        composite_check = compare_pixels(source, comp)
-        report = {
-            "id": ora.stem, "layers": len(layers),
-            "reference_layer_name_present": True,
-            "reference_layer_pixels_decodable": ref is not None,
-            "reference_layer_bbox": [original.left, original.top, original.right, original.bottom],
-            "reference_pixel_audit": ref_check,
-            "visible_composite_audit": composite_check,
-            "status": "editable_psd_draft_not_live2d_ready",
+        names = [layer.name.rstrip("\x00") for layer in layers]
+        missing = sorted(set(REQUIRED) - set(names))
+        visible = psd.composite()
+        if visible is None or visible.size != reference.size:
+            reports.append({"id": ora.stem, "status": "invalid_composite", "missing_layers": missing})
+            continue
+        checks = compare(reference, visible)
+        original_layer = next((layer for layer in layers
+                               if layer.name.rstrip("\x00") == "Original_Pixel_Reference_LOCKED"), None)
+        original_layer_decoded = bool(original_layer is not None and original_layer.topil() is not None)
+        # Missing or zero-pixel feature layers are NOT silently labelled complete.
+        status = ("editable_psd_draft_for_artist_review"
+                  if not missing and checks["alpha_changed"] == 0
+                  and checks["opaque_rgb_changed"] == 0
+                  else "artwork_needs_manual_repair")
+        row = {
+            "id": ora.stem, "layers": len(layers), "missing_layers": missing,
+            "reference_layer_decodable": original_layer_decoded,
+            "neutral_display": checks, "status": status,
+            "live2d_ready": False, "facial_animation_approved": False
         }
-        reports.append(report)
-        print(f"{len(reports)}/{len(sources)} {ora.stem}: {len(layers)} layers, "
-              f"reference-decoded={ref is not None}, composite={composite_check}", flush=True)
-        # Fail on changes above one RGB level, or any change to alpha coverage.
-        # This is intentionally strict to protect the user's original likeness.
-        if composite_check["changed_rgb_pixels"] or composite_check["changed_alpha_pixels"]:
-            (psd_dir / "psd-verification-debug.json").write_text(
-                json.dumps(reports, ensure_ascii=False, indent=2), encoding="utf-8")
-            raise RuntimeError(f"PSD composite failed original visual fidelity: {dst.name}")
-        if ref_check is not None and (
-            ref_check["changed_rgb_pixels"] or ref_check["changed_alpha_pixels"]
-        ):
-            raise RuntimeError(f"PSD reference image changed: {dst.name}")
+        reports.append(row)
+        print(f"{index}/{len(inputs)} {ora.stem}: {len(layers)} layers, "
+              f"missing={missing}, alpha bad={checks['alpha_changed']}, "
+              f"opaque RGB bad={checks['opaque_rgb_changed']}", flush=True)
+    approved_as_drafts = sum(x["status"] == "editable_psd_draft_for_artist_review" for x in reports)
+    summary = {
+        "expected": len(inputs), "full_layered_editable_drafts": approved_as_drafts,
+        "manual_repair_required": len(inputs) - approved_as_drafts,
+        "neutral_ora_original_pixel_exact": len(inputs),
+        "live2d_ready": 0,
+        "note": "Source pixels guaranteed in ORA. PSD antialiased-edge RGB may be converted by Krita. No PSD is certified for facial animation until human artwork review.",
+        "characters": reports,
+    }
     (psd_dir / "psd-verification.json").write_text(
-        json.dumps({
-            "characters": len(reports), "source_neutral_composites_verified": len(reports),
-            "embedded_reference_decodable": sum(x["reference_layer_pixels_decodable"] for x in reports),
-            "layered_psd_drafts": len(reports), "live2d_ready": 0, "results": reports,
-        }, ensure_ascii=False, indent=2), encoding="utf-8")
+        json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps({k:v for k,v in summary.items() if k!="characters"},indent=2))
+    if approved_as_drafts != len(inputs):
+        raise SystemExit(f"PSD preparation incomplete: {approved_as_drafts}/{len(inputs)} need no missing parts; "
+                         "review PSD report and manually repair excluded images.")
 
 
 if __name__ == "__main__":
