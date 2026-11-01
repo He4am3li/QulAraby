@@ -179,13 +179,20 @@ def export_character(source, output, pose, face, preview):
     if mismatch_pixels:
         raise ValueError(f"Source pixel fidelity FAILED: {mismatch_pixels} visible pixels changed")
 
-    # Underpainting previews are hidden by default. OpenCV inpainting is only
-    # a STARTING POINT for an artist and is never approved as an original face.
+    # Motion QA exposed large transparent seams behind detached arms.
+    # Reconstruct BOTH covered sleeves and the head zone in a hidden draft
+    # underpainting layer. This cannot replace artist-made garment patterns.
+    # The original layers and pixel-exact neutral pose remain untouched.
+    repair_region = np.zeros((h, w), dtype=np.uint8)
+    for part in ("arm_left", "arm_right", "head", "eye_left", "eye_right", "mouth"):
+        repair_region = np.maximum(repair_region, masks[part])
+    repair_region = cv2.dilate(repair_region, np.ones((7, 7), np.uint8), iterations=1)
     edit_underlay = np.asarray(original.convert("RGB")).copy()
-    head_removed = cv2.dilate(masks["head"], np.ones((5, 5), np.uint8), iterations=1)
-    if np.any(head_removed):
-        edit_underlay = cv2.inpaint(edit_underlay, head_removed, 5, cv2.INPAINT_TELEA)
-    underlay = Image.fromarray(np.dstack([edit_underlay, np.where(head_removed > 0, 255, 0).astype("uint8")]), "RGBA")
+    if np.any(repair_region):
+        edit_underlay = cv2.inpaint(edit_underlay, repair_region, 3, cv2.INPAINT_TELEA)
+    original_alpha = np.asarray(original.getchannel("A"))
+    underpaint_alpha = np.where((repair_region > 0) & (original_alpha > 0), 255, 0).astype("uint8")
+    underlay = Image.fromarray(np.dstack([edit_underlay, underpaint_alpha]), "RGBA")
 
     output.mkdir(parents=True, exist_ok=True)
     stem = source.parent.parent.name + "_" + source.parent.name
@@ -196,7 +203,9 @@ def export_character(source, output, pose, face, preview):
         "detectors": confidence, "status": "draft_not_live2d_ready",
         "original_facial_features_preserved": True,
         "facial_expressions_approved": False,
-        "restored_hidden_body_approved": False, "notes": notes,
+        "restored_hidden_body_approved": False,
+        "draft_underpainting_pixels": int(np.count_nonzero(underpaint_alpha)),
+        "notes": notes,
     }
     # A copy of the unmodified cutout is always embedded as a hidden fallback.
     # PNG preserves available source pixels without another lossy recompression.
