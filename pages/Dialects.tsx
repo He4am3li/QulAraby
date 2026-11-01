@@ -1743,7 +1743,7 @@ export const Dialects: React.FC = () => {
         model: "gemini-3.8-flash",
         contents: [
           { role: 'user', parts: [{ text: systemPrompt }] },
-          ...chatMessages.map(m => ({ role: m.role as any, parts: [{ text: m.text }] })),
+          ...chatMessages.map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] })),
           { role: 'user', parts: [{ text: userMsg }] }
         ],
         config: { responseMimeType: 'application/json', temperature: 0.5 }
@@ -1797,6 +1797,29 @@ export const Dialects: React.FC = () => {
       const currentMission = missions ? (rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar) : "Learn the dialect";
       liveInputBufferRef.current = '';
       let liveTutorText = '';
+      // Translate completed utterances, not every audio chunk, to reduce model calls.
+      const translateLiveReply = async (arabic: string) => {
+        if (!arabic.trim() || !stillCurrent()) return;
+        try {
+          const result = await ai.models.generateContent({
+            model: 'gemini-3.8-flash',
+            contents: [{
+              role: 'user',
+              parts: [{ text: 'Translate this spoken Arabic dialect faithfully into simple English. Return only the translation, without commentary.\\n' + arabic.slice(0, 500) }]
+            }],
+            config: { temperature: 0.1 }
+          });
+          const translation = (result.text || '').trim().slice(0, 650);
+          if (!translation || !stillCurrent() || selectedCountryRef.current?.id !== country.id) return;
+          setChatMessages(prev => {
+            const index = prev.findLastIndex(m => m.role === 'live-model' && m.text === arabic);
+            if (index < 0) return prev;
+            return prev.map((m, i) => i === index ? { ...m, translationEn: translation } : m);
+          });
+        } catch (error) {
+          console.warn('Live dialogue translation unavailable.', error);
+        }
+      };
       const flushLiveInput = () => {
         if (!stillCurrent()) return;
         const speech = liveInputBufferRef.current.replace(/\s+/g, ' ').trim();
@@ -1862,6 +1885,8 @@ export const Dialects: React.FC = () => {
             }
             if (message.serverContent?.turnComplete) {
               if (liveInputBufferRef.current.trim()) flushLiveInput();
+              const completedTutorReply = liveTutorText.trim();
+              if (completedTutorReply) void translateLiveReply(completedTutorReply);
               liveTutorText = '';
             }
             // An audio message may contain several independent PCM parts.
