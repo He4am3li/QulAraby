@@ -356,20 +356,30 @@ export const generateAssistantQuiz = async (topic: string, vocabWords: string[])
   });
 };
 
-export const generateSpeech = async (text: string, lang: 'ar' | 'en'): Promise<Uint8Array | undefined> => {
+export const generateSpeech = async (
+  text: string,
+  lang: 'ar' | 'en',
+  options?: { voiceName?: string; styleInstruction?: string; cacheScope?: string }
+): Promise<Uint8Array | undefined> => {
   if (!text || text.trim().length === 0) return undefined;
-  
-  const cacheKey = `tts_${lang}_${text.trim()}`;
+
+  const voiceName = options?.voiceName || (lang === 'ar' ? 'Kore' : 'Zephyr');
+  // Include the speaker and regional style in the cache key, avoiding playback
+  // of another country's pronunciation for the same Arabic text.
+  const cacheKey = 'tts_' + lang + '_' + voiceName + '_' +
+    (options?.cacheScope || '') + '_' + (options?.styleInstruction || '') + '_' + text.trim();
   const cached = await getCachedAsset(cacheKey);
   if (cached) return cached;
 
   const ai = getAI();
-  const voiceName = lang === 'ar' ? 'Kore' : 'Zephyr';
+  const contentsText = options?.styleInstruction
+    ? options.styleInstruction + '\nSpeak the following text verbatim in Arabic without reading these instructions:\n' + text
+    : text;
   try {
     return await withRetry(async () => {
       const response = await ai.models.generateContent({
         model: DEFAULT_TTS_MODEL,
-        contents: [{ parts: [{ text }] }],
+        contents: [{ parts: [{ text: contentsText }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } }
