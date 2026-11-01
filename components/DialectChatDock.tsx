@@ -1,5 +1,5 @@
 import React from 'react';
-import { Send, ChevronLeft, ChevronRight, Volume2, AudioLines } from 'lucide-react';
+import { Send, ChevronLeft, ChevronRight, Volume2, AudioLines, Sparkles, Radio, BookOpen, MessageCircle } from 'lucide-react';
 
 export interface DialectChatMessage { role: string; text: string; translationEn?: string }
 interface Props {
@@ -58,34 +58,34 @@ export const DialectChatDock: React.FC<Props> = ({
 
   return (
     <section aria-label={ar ? 'لوحة التدريب على المحادثة' : 'Guided conversation practice'}
-      className="flex h-full min-h-0 w-full flex-col gap-[5px] overflow-hidden rounded-[17px] border border-emerald-100/80 bg-white/90 p-[clamp(7px,.8vh,11px)] shadow-[0_5px_24px_rgba(14,59,50,.07)] backdrop-blur-lg">
+      className="relative flex h-full min-h-0 w-full flex-col gap-[6px] overflow-hidden rounded-[20px] border border-white/20 bg-[linear-gradient(135deg,#071c28_0%,#103b46_52%,#102a3c_100%)] p-[clamp(7px,.8vh,11px)] text-white shadow-[0_8px_28px_rgba(7,28,40,.22)]">
 
-      <div className="flex h-[19px] shrink-0 items-center justify-between gap-2">
+      <div className="flex h-[23px] shrink-0 items-center justify-between gap-2 border-b border-white/10 pb-1">
         <div className="min-w-0 flex items-center gap-2">
-          <span className="shrink-0 text-[clamp(11px,.94vw,13px)] font-black text-[#155a4c] arabic-font">
-            {historyOpen ? (ar ? 'المحادثة المباشرة' : 'Live conversation') : (ar ? 'تدرّب على كلمات اللهجة' : 'Practice dialect words')}
+          <span className="flex shrink-0 items-center gap-1.5 text-[clamp(11px,.94vw,13px)] font-black text-white arabic-font">
+            {historyOpen ? <Radio size={14} className={liveActive ? 'animate-pulse text-cyan-300' : 'text-cyan-300'}/> : <BookOpen size={14} className="text-amber-300"/>}{historyOpen ? (ar ? 'محادثة تفاعلية' : 'Interactive conversation') : (ar ? 'استكشف كلمات اللهجة' : 'Explore dialect words')}
           </span>
 
         </div>
         <button type="button" onClick={() => setHistoryOpen(v => !v)}
-          className="shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50 arabic-font"
+          className="flex shrink-0 items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-cyan-100 transition hover:bg-white/20 arabic-font"
           aria-pressed={historyOpen}>
-          {historyOpen ? (ar ? 'تدريب الكلمات' : 'Word practice') : (ar ? 'المحادثة' : 'Conversation')}
+          {historyOpen ? <BookOpen size={12}/> : <MessageCircle size={12}/>}{historyOpen ? (ar ? 'الكلمات' : 'Words') : (ar ? 'الحوار' : 'Chat')}
         </button>
       </div>
 
       {historyOpen ? (
         <div className="flex min-h-0 flex-1 items-center gap-1.5">
           <button type="button" disabled={offset === totalPages - 1} onClick={() => setOlderPages(p => Math.min(totalPages - 1, p + 1))}
-            className="rounded-md p-1 text-slate-500 hover:bg-slate-100 disabled:opacity-20"
+            className="rounded-lg border border-white/15 bg-white/10 p-1 text-cyan-100 hover:bg-white/20 disabled:opacity-20"
             aria-label={ar ? 'السابق' : 'Older'}><ChevronRight size={15}/></button>
-          <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden rounded-xl border border-slate-200 bg-slate-950/95 p-1.5" aria-live="polite">
+          <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden rounded-xl border border-cyan-300/15 bg-black/25 p-1.5" aria-live="polite">
             <div className="grid grid-cols-2 gap-1 border-b border-white/15 pb-1 text-[10px] font-bold">
               <span className="text-right text-emerald-200" dir="rtl">العربية</span>
               <span className="text-left text-sky-200" dir="ltr">English</span>
             </div>
             {visible.map((msg, i) => (
-              <div key={end - visible.length + i} className="grid min-h-0 flex-1 grid-cols-2 gap-1 rounded-lg border border-white/10 bg-white/5 p-1.5">
+              <div key={end - visible.length + i} className={"grid min-h-0 flex-1 grid-cols-2 gap-1 rounded-xl border p-1.5 transition-colors " + (msg.role === "user" ? "border-sky-300/25 bg-sky-300/10" : "border-emerald-300/25 bg-emerald-300/10")}>
                 <div dir="rtl" className="min-w-0 text-right">
                   <span className="block text-[9px] font-bold text-emerald-300">{msg.role === 'user' ? 'الطالب' : (name || 'المعلم')}</span>
                   <p className="line-clamp-2 text-[11px] leading-snug text-white arabic-font" lang="ar">{/[\u0600-\u06ff]/.test(msg.text) ? msg.text : '…'}</p>
@@ -99,27 +99,27 @@ export const DialectChatDock: React.FC<Props> = ({
             {messages.length === 0 && <p className="self-center text-center text-[11px] text-slate-300">{ar ? 'ابدأ التحدث لعرض الحوار هنا' : 'Start speaking to see the conversation here'}</p>}
           </div>
           <button type="button" disabled={offset === 0} onClick={() => setOlderPages(p => Math.max(0, p - 1))}
-            className="rounded-md p-1 text-slate-500 hover:bg-slate-100 disabled:opacity-20"
+            className="rounded-lg border border-white/15 bg-white/10 p-1 text-cyan-100 hover:bg-white/20 disabled:opacity-20"
             aria-label={ar ? 'التالي' : 'Newer'}><ChevronLeft size={15}/></button>
         </div>
       ) : (
         <>
-          <div className="flex min-h-0 flex-1 items-center gap-2 rounded-xl border border-slate-100 bg-[#f5f9f7] px-2.5 py-1" aria-live="polite">
+          <div className="flex min-h-0 flex-1 items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-2.5 py-1" aria-live="polite">
             <div className="min-w-0 flex-1">
-              <span className="block text-[10px] font-black text-emerald-800 arabic-font">
+              <span className="block text-[10px] font-black text-cyan-200 arabic-font">
                 {ar ? 'آخر رد' : 'Latest reply'} {name ? (ar ? 'من ' + name : 'from ' + name) : ''}
               </span>
-              <p className="line-clamp-2 text-[clamp(10px,.91vw,12px)] font-semibold leading-[1.3] text-slate-700 arabic-font" dir="auto" title={lastTutorReply}>
+              <p className="line-clamp-2 text-[clamp(10px,.91vw,12px)] font-semibold leading-[1.3] text-white arabic-font" dir="auto" title={lastTutorReply}>
                 {loading ? (ar ? 'يحضّر الرد...' : 'Preparing a response...') :
                   lastTutorReply || (ar ? 'تحدث مع الشخصية أو اكتب سؤالك لبدء التدريب.' : 'Talk to the character or type to begin practicing.')}
               </p>
-              {!!lastTranslation && <p lang="en" dir="ltr" className="line-clamp-1 text-[clamp(9px,.82vw,11px)] font-medium text-emerald-800" title={lastTranslation}>{lastTranslation}</p>}
+              {!!lastTranslation && <p lang="en" dir="ltr" className="line-clamp-1 text-[clamp(9px,.82vw,11px)] font-medium text-cyan-200" title={lastTranslation}>{lastTranslation}</p>}
             </div>
             {!!lastTutorReply && (
               <button type="button" onClick={() => onPronounce(lastTutorReply)}
                 title={ar ? 'استمع للرد' : 'Play the reply'}
                 aria-label={ar ? 'تشغيل آخر رد صوتيًا' : 'Hear latest reply'}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-emerald-700 hover:bg-emerald-100">
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-200/20 text-cyan-100 hover:bg-cyan-200/30">
                 <Volume2 size={16}/>
               </button>
             )}
@@ -128,7 +128,7 @@ export const DialectChatDock: React.FC<Props> = ({
             {prompts.map((prompt, i) => (
               <button type="button" key={i} onClick={() => onSend(ar ? prompt.ar : prompt.en)} disabled={loading}
                 title={ar ? prompt.en : prompt.ar}
-                className="min-w-0 truncate rounded-lg border border-emerald-100 bg-emerald-50/70 px-1.5 py-1 text-[clamp(9px,.77vw,11px)] font-bold leading-tight text-[#286c5f] transition-colors hover:border-emerald-300 hover:bg-emerald-100 disabled:opacity-40 arabic-font">
+                className="min-w-0 truncate rounded-lg border border-cyan-200/20 bg-white/10 px-1.5 py-1 text-[clamp(9px,.77vw,11px)] font-bold leading-tight text-white transition-colors hover:border-cyan-200/50 hover:bg-white/20 disabled:opacity-40 arabic-font">
                 {ar ? prompt.ar : prompt.en}
               </button>
             ))}
@@ -142,19 +142,19 @@ export const DialectChatDock: React.FC<Props> = ({
           type="text" autoComplete="off" value={value} onChange={event => onChange(event.target.value)}
           placeholder={ar ? 'اكتب ما تريد قوله...' : 'Type what you want to say...'}
           aria-label={ar ? 'رسالتك' : 'Your message'}
-          className="h-full min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-[12px] font-semibold text-slate-800 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 arabic-font"
+          className="h-full min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-3 text-[12px] font-semibold text-white placeholder:text-white/55 outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20 arabic-font"
         />
         <button type="button" onClick={onDictate}
           aria-label={ar ? 'إملاء صوتي لتحويل الكلام إلى نص' : 'Voice dictation'}
           title={ar ? 'إملاء صوتي' : 'Voice dictation'}
           className={'flex h-[36px] shrink-0 items-center justify-center gap-1 rounded-xl border px-2 transition-colors ' +
-            (listening ? 'border-rose-200 bg-rose-50 text-rose-600' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100')}>
+            (listening ? 'border-rose-300/50 bg-rose-400/20 text-rose-100' : 'border-white/20 bg-white/10 text-white hover:bg-white/20')}>
           <AudioLines size={15}/>
           <span className="hidden text-[11px] font-bold sm:inline arabic-font">{ar ? 'إملاء' : 'Dictate'}</span>
         </button>
         <button type="submit" disabled={loading || !value.trim()}
           aria-label={ar ? 'إرسال الرسالة' : 'Send message'}
-          className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-xl bg-[#116b58] text-white transition-colors hover:bg-emerald-700 disabled:opacity-40">
+          className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-xl bg-cyan-400 text-slate-950 transition-colors hover:bg-cyan-300 disabled:opacity-40">
           <Send size={16}/>
         </button>
       </form>
