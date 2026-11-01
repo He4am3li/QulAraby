@@ -55,12 +55,12 @@ def main():
                 raise RuntimeError(f"ORA reference mismatch: {ora.name}")
         psd = PSDImage.open(dst)
         layers = list(psd)
-        names = {layer.name for layer in layers}
+        names = {layer.name.rstrip('\x00') for layer in layers}
         if not set(REQUIRED).issubset(names) or len(layers) < 9:
             raise RuntimeError(f"PSD missing layers: {dst.name}, found {sorted(names)}")
         if psd.size != source.size:
             raise RuntimeError(f"PSD canvas dimensions differ: {dst.name}")
-        original = next(layer for layer in layers if layer.name == "Original_Pixel_Reference_LOCKED")
+        original = next(layer for layer in layers if layer.name.rstrip("\x00") == "Original_Pixel_Reference_LOCKED")
         # psd-tools.topil() may return None for hidden layers on some Krita
         # exports. Record this separately; do not treat absence of pixels as proof
         # the reference survived export.
