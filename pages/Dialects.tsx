@@ -1722,6 +1722,7 @@ export const Dialects: React.FC = () => {
       const currentMission = missions ? (rank === 0 ? (lang === 'ar' ? missions.visitor.ar : missions.visitor.en) : rank === 1 ? (lang === 'ar' ? missions.resident.ar : missions.resident.en) : (lang === 'ar' ? missions.native.ar : missions.native.en)) : "Learn the dialect";
 
       const systemPrompt = `You are ${currentPersona.nameEn} from ${selectedCountry.nameEn}, acting as a helpful and patient language teacher.
+      ${getDialectTextDirection(selectedCountry.id)}
       Your goal is to help a BEGINNER student complete their current mission.
       
       CURRENT MISSION: ${currentMission}
@@ -1731,15 +1732,21 @@ export const Dialects: React.FC = () => {
       1. STRICT DIALECT: You MUST respond ONLY in the ${selectedCountry.dialect} dialect of ${selectedCountry.nameEn}. Even if the student speaks in Modern Standard Arabic (Fusha) or English, you MUST answer in the local dialect to immerse them.
       2. ERROR CORRECTION: If the student answers a question incorrectly, makes a grammatical mistake, or uses a word that doesn't fit the dialect, you MUST gently correct them. Provide the correct word/phrase in ${selectedCountry.dialect} and explain it simply.
       3. VISITOR GUIDELINES (Rank 0):
-         - Use VERY simple words.
-         - Focus ONLY on basic greetings and the specific landmark mentioned in the mission.
-         - If they struggle, give them the answer in the dialect and ask them to repeat it.
-         - Keep responses very short (max 2 sentences).
+         - Student has VERY LITTLE ARABIC. Use one short sentence, ideally 4 to 10 words, no more than 12 Arabic words.
+         - Ask ONLY ONE concrete, easy question per turn. Wait for the learner to answer.
+         - Start with a local greeting, then guide the learner toward using a greeting and asking about the mission landmark.
+         - If the learner struggles, offer one short local example and ask them to try again.
+         - Never give the visitor stamp yourself: a separate assessor must check the learner's own contributions.
+         - Avoid difficult words, extended explanations, literary Fusha or unrelated tourist facts.
       4. RESIDENT/NATIVE GUIDELINES:
          - Gradually increase complexity but stay within the mission's scope.
          - Act out the scenario naturally but keep the teaching goal in mind.
 
-      If this is the first message, introduce yourself briefly in the dialect and ask a simple question to start the mission.`;
+      If this is the first message, introduce yourself briefly in the dialect and ask a simple question to start the mission.
+      OUTPUT FORMAT: Return ONLY a valid JSON object with TWO fields:
+      "dialectText": exactly what you would SAY aloud in the chosen Arabic dialect,
+      "translationEn": accurate, beginner-friendly English translation of dialectText.
+      Do not put any explanation outside the JSON, or speak the translation in the Arabic reply.`;
 
       const response = await ai.models.generateContent({
         model: "gemini-3.8-flash",
@@ -1747,11 +1754,20 @@ export const Dialects: React.FC = () => {
           { role: 'user', parts: [{ text: systemPrompt }] },
           ...chatMessages.map(m => ({ role: m.role as any, parts: [{ text: m.text }] })),
           { role: 'user', parts: [{ text: userMsg }] }
-        ]
+        ],
+        config: { responseMimeType: 'application/json', temperature: 0.35 }
       });
 
-      const modelText = response.text || "أعتذر، حدث خطأ ما.";
-      setChatMessages(prev => [...prev, { role: 'model', text: modelText }]);
+      const parsed = parseBilingualTutorReply(response.text || '');
+      const modelText = parsed.dialectText || "عذرًا، ما قدرت أرد عليك.";
+      const replyId = crypto.randomUUID();
+      setChatMessages(prev => [...prev, { role: 'model', text: modelText, translationEn: parsed.translationEn, id: replyId }]);
+      if (!parsed.translationEn && parsed.dialectText) {
+        void translateDialectToEnglish(countryForTurn.id, modelText).then(translationEn => {
+          if (selectedCountryRef.current?.id !== countryForTurn.id) return;
+          setChatMessages(prev => prev.map(msg => msg.id === replyId ? { ...msg, translationEn } : msg));
+        });
+      }
       captureMissionTurn(countryForTurn.id, { role: 'model', text: modelText });
       // Only authentic student work can unlock a passport. Never count prompts or replies.
       void checkMissionCompletion(countryForTurn, rank);
@@ -1995,7 +2011,13 @@ export const Dialects: React.FC = () => {
     setIsSpeaking(true);
     setCurrentSpeechText(text);
     try {
-      const audioBytes = await generateSpeech(text, 'ar');
+      const country = selectedCountryRef.current;
+      const gender = selectedPersona?.nameEn === country?.characterFemale?.nameEn ? 'female' : 'male';
+      const audioBytes = await generateSpeech(text, 'ar', country ? {
+        voiceName: getDialectVoiceName(country.id, gender),
+        styleInstruction: getDialectVoiceDirection(country.id, gender),
+        cacheScope: country.id + ':' + gender
+      } : undefined);
       if (!current()) return;
       if (!audioBytes) {
         setIsSpeaking(false);
