@@ -30,19 +30,55 @@ type ApprovedRig = {
   eyesClosed: string;
   mouth?: Partial<Record<Viseme, string>>;
   mouthVisible?: boolean;
+  /** Optional, individually reviewed Salman-style expression sprites. */
+  smile?: string;
+  thinkingBrows?: string;
+  listeningBrows?: string;
 };
-type LoadedRig = { eyesClosed: string; mouth: Partial<Record<Viseme, string>> };
+type LoadedRig = {
+  eyesClosed: string;
+  mouth: Partial<Record<Viseme, string>>;
+  smile?: string;
+  thinkingBrows?: string;
+  listeningBrows?: string;
+};
 type LoadState = 'loading' | 'available' | 'missing';
 
 const basePath = (countryId: string, gender: string) =>
   '/avatars/original-rigs/' + countryId + '/' + gender + '/';
 
-const loadImage = (url: string): Promise<void> => new Promise((resolve, reject) => {
+const loadImage = (url: string): Promise<HTMLImageElement> => new Promise((resolve, reject) => {
   const img = new Image();
-  img.onload = () => resolve();
-  img.onerror = () => reject(new Error('Missing approved facial layer'));
+  img.onload = () => resolve(img);
+  img.onerror = () => reject(new Error('Missing approved facial layer: ' + url));
   img.src = url;
 });
+
+const spriteIsConservative = (image: HTMLImageElement, source: HTMLImageElement): boolean => {
+  if (image.naturalWidth !== source.naturalWidth || image.naturalHeight !== source.naturalHeight) {
+    return false;
+  }
+  // A complete replacement portrait is NOT an expression layer. Only a small
+  // fraction of the canvas may be painted. Skip this sprite if validation fails.
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) return false;
+    context.drawImage(image, 0, 0);
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    let visible = 0;
+    let sampled = 0;
+    for (let pixel = 3; pixel < pixels.length; pixel += 32) {
+      sampled++;
+      if (pixels[pixel] > 20) visible++;
+    }
+    return visible > 0 && visible / sampled < 0.22;
+  } catch {
+    return false;
+  }
+};
 
 export const OriginalPortraitAvatar: React.FC<Props> = ({
   countryId, gender, nameAr, isSelected, isSpeaking, isListening, isLoading,
@@ -76,6 +112,7 @@ export const OriginalPortraitAvatar: React.FC<Props> = ({
             typeof data.eyesClosed !== 'string') return;
         const safeName = (name: string) => /^[A-Za-z0-9_-]+\.webp$/.test(name);
         if (!safeName(data.eyesClosed)) return;
+        // A full set of visemes is mandatory unless a face covering hides the mouth.
         const mouth: Partial<Record<Viseme, string>> = {};
         if (data.mouthVisible) {
           for (const shape of ['A', 'E', 'O'] as Viseme[]) {
@@ -83,10 +120,30 @@ export const OriginalPortraitAvatar: React.FC<Props> = ({
             if (!name || !safeName(name)) return;
             mouth[shape] = base + name;
           }
+        } else if (data.mouth && Object.keys(data.mouth).length > 0) {
+          return; // Never reveal a covered mouth by accident.
         }
-        const eyesClosed = base + data.eyesClosed;
-        await Promise.all([loadImage(eyesClosed), ...Object.values(mouth).map(loadImage)]);
-        if (alive) setRig({ eyesClosed, mouth });
+        const optional = {
+          smile: data.mouthVisible ? data.smile : undefined,
+          thinkingBrows: data.thinkingBrows,
+          listeningBrows: data.listeningBrows
+        };
+        if (Object.values(optional).some(name => name !== undefined && !safeName(name))) return;
+        const approved: LoadedRig = {
+          eyesClosed: base + data.eyesClosed,
+          mouth,
+          ...(optional.smile ? { smile: base + optional.smile } : {}),
+          ...(optional.thinkingBrows ? { thinkingBrows: base + optional.thinkingBrows } : {}),
+          ...(optional.listeningBrows ? { listeningBrows: base + optional.listeningBrows } : {})
+        };
+        const sprites = [
+          approved.eyesClosed, ...Object.values(approved.mouth),
+          approved.smile, approved.thinkingBrows, approved.listeningBrows
+        ].filter((url): url is string => Boolean(url));
+        // Load and validate every sprite before enabling ANY face animation.
+        const images = await Promise.all([loadImage(source), ...sprites.map(loadImage)]);
+        if (images.slice(1).some(image => !spriteIsConservative(image, images[0]))) return;
+        if (alive) setRig(approved);
       })
       .catch(() => { /* Absent or invalid draft means original portrait only. */ });
     return () => {
@@ -131,6 +188,15 @@ export const OriginalPortraitAvatar: React.FC<Props> = ({
 
   const maskClass = 'pointer-events-none absolute inset-0 h-full w-full select-none object-contain object-bottom';
   const mouthSrc = rig?.mouth[viseme] || null;
+  const isThinking = isLoading;
+  const activeBrows = isThinking ? rig?.thinkingBrows : isListening ? rig?.listeningBrows : null;
+  const smile = !isSpeaking && (reaction === 'correct' || reaction === 'greeting')
+    ? rig?.smile : null;
+  // The whole original portrait moves by less than 0.3%; no pixels, colors,
+  // face details or clothing are regenerated or geometrically repainted.
+  const subtleMotion = reduceMotion
+    ? { y: 0, scale: 1 }
+    : { y: [0, -1.6, 0], scale: [1, isSpeaking ? 1.0028 : 1.0018, 1] };
 
   return (
     <div
@@ -143,8 +209,9 @@ export const OriginalPortraitAvatar: React.FC<Props> = ({
       <motion.div
         className="pointer-events-none absolute inset-0"
         initial={false}
-        animate={{ opacity: isSelected ? 1 : .96 }}
-        transition={{ duration: .22 }}
+        animate={subtleMotion}
+        transition={{ duration: isSpeaking ? 2.2 : 4.6, repeat: reduceMotion ? 0 : Infinity, ease: 'easeInOut' }}
+        style={{ transformOrigin: '50% 90%', opacity: isSelected ? 1 : .97 }}
       >
         <img
           src={source}
@@ -171,17 +238,14 @@ export const OriginalPortraitAvatar: React.FC<Props> = ({
                 ease: 'linear'
               }}
             />
-            {mouthSrc && (
-              <motion.img
-                src={mouthSrc}
-                alt=""
-                draggable={false}
-                aria-hidden="true"
-                className={maskClass}
-                initial={false}
-                animate={{ opacity: isSpeaking ? .82 : 0 }}
-                transition={{ duration: .1 }}
-              />
+            {activeBrows && (
+              <img src={activeBrows} alt="" draggable={false} aria-hidden="true" className={maskClass} />
+            )}
+            {smile && (
+              <img src={smile} alt="" draggable={false} aria-hidden="true" className={maskClass} />
+            )}
+            {mouthSrc && isSpeaking && (
+              <img src={mouthSrc} alt="" draggable={false} aria-hidden="true" className={maskClass} />
             )}
           </>
         )}
