@@ -10,9 +10,10 @@ interface PageHeaderProps {
   children?: React.ReactNode;
   rightContent?: React.ReactNode;
   onToggle?: () => void;
+  compact?: boolean;
 }
 
-export const PageHeader: React.FC<PageHeaderProps> = ({ title, icon: Icon, lang, children, rightContent, onToggle }) => {
+export const PageHeader: React.FC<PageHeaderProps> = ({ title, icon: Icon, lang, children, rightContent, onToggle, compact = false }) => {
   const toggleLang = () => {
     if (onToggle) {
       onToggle();
@@ -24,7 +25,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, icon: Icon, lang,
   };
 
   return (
-    <div className="bg-gradient-to-l from-[#0f172a]/95 to-[#064e3b]/95 backdrop-blur-lg px-8 py-6 flex items-center justify-between shrink-0 shadow-lg relative z-[60] overflow-hidden no-print border-b border-white/20">
+    <div className={`bg-gradient-to-l from-[#0f172a]/95 to-[#064e3b]/95 backdrop-blur-lg flex items-center justify-between shrink-0 shadow-lg relative z-[60] overflow-hidden no-print border-b border-white/20 ${compact ? 'px-3 md:px-5 py-2.5 md:py-3' : 'px-8 py-6'}`}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <FallingLetters mode="compact" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-[80px]" />
