@@ -1806,8 +1806,8 @@ export const Dialects: React.FC = () => {
         pending: { text: string; id: number } | null;
         lastRequested: string; lastId: number; lastDeliveredLength: number;
       }> = {
-        tutor: { timer: null, busy: false, pending: null, lastRequested: '', lastId: -1, lastDeliveredLength: 0, lastDeliveredLength: 0 },
-        student: { timer: null, busy: false, pending: null, lastRequested: '', lastId: -1 }
+        tutor: { timer: null, busy: false, pending: null, lastRequested: '', lastId: -1, lastDeliveredLength: 0 },
+        student: { timer: null, busy: false, pending: null, lastRequested: '', lastId: -1, lastDeliveredLength: 0 }
       };
       const requestTranslation = (speaker: 'tutor' | 'student', text: string, id: number, immediate = false) => {
         if (!text.trim() || !stillCurrent()) return;
