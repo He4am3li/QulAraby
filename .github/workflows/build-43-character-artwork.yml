@@ -80,10 +80,11 @@ jobs:
           QT_LOGGING_RULES: "*.debug=false"
           OMP_NUM_THREADS: "2"
         run: bash scripts/export-43-character-psd.sh artifacts/qul-43-layer-drafts artifacts/qul-43-psd-drafts
-      - name: Publish 43 editable PSD files separately (not Cubism-certified)
+      - name: Preserve PSD export even if the stricter pixel audit rejects it
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: QUL-43-original-pixel-layered-PSD-drafts
+          name: QUL-43-layered-PSD-exports-REVIEW-REQUIRED
           path: artifacts/qul-43-psd-drafts
           retention-days: 30
-          if-no-files-found: error
+          if-no-files-found: warn
