@@ -25,3 +25,11 @@ The exported facial, neck and arm partitions are **editable starting layers**, n
 - Approve character artwork individually using a 4x face and arm-edge inspection.
 - Only then export conservative transparent expression PNG/WEBP layers and `rig-approved.json`.
 - Keep Salman and the published portraits untouched until each additional rig passes visual inspection.
+
+## Verified automation outcomes (2026-11-01)
+
+- First successful run produced 43/43 ORA editable drafts and reported **zero changed source pixels in all neutral poses**.
+- Face detector improved from 17/43 to **42/43** using pose-guided face crops without altering input pixels.
+- Pose landmarks were detected in **42/43**. The remaining Tunisian male requires manual landmarks.
+- PSD conversion is a separate GitHub Actions job. It must pass a multilayer and original-reference fidelity audit before a PSD download is described as successful.
+- This milestone does NOT imply 42 independently blinking, phoneme-matched, articulated or Live2D-certified characters.
