@@ -5,8 +5,9 @@ import { Live3DCharacter } from './Live3DCharacter';
 /**
  * Original-pixel portrait runtime for QUL dialect tutors.
  *
- * A portrait becomes the displayed character only once its own local
- * image has loaded successfully. Otherwise the established WebGL tutor is
+ * Only a transparent portrait cutout can be displayed. The old black-background
+ * source.webp is NEVER rendered as a cutout; it remains archived for reference.
+ * A transparent cutout becomes the displayed character once its local image has loaded. Otherwise the established WebGL tutor is
  * retained, so incomplete uploads cannot break the learning experience.
  *
  * Non-destructive, subtle pose motion is possible on an intact portrait.
@@ -28,7 +29,7 @@ interface Props {
 }
 type LoadState = 'loading' | 'available' | 'missing';
 const basePath = (countryId: string, gender: string) =>
-  '/avatars/original-rigs/' + countryId + '/' + gender + '/source.webp';
+  '/avatars/original-rigs/' + countryId + '/' + gender + '/cutout.webp';
 
 export const OriginalPortraitAvatar: React.FC<Props> = ({
   countryId, gender, nameAr, isSelected, isSpeaking, isListening, isLoading,
@@ -72,19 +73,15 @@ export const OriginalPortraitAvatar: React.FC<Props> = ({
       role="img"
       aria-label={nameAr + '، الشخصية الأصلية المعتمدة'}
     >
-      <div className="pointer-events-none absolute inset-[7%_12%_8%] rounded-full bg-slate-900/[.045] blur-3xl" />
+      <div className="pointer-events-none absolute inset-x-[25%] bottom-[1.2%] h-[3%] rounded-[50%] bg-slate-900/20 blur-[7px]" aria-hidden="true" />
       <motion.img
         key={source}
         src={source}
         alt=""
         draggable={false}
         loading="eager"
-        className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
-        style={{
-          transformOrigin: 'center bottom',
-          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%)',
-          maskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%)',
-        }}
+        className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain object-bottom"
+        style={{ transformOrigin: 'center bottom' }}
         initial={{ opacity: 0, y: 8 }}
         animate={{
           opacity: isSelected ? 1 : .96,
