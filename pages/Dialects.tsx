@@ -1758,6 +1758,8 @@ export const Dialects: React.FC = () => {
         config: { responseMimeType: 'application/json', temperature: 0.35 }
       });
 
+      // Ignore replies from a country the learner has already left.
+      if (selectedCountryRef.current?.id !== countryForTurn.id) return;
       const parsed = parseBilingualTutorReply(response.text || '');
       const modelText = parsed.dialectText || "عذرًا، ما قدرت أرد عليك.";
       const replyId = crypto.randomUUID();
@@ -1814,7 +1816,7 @@ export const Dialects: React.FC = () => {
 
       // Throttle translation calls; never request a translation for each audio sample.
       const translatePartialCaption = () => {
-        if (!stillCurrent() || liveCaptionTimerRef.current || liveTranslationCallsRef.current >= 3) return;
+        if (!stillCurrent() || liveCaptionTimerRef.current || liveTranslationCallsRef.current >= 2) return;
         if (liveOutputBufferRef.current.trim().length < 12) return;
         const epoch = liveCaptionEpochRef.current;
         liveCaptionTimerRef.current = setTimeout(() => {
