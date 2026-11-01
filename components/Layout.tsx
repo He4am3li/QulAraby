@@ -400,8 +400,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         })}
       </nav>
 
-      <main className={`flex-1 min-w-0 min-h-0 bg-[#f8fafc] overflow-hidden h-dvh ${(location.pathname === '/whiteboard' || location.pathname === '/calligraphy') ? 'p-1 md:p-2' : 'p-2 md:p-4 lg:p-6'}`}>
-        <div className={`w-full h-full min-h-0 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 relative no-scrollbar ${(location.pathname === '/whiteboard' || location.pathname === '/calligraphy') ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+      <main className={`flex-1 min-w-0 min-h-0 bg-[#f8fafc] overflow-hidden h-dvh ${(location.pathname === '/whiteboard' || location.pathname === '/calligraphy') ? 'p-1 md:p-2' : location.pathname === '/dialects' ? 'p-1 pb-[68px] md:p-2 md:pb-2 lg:p-3 lg:pb-3' : 'p-2 md:p-4 lg:p-6'}`}>
+        <div className={`w-full h-full min-h-0 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 relative no-scrollbar ${(location.pathname === '/whiteboard' || location.pathname === '/calligraphy' || location.pathname === '/dialects') ? 'overflow-hidden' : 'overflow-y-auto'}`}>
           {children}
         </div>
       </main>
