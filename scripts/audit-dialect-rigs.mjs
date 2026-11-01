@@ -13,7 +13,7 @@ const expected = 43; // 22 countries * two characters, excluding Saudi male (Sal
 const errors = [];
 const pending = [];
 const approved = [];
-const safeAsset = name => typeof name === 'string' && /^[A-Za-z0-9_-]+\\.webp$/.test(name);
+const safeAsset = name => typeof name === 'string' && /^[A-Za-z0-9_-]+\.webp$/.test(name);
 
 function dimensions(file) {
   const b = readFileSync(file);
