@@ -2038,6 +2038,7 @@ export const Dialects: React.FC = () => {
       
       {/* Global Brand Header */}
       <PageHeader 
+        compact={!!selectedCountry}
         title={t.title} 
         icon={Globe} 
         lang={lang}
