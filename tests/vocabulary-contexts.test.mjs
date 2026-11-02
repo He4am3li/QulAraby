@@ -132,3 +132,19 @@ assert.ok(!chooser.includes('qul-vocab-topic-glass-icon'), 'Remove rectangular i
 assert.ok(!src.slice(topicCardsEnd).includes('qul-vocab-topic-orb'), 'Do not affect in-topic flashcards');
 assert.ok(src.includes('data-testid="worksheet-preview-bottom-footer"'), 'Keep worksheet preview footer unchanged');
 console.log('Convex sphere OK: 30 external topic cards, refractive rim, protected lesson contents.');
+
+
+// Mouseleave visual polish: avoid lingering glass shadows / slow optical settling.
+const baseTransition = topicGlassCSS.match(/\.qul-vocab-topic-glass\s*\{([\s\S]*?)\n\}/)?.[1] || '';
+const orbTransition = topicGlassCSS.match(/\.qul-vocab-topic-orb\s*\{([\s\S]*?)\n\}/)?.[1] || '';
+const arrowTransition = topicGlassCSS.match(/\.qul-vocab-topic-glass-arrow\s*\{([\s\S]*?)\n\}/)?.[1] || '';
+assert.ok(baseTransition.includes('transform .09s'), 'Topic card must return rapidly after pointer leaves');
+assert.ok(baseTransition.includes('box-shadow .09s'), 'Card shadow must not linger');
+assert.ok(orbTransition.includes('transform .085s'), 'Glass orb must settle promptly');
+assert.ok(arrowTransition.includes('transform .085s'), 'Arrow must settle promptly');
+assert.ok(topicGlassCSS.includes('transition-duration: .155s;'), 'Hover entrance retains a gentle short animation');
+assert.ok(topicGlassCSS.includes('transition-duration: .145s;'), 'Orb entrance retains a short animation');
+assert.ok(topicGlassCSS.includes('@media (hover: none)'), 'Touch devices must not keep a latched elevation');
+assert.ok(topicGlassCSS.includes('@media (prefers-reduced-motion: reduce)'), 'Reduced-motion preference remains honored');
+assert.ok(src.includes('className="qul-vocab-topic-orb"'), 'Sphere rendering must remain unchanged');
+console.log('Hover polish OK: fast 85-90ms exit, controlled entry, no sticky touch elevation.');
