@@ -22,8 +22,9 @@
     0 10px 23px rgba(15,23,42,.08);
   -webkit-backdrop-filter: blur(12px) saturate(108%);
   backdrop-filter: blur(12px) saturate(108%);
-  transition: transform .32s cubic-bezier(.2,.8,.2,1),
-    box-shadow .32s ease, border-color .32s ease;
+  /* Fast return to rest: the previous 320ms easing looked like cursor lag. */
+  transition: transform .09s cubic-bezier(.2,.8,.2,1),
+    box-shadow .09s ease-out, border-color .09s ease-out;
 }
 
 .qul-vocab-topic-glass::before,
@@ -49,9 +50,11 @@
 }
 .qul-vocab-topic-glass > * { position: relative; z-index: 1; }
 
+/* A slightly softer entry, but mouseleave uses the 90ms resting duration. */
 .qul-vocab-topic-glass:hover,
 .qul-vocab-topic-glass:focus-visible {
-  transform: translateY(-3px);
+  transition-duration: .155s;
+  transform: translateY(-2px);
   border-color: rgba(148,163,184,.44);
   box-shadow:
     inset 0 1px 0 #fff,
@@ -96,7 +99,8 @@
     0 2px 4px rgba(15,23,42,.09);
   -webkit-backdrop-filter: blur(1.5px) contrast(1.04);
   backdrop-filter: blur(1.5px) contrast(1.04);
-  transition: box-shadow .34s ease, transform .34s cubic-bezier(.2,.8,.2,1);
+  /* The lens must settle with the card, not keep floating after mouseleave. */
+  transition: box-shadow .085s ease-out, transform .085s ease-out;
 }
 
 /* World inside the water: icon is magnified near the optical center and
@@ -190,7 +194,8 @@
 
 .qul-vocab-topic-glass:hover .qul-vocab-topic-orb,
 .qul-vocab-topic-glass:focus-visible .qul-vocab-topic-orb {
-  transform: translateY(-2px) scale(1.025);
+  transition-duration: .145s;
+  transform: translateY(-1px) scale(1.012);
   box-shadow:
     inset 2px 3px 3px #fff,
     inset -7px -10px 16px rgba(45,60,76,.25),
@@ -202,11 +207,12 @@
 .qul-vocab-topic-glass-arrow {
   border: 1px solid rgba(255,255,255,.85);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.88);
-  transition: color .25s ease, background-color .25s ease, transform .25s ease;
+  transition: color .085s ease-out, background-color .085s ease-out, transform .085s ease-out;
 }
 .qul-vocab-topic-glass:hover .qul-vocab-topic-glass-arrow,
 .qul-vocab-topic-glass:focus-visible .qul-vocab-topic-glass-arrow {
   color: #fff;
+  transition-duration: .14s;
   background-color: rgb(15,23,42);
   transform: translateY(-1px);
 }
@@ -221,6 +227,19 @@
 @media (max-width: 620px) {
   .qul-vocab-topic-orb { width: clamp(88px, 24vw, 108px); }
   .qul-vocab-topic-orb-content > span { font-size: 49px; }
+}
+
+/* On touch devices, CSS :hover can remain latched after a tap.
+   Restrict hover-only elevation without affecting focus-visible keyboard use. */
+@media (hover: none) {
+  .qul-vocab-topic-glass:hover:not(:focus-visible) {
+    transform: none;
+    border-color: rgba(255,255,255,.94);
+  }
+  .qul-vocab-topic-glass:hover:not(:focus-visible) .qul-vocab-topic-orb,
+  .qul-vocab-topic-glass:hover:not(:focus-visible) .qul-vocab-topic-glass-arrow {
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
