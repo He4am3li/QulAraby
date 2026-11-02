@@ -73,7 +73,7 @@
  */
 .qul-vocab-topic-orb {
   position: relative;
-  width: clamp(90px, 7.8vw, 116px);
+  width: clamp(82px, 7.2vw, 100px);
   max-width: 100%;
   aspect-ratio: 1;
   flex: none;
@@ -121,7 +121,7 @@
 }
 .qul-vocab-topic-orb-content > span {
   display: block;
-  font-size: clamp(44px, 4vw, 57px);
+  font-size: clamp(38px, 3.5vw, 50px);
   line-height: 1;
 }
 .qul-vocab-topic-orb-content .qul-vocab-topic-composite {
@@ -181,8 +181,8 @@
 /* A convincing sphere rests in space, it does not look pasted on the card. */
 .qul-vocab-topic-orb-shadow {
   width: min(76%, 94px);
-  height: 11px;
-  margin: -4px auto 9px;
+  height: 8px;
+  margin: -3px auto 3px;
   flex: none;
   border-radius: 50%;
   background: radial-gradient(ellipse at center,
@@ -203,19 +203,6 @@
     0 13px 19px -7px rgba(15,23,42,.38);
 }
 
-.qul-vocab-topic-glass-arrow {
-  border: 1px solid rgba(255,255,255,.85);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.88);
-  transition: color .085s ease-out, background-color .085s ease-out, transform .085s ease-out;
-}
-.qul-vocab-topic-glass:hover .qul-vocab-topic-glass-arrow,
-.qul-vocab-topic-glass:focus-visible .qul-vocab-topic-glass-arrow {
-  color: #fff;
-  transition-duration: .14s;
-  background-color: rgb(15,23,42);
-  transform: translateY(-1px);
-}
-
 /* Non-backdrop browsers retain an opaque, legible fall-back. */
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .qul-vocab-topic-glass { background: rgba(250,251,253,.97); }
@@ -224,8 +211,8 @@
 }
 
 @media (max-width: 620px) {
-  .qul-vocab-topic-orb { width: clamp(88px, 24vw, 108px); }
-  .qul-vocab-topic-orb-content > span { font-size: 49px; }
+  .qul-vocab-topic-orb { width: clamp(78px, 22vw, 96px); }
+  .qul-vocab-topic-orb-content > span { font-size: 42px; }
 }
 
 /* On touch devices, CSS :hover can remain latched after a tap.
@@ -235,23 +222,20 @@
     transform: none;
     border-color: rgba(255,255,255,.94);
   }
-  .qul-vocab-topic-glass:hover:not(:focus-visible) .qul-vocab-topic-orb,
-  .qul-vocab-topic-glass:hover:not(:focus-visible) .qul-vocab-topic-glass-arrow {
+  .qul-vocab-topic-glass:hover:not(:focus-visible) .qul-vocab-topic-orb {
     transform: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .qul-vocab-topic-glass,
-  .qul-vocab-topic-orb,
-  .qul-vocab-topic-glass-arrow {
+  .qul-vocab-topic-orb {
     transition: none !important;
   }
   .qul-vocab-topic-glass:hover,
   .qul-vocab-topic-glass:focus-visible,
   .qul-vocab-topic-glass:hover .qul-vocab-topic-orb,
-  .qul-vocab-topic-glass:focus-visible .qul-vocab-topic-orb,
-  .qul-vocab-topic-glass:hover .qul-vocab-topic-glass-arrow {
+  .qul-vocab-topic-glass:focus-visible .qul-vocab-topic-orb {
     transform: none !important;
   }
 }
