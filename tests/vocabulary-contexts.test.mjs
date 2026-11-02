@@ -159,3 +159,36 @@ assert.ok(topicGlassCSS.includes('transform .085s'), 'Keep existing orb settling
 assert.ok(topicGlassCSS.includes('@media (hover: none)'), 'Preserve touch behavior');
 assert.ok(topicGlassCSS.includes('@media (prefers-reduced-motion: reduce)'), 'Preserve reduced motion behavior');
 console.log('Home motion parity OK: external topic cards use the same Motion hover engine without styling changes.');
+
+
+// Match only the two Vocabulary sidebar tiles to the exact Translator tab style.
+// All navigation and the remainder of the Vocabulary page must stay untouched.
+const translatorSrc = readFileSync(new URL('../pages/Translator.tsx', import.meta.url), 'utf8');
+const vocabNav = src.slice(src.indexOf('<nav className="flex-1 space-y-2.5 -mx-1">'), src.indexOf('</nav>', src.indexOf('<nav className="flex-1 space-y-2.5 -mx-1">')));
+const navDef = src.slice(src.indexOf('const SidebarNavBtn: React.FC<'), src.indexOf('const SessionActionBtn:', src.indexOf('const SidebarNavBtn: React.FC<')));
+const commonTranslatorStyles = [
+  'w-full p-3.5 rounded-2xl border transition-all flex items-center gap-3 text-right group',
+  'border-blue-500 bg-blue-50/70 text-blue-700 shadow-xs',
+  'border-emerald-500 bg-emerald-50/70 text-emerald-700 shadow-xs',
+  'border-slate-100 bg-slate-50/50 hover:border-slate-200 text-slate-600',
+  'w-10 h-10 rounded-xl flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105 shrink-0',
+  'bg-white text-slate-500 border border-slate-100',
+  'text-xs font-black arabic-font truncate leading-tight mb-0.5',
+  'text-[10px] text-slate-400 font-medium truncate font-sans',
+  'opacity-30 shrink-0'
+];
+for (const style of commonTranslatorStyles) {
+  assert.ok(translatorSrc.includes(style), 'Translator style changed: ' + style);
+  assert.ok(navDef.includes(style), 'Vocabulary must copy Translator style: ' + style);
+}
+assert.ok(vocabNav.includes('space-y-2.5'), 'Vertical spacing must match Translator tabs');
+assert.ok(vocabNav.includes('color="blue"'), 'Word Journey active state must match Instant Translator');
+assert.ok(vocabNav.includes('color="emerald"'), 'My Words active state must match Translator Academy');
+assert.ok(vocabNav.includes('icon={<Compass size={20} />}'), 'Keep Journey icon with same size as Translator');
+assert.ok(vocabNav.includes('icon={<Layers size={20} />}'), 'Keep My Words icon with same size as Translator');
+assert.ok(vocabNav.includes("setActiveTab('discovery')"), 'Word Journey navigation must work');
+assert.ok(vocabNav.includes("setActiveTab('lexicon')"), 'My Words navigation must work');
+assert.ok(vocabNav.includes("setSelectedTopic(null)"), 'Keep My Words topic reset');
+assert.ok(navDef.includes("lang === 'ar' ? 'rotate-180' : ''"), 'Keep direction-aware arrow');
+assert.ok(!navDef.includes('shadow-xl shadow-slate-200 translate-x-1'), 'Remove old navy selected card style');
+console.log('Sidebar parity OK: Word Journey and My Words match Translator and Academy tiles.');
