@@ -309,7 +309,7 @@ export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, o
           'qul-word-gallery-stage flex-1 min-w-0 min-h-0 overflow-hidden flex-col relative',
           showMobileDetail ? 'flex' : 'hidden md:flex'
         ].join(' ')}>
-          <div className="qul-word-gallery-stage-top relative z-10 flex items-center justify-between gap-2 px-4 sm:px-6 pt-3 sm:pt-4">
+          <div className="qul-word-gallery-stage-top relative z-10 flex items-center gap-3 px-4 sm:px-6 pt-3 sm:pt-4">
             <div className="flex items-center gap-2 min-w-0">
               <button
                 type="button"
@@ -330,10 +330,16 @@ export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, o
                   {lang === 'ar' ? 'الكلمة المختارة' : 'Selected word'}
                 </span>
               )}
+              {selected && (
+                <span className="qul-word-gallery-status arabic-font" aria-label={getStatus(selected, lang)}>
+                  <span className={`qul-word-gallery-status-dot ${
+                    isMastered(selected.mastery_level) ? 'bg-emerald-500'
+                      : selected.mastery_level === MasteryLevel.NEW ? 'bg-slate-400' : 'bg-sky-500'
+                  }`} aria-hidden="true" />
+                  {getStatus(selected, lang)}
+                </span>
+              )}
             </div>
-            {selected && <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50/90 border border-emerald-100 px-3 py-1 rounded-full arabic-font">
-              {getStatus(selected, lang)}
-            </span>}
           </div>
 
           {selected ? (
