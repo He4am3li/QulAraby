@@ -12,6 +12,7 @@ import { LanguageToggle } from '../components/LanguageToggle';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { Vocabulary, MasteryLevel } from '../types';
+import { VOCABULARY_CONTEXTS } from '../data/vocabularyContextStories';
 import { generateSpeech, decodeAudioData, getWordDeepAnalysis, generateThemedVocabulary, generateWordIllustration, speak } from '../services/gemini';
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType, serverTimestamp } from '../firebase';
@@ -1630,190 +1631,42 @@ const MONTH_EMOJIS_MAP: Record<string, string> = {
   'سنوات / أعوام': '🕰️'
 };
 
-const TOPIC_STORIES: Record<string, { ar: string, en: string }> = {
-  about_me: {
-    ar: "عِنْدَمَا أَلْتَقِي بِأَحَدٍ أَقُولُ: مرحبًا و أهلاً و صباح الخير أَوْ مساء الخير. أَقُولُ لَهُ أهلاً وسهلاً وَأَسْأَلُهُ: كيف حالك؟ فَيُجِيبُ: أنا بخير. ثُمَّ أَقُولُ: سعيد بلقائك ، ما اسمك؟ فَيَقُولُ: اسمي... وَأَسْأَلُهُ: من أين أنت؟ فَيَرُدُّ: أنا من الإمارات. فِي النِّهَايَةِ أَقُولُ شكرًا، فَيُجِيبُ: على الرحب والسعة ، ثُمَّ أُوَدِّعُهُ: مع السلامة و أراك لاحقًا.",
-    en: "When I meet someone I say: Hello, Hi, Good morning or Good evening. I say Welcome and ask: How are you? He answers: I am fine. Then I say: Nice to meet you, What is your name? He says: My name is... and I ask: Where are you from? He replies: I am from the UAE. Finally I say Thank you, he answers: You are welcome, then I bid farewell: Goodbye and See you later."
-  },
-  family_hobbies: {
-    ar: "تَتَكُوَّنُ أسرة السَّعِيدَةِ مِنْ الوالدان ؛ أب و أم ، وَتَضُمُّ ابن و ابنة و أخ و أخت و طفل رضيع. نَزُورُ جد و جدة بِاسْتِمْرَارٍ، وَنَلْتَقِي بِـ عم / خال وَ عمة / خالة وَ ابن العم / ابن الخال. لِكُلِّ زوج و زوجة دَوْرٌ عَظِيمٌ فِي بِنَاءِ العَائِلَةِ.",
-    en: "The happy family consists of parents; father and mother, and includes son, daughter, brother, sister, and baby. We visit grandfather and grandmother regularly, and meet uncle, aunt, and cousin. Every husband and wife have a great role in building the family."
-  },
-  feelings: {
-    ar: "أَشْعُرُ بِأَنِّي سعيد و متحمس عِنْدَ النَّجَاحِ، وَأَكُونُ فخور بِنَفْسِي. لَكِنْ قَدْ أَشْعُرُ بِـ حزين أَوْ غاضب أَوْ منزعج عِنْدَ المَشَاكِلِ. عِنْدَمَا أَرَى مُفَاجَأَةً أَكُونُ متفاجئ و مذهول ، وَحِينَ أَكُونُ مريض أَوْ متعب أَحْتَاجُ لِلرَّاحَةِ. قَدْ أَصِيرُ قلق أَوْ متوتر أَوْ حائر أَوْ مُحرج أَوْ وحيد ، لَكِنِّي لاَ أَبْقَى كسول أَبَدًا.",
-    en: "I feel happy and excited when succeeding, and I am proud of myself. But I may feel sad, angry, or annoyed during problems. When I see a surprise I am surprised and amazed, and when sick or tired I need rest. I might become worried, nervous, confused, embarrassed, or lonely, but I never stay lazy."
-  },
-  body_parts: {
-    ar: "جِسْمُ الإِنْسَانِ يَتَكُوَّنُ مِنَ الرَّأْسِ وَفِيهِ الشَّعْرُ وَ العَيْنُ وَ الأُذُنُ وَ الأَنْفُ وَ الفَمُ وَ الأَسْنَانُ وَ اللِّسَانُ. يَتَّصِلُ الرَّأْسُ بِـ الرَّقَبَةِ وَ الْكَتِفِ ، وَتَمْتَدُّ الذِّرَاعُ وَ الْيَدُ مَعَ الأَصَابِعِ. كَمَا نَسْتَخْدِمُ الصَّدْرَ وَ البَطْنَ وَ الظَّهْرَ ، وَنَمْشِي عَلَى السَّاقِ وَ القَدَمِ وَ الرُّكْبَةِ.",
-    en: "The human body consists of the head containing hair, eye, ear, nose, mouth, teeth, and tongue. The head connects to the neck and shoulder, extending into the arm and hand with fingers. We also use the chest, stomach, and back, and walk on the leg, foot, and knee."
-  },
-  clothing: {
-    ar: "فِي الصَّيْفِ أَرْتَدِي قميص و شورت أَوْ فستان خَفِيفًا، أَمَّا فِي الشِّتَاءِ فَأَلْبَسُ معطف ثَقِيلًا وَ سِتْرَةً وَ وشاح وَ قُفَّازَاتٍ وَ قُبَّعَةً. عِنْدَ الرِّيَاضَةِ أَلْبَسُ بنطال وَ حِذَاءً رِيَاضِيًّا وَ جَوْرَبًا، وَفِي المُنَاسَبَاتِ أَرْتَدِي بلوزة أَوْ ربطة عنق أَوْ تنورة.",
-    en: "In summer I wear a t-shirt and shorts or a light dress, while in winter I put on a heavy coat, sweater, scarf, gloves, and hat. When playing sports I wear pants, sneakers, and socks, and for formal events I wear a blouse, necktie, or skirt."
-  },
-  living: {
-    ar: "فِي بَيْتِنَا غرفة النوم بِـ سرير وَ دولاب وَ مرآة ، وَ غرفة المعيشة بِـ أريكة وَ سجادة وَ تلفاز. فِي مطبخ نُعِدُّ الطَّعَامَ عَلَى طاولة ، وَنَسْتَخْدِمُ حمام لِلنَّظَافَةِ. نَفْتَحُ شباك وَ ستارة وَنَخْرُجُ إِلَى شرفة ، وَنَدْخُلُ مِنْ بوابة وَنَصْعَدُ بِـ سلم.",
-    en: "In our home, the bedroom has a bed, wardrobe, and mirror, and the living room has a sofa, carpet, and TV. In the kitchen we prepare food on the table, and use the bathroom for hygiene. We open the window and curtain and go out to the balcony, entering through the gate and going up the ladder."
-  },
-  routine: {
-    ar: "يَوْمِي يَبْدَأُ عِنْدَمَا أستيقظ وَ أرتب سريري ، ثُمَّ أستحم وَ أنظف أسناني وَ أرتدي ملابسي. أتناول الإفطار ثُمَّ أذهب إلى المدرسة لِكَيْ أدرس. بَعْدَ ذَلِك أعود للمنزل ، أتناول الغداء ، أمارس الرياضة وَ ألعب ، ثُمَّ أسترخي ، أتناول العشاء ، أصلي وَ أنام.",
-    en: "My day starts when I wake up and make my bed, then shower, brush my teeth, and get dressed. I eat breakfast then go to school to study. After that I return home, eat lunch, exercise, play, then relax, eat dinner, pray, and sleep."
-  },
-  food_drink: {
-    ar: "نَتَنَاوَلُ فِي الوَجَبَاتِ أرز مَعَ لحم أَوْ دجاج أَوْ سمك. فِي الصَّبَاحِ نَأْكُلُ بيض مسلوق أَوْ بيض مقلي مَعَ خبز ، وَفِي العَشَاءِ نَسْتَمْتِعُ بِـ نودلز أَوْ بيتزا وَ سلطة وَ بطاطس مقلية. نَشْرَبُ حليب وَ عصير أَوْ شاي وَ قهوة ، وَنَبْتَعِدُ عَنِ مشروب غازي.",
-    en: "In meals we eat rice with meat, chicken, or fish. In the morning we eat boiled egg or fried egg with bread, and for dinner we enjoy noodles or pizza with salad and fries. We drink milk, juice, tea, or coffee, and avoid soda."
-  },
-  fruits: {
-    ar: "الْفَوَاكِهُ لَذِيذَةٌ وَصِحِّيَّةٌ! نُحِبُّ أَكْلَ تفاح وَ موز وَ برتقال وَ بطيخ فِي الصَّيْفِ، كَمَا نَسْتَمْتِعُ بِـ عنب وَ فراولة وَ مانجو وَ أناناس. كَمَا نَأْكُلُ خوخ وَ كمثرى وَ كرز وَ كيوى وَ تين وَ رمان وَ تمر.",
-    en: "Fruits are delicious and healthy! We love eating apple, banana, orange, and watermelon in summer, and enjoy grapes, strawberry, mango, and pineapple. We also eat peach, pear, cherry, kiwi, fig, pomegranate, and dates."
-  },
-  vegetables: {
-    ar: "الْخَضْرَاوَاتُ تُقَوِّي المَنَاعَةَ! نَضَعُ فِي السَّلَطَةِ طماطم وَ خيار وَ خس وَ جزر وَ فلفل رومي وَ زيتون. فِي الطَّبْخِ نَسْتَخْدِمُ بصل وَ ثوم وَ بطاطس وَ باذنجان وَ قرنبيط وَ عيش الغراب ، وَنُحِبُّ أَيْضًا ذرة وَ بطاطا حلوة وَ شطة وَ ليمون.",
-    en: "Vegetables strengthen immunity! In salad we put tomatoes, cucumber, lettuce, carrots, bell pepper, and olives. In cooking we use onions, garlic, potatoes, eggplant, cauliflower, and mushrooms, and we also love corn, sweet potato, chili, and lemon."
-  },
-  key_phrases: {
-    ar: "فِي الفَصْلِ يَسْتَخْدِمُ طالب قلم وَ قلم رصاص وَ قلم ألوان فِي دفتر وَ كتاب. عِنْدَ الخَطَأِ نَسْتَعْمِلُ ممحاة وَ مبراة. يَشْرَحُ معلم عَلَى سبورة وَنَضَعُ الأَغْرَاضَ عَلَى طاولة. يَقُولُ لَنَا المعلم: قف ثُمَّ اجلس ، وَيُشَجِّعُنَا بِكَلِمَاتِ أحسنت وَ رائع. عِنْدَ الحَاجَةِ نَسْأَلُ عَنْ الحمّام.",
-    en: "In class the student uses a pen, pencil, and color pencil in notebook and book. When making a mistake we use eraser and sharpener. The teacher explains on the whiteboard and we put items on the table. The teacher tells us: Stand up then Sit down, encouraging us with Well done and Wonderful. When needed we ask for The bathroom."
-  },
-  survival: {
-    ar: "فِي المَدْرَسَةِ نَدْرُسُ اللغة العربية وَ اللغة الإنجليزية وَ اللغة الفرنسية. فِي مَعْمَلِ العلوم نُجْرِي التَّجَارِبَ، وَفِي الرياضيات نَحْسُبُ. نَتَعَلَّمُ القِيَمَ فِي التربية الإسلامية وَ التربية الأخلاقية ، وَنَقْرَأُ فِي دراسات اجتماعية. نَسْتَمْتِعُ بِـ الفن وَ الموسيقى وَ التربية الرياضية وَ الحاسب الآلي ، وَنَقِفُ فِي طابور الصباح لِنُنَشِّدَ النشيد الوطني وَنَسْتَمِعَ لِلـ الإذاعة المدرسية قَبْلَ الاستراحة.",
-    en: "At school we study Arabic, English, and French. In Science lab we do experiments, and in Mathematics we calculate. We learn values in Islamic Education and Moral Education, and read in Social Studies. We enjoy Art, Music, PE, and Computer Studies, standing in Morning Assembly to recite the National Anthem and listen to School Broadcast before Break."
-  },
-  time: {
-    ar: "مَعْرِفَةُ الوَقْتِ مُهِمَّةٌ! نَسْتَخْدِمُ الساعة لِنَعْرِفَ الوقت. هَلْ هِيَ الساعة الواحدة أَوْ الثانية أَوْ الثالثة أَوْ الرابعة أَوْ الخامسة أَوْ السادسة أَوْ السابعة أَوْ الثامنة أَوْ التاسعة أَوْ العاشرة أَوْ الحادية عشرة أَوْ الثانية عشرة؟ كَمَا نُمَيِّزُ عِنْدَمَا تَكُونُ تماماً أَوْ والنصف أَوْ والربع أَوْ إلا ربعاً.",
-    en: "Knowing time is important! We use the clock to know the time. Is it 1 o'clock, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, or 12 o'clock? We also distinguish when it is sharp/exactly, half past, quarter past, or quarter to."
-  },
-  weather: {
-    ar: "تَتَكُوَّنُ السَّنَةُ مِنْ فصول : الربيع وَ الصيف وَ الخريف وَ الشتاء. يَكُونُ الجَوُّ حار فِي الصَّيْفِ وَ بارد أَوْ ممطر فِي الشِّتَاءِ كَمَا يَنْزِلُ ثلج. فِي الرَّبِيعِ يَكُونُ معتدل ، وَقَدْ يَكُونُ عاصف أَوْ غائم أَوْ ضبابي أَوْ رطب. أنا أفضل الجَوَّ الجَمِيلَ.",
-    en: "The year consists of seasons: Spring, Summer, Autumn, and Winter. Weather is hot in summer, cold or rainy in winter with snow falling. In spring it is mild climate, and it can be windy, cloudy, foggy, or wet. I prefer beautiful weather."
-  },
-  instructions: {
-    ar: "تَتَكُوَّنُ سنة / عام مِنْ اثْنَيْ عَشَرَ شهر : يناير ، فبراير ، مارس ، أبريل ، مايو ، يونيو ، يوليو ، أغسطس ، سبتمبر ، أكتوبر ، نوفمبر ، وَ ديسمبر. تَمُرُّ شهور وَ سنين / أعوام وَنَحْنُ نَتَعَلَّمُ وَنَنْمُو.",
-    en: "A year consists of twelve months: January, February, March, April, May, June, July, August, September, October, November, and December. Months and years pass as we learn and grow."
-  },
-  colours: {
-    ar: "عَالَمُنَا ملون وَجَمِيلٌ! هذا اللون ... مِثْلُ أحمر ، برتقالي ، أصفر ، أخضر ، أزرق ، بنفسجي ، وردي ، وَ أزرق فاتح. كَمَا نَجِدُ أسود ، أبيض ، بني ، وَ رمادي. بَعْضُ الأَلْوَانِ فاتح وَبَعْضُهَا غامق.",
-    en: "Our world is colorful and beautiful! This color is... like red, orange, yellow, green, blue, purple, pink, and light blue. We also find black, white, brown, and grey. Some colors are light and some are dark."
-  },
-  animals: {
-    ar: "نَرَى فِي المَزْرَعَةِ قطة وَ كلب وَ أرنب وَ حصان وَ حمار وَ بقرة وَ خروف وَ ماعز. وَفِي الغَابَةِ وَالصَّحْرَاءِ نَجِدُ أسد وَ نمر وَ فيل وَ زرافة وَ قرد وَ دب وَ جمل وَ غزال.",
-    en: "On the farm we see cat, dog, rabbit, horse, donkey, cow, sheep, and goat. In the forest and desert we find lion, tiger, elephant, giraffe, monkey, bear, camel, and deer."
-  },
-  birds: {
-    ar: "تُحَلِّقُ الطُّيُورُ! نَشُودُ عصفور وَ حمامة وَ ببغاء وَ يمامة ، وَنَرَى دجاجة وَ ديك وَ بطة وَ إوَّزة. كَمَا نَجِدُ نسر وَ صقر وَ بومة وَ نعامة وَ بطريق وَ طاووس وَ بجعة.",
-    en: "Birds fly! We listen to sparrow, pigeon, parrot, and dove, seeing hen, rooster, duck, and goose. We also find eagle, falcon, owl, ostrich, penguin, peacock, and swan."
-  },
-  fish_creatures: {
-    ar: "تَعِيشُ الكَائِنَاتُ فِي البَحْرِ! نَجِدُ سمك وَ قنديل البحر وَ نجم البحر وَ سلحفاة وَ سرطان. كَمَا نَرَى دلفين وَ حوت وَ قرش وَ أخطبوط وَ سبع البحر وَ حصان البحر وَ تمساح.",
-    en: "Sea creatures live in the ocean! We find fish, jellyfish, starfish, turtle, and crab. We also see dolphin, whale, shark, octopus, sea lion, seahorse, and crocodile."
-  },
-  insects_reptiles: {
-    ar: "فِي الطَّبِيعَةِ نَجِدُ حشرات وَ زواحف: فراشة ، نحلة ، نملة ، ذبابة ، بعوضة ، دعسوقة ، صرصور ، وَ عنكبوت. كَمَا نَجِدُ ثعبان ، سلحفاة ، تمساح ، حرباء ، وَ ضفدع.",
-    en: "In nature we find insects and reptiles: butterfly, bee, ant, fly, mosquito, ladybug, cockroach, and spider. We also find snake, turtle, crocodile, chameleon, and frog."
-  },
-  places: {
-    ar: "فِي المَدِينَةِ نَزُورُ مدرسة وَ مستشفى وَ مطعم وَ فندق وَ صيدلية وَ مطار. نَتَسَوَّقُ فِي محل وَ سوبر ماركت ، وَنَسْتَمْتِعُ فِي مسرح وَ سينما وَ سيرك وَ شاطئ وَ مدينة ألعاب وَ استاد وَ حديقة حيوان وَ متحف.",
-    en: "In the city we visit school, hospital, restaurant, hotel, pharmacy, and airport. We shop in shop and supermarket, enjoying theatre, cinema, circus, beach, amusement park, stadium, zoo, and museum."
-  },
-  sports: {
-    ar: "الرِّيَاضَةُ مُمْتِعَةٌ! نَلْعَبُ كرة قدم وَ كرة سلة وَ بيسبول وَ تنس وَ كرة طائرة وَ تنس طاولة وَ ريشة طائرة. كَمَا نُمَارِسُ ملاكمة وَ مصارعة وَ رفع أثقال وَ دراجات وَ سباحة وَ تزلج وَ سباق الخيل وَ جمباز وَ تسلق.",
-    en: "Sports are fun! We play football, basketball, baseball, tennis, volleyball, table tennis, and badminton. We also practice boxing, wrestling, weightlifting, cycling, swimming, skiing, horse racing, gymnastics, and climbing."
-  },
-  transport: {
-    ar: "تَتَنَوَّعُ وَسَائِلُ النَّقْلِ: فِي الشَّارِعِ نَرَى سيارة وَ سيارة أجرة وَ حافلة وَ شاحنة وَ دراجة وَ سكوتر. نَجِدُ سيارة شرطة وَ سيارة إسعاف وَ سيارة إطفاء. وَلِلْمَسَافَاتِ البَعِيدَةِ نَسْتَخْدِمُ قطار وَ مترو وَ تلفريك وَ سفينة وَ طائرة وَ قارب شراعي.",
-    en: "Means of transport vary: on the street we see car, taxi, bus, truck, bicycle, and scooter. We find police car, ambulance, and fire engine. For long distances we use train, metro, cableway, ship, airplane, and sailboat."
-  },
-  jobs: {
-    ar: "تَتَنَوَّعُ المِهَنُ: نَجِدُ طبيب وَ ممرضة لِعِلَاجِ المَرْضَى، وَ معلم لِلتَّعْلِيمِ. يَعْمَلُ مهندس وَ نجار وَ رسام / دهان ، وَفِي الأَمْنِ شرطي وَ إطفائي. نَجِدُ مزارع وَ طباخ وَ سائق وَ طيار وَ رجل أعمال وَ عالم وَ قاضي وَ مصور.",
-    en: "Jobs vary: we find doctor and nurse for treating patients, and teacher for teaching. Engineer, carpenter, and painter work in construction, and police and firefighter in security. We find farmer, chef, driver, pilot, businessman, scientist, judge, and photographer."
-  },
-  shopping: {
-    ar: "فِي مول نَأْخُذُ عربة تسوق أَوْ سلة تسوق وَنَضَعُ البَضَائِعَ فِي أكياس تسوق أَوْ صندوق. نَسْتَفِيدُ مِنْ تخفيضات وَنَسْأَلُ موظف المبيعات ، أَوْ نَقُومُ بِـ تسوق إلكتروني. نَدْفَعُ بِـ نقود أَوْ بطاقة دفع وَنَأْخُذُ إيصال ، ثُمَّ نَمُرُّ مِنْ مدخل لِنَصْعَدَ بِـ مصعد وَنَصِلَ إِلَى موقف سيارات.",
-    en: "In mall we take shopping cart or shopping basket and put goods in shopping bags or box. We benefit from discount and ask sales assistant, or do online shopping. We pay in cash or payment card and take receipt, passing entrance to ride elevator to parking."
-  },
-  health: {
-    ar: "لِلْمُحَافَظَةِ عَلَى الصِّحَّةِ، يَصِفُ الطَّبِيبُ دواء أَوْ إبرة وَيَسْتَخْدِمُ سماعة طبيب وَ ميزان حرارة. نَضَعُ لاصق طبي وَنَسْتَخْدِمُ معقم لِقَتْلِ جرثومة. نَهْتَمُّ بِـ قلب وَ رئتان وَ دماغ وَ عظم وَ سن ، وَعِنْدَ الطَّوَارِئِ نَتَّصِلُ بِـ إسعاف.",
-    en: "To maintain health, doctor prescribes medicine or injection, using stethoscope and thermometer. We place bandage and use sanitizer to kill germ. We care for heart, lungs, brain, bone, and tooth, calling ambulance in emergency."
-  },
-  tech: {
-    ar: "التَّكْنُولُوجْيَا هَامَّةٌ! نَسْتَخْدِمُ هاتف ذكي وَ حاسوب وَ لابتوب مَعَ لوحة مفاتيح وَ فأرة وَ طابعة. نَتَّصِلُ بِـ واي فاي لِنَقْلِ إشارة ، وَنَحْتَاجُ شاحن لِشَحْنِ بطارية. نَضْبِطُ إعدادات وَنَسْتَفِيدُ مِنْ ذكاء اصطناعي.",
-    en: "Technology is important! We use smartphone, computer, and laptop with keyboard, mouse, and printer. We connect to Wi-Fi for signal, needing charger to charge battery. We adjust settings and benefit from Artificial Intelligence."
-  },
-  nature: {
-    ar: "الطَّبِيعَةُ سَاحِرَةٌ! نَرَى شجرة وَ نخلة وَ صبار وَ نبات وَ ورقة شجر وَ قمح وَ زهرة وَ دوّار الشمس. نَتَسَلَّقُ جبل وَ تلة وَنُشَاهِدُ جبل بركاني وَ وادٍ / طبيعة وَ جزيرة وَ بحر وَ شاطئ.",
-    en: "Nature is magical! We see tree, palm tree, cactus, plant, leaf, wheat, flower, and sunflower. We climb mountain and hill, viewing volcano, landscape, island, sea, and beach."
-  },
-  music: {
-    ar: "المُوسِيقَى جَمِيلَةٌ! نَعْزِفُ عَلَى بيانو وَ غيتار وَ كمان وَ طبول وَ ساكسفون وَ ترومبيت وَ أكورديون وَ ناي. نَقْرَأُ نوتة موسيقية وَنَسْتَخْدِمُ ميكروفون وَ مكبر صوت لِنَشْرِ الأَلْحَانِ.",
-    en: "Music is beautiful! We play piano, guitar, violin, drums, saxophone, trumpet, accordion, and flute. We read music notes and use microphone and speaker to spread tunes."
-  },
-  travel: {
-    ar: "عِنْدَ السَّفَرِ نَحْجِزُ تذكرة وَنَحْمِلُ جواز سفر وَ حقيبة سفر أَوْ حقيبة ظهر. فِي المَطَارِ نَمُرُّ عَبْرَ الجمارك وَ أمتعة لِنَصْعَدَ إِلَى طائرة وَنَجْلِسَ فِي مقعد الطائرة. يَقُودُ طيار بِمُسَاعَدَةِ مضيفة طيران عِنْدَ إقلاع وَ هبوط.",
-    en: "When traveling we book ticket and carry passport and suitcase or backpack. At airport we pass customs and baggage to board airplane and sit in seat. Pilot flies with flight attendant's help during departure and arrival."
-  }
-};
-
-const renderInteractiveStory = (
-  text: string, 
-  vocabWords: Partial<Vocabulary>[], 
-  onSelectWord: (word: Partial<Vocabulary>) => void,
-  selectedWord: Partial<Vocabulary> | null
+/** Render context words by explicit card index, not by surface-form equality. */
+const renderContextualStory = (
+  paragraph: string,
+  vocabWords: Partial<Vocabulary>[],
+  onSelectWord: (word: Partial<Vocabulary>, contextualForm: string) => void,
+  selectedWord: (Partial<Vocabulary> & { context_surface?: string }) | null
 ) => {
-  if (!text) return text;
-
-  const vocabMap = new Map<string, Partial<Vocabulary>>();
-
-  vocabWords.forEach(w => {
-    if (w.original_word) {
-      vocabMap.set(w.original_word.toLowerCase(), w);
-      if (w.original_word.includes('/')) {
-        w.original_word.split('/').forEach(part => {
-          vocabMap.set(part.trim().toLowerCase(), w);
-        });
-      }
+  const segments: React.ReactNode[] = [];
+  const marker = /\[\[(\d+)\|([^\]]+)\]\]/g;
+  let start = 0;
+  let match: RegExpExecArray | null;
+  while ((match = marker.exec(paragraph)) !== null) {
+    if (match.index > start) segments.push(<React.Fragment key={'text-' + start}>{paragraph.slice(start, match.index)}</React.Fragment>);
+    const wordIndex = Number(match[1]);
+    const surface = match[2];
+    const vocab = vocabWords[wordIndex];
+    if (!vocab?.original_word) {
+      segments.push(<React.Fragment key={'unlinked-' + match.index}>{surface}</React.Fragment>);
+    } else {
+      const active = selectedWord?.original_word === vocab.original_word && selectedWord?.context_surface === surface;
+      segments.push(
+        <button
+          type="button"
+          key={'word-' + match.index}
+          onClick={(event) => { event.stopPropagation(); onSelectWord(vocab, surface); }}
+          aria-label={'معنى ' + surface}
+          title="اضغط لعرض الكلمة في البطاقة ومعناها"
+          className={'inline font-bold rounded-md px-0.5 underline decoration-amber-400 decoration-dotted underline-offset-4 transition-colors ' +
+            (active ? 'bg-amber-500 text-white' : 'text-amber-900 hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-amber-600')}
+        >{surface}</button>
+      );
     }
-  });
-
-  const sortedKeys = Array.from(vocabMap.keys()).sort((a, b) => b.length - a.length);
-  if (sortedKeys.length === 0) return text;
-
-  const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const pattern = new RegExp(`(${sortedKeys.map(escapeRegExp).join('|')})`, 'gi');
-  const parts = text.split(pattern);
-
-  return (
-    <>
-      {parts.map((part, index) => {
-        const lowerPart = part.toLowerCase();
-        const matchedVocab = vocabMap.get(lowerPart);
-        if (matchedVocab) {
-          const isSelected = selectedWord && (
-            selectedWord.original_word?.toLowerCase() === matchedVocab.original_word?.toLowerCase() ||
-            selectedWord.original_word?.toLowerCase().includes(lowerPart)
-          );
-
-          return (
-            <span
-              key={index}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectWord(matchedVocab);
-              }}
-              className={`cursor-pointer transition-all duration-150 inline-block px-1 py-0.5 my-0.5 mx-0.5 rounded-md font-bold ${
-                isSelected
-                  ? 'bg-amber-500 text-white shadow-xs scale-105'
-                  : 'text-amber-950 hover:text-amber-700 hover:bg-amber-100/60'
-              }`}
-              title="اضغط لكشف الترجمة والنطق"
-            >
-              {part}
-            </span>
-          );
-        }
-        return <span key={index}>{part}</span>;
-      })}
-    </>
-  );
+    start = marker.lastIndex;
+  }
+  if (start < paragraph.length) segments.push(<React.Fragment key={'text-' + start}>{paragraph.slice(start)}</React.Fragment>);
+  return <>{segments}</>;
 };
 
 const TopicStoryBox: React.FC<{
@@ -1826,14 +1679,20 @@ const TopicStoryBox: React.FC<{
 }> = ({ topicId, topicAr, topicEn, words, lang, onSpeak }) => {
   const [showEnglish, setShowEnglish] = React.useState(false);
   const [isPlaying, setIsPlaying] = React.useState(false);
-  const [selectedWord, setSelectedWord] = React.useState<Partial<Vocabulary> | null>(null);
+  const [selectedWord, setSelectedWord] = React.useState<(Partial<Vocabulary> & { context_surface?: string }) | null>(null);
 
-  const storyObj = TOPIC_STORIES[topicId];
-  const storyTextAr = storyObj ? storyObj.ar : `فِي مَوْضُوعِ ${topicAr}، نَتَعَرَّفُ عَلَى المَفْرَدَاتِ التَّالِيَةِ فِي سِيَاقٍ مُتَكَامِلٍ: ${words.map(w => w.original_word).filter(Boolean).join('، ')}.`;
-  const storyTextEn = storyObj ? storyObj.en : `In the topic ${topicEn}, we learn the following vocabulary in context: ${words.map(w => w.translation).filter(Boolean).join(', ')}.`;
-
-  const currentText = showEnglish ? storyTextEn : storyTextAr;
+  const storyObj = VOCABULARY_CONTEXTS[topicId];
+  const storyTextAr = storyObj?.ar || '';
+  const storyTextEn = storyObj?.en || '';
+  // Pronounce plain Arabic, never the card-link annotations.
+  const spokenArabic = storyTextAr.replace(/\[\[\d+\|([^\]]+)\]\]/g, '$1');
+  const currentText = showEnglish ? storyTextEn : spokenArabic;
   const speakLang = showEnglish ? 'en' : 'ar';
+
+  React.useEffect(() => {
+    setShowEnglish(false);
+    setSelectedWord(null);
+  }, [topicId]);
 
   const handleSpeak = () => {
     setIsPlaying(true);
@@ -1888,13 +1747,17 @@ const TopicStoryBox: React.FC<{
 
       <div className="relative text-slate-800 text-xs md:text-sm leading-relaxed md:leading-loose font-medium arabic-font">
         {showEnglish ? (
-          <p className="font-sans text-xs md:text-sm text-slate-700 leading-relaxed text-left dir-ltr">
-            {storyTextEn}
-          </p>
+          <div dir="ltr" className="space-y-2 text-left font-sans text-xs md:text-sm text-slate-700 leading-relaxed">
+            {storyTextEn.split('\n\n').map((paragraph, index) => (<p key={index}>{paragraph}</p>))}
+          </div>
         ) : (
-          <p className="arabic-font text-xs md:text-sm text-slate-800 leading-loose text-justify dir-rtl">
-            {renderInteractiveStory(storyTextAr, words, (w) => setSelectedWord(w), selectedWord)}
-          </p>
+          <div dir="rtl" className="space-y-2 arabic-font text-xs md:text-sm text-slate-800 leading-loose text-right">
+            {storyTextAr.split('\n\n').map((paragraph, index) => (
+              <p key={index}>
+                {renderContextualStory(paragraph, words, (word, surface) => setSelectedWord({ ...word, context_surface: surface }), selectedWord)}
+              </p>
+            ))}
+          </div>
         )}
       </div>
 
@@ -1920,7 +1783,7 @@ const TopicStoryBox: React.FC<{
                 <div>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <h5 className="font-black text-slate-900 text-sm md:text-base arabic-font leading-none">
-                      {selectedWord.original_word}
+                      {selectedWord.context_surface || selectedWord.original_word}
                     </h5>
                     {(selectedWord as any).phonetic && (
                       <span className="text-[9px] text-amber-800/80 font-mono bg-amber-50 px-1 py-0.5 rounded border border-amber-100">
@@ -1931,12 +1794,20 @@ const TopicStoryBox: React.FC<{
                   <p className="text-xs font-bold text-amber-700 font-sans mt-0.5 leading-none">
                     {selectedWord.translation}
                   </p>
+                  {selectedWord.context_surface && selectedWord.context_surface !== selectedWord.original_word && (
+                    <p className="text-[11px] text-slate-600 arabic-font leading-relaxed mt-2 bg-amber-50 rounded-lg px-2 py-1">
+                      <span className="font-bold">في النص:</span> {selectedWord.context_surface}
+                      {'  |  '}
+                      <span className="font-bold">في البطاقة:</span> {selectedWord.original_word}
+                      <span className="block text-slate-500 mt-1">تتغير صورة الكلمة لتناسب موقعها في الجملة.</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
               <div className="flex items-center gap-1 shrink-0">
                 <button
-                  onClick={() => onSpeak(selectedWord.original_word || '', 'ar')}
+                  onClick={() => onSpeak(selectedWord.context_surface || selectedWord.original_word || '', 'ar')}
                   className="w-7 h-7 rounded-lg bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center transition-all shadow-2xs active:scale-95"
                   title="استمع للكلمة"
                 >
