@@ -74,3 +74,26 @@ assert.ok(!src.includes('<VocabularyUsageTips'), 'Interactive lesson panel must 
 assert.ok(!src.includes('selectedUsageChoice'), 'No quiz controls in tip bubble');
 assert.ok(!src.includes('VOCABULARY_USAGE_TIPS'), 'Remove old interactive tips data reference');
 console.log('Compact bilingual hints OK: 30 topics, no card icons or quizzes, original bubble restored.');
+
+
+// Worksheet preview belongs at the bottom of the topic frame, physically left in
+// Arabic and right in English, never inside the word cards or the header.
+assert.equal((src.match(/setShowWorksheetPreview\(true\)/g) || []).length, 1,
+  'Only one worksheet preview button should remain');
+const footerIndex = src.indexOf('data-testid="worksheet-preview-bottom-footer"');
+const cardsIndex = src.indexOf('words.map((f, i) =>');
+const modalIndex = src.indexOf('isOpen={showWorksheetPreview}');
+assert.ok(footerIndex > cardsIndex && footerIndex < modalIndex,
+  'The preview action must be below vocabulary cards and above the worksheet modal');
+const footer = src.slice(footerIndex, src.indexOf('{/* Printable Topic Worksheet', footerIndex));
+assert.ok(footer.includes('dir="ltr"'),
+  'Force physical left/right direction independent of RTL document flow');
+assert.ok(footer.includes("lang === 'ar' ? 'justify-start' : 'justify-end'"),
+  'Arabic places preview at the left and English at the right');
+assert.ok(footer.includes('shrink-0 w-full flex'),
+  'Bottom action must remain visible outside the scrolling vocabulary list');
+assert.ok(footer.includes("lang === 'ar' ? 'معاينة ورقة العمل' : 'Worksheet Preview'"),
+  'Keep the bilingual preview label');
+assert.ok(src.indexOf('setShowHint(!showHint)') < cardsIndex,
+  'The existing lightbulb must stay in the topic header');
+console.log('Worksheet preview layout OK: bottom-left Arabic, bottom-right English, no duplicate control.');
