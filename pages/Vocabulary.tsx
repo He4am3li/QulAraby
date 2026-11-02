@@ -2166,16 +2166,7 @@ const TopicInterface: React.FC<{
             <p className="text-[7px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">{lang === 'ar' ? topic.en : topic.ar}</p>
           </div>
           <div className="flex items-center gap-2 relative">
-             <button
-                onClick={() => setShowWorksheetPreview(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all active:scale-95"
-                title={lang === 'ar' ? 'معاينة ورقة العمل' : 'Preview Worksheet'}
-             >
-                <FileText size={15} />
-                <span className="arabic-font">
-                  {lang === 'ar' ? 'معاينة ورقة العمل' : 'Worksheet Preview'}
-                </span>
-             </button>
+
 
              <button
                type="button"
@@ -2326,6 +2317,26 @@ const TopicInterface: React.FC<{
           .backface-hidden { backface-visibility: hidden; }
           .rotate-y-180 { transform: rotateY(180deg); }
         `}</style>
+        </div>
+
+        {/* Fixed area within the topic panel, so the action never covers cards or requires scrolling. */}
+        <div
+          data-testid="worksheet-preview-bottom-footer"
+          dir="ltr"
+          className={`shrink-0 w-full flex items-center ${lang === 'ar' ? 'justify-start' : 'justify-end'} px-6 md:px-8 lg:px-10 py-3 border-t border-slate-100 bg-white`}
+        >
+          <button
+            type="button"
+            onClick={() => setShowWorksheetPreview(true)}
+            aria-label={lang === 'ar' ? 'معاينة ورقة العمل' : 'Preview Worksheet'}
+            title={lang === 'ar' ? 'معاينة ورقة العمل' : 'Preview Worksheet'}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all active:scale-95"
+          >
+            <FileText size={15} />
+            <span className={lang === 'ar' ? 'arabic-font' : 'font-sans'}>
+              {lang === 'ar' ? 'معاينة ورقة العمل' : 'Worksheet Preview'}
+            </span>
+          </button>
         </div>
       </div>
 
