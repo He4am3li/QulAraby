@@ -791,6 +791,7 @@ export const VocabularyPage: React.FC = () => {
                             aria-label={lang === 'ar' ? topic.ar : topic.en}
                             className="qul-vocab-topic-glass rounded-3xl px-3 py-5 sm:px-4 sm:py-6 xl:px-5 flex flex-col items-center justify-center group relative overflow-hidden min-w-0 min-h-[195px] md:min-h-[224px] cursor-pointer"
                           >
+                            <span className="qul-vocab-topic-water-shine" aria-hidden="true" />
                             <div className={`qul-vocab-topic-glass-icon w-16 h-16 lg:w-20 lg:h-20 rounded-3xl ${color.bg} ${color.text} flex items-center justify-center mb-4 border ${color.border}`}>
                               {topic.id === 'insects_reptiles' ? (
                                 <div className="relative w-full h-full">
