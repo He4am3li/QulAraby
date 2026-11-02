@@ -51,3 +51,48 @@ assert.ok(src.includes('selectedWord, lang)'), 'Context word controls must recei
 assert.ok(src.includes("lang === 'ar' ? 'استمع للكلمة' : 'Listen to the word'"), 'Speech control must be localized');
 assert.ok(src.includes("lang === 'ar' ? 'إغلاق' : 'Close'"), 'Close control must be localized');
 console.log('Vocabulary contexts OK: 30 topics, 480 linked forms, matching translations and clean speech.');
+// Validate the hands-on usage tips against the actual 30-topic card arrays.
+const tipsText = readFileSync(new URL('../data/vocabularyUsageTips.ts', import.meta.url), 'utf8');
+const tipPrefix = 'export const VOCABULARY_USAGE_TIPS: Record<string, VocabularyUsageTip[]> = ';
+const tipStart = tipsText.indexOf(tipPrefix);
+assert.ok(tipStart >= 0, 'Vocabulary usage tips must exist');
+const usageTips = JSON.parse(tipsText.slice(tipStart + tipPrefix.length, tipsText.lastIndexOf(';')).trim());
+assert.deepEqual(Object.keys(usageTips).sort(), topicIds.slice().sort());
+let totalTips = 0;
+let linkedExamples = 0;
+for (const topicId of topicIds) {
+  const name = topicToArray[topicId];
+  const start = src.indexOf('const ' + name + ': Partial<Vocabulary>[] = [');
+  const end = src.indexOf('\n];', start);
+  const cards = [...src.slice(start, end).matchAll(/original_word:\s*'([^']+)'/g)].map(m => m[1]);
+  const tips = usageTips[topicId];
+  assert.ok(Array.isArray(tips) && tips.length > 0, topicId + ': missing usage tips');
+  totalTips += tips.length;
+  for (const [tipIndex, tip] of tips.entries()) {
+    const tag = topicId + '[' + tipIndex + ']';
+    for (const field of ['title', 'instruction']) {
+      assert.ok(tip[field]?.ar?.trim() && tip[field]?.en?.trim(), tag + ': ' + field + ' must be bilingual');
+    }
+    assert.ok(tip.practice?.question?.ar?.trim() && tip.practice?.question?.en?.trim(), tag + ': missing bilingual question');
+    assert.equal(tip.practice?.options.length, 3, tag + ': practice needs 3 options');
+    assert.ok(Number.isInteger(tip.practice.correctIndex) && tip.practice.correctIndex >= 0 && tip.practice.correctIndex < 3, tag + ': invalid answer');
+    assert.equal(new Set(tip.practice.options).size, 3, tag + ': duplicate answers');
+    assert.ok(tip.examples.length >= 2, tag + ': at least 2 examples');
+    assert.equal(new Set(tip.examples.map(e => e.wordIndex)).size, tip.examples.length, tag + ': repeated card example');
+    for (const example of tip.examples) {
+      assert.ok(Number.isInteger(example.wordIndex) && example.wordIndex >= 0 && example.wordIndex < cards.length, tag + ': invalid card link');
+      assert.ok(example.usage?.trim(), tag + ': missing example sentence');
+      linkedExamples++;
+    }
+  }
+}
+assert.ok(totalTips >= 39, 'Expected a diverse set of practical usage tips');
+assert.ok(linkedExamples >= 150, 'Expected many word-level applications');
+assert.ok(src.includes('showUsageForCard(i)'), 'Every relevant card needs a usage tip affordance');
+assert.ok(src.includes('<VocabularyUsageTips'), 'Usage tip component must be present');
+const tipsUI = readFileSync(new URL('../components/VocabularyUsageTips.tsx', import.meta.url), 'utf8');
+assert.ok(tipsUI.includes("tip.practice.question[lang]"), 'Exercises must be bilingual');
+assert.ok(tipsUI.includes('choiceIndex === tip.practice.correctIndex'), 'Answer feedback must be grounded');
+assert.ok(tipsUI.includes('tip.examples[exampleIndex]?.usage'), 'Word-specific usage examples must display');
+console.log('Applied usage tips OK: ' + totalTips + ' micro-lessons across 30 topics, ' + linkedExamples + ' word-card examples.');
+
