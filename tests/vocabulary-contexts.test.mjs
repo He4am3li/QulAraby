@@ -134,17 +134,28 @@ assert.ok(src.includes('data-testid="worksheet-preview-bottom-footer"'), 'Keep w
 console.log('Convex sphere OK: 30 external topic cards, refractive rim, protected lesson contents.');
 
 
-// Mouseleave visual polish: avoid lingering glass shadows / slow optical settling.
+// Outer vocabulary cards now use the SAME Framer Motion hover driver as the
+// rectangular ModuleCard in Home, without changing their 2px displacement,
+// optical appearance, typography, shadow, or navigation.
+const homeSrc = readFileSync(new URL('../pages/Home.tsx', import.meta.url), 'utf8');
+const homeCard = homeSrc.slice(homeSrc.indexOf('export const ModuleCard:'), homeSrc.indexOf('interface ProgressItemProps'));
+assert.ok(homeCard.includes('<motion.button'), 'Home cards must use Motion');
+assert.ok(homeCard.includes('whileHover={{ y: -8'), 'Home hover animation reference missing');
+const topicCardStart = chooser.indexOf('<motion.button');
+const topicCardEnd = chooser.indexOf('</motion.button>', topicCardStart);
+assert.ok(topicCardStart >= 0 && topicCardEnd > topicCardStart, 'Vocabulary topic card must use Motion, like Home');
+const topicCard = chooser.slice(topicCardStart, topicCardEnd);
+assert.ok(topicCard.includes('whileHover={{ y: -2 }}'), 'Use same Motion hover timing, preserve original -2px movement');
+assert.ok(topicCard.includes('whileFocus={{ y: -2 }}'), 'Keyboard users must retain the same focus movement');
+assert.ok(!topicCard.includes('transition={{'), 'Do not override the Home card Motion default transition');
+assert.ok(topicCard.includes('startDiscovery(topic)'), 'Navigation must remain unchanged');
 const baseTransition = topicGlassCSS.match(/\.qul-vocab-topic-glass\s*\{([\s\S]*?)\n\}/)?.[1] || '';
-const orbTransition = topicGlassCSS.match(/\.qul-vocab-topic-orb\s*\{([\s\S]*?)\n\}/)?.[1] || '';
-const arrowTransition = topicGlassCSS.match(/\.qul-vocab-topic-glass-arrow\s*\{([\s\S]*?)\n\}/)?.[1] || '';
-assert.ok(baseTransition.includes('transform .09s'), 'Topic card must return rapidly after pointer leaves');
-assert.ok(baseTransition.includes('box-shadow .09s'), 'Card shadow must not linger');
-assert.ok(orbTransition.includes('transform .085s'), 'Glass orb must settle promptly');
-assert.ok(arrowTransition.includes('transform .085s'), 'Arrow must settle promptly');
-assert.ok(topicGlassCSS.includes('transition-duration: .155s;'), 'Hover entrance retains a gentle short animation');
-assert.ok(topicGlassCSS.includes('transition-duration: .145s;'), 'Orb entrance retains a short animation');
-assert.ok(topicGlassCSS.includes('@media (hover: none)'), 'Touch devices must not keep a latched elevation');
-assert.ok(topicGlassCSS.includes('@media (prefers-reduced-motion: reduce)'), 'Reduced-motion preference remains honored');
-assert.ok(src.includes('className="qul-vocab-topic-orb"'), 'Sphere rendering must remain unchanged');
-console.log('Hover polish OK: fast 85-90ms exit, controlled entry, no sticky touch elevation.');
+const hoverTransition = topicGlassCSS.match(/\.qul-vocab-topic-glass:hover,\s*\.qul-vocab-topic-glass:focus-visible\s*\{([\s\S]*?)\n\}/)?.[1] || '';
+assert.ok(!baseTransition.includes('transition: transform'), 'CSS may not compete with Motion transform timing');
+assert.ok(!hoverTransition.includes('transform: translateY'), 'CSS may not compete with Motion hover movement');
+assert.ok(baseTransition.includes('box-shadow .09s'), 'Keep existing fast border and shadow return');
+assert.ok(hoverTransition.includes('transition-duration: .155s'), 'Keep unchanged hover border/shadow timing');
+assert.ok(topicGlassCSS.includes('transform .085s'), 'Keep existing orb settling');
+assert.ok(topicGlassCSS.includes('@media (hover: none)'), 'Preserve touch behavior');
+assert.ok(topicGlassCSS.includes('@media (prefers-reduced-motion: reduce)'), 'Preserve reduced motion behavior');
+console.log('Home motion parity OK: external topic cards use the same Motion hover engine without styling changes.');
