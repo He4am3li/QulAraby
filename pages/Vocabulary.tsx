@@ -1993,18 +1993,19 @@ const SidebarNavBtn: React.FC<{
     onClick={onClick}
     aria-current={active ? 'page' : undefined}
     aria-pressed={active}
-    className={`qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all ${
+    aria-label={label}
+    className={`qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all max-sm:justify-center max-sm:gap-0 max-sm:px-1 ${
       active ? 'qul-word-gallery-item-active' : ''
     }`}
   >
     <div className="qul-word-gallery-tile h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600">
       {icon}
     </div>
-    <div className="flex-1 min-w-0">
+    <div className="hidden sm:block flex-1 min-w-0">
       <div className="text-[13px] font-black arabic-font text-slate-800 truncate">{label}</div>
       <div className="text-[10px] text-slate-500 truncate" dir={lang === 'ar' ? 'rtl' : 'ltr'}>{sub}</div>
     </div>
-    <span className={`h-2 w-2 rounded-full shrink-0 ${active ? 'bg-emerald-500' : 'bg-slate-300'}`} aria-hidden="true" />
+    <span className={`hidden sm:block h-2 w-2 rounded-full shrink-0 ${active ? 'bg-emerald-500' : 'bg-slate-300'}`} aria-hidden="true" />
   </button>
 );
 
