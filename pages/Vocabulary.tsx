@@ -719,22 +719,24 @@ export const VocabularyPage: React.FC = () => {
              {lang === 'ar' ? 'اختر وجهتك التعليمية' : 'Choose your learning path'}
            </h3>
 
-           <nav className="flex-1 space-y-4">
-              <SidebarNavBtn 
-                active={activeTab === 'discovery'} 
-                icon={<Compass size={24} />} 
-                label={t.wordJourney} 
-                sub={lang === 'ar' ? 'كلمات جديدة' : 'NEW WORDS'} 
+           <nav className="flex-1 space-y-2.5 -mx-1">
+              <SidebarNavBtn
+                active={activeTab === 'discovery'}
+                color="blue"
+                icon={<Compass size={20} />}
+                label={t.wordJourney}
+                sub={lang === 'ar' ? 'كلمات جديدة' : 'NEW WORDS'}
                 lang={lang}
-                onClick={() => setActiveTab('discovery')} 
+                onClick={() => setActiveTab('discovery')}
               />
-              <SidebarNavBtn 
-                active={activeTab === 'lexicon'} 
-                icon={<Layers size={24} />} 
-                label={t.myWords} 
-                sub={lang === 'ar' ? `${vocab.length} كلمة محفوظة` : `${vocab.length} WORDS SAVED`} 
+              <SidebarNavBtn
+                active={activeTab === 'lexicon'}
+                color="emerald"
+                icon={<Layers size={20} />}
+                label={t.myWords}
+                sub={lang === 'ar' ? `${vocab.length} كلمة محفوظة` : `${vocab.length} WORDS SAVED`}
                 lang={lang}
-                onClick={() => { setActiveTab('lexicon'); setSelectedTopic(null); }} 
+                onClick={() => { setActiveTab('lexicon'); setSelectedTopic(null); }}
               />
            </nav>
         </aside>
@@ -2371,18 +2373,41 @@ const TopicInterface: React.FC<{
 };
 
 
-const SidebarNavBtn: React.FC<{ active: boolean, icon: React.ReactNode, label: string, sub: string, lang: 'ar' | 'en', onClick: () => void }> = ({ active, icon, label, sub, lang, onClick }) => (
-  <button 
+// Keep the two Vocabulary navigation cards visually identical to the
+// Instant Translator and Translator Academy navigation cards.
+const SidebarNavBtn: React.FC<{
+  active: boolean;
+  color: 'blue' | 'emerald';
+  icon: React.ReactNode;
+  label: string;
+  sub: string;
+  lang: 'ar' | 'en';
+  onClick: () => void;
+}> = ({ active, color, icon, label, sub, lang, onClick }) => (
+  <button
+    type="button"
     onClick={onClick}
-    className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all relative overflow-hidden flex-row ${active ? 'bg-[#0f172a] text-white shadow-xl shadow-slate-200 translate-x-1' : 'text-slate-400 hover:bg-slate-50'}`}
+    aria-current={active ? 'page' : undefined}
+    className={`w-full p-3.5 rounded-2xl border transition-all flex items-center gap-3 text-right group ${
+      active
+        ? (color === 'blue'
+          ? 'border-blue-500 bg-blue-50/70 text-blue-700 shadow-xs'
+          : 'border-emerald-500 bg-emerald-50/70 text-emerald-700 shadow-xs')
+        : 'border-slate-100 bg-slate-50/50 hover:border-slate-200 text-slate-600'
+    }`}
   >
-    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
+    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105 shrink-0 ${
+      active
+        ? (color === 'blue' ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white')
+        : 'bg-white text-slate-500 border border-slate-100'
+    }`}>
       {icon}
     </div>
-    <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
-       <h4 className={`text-sm font-black arabic-font leading-none mb-0.5 ${active ? 'text-white' : 'text-slate-700'}`}>{label}</h4>
-       <span className={`text-[7px] font-black tracking-widest uppercase ${active ? 'text-white/60' : 'text-slate-300'}`}>{sub}</span>
+    <div className="flex-1 min-w-0">
+      <p className="text-xs font-black arabic-font truncate leading-tight mb-0.5">{label}</p>
+      <p className="text-[10px] text-slate-400 font-medium truncate font-sans">{sub}</p>
     </div>
+    <ChevronRight size={14} className={`opacity-30 shrink-0 ${lang === 'ar' ? 'rotate-180' : ''}`} />
   </button>
 );
 
