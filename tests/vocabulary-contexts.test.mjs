@@ -51,48 +51,26 @@ assert.ok(src.includes('selectedWord, lang)'), 'Context word controls must recei
 assert.ok(src.includes("lang === 'ar' ? 'استمع للكلمة' : 'Listen to the word'"), 'Speech control must be localized');
 assert.ok(src.includes("lang === 'ar' ? 'إغلاق' : 'Close'"), 'Close control must be localized');
 console.log('Vocabulary contexts OK: 30 topics, 480 linked forms, matching translations and clean speech.');
-// Validate the hands-on usage tips against the actual 30-topic card arrays.
-const tipsText = readFileSync(new URL('../data/vocabularyUsageTips.ts', import.meta.url), 'utf8');
-const tipPrefix = 'export const VOCABULARY_USAGE_TIPS: Record<string, VocabularyUsageTip[]> = ';
-const tipStart = tipsText.indexOf(tipPrefix);
-assert.ok(tipStart >= 0, 'Vocabulary usage tips must exist');
-const usageTips = JSON.parse(tipsText.slice(tipStart + tipPrefix.length, tipsText.lastIndexOf(';')).trim());
-assert.deepEqual(Object.keys(usageTips).sort(), topicIds.slice().sort());
-let totalTips = 0;
-let linkedExamples = 0;
+// Keep one concise bilingual hint per topic and the original small popover.
+const hintsText = readFileSync(new URL('../data/vocabularyUsageTips.ts', import.meta.url), 'utf8');
+const hintPrefix = 'export const VOCABULARY_TOPIC_HINTS: Record<string, VocabularyTopicHint> = ';
+const hintStart = hintsText.indexOf(hintPrefix);
+assert.ok(hintStart >= 0, 'Compact topic hints must be exported');
+const hints = JSON.parse(hintsText.slice(hintStart + hintPrefix.length, hintsText.lastIndexOf(';')).trim());
+assert.deepEqual(Object.keys(hints).sort(), topicIds.slice().sort(), 'Every topic needs its own hint');
 for (const topicId of topicIds) {
-  const name = topicToArray[topicId];
-  const start = src.indexOf('const ' + name + ': Partial<Vocabulary>[] = [');
-  const end = src.indexOf('\n];', start);
-  const cards = [...src.slice(start, end).matchAll(/original_word:\s*'([^']+)'/g)].map(m => m[1]);
-  const tips = usageTips[topicId];
-  assert.ok(Array.isArray(tips) && tips.length > 0, topicId + ': missing usage tips');
-  totalTips += tips.length;
-  for (const [tipIndex, tip] of tips.entries()) {
-    const tag = topicId + '[' + tipIndex + ']';
-    for (const field of ['title', 'instruction']) {
-      assert.ok(tip[field]?.ar?.trim() && tip[field]?.en?.trim(), tag + ': ' + field + ' must be bilingual');
-    }
-    assert.ok(tip.practice?.question?.ar?.trim() && tip.practice?.question?.en?.trim(), tag + ': missing bilingual question');
-    assert.equal(tip.practice?.options.length, 3, tag + ': practice needs 3 options');
-    assert.ok(Number.isInteger(tip.practice.correctIndex) && tip.practice.correctIndex >= 0 && tip.practice.correctIndex < 3, tag + ': invalid answer');
-    assert.equal(new Set(tip.practice.options).size, 3, tag + ': duplicate answers');
-    assert.ok(tip.examples.length >= 2, tag + ': at least 2 examples');
-    assert.equal(new Set(tip.examples.map(e => e.wordIndex)).size, tip.examples.length, tag + ': repeated card example');
-    for (const example of tip.examples) {
-      assert.ok(Number.isInteger(example.wordIndex) && example.wordIndex >= 0 && example.wordIndex < cards.length, tag + ': invalid card link');
-      assert.ok(example.usage?.trim(), tag + ': missing example sentence');
-      linkedExamples++;
-    }
-  }
+  const hint = hints[topicId];
+  assert.deepEqual(Object.keys(hint).sort(), ['ar','en'], topicId + ': only Arabic and English hint text');
+  assert.ok(typeof hint.ar === 'string' && hint.ar.trim().length > 30, topicId + ': Arabic hint is missing');
+  assert.ok(typeof hint.en === 'string' && hint.en.trim().length > 35, topicId + ': English translation is missing');
 }
-assert.ok(totalTips >= 39, 'Expected a diverse set of practical usage tips');
-assert.ok(linkedExamples >= 150, 'Expected many word-level applications');
-assert.ok(src.includes('showUsageForCard(i)'), 'Every relevant card needs a usage tip affordance');
-assert.ok(src.includes('<VocabularyUsageTips'), 'Usage tip component must be present');
-const tipsUI = readFileSync(new URL('../components/VocabularyUsageTips.tsx', import.meta.url), 'utf8');
-assert.ok(tipsUI.includes("tip.practice.question[lang]"), 'Exercises must be bilingual');
-assert.ok(tipsUI.includes('choiceIndex === tip.practice.correctIndex'), 'Answer feedback must be grounded');
-assert.ok(tipsUI.includes('tip.examples[exampleIndex]?.usage'), 'Word-specific usage examples must display');
-console.log('Applied usage tips OK: ' + totalTips + ' micro-lessons across 30 topics, ' + linkedExamples + ' word-card examples.');
-
+assert.ok(src.includes('VOCABULARY_TOPIC_HINTS[topic.id]?.[lang]'), 'Tip language must match the interface');
+assert.ok(src.includes('left-full ml-4'), 'Restore original right-side hint placement in Arabic');
+assert.ok(src.includes('right-full mr-4'), 'Restore original left-side hint placement in English');
+assert.ok(src.includes('w-64 p-4 bg-white border border-amber-100 rounded-2xl'), 'Keep original compact hint shape');
+assert.ok(src.includes('{currentHint}'), 'Show one tip, not an exercise');
+assert.ok(!src.includes('showUsageForCard'), 'No hints on individual vocabulary cards');
+assert.ok(!src.includes('<VocabularyUsageTips'), 'Interactive lesson panel must be removed');
+assert.ok(!src.includes('selectedUsageChoice'), 'No quiz controls in tip bubble');
+assert.ok(!src.includes('VOCABULARY_USAGE_TIPS'), 'Remove old interactive tips data reference');
+console.log('Compact bilingual hints OK: 30 topics, no card icons or quizzes, original bubble restored.');

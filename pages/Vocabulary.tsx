@@ -13,8 +13,7 @@ import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { Vocabulary, MasteryLevel } from '../types';
 import { VOCABULARY_CONTEXTS } from '../data/vocabularyContextStories';
-import { VOCABULARY_USAGE_TIPS } from '../data/vocabularyUsageTips';
-import { VocabularyUsageTips } from '../components/VocabularyUsageTips';
+import { VOCABULARY_TOPIC_HINTS } from '../data/vocabularyUsageTips';
 import { generateSpeech, decodeAudioData, getWordDeepAnalysis, generateThemedVocabulary, generateWordIllustration, speak } from '../services/gemini';
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType, serverTimestamp } from '../firebase';
@@ -2094,21 +2093,10 @@ const TopicInterface: React.FC<{
   const [isGeneratingWorksheet, setIsGeneratingWorksheet] = React.useState(false);
   const [showWorksheetPreview, setShowWorksheetPreview] = React.useState(false);
   const worksheetRef = React.useRef<HTMLDivElement>(null);
-  const [focusedTipWordIndex, setFocusedTipWordIndex] = React.useState<number | null>(null);
-  const usageTips = VOCABULARY_USAGE_TIPS[topic.id] || [];
-
+  const currentHint = VOCABULARY_TOPIC_HINTS[topic.id]?.[lang] || '';
   React.useEffect(() => {
-    setFocusedTipWordIndex(null);
     setShowHint(false);
   }, [topic.id]);
-
-  const showUsageForCard = (wordIndex: number) => {
-    if (usageTips.some(tip => tip.examples.some(example => example.wordIndex === wordIndex))) {
-      setFocusedTipWordIndex(wordIndex);
-      setShowHint(true);
-    }
-  };
-
 
   const generateWorksheet = async () => {
     if (!worksheetRef.current) return;
@@ -2166,14 +2154,6 @@ const TopicInterface: React.FC<{
       <div className="bg-white rounded-3xl md:rounded-[2.5rem] shadow-lg border border-slate-100 relative max-h-[88vh] w-full flex flex-col shrink-0 overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 to-orange-500 z-20 pointer-events-none" />
 
-        <VocabularyUsageTips
-          topicId={topic.id}
-          lang={lang}
-          words={words}
-          open={showHint}
-          onClose={() => setShowHint(false)}
-          focusedWordIndex={focusedTipWordIndex}
-        />
 
         
         <div className="p-6 md:p-8 lg:p-10 overflow-y-auto custom-scroll w-full flex-1 flex flex-col">
@@ -2199,14 +2179,31 @@ const TopicInterface: React.FC<{
 
              <button
                type="button"
-               onClick={() => {
-                 if (showHint) setShowHint(false);
-                 else { setFocusedTipWordIndex(null); setShowHint(true); }
-               }}
+               onClick={() => setShowHint(!showHint)}
                aria-expanded={showHint}
-               aria-label={lang === 'ar' ? 'تلميحات استخدام الكلمات' : 'Vocabulary usage tips'}
+               aria-label={lang === 'ar' ? 'لمحة مفيدة' : 'Helpful language tip'}
                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all border shadow-sm active:scale-95 ${showHint ? 'bg-amber-100 border-amber-200 text-amber-600' : 'bg-white border-slate-50 text-slate-400 hover:bg-slate-50'}`}
-             ><Lightbulb size={16}/></button>
+             >
+               <Lightbulb size={16} />
+             </button>
+             <AnimatePresence>
+               {showHint && currentHint && (
+                 <motion.div
+                   key={topic.id}
+                   initial={{ opacity: 0, x: lang === 'ar' ? 10 : -10, scale: 0.95 }}
+                   animate={{ opacity: 1, x: 0, scale: 1 }}
+                   exit={{ opacity: 0, x: lang === 'ar' ? 10 : -10, scale: 0.95 }}
+                   dir={lang === 'ar' ? 'rtl' : 'ltr'}
+                   role="status"
+                   className={`absolute top-1/2 -translate-y-1/2 -mt-[35px] ${lang === 'ar' ? 'left-full ml-4' : 'right-full mr-4'} w-64 p-4 bg-white border border-amber-100 rounded-2xl shadow-2xl z-[100] ${lang === 'ar' ? 'text-right' : 'text-left'} pointer-events-auto`}
+                 >
+                   <div className={`absolute top-1/2 -translate-y-1/2 ${lang === 'ar' ? '-left-2' : '-right-2'} w-4 h-4 bg-white border-t ${lang === 'ar' ? 'border-l' : 'border-r'} border-amber-100 ${lang === 'ar' ? '-rotate-45' : 'rotate-45'}`} />
+                   <p className={`text-[11px] font-medium ${lang === 'ar' ? 'arabic-font' : 'font-sans'} text-slate-700 leading-relaxed`}>
+                     {currentHint}
+                   </p>
+                 </motion.div>
+               )}
+             </AnimatePresence>
           </div>
         </div>
 
@@ -2222,7 +2219,7 @@ const TopicInterface: React.FC<{
 
         <div className="grid grid-cols-4 md:grid-cols-8 gap-2.5 md:gap-3.5 relative z-10">
            {words.map((f, i) => (
-             <div key={i} className="perspective-1000 h-[130px] md:h-[150px] relative">
+             <div key={i} className="perspective-1000 h-[130px] md:h-[150px]">
                <motion.div
                  className="relative w-full h-full text-center transition-all duration-500 transform-style-3d cursor-pointer"
                  animate={{ rotateY: flippedIndex === i ? 180 : 0 }}
@@ -2318,15 +2315,7 @@ const TopicInterface: React.FC<{
                    </div>
                  </div>
                </motion.div>
-               {usageTips.some(tip => tip.examples.some(example => example.wordIndex === i)) && (
-                 <button
-                   type="button"
-                   onClick={(event) => { event.stopPropagation(); showUsageForCard(i); }}
-                   aria-label={lang === 'ar' ? 'كيفية استخدام ' + f.original_word : 'How to use ' + f.original_word}
-                   title={lang === 'ar' ? 'تطبيق التلميح' : 'Apply usage tip'}
-                   className="absolute top-1 right-1 z-30 p-1 rounded-md text-amber-500 bg-white/85 border border-amber-100 shadow-sm hover:bg-amber-100"
-                 ><Lightbulb size={12}/></button>
-               )}
+
              </div>
            ))}
         </div>
