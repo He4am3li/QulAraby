@@ -18,6 +18,7 @@ interface Props {
   lang: 'ar' | 'en';
   onSpeak: (text: string, lang: 'ar' | 'en') => void;
   onDelete: (id: string) => Promise<void>;
+  onReviewResult: (word: Vocabulary, correct: boolean) => Promise<void>;
 }
 
 const getReviewTime = (value: unknown): number | null => {
@@ -32,9 +33,11 @@ const isDue = (word: Vocabulary): boolean => {
   const time = getReviewTime(word.next_review);
   return time !== null && time <= Date.now();
 };
-const isMastered = (level: MasteryLevel): boolean =>
-  level === MasteryLevel.FLUENT || level === MasteryLevel.MASTERED;
+const isMastered = (word: Vocabulary): boolean =>
+  (word.correct_reviews || 0) >= 3 && word.mastery_level >= MasteryLevel.FLUENT;
 const getStatus = (word: Vocabulary, lang: 'ar' | 'en') => {
+  if (typeof word.correct_reviews !== 'number' && word.mastery_level > MasteryLevel.LEARNING)
+    return lang === 'ar' ? 'قيد التعلم' : 'Learning';
   if (word.mastery_level === MasteryLevel.MASTERED) return lang === 'ar' ? 'متقنة' : 'Mastered';
   if (word.mastery_level === MasteryLevel.FLUENT) return lang === 'ar' ? 'متمكن' : 'Fluent';
   if (word.mastery_level === MasteryLevel.NEW) return lang === 'ar' ? 'جديدة' : 'New';
@@ -53,7 +56,7 @@ const wordLetters = (value: string): Letter[] =>
 const displayDetail = (text: unknown): text is string =>
   typeof text === 'string' && !!text.trim() && !['general', 'unknown', 'n/a', 'none'].includes(text.trim().toLowerCase());
 
-export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, onDelete }) => {
+export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, onDelete, onReviewResult }) => {
   const [search, setSearch] = React.useState('');
   const [filter, setFilter] = React.useState<GalleryFilter>('all');
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
@@ -78,15 +81,15 @@ export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, o
       (word.original_word || '').toLocaleLowerCase().includes(normalizedSearch) ||
       (word.translation || '').toLocaleLowerCase().includes(normalizedSearch);
     const matchesStatus = filter === 'all' ||
-      (filter === 'learning' && !isMastered(word.mastery_level)) ||
-      (filter === 'mastered' && isMastered(word.mastery_level)) ||
+      (filter === 'learning' && !isMastered(word)) ||
+      (filter === 'mastered' && isMastered(word)) ||
       (filter === 'due' && isDue(word));
     return matchesSearch && matchesStatus;
   });
   const selected = filtered.find(word => word.id === selectedId) || filtered[0] || null;
   const selectedExample = selected?.analysis?.details_ar?.example || '';
   const selectedTranslation = selected?.analysis?.details_en?.example || '';
-  const totalMastered = words.filter(word => isMastered(word.mastery_level)).length;
+  const totalMastered = words.filter(word => isMastered(word)).length;
   const reviewCount = words.filter(isDue).length;
 
   React.useEffect(() => {
@@ -123,8 +126,10 @@ export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, o
     setGuess(next);
     setRemaining(previous => previous.filter(item => item.id !== letter.id));
     if (next.length === wordLetters(selected.original_word).length) {
-      setScrambleCorrect(next.map(item => item.char).join('') ===
-        wordLetters(selected.original_word).map(item => item.char).join(''));
+      const correct = next.map(item => item.char).join('') ===
+        wordLetters(selected.original_word).map(item => item.char).join('');
+      setScrambleCorrect(correct);
+      void onReviewResult(selected, correct);
     }
   };
   const beginPractice = () => {
@@ -292,12 +297,12 @@ export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, o
                     ? <span>{word.emoji}</span> : <BookText size={18} strokeWidth={1.7}/>}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-black arabic-font text-slate-800 truncate" dir="rtl">{word.original_word}</div>
-                  <div className="text-[10px] text-slate-500 truncate" dir="ltr">{word.translation}</div>
+                  <div className="text-[13px] font-black arabic-font text-slate-800 truncate" dir="rtl">{mode === 'practice' && game === 'scramble' && selected?.id === word.id ? '••••' : word.original_word}</div>
+                  <div className="text-[10px] text-slate-500 truncate" dir="ltr">{mode === 'practice' && game === 'meaning' && selected?.id === word.id ? '••••' : word.translation}</div>
                 </div>
                 <span className={[
                   'h-2 w-2 rounded-full shrink-0',
-                  isMastered(word.mastery_level) ? 'bg-emerald-500'
+                  isMastered(word) ? 'bg-emerald-500'
                     : isDue(word) ? 'bg-amber-400' : 'bg-sky-400'
                 ].join(' ')} aria-hidden="true"/>
               </button>
@@ -333,7 +338,7 @@ export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, o
               {selected && (
                 <span className="qul-word-gallery-status arabic-font" aria-label={getStatus(selected, lang)}>
                   <span className={`qul-word-gallery-status-dot ${
-                    isMastered(selected.mastery_level) ? 'bg-emerald-500'
+                    isMastered(selected) ? 'bg-emerald-500'
                       : selected.mastery_level === MasteryLevel.NEW ? 'bg-slate-400' : 'bg-sky-500'
                   }`} aria-hidden="true" />
                   {getStatus(selected, lang)}
@@ -521,7 +526,7 @@ export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, o
                   </div>
                 ) : (
                   <div data-testid="word-inline-practice" className="flex-1 min-h-0 flex flex-col gap-3 overflow-y-auto custom-scroll py-2">
-                    <h2 className="arabic-font font-black text-xl sm:text-2xl text-slate-800" dir="rtl">{selected.original_word}</h2>
+                    <h2 className="arabic-font font-black text-xl sm:text-2xl text-slate-800" dir="rtl">{game === 'scramble' ? (lang === 'ar' ? 'رتّب الحروف' : 'Arrange letters') : selected.original_word}</h2>
                     <div className="flex justify-center gap-2 shrink-0">
                       <button type="button" onClick={() => beginScramble(selected)} aria-pressed={game === 'scramble'}
                         className={['rounded-xl text-xs font-bold px-3 py-2 transition-colors',
@@ -580,7 +585,7 @@ export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, o
                         ) : (
                           <div className="flex flex-col gap-2">
                             {quizOptions.map(option => (
-                              <button type="button" key={option} disabled={quizAnswer !== null} onClick={() => setQuizAnswer(option)}
+                              <button type="button" key={option} disabled={quizAnswer !== null} onClick={() => { setQuizAnswer(option); void onReviewResult(selected, option === selected.translation); }}
                                 className={[
                                   'qul-word-gallery-action text-start rounded-xl px-3 py-2.5 text-sm text-slate-800 font-semibold disabled:opacity-80',
                                   quizAnswer !== null && option === selected.translation ? 'border-emerald-300 bg-emerald-50' : ''
