@@ -517,10 +517,9 @@ export const VocabularyPage: React.FC = () => {
              {lang === 'ar' ? 'اختر وجهتك التعليمية' : 'Choose your learning path'}
            </h3>
 
-           <nav className="flex-1 space-y-2.5 -mx-1">
+           <nav className="flex-1 space-y-2" aria-label={lang === 'ar' ? 'أقسام المفردات' : 'Vocabulary sections'}>
               <SidebarNavBtn
                 active={activeTab === 'discovery'}
-                color="blue"
                 icon={<Compass size={20} />}
                 label={t.wordJourney}
                 sub={lang === 'ar' ? 'كلمات جديدة' : 'NEW WORDS'}
@@ -529,7 +528,6 @@ export const VocabularyPage: React.FC = () => {
               />
               <SidebarNavBtn
                 active={activeTab === 'lexicon'}
-                color="emerald"
                 icon={<Layers size={20} />}
                 label={t.myWords}
                 sub={lang === 'ar' ? `${vocab.length} كلمة محفوظة` : `${vocab.length} WORDS SAVED`}
@@ -2024,39 +2022,32 @@ const TopicInterface: React.FC<{
 
 // Keep the two Vocabulary navigation cards visually identical to the
 // Instant Translator and Translator Academy navigation cards.
+// Match the exact glass item structure used by the saved-word gallery.
 const SidebarNavBtn: React.FC<{
   active: boolean;
-  color: 'blue' | 'emerald';
   icon: React.ReactNode;
   label: string;
   sub: string;
   lang: 'ar' | 'en';
   onClick: () => void;
-}> = ({ active, color, icon, label, sub, lang, onClick }) => (
+}> = ({ active, icon, label, sub, lang, onClick }) => (
   <button
     type="button"
     onClick={onClick}
     aria-current={active ? 'page' : undefined}
-    className={`w-full p-3.5 rounded-2xl border transition-all flex items-center gap-3 text-right group ${
-      active
-        ? (color === 'blue'
-          ? 'border-blue-500 bg-blue-50/70 text-blue-700 shadow-xs'
-          : 'border-emerald-500 bg-emerald-50/70 text-emerald-700 shadow-xs')
-        : 'border-slate-100 bg-slate-50/50 hover:border-slate-200 text-slate-600'
+    aria-pressed={active}
+    className={`qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all ${
+      active ? 'qul-word-gallery-item-active' : ''
     }`}
   >
-    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105 shrink-0 ${
-      active
-        ? (color === 'blue' ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white')
-        : 'bg-white text-slate-500 border border-slate-100'
-    }`}>
+    <div className="qul-word-gallery-tile h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600">
       {icon}
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-xs font-black arabic-font truncate leading-tight mb-0.5">{label}</p>
-      <p className="text-[10px] text-slate-400 font-medium truncate font-sans">{sub}</p>
+      <div className="text-[13px] font-black arabic-font text-slate-800 truncate">{label}</div>
+      <div className="text-[10px] text-slate-500 truncate" dir={lang === 'ar' ? 'rtl' : 'ltr'}>{sub}</div>
     </div>
-    <ChevronRight size={14} className={`opacity-30 shrink-0 ${lang === 'ar' ? 'rotate-180' : ''}`} />
+    <span className={`h-2 w-2 rounded-full shrink-0 ${active ? 'bg-emerald-500' : 'bg-slate-300'}`} aria-hidden="true" />
   </button>
 );
 

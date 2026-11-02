@@ -183,3 +183,26 @@
   .qul-word-gallery-letter { transition: none !important; }
   .qul-word-gallery-letter:hover { transform: none !important; }
 }
+
+
+/* Word stage status: small, quiet, in-line with the selected-word label.
+   No floating, green capsule or oversized badge for "Fluent"/"Learning". */
+.qul-word-gallery-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 600;
+  white-space: nowrap;
+  padding-inline-start: 10px;
+  border-inline-start: 1px solid rgba(148,163,184,.35);
+}
+.qul-word-gallery-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+}

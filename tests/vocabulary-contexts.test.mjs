@@ -161,45 +161,38 @@ assert.ok(topicGlassCSS.includes('@media (prefers-reduced-motion: reduce)'), 'Pr
 console.log('Home motion parity OK: external topic cards use the same Motion hover engine without styling changes.');
 
 
-// Match only the two Vocabulary sidebar tiles to the exact Translator tab style.
-// All navigation and the remainder of the Vocabulary page must stay untouched.
-const translatorSrc = readFileSync(new URL('../pages/Translator.tsx', import.meta.url), 'utf8');
-const vocabNav = src.slice(src.indexOf('<nav className="flex-1 space-y-2.5 -mx-1">'), src.indexOf('</nav>', src.indexOf('<nav className="flex-1 space-y-2.5 -mx-1">')));
+// The two Vocabulary navigation tiles must use precisely the same gallery
+// item classes and selected-glass state as individual saved-word rows.
+const vocabNav = src.slice(src.indexOf('<nav className="flex-1 space-y-2"'), src.indexOf('</nav>', src.indexOf('<nav className="flex-1 space-y-2"')));
 const navDef = src.slice(src.indexOf('const SidebarNavBtn: React.FC<'), src.indexOf('const SessionActionBtn:', src.indexOf('const SidebarNavBtn: React.FC<')));
-const commonTranslatorStyles = [
-  'w-full p-3.5 rounded-2xl border transition-all flex items-center gap-3 text-right group',
-  'border-blue-500 bg-blue-50/70 text-blue-700 shadow-xs',
-  'border-emerald-500 bg-emerald-50/70 text-emerald-700 shadow-xs',
-  'border-slate-100 bg-slate-50/50 hover:border-slate-200 text-slate-600',
-  'w-10 h-10 rounded-xl flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105 shrink-0',
-  'bg-white text-slate-500 border border-slate-100',
-  'text-xs font-black arabic-font truncate leading-tight mb-0.5',
-  'text-[10px] text-slate-400 font-medium truncate font-sans',
-  'opacity-30 shrink-0'
-];
-for (const style of commonTranslatorStyles) {
-  assert.ok(translatorSrc.includes(style), 'Translator style changed: ' + style);
-  assert.ok(navDef.includes(style), 'Vocabulary must copy Translator style: ' + style);
-}
-assert.ok(vocabNav.includes('space-y-2.5'), 'Vertical spacing must match Translator tabs');
-assert.ok(vocabNav.includes('color="blue"'), 'Word Journey active state must match Instant Translator');
-assert.ok(vocabNav.includes('color="emerald"'), 'My Words active state must match Translator Academy');
-assert.ok(vocabNav.includes('icon={<Compass size={20} />}'), 'Keep Journey icon with same size as Translator');
-assert.ok(vocabNav.includes('icon={<Layers size={20} />}'), 'Keep My Words icon with same size as Translator');
-assert.ok(vocabNav.includes("setActiveTab('discovery')"), 'Word Journey navigation must work');
-assert.ok(vocabNav.includes("setActiveTab('lexicon')"), 'My Words navigation must work');
-assert.ok(vocabNav.includes("setSelectedTopic(null)"), 'Keep My Words topic reset');
-assert.ok(navDef.includes("lang === 'ar' ? 'rotate-180' : ''"), 'Keep direction-aware arrow');
-assert.ok(!navDef.includes('shadow-xl shadow-slate-200 translate-x-1'), 'Remove old navy selected card style');
-console.log('Sidebar parity OK: Word Journey and My Words match Translator and Academy tiles.');
+const galleryForNav = readFileSync(new URL('../components/VocabularyWordGallery.tsx', import.meta.url), 'utf8');
+const galleryStyleForNav = readFileSync(new URL('../components/vocabulary-word-gallery.css', import.meta.url), 'utf8');
+const galleryTileClass = 'qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all';
+const galleryIconClass = 'qul-word-gallery-tile h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600';
+assert.ok(galleryForNav.includes(galleryTileClass) && navDef.includes(galleryTileClass), 'The sidebar and word entries must use identical tile layouts');
+assert.ok(galleryForNav.includes(galleryIconClass) && navDef.includes(galleryIconClass), 'The sidebar and word entries must use identical icon tiles');
+assert.ok(navDef.includes('qul-word-gallery-item-active'), 'Sidebar selected tile must use gallery active styling');
+assert.ok(galleryStyleForNav.includes('.qul-word-gallery-item-active'), 'Gallery selected-state CSS must be available');
+assert.ok(navDef.includes('text-[13px] font-black arabic-font text-slate-800 truncate'), 'Match saved-word primary label style');
+assert.ok(navDef.includes('text-[10px] text-slate-500 truncate'), 'Match saved-word secondary label style');
+assert.ok(navDef.includes("active ? 'bg-emerald-500' : 'bg-slate-300'"), 'Use gallery-style selection indicator');
+assert.ok(navDef.includes('aria-pressed={active}'), 'Tab selection must remain accessible');
+assert.ok(vocabNav.includes('space-y-2'), 'Sidebar vertical spacing must match word list');
+assert.ok(vocabNav.includes('icon={<Compass size={20} />}'), 'Keep Word Journey icon');
+assert.ok(vocabNav.includes('icon={<Layers size={20} />}'), 'Keep My Words icon');
+assert.ok(vocabNav.includes("setActiveTab('discovery')"), 'Word Journey action remains working');
+assert.ok(vocabNav.includes("setActiveTab('lexicon')"), 'My Words action remains working');
+assert.ok(vocabNav.includes("setSelectedTopic(null)"), 'My Words topic reset remains working');
+assert.ok(!navDef.includes('border-blue-500') && !navDef.includes('border-emerald-500'), 'Remove mismatched translator-style sidebar surfaces');
+console.log('Sidebar gallery parity OK: Word Journey and My Words match saved-word tiles exactly.');
 
 
 // My Words is now a self-contained, uncluttered, responsive gallery.
 // The right sidebar buttons and Word Journey are deliberately untouched.
 const myWordsSrc = readFileSync(new URL('../components/VocabularyWordGallery.tsx', import.meta.url), 'utf8');
 const myWordsCSS = readFileSync(new URL('../components/vocabulary-word-gallery.css', import.meta.url), 'utf8');
-const pageNav = src.slice(src.indexOf('           <nav className="flex-1 space-y-2.5 -mx-1">'), src.indexOf('           </nav>'));
-assert.ok(pageNav.includes('color="blue"') && pageNav.includes('color="emerald"'), 'Keep the Word Journey / My Words navigation design');
+const pageNav = src.slice(src.indexOf('           <nav className="flex-1 space-y-2"'), src.indexOf('           </nav>'));
+assert.ok(pageNav.includes('<SidebarNavBtn') && !pageNav.includes('color="blue"'), 'Keep both navigation controls in the matching gallery style');
 assert.ok(pageNav.includes("setActiveTab('discovery')"), 'Word Journey remains available');
 assert.ok(pageNav.includes("setActiveTab('lexicon')"), 'My Words remains available');
 assert.ok(src.includes('<VocabularyWordGallery'), 'Render saved-word gallery in the main area');
@@ -256,3 +249,16 @@ assert.ok(!src.includes('التحليل الذكي') && !src.includes('Smart Wor
 assert.ok(myWordsCSS.includes('.qul-word-gallery-detail'), 'Compact inline language details must be styled');
 assert.ok(myWordsCSS.includes('.qul-word-gallery-letter'), 'In-stage learning game must be styled');
 console.log('My Words inline OK: no artificial-intelligence badges or side panels, instant local analysis and real practice.');
+
+
+// The mastery labels sit next to the section name as understated inline text,
+// not as a detached green capsule anywhere in the showcase.
+assert.ok(myWordsSrc.includes('qul-word-gallery-status arabic-font'), 'Use subdued inline mastery status');
+assert.ok(myWordsSrc.includes('qul-word-gallery-status-dot'), 'Subtle color indicator must remain');
+assert.ok(myWordsSrc.includes('getStatus(selected, lang)'), 'Display the same learner status labels');
+assert.ok(myWordsCSS.includes('.qul-word-gallery-status {'), 'Status typography and separator must exist');
+assert.ok(myWordsCSS.includes('border-inline-start: 1px solid'), 'Inline status separator must respect RTL/LTR');
+assert.ok(!myWordsSrc.includes('text-emerald-700 bg-emerald-50/90 border border-emerald-100 px-3 py-1 rounded-full arabic-font'), 'Remove detached, oversized mastery badge');
+assert.ok(myWordsSrc.includes("lang === 'ar' ? 'قيد التعلم' : 'Learning'"), 'Learning label preserved');
+assert.ok(myWordsSrc.includes("lang === 'ar' ? 'متمكن' : 'Fluent'"), 'Fluent label preserved');
+console.log('Mastery label OK: quiet adjacent word statuses in Arabic and English.');
