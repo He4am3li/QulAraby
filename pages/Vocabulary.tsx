@@ -784,9 +784,11 @@ export const VocabularyPage: React.FC = () => {
                       {ALL_TOPICS.map(topic => {
                         const color = TOPIC_COLORS[topic.color] || TOPIC_COLORS.blue;
                         return (
-                          <button
+                          <motion.button
                             key={topic.id}
                             type="button"
+                            whileHover={{ y: -2 }}
+                            whileFocus={{ y: -2 }}
                             onClick={() => startDiscovery(topic)}
                             aria-label={lang === 'ar' ? topic.ar : topic.en}
                             className="qul-vocab-topic-glass rounded-3xl px-3 py-4 sm:px-4 sm:py-5 xl:px-5 flex flex-col items-center justify-center group relative overflow-hidden min-w-0 min-h-[212px] md:min-h-[224px] cursor-pointer"
@@ -816,7 +818,7 @@ export const VocabularyPage: React.FC = () => {
                             <div className={`qul-vocab-topic-glass-arrow mt-3 w-7 h-7 rounded-full flex items-center justify-center ${color.bg} ${color.text}`}>
                               <ArrowUpRight size={13} />
                             </div>
-                          </button>
+                          </motion.button>
                         );
                       })}
                    </div>
