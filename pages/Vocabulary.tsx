@@ -789,24 +789,28 @@ export const VocabularyPage: React.FC = () => {
                             type="button"
                             onClick={() => startDiscovery(topic)}
                             aria-label={lang === 'ar' ? topic.ar : topic.en}
-                            className="qul-vocab-topic-glass rounded-3xl px-3 py-5 sm:px-4 sm:py-6 xl:px-5 flex flex-col items-center justify-center group relative overflow-hidden min-w-0 min-h-[195px] md:min-h-[224px] cursor-pointer"
+                            className="qul-vocab-topic-glass rounded-3xl px-3 py-4 sm:px-4 sm:py-5 xl:px-5 flex flex-col items-center justify-center group relative overflow-hidden min-w-0 min-h-[212px] md:min-h-[224px] cursor-pointer"
                           >
-                            <span className="qul-vocab-topic-water-shine" aria-hidden="true" />
-                            <div className={`qul-vocab-topic-glass-icon w-16 h-16 lg:w-20 lg:h-20 rounded-3xl ${color.bg} ${color.text} flex items-center justify-center mb-4 border ${color.border}`}>
-                              {topic.id === 'insects_reptiles' ? (
-                                <div className="relative w-full h-full">
-                                  <span className="absolute top-3 left-3 text-sm -rotate-12">🦋</span>
-                                  <span className="absolute bottom-2.5 right-3 text-4xl leading-none">🐍</span>
-                                </div>
-                              ) : topic.id === 'food_drink' ? (
-                                <div className="relative w-full h-full">
-                                  <span className="absolute top-3.5 left-3.5 text-2xl -rotate-12">🥤</span>
-                                  <span className="absolute bottom-3 right-3 text-[42px] leading-none">🍝</span>
-                                </div>
-                              ) : (
-                                <span className={`${topic.icon.length > 8 ? "text-3xl leading-tight" : "text-5xl"} whitespace-pre`}>{topic.icon}</span>
-                              )}
+                            <div className="qul-vocab-topic-orb" aria-hidden="true">
+                              <div className="qul-vocab-topic-orb-content">
+                                {topic.id === 'insects_reptiles' ? (
+                                  <div className="qul-vocab-topic-composite">
+                                    <span className="absolute top-[9%] left-[8%] text-2xl -rotate-12">🦋</span>
+                                    <span className="absolute bottom-[7%] right-[7%] text-4xl">🐍</span>
+                                  </div>
+                                ) : topic.id === 'food_drink' ? (
+                                  <div className="qul-vocab-topic-composite">
+                                    <span className="absolute top-[5%] left-[8%] text-3xl -rotate-12">🥤</span>
+                                    <span className="absolute bottom-[4%] right-[5%] text-4xl">🍝</span>
+                                  </div>
+                                ) : (
+                                  <span className="whitespace-pre">{topic.icon}</span>
+                                )}
+                              </div>
+                              <span className="qul-vocab-topic-orb-refraction" />
+                              <span className="qul-vocab-topic-orb-reflection" />
                             </div>
+                            <span className="qul-vocab-topic-orb-shadow" aria-hidden="true" />
                             <h3 className="min-h-[2rem] w-full flex items-center justify-center text-center text-[11px] md:text-xs leading-snug font-black text-slate-800 arabic-font mb-1 break-words">{lang === 'ar' ? topic.ar : topic.en}</h3>
                             <span className={`min-h-[1.4rem] max-w-full text-center leading-snug text-[8px] font-bold text-slate-500 uppercase tracking-wider break-words ${lang === 'en' ? 'arabic-font' : ''}`}>{lang === 'ar' ? topic.en : topic.ar}</span>
                             <div className={`qul-vocab-topic-glass-arrow mt-3 w-7 h-7 rounded-full flex items-center justify-center ${color.bg} ${color.text}`}>

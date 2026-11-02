@@ -1,24 +1,29 @@
-/* Neutral liquid glass for the OUTER topic chooser only.
-   Chromatic glows are deliberately omitted. Original topic icon colors are kept. */
+/*
+ * QUL vocabulary topic gallery.
+ * A convex crystal-water sphere containing the topic artwork, like an optical
+ * glass paperweight. Unlike the earlier water-drop overlay, the illustration
+ * actually appears INSIDE a round lens with a refractive edge.
+ * CSS only, no canvas or per-card WebGL contexts for the 30-item gallery.
+ */
 
 .qul-vocab-topic-glass {
   position: relative;
   isolation: isolate;
   background: linear-gradient(152deg,
     rgba(255,255,255,.93) 0%,
-    rgba(255,255,255,.81) 31%,
-    rgba(242,245,248,.70) 73%,
-    rgba(255,255,255,.91) 100%);
+    rgba(255,255,255,.84) 38%,
+    rgba(242,245,248,.73) 77%,
+    rgba(255,255,255,.94) 100%);
   border: 1px solid rgba(255,255,255,.94);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,1),
-    inset 0 -1px 0 rgba(148,163,184,.12),
-    0 2px 5px rgba(15,23,42,.035),
-    0 10px 23px rgba(15,23,42,.078);
-  -webkit-backdrop-filter: blur(14px) saturate(112%);
-  backdrop-filter: blur(14px) saturate(112%);
-  transition: transform .34s cubic-bezier(.2,.8,.2,1),
-    box-shadow .34s ease, border-color .34s ease;
+    inset 0 1px 0 #fff,
+    inset 0 -1px 0 rgba(148,163,184,.10),
+    0 3px 7px rgba(15,23,42,.035),
+    0 10px 23px rgba(15,23,42,.08);
+  -webkit-backdrop-filter: blur(12px) saturate(108%);
+  backdrop-filter: blur(12px) saturate(108%);
+  transition: transform .32s cubic-bezier(.2,.8,.2,1),
+    box-shadow .32s ease, border-color .32s ease;
 }
 
 .qul-vocab-topic-glass::before,
@@ -29,123 +34,176 @@
   border-radius: inherit;
   pointer-events: none;
 }
-
 .qul-vocab-topic-glass::before {
   z-index: 0;
   background:
-    radial-gradient(ellipse 85% 50% at 18% -9%,
-      rgba(255,255,255,.95), transparent 84%),
-    radial-gradient(ellipse 68% 48% at 96% 99%,
-      rgba(203,213,225,.18), transparent 86%),
-    linear-gradient(116deg,
-      rgba(255,255,255,.31) 3%,
-      transparent 42%,
-      rgba(255,255,255,.16) 54%,
-      transparent 75%);
-  opacity: .96;
-  transition: opacity .34s ease;
+    radial-gradient(ellipse 90% 42% at 17% -8%,
+      rgba(255,255,255,.91), transparent 87%),
+    linear-gradient(110deg,
+      transparent 26%, rgba(255,255,255,.14) 52%, transparent 74%);
 }
-
-/* One raised, transparent water lens sitting ON TOP of each card.
-   Its asymmetric rim, inner caustics and tight glint give the impression of
-   a real droplet, without tinting the glass or hiding card interactions. */
 .qul-vocab-topic-glass::after {
-  inset: auto;
-  width: clamp(72px, 66%, 114px);
-  height: clamp(59px, 32%, 85px);
-  top: 9px;
-  right: 7px;
-  z-index: 3;
-  border-radius: 53% 47% 58% 42% / 50% 58% 42% 50%;
-  transform: rotate(-13deg);
-  background:
-    radial-gradient(ellipse at 27% 21%,
-      rgba(255,255,255,.88) 0%,
-      rgba(255,255,255,.47) 13%,
-      rgba(255,255,255,.11) 29%,
-      transparent 59%),
-    radial-gradient(ellipse at 78% 82%,
-      rgba(148,163,184,.18) 0%,
-      rgba(203,213,225,.085) 38%,
-      transparent 70%),
-    linear-gradient(135deg,
-      rgba(255,255,255,.28),
-      rgba(255,255,255,.04) 47%,
-      rgba(255,255,255,.17) 95%);
-  border: 1px solid rgba(255,255,255,.77);
-  box-shadow:
-    inset 2px 2px 3px rgba(255,255,255,.96),
-    inset -5px -7px 10px rgba(100,116,139,.16),
-    inset 0 -1px 1px rgba(255,255,255,.72),
-    1px 4px 9px rgba(51,65,85,.12),
-    0 0 0 1px rgba(148,163,184,.14);
-  -webkit-backdrop-filter: blur(1.5px) saturate(108%);
-  backdrop-filter: blur(1.5px) saturate(108%);
-  opacity: .97;
+  inset: 2px;
+  z-index: 0;
+  border: 1px solid rgba(255,255,255,.49);
 }
-
-/* A very small specular streak makes the lens read as WATER, not a colored
-   decoration. Keep it on top, and never intercept pointer events. */
-.qul-vocab-topic-glass .qul-vocab-topic-water-shine {
-  position: absolute;
-  top: 22px;
-  right: clamp(38px, 34%, 55px);
-  z-index: 4;
-  width: 24px;
-  height: 8px;
-  border-radius: 100%;
-  transform: rotate(-23deg);
-  background: rgba(255,255,255,.88);
-  box-shadow: 0 0 7px 2px rgba(255,255,255,.40);
-  filter: blur(.45px);
-  pointer-events: none;
-}
-
-.qul-vocab-topic-glass > * {
-  position: relative;
-  z-index: 1;
-}
+.qul-vocab-topic-glass > * { position: relative; z-index: 1; }
 
 .qul-vocab-topic-glass:hover,
 .qul-vocab-topic-glass:focus-visible {
   transform: translateY(-3px);
-  border-color: rgba(148,163,184,.43);
+  border-color: rgba(148,163,184,.44);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,1),
-    inset 0 -1px 0 rgba(100,116,139,.16),
-    0 6px 14px rgba(15,23,42,.065),
-    0 17px 30px rgba(15,23,42,.13);
+    inset 0 1px 0 #fff,
+    inset 0 -1px 0 rgba(100,116,139,.12),
+    0 7px 15px rgba(15,23,42,.065),
+    0 18px 34px rgba(15,23,42,.15);
 }
-
 .qul-vocab-topic-glass:focus-visible {
-  outline: 2px solid rgba(100,116,139,.58);
+  outline: 2px solid rgba(100,116,139,.59);
   outline-offset: 3px;
 }
 
-/* The original pale, per-topic icon background and border come from
-   existing Tailwind classes, not from a new colored glass overlay. */
-.qul-vocab-topic-glass-icon {
+/*
+ * The round body is intentionally large, with no rectangular icon tile.
+ * Directional softbox reflections, a heavy bottom rim and a bright meniscus
+ * create a believable glass ball against the light topic-gallery background.
+ */
+.qul-vocab-topic-orb {
+  position: relative;
+  width: clamp(90px, 7.8vw, 116px);
+  max-width: 100%;
+  aspect-ratio: 1;
+  flex: none;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.96);
+  background:
+    radial-gradient(circle at 32% 21%, rgba(255,255,255,.63), transparent 38%),
+    radial-gradient(ellipse at 55% 108%, rgba(51,65,85,.27), transparent 53%),
+    linear-gradient(166deg,
+      rgba(245,250,255,.75) 0%,
+      rgba(244,248,252,.26) 28%,
+      rgba(232,240,246,.11) 63%,
+      rgba(205,217,228,.44) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.92),
-    0 7px 14px rgba(15,23,42,.075);
-  transition: transform .34s cubic-bezier(.2,.8,.2,1), box-shadow .34s ease;
+    inset 2px 3px 3px rgba(255,255,255,.99),
+    inset -7px -10px 16px rgba(45,60,76,.23),
+    inset 0 -2px 3px rgba(30,41,59,.23),
+    inset 0 0 0 2px rgba(255,255,255,.62),
+    0 9px 15px -7px rgba(15,23,42,.35),
+    0 2px 4px rgba(15,23,42,.09);
+  -webkit-backdrop-filter: blur(1.5px) contrast(1.04);
+  backdrop-filter: blur(1.5px) contrast(1.04);
+  transition: box-shadow .34s ease, transform .34s cubic-bezier(.2,.8,.2,1);
 }
 
-.qul-vocab-topic-glass:hover .qul-vocab-topic-glass-icon,
-.qul-vocab-topic-glass:focus-visible .qul-vocab-topic-glass-icon {
+/* World inside the water: icon is magnified near the optical center and
+   softens naturally towards the spherical glass rim. */
+.qul-vocab-topic-orb-content {
+  position: absolute;
+  inset: 9%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(1.12) translateY(2px);
+  border-radius: 50%;
+  -webkit-mask-image: radial-gradient(circle,
+    #000 0%, #000 58%, rgba(0,0,0,.78) 78%, transparent 99%);
+  mask-image: radial-gradient(circle,
+    #000 0%, #000 58%, rgba(0,0,0,.78) 78%, transparent 99%);
+  filter: drop-shadow(0 3px 3px rgba(15,23,42,.18));
+}
+.qul-vocab-topic-orb-content > span {
+  display: block;
+  font-size: clamp(44px, 4vw, 57px);
+  line-height: 1;
+}
+.qul-vocab-topic-orb-content .qul-vocab-topic-composite {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Lens-edge refraction. A narrow annulus subtly distorts and softens what
+   is underneath. The bright ring reads as a refractive meniscus. */
+.qul-vocab-topic-orb-refraction {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 53% 50%,
+      transparent 0%, transparent 58%,
+      rgba(255,255,255,.045) 65%,
+      rgba(255,255,255,.51) 85%,
+      rgba(26,42,57,.18) 96%,
+      rgba(255,255,255,.89) 100%);
+  -webkit-mask-image: radial-gradient(circle,
+    transparent 0 56%, #000 76% 100%);
+  mask-image: radial-gradient(circle,
+    transparent 0 56%, #000 76% 100%);
+  -webkit-backdrop-filter: blur(1.4px) contrast(1.14);
+  backdrop-filter: blur(1.4px) contrast(1.14);
+}
+
+/* Curved environmental reflections and a strong top-left light sweep. */
+.qul-vocab-topic-orb-reflection {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 41% 9% at 28% 12%,
+      rgba(255,255,255,.96) 0%,
+      rgba(255,255,255,.62) 31%, transparent 100%),
+    radial-gradient(ellipse 9% 30% at 90% 35%,
+      rgba(255,255,255,.85) 0%, transparent 100%),
+    radial-gradient(ellipse 48% 20% at 48% 98%,
+      rgba(255,255,255,.45), transparent 100%),
+    conic-gradient(from 205deg at 50% 50%,
+      rgba(255,255,255,.35) 0deg, transparent 37deg,
+      transparent 96deg, rgba(255,255,255,.27) 137deg,
+      transparent 182deg, transparent 276deg,
+      rgba(255,255,255,.20) 323deg, rgba(255,255,255,.35) 360deg);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.67),
+    inset 2px 2px 7px rgba(255,255,255,.64);
+}
+
+/* A convincing sphere rests in space, it does not look pasted on the card. */
+.qul-vocab-topic-orb-shadow {
+  width: min(76%, 94px);
+  height: 11px;
+  margin: -4px auto 9px;
+  flex: none;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+    rgba(15,23,42,.18), rgba(15,23,42,.045) 55%, transparent 77%);
+  filter: blur(3.5px);
+  pointer-events: none;
+}
+
+.qul-vocab-topic-glass:hover .qul-vocab-topic-orb,
+.qul-vocab-topic-glass:focus-visible .qul-vocab-topic-orb {
   transform: translateY(-2px) scale(1.025);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,1),
-    0 10px 18px rgba(15,23,42,.12);
+    inset 2px 3px 3px #fff,
+    inset -7px -10px 16px rgba(45,60,76,.25),
+    inset 0 -2px 3px rgba(30,41,59,.25),
+    inset 0 0 0 2px rgba(255,255,255,.7),
+    0 13px 19px -7px rgba(15,23,42,.38);
 }
 
-/* The arrow keeps its ORIGINAL topic color, with a navy hover state. */
 .qul-vocab-topic-glass-arrow {
   border: 1px solid rgba(255,255,255,.85);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.88);
   transition: color .25s ease, background-color .25s ease, transform .25s ease;
 }
-
 .qul-vocab-topic-glass:hover .qul-vocab-topic-glass-arrow,
 .qul-vocab-topic-glass:focus-visible .qul-vocab-topic-glass-arrow {
   color: #fff;
@@ -153,29 +211,29 @@
   transform: translateY(-1px);
 }
 
+/* Non-backdrop browsers retain an opaque, legible fall-back. */
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .qul-vocab-topic-glass {
-    background: rgba(250,251,253,.97);
-  }
-  .qul-vocab-topic-glass::after {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    background: radial-gradient(ellipse at 28% 20%, rgba(255,255,255,.83), rgba(235,239,244,.22) 74%);
-  }
+  .qul-vocab-topic-glass { background: rgba(250,251,253,.97); }
+  .qul-vocab-topic-orb { background-color: rgba(240,245,250,.75); }
+  .qul-vocab-topic-orb-refraction { background-color: rgba(255,255,255,.06); }
+}
+
+@media (max-width: 620px) {
+  .qul-vocab-topic-orb { width: clamp(88px, 24vw, 108px); }
+  .qul-vocab-topic-orb-content > span { font-size: 49px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .qul-vocab-topic-glass,
-  .qul-vocab-topic-glass::before,
-  .qul-vocab-topic-glass-icon,
+  .qul-vocab-topic-orb,
   .qul-vocab-topic-glass-arrow {
     transition: none !important;
   }
   .qul-vocab-topic-glass:hover,
   .qul-vocab-topic-glass:focus-visible,
-  .qul-vocab-topic-glass:hover .qul-vocab-topic-glass-icon,
-  .qul-vocab-topic-glass:focus-visible .qul-vocab-topic-glass-icon,
+  .qul-vocab-topic-glass:hover .qul-vocab-topic-orb,
+  .qul-vocab-topic-glass:focus-visible .qul-vocab-topic-orb,
   .qul-vocab-topic-glass:hover .qul-vocab-topic-glass-arrow {
-    transform: none;
+    transform: none !important;
   }
 }

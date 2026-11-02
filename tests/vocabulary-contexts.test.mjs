@@ -98,38 +98,37 @@ assert.ok(src.indexOf('setShowHint(!showHint)') < cardsIndex,
   'The existing lightbulb must stay in the topic header');
 console.log('Worksheet preview layout OK: bottom-left Arabic, bottom-right English, no duplicate control.');
 
-// Scope the liquid-glass treatment to the OUTER vocabulary topic chooser.
-// Word cards, text contexts, teaching tips, and worksheet controls stay intact.
+// The reference is a convex water-glass sphere with the artwork inside it,
+// not a decorative ellipse drawn on top of a rectangular card.
 const topicGlassCSS = readFileSync(new URL('../components/vocabulary-topic-glass.css', import.meta.url), 'utf8');
 const topicCardsStart = src.indexOf('{ALL_TOPICS.map(topic => {');
 const topicCardsEnd = src.indexOf('})}', topicCardsStart);
 assert.ok(topicCardsStart >= 0 && topicCardsEnd > topicCardsStart, 'Topic chooser section not found');
 const chooser = src.slice(topicCardsStart, topicCardsEnd);
 assert.ok(src.includes("import '../components/vocabulary-topic-glass.css';"), 'Topic glass stylesheet must load');
-assert.ok(chooser.includes('qul-vocab-topic-glass rounded-3xl'), 'Topic selection button must use liquid glass');
-assert.ok(chooser.includes('qul-vocab-topic-glass-icon'), 'Topic art tile must have an optical layer');
-assert.ok(chooser.includes('qul-vocab-topic-glass-arrow'), 'Topic arrow should match glass styling');
-assert.ok(chooser.includes('startDiscovery(topic)'), 'Topic card navigation must remain functional');
-assert.ok(!src.includes('TOPIC_GLASS_RGB'), 'Added color-tint palette must be removed');
-assert.ok(chooser.includes('${color.bg} ${color.text}'), 'Use the original icon and arrow palette');
-assert.ok(chooser.includes('border ${color.border}'), 'Restore original icon border colors');
-assert.ok(!topicGlassCSS.includes('topic-glass-rgb'), 'No colored glass gradients or accents');
-assert.ok(!topicGlassCSS.includes('rgba(var('), 'Do not tint the glass with topic colors');
-assert.ok(topicGlassCSS.includes('rgba(255,255,255,.93)'), 'Neutral clear-glass surface required');
-assert.ok(topicGlassCSS.includes('backdrop-filter: blur('), 'Real translucent glass refraction is required');
-assert.ok(topicGlassCSS.includes('pointer-events: none'), 'Highlights cannot block clicking');
-assert.ok(topicGlassCSS.includes('prefers-reduced-motion: reduce'), 'Reduced-motion accessibility must be retained');
-assert.ok(topicGlassCSS.includes('@supports not'), 'Missing-backdrop browser fallback required');
-assert.ok(!src.slice(topicCardsEnd).includes('qul-vocab-topic-glass-icon'), 'Do not apply to in-topic word cards');
-assert.ok(src.includes('data-testid="worksheet-preview-bottom-footer"'), 'Worksheet footer remains untouched');
-console.log('Vocabulary glass OK: 30 neutral frosted-glass cards, original icon colors preserved.');
-assert.ok(chooser.includes('<span className="qul-vocab-topic-water-shine" aria-hidden="true" />'), 'Decorative water glint belongs to external topic cards');
-assert.ok(!src.slice(topicCardsEnd).includes('qul-vocab-topic-water-shine'), 'Inner vocabulary cards must remain unchanged');
-assert.ok(topicGlassCSS.includes('.qul-vocab-topic-glass::after {'), 'Water lens must be present');
-assert.ok(topicGlassCSS.includes('border-radius: 53% 47% 58% 42%'), 'Organic water lens shape required');
-assert.ok(topicGlassCSS.includes('z-index: 3;'), 'Water lens should sit above the card artwork');
-assert.ok(topicGlassCSS.includes('qul-vocab-topic-water-shine'), 'Specular water highlight is required');
-assert.ok(topicGlassCSS.includes('pointer-events: none'), 'Water must not block navigation');
-assert.ok(topicGlassCSS.includes('background: rgba(250,251,253,.97)'), 'Neutral fallback must be maintained');
-assert.ok(!topicGlassCSS.includes('topic-glass-rgb'), 'Water drop cannot add colored glass tints');
-console.log('Water-drop lens OK: a neutral, decorative overlay on the 30 external topic cards.');
+assert.ok(chooser.includes('qul-vocab-topic-glass rounded-3xl'), 'Topic cards should stay glazed');
+assert.ok(chooser.includes('className="qul-vocab-topic-orb"'), 'Artwork must live inside a real circular lens');
+assert.ok(chooser.includes('className="qul-vocab-topic-orb-content"'), 'Word artwork must be within the sphere');
+assert.ok(chooser.includes('className="qul-vocab-topic-orb-refraction"'), 'Sphere needs a refractive edge');
+assert.ok(chooser.includes('className="qul-vocab-topic-orb-reflection"'), 'Sphere needs optical reflections');
+assert.ok(chooser.includes('className="qul-vocab-topic-orb-shadow"'), 'Sphere needs a grounding shadow');
+assert.ok(chooser.includes('qul-vocab-topic-glass-arrow'), 'Original arrow control must remain');
+assert.ok(chooser.includes('startDiscovery(topic)'), 'Topic navigation must work');
+assert.ok(chooser.includes('aria-hidden="true"'), 'Glass orb is decorative, card name is announced');
+assert.ok(topicGlassCSS.includes('.qul-vocab-topic-orb {'), 'Spherical lens CSS missing');
+assert.ok(topicGlassCSS.includes('aspect-ratio: 1;'), 'Glass lens must be spherical');
+assert.ok(topicGlassCSS.includes('border-radius: 50%'), 'Spherical edge missing');
+assert.ok(topicGlassCSS.includes('mask-image: radial-gradient'), 'Soft optical edge missing');
+assert.ok(topicGlassCSS.includes('backdrop-filter: blur('), 'Actual background optical diffusion missing');
+assert.ok(topicGlassCSS.includes('qul-vocab-topic-orb-refraction'), 'Refractive rim missing');
+assert.ok(topicGlassCSS.includes('qul-vocab-topic-orb-reflection'), 'Highlights missing');
+assert.ok(topicGlassCSS.includes('pointer-events: none'), 'Optical overlays must not intercept taps');
+assert.ok(topicGlassCSS.includes('prefers-reduced-motion: reduce'), 'Reduced motion support missing');
+assert.ok(topicGlassCSS.includes('@supports not'), 'Optical fallback required');
+assert.ok(!src.includes('TOPIC_GLASS_RGB'), 'No unwanted new color tints');
+assert.ok(!topicGlassCSS.includes('topic-glass-rgb'), 'Sphere must remain color neutral');
+assert.ok(!chooser.includes('qul-vocab-topic-water-shine'), 'Remove the old fake water spot');
+assert.ok(!chooser.includes('qul-vocab-topic-glass-icon'), 'Remove rectangular icon tile inside sphere');
+assert.ok(!src.slice(topicCardsEnd).includes('qul-vocab-topic-orb'), 'Do not affect in-topic flashcards');
+assert.ok(src.includes('data-testid="worksheet-preview-bottom-footer"'), 'Keep worksheet preview footer unchanged');
+console.log('Convex sphere OK: 30 external topic cards, refractive rim, protected lesson contents.');
