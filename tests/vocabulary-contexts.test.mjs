@@ -97,3 +97,24 @@ assert.ok(footer.includes("lang === 'ar' ? 'معاينة ورقة العمل' : 
 assert.ok(src.indexOf('setShowHint(!showHint)') < cardsIndex,
   'The existing lightbulb must stay in the topic header');
 console.log('Worksheet preview layout OK: bottom-left Arabic, bottom-right English, no duplicate control.');
+
+// Scope the liquid-glass treatment to the OUTER vocabulary topic chooser.
+// Word cards, text contexts, teaching tips, and worksheet controls stay intact.
+const topicGlassCSS = readFileSync(new URL('../components/vocabulary-topic-glass.css', import.meta.url), 'utf8');
+const topicCardsStart = src.indexOf('{ALL_TOPICS.map(topic => {');
+const topicCardsEnd = src.indexOf('})}', topicCardsStart);
+assert.ok(topicCardsStart >= 0 && topicCardsEnd > topicCardsStart, 'Topic chooser section not found');
+const chooser = src.slice(topicCardsStart, topicCardsEnd);
+assert.ok(src.includes("import '../components/vocabulary-topic-glass.css';"), 'Topic glass stylesheet must load');
+assert.ok(chooser.includes('qul-vocab-topic-glass rounded-3xl'), 'Topic selection button must use liquid glass');
+assert.ok(chooser.includes('qul-vocab-topic-glass-icon'), 'Topic art tile must have an optical layer');
+assert.ok(chooser.includes('qul-vocab-topic-glass-arrow'), 'Topic arrow should match glass styling');
+assert.ok(chooser.includes('startDiscovery(topic)'), 'Topic card navigation must remain functional');
+assert.ok(chooser.includes('TOPIC_GLASS_RGB[topic.color]'), 'Per-topic palette must be preserved');
+assert.ok(topicGlassCSS.includes('backdrop-filter: blur('), 'Real translucent glass refraction is required');
+assert.ok(topicGlassCSS.includes('pointer-events: none'), 'Highlights cannot block clicking');
+assert.ok(topicGlassCSS.includes('prefers-reduced-motion: reduce'), 'Reduced-motion accessibility must be retained');
+assert.ok(topicGlassCSS.includes('@supports not'), 'Missing-backdrop browser fallback required');
+assert.ok(!src.slice(topicCardsEnd).includes('qul-vocab-topic-glass-icon'), 'Do not apply to in-topic word cards');
+assert.ok(src.includes('data-testid="worksheet-preview-bottom-footer"'), 'Worksheet footer remains untouched');
+console.log('Vocabulary glass OK: 30 outer topic cards, responsive optical effects, preserved word cards.');
