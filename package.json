@@ -10,7 +10,8 @@
     "lint": "tsc --noEmit",
     "audit:dialects": "node scripts/audit-dialect-rigs.mjs",
     "test:radio": "node scripts/test-radio.mjs && node tests/radio-ui.test.mjs",
-    "test:vocabulary": "node tests/vocabulary-contexts.test.mjs"
+    "test:vocabulary": "node tests/vocabulary-contexts.test.mjs",
+    "prebuild": "npm run test:vocabulary"
   },
   "dependencies": {
     "@google/genai": "2.31.0",
