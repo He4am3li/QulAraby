@@ -13,6 +13,8 @@ import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { Vocabulary, MasteryLevel } from '../types';
 import { VOCABULARY_CONTEXTS } from '../data/vocabularyContextStories';
+import { VOCABULARY_USAGE_TIPS } from '../data/vocabularyUsageTips';
+import { VocabularyUsageTips } from '../components/VocabularyUsageTips';
 import { generateSpeech, decodeAudioData, getWordDeepAnalysis, generateThemedVocabulary, generateWordIllustration, speak } from '../services/gemini';
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType, serverTimestamp } from '../firebase';
@@ -367,31 +369,6 @@ export const VocabularyPage: React.FC = () => {
   const [showFeelingsChart, setShowFeelingsChart] = React.useState(false);
   const [showHint, setShowHint] = React.useState(false);
   const [activeActivityWord, setActiveActivityWord] = React.useState<Vocabulary | null>(null);
-
-  const TOPIC_HINTS: Record<string, { ar: string, en: string }> = {
-    feelings: {
-      ar: 'هذه الكلمات بصيغة المذكر، أضف ة / ـة لتصبح بصيغة المؤنث.',
-      en: 'These words are in the masculine form. Add ة / ـة to make them feminine.'
-    },
-    family_hobbies: {
-      ar: 'يمكنك إضافة حرف «ي» في نهاية الكلمة للدلالة على الملكية، أي بمعنى «لي / خاصتي».',
-      en: 'You can add "ي” in the end of the word if you want to say My ……'
-    },
-    weather: {
-      ar: 'تحدث عن حالة الجو وفصول السنة.',
-      en: 'Talk about the weather and seasons.'
-    },
-    animals: {
-      ar: 'لاحظ أن أسماء الحيوانات في العربية لها مذكر ومؤنث مختلف أحياناً.',
-      en: 'Note that animal names in Arabic sometimes have different names for male and female.'
-    },
-    default: {
-      ar: 'استخدم هذه الكلمات في جمل يومية لتثبيتها في ذاكرتك.',
-      en: 'Use these words in daily sentences to memorize them better.'
-    }
-  };
-
-  const currentHint = selectedTopic ? (TOPIC_HINTS[selectedTopic.id] || TOPIC_HINTS.default)[lang] : '';
 
   const audioContextRef = React.useRef<AudioContext | null>(null);
 
@@ -894,7 +871,6 @@ export const VocabularyPage: React.FC = () => {
                   }}
                   showHint={showHint}
                   setShowHint={setShowHint}
-                  currentHint={currentHint}
                 />
               )}
 
@@ -2112,13 +2088,27 @@ const TopicInterface: React.FC<{
   onSpeak: (text: string, lang: 'ar' | 'en') => void,
   onAction: (word: Partial<Vocabulary>, status: 'know' | 'learn' | 'ignore') => void,
   showHint: boolean,
-  setShowHint: (val: boolean) => void,
-  currentHint: string
-}> = ({ topic, lang, words, onBack, onSpeak, onAction, showHint, setShowHint, currentHint }) => {
+  setShowHint: (val: boolean) => void
+}> = ({ topic, lang, words, onBack, onSpeak, onAction, showHint, setShowHint }) => {
   const [flippedIndex, setFlippedIndex] = React.useState<number | null>(null);
   const [isGeneratingWorksheet, setIsGeneratingWorksheet] = React.useState(false);
   const [showWorksheetPreview, setShowWorksheetPreview] = React.useState(false);
   const worksheetRef = React.useRef<HTMLDivElement>(null);
+  const [focusedTipWordIndex, setFocusedTipWordIndex] = React.useState<number | null>(null);
+  const usageTips = VOCABULARY_USAGE_TIPS[topic.id] || [];
+
+  React.useEffect(() => {
+    setFocusedTipWordIndex(null);
+    setShowHint(false);
+  }, [topic.id]);
+
+  const showUsageForCard = (wordIndex: number) => {
+    if (usageTips.some(tip => tip.examples.some(example => example.wordIndex === wordIndex))) {
+      setFocusedTipWordIndex(wordIndex);
+      setShowHint(true);
+    }
+  };
+
 
   const generateWorksheet = async () => {
     if (!worksheetRef.current) return;
@@ -2197,29 +2187,27 @@ const TopicInterface: React.FC<{
                 </span>
              </button>
 
-             <button 
-                onClick={() => setShowHint(!showHint)}
-                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all border shadow-sm active:scale-95 ${showHint ? 'bg-amber-100 border-amber-200 text-amber-600' : 'bg-white border-slate-50 text-slate-400 hover:bg-slate-50'}`}
-             >
-                <Lightbulb size={16} />
-             </button>
-             <AnimatePresence>
-                {showHint && (
-                    <motion.div 
-                      initial={{ opacity: 0, x: lang === 'ar' ? 10 : -10, scale: 0.95 }}
-                      animate={{ opacity: 1, x: 0, scale: 1 }}
-                      exit={{ opacity: 0, x: lang === 'ar' ? 10 : -10, scale: 0.95 }}
-                      className={`absolute top-1/2 -translate-y-1/2 -mt-[35px] ${lang === 'ar' ? 'left-full ml-4' : 'right-full mr-4'} w-64 p-4 bg-white border border-amber-100 rounded-2xl shadow-2xl z-[100] ${lang === 'ar' ? 'text-right' : 'text-left'} pointer-events-auto`}
-                    >
-                      <div className={`absolute top-1/2 -translate-y-1/2 ${lang === 'ar' ? '-left-2' : '-right-2'} w-4 h-4 bg-white border-t ${lang === 'ar' ? 'border-l' : 'border-r'} border-amber-100 ${lang === 'ar' ? '-rotate-45' : 'rotate-45'}`} />
-                      <p className={`text-[11px] font-medium ${lang === 'ar' ? 'arabic-font' : 'font-sans'} text-slate-700 leading-relaxed`}>
-                        {currentHint}
-                      </p>
-                    </motion.div>
-                )}
-             </AnimatePresence>
+             <button
+               type="button"
+               onClick={() => {
+                 if (showHint) setShowHint(false);
+                 else { setFocusedTipWordIndex(null); setShowHint(true); }
+               }}
+               aria-expanded={showHint}
+               aria-label={lang === 'ar' ? 'تلميحات استخدام الكلمات' : 'Vocabulary usage tips'}
+               className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all border shadow-sm active:scale-95 ${showHint ? 'bg-amber-100 border-amber-200 text-amber-600' : 'bg-white border-slate-50 text-slate-400 hover:bg-slate-50'}`}
+             ><Lightbulb size={16}/></button>
           </div>
         </div>
+
+        <VocabularyUsageTips
+          topicId={topic.id}
+          lang={lang}
+          words={words}
+          open={showHint}
+          onClose={() => setShowHint(false)}
+          focusedWordIndex={focusedTipWordIndex}
+        />
 
         {/* Topic Story Box combining vocabulary in context */}
         <TopicStoryBox 
@@ -2233,7 +2221,7 @@ const TopicInterface: React.FC<{
 
         <div className="grid grid-cols-4 md:grid-cols-8 gap-2.5 md:gap-3.5 relative z-10">
            {words.map((f, i) => (
-             <div key={i} className="perspective-1000 h-[130px] md:h-[150px]">
+             <div key={i} className="perspective-1000 h-[130px] md:h-[150px] relative">
                <motion.div
                  className="relative w-full h-full text-center transition-all duration-500 transform-style-3d cursor-pointer"
                  animate={{ rotateY: flippedIndex === i ? 180 : 0 }}
@@ -2329,6 +2317,15 @@ const TopicInterface: React.FC<{
                    </div>
                  </div>
                </motion.div>
+               {usageTips.some(tip => tip.examples.some(example => example.wordIndex === i)) && (
+                 <button
+                   type="button"
+                   onClick={(event) => { event.stopPropagation(); showUsageForCard(i); }}
+                   aria-label={lang === 'ar' ? 'كيفية استخدام ' + f.original_word : 'How to use ' + f.original_word}
+                   title={lang === 'ar' ? 'تطبيق التلميح' : 'Apply usage tip'}
+                   className="absolute top-1 right-1 z-30 p-1 rounded-md text-amber-500 bg-white/85 border border-amber-100 shadow-sm hover:bg-amber-100"
+                 ><Lightbulb size={12}/></button>
+               )}
              </div>
            ))}
         </div>
