@@ -39,7 +39,7 @@ for (const id of topicIds) {
 }
 assert.match(contexts.family_hobbies.ar, /\[\[12\|الوالدين\]\]/);
 assert.match(contexts.family_hobbies.ar, /\[\[0\|أبي\]\]/);
-assert.match(contexts.feelings.ar, /\[\[4\|بالحزن\]\]/);
+assert.match(contexts.feelings.ar, /\[\[4\|حزينًا\]\]/);
 assert.ok(src.includes('renderContextualStory(paragraph, words'));
 assert.ok(src.includes('context_surface'));
 assert.ok(!src.includes('TOPIC_STORIES'));
