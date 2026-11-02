@@ -19,7 +19,8 @@ import { VocabularyWordGallery } from '../components/VocabularyWordGallery';
 import { generateSpeech, decodeAudioData, generateThemedVocabulary, generateWordIllustration, speak } from '../services/gemini';
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType, serverTimestamp } from '../firebase';
-import { collection, query, where, onSnapshot, setDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, setDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { updateSRS } from '../utils/srs';
 
 const ALL_TOPICS = [
   { id: 'about_me', ar: 'التحيات والتعارف', en: 'GREETINGS & INTRODUCTIONS', icon: '👋🏻', color: 'blue' },
@@ -390,29 +391,48 @@ export const VocabularyPage: React.FC = () => {
     finally { setIsLoadingIllustration(false); }
   };
 
+  const saveVocabularyWord = async (word: Partial<Vocabulary>, status: 'know' | 'learn' | 'ignore') => {
+    if (!user || status === 'ignore') return;
+    const original = (word.original_word || '').trim();
+    if (!original) return;
+    const normalize = (value: string) => value.normalize('NFC').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+    const normalized = normalize(original);
+    if (vocab.some(item => normalize(item.original_word || '') === normalized)) return;
+    const fingerprint = Array.from(new TextEncoder().encode(normalized))
+      .reduce((hash, byte) => Math.imul(hash ^ byte, 16777619) >>> 0, 2166136261);
+    const wordId = 'word_' + encodeURIComponent(normalized).slice(0, 120) + '_' + fingerprint.toString(36);
+    const savedWord = {
+      id: wordId, original_word: original, translation: word.translation || '', emoji: word.emoji || '',
+      analysis: word.analysis || { details_ar: { example: '' }, details_en: { example: '' } },
+      is_english_to_arabic: false, english_definition: word.translation || '', arabic_definition: original,
+      userId: user.uid, createdAt: serverTimestamp(), word: original, meaning_ar: original,
+      meaning_en: word.translation || '',
+      mastery_level: status === 'know' ? MasteryLevel.LEARNING : MasteryLevel.NEW,
+      correct_reviews: 0, review_count: 0, last_reviewed: '', next_review: new Date().toISOString()
+    };
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'vocabulary', wordId), savedWord);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'users/' + user.uid + '/vocabulary/' + wordId);
+    }
+  };
+
+  const recordVocabularyReview = async (word: Vocabulary, correct: boolean) => {
+    if (!user || !word.id) return;
+    const result = updateSRS(word, correct ? 'easy' : 'hard');
+    try {
+      await updateDoc(doc(db, 'users', user.uid, 'vocabulary', word.id), {
+        mastery_level: result.mastery_level, correct_reviews: result.correct_reviews,
+        last_successful_review: result.last_successful_review || '',
+        review_count: result.review_count, last_reviewed: result.last_reviewed, next_review: result.next_review
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'users/' + user.uid + '/vocabulary/' + word.id);
+    }
+  };
   const processDiscovery = async (status: 'know' | 'learn' | 'ignore') => {
     const current = discoveryQueue[currentIndex] as Vocabulary;
-    if (status !== 'ignore' && user) {
-      const level = status === 'know' ? MasteryLevel.FLUENT : MasteryLevel.LEARNING;
-      const updatedWord = { 
-        ...current, 
-        mastery_level: level,
-        userId: user.uid,
-        createdAt: serverTimestamp(),
-        // Add compatibility fields for Firestore rules
-        word: current.original_word,
-        meaning_ar: current.arabic_definition || current.original_word,
-        meaning_en: current.translation
-      };
-      
-      // Save to Firestore
-      try {
-        const wordId = updatedWord.id || Math.random().toString(36).substring(2, 15);
-        await setDoc(doc(db, 'users', user.uid, 'vocabulary', wordId), updatedWord);
-      } catch (error) {
-        handleFirestoreError(error, OperationType.CREATE, `users/${user.uid}/vocabulary`);
-      }
-    }
+    await saveVocabularyWord(current, status);
 
     if (currentIndex < discoveryQueue.length - 1) {
       const nextIndex = currentIndex + 1;
@@ -427,14 +447,15 @@ export const VocabularyPage: React.FC = () => {
     }
   };
 
-  const progress = Math.min(100, (vocab.length / 50) * 100);
+  const verifiedCount = vocab.filter(word => (word.correct_reviews || 0) >= 3).length;
+  const progress = Math.min(100, (verifiedCount / 50) * 100);
   const getRank = (count: number) => {
     if (count < 10) return { title: lang === 'ar' ? 'مبتدئ' : 'Beginner', color: 'slate' };
     if (count < 30) return { title: lang === 'ar' ? 'مستكشف' : 'Explorer', color: 'emerald' };
     if (count < 60) return { title: lang === 'ar' ? 'باحث' : 'teal' };
     return { title: lang === 'ar' ? 'متقن' : 'Master', color: 'indigo' };
   };
-  const currentRank = getRank(vocab.length);
+  const currentRank = getRank(verifiedCount);
 
   const deleteWord = async (wordId: string) => {
     if (!user) return;
@@ -468,9 +489,9 @@ export const VocabularyPage: React.FC = () => {
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 0.8px, transparent 0.8px)', backgroundSize: '24px 24px' }} />
 
         {/* Simplified Sidebar Navigation */}
-        <aside className={`w-[280px] bg-white flex flex-col p-6 shrink-0 relative z-[50] shadow-sm no-print ${lang === 'ar' ? 'border-l' : 'border-r'} border-slate-100`}>
-           <div className="mb-10 px-1 flex items-center justify-between flex-row">
-              <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
+        <aside className={`w-[76px] sm:w-[190px] md:w-[230px] xl:w-[280px] bg-white flex flex-col p-2 sm:p-3 md:p-5 xl:p-6 shrink-0 relative z-[50] shadow-sm no-print ${lang === 'ar' ? 'border-l' : 'border-r'} border-slate-100`}>
+           <div className="mb-4 sm:mb-8 px-1 flex items-center justify-center sm:justify-between flex-row">
+              <div className={`hidden sm:block ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
                  <div className={`flex items-center gap-2 mb-1 ${lang === 'ar' ? 'flex-row' : 'flex-row'}`}>
                     <div className="w-2 h-2 rounded-full bg-[#0f172a] shadow-[0_0_8px_rgba(15,23,42,0.4)]" />
                     <span className="text-[10px] font-black text-slate-800 uppercase tracking-[0.2em]">{currentRank.title}</span>
@@ -491,7 +512,7 @@ export const VocabularyPage: React.FC = () => {
               </div>
            </div>
 
-           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 px-1">
+           <h3 className="hidden sm:block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 px-1">
              {lang === 'ar' ? 'اختر وجهتك التعليمية' : 'Choose your learning path'}
            </h3>
 
@@ -524,6 +545,7 @@ export const VocabularyPage: React.FC = () => {
                  lang={lang}
                  onSpeak={speak}
                  onDelete={deleteWord}
+                 onReviewResult={recordVocabularyReview}
                />
              </div>
            )}
@@ -600,39 +622,7 @@ export const VocabularyPage: React.FC = () => {
                     }, 50);
                   }} 
                   onSpeak={speak}
-                  onAction={async (word: Partial<Vocabulary>, status: 'know' | 'learn' | 'ignore') => {
-                    if (status === 'ignore' || !user) return;
-                    const level = status === 'know' ? MasteryLevel.FLUENT : MasteryLevel.LEARNING;
-                    
-                    const vocabWord: Vocabulary = { 
-                      id: Math.random().toString(36).substring(2, 15),
-                      original_word: word.original_word || '', 
-                      translation: word.translation || '',
-                      mastery_level: level,
-                      userId: user.uid,
-                      createdAt: serverTimestamp(),
-                      word: word.original_word || '',
-                      meaning_ar: word.original_word || '',
-                      meaning_en: word.translation || '',
-                      is_english_to_arabic: false,
-                      english_definition: word.translation || '',
-                      arabic_definition: word.original_word || '',
-                      analysis: word.analysis || {
-                        type: 'noun',
-                        details_ar: { category: 'General', sub_category: 'General', rule: '', example: '' },
-                        details_en: { category: 'General', sub_category: 'General', rule: '', example: '' }
-                      },
-                      review_count: 0,
-                      last_reviewed: new Date().toISOString(),
-                      next_review: new Date().toISOString()
-                    } as any;
-                    
-                    try {
-                      await setDoc(doc(db, 'users', user.uid, 'vocabulary', vocabWord.id), vocabWord);
-                    } catch (error) {
-                      handleFirestoreError(error, OperationType.CREATE, `users/${user.uid}/vocabulary`);
-                    }
-                  }}
+                  onAction={saveVocabularyWord}
                   showHint={showHint}
                   setShowHint={setShowHint}
                 />
@@ -1145,8 +1135,8 @@ const SHOPPING_DATA: Partial<Vocabulary>[] = [
 
 const TRAVEL_DATA: Partial<Vocabulary>[] = [
   { original_word: 'طائرة', translation: 'Airplane', emoji: '🛩️', analysis: { details_ar: { example: 'سافرت إلى المدينة البعيدة بالطائرة.' }, details_en: { example: 'I traveled to the far city by airplane.' } } as any },
-  { original_word: 'إقلاع', translation: 'Departure', emoji: '🛫', analysis: { details_ar: { example: 'حان وقت إقلاع الطائرة الآن.' }, details_en: { example: 'It is time for the airplane departure now.' } } as any },
-  { original_word: 'هبوط', translation: 'Arrival', emoji: '🛬', analysis: { details_ar: { example: 'شاهدنا هبوط الطائرة بسلام في المدرج.' }, details_en: { example: 'We watched the airplane arrival safely on the runway.' } } as any },
+  { original_word: 'إقلاع', translation: 'Takeoff', emoji: '🛫', analysis: { details_ar: { example: 'حان وقت إقلاع الطائرة الآن.' }, details_en: { example: 'It is time for the airplane departure now.' } } as any },
+  { original_word: 'هبوط', translation: 'Landing', emoji: '🛬', analysis: { details_ar: { example: 'شاهدنا هبوط الطائرة بسلام في المدرج.' }, details_en: { example: 'We watched the airplane arrival safely on the runway.' } } as any },
   { original_word: 'طيار', translation: 'Pilot', emoji: '🧑‍✈️', analysis: { details_ar: { example: 'يقود الطيار الطائرة بمهارة عالية.' }, details_en: { example: 'The pilot flies the plane with high skill.' } } as any },
   { original_word: 'مضيفة طيران', translation: 'Flight attendant', emoji: '👩‍✈️', analysis: { details_ar: { example: 'تقدم مضيفة الطيران وجبات خفيفة للركاب.' }, details_en: { example: 'The flight attendant serves light meals to passengers.' } } as any },
   { original_word: 'مقعد الطائرة', translation: 'Seat', emoji: '💺', analysis: { details_ar: { example: 'حجزت مقعد الطائرة بجانب النافذة لنرى السحاب.' }, details_en: { example: 'I booked the airplane seat next to the window to see the clouds.' } } as any },
@@ -1154,12 +1144,12 @@ const TRAVEL_DATA: Partial<Vocabulary>[] = [
   { original_word: 'حقيبة ظهر', translation: 'Backpack', emoji: '🎒', analysis: { details_ar: { example: 'أحمل زجاجة المياه في حقيبة ظهر مريحة.' }, details_en: { example: 'I carry the water bottle in a comfortable backpack.' } } as any },
   { original_word: 'حقيبة عمل', translation: 'Briefcase', emoji: '💼', analysis: { details_ar: { example: 'يحمل المستندات الهامة في حقيبة عمل جلدية.' }, details_en: { example: 'He carries the important documents in a leather briefcase.' } } as any },
   { original_word: 'حقيبة يد', translation: 'Handbag', emoji: '👜', analysis: { details_ar: { example: 'تحتفظ الأم بمحفظتها ومفاتيحها في حقيبة يد صغيرة.' }, details_en: { example: 'The mother keeps her purse and keys in a small handbag.' } } as any },
-  { original_word: 'جواز سفر', translation: 'Passport control', emoji: '🛂', analysis: { details_ar: { example: 'أظهرت جواز سفر المريض عند نقطة العبور.' }, details_en: { example: 'I showed the passport at the passport control point of the crossing.' } } as any },
+  { original_word: 'جواز سفر', translation: 'Passport', emoji: '🛂', analysis: { details_ar: { example: 'أظهرت جواز سفري عند نقطة التفتيش في المطار.' }, details_en: { example: 'I showed my passport at the airport checkpoint.' } } as any },
   { original_word: 'أمتعة', translation: 'Baggage', emoji: '🛄', analysis: { details_ar: { example: 'استلمنا أمتعة السفر من منطقة استلام الحقائب.' }, details_en: { example: 'We received our travel baggage from the baggage claim area.' } } as any },
   { original_word: 'الجمارك', translation: 'Customs', emoji: '🛃', analysis: { details_ar: { example: 'فتش موظف الجمارك الحقيبة قبل الخروج من المطار.' }, details_en: { example: 'The officer checked the bag at customs before exiting the airport.' } } as any },
   { original_word: 'تأخير', translation: 'Delay', emoji: '⏳', analysis: { details_ar: { example: 'سأنتظر لعدة ساعات بسبب تأخير موعد الرحلة.' }, details_en: { example: 'I will wait for several hours due to the flight delay.' } } as any },
   { original_word: 'تذكرة', translation: 'Ticket', emoji: '🎫', analysis: { details_ar: { example: 'حجزت تذكرة ذهاب وإياب عبر الإنترنت.' }, details_en: { example: 'I booked a round-trip ticket online.' } } as any },
-  { original_word: 'خريطة', translation: 'Map Cruise', emoji: '🗺️', analysis: { details_ar: { example: 'استخدمنا الخريطة لمعرفة مسار الرحلة.' }, details_en: { example: 'We used the map to find the tour route.' } } as any },
+  { original_word: 'خريطة', translation: 'Map', emoji: '🗺️', analysis: { details_ar: { example: 'استخدمنا الخريطة لمعرفة مسار الرحلة.' }, details_en: { example: 'We used the map to find the tour route.' } } as any },
 ];
 
 const MUSIC_DATA: Partial<Vocabulary>[] = [
@@ -1178,7 +1168,7 @@ const MUSIC_DATA: Partial<Vocabulary>[] = [
   { original_word: 'نوتة موسيقية', translation: 'Music notes', emoji: '🎼', analysis: { details_ar: { example: 'يقرأ العازف النوتة الموسيقية أثناء التدريب.' }, details_en: { example: 'The player reads the music notes during practice.' } } as any },
   { original_word: 'ميكروفون', translation: 'Microphone', emoji: '🎙️', analysis: { details_ar: { example: 'تحدث المغني في الميكروفون ليسمعه الجميع.' }, details_en: { example: 'The singer spoke into the microphone for everyone to hear.' } } as any },
   { original_word: 'مكبر صوت', translation: 'Speaker', emoji: '🔊', analysis: { details_ar: { example: 'قمنا بتشغيل مكبر الصوت لملء الغرفة بالنغمات.' }, details_en: { example: 'We turned on the speaker to fill the room with melodies.' } } as any },
-  { original_word: 'نظام الصوت', translation: 'Control knobs', emoji: '🎛️', analysis: { details_ar: { example: 'اضبط نظام الصوت لتعديل النغمة.' }, details_en: { example: 'Adjust the control knobs to modify the audio.' } } as any },
+  { original_word: 'نظام الصوت', translation: 'Sound system', emoji: '🎛️', analysis: { details_ar: { example: 'اضبط نظام الصوت لتعديل النغمة.' }, details_en: { example: 'Adjust the control knobs to modify the audio.' } } as any },
 ];
 
 const ROUTINE_DATA: Partial<Vocabulary>[] = [
@@ -1201,7 +1191,7 @@ const ROUTINE_DATA: Partial<Vocabulary>[] = [
 ];
 
 const CLOTHING_DATA: Partial<Vocabulary>[] = [
-  { original_word: 'قميص', translation: 'T-shirt', emoji: '👕', analysis: { details_ar: { example: 'أرتدي قميصاً خفيفاً في أيام الصيف الدافئة.' }, details_en: { example: 'I wear a light T-shirt on warm summer days.' } } as any },
+  { original_word: 'قميص', translation: 'Shirt', emoji: '👕', analysis: { details_ar: { example: 'أرتدي قميصاً خفيفاً في أيام الصيف الدافئة.' }, details_en: { example: 'I wear a light T-shirt on warm summer days.' } } as any },
   { original_word: 'بلوزة', translation: 'Blouse', emoji: '👚', analysis: { details_ar: { example: 'اشترت أختي بلوزة وردية جميلة.' }, details_en: { example: 'My sister bought a beautiful pink blouse.' } } as any },
   { original_word: 'ربطة عنق', translation: 'Necktie', emoji: '👔', analysis: { details_ar: { example: 'يرتدي الموظف ربطة عنق أنيقة في العمل.' }, details_en: { example: 'The employee wears an elegant necktie at work.' } } as any },
   { original_word: 'بنطال', translation: 'Pants', emoji: '👖', analysis: { details_ar: { example: 'هذا البنطال مريح جداً أثناء الجري والتمارين.' }, details_en: { example: 'These pants are very comfortable during running and exercise.' } } as any },
@@ -1841,9 +1831,9 @@ const TopicInterface: React.FC<{
           onSpeak={onSpeak}
         />
 
-        <div className="grid grid-cols-4 md:grid-cols-8 gap-2.5 md:gap-3.5 relative z-10">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2.5 md:gap-3.5 relative z-10">
            {words.map((f, i) => (
-             <div key={i} className="perspective-1000 h-[130px] md:h-[150px]">
+             <div key={i} className="perspective-1000 h-[142px] md:h-[154px]">
                <motion.div
                  className="relative w-full h-full text-center transition-all duration-500 transform-style-3d cursor-pointer"
                  animate={{ rotateY: flippedIndex === i ? 180 : 0 }}
@@ -1888,14 +1878,7 @@ const TopicInterface: React.FC<{
                      )}
                    </div>
                    <h3 className={`${topic && (topic.id === 'instructions' || topic.en === 'MONTHS' || topic.ar === 'الشهور') ? 'hidden' : ''} font-black text-slate-800 arabic-font leading-relaxed pt-1 mb-2 truncate w-full px-1 ${
-                      f.original_word && f.original_word.length > 20 ? 'text-[4px] md:text-[6px]' :
-                      f.original_word && f.original_word.length > 18 ? 'text-[5px] md:text-[7px]' :
-                      f.original_word && f.original_word.length > 14 ? 'text-[6px] md:text-[8px]' :
-                      f.original_word && f.original_word.length > 12 ? 'text-[7px] md:text-[8px]' : 
-                      f.original_word === 'بيض مسلوق' ? 'text-[6px] md:text-[7px]' :
-                      f.original_word && f.original_word.length >= 10 ? 'text-[7px] md:text-[8px]' : 
-                      'text-[10px] md:text-[12px]'
-                   }`}>{f.original_word}</h3>
+                      f.original_word && f.original_word.length > 14 ? 'text-[10px] md:text-[11px] whitespace-normal break-words' : 'text-[12px] md:text-[13px]'                   }`}>{f.original_word}</h3>
                    <button 
                       onClick={(e) => { e.stopPropagation(); onSpeak(f.original_word || '', 'ar'); }}
                       className="p-1 text-amber-500 hover:bg-amber-100 rounded-full transition-all"
@@ -1929,11 +1912,11 @@ const TopicInterface: React.FC<{
 
                    <div className="grid grid-cols-2 gap-1 mt-auto">
                       <button 
-                        onClick={(e) => { e.stopPropagation(); onAction({ original_word: f.original_word, translation: f.translation, analysis: f.analysis }, 'know'); setFlippedIndex(null); }}
+                        onClick={(e) => { e.stopPropagation(); onAction({ original_word: f.original_word, translation: f.translation, analysis: f.analysis, emoji: f.emoji }, 'know'); setFlippedIndex(null); }}
                         className="py-1 bg-emerald-500/10 text-emerald-600 rounded-lg text-[6px] font-black uppercase transition-all hover:bg-emerald-500 hover:text-white border border-emerald-100"
                       >أعرفها</button>
                       <button 
-                         onClick={(e) => { e.stopPropagation(); onAction({ original_word: f.original_word, translation: f.translation, analysis: f.analysis }, 'learn'); setFlippedIndex(null); }}
+                         onClick={(e) => { e.stopPropagation(); onAction({ original_word: f.original_word, translation: f.translation, analysis: f.analysis, emoji: f.emoji }, 'learn'); setFlippedIndex(null); }}
                          className="py-1 bg-sky-500/10 text-sky-600 rounded-lg text-[6px] font-black uppercase transition-all hover:bg-sky-600 hover:text-white border border-sky-100"
                       >أتعلمها</button>
                    </div>
@@ -2010,18 +1993,19 @@ const SidebarNavBtn: React.FC<{
     onClick={onClick}
     aria-current={active ? 'page' : undefined}
     aria-pressed={active}
-    className={`qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all ${
+    aria-label={label}
+    className={`qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all max-sm:justify-center max-sm:gap-0 max-sm:px-1 ${
       active ? 'qul-word-gallery-item-active' : ''
     }`}
   >
     <div className="qul-word-gallery-tile h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600">
       {icon}
     </div>
-    <div className="flex-1 min-w-0">
+    <div className="hidden sm:block flex-1 min-w-0">
       <div className="text-[13px] font-black arabic-font text-slate-800 truncate">{label}</div>
       <div className="text-[10px] text-slate-500 truncate" dir={lang === 'ar' ? 'rtl' : 'ltr'}>{sub}</div>
     </div>
-    <span className={`h-2 w-2 rounded-full shrink-0 ${active ? 'bg-emerald-500' : 'bg-slate-300'}`} aria-hidden="true" />
+    <span className={`hidden sm:block h-2 w-2 rounded-full shrink-0 ${active ? 'bg-emerald-500' : 'bg-slate-300'}`} aria-hidden="true" />
   </button>
 );
 

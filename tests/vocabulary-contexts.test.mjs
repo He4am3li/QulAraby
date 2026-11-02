@@ -269,3 +269,30 @@ assert.ok(!myWordsSrc.includes('text-emerald-700 bg-emerald-50/90 border border-
 assert.ok(myWordsSrc.includes("lang === 'ar' ? 'قيد التعلم' : 'Learning'"), 'Learning label preserved');
 assert.ok(myWordsSrc.includes("lang === 'ar' ? 'متمكن' : 'Fluent'"), 'Fluent label preserved');
 console.log('Mastery label OK: quiet adjacent word statuses in Arabic and English.');
+
+
+// Critical vocabulary integrity checks, backed by functional SRS tests.
+const savedHelper = src.slice(src.indexOf('  const saveVocabularyWord = async'), src.indexOf('  const recordVocabularyReview = async'));
+assert.ok(savedHelper.includes("normalize(item.original_word || '') === normalized"), 'Legacy records must be checked for duplicate words');
+assert.ok(savedHelper.includes("const wordId = 'word_' + encodeURIComponent(normalized)"), 'New record IDs must be deterministic');
+assert.ok(savedHelper.includes('emoji: word.emoji'), 'Preserve learned word illustration/emoji in My Words');
+assert.ok(savedHelper.includes('correct_reviews: 0') && savedHelper.includes('review_count: 0'), 'New word must start with zero verified reviews');
+assert.ok(!savedHelper.includes('MasteryLevel.FLUENT'), 'I know it is self-report, never verified fluency');
+assert.ok(src.includes('onAction={saveVocabularyWord}'), 'Topic card learning must use deduplicated saver');
+assert.ok(src.includes('onReviewResult={recordVocabularyReview}'), 'Learning results must flow to persistence');
+assert.ok(src.includes("updateSRS(word, correct ? 'easy' : 'hard')"), 'Graded recall must update SRS');
+assert.ok(src.includes('await updateDoc('), 'SRS results must persist in existing Firestore doc');
+assert.ok(src.includes('vocab.filter(word => (word.correct_reviews || 0) >= 3).length'), 'Rank must count demonstrated fluency, not saved word totals');
+assert.ok(src.includes('sm:w-[190px]') && src.includes('w-[76px]'), 'Navigation must be responsive on mobile');
+assert.ok(navDef.includes('max-sm:justify-center') && navDef.includes('aria-label={label}'), 'Mobile nav buttons must have accessible icon-only variant');
+assert.ok(src.includes('grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8'), 'Inside-topic word grid must fit narrow screens');
+assert.ok(!src.includes("text-[4px] md:text-[6px]"), 'Never use unreadably tiny text on word cards');
+assert.ok(src.includes("translation: 'Passport'") && !src.includes("translation: 'Passport control'"), 'Correct passport meaning');
+assert.ok(src.includes("translation: 'Map'") && !src.includes("translation: 'Map Cruise'"), 'Correct map meaning');
+assert.ok(src.includes("translation: 'Sound system'") && !src.includes("translation: 'Control knobs'"), 'Correct sound-system meaning');
+assert.ok(myWordsSrc.includes('onReviewResult: (word: Vocabulary, correct: boolean)'), 'Practice must report scores');
+assert.ok(myWordsSrc.includes('void onReviewResult(selected, correct)'), 'Scramble must report real score');
+assert.ok(myWordsSrc.includes('void onReviewResult(selected, option === selected.translation)'), 'Meaning quiz must report score');
+assert.ok(myWordsSrc.includes("game === 'scramble' ? (lang === 'ar'"), 'Hide target word in spelling exercise');
+assert.ok(myWordsSrc.includes("game === 'meaning' && selected?.id === word.id"), 'Hide selected answer in meaning exercise');
+console.log('Learning integrity OK: deduplicated saves, verified progress, legible mobile layout, corrected glossary.');
