@@ -60,6 +60,9 @@ export interface Vocabulary {
   last_reviewed: string;
   next_review: string;
   mastery_level: MasteryLevel;
+  /** Verified correct reviews on distinct, scheduled days, not self-reported familiarity. */
+  correct_reviews?: number;
+  last_successful_review?: string;
 }
 
 export interface GrammarNode {
