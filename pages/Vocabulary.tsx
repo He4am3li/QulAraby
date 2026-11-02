@@ -14,6 +14,7 @@ import { FallingLetters } from '../components/Layout';
 import { Vocabulary, MasteryLevel } from '../types';
 import { VOCABULARY_CONTEXTS } from '../data/vocabularyContextStories';
 import { VOCABULARY_TOPIC_HINTS } from '../data/vocabularyUsageTips';
+import '../components/vocabulary-topic-glass.css';
 import { generateSpeech, decodeAudioData, getWordDeepAnalysis, generateThemedVocabulary, generateWordIllustration, speak } from '../services/gemini';
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType, serverTimestamp } from '../firebase';
@@ -72,6 +73,17 @@ const TOPIC_COLORS: Record<string, { bg: string, border: string, text: string, l
   slate: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-600', light: 'bg-slate-50/50' },
   green: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-600', light: 'bg-green-50/50' },
   gray: { bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-600', light: 'bg-gray-50/50' },
+};
+
+/** Muted optical tint matched to each topic's existing identity color. */
+const TOPIC_GLASS_RGB: Record<string, string> = {
+  blue: '37,99,235', emerald: '5,150,105', rose: '225,29,72',
+  indigo: '79,70,229', red: '220,38,38', amber: '217,119,6',
+  teal: '13,148,136', sky: '2,132,199', stone: '87,83,78',
+  purple: '147,51,234', orange: '234,88,12', cyan: '8,145,178',
+  violet: '124,58,237', yellow: '202,138,4', lime: '101,163,13',
+  pink: '219,39,119', slate: '71,85,105', green: '22,163,74',
+  gray: '75,85,99'
 };
 
 const highlightWord = (text: string, word: string) => {
@@ -783,12 +795,15 @@ export const VocabularyPage: React.FC = () => {
                       {ALL_TOPICS.map(topic => {
                         const color = TOPIC_COLORS[topic.color] || TOPIC_COLORS.blue;
                         return (
-                          <button 
-                            key={topic.id} 
+                          <button
+                            key={topic.id}
+                            type="button"
                             onClick={() => startDiscovery(topic)}
-                            className={`bg-white rounded-3xl p-6 border border-slate-50 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all flex flex-col items-center group relative overflow-hidden border-b-4 ${color.border.replace('border-', 'border-b-')}`}
+                            aria-label={lang === 'ar' ? topic.ar : topic.en}
+                            style={{ '--topic-glass-rgb': TOPIC_GLASS_RGB[topic.color] || TOPIC_GLASS_RGB.blue } as React.CSSProperties}
+                            className="qul-vocab-topic-glass rounded-3xl px-3 py-5 sm:px-4 sm:py-6 xl:px-5 flex flex-col items-center justify-center group relative overflow-hidden min-w-0 min-h-[195px] md:min-h-[224px] cursor-pointer"
                           >
-                            <div className={`w-20 h-20 rounded-3xl ${color.bg} ${color.text} flex items-center justify-center mb-4 shadow-sm border ${color.border} group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
+                            <div className={`qul-vocab-topic-glass-icon w-16 h-16 lg:w-20 lg:h-20 rounded-3xl ${color.text} flex items-center justify-center mb-4`}>
                               {topic.id === 'insects_reptiles' ? (
                                 <div className="relative w-full h-full">
                                   <span className="absolute top-3 left-3 text-sm -rotate-12">🦋</span>
@@ -803,10 +818,10 @@ export const VocabularyPage: React.FC = () => {
                                 <span className={`${topic.icon.length > 8 ? "text-3xl leading-tight" : "text-5xl"} whitespace-pre`}>{topic.icon}</span>
                               )}
                             </div>
-                            <h3 className="text-xs font-black text-slate-800 arabic-font mb-1 whitespace-nowrap">{lang === 'ar' ? topic.ar : topic.en}</h3>
-                            <span className={`text-[8px] font-black text-slate-300 uppercase tracking-widest ${lang === 'en' ? 'arabic-font' : ''}`}>{lang === 'ar' ? topic.en : topic.ar}</span>
-                            <div className={`mt-3 w-6 h-6 ${color.bg} rounded-full flex items-center justify-center ${color.text} group-hover:bg-[#0f172a] group-hover:text-white transition-all`}>
-                              <ArrowUpRight size={12} />
+                            <h3 className="min-h-[2rem] w-full flex items-center justify-center text-center text-[11px] md:text-xs leading-snug font-black text-slate-800 arabic-font mb-1 break-words">{lang === 'ar' ? topic.ar : topic.en}</h3>
+                            <span className={`min-h-[1.4rem] max-w-full text-center leading-snug text-[8px] font-bold text-slate-500 uppercase tracking-wider break-words ${lang === 'en' ? 'arabic-font' : ''}`}>{lang === 'ar' ? topic.en : topic.ar}</span>
+                            <div className="qul-vocab-topic-glass-arrow mt-3 w-7 h-7 rounded-full flex items-center justify-center">
+                              <ArrowUpRight size={13} />
                             </div>
                           </button>
                         );
