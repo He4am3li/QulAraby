@@ -112,7 +112,14 @@ assert.ok(chooser.includes('className="qul-vocab-topic-orb-content"'), 'Word art
 assert.ok(chooser.includes('className="qul-vocab-topic-orb-refraction"'), 'Sphere needs a refractive edge');
 assert.ok(chooser.includes('className="qul-vocab-topic-orb-reflection"'), 'Sphere needs optical reflections');
 assert.ok(chooser.includes('className="qul-vocab-topic-orb-shadow"'), 'Sphere needs a grounding shadow');
-assert.ok(chooser.includes('qul-vocab-topic-glass-arrow'), 'Original arrow control must remain');
+assert.ok(!chooser.includes('qul-vocab-topic-glass-arrow') && !chooser.includes('<ArrowUpRight'), 'Remove the bottom arrow from every topic card');
+assert.ok(!topicGlassCSS.includes('qul-vocab-topic-glass-arrow'), 'Do not retain dead arrow styling');
+assert.ok(chooser.includes('min-h-[176px] md:min-h-[186px]'), 'Topic card height must be compact and responsive');
+assert.ok(chooser.includes('py-3 sm:px-4 sm:py-3'), 'Reduce only topic-card internal vertical padding');
+assert.ok(chooser.includes('min-h-[1.65rem]') && chooser.includes('min-h-[1rem]'), 'Keep title and bilingual subtitle within compact layout');
+assert.ok(topicGlassCSS.includes('width: clamp(82px, 7.2vw, 100px)'), 'Scale the lens proportionately for shorter cards');
+assert.ok(topicGlassCSS.includes('width: clamp(78px, 22vw, 96px)'), 'Keep lens readable on mobile');
+assert.ok(topicGlassCSS.includes('height: 8px') && topicGlassCSS.includes('margin: -3px auto 3px'), 'Tighten only decorative orb-shadow spacing');
 assert.ok(chooser.includes('startDiscovery(topic)'), 'Topic navigation must work');
 assert.ok(chooser.includes('aria-hidden="true"'), 'Glass orb is decorative, card name is announced');
 assert.ok(topicGlassCSS.includes('.qul-vocab-topic-orb {'), 'Spherical lens CSS missing');
@@ -131,7 +138,7 @@ assert.ok(!chooser.includes('qul-vocab-topic-water-shine'), 'Remove the old fake
 assert.ok(!chooser.includes('qul-vocab-topic-glass-icon'), 'Remove rectangular icon tile inside sphere');
 assert.ok(!src.slice(topicCardsEnd).includes('qul-vocab-topic-orb'), 'Do not affect in-topic flashcards');
 assert.ok(src.includes('data-testid="worksheet-preview-bottom-footer"'), 'Keep worksheet preview footer unchanged');
-console.log('Convex sphere OK: 30 external topic cards, refractive rim, protected lesson contents.');
+console.log('Convex sphere OK: 30 compact external topic cards, no bottom arrows, refractive rim preserved.');
 
 
 // Outer vocabulary cards now use the SAME Framer Motion hover driver as the
