@@ -1783,7 +1783,7 @@ const TopicStoryBox: React.FC<{
                 <div>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <h5 className="font-black text-slate-900 text-sm md:text-base arabic-font leading-none">
-                      {selectedWord.original_word}
+                      {selectedWord.context_surface || selectedWord.original_word}
                     </h5>
                     {(selectedWord as any).phonetic && (
                       <span className="text-[9px] text-amber-800/80 font-mono bg-amber-50 px-1 py-0.5 rounded border border-amber-100">
@@ -1807,7 +1807,7 @@ const TopicStoryBox: React.FC<{
 
               <div className="flex items-center gap-1 shrink-0">
                 <button
-                  onClick={() => onSpeak(selectedWord.original_word || '', 'ar')}
+                  onClick={() => onSpeak(selectedWord.context_surface || selectedWord.original_word || '', 'ar')}
                   className="w-7 h-7 rounded-lg bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center transition-all shadow-2xs active:scale-95"
                   title="استمع للكلمة"
                 >
