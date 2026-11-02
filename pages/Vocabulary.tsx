@@ -2165,6 +2165,16 @@ const TopicInterface: React.FC<{
     <div className="w-full max-w-5xl mx-auto flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 select-none" style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}>
       <div className="bg-white rounded-3xl md:rounded-[2.5rem] shadow-lg border border-slate-100 relative max-h-[88vh] w-full flex flex-col shrink-0 overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 to-orange-500 z-20 pointer-events-none" />
+
+        <VocabularyUsageTips
+          topicId={topic.id}
+          lang={lang}
+          words={words}
+          open={showHint}
+          onClose={() => setShowHint(false)}
+          focusedWordIndex={focusedTipWordIndex}
+        />
+
         
         <div className="p-6 md:p-8 lg:p-10 overflow-y-auto custom-scroll w-full flex-1 flex flex-col">
           <div className="flex justify-between items-center mb-6 relative z-50 px-1">
@@ -2199,15 +2209,6 @@ const TopicInterface: React.FC<{
              ><Lightbulb size={16}/></button>
           </div>
         </div>
-
-        <VocabularyUsageTips
-          topicId={topic.id}
-          lang={lang}
-          words={words}
-          open={showHint}
-          onClose={() => setShowHint(false)}
-          focusedWordIndex={focusedTipWordIndex}
-        />
 
         {/* Topic Story Box combining vocabulary in context */}
         <TopicStoryBox 
