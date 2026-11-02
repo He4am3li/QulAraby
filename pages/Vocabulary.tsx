@@ -19,7 +19,8 @@ import { VocabularyWordGallery } from '../components/VocabularyWordGallery';
 import { generateSpeech, decodeAudioData, generateThemedVocabulary, generateWordIllustration, speak } from '../services/gemini';
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType, serverTimestamp } from '../firebase';
-import { collection, query, where, onSnapshot, setDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, setDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { updateSRS } from '../utils/srs';
 
 const ALL_TOPICS = [
   { id: 'about_me', ar: 'التحيات والتعارف', en: 'GREETINGS & INTRODUCTIONS', icon: '👋🏻', color: 'blue' },
@@ -390,29 +391,48 @@ export const VocabularyPage: React.FC = () => {
     finally { setIsLoadingIllustration(false); }
   };
 
+  const saveVocabularyWord = async (word: Partial<Vocabulary>, status: 'know' | 'learn' | 'ignore') => {
+    if (!user || status === 'ignore') return;
+    const original = (word.original_word || '').trim();
+    if (!original) return;
+    const normalize = (value: string) => value.normalize('NFC').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+    const normalized = normalize(original);
+    if (vocab.some(item => normalize(item.original_word || '') === normalized)) return;
+    const fingerprint = Array.from(new TextEncoder().encode(normalized))
+      .reduce((hash, byte) => Math.imul(hash ^ byte, 16777619) >>> 0, 2166136261);
+    const wordId = 'word_' + encodeURIComponent(normalized).slice(0, 120) + '_' + fingerprint.toString(36);
+    const savedWord = {
+      id: wordId, original_word: original, translation: word.translation || '', emoji: word.emoji || '',
+      analysis: word.analysis || { details_ar: { example: '' }, details_en: { example: '' } },
+      is_english_to_arabic: false, english_definition: word.translation || '', arabic_definition: original,
+      userId: user.uid, createdAt: serverTimestamp(), word: original, meaning_ar: original,
+      meaning_en: word.translation || '',
+      mastery_level: status === 'know' ? MasteryLevel.LEARNING : MasteryLevel.NEW,
+      correct_reviews: 0, review_count: 0, last_reviewed: '', next_review: new Date().toISOString()
+    };
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'vocabulary', wordId), savedWord);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'users/' + user.uid + '/vocabulary/' + wordId);
+    }
+  };
+
+  const recordVocabularyReview = async (word: Vocabulary, correct: boolean) => {
+    if (!user || !word.id) return;
+    const result = updateSRS(word, correct ? 'easy' : 'hard');
+    try {
+      await updateDoc(doc(db, 'users', user.uid, 'vocabulary', word.id), {
+        mastery_level: result.mastery_level, correct_reviews: result.correct_reviews,
+        last_successful_review: result.last_successful_review || '',
+        review_count: result.review_count, last_reviewed: result.last_reviewed, next_review: result.next_review
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'users/' + user.uid + '/vocabulary/' + word.id);
+    }
+  };
   const processDiscovery = async (status: 'know' | 'learn' | 'ignore') => {
     const current = discoveryQueue[currentIndex] as Vocabulary;
-    if (status !== 'ignore' && user) {
-      const level = status === 'know' ? MasteryLevel.FLUENT : MasteryLevel.LEARNING;
-      const updatedWord = { 
-        ...current, 
-        mastery_level: level,
-        userId: user.uid,
-        createdAt: serverTimestamp(),
-        // Add compatibility fields for Firestore rules
-        word: current.original_word,
-        meaning_ar: current.arabic_definition || current.original_word,
-        meaning_en: current.translation
-      };
-      
-      // Save to Firestore
-      try {
-        const wordId = updatedWord.id || Math.random().toString(36).substring(2, 15);
-        await setDoc(doc(db, 'users', user.uid, 'vocabulary', wordId), updatedWord);
-      } catch (error) {
-        handleFirestoreError(error, OperationType.CREATE, `users/${user.uid}/vocabulary`);
-      }
-    }
+    await saveVocabularyWord(current, status);
 
     if (currentIndex < discoveryQueue.length - 1) {
       const nextIndex = currentIndex + 1;
@@ -524,6 +544,7 @@ export const VocabularyPage: React.FC = () => {
                  lang={lang}
                  onSpeak={speak}
                  onDelete={deleteWord}
+                 onReviewResult={recordVocabularyReview}
                />
              </div>
            )}
@@ -600,39 +621,7 @@ export const VocabularyPage: React.FC = () => {
                     }, 50);
                   }} 
                   onSpeak={speak}
-                  onAction={async (word: Partial<Vocabulary>, status: 'know' | 'learn' | 'ignore') => {
-                    if (status === 'ignore' || !user) return;
-                    const level = status === 'know' ? MasteryLevel.FLUENT : MasteryLevel.LEARNING;
-                    
-                    const vocabWord: Vocabulary = { 
-                      id: Math.random().toString(36).substring(2, 15),
-                      original_word: word.original_word || '', 
-                      translation: word.translation || '',
-                      mastery_level: level,
-                      userId: user.uid,
-                      createdAt: serverTimestamp(),
-                      word: word.original_word || '',
-                      meaning_ar: word.original_word || '',
-                      meaning_en: word.translation || '',
-                      is_english_to_arabic: false,
-                      english_definition: word.translation || '',
-                      arabic_definition: word.original_word || '',
-                      analysis: word.analysis || {
-                        type: 'noun',
-                        details_ar: { category: 'General', sub_category: 'General', rule: '', example: '' },
-                        details_en: { category: 'General', sub_category: 'General', rule: '', example: '' }
-                      },
-                      review_count: 0,
-                      last_reviewed: new Date().toISOString(),
-                      next_review: new Date().toISOString()
-                    } as any;
-                    
-                    try {
-                      await setDoc(doc(db, 'users', user.uid, 'vocabulary', vocabWord.id), vocabWord);
-                    } catch (error) {
-                      handleFirestoreError(error, OperationType.CREATE, `users/${user.uid}/vocabulary`);
-                    }
-                  }}
+                  onAction={saveVocabularyWord}
                   showHint={showHint}
                   setShowHint={setShowHint}
                 />
