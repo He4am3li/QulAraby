@@ -123,3 +123,13 @@ assert.ok(topicGlassCSS.includes('@supports not'), 'Missing-backdrop browser fal
 assert.ok(!src.slice(topicCardsEnd).includes('qul-vocab-topic-glass-icon'), 'Do not apply to in-topic word cards');
 assert.ok(src.includes('data-testid="worksheet-preview-bottom-footer"'), 'Worksheet footer remains untouched');
 console.log('Vocabulary glass OK: 30 neutral frosted-glass cards, original icon colors preserved.');
+assert.ok(chooser.includes('<span className="qul-vocab-topic-water-shine" aria-hidden="true" />'), 'Decorative water glint belongs to external topic cards');
+assert.ok(!src.slice(topicCardsEnd).includes('qul-vocab-topic-water-shine'), 'Inner vocabulary cards must remain unchanged');
+assert.ok(topicGlassCSS.includes('.qul-vocab-topic-glass::after {'), 'Water lens must be present');
+assert.ok(topicGlassCSS.includes('border-radius: 53% 47% 58% 42%'), 'Organic water lens shape required');
+assert.ok(topicGlassCSS.includes('z-index: 3;'), 'Water lens should sit above the card artwork');
+assert.ok(topicGlassCSS.includes('qul-vocab-topic-water-shine'), 'Specular water highlight is required');
+assert.ok(topicGlassCSS.includes('pointer-events: none'), 'Water must not block navigation');
+assert.ok(topicGlassCSS.includes('background: rgba(250,251,253,.97)'), 'Neutral fallback must be maintained');
+assert.ok(!topicGlassCSS.includes('topic-glass-rgb'), 'Water drop cannot add colored glass tints');
+console.log('Water-drop lens OK: a neutral, decorative overlay on the 30 external topic cards.');
