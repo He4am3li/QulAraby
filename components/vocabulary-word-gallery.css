@@ -135,3 +135,51 @@
   .qul-word-gallery-item, .qul-word-gallery-action, .qul-word-gallery-speak { transition: none !important; }
   .qul-word-gallery-item:hover, .qul-word-gallery-action:hover, .qul-word-gallery-speak:hover { transform: none !important; }
 }
+
+
+/* Inline, no-drawer practice and analysis views use the existing word stage. */
+.qul-word-gallery-detail {
+  border-radius: 12px;
+  background: rgba(255,255,255,.83);
+  border: 1px solid rgba(255,255,255,.96);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  text-align: start;
+}
+.qul-word-gallery-detail span {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+}
+.qul-word-gallery-detail strong {
+  font-size: 13px;
+  line-height: 1.7;
+  font-weight: 700;
+  color: #334155;
+  overflow-wrap: anywhere;
+}
+.qul-word-gallery-letter {
+  width: 36px;
+  height: 39px;
+  min-width: 34px;
+  border: 1px solid rgba(203,213,225,.75);
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .14s ease, background-color .14s ease;
+}
+.qul-word-gallery-letter:hover { transform: translateY(-1px); }
+.qul-word-gallery-letter:focus-visible {
+  outline: 2px solid #059669;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .qul-word-gallery-letter { transition: none !important; }
+  .qul-word-gallery-letter:hover { transform: none !important; }
+}
