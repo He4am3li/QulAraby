@@ -15,6 +15,7 @@ import { Vocabulary, MasteryLevel } from '../types';
 import { VOCABULARY_CONTEXTS } from '../data/vocabularyContextStories';
 import { VOCABULARY_TOPIC_HINTS } from '../data/vocabularyUsageTips';
 import '../components/vocabulary-topic-glass.css';
+import { VocabularyWordGallery } from '../components/VocabularyWordGallery';
 import { generateSpeech, decodeAudioData, getWordDeepAnalysis, generateThemedVocabulary, generateWordIllustration, speak } from '../services/gemini';
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType, serverTimestamp } from '../firebase';
@@ -343,8 +344,6 @@ export const VocabularyPage: React.FC = () => {
   const { user, isAuthReady } = useAuth();
   const [activeTab, setActiveTab] = React.useState<'lexicon' | 'discovery'>('discovery');
   const [vocab, setVocab] = React.useState<Vocabulary[]>([]);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [filter, setFilter] = React.useState<MasteryLevel | 'all'>('all');
   const [lang, setLang] = React.useState<'ar' | 'en'>(
     (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar'
   );
@@ -613,13 +612,6 @@ export const VocabularyPage: React.FC = () => {
     } catch (e) { console.error(e); } finally { setLoadingAnalysis(false); }
   };
 
-  const filtered = vocab.filter(v => {
-    const matchesSearch = v.original_word.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          v.translation.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filter === 'all' || v.mastery_level === Number(filter);
-    return matchesSearch && matchesFilter;
-  });
-
   const progress = Math.min(100, (vocab.length / 50) * 100);
   const getRank = (count: number) => {
     if (count < 10) return { title: lang === 'ar' ? 'مبتدئ' : 'Beginner', color: 'slate' };
@@ -629,8 +621,6 @@ export const VocabularyPage: React.FC = () => {
   };
   const currentRank = getRank(vocab.length);
 
-  const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null);
-
   const deleteWord = async (wordId: string) => {
     if (!user) return;
     try {
@@ -638,35 +628,6 @@ export const VocabularyPage: React.FC = () => {
       setVocab(prev => prev.filter(v => v.id !== wordId));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `users/${user.uid}/vocabulary/${wordId}`);
-    } finally {
-      setConfirmDeleteId(null);
-    }
-  };
-
-  const getMasteryColor = (level: MasteryLevel) => {
-    switch (level) {
-      case MasteryLevel.NEW: return 'bg-slate-200';
-      case MasteryLevel.LEARNING: return 'bg-indigo-400';
-      case MasteryLevel.FLUENT: return 'bg-emerald-500';
-      default: return 'bg-slate-100';
-    }
-  };
-
-  const getMasteryBadge = (level: MasteryLevel) => {
-    switch (level) {
-      case MasteryLevel.NEW: return 'bg-slate-100 text-slate-500';
-      case MasteryLevel.LEARNING: return 'bg-indigo-50 text-indigo-600';
-      case MasteryLevel.FLUENT: return 'bg-emerald-50 text-emerald-600';
-      default: return 'bg-slate-50 text-slate-400';
-    }
-  };
-
-  const getMasteryText = (level: MasteryLevel) => {
-    switch (level) {
-      case MasteryLevel.NEW: return lang === 'ar' ? 'جديد' : 'New';
-      case MasteryLevel.LEARNING: return lang === 'ar' ? 'تعلم' : 'Learning';
-      case MasteryLevel.FLUENT: return lang === 'ar' ? 'متقن' : 'Fluent';
-      default: return lang === 'ar' ? 'مراجعة' : 'Review';
     }
   };
 
@@ -744,34 +705,19 @@ export const VocabularyPage: React.FC = () => {
         {/* Main Work Area */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
            {activeTab === 'lexicon' && (
-             <div className="px-8 pt-8 pb-4 flex items-center justify-between shrink-0 no-print flex-row">
-               <div className="flex items-center gap-6 flex-row">
-                  <div className="w-1.5 h-10 bg-gradient-to-b from-[#0f172a] to-[#059669] rounded-full" />
-                  <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
-                     <h1 className="text-3xl font-black text-slate-800 arabic-font leading-none">
-                        {t.lexicon}
-                     </h1>
-                  </div>
-               </div>
-               
-               <div className="flex items-center gap-3 flex-row">
-                  <div className="relative">
-                     <Search className={`absolute ${lang === 'ar' ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-slate-300`} size={16} />
-                     <input 
-                       type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                       placeholder={t.search} 
-                       className={`bg-white border border-slate-100 ${lang === 'ar' ? 'pr-12 pl-6' : 'pl-12 pr-6'} py-2.5 rounded-xl text-xs font-bold arabic-font outline-none focus:ring-2 focus:ring-blue-100 transition-all w-64`}
-                     />
-                  </div>
-                  <select value={filter} onChange={(e) => setFilter(e.target.value as any)} className="bg-white border border-slate-100 rounded-xl px-4 py-2.5 text-xs font-black text-slate-500 outline-none">
-                     <option value="all">{t.allLevels}</option>
-                     <option value={MasteryLevel.NEW}>{t.new}</option>
-                     <option value={MasteryLevel.FLUENT}>{t.mastered}</option>
-                  </select>
-               </div>
+             <div className="flex-1 min-h-0 relative z-10 p-3 md:p-5" data-testid="my-words-gallery-surface">
+               <VocabularyWordGallery
+                 words={vocab}
+                 lang={lang}
+                 onSpeak={speak}
+                 onAnalyze={handleDeepDive}
+                 onPractice={setActiveActivityWord}
+                 onDelete={deleteWord}
+               />
              </div>
            )}
 
+           {activeTab === 'discovery' && (
            <div id="vocab-scroll-container" style={{ overscrollBehaviorY: 'contain', scrollBehavior: 'auto', touchAction: selectedTopic ? 'pan-y' : 'auto' }} className={`flex-1 ${selectedTopic ? 'overflow-y-auto custom-scroll flex items-start justify-center p-3 md:p-6 h-full' : 'overflow-y-auto custom-scroll px-8 pb-8'} relative z-10 ${activeTab === 'discovery' && !selectedTopic ? 'pt-8' : ''}`}>
               
               {activeTab === 'discovery' && !selectedTopic && (
@@ -887,58 +833,8 @@ export const VocabularyPage: React.FC = () => {
 
 
 
-               {activeTab === 'lexicon' && (
-                <div className="animate-in fade-in duration-500">
-                   <div className="grid grid-cols-2 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                      {filtered.map(item => (
-                        <div 
-                          key={item.id} 
-                          className="bg-white p-6 py-10 rounded-2xl border border-slate-50 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all group cursor-pointer flex flex-col items-center text-center relative overflow-hidden border-b-4 border-slate-100"
-                          onClick={() => {
-                            if (item.mastery_level === MasteryLevel.LEARNING) {
-                              setActiveActivityWord(item);
-                            } else {
-                              handleDeepDive(item);
-                            }
-                          }}
-                        >
-                           <div className={`absolute top-0 right-0 left-0 h-1.5 ${getMasteryColor(item.mastery_level)}`} />
-                           <h4 className="text-base font-black text-slate-800 arabic-font mb-1">{item.original_word}</h4>
-                           <p className="text-[9px] font-black text-slate-400 uppercase mb-3 tracking-tighter">{item.translation}</p>
-                           <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase ${getMasteryBadge(item.mastery_level)}`}>{getMasteryText(item.mastery_level)}</div>
-                          <button 
-                             onClick={async (e) => {
-                               e.stopPropagation();
-                               e.preventDefault();
-                               if (confirmDeleteId === item.id) {
-                                  if (!user) return;
-                                  try {
-                                    await deleteDoc(doc(db, 'users', user.uid, 'vocabulary', item.id!));
-                                    setVocab(prev => prev.filter(v => v.id !== item.id));
-                                  } catch (error) {
-                                    handleFirestoreError(error, OperationType.DELETE, `users/${user.uid}/vocabulary/${item.id}`);
-                                  } finally {
-                                    setConfirmDeleteId(null);
-                                  }
-                               } else {
-                                 setConfirmDeleteId(item.id!);
-                                 setTimeout(() => setConfirmDeleteId(null), 3000);
-                               }
-                             }}
-                             className={`absolute bottom-3 right-3 p-3 rounded-xl transition-all z-40 shadow-sm ${
-                               confirmDeleteId === item.id 
-                                 ? 'bg-rose-600 text-white opacity-100 scale-110 shadow-lg ring-4 ring-rose-100' 
-                                 : 'text-slate-300 bg-slate-50 hover:bg-rose-500 hover:text-white opacity-70 group-hover:opacity-100'
-                             }`}
-                           >
-                             {confirmDeleteId === item.id ? <CheckCircle2 size={18} /> : <Trash2 size={16} />}
-                           </button>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-              )}
            </div>
+           )}
         </div>
 
         {/* Laboratory Analysis Side Panel */}

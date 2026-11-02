@@ -192,3 +192,35 @@ assert.ok(vocabNav.includes("setSelectedTopic(null)"), 'Keep My Words topic rese
 assert.ok(navDef.includes("lang === 'ar' ? 'rotate-180' : ''"), 'Keep direction-aware arrow');
 assert.ok(!navDef.includes('shadow-xl shadow-slate-200 translate-x-1'), 'Remove old navy selected card style');
 console.log('Sidebar parity OK: Word Journey and My Words match Translator and Academy tiles.');
+
+
+// My Words is now a self-contained, uncluttered, responsive gallery.
+// The right sidebar buttons and Word Journey are deliberately untouched.
+const myWordsSrc = readFileSync(new URL('../components/VocabularyWordGallery.tsx', import.meta.url), 'utf8');
+const myWordsCSS = readFileSync(new URL('../components/vocabulary-word-gallery.css', import.meta.url), 'utf8');
+const pageNav = src.slice(src.indexOf('           <nav className="flex-1 space-y-2.5 -mx-1">'), src.indexOf('           </nav>'));
+assert.ok(pageNav.includes('color="blue"') && pageNav.includes('color="emerald"'), 'Keep the Word Journey / My Words navigation design');
+assert.ok(pageNav.includes("setActiveTab('discovery')"), 'Word Journey remains available');
+assert.ok(pageNav.includes("setActiveTab('lexicon')"), 'My Words remains available');
+assert.ok(src.includes('<VocabularyWordGallery'), 'Render saved-word gallery in the main area');
+assert.ok(src.includes('onDelete={deleteWord}'), 'Preserve Firestore word deletion');
+assert.ok(src.includes('onAnalyze={handleDeepDive}'), 'Preserve word analysis action');
+assert.ok(src.includes('onPractice={setActiveActivityWord}'), 'Preserve training action');
+assert.ok(src.includes('ALL_TOPICS.map(topic =>'), 'Do not change Word Journey');
+assert.ok(!src.includes('filtered.map(item =>'), 'Remove old crowded saved-word grid');
+assert.ok(myWordsSrc.includes('data-testid="vocabulary-word-gallery"'), 'Gallery root must exist');
+assert.ok(myWordsSrc.includes('data-testid="word-gallery-list"'), 'Gallery must have an internal list');
+assert.ok(myWordsSrc.includes('overflow-y-auto custom-scroll'), 'Only the gallery list should scroll');
+assert.ok(myWordsSrc.includes('showMobileDetail'), 'Mobile must switch from list to selected word');
+assert.ok(myWordsSrc.includes('words.length === 0'), 'Empty collection must be handled');
+assert.ok(myWordsSrc.includes("filter === 'due' && isDue(word)"), 'Review filter should use saved due dates');
+assert.ok(myWordsSrc.includes('MasteryLevel.MASTERED'), 'Mastered and fluent states must be supported');
+assert.ok(myWordsSrc.includes('selected?.analysis?.details_ar?.example'), 'Show saved, grounded Arabic examples');
+assert.ok(myWordsSrc.includes('onSpeak(selected.original_word'), 'Pronunciation control must be wired');
+assert.ok(myWordsSrc.includes('onPractice(selected)'), 'Training must be wired');
+assert.ok(myWordsSrc.includes('onAnalyze(selected)'), 'Analysis must be wired');
+assert.ok(myWordsSrc.includes('await onDelete(selected.id)'), 'Confirm deletion must be wired');
+assert.ok(myWordsSrc.includes('aria-pressed={filter === tab.key}'), 'Filter state must be accessible');
+assert.ok(myWordsCSS.includes('.qul-word-gallery-orb'), 'Showcase needs a restrained crystal element');
+assert.ok(myWordsCSS.includes('prefers-reduced-motion'), 'Respect reduced-motion preferences');
+console.log('My Words gallery OK: existing navigation preserved, minimal crystal word showcase, no extra page scroll.');

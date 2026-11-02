@@ -1,0 +1,137 @@
+/* A compact word cabinet and crystal display for the saved-word gallery only.
+   The original right navigation and Word Journey do not use these selectors. */
+.qul-word-gallery {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse 68% 75% at 64% 4%, rgba(214,229,243,.34), transparent 80%),
+    linear-gradient(145deg, rgba(255,255,255,.95), rgba(242,246,250,.89));
+  border: 1px solid rgba(255,255,255,.94);
+  box-shadow: inset 0 1px 1px #fff, 0 12px 32px rgba(15,23,42,.055);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.qul-word-gallery::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  pointer-events: none;
+  border-radius: 25px;
+  border: 1px solid rgba(255,255,255,.66);
+}
+.qul-word-gallery-header {
+  position: relative;
+  z-index: 1;
+  border-bottom: 1px solid rgba(148,163,184,.16);
+  background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,255,255,.20));
+}
+.qul-word-gallery-count {
+  background: rgba(255,255,255,.75);
+  border: 1px solid rgba(255,255,255,.94);
+  box-shadow: inset 0 1px 0 #fff, 0 3px 8px rgba(15,23,42,.045);
+}
+.qul-word-gallery-shelf {
+  position: relative;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.95);
+  background: linear-gradient(155deg, rgba(232,238,246,.72), rgba(248,250,253,.89));
+  box-shadow: inset 0 2px 7px rgba(15,23,42,.045), 0 3px 13px rgba(15,23,42,.04);
+}
+.qul-word-gallery-item {
+  background: rgba(255,255,255,.57);
+  border: 1px solid rgba(255,255,255,.82);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.93), 0 2px 6px rgba(15,23,42,.035);
+}
+.qul-word-gallery-item:hover,
+.qul-word-gallery-item:focus-visible {
+  border-color: rgba(148,163,184,.46);
+  background: rgba(255,255,255,.90);
+  transform: translateY(-1px);
+}
+.qul-word-gallery-item-active {
+  border-color: rgba(192,151,80,.53) !important;
+  background: linear-gradient(110deg, rgba(255,249,237,.95), rgba(255,255,255,.94));
+  box-shadow: inset 0 1px 0 #fff, 0 3px 12px rgba(151,117,65,.10);
+}
+.qul-word-gallery-tile {
+  border: 1px solid rgba(255,255,255,.94);
+  background: linear-gradient(145deg, #fff, rgba(228,237,246,.72));
+  box-shadow: 0 2px 7px rgba(15,23,42,.06);
+}
+.qul-word-gallery-stage {
+  position: relative;
+  border: 1px solid rgba(255,255,255,.96);
+  border-radius: 23px;
+  background:
+    radial-gradient(ellipse 72% 55% at 50% 25%, rgba(198,218,238,.37), transparent 80%),
+    linear-gradient(155deg, rgba(255,255,255,.91), rgba(230,237,245,.83));
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.95),
+    inset 0 -1px 1px rgba(148,163,184,.17),
+    0 8px 21px rgba(15,23,42,.07);
+}
+.qul-word-gallery-stage::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.70);
+  pointer-events: none;
+}
+.qul-word-gallery-orb {
+  width: clamp(70px, 14vh, 126px);
+  height: clamp(70px, 14vh, 126px);
+  border-radius: 50%;
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgba(255,255,255,.93);
+  background:
+    radial-gradient(ellipse 40% 14% at 33% 14%, rgba(255,255,255,.99), transparent 85%),
+    radial-gradient(circle at 50% 50%, rgba(248,252,255,.64), rgba(205,220,236,.21) 64%, rgba(77,98,119,.21) 97%),
+    linear-gradient(160deg, rgba(255,255,255,.75), rgba(218,231,242,.6));
+  box-shadow:
+    inset 2px 3px 4px #fff,
+    inset -7px -9px 14px rgba(56,72,92,.19),
+    inset 0 -2px 2px rgba(71,85,105,.18),
+    0 12px 18px -8px rgba(30,41,59,.28),
+    0 0 0 2px rgba(255,255,255,.64);
+}
+.qul-word-gallery-orb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 41% 11% at 24% 17%, rgba(255,255,255,.92), transparent 95%),
+    radial-gradient(ellipse 12% 47% at 92% 39%, rgba(255,255,255,.7), transparent 95%),
+    radial-gradient(circle at 50% 50%, transparent 65%, rgba(255,255,255,.47) 84%, rgba(44,62,81,.10) 96%);
+}
+.qul-word-gallery-speak {
+  background: linear-gradient(148deg, rgba(255,255,255,.96), rgba(219,244,230,.84));
+  border: 1px solid rgba(255,255,255,.99);
+  box-shadow: 0 3px 9px rgba(15,23,42,.07), inset 0 1px 0 #fff;
+  transition: transform .15s ease;
+}
+.qul-word-gallery-speak:hover { transform: scale(1.07); }
+.qul-word-gallery-example {
+  background: rgba(255,255,255,.70);
+  border: 1px solid rgba(255,255,255,.96);
+  box-shadow: inset 0 1px 0 #fff, 0 3px 13px rgba(15,23,42,.04);
+}
+.qul-word-gallery-action {
+  background: rgba(255,255,255,.78);
+  border: 1px solid rgba(255,255,255,.96);
+  box-shadow: inset 0 1px 0 #fff, 0 3px 8px rgba(15,23,42,.045);
+  transition: background-color .14s ease, transform .14s ease;
+}
+.qul-word-gallery-action:hover { background: #fff; transform: translateY(-1px); }
+.qul-word-gallery-action:focus-visible,
+.qul-word-gallery-item:focus-visible,
+.qul-word-gallery-speak:focus-visible {
+  outline: 2px solid rgba(5,150,105,.6);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .qul-word-gallery-item, .qul-word-gallery-action, .qul-word-gallery-speak { transition: none !important; }
+  .qul-word-gallery-item:hover, .qul-word-gallery-action:hover, .qul-word-gallery-speak:hover { transform: none !important; }
+}
