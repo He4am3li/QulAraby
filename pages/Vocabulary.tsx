@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Search, BookText, Trash2, Volume2, Sparkles, X, Lightbulb, Download,
+  Search, BookText, Trash2, Volume2, X, Lightbulb, Download,
   BookOpen, Info, Loader2, Trees as TreeIcon, Compass, FileText, Eye,
   CheckCircle2, XCircle, ArrowRight, MousePointer2, 
   Layers, Star, BrainCircuit, Zap, Globe2, ChevronRight, Hash, Users, Home, School, Hotel, Plane, Calendar, CloudSun, Palette, Utensils, Activity, Leaf, Apple, Bird, Fish, Bug, Clock, Briefcase, MapPin, Sparkle, Flag, HelpCircle, Navigation, Car, Gamepad2, Trophy, Scale, Globe, Wrench, Languages, LayoutGrid, GraduationCap, ChevronLeft, ArrowUpRight, Monitor, Laptop, BriefcaseIcon, Heart, Waves, Tent, Palmtree, Fingerprint, RefreshCcw, HelpCircle as HelpIcon, Calculator, ListChecks, MessageSquare, Image as ImageIcon
@@ -16,7 +16,7 @@ import { VOCABULARY_CONTEXTS } from '../data/vocabularyContextStories';
 import { VOCABULARY_TOPIC_HINTS } from '../data/vocabularyUsageTips';
 import '../components/vocabulary-topic-glass.css';
 import { VocabularyWordGallery } from '../components/VocabularyWordGallery';
-import { generateSpeech, decodeAudioData, getWordDeepAnalysis, generateThemedVocabulary, generateWordIllustration, speak } from '../services/gemini';
+import { generateSpeech, decodeAudioData, generateThemedVocabulary, generateWordIllustration, speak } from '../services/gemini';
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType, serverTimestamp } from '../firebase';
 import { collection, query, where, onSnapshot, setDoc, doc, deleteDoc } from 'firebase/firestore';
@@ -195,151 +195,6 @@ const DiscoveryCard: React.FC<{
   );
 };
 
-const InteractiveActivitiesSidePanel: React.FC<{
-  word: Vocabulary,
-  lang: 'ar' | 'en',
-  onClose: () => void,
-  onSpeak: (text: string, lang: 'ar' | 'en') => void
-}> = ({ word, lang, onClose, onSpeak }) => {
-  const [activeActivity, setActiveActivity] = React.useState<'none' | 'scramble' | 'quiz'>('none');
-  const [scrambled, setScrambled] = React.useState<string[]>([]);
-  const [userGuess, setUserGuess] = React.useState<string[]>([]);
-  const [isCorrect, setIsCorrect] = React.useState<boolean | null>(null);
-
-  const startScramble = () => {
-    const letters = word.original_word.split('').filter(l => l !== ' ');
-    setScrambled([...letters].sort(() => Math.random() - 0.5));
-    setUserGuess([]);
-    setIsCorrect(null);
-    setActiveActivity('scramble');
-  };
-
-  const handleLetterClick = (letter: string, index: number) => {
-    const newGuess = [...userGuess, letter];
-    setUserGuess(newGuess);
-    setScrambled(prev => prev.filter((_, i) => i !== index));
-
-    if (newGuess.length === word.original_word.split('').filter(l => l !== ' ').length) {
-      const isMatch = newGuess.join('') === word.original_word.split('').filter(l => l !== ' ').join('');
-      setIsCorrect(isMatch);
-      if (isMatch) onSpeak(word.original_word, 'ar');
-    }
-  };
-
-  return (
-    <div className={`absolute inset-y-0 ${lang === 'ar' ? 'left-0 border-r shadow-r-2xl' : 'right-0 border-l shadow-l-2xl'} w-80 bg-white shadow-2xl border-slate-100 z-[200] flex flex-col animate-in ${lang === 'ar' ? 'slide-in-from-left-full' : 'slide-in-from-right-full'} duration-500 no-print`}>
-      <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0 bg-[#fafafa]">
-         <div className={`flex items-center gap-3 ${lang === 'ar' ? 'flex-row' : 'flex-row-reverse'}`}>
-           <div className="p-3 bg-gradient-to-br from-sky-500 to-indigo-600 text-white rounded-xl shadow-lg"><BookOpen size={16} /></div>
-           <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
-              <h3 className="text-sm font-black arabic-font text-slate-800 leading-none">{lang === 'ar' ? 'إتقان الكلمة' : 'Word Mastery'}</h3>
-              <p className="text-[7px] font-black text-slate-400 uppercase mt-1">Interactive Learning</p>
-           </div>
-         </div>
-         <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full text-slate-300 transition-all"><X size={18} /></button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6 custom-scroll space-y-8">
-        <div className={`text-center transition-all duration-500 ${activeActivity === 'scramble' ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'}`}>
-           <h2 className="text-3xl font-black text-slate-800 arabic-font leading-relaxed pt-1 mb-1">{word.original_word}</h2>
-           <p className="text-[10px] font-bold text-sky-600 uppercase tracking-tighter mb-4">{word.translation}</p>
-           <button 
-              onClick={() => onSpeak(word.original_word, 'ar')}
-              className="w-10 h-10 bg-sky-50 text-sky-600 rounded-full flex items-center justify-center mx-auto shadow-sm hover:bg-sky-600 hover:text-white transition-all border border-sky-100"
-            >
-              <Volume2 size={20} />
-            </button>
-        </div>
-
-        {activeActivity === 'none' ? (
-          <div className="grid grid-cols-1 gap-4">
-             <ActivityCard 
-                icon={<RefreshCcw size={20} />} 
-                title={lang === 'ar' ? 'بعثرة الحروف' : 'Word Scramble'} 
-                desc={lang === 'ar' ? 'رتب الحروف لتكون الكلمة' : 'Reorder letters correctly'} 
-                onClick={startScramble}
-                lang={lang}
-             />
-             <ActivityCard 
-                icon={<ListChecks size={20} />} 
-                title={lang === 'ar' ? 'اختبار سريع' : 'Quick Quiz'} 
-                desc={lang === 'ar' ? 'اختر المعنى الصحيح' : 'Choose corrected meaning'} 
-                onClick={() => setActiveActivity('quiz')}
-                lang={lang}
-             />
-          </div>
-        ) : activeActivity === 'scramble' ? (
-          <div className="animate-in fade-in zoom-in duration-300">
-             <div className="mb-6 flex justify-between items-center text-right" dir="rtl">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lang === 'ar' ? 'رتب الحروف' : 'Reorder Letters'}</h4>
-                <button onClick={() => setActiveActivity('none')} className="text-xs text-slate-300 hover:text-slate-600 font-bold underline">رجوع</button>
-             </div>
-
-             <div className="flex flex-wrap justify-center gap-3 mb-10">
-                {userGuess.map((letter, i) => (
-                  <motion.div 
-                    initial={{ scale: 0 }} animate={{ scale: 1 }}
-                    key={i} className="w-10 h-10 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-center text-lg font-black text-emerald-700 shadow-sm"
-                  >
-                    {letter}
-                  </motion.div>
-                ))}
-             </div>
-
-             {isCorrect === null ? (
-               <div className="flex flex-wrap justify-center gap-3">
-                 {scrambled.map((letter, i) => (
-                   <button 
-                      key={i} onClick={() => handleLetterClick(letter, i)}
-                      className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-lg font-black text-slate-700 shadow-lg hover:-translate-y-1 transition-all active:scale-90"
-                   >
-                     {letter}
-                   </button>
-                 ))}
-               </div>
-             ) : (
-               <div className="text-center animate-in zoom-in duration-500">
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
-                    {isCorrect ? <CheckCircle2 size={32} /> : <XCircle size={32} />}
-                  </div>
-                  <h5 className="text-sm font-black arabic-font mb-4">{isCorrect ? (lang === 'ar' ? 'أحسنت! إجابة صحيحة' : 'Excellent! Correct') : (lang === 'ar' ? 'حاول مرة أخرى' : 'Try Again')}</h5>
-                  <button onClick={startScramble} className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest">
-                    {lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}
-                  </button>
-               </div>
-             )}
-          </div>
-        ) : (
-          <div className="animate-in fade-in zoom-in duration-300 text-center py-10 opacity-40">
-             <Zap size={48} className="mx-auto mb-4" />
-             <p className="text-xs font-black uppercase tracking-widest leading-relaxed">Activity Coming Soon...</p>
-             <button onClick={() => setActiveActivity('none')} className="mt-4 text-xs text-slate-300 hover:text-slate-600 font-bold underline">رجوع</button>
-          </div>
-        )}
-      </div>
-
-      <div className="p-4 border-t border-slate-50 bg-[#fafafa]">
-         <button onClick={onClose} className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-[9px] uppercase tracking-widest shadow-md">{lang === 'ar' ? 'إغلاق' : 'Close'}</button>
-      </div>
-    </div>
-  );
-};
-
-const ActivityCard: React.FC<{ icon: React.ReactNode, title: string, desc: string, onClick: () => void, lang: 'ar' | 'en' }> = ({ icon, title, desc, onClick, lang }) => (
-  <button 
-    onClick={onClick}
-    className={`w-full p-5 bg-white border border-slate-100 rounded-3xl shadow-sm hover:shadow-xl hover:border-sky-200 transition-all group flex items-start gap-4 ${lang === 'ar' ? 'flex-row' : 'flex-row-reverse'}`}
-  >
-     <div className="p-4 bg-sky-50 text-sky-600 rounded-2xl group-hover:bg-sky-600 group-hover:text-white transition-all shadow-inner">
-       {icon}
-     </div>
-     <div className={`flex-1 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
-        <h4 className="text-sm font-black arabic-font text-slate-800 mb-1">{title}</h4>
-        <p className="text-[10px] font-medium text-slate-400">{desc}</p>
-     </div>
-  </button>
-);
-
 export const VocabularyPage: React.FC = () => {
   const { user, isAuthReady } = useAuth();
   const [activeTab, setActiveTab] = React.useState<'lexicon' | 'discovery'>('discovery');
@@ -362,12 +217,8 @@ export const VocabularyPage: React.FC = () => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [isLoadingDiscovery, setIsLoadingDiscovery] = React.useState(false);
   const [isLoadingIllustration, setIsLoadingIllustration] = React.useState(false);
-  const [selectedWord, setSelectedWord] = React.useState<Vocabulary | null>(null);
-  const [deepAnalysis, setDeepAnalysis] = React.useState<any>(null);
-  const [loadingAnalysis, setLoadingAnalysis] = React.useState(false);
   const [showFeelingsChart, setShowFeelingsChart] = React.useState(false);
   const [showHint, setShowHint] = React.useState(false);
-  const [activeActivityWord, setActiveActivityWord] = React.useState<Vocabulary | null>(null);
 
   const audioContextRef = React.useRef<AudioContext | null>(null);
 
@@ -399,7 +250,7 @@ export const VocabularyPage: React.FC = () => {
   }, []);
 
   const t = {
-    title: lang === 'ar' ? 'كلماتي الذكية' : 'My Smart Words',
+    title: lang === 'ar' ? 'المفردات' : 'Vocabulary',
     lexicon: lang === 'ar' ? 'بنك الكلمات' : 'Word Bank',
     discovery: lang === 'ar' ? 'اكتشاف الكلمات' : 'Word Discovery',
     searchPlaceholder: lang === 'ar' ? 'ابحث في كلماتك...' : 'Search your words...',
@@ -408,15 +259,13 @@ export const VocabularyPage: React.FC = () => {
     learning: lang === 'ar' ? 'قيد التعلم' : 'Learning',
     mastered: lang === 'ar' ? 'متقن' : 'Mastered',
     noWords: lang === 'ar' ? 'لا توجد كلمات بعد. ابدأ باكتشاف كلمات جديدة!' : 'No words yet. Start by discovering new words!',
-    discoveryTitle: lang === 'ar' ? 'اكتشاف الكلمات الذكي' : 'Smart Word Discovery',
-    discoverySubtitle: lang === 'ar' ? 'اختر موضوعاً لتعلم كلمات جديدة مدعومة بالذكاء الاصطناعي.' : 'Choose a topic to learn new words powered by AI.',
+    discoveryTitle: lang === 'ar' ? 'اكتشاف الكلمات' : 'Word Discovery',
+    discoverySubtitle: lang === 'ar' ? 'اختر موضوعاً لتعلم كلمات جديدة.' : 'Choose a topic to learn new words.',
     startSession: lang === 'ar' ? 'بدء الجلسة' : 'Start Session',
     loading: lang === 'ar' ? 'جاري تحضير الكلمات...' : 'Preparing words...',
     saveWord: lang === 'ar' ? 'حفظ الكلمة' : 'Save Word',
     nextWord: lang === 'ar' ? 'الكلمة التالية' : 'Next Word',
     finish: lang === 'ar' ? 'إنهاء' : 'Finish',
-    deepAnalysis: lang === 'ar' ? 'تحليل لغوي عميق' : 'Deep Linguistic Analysis',
-    analysisLoading: lang === 'ar' ? 'جاري التحليل اللغوي...' : 'Analyzing linguistically...',
     words: lang === 'ar' ? 'الكلمات' : 'Words',
     myWords: lang === 'ar' ? 'كلماتي' : 'My Words',
     myBank: lang === 'ar' ? 'بنك الكلمات' : 'Word Bank',
@@ -432,7 +281,6 @@ export const VocabularyPage: React.FC = () => {
     chooseAdventure: lang === 'ar' ? 'اختر مغامرتك اليوم لنبدأ معاً في تعلم كلمات جديدة وممتعة' : 'Choose your adventure today to start learning new words together',
     fetchingWords: lang === 'ar' ? 'جاري سحب كلمات المغامرة...' : 'Fetching adventure words...',
     drawing: lang === 'ar' ? 'جاري الرسم...' : 'Drawing...',
-    smartAnalysis: lang === 'ar' ? 'التحليل الذكي للكلمة' : 'Smart Word Analysis',
     knowIt: lang === 'ar' ? 'أعرفها' : 'I Know It',
     learnIt: lang === 'ar' ? 'أدرسها' : 'I Study It',
     skip: lang === 'ar' ? 'تجاهل' : 'Skip',
@@ -601,17 +449,6 @@ export const VocabularyPage: React.FC = () => {
     }
   };
 
-  const handleDeepDive = async (word: Vocabulary | Partial<Vocabulary>) => {
-    const vWord = word as Vocabulary;
-    setSelectedWord(vWord);
-    setDeepAnalysis(null);
-    setLoadingAnalysis(true);
-    try {
-      const analysis = await getWordDeepAnalysis(vWord.original_word);
-      setDeepAnalysis(analysis);
-    } catch (e) { console.error(e); } finally { setLoadingAnalysis(false); }
-  };
-
   const progress = Math.min(100, (vocab.length / 50) * 100);
   const getRank = (count: number) => {
     if (count < 10) return { title: lang === 'ar' ? 'مبتدئ' : 'Beginner', color: 'slate' };
@@ -710,8 +547,6 @@ export const VocabularyPage: React.FC = () => {
                  words={vocab}
                  lang={lang}
                  onSpeak={speak}
-                 onAnalyze={handleDeepDive}
-                 onPractice={setActiveActivityWord}
                  onDelete={deleteWord}
                />
              </div>
@@ -837,88 +672,6 @@ export const VocabularyPage: React.FC = () => {
            )}
         </div>
 
-        {/* Laboratory Analysis Side Panel */}
-        {selectedWord && (
-           <div className={`absolute inset-y-0 ${lang === 'ar' ? 'left-0 border-r shadow-r-2xl' : 'right-0 border-l shadow-l-2xl'} w-72 bg-white shadow-2xl border-slate-100 z-[200] flex flex-col animate-in ${lang === 'ar' ? 'slide-in-from-left-full' : 'slide-in-from-right-full'} duration-500 no-print`}>
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0 bg-[#fafafa]">
-                 <div className={`flex items-center gap-3 ${lang === 'ar' ? 'flex-row' : 'flex-row-reverse'}`}>
-                   <div className="p-3 bg-gradient-to-br from-[#059669] to-[#047857] text-white rounded-xl shadow-lg"><BrainCircuit size={16} /></div>
-                   <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
-                      <h3 className="text-sm font-black arabic-font text-slate-800 leading-none">{t.smartAnalysis}</h3>
-                      <p className="text-[7px] font-black text-slate-400 uppercase mt-1">Word Analysis</p>
-                   </div>
-                 </div>
-                 <button onClick={() => setSelectedWord(null)} className="p-2 hover:bg-slate-100 rounded-full text-slate-300 transition-all"><X size={18} /></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6 custom-scroll space-y-6">
-                {loadingAnalysis ? (
-                   <div className="h-full flex flex-col items-center justify-center space-y-4">
-                      <div className="w-8 h-8 border-4 border-slate-50 border-t-emerald-600 rounded-full animate-spin" />
-                      <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">{t.analysisLoading}</span>
-                   </div>
-                ) : deepAnalysis && (
-                   <div className="animate-in fade-in duration-500 h-full flex flex-col">
-                       <div className={`${lang === 'ar' ? 'text-right' : 'text-left'} mb-4 shrink-0`}>
-                          <h2 className={`text-2xl font-black text-slate-800 arabic-font leading-relaxed mb-0.5 pt-1 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{selectedWord.original_word}</h2>
-                          <p className={`text-[8px] font-bold text-[#059669] uppercase tracking-tighter mb-4 ${lang === 'en' ? 'text-left' : 'text-right'}`} dir={lang === 'en' ? 'ltr' : 'rtl'}>{selectedWord.translation}</p>
-                          
-                          <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50 mb-2">
-                             <h4 className="text-[7px] font-black text-emerald-600 uppercase tracking-widest mb-3 text-center">
-                                {lang === 'ar' ? 'الجذر (حروف الكلمة الأصلية)' : 'Word Root (Original Letters)'}
-                             </h4>
-                             <div className="flex justify-center gap-3" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-                                {deepAnalysis.root_letters.map((l: string, i: number) => (
-                                  <div key={i} className="w-9 h-9 bg-white border border-emerald-100 shadow-sm rounded-xl flex items-center justify-center text-sm font-black text-emerald-700 arabic-font">{l}</div>
-                                ))}
-                             </div>
-                          </div>
-                       </div>
-
-                      <div className="flex-1 space-y-3 overflow-hidden flex flex-col">
-                         {selectedWord.image_data && (
-                            <div className="w-full shrink-0 p-3 bg-white border border-slate-50 rounded-2xl shadow-sm flex justify-center">
-                               <img src={selectedWord.image_data} alt="Visual Aid" className="max-w-[50%] max-h-32 h-auto object-contain opacity-90 transition-opacity" referrerPolicy="no-referrer" />
-                            </div>
-                         )}
-                         <div className="bg-slate-50 p-4 rounded-3xl text-slate-800 border border-slate-100 shadow-sm relative overflow-hidden group shrink-0">
-                            <Fingerprint className="absolute top-4 left-4 opacity-[0.03] text-slate-900" size={60} />
-                            <h4 className={`text-[7px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t.wordFamily}</h4>
-                            <div className="grid grid-cols-1 gap-1.5">
-                               {deepAnalysis.word_family.slice(0, 3).map((item: any, i: number) => (
-                                 <div key={i} className={`flex items-center justify-between p-2 bg-white rounded-xl border border-slate-50 shadow-sm ${lang === 'ar' ? 'flex-row' : 'flex-row-reverse'}`}>
-                                    <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
-                                       <span className="block text-[11px] font-black arabic-font text-slate-800">{item.word}</span>
-                                       <span className={`block text-[6px] text-slate-400 font-medium uppercase ${lang === 'en' ? 'text-left' : 'text-right'}`}>{item.meaning}</span>
-                                    </div>
-                                    <div className="w-5 h-5 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-[7px] font-black">{item.weight}</div>
-                                 </div>
-                               ))}
-                            </div>
-                         </div>
-
-                      </div>
-                   </div>
-                )}
-              </div>
-              <div className="p-5 border-t border-slate-100 bg-white sticky bottom-0 z-10 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-                 <button 
-                  onClick={() => setSelectedWord(null)} 
-                  className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-200"
-                 >
-                  {t.close}
-                 </button>
-              </div>
-           </div>
-        )}
-         {/* Interactive Activities Side Panel */}
-         {activeActivityWord && (
-            <InteractiveActivitiesSidePanel 
-               word={activeActivityWord} 
-               lang={lang} 
-               onClose={() => setActiveActivityWord(null)} 
-               onSpeak={speak} 
-            />
-         )}
       </div>
     </motion.div>
   );

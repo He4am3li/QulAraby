@@ -204,8 +204,8 @@ assert.ok(pageNav.includes("setActiveTab('discovery')"), 'Word Journey remains a
 assert.ok(pageNav.includes("setActiveTab('lexicon')"), 'My Words remains available');
 assert.ok(src.includes('<VocabularyWordGallery'), 'Render saved-word gallery in the main area');
 assert.ok(src.includes('onDelete={deleteWord}'), 'Preserve Firestore word deletion');
-assert.ok(src.includes('onAnalyze={handleDeepDive}'), 'Preserve word analysis action');
-assert.ok(src.includes('onPractice={setActiveActivityWord}'), 'Preserve training action');
+assert.ok(!src.includes('onAnalyze={handleDeepDive}'), 'My Words analysis must not use the legacy side drawer');
+assert.ok(!src.includes('onPractice={setActiveActivityWord}'), 'My Words training must not use the legacy side drawer');
 assert.ok(src.includes('ALL_TOPICS.map(topic =>'), 'Do not change Word Journey');
 assert.ok(!src.includes('filtered.map(item =>'), 'Remove old crowded saved-word grid');
 assert.ok(myWordsSrc.includes('data-testid="vocabulary-word-gallery"'), 'Gallery root must exist');
@@ -217,10 +217,42 @@ assert.ok(myWordsSrc.includes("filter === 'due' && isDue(word)"), 'Review filter
 assert.ok(myWordsSrc.includes('MasteryLevel.MASTERED'), 'Mastered and fluent states must be supported');
 assert.ok(myWordsSrc.includes('selected?.analysis?.details_ar?.example'), 'Show saved, grounded Arabic examples');
 assert.ok(myWordsSrc.includes('onSpeak(selected.original_word'), 'Pronunciation control must be wired');
-assert.ok(myWordsSrc.includes('onPractice(selected)'), 'Training must be wired');
-assert.ok(myWordsSrc.includes('onAnalyze(selected)'), 'Analysis must be wired');
+assert.ok(myWordsSrc.includes('onClick={beginPractice}'), 'Inline training button must work');
+assert.ok(myWordsSrc.includes('onClick={openAnalysis}'), 'Inline analysis button must work');
 assert.ok(myWordsSrc.includes('await onDelete(selected.id)'), 'Confirm deletion must be wired');
 assert.ok(myWordsSrc.includes('aria-pressed={filter === tab.key}'), 'Filter state must be accessible');
 assert.ok(myWordsCSS.includes('.qul-word-gallery-orb'), 'Showcase needs a restrained crystal element');
 assert.ok(myWordsCSS.includes('prefers-reduced-motion'), 'Respect reduced-motion preferences');
 console.log('My Words gallery OK: existing navigation preserved, minimal crystal word showcase, no extra page scroll.');
+
+
+// My Words revision: no AI presentation, no drawers, and analysis is instant.
+const galleryAnalysisStart = myWordsSrc.indexOf("const openAnalysis = () => {");
+const galleryExtendedStart = myWordsSrc.indexOf("const requestExtraAnalysis = async () => {", galleryAnalysisStart);
+assert.ok(galleryAnalysisStart > 0 && galleryExtendedStart > galleryAnalysisStart, 'Analysis actions must exist');
+const instantAnalysis = myWordsSrc.slice(galleryAnalysisStart, galleryExtendedStart);
+assert.ok(instantAnalysis.includes("setMode('analysis')"), 'Analysis should switch the existing stage instantly');
+assert.ok(!instantAnalysis.includes('await') && !instantAnalysis.includes('getWordDeepAnalysis('), 'No network call upon clicking Analyze');
+assert.ok(myWordsSrc.includes('selected?.analysis?.details_ar'), 'Read Arabic analysis from stored word');
+assert.ok(myWordsSrc.includes('selected?.analysis?.details_en'), 'Read English analysis from stored word');
+assert.ok(myWordsSrc.includes('extraAnalysis[selected.original_word]'), 'Cache optional extended analysis by word');
+assert.ok(myWordsSrc.includes('getWordDeepAnalysis(term)'), 'Optional extended analysis is available on explicit request');
+assert.ok(myWordsSrc.includes('data-testid="word-inline-practice"'), 'Training must render within word stage');
+assert.ok(myWordsSrc.includes('data-testid="word-inline-analysis"'), 'Analysis must render within word stage');
+assert.ok(myWordsSrc.includes("type StageMode = 'word' | 'practice' | 'analysis'"), 'Inline modes must share stage');
+assert.ok(myWordsSrc.includes("game === 'scramble'"), 'Functional letter-order activity required');
+assert.ok(myWordsSrc.includes("game === 'meaning'"), 'Functional meaning-selection activity required');
+assert.ok(myWordsSrc.includes('setScrambleCorrect('), 'Validate word letter order');
+assert.ok(myWordsSrc.includes('setQuizAnswer(option)'), 'Meaning quiz options must respond');
+assert.ok(!myWordsSrc.includes('Sparkles'), 'Remove generic AI sparkle icon from My Words');
+assert.ok(!myWordsSrc.includes('onAnalyze(') && !myWordsSrc.includes('onPractice('), 'No drawer callbacks may remain');
+assert.ok(!src.includes('Laboratory Analysis Side Panel'), 'Remove old side analysis');
+assert.ok(!src.includes('Interactive Activities Side Panel'), 'Remove old side training');
+assert.ok(!src.includes('InteractiveActivitiesSidePanel'), 'Do not mount legacy training drawer');
+assert.ok(!src.includes('getWordDeepAnalysis'), 'Parent page must not make remote analysis request');
+assert.ok(src.includes("title: lang === 'ar' ? 'المفردات' : 'Vocabulary'"), 'Remove AI-branded page title');
+assert.ok(!src.includes('مدعومة بالذكاء الاصطناعي') && !src.includes('powered by AI'), 'Remove AI promotional labels');
+assert.ok(!src.includes('التحليل الذكي') && !src.includes('Smart Word Analysis'), 'No AI analysis branding');
+assert.ok(myWordsCSS.includes('.qul-word-gallery-detail'), 'Compact inline language details must be styled');
+assert.ok(myWordsCSS.includes('.qul-word-gallery-letter'), 'In-stage learning game must be styled');
+console.log('My Words inline OK: no artificial-intelligence badges or side panels, instant local analysis and real practice.');
