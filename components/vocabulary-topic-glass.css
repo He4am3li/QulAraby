@@ -1,25 +1,24 @@
-/* Topic chooser only. The vocabulary cards inside each topic are untouched.
-   Gentle optical refraction, glazed edges and an accent-tinted internal reflection. */
+/* Neutral liquid glass for the OUTER topic chooser only.
+   Chromatic glows are deliberately omitted. Original topic icon colors are kept. */
 
 .qul-vocab-topic-glass {
-  --topic-glass-rgb: 39, 130, 193;
   position: relative;
   isolation: isolate;
-  background: linear-gradient(147deg,
-    rgba(255,255,255,.88) 0%,
-    rgba(252,254,255,.69) 35%,
-    rgba(241,247,252,.56) 76%,
-    rgba(255,255,255,.82) 100%);
+  background: linear-gradient(152deg,
+    rgba(255,255,255,.93) 0%,
+    rgba(255,255,255,.81) 31%,
+    rgba(242,245,248,.70) 73%,
+    rgba(255,255,255,.91) 100%);
   border: 1px solid rgba(255,255,255,.94);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,1),
-    inset 0 -1px 0 rgba(var(--topic-glass-rgb),.11),
-    0 1px 2px rgba(15,23,42,.04),
-    0 9px 25px rgba(24,45,65,.095);
-  -webkit-backdrop-filter: blur(14px) saturate(152%);
-  backdrop-filter: blur(14px) saturate(152%);
+    inset 0 -1px 0 rgba(148,163,184,.12),
+    0 2px 5px rgba(15,23,42,.035),
+    0 10px 23px rgba(15,23,42,.078);
+  -webkit-backdrop-filter: blur(14px) saturate(112%);
+  backdrop-filter: blur(14px) saturate(112%);
   transition: transform .34s cubic-bezier(.2,.8,.2,1),
-    box-shadow .34s ease, border-color .34s ease, background .34s ease;
+    box-shadow .34s ease, border-color .34s ease;
 }
 
 .qul-vocab-topic-glass::before,
@@ -34,24 +33,24 @@
 .qul-vocab-topic-glass::before {
   z-index: 0;
   background:
-    radial-gradient(ellipse 88% 52% at 18% -10%,
-      rgba(255,255,255,.94), transparent 84%),
-    radial-gradient(ellipse 67% 55% at 97% 100%,
-      rgba(var(--topic-glass-rgb),.14), transparent 80%),
+    radial-gradient(ellipse 85% 50% at 18% -9%,
+      rgba(255,255,255,.95), transparent 84%),
+    radial-gradient(ellipse 68% 48% at 96% 99%,
+      rgba(203,213,225,.18), transparent 86%),
     linear-gradient(116deg,
-      rgba(255,255,255,.34) 3%,
-      transparent 39%,
-      rgba(255,255,255,.15) 53%,
-      transparent 74%);
-  opacity: .95;
-  transition: opacity .35s ease;
+      rgba(255,255,255,.31) 3%,
+      transparent 42%,
+      rgba(255,255,255,.16) 54%,
+      transparent 75%);
+  opacity: .96;
+  transition: opacity .34s ease;
 }
 
 .qul-vocab-topic-glass::after {
   inset: 2px;
   z-index: 0;
-  border: 1px solid rgba(255,255,255,.60);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.58);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.11);
 }
 
 .qul-vocab-topic-glass > * {
@@ -61,68 +60,55 @@
 
 .qul-vocab-topic-glass:hover,
 .qul-vocab-topic-glass:focus-visible {
-  transform: translateY(-4px);
-  border-color: rgba(var(--topic-glass-rgb),.34);
+  transform: translateY(-3px);
+  border-color: rgba(148,163,184,.43);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,1),
-    inset 0 -2px 0 rgba(var(--topic-glass-rgb),.24),
-    0 4px 10px rgba(15,23,42,.055),
-    0 18px 34px rgba(24,45,65,.16),
-    0 0 0 1px rgba(255,255,255,.44);
-}
-
-.qul-vocab-topic-glass:hover::before,
-.qul-vocab-topic-glass:focus-visible::before {
-  opacity: 1;
+    inset 0 -1px 0 rgba(100,116,139,.16),
+    0 6px 14px rgba(15,23,42,.065),
+    0 17px 30px rgba(15,23,42,.13);
 }
 
 .qul-vocab-topic-glass:focus-visible {
-  outline: 2px solid rgba(var(--topic-glass-rgb),.64);
+  outline: 2px solid rgba(100,116,139,.58);
   outline-offset: 3px;
 }
 
+/* The original pale, per-topic icon background and border come from
+   existing Tailwind classes, not from a new colored glass overlay. */
 .qul-vocab-topic-glass-icon {
-  background: linear-gradient(148deg,
-    rgba(255,255,255,.81),
-    rgba(var(--topic-glass-rgb),.15) 70%,
-    rgba(255,255,255,.44));
-  border: 1px solid rgba(255,255,255,.91);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.98),
-    inset 0 -1px 0 rgba(var(--topic-glass-rgb),.12),
-    0 7px 15px rgba(22,42,64,.10);
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
+    inset 0 1px 0 rgba(255,255,255,.92),
+    0 7px 14px rgba(15,23,42,.075);
   transition: transform .34s cubic-bezier(.2,.8,.2,1), box-shadow .34s ease;
 }
 
 .qul-vocab-topic-glass:hover .qul-vocab-topic-glass-icon,
 .qul-vocab-topic-glass:focus-visible .qul-vocab-topic-glass-icon {
-  transform: translateY(-2px) scale(1.035);
+  transform: translateY(-2px) scale(1.025);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,1),
-    0 11px 19px rgba(22,42,64,.14);
+    0 10px 18px rgba(15,23,42,.12);
 }
 
+/* The arrow keeps its ORIGINAL topic color, with a navy hover state. */
 .qul-vocab-topic-glass-arrow {
-  background: rgba(var(--topic-glass-rgb),.10);
-  color: rgb(var(--topic-glass-rgb));
   border: 1px solid rgba(255,255,255,.85);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.92);
-  transition: color .25s ease, background .25s ease, transform .25s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.88);
+  transition: color .25s ease, background-color .25s ease, transform .25s ease;
 }
 
 .qul-vocab-topic-glass:hover .qul-vocab-topic-glass-arrow,
 .qul-vocab-topic-glass:focus-visible .qul-vocab-topic-glass-arrow {
   color: #fff;
-  background: rgb(15, 23, 42);
+  background-color: rgb(15,23,42);
   transform: translateY(-1px);
 }
 
-/* An opaque fallback keeps titles readable in browsers without backdrop blur. */
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .qul-vocab-topic-glass { background: rgba(249,252,255,.96); }
-  .qul-vocab-topic-glass-icon { background: rgba(242,247,251,.98); }
+  .qul-vocab-topic-glass {
+    background: rgba(250,251,253,.97);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -110,11 +110,16 @@ assert.ok(chooser.includes('qul-vocab-topic-glass rounded-3xl'), 'Topic selectio
 assert.ok(chooser.includes('qul-vocab-topic-glass-icon'), 'Topic art tile must have an optical layer');
 assert.ok(chooser.includes('qul-vocab-topic-glass-arrow'), 'Topic arrow should match glass styling');
 assert.ok(chooser.includes('startDiscovery(topic)'), 'Topic card navigation must remain functional');
-assert.ok(chooser.includes('TOPIC_GLASS_RGB[topic.color]'), 'Per-topic palette must be preserved');
+assert.ok(!src.includes('TOPIC_GLASS_RGB'), 'Added color-tint palette must be removed');
+assert.ok(chooser.includes('${color.bg} ${color.text}'), 'Use the original icon and arrow palette');
+assert.ok(chooser.includes('border ${color.border}'), 'Restore original icon border colors');
+assert.ok(!topicGlassCSS.includes('topic-glass-rgb'), 'No colored glass gradients or accents');
+assert.ok(!topicGlassCSS.includes('rgba(var('), 'Do not tint the glass with topic colors');
+assert.ok(topicGlassCSS.includes('rgba(255,255,255,.93)'), 'Neutral clear-glass surface required');
 assert.ok(topicGlassCSS.includes('backdrop-filter: blur('), 'Real translucent glass refraction is required');
 assert.ok(topicGlassCSS.includes('pointer-events: none'), 'Highlights cannot block clicking');
 assert.ok(topicGlassCSS.includes('prefers-reduced-motion: reduce'), 'Reduced-motion accessibility must be retained');
 assert.ok(topicGlassCSS.includes('@supports not'), 'Missing-backdrop browser fallback required');
 assert.ok(!src.slice(topicCardsEnd).includes('qul-vocab-topic-glass-icon'), 'Do not apply to in-topic word cards');
 assert.ok(src.includes('data-testid="worksheet-preview-bottom-footer"'), 'Worksheet footer remains untouched');
-console.log('Vocabulary glass OK: 30 outer topic cards, responsive optical effects, preserved word cards.');
+console.log('Vocabulary glass OK: 30 neutral frosted-glass cards, original icon colors preserved.');
