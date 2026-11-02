@@ -1636,7 +1636,8 @@ const renderContextualStory = (
   paragraph: string,
   vocabWords: Partial<Vocabulary>[],
   onSelectWord: (word: Partial<Vocabulary>, contextualForm: string) => void,
-  selectedWord: (Partial<Vocabulary> & { context_surface?: string }) | null
+  selectedWord: (Partial<Vocabulary> & { context_surface?: string }) | null,
+  lang: 'ar' | 'en'
 ) => {
   const segments: React.ReactNode[] = [];
   const marker = /\[\[(\d+)\|([^\]]+)\]\]/g;
@@ -1656,8 +1657,8 @@ const renderContextualStory = (
           type="button"
           key={'word-' + match.index}
           onClick={(event) => { event.stopPropagation(); onSelectWord(vocab, surface); }}
-          aria-label={'معنى ' + surface}
-          title="اضغط لعرض الكلمة في البطاقة ومعناها"
+          aria-label={lang === 'ar' ? 'معنى ' + surface : 'Show meaning of ' + surface}
+          title={lang === 'ar' ? 'اضغط لعرض الكلمة في البطاقة ومعناها' : 'Show the word and its meaning'}
           className={'inline font-bold rounded-md px-0.5 underline decoration-amber-400 decoration-dotted underline-offset-4 transition-colors ' +
             (active ? 'bg-amber-500 text-white' : 'text-amber-900 hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-amber-600')}
         >{surface}</button>
@@ -1754,7 +1755,7 @@ const TopicStoryBox: React.FC<{
           <div dir="rtl" className="space-y-2 arabic-font text-xs md:text-sm text-slate-800 leading-loose text-right">
             {storyTextAr.split('\n\n').map((paragraph, index) => (
               <p key={index}>
-                {renderContextualStory(paragraph, words, (word, surface) => setSelectedWord({ ...word, context_surface: surface }), selectedWord)}
+                {renderContextualStory(paragraph, words, (word, surface) => setSelectedWord({ ...word, context_surface: surface }), selectedWord, lang)}
               </p>
             ))}
           </div>
@@ -1795,12 +1796,24 @@ const TopicStoryBox: React.FC<{
                     {selectedWord.translation}
                   </p>
                   {selectedWord.context_surface && selectedWord.context_surface !== selectedWord.original_word && (
-                    <p className="text-[11px] text-slate-600 arabic-font leading-relaxed mt-2 bg-amber-50 rounded-lg px-2 py-1">
-                      <span className="font-bold">في النص:</span> {selectedWord.context_surface}
-                      {'  |  '}
-                      <span className="font-bold">في البطاقة:</span> {selectedWord.original_word}
-                      <span className="block text-slate-500 mt-1">تتغير صورة الكلمة لتناسب موقعها في الجملة.</span>
-                    </p>
+                    <div
+                      dir={lang === 'ar' ? 'rtl' : 'ltr'}
+                      className={`text-[11px] text-slate-600 leading-relaxed mt-2 bg-amber-50 rounded-lg px-2 py-1 ${lang === 'ar' ? 'arabic-font text-right' : 'font-sans text-left'}`}
+                    >
+                      <div>
+                        <span className="font-bold">{lang === 'ar' ? 'في النص:' : 'In the text:'}</span>{' '}
+                        <span lang="ar" dir="rtl" className="arabic-font inline-block">{selectedWord.context_surface}</span>
+                      </div>
+                      <div>
+                        <span className="font-bold">{lang === 'ar' ? 'في البطاقة:' : 'On the card:'}</span>{' '}
+                        <span lang="ar" dir="rtl" className="arabic-font inline-block">{selectedWord.original_word}</span>
+                      </div>
+                      <p className="text-slate-500 mt-1">
+                        {lang === 'ar'
+                          ? 'تتغير صورة الكلمة لتناسب موقعها في الجملة.'
+                          : 'The word changes form to fit its role in the sentence.'}
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1809,7 +1822,8 @@ const TopicStoryBox: React.FC<{
                 <button
                   onClick={() => onSpeak(selectedWord.context_surface || selectedWord.original_word || '', 'ar')}
                   className="w-7 h-7 rounded-lg bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center transition-all shadow-2xs active:scale-95"
-                  title="استمع للكلمة"
+                  title={lang === 'ar' ? 'استمع للكلمة' : 'Listen to the word'}
+                  aria-label={lang === 'ar' ? 'استمع للكلمة' : 'Listen to the word'}
                 >
                   <Volume2 size={15} />
                 </button>
@@ -1817,7 +1831,8 @@ const TopicStoryBox: React.FC<{
                 <button
                   onClick={() => setSelectedWord(null)}
                   className="w-7 h-7 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-400 border border-slate-100 flex items-center justify-center transition-all active:scale-95"
-                  title="إغلاق"
+                  title={lang === 'ar' ? 'إغلاق' : 'Close'}
+                  aria-label={lang === 'ar' ? 'إغلاق' : 'Close'}
                 >
                   <X size={15} />
                 </button>
