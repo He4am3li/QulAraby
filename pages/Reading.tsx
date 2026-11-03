@@ -949,9 +949,25 @@ export const Reading: React.FC = () => {
       }
     } catch (e) {
       console.error('Reading text generation failed:', e);
-      setReadingGenerationError(lang === 'ar'
-        ? 'تعذر توليد النص الآن. تحقق من الاتصال ثم اضغط إعادة المحاولة.'
-        : 'Text generation could not finish. Check your connection and try again.');
+      const message = e instanceof Error ? e.message : String(e);
+      const status = Number((e as any)?.status || message.match(/\\b(401|403|404|429|500|502|503|504)\\b/)?.[1] || 0);
+      const normalized = message.toLowerCase();
+      const reason = status === 401 || /sign in|session|unauthorized|firebase/.test(normalized) ? 'AUTH'
+        : status === 403 || /permission|api.key|api key|invalid key/.test(normalized) ? 'KEY'
+        : status === 404 || /model.*not found|not found.*model/.test(normalized) ? 'MODEL'
+        : status === 429 || /quota|resource.exhausted|rate.limit/.test(normalized) ? 'QUOTA'
+        : /timeout|timed out|abort/.test(normalized) ? 'TIMEOUT'
+        : status >= 500 ? 'SERVER' : 'UNKNOWN';
+      const reasons: Record<string, [string, string]> = {
+        AUTH: ['انتهت جلسة الدخول. سجّل الخروج ثم ادخل مجددًا.', 'Your session expired. Sign out and sign in again.'],
+        KEY: ['خدمة توليد النصوص ترفض مفتاح الوصول أو صلاحياته. يحتاج المسؤول إلى مراجعة إعدادات Gemini.', 'Gemini rejected the API key or its permissions. An administrator must check the configuration.'],
+        MODEL: ['نموذج توليد النصوص غير متاح لهذا المفتاح. يحتاج المسؤول إلى تغيير النموذج.', 'The selected model is not available for this API key.'],
+        QUOTA: ['وصلت خدمة Gemini إلى حد الاستخدام. حاول لاحقًا أو راجع الحصة المتاحة.', 'Gemini usage quota has been reached. Try later or check the quota.'],
+        TIMEOUT: ['تأخرت خدمة التوليد أكثر من 30 ثانية. حاول مرة أخرى.', 'Generation took longer than 30 seconds. Please retry.'],
+        SERVER: ['خدمة التوليد غير متاحة حاليًا. حاول مجددًا بعد قليل.', 'The generation service is temporarily unavailable.'],
+        UNKNOWN: ['فشل توليد النص. حاول مرة أخرى، وإذا استمرت المشكلة أبلغ المسؤول.', 'Text generation failed. Retry or contact an administrator.']
+      };
+      setReadingGenerationError(reasons[reason][lang === 'ar' ? 0 : 1] + ' (' + reason + (status ? ' ' + status : '') + ')');
     } finally {
       setReadingGenerationPending(false);
     }
