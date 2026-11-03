@@ -413,7 +413,12 @@ export const VocabularyPage: React.FC = () => {
     try {
       await setDoc(doc(db, 'users', user.uid, 'vocabulary', wordId), savedWord);
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'users/' + user.uid + '/vocabulary/' + wordId);
+      try {
+        handleFirestoreError(error, OperationType.CREATE, 'users/' + user.uid + '/vocabulary/' + wordId);
+      } finally {
+        // Even offline errors must reach the card, not pretend the save worked.
+        throw error;
+      }
     }
   };
 
@@ -1857,7 +1862,7 @@ const TopicInterface: React.FC<{
         {saveError && <p role="alert" className="mb-2 text-xs font-semibold text-red-600" dir={lang === 'ar' ? 'rtl' : 'ltr'}>{saveError}</p>}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2.5 md:gap-3.5 relative z-10">
            {words.map((f, i) => (
-             <div key={i} className="perspective-1000 h-[142px] md:h-[154px]">
+             <div key={i} className="perspective-1000 h-[168px] md:h-[184px]">
                <motion.div
                  className="relative w-full h-full text-center transition-all duration-500 transform-style-3d cursor-pointer"
                  animate={{ rotateY: flippedIndex === i ? 180 : 0 }}
