@@ -3,6 +3,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Globe, Volume2, Loader2, Type as TypeIcon, ChevronLeft, ArrowRight, AlertCircle, Music, Wind, Download, Upload, FileText, CheckCircle2, XCircle, Award, Share2, PenTool, RefreshCcw, Paintbrush, Palette, Play, Star, CheckCircle, Edit3, BrainCircuit, Mic, Activity, BookOpen, Layers, Search, X, Inbox } from 'lucide-react';
 import { LanguageToggle } from '../components/LanguageToggle';
+import { normalizeLetterKey, letterCanvasPoint, normalizeAssessmentScore } from '../utils/letterLearning.js';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { generateSpeech, decodeAudioData, verifyLetterWorksheet, fileToGenerativePart, generateContentWithRetry, speak } from '../services/gemini';
@@ -247,7 +248,8 @@ const STRINGS = {
 
 const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, onMastered?: (stars: number) => void }> = ({ char, shapes, t, lang, onMastered }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = React.useState(false);
+  const isDrawingRef = React.useRef(false);
+  const hasStrokesRef = React.useRef(false);
   const [activeShape, setActiveShape] = React.useState<'isolated' | 'initial' | 'medial' | 'final'>('isolated');
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [aiFeedback, setAiFeedback] = React.useState<{ stars: number, message: string, isCorrect: boolean } | null>(null);
@@ -276,42 +278,46 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
     ctx.globalAlpha = 1;
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasStrokesRef.current = false;
+    isDrawingRef.current = false;
     setAiFeedback(null);
-  }, [activeShape]);
+  }, [activeShape, char]);
 
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    setIsDrawing(true);
+  const startDrawing = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+    canvas.setPointerCapture(e.pointerId);
+    isDrawingRef.current = true;
+    hasStrokesRef.current = true;
     if (drawSound.current) drawSound.current.play().catch(() => {});
-    draw(e);
+    const point = letterCanvasPoint(e.clientX, e.clientY, canvas.getBoundingClientRect(), canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.moveTo(point.x, point.y);
+    ctx.lineTo(point.x + 0.01, point.y + 0.01);
+    ctx.stroke();
   };
 
   const stopDrawing = () => {
-    setIsDrawing(false);
+    isDrawingRef.current = false;
     if (drawSound.current) {
       drawSound.current.pause();
       drawSound.current.currentTime = 0;
     }
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    ctx?.beginPath();
+    canvasRef.current?.getContext('2d')?.beginPath();
   };
 
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing) return;
+  const draw = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current) return;
+    e.preventDefault();
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = ('touches' in e) ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = ('touches' in e) ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-
-    ctx.lineTo(x, y);
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+    const point = letterCanvasPoint(e.clientX, e.clientY, canvas.getBoundingClientRect(), canvas.width, canvas.height);
+    ctx.lineTo(point.x, point.y);
     ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x, y);
   };
 
   const clear = () => {
@@ -319,12 +325,17 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    hasStrokesRef.current = false;
     setAiFeedback(null);
   };
 
   const handleCheckWork = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    if (!hasStrokesRef.current) {
+      setAiFeedback({ stars: 0, isCorrect: false, message: lang === 'ar' ? 'اكتب الحرف أولاً' : 'Draw the letter first' });
+      return;
+    }
     
     setIsAnalyzing(true);
     setAiFeedback(null);
@@ -421,12 +432,11 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
             ref={canvasRef}
             width={850}
             height={220}
-            onMouseDown={startDrawing}
-            onMouseUp={stopDrawing}
-            onMouseMove={draw}
-            onTouchStart={startDrawing}
-            onTouchEnd={stopDrawing}
-            onTouchMove={draw}
+            onPointerDown={startDrawing}
+            onPointerUp={stopDrawing}
+            onPointerCancel={stopDrawing}
+            onLostPointerCapture={stopDrawing}
+            onPointerMove={draw}
             className="relative z-10 w-full h-full max-w-[850px] max-h-[220px]"
           />
 
@@ -667,7 +677,7 @@ const AuditoryGame: React.FC<{ char: string, t: any, onSpeak: (text: string, dis
   const generateQuestion = (currentLevel: number) => {
     let target = '';
     let opts: any[] = [];
-    const cleanChar = char.replace('ـ', '').trim();
+    const cleanChar = normalizeLetterKey(char);
 
     switch(currentLevel) {
       case 1: // Short Vowels
@@ -1214,7 +1224,7 @@ const WordDiscriminationGame: React.FC<{
   const [score, setScore] = React.useState(0);
   const [isComplete, setIsComplete] = React.useState(false);
 
-  const cleanChar = char.replace('ـ', '').trim();
+  const cleanChar = normalizeLetterKey(char);
   const wordData = LETTER_WORDS[cleanChar] || LETTER_WORDS['ب'];
 
   const generateQuestion = (currentLevel: number) => {
@@ -1612,7 +1622,7 @@ const TASHKEEL_WORDS: Record<string, {
   'ي': {
     fatha: { word: 'يَد', charWithDiacritic: 'يَ', meaningAr: 'عضو', meaningEn: 'Hand' },
     damma: { word: 'يُوسُفِي', charWithDiacritic: 'يُ', meaningAr: 'فاكهة', meaningEn: 'Tangerine' },
-    kasra: { word: 'يَنَابِيع', charWithDiacritic: 'يِ', meaningAr: 'ماء', meaningEn: 'Springs' },
+    kasra: { word: 'يُحْيِي', charWithDiacritic: 'يِ', meaningAr: 'يمنح الحياة', meaningEn: 'Revives' },
     sukoon: { word: 'بَيْت', charWithDiacritic: 'يْ', meaningAr: 'منزل', meaningEn: 'House' }
   }
 };
@@ -1631,7 +1641,7 @@ const WordTashkeelGame: React.FC<{
   const [score, setScore] = React.useState(0);
   const [isComplete, setIsComplete] = React.useState(false);
 
-  const cleanChar = char.replace('ـ', '').trim();
+  const cleanChar = normalizeLetterKey(char);
   const sampleData = TASHKEEL_WORDS[cleanChar] || TASHKEEL_WORDS['ب'];
 
   const generateQuestion = (currentLevel: number) => {
@@ -2273,6 +2283,7 @@ export const Letters: React.FC = () => {
       const filePart = await fileToGenerativePart(file);
       const result = await verifyLetterWorksheet(filePart, selectedChar.char, selectedChar.name);
       setVerificationResult(result);
+      const verifiedScore = normalizeAssessmentScore(result.score);
       if (result.passed) saveMastery(selectedChar.char);
 
       // Save submission to database for teacher inbox review
@@ -2292,14 +2303,13 @@ export const Letters: React.FC = () => {
             status: 'pending',
             aiFeedback: {
               passed: result.passed || false,
-              score: result.passed ? 95 : 75,
+              ...(verifiedScore !== null ? { score: verifiedScore } : {}),
               feedback_ar: result.feedback_ar || '',
               feedback_en: result.feedback_en || '',
               observations: result.observations || []
             },
-            teacherGrade: result.passed ? 5 : 4,
             teacherNotes: '',
-            badge: result.passed ? '✍️ خطاط متميز' : '💡 محاولة ممتازة'
+            badge: ''
           };
 
           try {
