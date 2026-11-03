@@ -6,7 +6,7 @@ import type { RadioCorpusText } from '../src/data/radioTextCorpus';
 
 // Google API credentials stay server-side. The browser uses authenticated
 // same-origin endpoints and never receives the long-lived Gemini API key.
-export const DEFAULT_TEXT_MODEL = 'gemini-3.8-flash';
+export const DEFAULT_TEXT_MODEL = 'gemini-2.5-flash';
 export const DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-lite-image';
 export const DEFAULT_TTS_MODEL = 'gemini-3.8-flash-lite-tts';
 export const DEFAULT_LIVE_MODEL = 'gemini-3.8-live';
