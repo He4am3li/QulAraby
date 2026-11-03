@@ -1,6 +1,6 @@
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import { checkGatewayQuota, readGatewayBody, requireFirebaseUser, type GatewayRequest, type GatewayResponse } from './_geminiAuth';
+import { checkGatewayQuota, readGatewayBody, requireFirebaseUser, type GatewayRequest, type GatewayResponse } from './_geminiAuth.js';
 
 const allowedModelRequest = /^\/v1(?:alpha|beta)?\/models\/[A-Za-z0-9._-]+:(generateContent|streamGenerateContent|countTokens|embedContent)$/;
 
