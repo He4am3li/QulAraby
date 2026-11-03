@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import { checkGatewayQuota, requireFirebaseUser, type GatewayRequest, type GatewayResponse } from './_geminiAuth';
+import { checkGatewayQuota, requireFirebaseUser, type GatewayRequest, type GatewayResponse } from './_geminiAuth.js';
 
 export default async function handler(req: GatewayRequest, res: GatewayResponse): Promise<void> {
   res.setHeader('Cache-Control', 'no-store');
