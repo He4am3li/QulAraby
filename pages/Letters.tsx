@@ -3,6 +3,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Globe, Volume2, Loader2, Type as TypeIcon, ChevronLeft, ArrowRight, AlertCircle, Music, Wind, Download, Upload, FileText, CheckCircle2, XCircle, Award, Share2, PenTool, RefreshCcw, Paintbrush, Palette, Play, Star, CheckCircle, Edit3, BrainCircuit, Mic, Activity, BookOpen, Layers, Search, X, Inbox } from 'lucide-react';
 import { LanguageToggle } from '../components/LanguageToggle';
+import { letterCanvasPoint } from '../utils/letterCanvas.js';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { generateSpeech, decodeAudioData, verifyLetterWorksheet, fileToGenerativePart, generateContentWithRetry, speak } from '../services/gemini';
@@ -248,7 +249,7 @@ const STRINGS = {
 
 const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, onMastered?: (stars: number) => void }> = ({ char, shapes, t, lang, onMastered }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = React.useState(false);
+  const activePointerIdRef = React.useRef<number | null>(null);
   const [activeShape, setActiveShape] = React.useState<'isolated' | 'initial' | 'medial' | 'final'>('isolated');
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [aiFeedback, setAiFeedback] = React.useState<{ stars: number, message: string, isCorrect: boolean } | null>(null);
@@ -277,38 +278,56 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
     ctx.globalAlpha = 1;
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    activePointerIdRef.current = null;
     setAiFeedback(null);
-  }, [activeShape]);
+  }, [activeShape, char]);
 
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    setIsDrawing(true);
-    if (drawSound.current) drawSound.current.play().catch(() => {});
-    draw(e);
+  // Pointer events work with mouse, touch and stylus, without duplicate touch/mouse callbacks.
+  // Read the rendered canvas bounds because CSS can resize it independently in both axes.
+  const pointFromEvent = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = e.currentTarget;
+    return letterCanvasPoint(e.clientX, e.clientY, canvas.getBoundingClientRect(), canvas.width, canvas.height);
   };
 
-  const stopDrawing = () => {
-    setIsDrawing(false);
+  const startDrawing = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (activePointerIdRef.current !== null) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    const canvas = e.currentTarget;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    activePointerIdRef.current = e.pointerId;
+    canvas.setPointerCapture(e.pointerId);
+    const { x, y } = pointFromEvent(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    // Render the first contact immediately, including a single tap.
+    ctx.lineTo(x + 0.01, y + 0.01);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    drawSound.current?.play().catch(() => {});
+  };
+
+  const stopDrawing = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (activePointerIdRef.current !== e.pointerId) return;
+    activePointerIdRef.current = null;
+    const canvas = e.currentTarget;
+    canvas.getContext('2d')?.beginPath();
+    if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
     if (drawSound.current) {
       drawSound.current.pause();
       drawSound.current.currentTime = 0;
     }
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    ctx?.beginPath();
   };
 
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+  const draw = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (activePointerIdRef.current !== e.pointerId) return;
+    e.preventDefault();
+    const ctx = e.currentTarget.getContext('2d');
     if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = ('touches' in e) ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = ('touches' in e) ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-
+    const { x, y } = pointFromEvent(e);
     ctx.lineTo(x, y);
     ctx.stroke();
     ctx.beginPath();
@@ -405,31 +424,31 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
           </div>
         </div>
 
-        {/* Center Canvas - Wide Rectangle */}
+        {/* Center Canvas - identical bounds for the pale guide and the drawing surface. */}
         <div className="flex-1 relative bg-white flex items-center justify-center p-2 cursor-crosshair touch-none overflow-hidden">
-          <div className="absolute inset-0 flex flex-col items-center justify-center select-none pointer-events-none">
-            <div className="text-center opacity-10 relative">
-              <span className="text-[120px] font-black arabic-font text-slate-900">
+          <div className="relative w-full h-full max-w-[850px] max-h-[220px] min-w-0 min-h-0">
+            <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none" aria-hidden="true">
+              <span className="text-[clamp(64px,12vw,120px)] leading-none font-black arabic-font text-slate-900 opacity-10">
                 {(shapes as any)[activeShape]}
               </span>
             </div>
-            <p className="text-[8px] font-bold text-blue-600/30 uppercase tracking-[0.4em] mt-[-8px]">
+            <p className="absolute bottom-1 left-0 right-0 text-center text-[8px] font-bold text-blue-600/30 uppercase tracking-[0.4em] select-none pointer-events-none">
               {lang === 'ar' ? `شكل ${t[activeShape]}` : `${t[activeShape]} form`}
             </p>
+            <canvas
+              ref={canvasRef}
+              width={850}
+              height={220}
+              onPointerDown={startDrawing}
+              onPointerUp={stopDrawing}
+              onPointerCancel={stopDrawing}
+              onLostPointerCapture={stopDrawing}
+              onPointerMove={draw}
+              style={{ touchAction: 'none' }}
+              className="absolute inset-0 z-10 w-full h-full cursor-crosshair"
+              aria-label={lang === 'ar' ? 'سبورة التدريب على كتابة الحرف' : 'Letter tracing canvas'}
+            />
           </div>
-          
-          <canvas
-            ref={canvasRef}
-            width={850}
-            height={220}
-            onMouseDown={startDrawing}
-            onMouseUp={stopDrawing}
-            onMouseMove={draw}
-            onTouchStart={startDrawing}
-            onTouchEnd={stopDrawing}
-            onTouchMove={draw}
-            className="relative z-10 w-full h-full max-w-[850px] max-h-[220px]"
-          />
 
           {/* AI Feedback Overlay */}
           {aiFeedback && (
