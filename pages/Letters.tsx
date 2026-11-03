@@ -10,6 +10,7 @@ import { generateSpeech, decodeAudioData, verifyLetterWorksheet, fileToGenerativ
 import { GoogleGenAI, Type } from "@google/genai";
 import { useAuth } from '../components/AuthProvider';
 import { LetterHomeworkInboxModal } from '../components/LetterHomeworkInboxModal';
+import { preloadLetterNames, playLetterName, stopLetterName } from '../services/letterAudio';
 import { db } from '../firebase';
 import { collection, onSnapshot, addDoc, serverTimestamp, query, where } from 'firebase/firestore';
 
@@ -2153,6 +2154,12 @@ export const Letters: React.FC = () => {
 
   const t = STRINGS[lang];
 
+  // Prepare the 28 short recordings while the student scans the alphabet grid.
+  React.useEffect(() => {
+    preloadLetterNames();
+    return () => stopLetterName();
+  }, []);
+
   // Real-time pending submissions count listener
   React.useEffect(() => {
     try {
@@ -2261,6 +2268,15 @@ export const Letters: React.FC = () => {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
     }
+  };
+
+  const handlePlayLetterName = (char: string) => {
+    setError(null);
+    // Calling play() directly in the click handler keeps mobile user-activation.
+    void playLetterName(char).catch((err) => {
+      console.warn('Local letter recording unavailable:', err);
+      setError(lang === 'ar' ? 'تعذر تشغيل تسجيل الحرف.' : 'Unable to play the letter recording.');
+    });
   };
 
   const handleSpeak = async (textToSpeak: string, displayChar: string) => {
@@ -2438,7 +2454,7 @@ export const Letters: React.FC = () => {
                 return (
                   <button
                     key={item.char}
-                    onClick={() => { setSelectedChar(item); handleSpeak(`حرف ${item.char}`, item.char); }}
+                    onClick={() => { setSelectedChar(item); handlePlayLetterName(item.char); }}
                     className={`group relative w-10 h-10 bg-white border-2 rounded-2xl flex flex-col items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-sm ${
                       selectedChar?.char === item.char ? 'border-blue-500 bg-blue-50' : 'border-slate-100 hover:border-blue-300'
                     }`}
@@ -2577,7 +2593,7 @@ export const Letters: React.FC = () => {
                 <div className="flex items-center justify-around py-1 px-2">
                   {/* Clickable Letter */}
                   <button
-                    onClick={() => handleSpeak(`حرف ${selectedChar.char}`, selectedChar.char)}
+                    onClick={() => handlePlayLetterName(selectedChar.char)}
                     className="relative group flex items-center justify-center transition-transform duration-200 hover:scale-110 active:scale-95 focus:outline-none cursor-pointer"
                     title={lang === 'ar' ? 'انقر لنطق الحرف' : 'Click to pronounce letter'}
                   >
