@@ -407,6 +407,8 @@ export const Reading: React.FC = () => {
   const [highlightIdx, setHighlightIdx] = React.useState(-1);
   const [showBook, setShowBook] = React.useState(false);
   const [mobileSourcesOpen, setMobileSourcesOpen] = React.useState(false);
+  const [readingGenerationError, setReadingGenerationError] = React.useState('');
+  const [readingGenerationPending, setReadingGenerationPending] = React.useState(false);
   const [showPopUpPilot, setShowPopUpPilot] = React.useState(false);
   const [isBookOpen, setIsBookOpen] = React.useState(false);
   const [isOpening, setIsOpening] = React.useState(false);
@@ -919,16 +921,22 @@ export const Reading: React.FC = () => {
   };
 
   const handleGenerateAIText = async () => {
-    if (!textType) return;
-    setLoading(true);
+    if (!textType || readingGenerationPending) return;
+    setReadingGenerationError('');
+    setReadingGenerationPending(true);
     try {
-      const generated = await generateReadingText(textType, selectedLevel?.id || 'intermediate');
-      setText(generated);
+      // Bound the wait so a stalled provider never leaves the student in an endless spinner.
+      const generated = await Promise.race<string>([
+        generateReadingText(textType, selectedLevel?.id || 'intermediate'),
+        new Promise<string>((_, reject) =>
+          setTimeout(() => reject(new Error('READING_GENERATION_TIMEOUT')), 30000)
+        )
+      ]);
+      if (!generated?.trim()) throw new Error('EMPTY_READING_TEXT');
+      setText(generated.trim());
       setIsGenerated(true);
       setActiveTab('external');
       setShowBook(false);
-
-      // Save Interest
       if (user) {
         const interestsRef = collection(db, 'users', user.uid, 'interests');
         addDoc(interestsRef, {
@@ -937,12 +945,15 @@ export const Reading: React.FC = () => {
           frequency: 1,
           lastSeen: serverTimestamp(),
           source: 'Reading'
-        }).catch(err => console.error("Failed to sync interest to Firestore", err));
+        }).catch(err => console.error('Failed to sync interest to Firestore', err));
       }
     } catch (e) {
-      console.error(e);
+      console.error('Reading text generation failed:', e);
+      setReadingGenerationError(lang === 'ar'
+        ? 'تعذر توليد النص الآن. تحقق من الاتصال ثم اضغط إعادة المحاولة.'
+        : 'Text generation could not finish. Check your connection and try again.');
     } finally {
-      setLoading(false);
+      setReadingGenerationPending(false);
     }
   };
 
@@ -1382,12 +1393,13 @@ export const Reading: React.FC = () => {
                                     >
                                       <button 
                                         onClick={handleGenerateAIText}
-                                        disabled={isGenerated}
-                                        className={`px-8 py-2.5 rounded-full font-black text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${isGenerated ? 'bg-slate-100 text-slate-400 cursor-default' : 'bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl'}`}
+                                        disabled={readingGenerationPending}
+                                        className={`px-8 py-2.5 rounded-full font-black text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${readingGenerationPending ? 'bg-slate-100 text-slate-400 cursor-wait' : 'bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl'}`}
                                       >
-                                        <Zap size={16} />
-                                        {lang === 'ar' ? 'ابدأ التوليد الذكي الآن' : 'Start AI Generation Now'}
+                                        {readingGenerationPending ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
+                                        {readingGenerationPending ? (lang === 'ar' ? 'جارٍ توليد النص...' : 'Generating text...') : readingGenerationError ? (lang === 'ar' ? 'إعادة المحاولة' : 'Try again') : (lang === 'ar' ? 'توليد نص' : 'Generate text')}
                                       </button>
+                                      {readingGenerationError && <p role="alert" className="mt-3 text-sm text-red-700 text-center max-w-sm">{readingGenerationError}</p>}
                                     </motion.div>
                                   )}
                                 </AnimatePresence>
