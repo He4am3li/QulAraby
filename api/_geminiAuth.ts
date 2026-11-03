@@ -1,6 +1,7 @@
 import { createHash, createVerify } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import firebaseConfig from '../firebase-applet-config.json';
+// Public Firebase project identifier, must match firebase-applet-config.json.
+const FIREBASE_PROJECT_ID = 'gen-lang-client-0558881211';
 
 type AuthRequest = IncomingMessage & { body?: unknown; query?: Record<string, unknown> };
 export type GatewayRequest = AuthRequest;
@@ -45,8 +46,8 @@ export async function requireFirebaseUser(req: GatewayRequest, res: GatewayRespo
     const payload = decodePart(parts[1]);
     const now = Math.floor(Date.now() / 1000);
     if (header.alg !== 'RS256' || typeof header.kid !== 'string' ||
-        payload.aud !== firebaseConfig.projectId ||
-        payload.iss !== 'https://securetoken.google.com/' + firebaseConfig.projectId ||
+        payload.aud !== FIREBASE_PROJECT_ID ||
+        payload.iss !== 'https://securetoken.google.com/' + FIREBASE_PROJECT_ID ||
         typeof payload.sub !== 'string' || payload.sub.length < 1 || payload.sub.length > 128 ||
         typeof payload.exp !== 'number' || payload.exp <= now ||
         typeof payload.iat !== 'number' || payload.iat > now ||
