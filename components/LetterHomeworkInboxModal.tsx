@@ -139,7 +139,7 @@ export const LetterHomeworkInboxModal: React.FC<LetterHomeworkInboxModalProps> =
   const [isImageZoomed, setIsImageZoomed] = useState(false);
 
   // Teacher feedback form state
-  const [grade, setGrade] = useState<number>(5);
+  const [grade, setGrade] = useState<number>(0);
   const [notes, setNotes] = useState<string>('');
   const [selectedBadge, setSelectedBadge] = useState<string>('✍️ خطاط متميز');
 
@@ -226,7 +226,7 @@ export const LetterHomeworkInboxModal: React.FC<LetterHomeworkInboxModalProps> =
   const currentSub = submissions.find((s) => s.id === selectedSubId);
   useEffect(() => {
     if (currentSub) {
-      setGrade(currentSub.teacherGrade || (currentSub.aiFeedback?.passed ? 5 : 4));
+      setGrade(currentSub.teacherGrade ?? 0);
       setNotes(currentSub.teacherNotes || '');
       setSelectedBadge(currentSub.badge || '✍️ خطاط متميز');
     }
@@ -566,7 +566,9 @@ export const LetterHomeworkInboxModal: React.FC<LetterHomeworkInboxModalProps> =
                                   sub.aiFeedback.passed ? 'text-blue-600' : 'text-amber-600'
                                 }`}>
                                   <PenTool size={11} />
-                                  <span>{isAr ? 'تدقيق الرسم:' : 'Score:'} {sub.aiFeedback.score || 90}%</span>
+                                  <span>{typeof sub.aiFeedback.score === 'number' && Number.isFinite(sub.aiFeedback.score)
+                                     ? `${isAr ? 'تدقيق الرسم:' : 'Score:'} ${sub.aiFeedback.score}%`
+                                     : (isAr ? 'فحص آلي دون درجة رقمية' : 'Automated review, no numeric score')}</span>
                                 </span>
                               )}
 
@@ -761,7 +763,7 @@ export const LetterHomeworkInboxModal: React.FC<LetterHomeworkInboxModalProps> =
                               {grade === 5 ? (isAr ? 'ممتاز (5/5)' : 'Excellent (5/5)') :
                                grade === 4 ? (isAr ? 'جيد جداً (4/5)' : 'Very Good (4/5)') :
                                grade === 3 ? (isAr ? 'جيد (3/5)' : 'Good (3/5)') :
-                               grade === 2 ? (isAr ? 'مقبول (2/5)' : 'Fair (2/5)') : (isAr ? 'يحتاج إعادة (1/5)' : 'Needs Retry (1/5)')}
+                               grade === 2 ? (isAr ? 'مقبول (2/5)' : 'Fair (2/5)') : grade === 1 ? (isAr ? 'يحتاج إعادة (1/5)' : 'Needs Retry (1/5)') : (isAr ? 'لم يُقيّم بعد' : 'Not yet graded')}
                             </span>
                           </div>
                         </div>
@@ -811,7 +813,7 @@ export const LetterHomeworkInboxModal: React.FC<LetterHomeworkInboxModalProps> =
                       <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
                         <button
                           onClick={handleSaveEvaluation}
-                          disabled={isSaving}
+                          disabled={isSaving || grade === 0}
                           className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 hover:from-blue-700 hover:to-indigo-700 active:scale-98 transition-all disabled:opacity-50 cursor-pointer"
                         >
                           <Send size={15} />

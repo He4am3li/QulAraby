@@ -3,12 +3,14 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Globe, Volume2, Loader2, Type as TypeIcon, ChevronLeft, ArrowRight, AlertCircle, Music, Wind, Download, Upload, FileText, CheckCircle2, XCircle, Award, Share2, PenTool, RefreshCcw, Paintbrush, Palette, Play, Star, CheckCircle, Edit3, BrainCircuit, Mic, Activity, BookOpen, Layers, Search, X, Inbox } from 'lucide-react';
 import { LanguageToggle } from '../components/LanguageToggle';
+import { normalizeLetterKey, letterCanvasPoint, normalizeAssessmentScore } from '../utils/letterLearning.js';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { generateSpeech, decodeAudioData, verifyLetterWorksheet, fileToGenerativePart, generateContentWithRetry, speak } from '../services/gemini';
 import { GoogleGenAI, Type } from "@google/genai";
 import { useAuth } from '../components/AuthProvider';
 import { LetterHomeworkInboxModal } from '../components/LetterHomeworkInboxModal';
+import { preloadLetterNames, playLetterName, stopLetterName } from '../services/letterAudio';
 import { db } from '../firebase';
 import { collection, onSnapshot, addDoc, serverTimestamp, query, where } from 'firebase/firestore';
 
@@ -247,7 +249,8 @@ const STRINGS = {
 
 const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, onMastered?: (stars: number) => void }> = ({ char, shapes, t, lang, onMastered }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = React.useState(false);
+  const isDrawingRef = React.useRef(false);
+  const hasStrokesRef = React.useRef(false);
   const [activeShape, setActiveShape] = React.useState<'isolated' | 'initial' | 'medial' | 'final'>('isolated');
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [aiFeedback, setAiFeedback] = React.useState<{ stars: number, message: string, isCorrect: boolean } | null>(null);
@@ -276,42 +279,46 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
     ctx.globalAlpha = 1;
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasStrokesRef.current = false;
+    isDrawingRef.current = false;
     setAiFeedback(null);
-  }, [activeShape]);
+  }, [activeShape, char]);
 
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    setIsDrawing(true);
+  const startDrawing = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+    canvas.setPointerCapture(e.pointerId);
+    isDrawingRef.current = true;
+    hasStrokesRef.current = true;
     if (drawSound.current) drawSound.current.play().catch(() => {});
-    draw(e);
+    const point = letterCanvasPoint(e.clientX, e.clientY, canvas.getBoundingClientRect(), canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.moveTo(point.x, point.y);
+    ctx.lineTo(point.x + 0.01, point.y + 0.01);
+    ctx.stroke();
   };
 
   const stopDrawing = () => {
-    setIsDrawing(false);
+    isDrawingRef.current = false;
     if (drawSound.current) {
       drawSound.current.pause();
       drawSound.current.currentTime = 0;
     }
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    ctx?.beginPath();
+    canvasRef.current?.getContext('2d')?.beginPath();
   };
 
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing) return;
+  const draw = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current) return;
+    e.preventDefault();
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = ('touches' in e) ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = ('touches' in e) ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-
-    ctx.lineTo(x, y);
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+    const point = letterCanvasPoint(e.clientX, e.clientY, canvas.getBoundingClientRect(), canvas.width, canvas.height);
+    ctx.lineTo(point.x, point.y);
     ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x, y);
   };
 
   const clear = () => {
@@ -319,12 +326,17 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    hasStrokesRef.current = false;
     setAiFeedback(null);
   };
 
   const handleCheckWork = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    if (!hasStrokesRef.current) {
+      setAiFeedback({ stars: 0, isCorrect: false, message: lang === 'ar' ? 'اكتب الحرف أولاً' : 'Draw the letter first' });
+      return;
+    }
     
     setIsAnalyzing(true);
     setAiFeedback(null);
@@ -421,12 +433,11 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
             ref={canvasRef}
             width={850}
             height={220}
-            onMouseDown={startDrawing}
-            onMouseUp={stopDrawing}
-            onMouseMove={draw}
-            onTouchStart={startDrawing}
-            onTouchEnd={stopDrawing}
-            onTouchMove={draw}
+            onPointerDown={startDrawing}
+            onPointerUp={stopDrawing}
+            onPointerCancel={stopDrawing}
+            onLostPointerCapture={stopDrawing}
+            onPointerMove={draw}
             className="relative z-10 w-full h-full max-w-[850px] max-h-[220px]"
           />
 
@@ -667,7 +678,7 @@ const AuditoryGame: React.FC<{ char: string, t: any, onSpeak: (text: string, dis
   const generateQuestion = (currentLevel: number) => {
     let target = '';
     let opts: any[] = [];
-    const cleanChar = char.replace('ـ', '').trim();
+    const cleanChar = normalizeLetterKey(char);
 
     switch(currentLevel) {
       case 1: // Short Vowels
@@ -930,7 +941,7 @@ const LETTER_WORDS: Record<string, {
       { word: 'دُبّ', position: 'initial', meaningAr: 'حيوان ضخم', meaningEn: 'Bear' },
       { word: 'دَرَّاجَة', position: 'initial', meaningAr: 'مركبة خفيفة', meaningEn: 'Bicycle' },
       { word: 'مَدْرَسَة', position: 'medial', meaningAr: 'صرح تعليمي', meaningEn: 'School' },
-      { word: 'وَرْدَة', position: 'final', meaningAr: 'زهرة معطرة', meaningEn: 'Rose' }
+      { word: 'وَلَد', position: 'final', meaningAr: 'طفل', meaningEn: 'Boy' }
     ],
     distractors: [
       { word: 'بَحْر', meaningAr: 'ماء', meaningEn: 'Sea' },
@@ -943,7 +954,7 @@ const LETTER_WORDS: Record<string, {
       { word: 'ذِئْب', position: 'initial', meaningAr: 'حيوان بري', meaningEn: 'Wolf' },
       { word: 'ذُرَة', position: 'initial', meaningAr: 'نبات أصفر', meaningEn: 'Corn' },
       { word: 'جَذْر', position: 'medial', meaningAr: 'أسفل الشجرة', meaningEn: 'Root' },
-      { word: 'أُذُن', position: 'final', meaningAr: 'عضو السمع', meaningEn: 'Ear' }
+      { word: 'تِلْمِيذ', position: 'final', meaningAr: 'طالب', meaningEn: 'Student' }
     ],
     distractors: [
       { word: 'شَمْس', meaningAr: 'نجم', meaningEn: 'Sun' },
@@ -981,7 +992,7 @@ const LETTER_WORDS: Record<string, {
     targetWords: [
       { word: 'سَمَكَة', position: 'initial', meaningAr: 'كائن مائي', meaningEn: 'Fish' },
       { word: 'سَيَّارَة', position: 'initial', meaningAr: 'وسيلة نقل', meaningEn: 'Car' },
-      { word: 'مَشْمَس', position: 'medial', meaningAr: 'مكان مشمس', meaningEn: 'Sunny Place' },
+      { word: 'مَسْجِد', position: 'medial', meaningAr: 'مكان الصلاة', meaningEn: 'Mosque' },
       { word: 'شَمْس', position: 'final', meaningAr: 'نجم النهار', meaningEn: 'Sun' }
     ],
     distractors: [
@@ -1214,7 +1225,7 @@ const WordDiscriminationGame: React.FC<{
   const [score, setScore] = React.useState(0);
   const [isComplete, setIsComplete] = React.useState(false);
 
-  const cleanChar = char.replace('ـ', '').trim();
+  const cleanChar = normalizeLetterKey(char);
   const wordData = LETTER_WORDS[cleanChar] || LETTER_WORDS['ب'];
 
   const generateQuestion = (currentLevel: number) => {
@@ -1463,7 +1474,7 @@ const TASHKEEL_WORDS: Record<string, {
     fatha: { word: 'تَمْر', charWithDiacritic: 'تَ', meaningAr: 'تمر', meaningEn: 'Dates' },
     damma: { word: 'تُفَّاح', charWithDiacritic: 'تُ', meaningAr: 'فاكهة', meaningEn: 'Apple' },
     kasra: { word: 'تِمْسَاح', charWithDiacritic: 'تِ', meaningAr: 'حيوان', meaningEn: 'Crocodile' },
-    sukoon: { word: 'مَكْتَب', charWithDiacritic: 'تْ', meaningAr: 'مكتب', meaningEn: 'Desk' }
+    sukoon: { word: 'مُتْحَف', charWithDiacritic: 'تْ', meaningAr: 'مكان عرض الآثار', meaningEn: 'Museum' }
   },
   'ث': {
     fatha: { word: 'ثَعْلَب', charWithDiacritic: 'ثَ', meaningAr: 'حيوان', meaningEn: 'Fox' },
@@ -1541,7 +1552,7 @@ const TASHKEEL_WORDS: Record<string, {
     fatha: { word: 'طَائِر', charWithDiacritic: 'طَ', meaningAr: 'طائر', meaningEn: 'Bird' },
     damma: { word: 'طُيُور', charWithDiacritic: 'طُ', meaningAr: 'طيور', meaningEn: 'Birds' },
     kasra: { word: 'طِفْل', charWithDiacritic: 'طِ', meaningAr: 'صغير', meaningEn: 'Child' },
-    sukoon: { word: 'مَطَر', charWithDiacritic: 'طْ', meaningAr: 'ماء', meaningEn: 'Rain' }
+    sukoon: { word: 'قِطْعَة', charWithDiacritic: 'طْ', meaningAr: 'جزء من شيء', meaningEn: 'Piece' }
   },
   'ظ': {
     fatha: { word: 'ظَرْف', charWithDiacritic: 'ظَ', meaningAr: 'ورق', meaningEn: 'Envelope' },
@@ -1553,7 +1564,7 @@ const TASHKEEL_WORDS: Record<string, {
     fatha: { word: 'عَلَم', charWithDiacritic: 'عَ', meaningAr: 'راية', meaningEn: 'Flag' },
     damma: { word: 'عُشّ', charWithDiacritic: 'عُ', meaningAr: 'بيت الطائر', meaningEn: 'Nest' },
     kasra: { word: 'عِنَب', charWithDiacritic: 'عِ', meaningAr: 'فاكهة', meaningEn: 'Grapes' },
-    sukoon: { word: 'مَلْعَب', charWithDiacritic: 'عْ', meaningAr: 'مكان', meaningEn: 'Playground' }
+    sukoon: { word: 'مَعْلُومَة', charWithDiacritic: 'عْ', meaningAr: 'حقيقة أو خبر', meaningEn: 'Information' }
   },
   'غ': {
     fatha: { word: 'غَزَال', charWithDiacritic: 'غَ', meaningAr: 'حيوان', meaningEn: 'Deer' },
@@ -1565,7 +1576,7 @@ const TASHKEEL_WORDS: Record<string, {
     fatha: { word: 'فَرَاشَة', charWithDiacritic: 'فَ', meaningAr: 'حشرة', meaningEn: 'Butterfly' },
     damma: { word: 'فُلْفُل', charWithDiacritic: 'فُ', meaningAr: 'خضار', meaningEn: 'Pepper' },
     kasra: { word: 'فِيل', charWithDiacritic: 'فِ', meaningAr: 'حيوان', meaningEn: 'Elephant' },
-    sukoon: { word: 'سَقْف', charWithDiacritic: 'فْ', meaningAr: 'بناء', meaningEn: 'Roof' }
+    sukoon: { word: 'مِفْتَاح', charWithDiacritic: 'فْ', meaningAr: 'أداة لفتح الباب', meaningEn: 'Key' }
   },
   'ق': {
     fatha: { word: 'قَلَم', charWithDiacritic: 'قَ', meaningAr: 'أداة', meaningEn: 'Pen' },
@@ -1612,7 +1623,7 @@ const TASHKEEL_WORDS: Record<string, {
   'ي': {
     fatha: { word: 'يَد', charWithDiacritic: 'يَ', meaningAr: 'عضو', meaningEn: 'Hand' },
     damma: { word: 'يُوسُفِي', charWithDiacritic: 'يُ', meaningAr: 'فاكهة', meaningEn: 'Tangerine' },
-    kasra: { word: 'يَنَابِيع', charWithDiacritic: 'يِ', meaningAr: 'ماء', meaningEn: 'Springs' },
+    kasra: { word: 'يُحْيِي', charWithDiacritic: 'يِ', meaningAr: 'يمنح الحياة', meaningEn: 'Revives' },
     sukoon: { word: 'بَيْت', charWithDiacritic: 'يْ', meaningAr: 'منزل', meaningEn: 'House' }
   }
 };
@@ -1631,7 +1642,7 @@ const WordTashkeelGame: React.FC<{
   const [score, setScore] = React.useState(0);
   const [isComplete, setIsComplete] = React.useState(false);
 
-  const cleanChar = char.replace('ـ', '').trim();
+  const cleanChar = normalizeLetterKey(char);
   const sampleData = TASHKEEL_WORDS[cleanChar] || TASHKEEL_WORDS['ب'];
 
   const generateQuestion = (currentLevel: number) => {
@@ -2143,6 +2154,12 @@ export const Letters: React.FC = () => {
 
   const t = STRINGS[lang];
 
+  // Prepare the 28 short recordings while the student scans the alphabet grid.
+  React.useEffect(() => {
+    preloadLetterNames();
+    return () => stopLetterName();
+  }, []);
+
   // Real-time pending submissions count listener
   React.useEffect(() => {
     try {
@@ -2253,6 +2270,17 @@ export const Letters: React.FC = () => {
     }
   };
 
+  const handlePlayLetterName = (char: string) => {
+    setError(null);
+    // Calling play() directly in the click handler keeps mobile user-activation.
+    void playLetterName(char).catch((err) => {
+      // Rapidly changing letters intentionally interrupts the previous play().
+      if (err?.name === 'AbortError') return;
+      console.warn('Local letter recording unavailable:', err);
+      setError(lang === 'ar' ? 'تعذر تشغيل تسجيل الحرف.' : 'Unable to play the letter recording.');
+    });
+  };
+
   const handleSpeak = async (textToSpeak: string, displayChar: string) => {
     setLoadingChar(displayChar);
     try {
@@ -2273,6 +2301,7 @@ export const Letters: React.FC = () => {
       const filePart = await fileToGenerativePart(file);
       const result = await verifyLetterWorksheet(filePart, selectedChar.char, selectedChar.name);
       setVerificationResult(result);
+      const verifiedScore = normalizeAssessmentScore(result.score);
       if (result.passed) saveMastery(selectedChar.char);
 
       // Save submission to database for teacher inbox review
@@ -2292,14 +2321,13 @@ export const Letters: React.FC = () => {
             status: 'pending',
             aiFeedback: {
               passed: result.passed || false,
-              score: result.passed ? 95 : 75,
+              ...(verifiedScore !== null ? { score: verifiedScore } : {}),
               feedback_ar: result.feedback_ar || '',
               feedback_en: result.feedback_en || '',
               observations: result.observations || []
             },
-            teacherGrade: result.passed ? 5 : 4,
             teacherNotes: '',
-            badge: result.passed ? '✍️ خطاط متميز' : '💡 محاولة ممتازة'
+            badge: ''
           };
 
           try {
@@ -2428,7 +2456,7 @@ export const Letters: React.FC = () => {
                 return (
                   <button
                     key={item.char}
-                    onClick={() => { setSelectedChar(item); handleSpeak(`حرف ${item.char}`, item.char); }}
+                    onClick={() => { setSelectedChar(item); handlePlayLetterName(item.char); }}
                     className={`group relative w-10 h-10 bg-white border-2 rounded-2xl flex flex-col items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-sm ${
                       selectedChar?.char === item.char ? 'border-blue-500 bg-blue-50' : 'border-slate-100 hover:border-blue-300'
                     }`}
@@ -2567,7 +2595,7 @@ export const Letters: React.FC = () => {
                 <div className="flex items-center justify-around py-1 px-2">
                   {/* Clickable Letter */}
                   <button
-                    onClick={() => handleSpeak(`حرف ${selectedChar.char}`, selectedChar.char)}
+                    onClick={() => handlePlayLetterName(selectedChar.char)}
                     className="relative group flex items-center justify-center transition-transform duration-200 hover:scale-110 active:scale-95 focus:outline-none cursor-pointer"
                     title={lang === 'ar' ? 'انقر لنطق الحرف' : 'Click to pronounce letter'}
                   >
