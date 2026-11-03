@@ -1884,7 +1884,7 @@ export const Dialects: React.FC = () => {
             const translation = (result.text || '').trim().slice(0, 1100);
             if (translation && stillCurrent() && selectedCountryRef.current?.id === country.id) {
               setChatMessages(prev => {
-                const index = prev.findLastIndex(msg => msg.liveTurnKey === speaker + ':' + snapshot.id);
+                const index = prev.map(msg => msg.liveTurnKey).lastIndexOf(speaker + ':' + snapshot.id);
                 if (index < 0 || !prev[index].text.startsWith(snapshot.text)) return prev;
                 // Keep a useful partial translation on screen while newer words arrive.
                 // Never overwrite a newer result with a shorter, older snapshot.
