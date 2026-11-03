@@ -20,7 +20,7 @@ const privateGeminiFetch: typeof fetch = async (input, init) => {
   if (!target.pathname.startsWith('/api/gemini/')) {
     throw new Error('Unexpected language service endpoint');
   }
-  const path = target.pathname.replace(/^\\/api\\/gemini/, '') + target.search;
+  const path = target.pathname.slice('/api/gemini'.length) + target.search;
   const headers = new Headers(original.headers);
   headers.delete('x-goog-api-key');
   headers.delete('authorization');
