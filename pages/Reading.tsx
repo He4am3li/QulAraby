@@ -1677,7 +1677,53 @@ export const Reading: React.FC = () => {
                 </motion.div>
               ) : (
                 <>
-                  <div className="relative w-full h-[min(55vh,380px)] md:h-[380px] flex flex-col animate-in fade-in zoom-in duration-700 overflow-visible shrink-0 translate-y-0 md:-translate-y-16">
+                  {/* Mobile reader: full-width, readable single-page layout instead of two tiny columns. */}
+                  <section className="md:hidden w-full max-w-xl mx-auto rounded-[22px] border border-amber-200 bg-[#fffdfa] shadow-[0_12px_36px_rgba(62,37,18,0.12)] overflow-hidden" aria-label={lang === 'ar' ? 'صفحة القراءة' : 'Reading page'}>
+                    <div className="flex items-center justify-between gap-2 px-4 py-3 bg-[#f4ead8] border-b border-amber-200">
+                      <span className="text-xs font-bold text-amber-950">{lang === 'ar' ? 'كتاب القراءة' : 'Reading book'}</span>
+                      <button type="button" onClick={saveToLibrary} disabled={isTextSaved}
+                        className="min-h-10 rounded-full border border-amber-300 bg-white px-4 text-xs font-bold text-amber-900 disabled:opacity-50">
+                        {isTextSaved ? (lang === 'ar' ? 'محفوظ' : 'Saved') : (lang === 'ar' ? 'حفظ النص' : 'Save text')}
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-center gap-3 p-3 border-b border-amber-100">
+                      <button type="button" onClick={handleReadMe} disabled={loading || isProcessing || !text}
+                        className="min-h-11 flex-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2">
+                        <Volume2 size={17}/>{isReading ? (isPaused ? t.resume : t.pause) : t.btnRead}
+                      </button>
+                      <button type="button" onClick={isRecording ? stopReadingEvaluation : startReadingEvaluation}
+                        disabled={loading || evaluating || !text.trim()}
+                        className={`min-h-11 flex-1 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 ${isRecording ? 'bg-red-600 text-white border-red-600' : 'bg-sky-50 text-sky-800 border-sky-200'}`}>
+                        <Mic size={17}/>{evaluating ? t.evaluating : isRecording ? t.stopEvaluateBtn : t.evaluateBtn}
+                      </button>
+                    </div>
+                    <div dir="rtl" className="px-5 py-5 max-h-[min(54dvh,540px)] overflow-y-auto overscroll-contain text-right text-[clamp(19px,5.3vw,25px)] leading-[2.15] font-medium text-blue-900 arabic-font"
+                      style={{ scrollbarWidth: 'thin', backgroundImage: 'repeating-linear-gradient(transparent,transparent 47px,rgba(148,163,184,.18) 48px)' }}>
+                      {words.map((word, idx) => (
+                        <React.Fragment key={idx}>
+                          <button type="button" onClick={() => handleWordClick(word)}
+                            className={`inline rounded px-0.5 align-baseline text-inherit focus-visible:outline-2 focus-visible:outline-blue-600 ${idx === highlightIdx ? 'bg-blue-200 shadow-[0_2px_0_#2563eb]' : ''}`}
+                            aria-label={word}>
+                            <BicolorText text={word}/>
+                          </button>{' '}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between gap-3 px-4 py-3 bg-[#f8f2e7] border-t border-amber-100">
+                      <span className="text-[11px] text-stone-600">{lang === 'ar' ? 'اضغط على أي كلمة لمعرفة معناها' : 'Tap a word to explore its meaning'}</span>
+                      <button type="button" onClick={handleChallenge} disabled={loading || isProcessing || !text}
+                        className="min-h-11 shrink-0 px-4 rounded-xl bg-amber-800 text-white text-xs font-bold flex items-center gap-2">
+                        <HelpCircle size={16}/>{t.btnChallenge}
+                      </button>
+                    </div>
+                    {qaState.index !== -1 && (
+                      <div className="p-4 border-t border-amber-200 bg-white text-center" aria-live="polite">
+                        <p className="text-base font-bold text-stone-800 arabic-font">{qaState.currentQ}</p>
+                        {qaState.showAnswer && <p className="mt-2 text-sm text-emerald-700 arabic-font">{qaState.currentA || t.thinking}</p>}
+                      </div>
+                    )}
+                  </section>
+                  <div className="hidden md:flex relative w-full h-[380px] md:h-[380px] flex flex-col animate-in fade-in zoom-in duration-700 overflow-visible shrink-0 translate-y-0 md:-translate-y-16">
                   <div className="relative flex-1 w-full flex perspective-[3000px] preserve-3d py-1">
                     <div className="w-full h-full relative flex shadow-[0_20px_40px_rgba(0,0,0,0.2)] rounded-2xl bg-gradient-to-b from-[#3d1e09] via-[#2d160a] to-[#1a0d06] p-1.5 ring-[6px] ring-[#3d1e09] preserve-3d">
                       <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-6 bg-gradient-to-r from-black/20 via-black/40 to-black/20 z-30 pointer-events-none" />
