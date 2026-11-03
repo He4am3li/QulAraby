@@ -46,7 +46,7 @@ export default async function handler(req: GatewayRequest, res: GatewayResponse)
       headers: {
         'x-goog-api-key': configuredKey,
         'content-type': 'application/json',
-        accept: req.headers.accept || 'application/json',
+        accept: typeof req.headers.accept === 'string' ? req.headers.accept : 'application/json',
       },
       body,
       signal: AbortSignal.timeout(60000),
