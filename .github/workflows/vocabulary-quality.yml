@@ -1,0 +1,33 @@
+name: Vocabulary quality
+
+on:
+  pull_request:
+    paths:
+      - 'pages/Vocabulary.tsx'
+      - 'components/VocabularyWordGallery.tsx'
+      - 'data/vocabularyContextStories.ts'
+      - 'tests/vocabulary-*.test.mjs'
+      - 'utils/srs.ts'
+      - 'package*.json'
+      - '.github/workflows/vocabulary-quality.yml'
+  push:
+    branches:
+      - 'fix/vocabulary-editorial-integrity-20261102'
+
+permissions:
+  contents: read
+
+jobs:
+  vocabulary:
+    name: Content, SRS and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:vocabulary
+      - run: npm run build

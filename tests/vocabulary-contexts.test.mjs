@@ -280,8 +280,8 @@ assert.ok(savedHelper.includes('correct_reviews: 0') && savedHelper.includes('re
 assert.ok(!savedHelper.includes('MasteryLevel.FLUENT'), 'I know it is self-report, never verified fluency');
 assert.ok(src.includes('onAction={saveVocabularyWord}'), 'Topic card learning must use deduplicated saver');
 assert.ok(src.includes('onReviewResult={recordVocabularyReview}'), 'Learning results must flow to persistence');
-assert.ok(src.includes("updateSRS(word, correct ? 'easy' : 'hard')"), 'Graded recall must update SRS');
-assert.ok(src.includes('await updateDoc('), 'SRS results must persist in existing Firestore doc');
+assert.ok(src.includes("updateSRS(current, correct ? 'easy' : 'hard')"), 'Graded recall must update SRS from newest stored data');
+assert.ok(src.includes('transaction.update(wordRef,'), 'SRS results must persist atomically in existing Firestore doc');
 assert.ok(src.includes('vocab.filter(word => (word.correct_reviews || 0) >= 3).length'), 'Rank must count demonstrated fluency, not saved word totals');
 assert.ok(src.includes('sm:w-[190px]') && src.includes('w-[76px]'), 'Navigation must be responsive on mobile');
 assert.ok(navDef.includes('max-sm:justify-center') && navDef.includes('aria-label={label}'), 'Mobile nav buttons must have accessible icon-only variant');

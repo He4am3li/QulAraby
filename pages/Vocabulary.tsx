@@ -19,7 +19,7 @@ import { VocabularyWordGallery } from '../components/VocabularyWordGallery';
 import { generateSpeech, decodeAudioData, generateThemedVocabulary, generateWordIllustration, speak } from '../services/gemini';
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType, serverTimestamp } from '../firebase';
-import { collection, query, where, onSnapshot, setDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, setDoc, runTransaction, doc, deleteDoc } from 'firebase/firestore';
 import { updateSRS } from '../utils/srs';
 
 const ALL_TOPICS = [
@@ -413,18 +413,31 @@ export const VocabularyPage: React.FC = () => {
     try {
       await setDoc(doc(db, 'users', user.uid, 'vocabulary', wordId), savedWord);
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'users/' + user.uid + '/vocabulary/' + wordId);
+      try {
+        handleFirestoreError(error, OperationType.CREATE, 'users/' + user.uid + '/vocabulary/' + wordId);
+      } finally {
+        // Even offline errors must reach the card, not pretend the save worked.
+        throw error;
+      }
     }
   };
 
   const recordVocabularyReview = async (word: Vocabulary, correct: boolean) => {
     if (!user || !word.id) return;
-    const result = updateSRS(word, correct ? 'easy' : 'hard');
+    const wordRef = doc(db, 'users', user.uid, 'vocabulary', word.id);
     try {
-      await updateDoc(doc(db, 'users', user.uid, 'vocabulary', word.id), {
-        mastery_level: result.mastery_level, correct_reviews: result.correct_reviews,
-        last_successful_review: result.last_successful_review || '',
-        review_count: result.review_count, last_reviewed: result.last_reviewed, next_review: result.next_review
+      // Always grade from the latest stored record. A stale gallery snapshot
+      // must never overwrite a more recent review from another tab or device.
+      await runTransaction(db, async transaction => {
+        const snapshot = await transaction.get(wordRef);
+        if (!snapshot.exists()) return;
+        const current = { ...snapshot.data(), id: word.id } as Vocabulary;
+        const result = updateSRS(current, correct ? 'easy' : 'hard');
+        transaction.update(wordRef, {
+          mastery_level: result.mastery_level, correct_reviews: result.correct_reviews,
+          last_successful_review: result.last_successful_review || '',
+          review_count: result.review_count, last_reviewed: result.last_reviewed, next_review: result.next_review
+        });
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, 'users/' + user.uid + '/vocabulary/' + word.id);
@@ -452,7 +465,7 @@ export const VocabularyPage: React.FC = () => {
   const getRank = (count: number) => {
     if (count < 10) return { title: lang === 'ar' ? 'مبتدئ' : 'Beginner', color: 'slate' };
     if (count < 30) return { title: lang === 'ar' ? 'مستكشف' : 'Explorer', color: 'emerald' };
-    if (count < 60) return { title: lang === 'ar' ? 'باحث' : 'teal' };
+    if (count < 60) return { title: lang === 'ar' ? 'باحث' : 'Researcher', color: 'teal' };
     return { title: lang === 'ar' ? 'متقن' : 'Master', color: 'indigo' };
   };
   const currentRank = getRank(verifiedCount);
@@ -680,7 +693,7 @@ const FAMILY_DATA: Partial<Vocabulary>[] = [
 const CLASS_DATA: Partial<Vocabulary>[] = [
   { original_word: 'قلم', translation: 'Pen', emoji: '🖊️', analysis: { details_ar: { example: 'أكتب واجبي باستخدام القلم.' }, details_en: { example: 'I write my homework using a pen.' } } as any },
   { original_word: 'قلم رصاص', translation: 'Pencil', emoji: '✏️', analysis: { details_ar: { example: 'أرسم لوحة جميلة بالقلم الرصاص.' }, details_en: { example: 'I draw a beautiful painting with a pencil.' } } as any },
-  { original_word: 'قلم ألوان', translation: 'Color Pencil', emoji: '🖍️', analysis: { details_ar: { example: 'أحب التلوين بأقلام الألوان الزاهية.' }, details_en: { example: 'I love coloring with bright colored pencils.' } } as any },
+  { original_word: 'قلم تلوين', translation: 'Colored pencil', emoji: '🖍️', analysis: { details_ar: { example: 'أحب التلوين بأقلام الألوان الزاهية.' }, details_en: { example: 'I love coloring with bright colored pencils.' } } as any },
   { original_word: 'كتاب', translation: 'Book', emoji: '📘', analysis: { details_ar: { example: 'الكتاب خير جليس في الزمان.' }, details_en: { example: 'A book is the best companion in time.' } } as any },
   { original_word: 'دفتر', translation: 'Notebook', emoji: '📓', analysis: { details_ar: { example: 'سجلت ملاحظاتي المهمة في الدفتر.' }, details_en: { example: 'I recorded my important notes in the notebook.' } } as any },
   { original_word: 'مِمحاة', translation: 'Eraser', emoji: '/eraser.png', analysis: { details_ar: { example: 'استخدم الممحاة لمسح الخطأ.' }, details_en: { example: 'I use the eraser to erase the mistake.' } } as any },
@@ -782,11 +795,11 @@ const WEATHER_DATA: Partial<Vocabulary>[] = [
   { original_word: 'الشِّتاء', translation: 'Winter', emoji: '❄️', analysis: { details_ar: { example: 'ينزل المطر والثلج في فصل الشتاء.' }, details_en: { example: 'Rain and snow fall in the winter season.' } } as any },
   { original_word: 'حار', translation: 'Hot', emoji: '🔥☀️', analysis: { details_ar: { example: 'الجو حار جداً اليوم.' }, details_en: { example: 'The weather is very hot today.' } } as any },
   { original_word: 'بارِد', translation: 'Cold', emoji: '🥶', analysis: { details_ar: { example: 'أشعر بالبرد، الجو بارد في الخارج.' }, details_en: { example: 'I feel cold, the weather is cold outside.' } } as any },
-  { original_word: 'مُعتَدِل', translation: 'Mild climate', emoji: '🌤️' + '🙂', analysis: { details_ar: { example: 'الجو معتدل وجميل في فصل الربيع.' }, details_en: { example: 'The weather is mild and beautiful in spring.' } } as any },
+  { original_word: 'مُعتَدِل', translation: 'Mild', emoji: '🌤️' + '🙂', analysis: { details_ar: { example: 'الجو معتدل وجميل في فصل الربيع.' }, details_en: { example: 'The weather is mild and beautiful in spring.' } } as any },
   { original_word: 'عاصِف', translation: 'Windy', emoji: '🌬️', analysis: { details_ar: { example: 'الجو عاصف والرياح قوية اليوم.' }, details_en: { example: 'The weather is windy and the winds are strong today.' } } as any },
   { original_word: 'مُمْطِر', translation: 'Rainy', emoji: '🌧️', analysis: { details_ar: { example: 'اليوم يوم ممطر، لا تنسَ المظلة.' }, details_en: { example: 'Today is a rainy day, don\'t forget the umbrella.' } } as any },
   { original_word: 'ثلج', translation: 'Snow', emoji: '❄️', analysis: { details_ar: { example: 'يحب الأطفال اللعب بالثلج في الشتاء.' }, details_en: { example: 'Children love playing with snow in winter.' } } as any },
-  { original_word: 'رطب', translation: 'Wet', emoji: '💧', analysis: { details_ar: { example: 'المكان رطب بسبب المطر.' }, details_en: { example: 'The place is wet because of the rain.' } } as any },
+  { original_word: 'رطب', translation: 'Humid', emoji: '💧', analysis: { details_ar: { example: 'الجو رطب اليوم بسبب ارتفاع نسبة الرطوبة في الهواء.' }, details_en: { example: 'The air is humid today because of high moisture levels.' } } as any },
   { original_word: 'غائم', translation: 'Cloudy', emoji: '☁️', analysis: { details_ar: { example: 'السماء غائمة اليوم وقد تمطر.' }, details_en: { example: 'The sky is cloudy today and it might rain.' } } as any },
   { original_word: 'ضبابي', translation: 'Foggy', emoji: '🌫️', analysis: { details_ar: { example: 'الرؤية صعبة لأن الجو ضبابي.' }, details_en: { example: 'Vision is difficult because the weather is foggy.' } } as any },
 ];
@@ -811,7 +824,7 @@ const COLOURS_DATA: Partial<Vocabulary>[] = [
 ];
 
 const FOOD_DRINK_DATA: Partial<Vocabulary>[] = [
-  { original_word: 'أُرز', translation: 'Rice', emoji: '🍚', analysis: { details_ar: { example: 'أحب أكل الرز مع اللحم.' }, details_en: { example: 'I love eating rice with meat.' } } as any },
+  { original_word: 'أرز', translation: 'Rice', emoji: '🍚', analysis: { details_ar: { example: 'أحب أكل الرز مع اللحم.' }, details_en: { example: 'I love eating rice with meat.' } } as any },
   { original_word: 'لحم', translation: 'Meat', emoji: '🥩', analysis: { details_ar: { example: 'اللحم المشوي لذيذ جداً.' }, details_en: { example: 'Grilled meat is very delicious.' } } as any },
   { original_word: 'دجاج', translation: 'Chicken', emoji: '🍗', analysis: { details_ar: { example: 'الدجاج المقلي طعمه رائع.' }, details_en: { example: 'Fried chicken tastes great.' } } as any },
   { original_word: 'سمك', translation: 'Fish', emoji: '🐟', analysis: { details_ar: { example: 'السمك يعيش في الماء.' }, details_en: { example: 'Fish lives in water.' } } as any },
@@ -837,7 +850,7 @@ const VEGETABLES_DATA: Partial<Vocabulary>[] = [
   { original_word: 'بطاطس', translation: 'Potatoes', emoji: '🥔', analysis: { details_ar: { example: 'البطاطس المقلية هي الطعام المفضل للأطفال.' }, details_en: { example: 'Fried potatoes are the favorite food for children.' } } as any },
   { original_word: 'بصل', translation: 'Onions', emoji: '🧅', analysis: { details_ar: { example: 'البصل يعطي نكهة رائعة للطعام المطبوخ.' }, details_en: { example: 'Onion gives a great flavor to cooked food.' } } as any },
   { original_word: 'ثوم', translation: 'Garlic', emoji: '🧄', analysis: { details_ar: { example: 'الثوم مفيد جدًا لتقوية المناعة.' }, details_en: { example: 'Garlic is very useful for strengthening immunity.' } } as any },
-  { original_word: 'ليمون', translation: 'Lemon', emoji: '🍋', analysis: { details_ar: { example: 'أشرب عصير الليمون عندما أشعر بالبرد.' }, details_en: { example: 'I drink lemon juice when I feel cold.' } } as any },
+  { original_word: 'بازلاء', translation: 'Peas', emoji: '🫛', analysis: { details_ar: { example: 'أضيف البازلاء إلى الحساء.' }, details_en: { example: 'I add peas to the soup.' } } as any },
   { original_word: 'فلفل رومي', translation: 'Bell Pepper', emoji: '🫑', analysis: { details_ar: { example: 'الفلفل الرومي يعطي طعمًا رائعًا للسلطة.' }, details_en: { example: 'Bell pepper gives a great taste to the salad.' } } as any },
   { original_word: 'شطة', translation: 'Chili pepper', emoji: '🌶️', analysis: { details_ar: { example: 'أحب الطعام الحار الذي يحتوي على الشطة.' }, details_en: { example: 'I love spicy food that contains chili pepper.' } } as any },
   { original_word: 'زيتون', translation: 'Olives', emoji: '🫒', analysis: { details_ar: { example: 'الزيتون الأخضر والأسود لذيذ مع الفطور.' }, details_en: { example: 'Green and black olives are delicious with breakfast.' } } as any },
@@ -859,7 +872,7 @@ const FRUITS_DATA: Partial<Vocabulary>[] = [
   { original_word: 'فراولة', translation: 'Strawberry', emoji: '🍓', analysis: { details_ar: { example: 'أحب كعكة الفراولة.' }, details_en: { example: 'I love strawberry cake.' } } as any },
   { original_word: 'خوخ', translation: 'Peach', emoji: '🍑', analysis: { details_ar: { example: 'الخوخ ناعم وحلو المذاق.' }, details_en: { example: 'The peach is soft and sweet tasting.' } } as any },
   { original_word: 'كيوي', translation: 'Kiwi', emoji: '🥝', analysis: { details_ar: { example: 'الكيوي غني بفيتامين سي.' }, details_en: { example: 'Kiwi is rich in vitamin C.' } } as any },
-  { original_word: 'توت', translation: 'Blueberry', emoji: '🫐', analysis: { details_ar: { example: 'التوت الأزرق مفيد جداً.' }, details_en: { example: 'Blueberries are very beneficial.' } } as any },
+  { original_word: 'توت أزرق', translation: 'Blueberry', emoji: '🫐', analysis: { details_ar: { example: 'التوت الأزرق مفيد جداً.' }, details_en: { example: 'Blueberries are very beneficial.' } } as any },
   { original_word: 'يوسفي', translation: 'Tangerine', emoji: '🍊', analysis: { details_ar: { example: 'اليوسفي يشبه البرتقال ولكنه أصغر.' }, details_en: { example: 'Tangerine is like an orange but smaller.' } } as any },
   { original_word: 'كرز', translation: 'Cherry', emoji: '🍒', analysis: { details_ar: { example: 'الكرز الأحمر جميل المنظر.' }, details_en: { example: 'Red cherries are beautiful to look at.' } } as any },
   { original_word: 'كمثرى', translation: 'Pear', emoji: '🍐', analysis: { details_ar: { example: 'الكمثرى فاكهة لذيذة ومفيدة.' }, details_en: { example: 'The pear is a delicious and beneficial fruit.' } } as any },
@@ -869,7 +882,7 @@ const FRUITS_DATA: Partial<Vocabulary>[] = [
 
 const BIRDS_DATA: Partial<Vocabulary>[] = [
   { original_word: 'نسر', translation: 'Eagle', emoji: '🦅', analysis: { details_ar: { example: 'النسر يحلق عالياً في السماء.' }, details_en: { example: 'The eagle flies high in the sky.' } } as any },
-  { original_word: 'خفاش', translation: 'Bat', emoji: '🦇', analysis: { details_ar: { example: 'الخفاش يخرج في الليل للبحث عن الطعام.' }, details_en: { example: 'The bat comes out at night to search for food.' } } as any },
+  { original_word: 'صقر', translation: 'Falcon', emoji: '🦅', analysis: { details_ar: { example: 'الصقر طائر جارح يراقب فريسته من علو.' }, details_en: { example: 'The falcon is a bird of prey that watches its prey from above.' } } as any },
   { original_word: 'بومة', translation: 'Owl', emoji: '🦉', analysis: { details_ar: { example: 'البومة طائر نشيط في الليل.' }, details_en: { example: 'The owl is a bird active at night.' } } as any },
   { original_word: 'طاووس', translation: 'Peacock', emoji: '🦚', analysis: { details_ar: { example: 'الطاووس طائر جميل يتميز بريشه الملون.' }, details_en: { example: 'The peacock is a beautiful bird known for its colorful feathers.' } } as any },
   { original_word: 'فلامينجو', translation: 'Flamingo', emoji: '🦩', analysis: { details_ar: { example: 'الفلامينجو طائر وردي يعيش قرب الماء.' }, details_en: { example: 'The flamingo is a pink bird that lives near water.' } } as any },
@@ -882,7 +895,7 @@ const BIRDS_DATA: Partial<Vocabulary>[] = [
   { original_word: 'بطة', translation: 'Duck', emoji: '🦆', analysis: { details_ar: { example: 'البطة تسبح بسعادة في البحيرة.' }, details_en: { example: 'The duck swims happily in the lake.' } } as any },
   { original_word: 'أوزة', translation: 'Goose', emoji: '🪿', analysis: { details_ar: { example: 'الأوزة طائر كبير يحب السباحة في الحديقة.' }, details_en: { example: 'The goose is a large bird that loves swimming in the garden.' } } as any },
   { original_word: 'ببغاء', translation: 'Parrot', emoji: '🦜', analysis: { details_ar: { example: 'الببغاء يحب تقليد أصوات الناس.' }, details_en: { example: 'The parrot loves to imitate people\'s voices.' } } as any },
-  { original_word: 'بجع', translation: 'Swan', emoji: '🦢', analysis: { details_ar: { example: 'البجع يسبح برقة في مياه البحيرة.' }, details_en: { example: 'The swan swims gracefully in the lake waters.' } } as any },
+  { original_word: 'بجعة', translation: 'Swan', emoji: '🦢', analysis: { details_ar: { example: 'البجعة تسبح برقة في مياه البحيرة.' }, details_en: { example: 'The swan swims gracefully in the lake waters.' } } as any },
   { original_word: 'بطريق', translation: 'Penguin', emoji: '🐧', analysis: { details_ar: { example: 'البطريق طائر يعيش في الجليد ولا يطير.' }, details_en: { example: 'The penguin is a bird that lives in ice and does not fly.' } } as any },
 ];
 
@@ -898,9 +911,9 @@ const FISH_DATA: Partial<Vocabulary>[] = [
   { original_word: 'حبار', translation: 'Squid', emoji: '🦑', analysis: { details_ar: { example: 'الحبار يطلق حبرًا ليهرب من الأعداء.' }, details_en: { example: 'The squid releases ink to escape from enemies.' } } as any },
   { original_word: 'قنديل البحر', translation: 'Jellyfish', emoji: '🪼', analysis: { details_ar: { example: 'لسعة قنديل البحر قد تكون مؤلمة.' }, details_en: { example: 'A jellyfish sting can be painful.' } } as any },
   { original_word: 'محار', translation: 'Oyster', emoji: '🦪', analysis: { details_ar: { example: 'المحار ينتج اللؤلؤ الجميل.' }, details_en: { example: 'Oysters produce beautiful pearls.' } } as any },
-  { original_word: 'حلزون بحري', translation: 'Spiral Shell', emoji: '🐚', analysis: { details_ar: { example: 'وجدت حلزونًا بحريًا جميلاً على الرمل.' }, details_en: { example: 'I found a beautiful spiral shell on the sand.' } } as any },
-  { original_word: 'دودة بحرية', translation: 'Worm', emoji: '🪱', analysis: { details_ar: { example: 'الدودة البحرية تعيش في قاع البحر.' }, details_en: { example: 'The sea worm lives at the bottom of the sea.' } } as any },
-  { original_word: 'سوشي', translation: 'Sushi', emoji: '🍣', analysis: { details_ar: { example: 'السوشي طعام ياباني يحتوي على السمك النيء.' }, details_en: { example: 'Sushi is a Japanese food containing raw fish.' } } as any },
+  { original_word: 'حلزون بحري', translation: 'Sea snail', emoji: '🐚', analysis: { details_ar: { example: 'وجدت حلزونًا بحريًا جميلاً على الرمل.' }, details_en: { example: 'I found a beautiful sea snail on the sand.' } } as any },
+  { original_word: 'دودة بحرية', translation: 'Marine worm', emoji: '🪱', analysis: { details_ar: { example: 'الدودة البحرية تعيش في قاع البحر.' }, details_en: { example: 'The sea worm lives at the bottom of the sea.' } } as any },
+  { original_word: 'سوشي', translation: 'Sushi', emoji: '🍣', analysis: { details_ar: { example: 'السوشي طبق ياباني يحضّر بالأرز وقد يحتوي على السمك.' }, details_en: { example: 'Sushi is a Japanese rice dish that may contain fish.' } } as any },
   { original_word: 'سنارة', translation: 'Fishing Rod', emoji: '🎣', analysis: { details_ar: { example: 'استخدمت السنارة لصيد السمكة.' }, details_en: { example: 'I used the fishing rod to catch the fish.' } } as any },
   { original_word: 'سمكة زينة', translation: 'Tropical Fish', emoji: '🐠', analysis: { details_ar: { example: 'سمكة الزينة الملونة تجعل الحوض جميلاً.' }, details_en: { example: 'Tropical fish make the aquarium beautiful.' } } as any },
 ];
@@ -934,13 +947,13 @@ const INSECTS_REPTILES_DATA: Partial<Vocabulary>[] = [
   { original_word: 'صرصور', translation: 'Cockroach', emoji: '🪳', analysis: { details_ar: { example: 'الصرصور يخرج غالباً في الليل.' }, details_en: { example: 'The cockroach often comes out at night.' } } as any },
   { original_word: 'خنفساء', translation: 'Beetle', emoji: '🪲', analysis: { details_ar: { example: 'الخنفساء الصغيرة تسير الهوينى.' }, details_en: { example: 'The little beetle walks slowly.' } } as any },
   { original_word: 'يرقة', translation: 'Caterpillar', emoji: '🐛', analysis: { details_ar: { example: 'اليرقة تتحول يوماً ما إلى فراشة.' }, details_en: { example: 'The caterpillar will one day turn into a butterfly.' } } as any },
-  { original_word: 'عنكبوت', translation: 'Spider', emoji: '🕷️', analysis: { details_ar: { example: 'العنكبوت يبني شبكة قوية لصيد الفرائس.' }, details_en: { example: 'The spider builds a strong web to catch prey.' } } as any },
+  { original_word: 'دعسوقة', translation: 'Ladybug', emoji: '🐞', analysis: { details_ar: { example: 'الدعسوقة حشرة صغيرة ذات نقاط سوداء.' }, details_en: { example: 'The ladybug is a small insect with black spots.' } } as any },
   { original_word: 'ثعبان', translation: 'Snake', emoji: '🐍', analysis: { details_ar: { example: 'الثعبان يزحف على الأرض بصمت.' }, details_en: { example: 'The snake crawls silently on the ground.' } } as any },
   { original_word: 'سلحفاة', translation: 'Turtle', emoji: '🐢', analysis: { details_ar: { example: 'السلحفاة حيوان بطيء ومحمي بدرع.' }, details_en: { example: 'The turtle is a slow animal protected by a shell.' } } as any },
   { original_word: 'تمساح', translation: 'Crocodile', emoji: '🐊', analysis: { details_ar: { example: 'التمساح حيوان مفترس يعيش في الماء والبر.' }, details_en: { example: 'The crocodile is a predator that lives in water and on land.' } } as any },
   { original_word: 'سحلية', translation: 'Lizard', emoji: '🦎', analysis: { details_ar: { example: 'السحلية تختبئ بين الصخور في الشمس.' }, details_en: { example: 'The lizard hides among the rocks in the sun.' } } as any },
-  { original_word: 'ضفدع', translation: 'Frog', emoji: '🐸', analysis: { details_ar: { example: 'الضفدع يقفز ويصدر صوتاً في المستنقع.' }, details_en: { example: 'The frog jumps and makes a sound in the swamp.' } } as any },
-  { original_word: 'تنين', translation: 'Dragon', emoji: '🐉', analysis: { details_ar: { example: 'التنين كائن أسطوري ينفث النار.' }, details_en: { example: 'The dragon is a legendary creature that breathes fire.' } } as any },
+  { original_word: 'وزغ', translation: 'Gecko', emoji: '🦎', analysis: { details_ar: { example: 'الوزغ زاحف صغير يستطيع التسلق على الجدران.' }, details_en: { example: 'The gecko is a small reptile that can climb walls.' } } as any },
+  { original_word: 'حرباء', translation: 'Chameleon', emoji: '🦎', analysis: { details_ar: { example: 'الحرباء زاحف يستطيع تغيير لون جلده.' }, details_en: { example: 'The chameleon is a reptile that can change its skin color.' } } as any },
 ];
 
 const TIME_DATA: Partial<Vocabulary>[] = [
@@ -1062,18 +1075,18 @@ const NATURE_DATA: Partial<Vocabulary>[] = [
   { original_word: 'غابة', translation: 'Forest', emoji: '🌲', analysis: { details_ar: { example: 'تعيش الحيوانات والطيور البرية في غابة كثيفة.' }, details_en: { example: 'Wild animals and birds live in a dense forest.' } } as any },
   { original_word: 'نخلة', translation: 'Palm Tree', emoji: '🌴', analysis: { details_ar: { example: 'ترتفع نخلة طويلة في وسط الصحراء.' }, details_en: { example: 'A tall palm tree rises in the middle of the desert.' } } as any },
   { original_word: 'صبار', translation: 'Cactus', emoji: '🌵', analysis: { details_ar: { example: 'ينمو نبات صبار في الصحراء القاحلة.' }, details_en: { example: 'A cactus grows in the arid desert.' } } as any },
-  { original_word: 'نبات', translation: 'Herb / Plant', emoji: '🌿', analysis: { details_ar: { example: 'هذا نبات طبي يستعمل لعلاج الأمراض.' }, details_en: { example: 'This is a medicinal plant used to treat diseases.' } } as any },
+  { original_word: 'نبات', translation: 'Plant', emoji: '🌿', analysis: { details_ar: { example: 'هذا نبات طبي يستعمل لعلاج الأمراض.' }, details_en: { example: 'This is a medicinal plant used to treat diseases.' } } as any },
   { original_word: 'ورقة شجر', translation: 'Leaf', emoji: '🍃', analysis: { details_ar: { example: 'سقطت ورقة شجر خضراء على الأرض.' }, details_en: { example: 'A green leaf fell to the ground.' } } as any },
-  { original_word: 'قمح', translation: 'Grain / Wheat', emoji: '🌾', analysis: { details_ar: { example: 'يحصد الفلاح قمحاً ذهبياً في فصل الصيف.' }, details_en: { example: 'The farmer harvests golden wheat in the summer season.' } } as any },
+  { original_word: 'قمح', translation: 'Wheat', emoji: '🌾', analysis: { details_ar: { example: 'يحصد الفلاح قمحاً ذهبياً في فصل الصيف.' }, details_en: { example: 'The farmer harvests golden wheat in the summer season.' } } as any },
   { original_word: 'زهرة', translation: 'Flower', emoji: '🌸', analysis: { details_ar: { example: 'تتفتح زهرة بيضاء تعطي رائحة عطرة.' }, details_en: { example: 'A white flower blooms giving a fragrant scent.' } } as any },
   { original_word: 'دوّار الشمس', translation: 'Sunflower', emoji: '🌻', analysis: { details_ar: { example: 'تتجه زهرة دوّار الشمس دائماً نحو الضوء والحرارة.' }, details_en: { example: 'The sunflower always faces towards the light and heat.' } } as any },
   { original_word: 'جبل', translation: 'Mountain', emoji: '🏔️', analysis: { details_ar: { example: 'يغطي الثلج جبل إفرست بشكل مذهل.' }, details_en: { example: 'Snow covers Mount Everest spectacularly.' } } as any },
   { original_word: 'تلة', translation: 'Hill', emoji: '⛰️', analysis: { details_ar: { example: 'صعدنا إلى تلة خضراء لنرى غروب الشمس.' }, details_en: { example: 'We climbed up a green hill to see the sunset.' } } as any },
   { original_word: 'جبل بركاني', translation: 'Volcano', emoji: '🗻', analysis: { details_ar: { example: 'يخرج الغاز الساخن من جبل بركاني نشط.' }, details_en: { example: 'Hot gas comes out of an active volcano.' } } as any },
-  { original_word: 'وادٍ / طبيعة', translation: 'National Park / Landscape', emoji: '🏞️', analysis: { details_ar: { example: 'استمتعنا بالتنزه في وادٍ رائع مليء بالأشجار.' }, details_en: { example: 'We enjoyed hiking in a wonderful national park full of trees.' } } as any },
+  { original_word: 'وادٍ', translation: 'Valley', emoji: '🏞️', analysis: { details_ar: { example: 'استمتعنا بالتنزه في وادٍ رائع مليء بالأشجار.' }, details_en: { example: 'We enjoyed hiking in a wonderful national park full of trees.' } } as any },
   { original_word: 'شاطئ', translation: 'Beach', emoji: '🏖️', analysis: { details_ar: { example: 'أحب الجري ولعب الرمل على شاطئ البحر.' }, details_en: { example: 'I love running and playing with sand on the beach.' } } as any },
   { original_word: 'جزيرة', translation: 'Island', emoji: '🏝️', analysis: { details_ar: { example: 'تقع جزيرة صغيرة ساحرة في وسط المحيط.' }, details_en: { example: 'A charming small island lies in the middle of the ocean.' } } as any },
-  { original_word: 'بحر', translation: 'Sea / Ocean', emoji: '🌊', analysis: { details_ar: { example: 'البحر هادئ والمياه زرقاء وصافية جداً.' }, details_en: { example: 'The sea is calm and the water is very blue and clear.' } } as any },
+  { original_word: 'بحر', translation: 'Sea', emoji: '🌊', analysis: { details_ar: { example: 'البحر هادئ والمياه زرقاء وصافية جداً.' }, details_en: { example: 'The sea is calm and the water is very blue and clear.' } } as any },
 ];
 
 const TECHNOLOGY_DATA: Partial<Vocabulary>[] = [
@@ -1088,7 +1101,7 @@ const TECHNOLOGY_DATA: Partial<Vocabulary>[] = [
   { original_word: 'كاميرا', translation: 'Camera', emoji: '📷', analysis: { details_ar: { example: 'التقط المصور صورة رائعة باستخدام كاميرا احترافية.' }, details_en: { example: 'The photographer captured a wonderful picture using a professional camera.' } } as any },
   { original_word: 'كاميرا فيديو', translation: 'Video Camera', emoji: '🎥', analysis: { details_ar: { example: 'استخدم المخرج كاميرا فيديو حديثة لتصوير المشهد.' }, details_en: { example: 'The director used a modern video camera to film the scene.' } } as any },
   { original_word: 'إشارة', translation: 'Signal', emoji: '📡', analysis: { details_ar: { example: 'يلتقط هذا الهوائي اللاسلكي إشارة واضحة من القمر الصناعي.' }, details_en: { example: 'This wireless antenna intercepts a clear signal from the satellite.' } } as any },
-  { original_word: 'شاحن', translation: 'Plug', emoji: '🔌', analysis: { details_ar: { example: 'أحتاج إلى شاحن سريع لشحن بطارية هاتفي.' }, details_en: { example: 'I need a fast charger (plug) to charge my phone battery.' } } as any },
+  { original_word: 'شاحن', translation: 'Charger', emoji: '🔌', analysis: { details_ar: { example: 'أحتاج إلى شاحن سريع لشحن بطارية هاتفي.' }, details_en: { example: 'I need a fast charger for my phone battery.' } } as any },
   { original_word: 'واي فاي', translation: 'Wi-Fi', emoji: '📶', analysis: { details_ar: { example: 'تتميز شبكة الواي فاي في المنزل بإنترنت سريع.' }, details_en: { example: 'The home Wi-Fi network features fast internet.' } } as any },
   { original_word: 'بطارية', translation: 'Battery', emoji: '🔋', analysis: { details_ar: { example: 'نفدت بطارية الكشاف وعلي استبدالها بأخرى جديدة.' }, details_en: { example: 'The flashlight battery is empty and I must replace it with a new one.' } } as any },
   { original_word: 'إعدادات', translation: 'Settings', emoji: '⚙️', analysis: { details_ar: { example: 'ادخل إلى قائمة الإعدادات لتغيير لغة النظام.' }, details_en: { example: 'Enter the settings menu to change the system language.' } } as any },
@@ -1104,7 +1117,7 @@ const HEALTH_DATA: Partial<Vocabulary>[] = [
   { original_word: 'جرثومة', translation: 'Germ', emoji: '🦠', analysis: { details_ar: { example: 'اغسل يديك بالصابون للقضاء على الجراثيم.' }, details_en: { example: 'Wash your hands with soap to eliminate germs.' } } as any },
   { original_word: 'معقم', translation: 'Sanitizer', emoji: '🧴', analysis: { details_ar: { example: 'يجب استخدام معقم اليدين للوقاية من الأمراض.' }, details_en: { example: 'You must use hand sanitizer to prevent diseases.' } } as any },
   { original_word: 'لاصق طبي', translation: 'Bandage', emoji: '🩹', analysis: { details_ar: { example: 'وضعت الأم لاصقاً طبياً على الجرح الصغير.' }, details_en: { example: 'The mother placed a bandage on the small wound.' } } as any },
-  { original_word: 'إسعاف', translation: 'Ambulance', emoji: '🚑', analysis: { details_ar: { example: 'وصلت سيارة الإسعاف بسرعة لنقل المريض الطارئ.' }, details_en: { example: 'The ambulance arrived quickly to transport the emergency patient.' } } as any },
+  { original_word: 'سيارة إسعاف', translation: 'Ambulance', emoji: '🚑', analysis: { details_ar: { example: 'وصلت سيارة الإسعاف بسرعة لنقل المريض الطارئ.' }, details_en: { example: 'The ambulance arrived quickly to transport the emergency patient.' } } as any },
   { original_word: 'قلب', translation: 'Heart', emoji: '🫀', analysis: { details_ar: { example: 'ممارسة التمارين الرياضية تقوي عضلة القلب.' }, details_en: { example: 'Exercising strengthens the heart muscle.' } } as any },
   { original_word: 'رئتان', translation: 'Lungs', emoji: '🫁', analysis: { details_ar: { example: 'الهواء النقي والصحي مفيد لصحة الرئتين.' }, details_en: { example: 'Fresh and healthy air is beneficial for the health of lungs.' } } as any },
   { original_word: 'دماغ', translation: 'Brain', emoji: '🧠', analysis: { details_ar: { example: 'الدماغ هو العضو الرئيسي للتحكم ووظائف التفكير.' }, details_en: { example: 'The brain is the main organ for control and thinking functions.' } } as any },
@@ -1121,11 +1134,11 @@ const SHOPPING_DATA: Partial<Vocabulary>[] = [
   { original_word: 'أكياس تسوق', translation: 'Shopping bags', emoji: '🛍️', analysis: { details_ar: { example: 'نقلت المشتريات في أكياس تسوق صديقة للبيئة.' }, details_en: { example: 'I carried the purchases in eco-friendly shopping bags.' } } as any },
   { original_word: 'صندوق', translation: 'Box', emoji: '📦', analysis: { details_ar: { example: 'وضعت البضائع المشحونة في صندوق كرتوني كبير.' }, details_en: { example: 'I placed the shipped goods in a large cardboard box.' } } as any },
   { original_word: 'تغليف الهدايا', translation: 'Gift wrapping', emoji: '🎁', analysis: { details_ar: { example: 'يقدم المتجر خدمة تغليف الهدايا مجاناً للزبائن.' }, details_en: { example: 'The store offers free gift wrapping service for customers.' } } as any },
-  { original_word: 'تخفيضات', translation: 'Discount / Sale', emoji: '🏷️', analysis: { details_ar: { example: 'هناك تخفيضات كبرى بمناسبة نهاية الموسم المالي.' }, details_en: { example: 'There are major discounts/sales on the occasion of the fiscal year-end.' } } as any },
+  { original_word: 'تخفيضات', translation: 'Discounts', emoji: '🏷️', analysis: { details_ar: { example: 'هناك تخفيضات كبيرة في نهاية الموسم.' }, details_en: { example: 'There are major discounts at the end of the season.' } } as any },
   { original_word: 'موظف المبيعات', translation: 'Sales assistant', emoji: '👨‍💼', analysis: { details_ar: { example: 'ساعدني موظف المبيعات في العثور على القياس المناسب.' }, details_en: { example: 'The sales assistant helped me find the right size.' } } as any },
   { original_word: 'تسوق إلكتروني', translation: 'Online shopping', emoji: '📱', analysis: { details_ar: { example: 'أصبح التسوق الإلكتروني أكثر سهولة وسرعة من ذي قبل.' }, details_en: { example: 'Online shopping has become easier and faster than before.' } } as any },
   { original_word: 'إعلان العروض', translation: 'Sale announcement', emoji: '📢', analysis: { details_ar: { example: 'استمعت إلى إعلان العروض عبر مكبر الصوت في المتجر.' }, details_en: { example: 'I listened to the sale announcement over the loudspeaker in the store.' } } as any },
-  { original_word: 'نقود', translation: 'Cash / Money', emoji: '💵', analysis: { details_ar: { example: 'أفضل الدفع نقداً باستخدام نقود ورقية.' }, details_en: { example: 'I prefer to pay in cash using paper money.' } } as any },
+  { original_word: 'نقود', translation: 'Money', emoji: '💵', analysis: { details_ar: { example: 'أفضل الدفع نقداً باستخدام نقود ورقية.' }, details_en: { example: 'I prefer to pay in cash using paper money.' } } as any },
   { original_word: 'بطاقة دفع', translation: 'Payment card', emoji: '💳', analysis: { details_ar: { example: 'استخدمت بطاقة الدفع الإلكتروني لإتمام عملية الشراء.' }, details_en: { example: 'I used the electronic payment card to complete the purchase.' } } as any },
   { original_word: 'إيصال', translation: 'Receipt', emoji: '🧾', analysis: { details_ar: { example: 'احتفظت به من أجل إثبات الشراء في الإيصال الورقي.' }, details_en: { example: 'I kept the receipt as proof of purchase.' } } as any },
   { original_word: 'مدخل', translation: 'Entrance', emoji: '🚪', analysis: { details_ar: { example: 'التقينا عند مدخل المركز التجاري الرئيسي.' }, details_en: { example: 'We met at the main shopping mall entrance.' } } as any },
@@ -1163,7 +1176,7 @@ const MUSIC_DATA: Partial<Vocabulary>[] = [
   { original_word: 'ماراكاس', translation: 'Maracas', emoji: '🪇', analysis: { details_ar: { example: 'هززت الماراكاس لإضافة إيقاع لطيف للفرقة.' }, details_en: { example: 'I shook the maracas to add a nice rhythm to the band.' } } as any },
   { original_word: 'بانجو', translation: 'Banjo', emoji: '🪕', analysis: { details_ar: { example: 'آلة البانجو تستخدم بكثرة في الموسيقى الريفية.' }, details_en: { example: 'The banjo is used extensively in country music.' } } as any },
   { original_word: 'بوق', translation: 'Horn', emoji: '📯', analysis: { details_ar: { example: 'استخدم الحارس البوق لإرسال الإشارات.' }, details_en: { example: 'The guard used the horn to send signals.' } } as any },
-  { original_word: 'ناي', translation: 'Flute / Pipe', emoji: '🪈', analysis: { details_ar: { example: 'صوت الناي يعبر عن مشاعر عميقة ودافئة.' }, details_en: { example: 'The sound of the flute expresses deep and warm feelings.' } } as any },
+  { original_word: 'ناي', translation: 'Flute', emoji: '🪈', analysis: { details_ar: { example: 'صوت الناي يعبر عن مشاعر عميقة ودافئة.' }, details_en: { example: 'The sound of the flute expresses deep and warm feelings.' } } as any },
   { original_word: 'أجراس رياح', translation: 'Wind Chimes', emoji: '🎐', analysis: { details_ar: { example: 'علقت الأم أجراس الرياح عند نافذة الشرفة.' }, details_en: { example: 'The mother hung wind chimes near the balcony window.' } } as any },
   { original_word: 'نوتة موسيقية', translation: 'Music notes', emoji: '🎼', analysis: { details_ar: { example: 'يقرأ العازف النوتة الموسيقية أثناء التدريب.' }, details_en: { example: 'The player reads the music notes during practice.' } } as any },
   { original_word: 'ميكروفون', translation: 'Microphone', emoji: '🎙️', analysis: { details_ar: { example: 'تحدث المغني في الميكروفون ليسمعه الجميع.' }, details_en: { example: 'The singer spoke into the microphone for everyone to hear.' } } as any },
@@ -1202,7 +1215,7 @@ const CLOTHING_DATA: Partial<Vocabulary>[] = [
   { original_word: 'قفازات', translation: 'Gloves', emoji: '🧤', analysis: { details_ar: { example: 'أرتدي قفازات صوفية لحماية يدي من البرد الشديد.' }, details_en: { example: 'I wear woolen gloves to protect my hands from the extreme cold.' } } as any },
   { original_word: 'جوارب', translation: 'Socks', emoji: '🧦', analysis: { details_ar: { example: 'أرتدي جوارب قطنية مريحة مع حذائي الرياضي.' }, details_en: { example: 'I wear comfortable cotton socks with my athletic shoes.' } } as any },
   { original_word: 'حذاء', translation: 'Shoe', emoji: '👟', analysis: { details_ar: { example: 'اشتريت حذاءً رياضياً جديداً للمشي اليومي.' }, details_en: { example: 'I bought a new athletic shoe for my daily walk.' } } as any },
-  { original_word: 'كعب عالي', translation: 'High heel', emoji: '👠', analysis: { details_ar: { example: 'اختارت الحذاء ذو الكعب العالي ليناسب فستانها.' }, details_en: { example: 'She chose the high heel shoe to match her dress.' } } as any },
+  { original_word: 'حذاء بكعب عالٍ', translation: 'High-heeled shoe', emoji: '👠', analysis: { details_ar: { example: 'اختارت الحذاء ذو الكعب العالي ليناسب فستانها.' }, details_en: { example: 'She chose the high heel shoe to match her dress.' } } as any },
   { original_word: 'قبعة', translation: 'Cap', emoji: '🧢', analysis: { details_ar: { example: 'أرتدي قبعة رياضية لحماية رأسي من أشعة الشمس.' }, details_en: { example: 'I wear a sports cap to protect my head from the sun.' } } as any },
   { original_word: 'نظارة شمسية', translation: 'Sunglasses', emoji: '🕶️', analysis: { details_ar: { example: 'أحتاج إلى نظارة شمسية لحماية عيني من وهج الضوء.' }, details_en: { example: 'I need sunglasses to protect my eyes from the glare of light.' } } as any },
   { original_word: 'نظارة طبية', translation: 'Glasses', emoji: '👓', analysis: { details_ar: { example: 'أستخدم النظارة الطبية للقراءة ومتابعة الشاشات.' }, details_en: { example: 'I use reading glasses for reading and watching screens.' } } as any },
@@ -1708,11 +1721,26 @@ const TopicInterface: React.FC<{
   words: Partial<Vocabulary>[],
   onBack: () => void, 
   onSpeak: (text: string, lang: 'ar' | 'en') => void,
-  onAction: (word: Partial<Vocabulary>, status: 'know' | 'learn' | 'ignore') => void,
+  onAction: (word: Partial<Vocabulary>, status: 'know' | 'learn' | 'ignore') => Promise<void>,
   showHint: boolean,
   setShowHint: (val: boolean) => void
 }> = ({ topic, lang, words, onBack, onSpeak, onAction, showHint, setShowHint }) => {
   const [flippedIndex, setFlippedIndex] = React.useState<number | null>(null);
+  const [savingWord, setSavingWord] = React.useState<number | null>(null);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
+  const saveCard = async (word: Partial<Vocabulary>, status: 'know' | 'learn', index: number) => {
+    if (savingWord !== null) return;
+    setSavingWord(index);
+    setSaveError(null);
+    try {
+      await onAction(word, status);
+      setFlippedIndex(null);
+    } catch {
+      setSaveError(lang === 'ar' ? 'تعذر حفظ الكلمة. حاول مجددًا.' : 'Could not save this word. Try again.');
+    } finally {
+      setSavingWord(null);
+    }
+  };
   const [isGeneratingWorksheet, setIsGeneratingWorksheet] = React.useState(false);
   const [showWorksheetPreview, setShowWorksheetPreview] = React.useState(false);
   const worksheetRef = React.useRef<HTMLDivElement>(null);
@@ -1831,9 +1859,10 @@ const TopicInterface: React.FC<{
           onSpeak={onSpeak}
         />
 
+        {saveError && <p role="alert" className="mb-2 text-xs font-semibold text-red-600" dir={lang === 'ar' ? 'rtl' : 'ltr'}>{saveError}</p>}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2.5 md:gap-3.5 relative z-10">
            {words.map((f, i) => (
-             <div key={i} className="perspective-1000 h-[142px] md:h-[154px]">
+             <div key={i} className="perspective-1000 h-[168px] md:h-[184px]">
                <motion.div
                  className="relative w-full h-full text-center transition-all duration-500 transform-style-3d cursor-pointer"
                  animate={{ rotateY: flippedIndex === i ? 180 : 0 }}
@@ -1890,15 +1919,9 @@ const TopicInterface: React.FC<{
                  {/* BACK SIDE */}
                  <div className="absolute inset-0 backface-hidden bg-white text-slate-800 rounded-2xl p-2 flex flex-col justify-between shadow-2xl rotate-y-180 border border-slate-100">
                    <div className="flex-1 flex flex-col justify-center items-center overflow-hidden">
-                     <span className={`font-black mb-1 text-slate-400 uppercase tracking-tighter text-center whitespace-nowrap overflow-hidden text-ellipsis w-full px-1 ${
-                       (f.translation || '').length > 22 ? 'text-[5.5px] md:text-[6.5px]' :
-                       (f.translation || '').length > 16 || (f.translation || '').includes(' ') || (f.translation || '').includes('/') ? 'text-[6.5px] md:text-[7.5px]' :
-                       (f.translation || '').length > 12 ? 'text-[7.5px] md:text-[8.5px]' :
-                       (f.translation || '').length > 8 ? 'text-[8.5px] md:text-[9.5px]' :
-                       'text-[10px] md:text-[11px]'
-                     }`}>{f.translation}</span>
+                     <span dir="ltr" className="font-black mb-1 text-slate-600 text-center whitespace-normal break-words leading-snug w-full px-1 text-[11px] md:text-xs">{f.translation}</span>
                      {f.analysis?.details_ar?.example && (
-                       <p className="text-[7px] md:text-[8px] arabic-font font-medium leading-relaxed text-slate-600 mb-2 px-1 pt-1">"{highlightWord(f.analysis.details_ar.example, f.original_word || '')}"</p>
+                       <p className="text-[11px] md:text-xs arabic-font font-medium leading-relaxed text-slate-600 mb-2 px-1 pt-1 line-clamp-3" dir="rtl">"{highlightWord(f.analysis.details_ar.example, f.original_word || '')}"</p>
                      )}
                      {f.analysis?.details_ar?.example && (
                        <button 
@@ -1911,14 +1934,16 @@ const TopicInterface: React.FC<{
                    </div>
 
                    <div className="grid grid-cols-2 gap-1 mt-auto">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); onAction({ original_word: f.original_word, translation: f.translation, analysis: f.analysis, emoji: f.emoji }, 'know'); setFlippedIndex(null); }}
-                        className="py-1 bg-emerald-500/10 text-emerald-600 rounded-lg text-[6px] font-black uppercase transition-all hover:bg-emerald-500 hover:text-white border border-emerald-100"
-                      >أعرفها</button>
-                      <button 
-                         onClick={(e) => { e.stopPropagation(); onAction({ original_word: f.original_word, translation: f.translation, analysis: f.analysis, emoji: f.emoji }, 'learn'); setFlippedIndex(null); }}
-                         className="py-1 bg-sky-500/10 text-sky-600 rounded-lg text-[6px] font-black uppercase transition-all hover:bg-sky-600 hover:text-white border border-sky-100"
-                      >أتعلمها</button>
+                      <button type="button" disabled={savingWord !== null}
+                        aria-label={lang === 'ar' ? 'أعرف هذه الكلمة' : 'I know this word'}
+                        onClick={(e) => { e.stopPropagation(); void saveCard({ original_word: f.original_word, translation: f.translation, analysis: f.analysis, emoji: f.emoji }, 'know', i); }}
+                        className="min-h-8 px-1 py-1.5 bg-emerald-500/10 text-emerald-700 rounded-lg text-[11px] md:text-xs font-bold transition-all hover:bg-emerald-500 hover:text-white border border-emerald-100 disabled:opacity-50"
+                      >{savingWord === i ? (lang === 'ar' ? 'يُحفظ...' : 'Saving...') : (lang === 'ar' ? 'أعرفها' : 'Know it')}</button>
+                      <button type="button" disabled={savingWord !== null}
+                        aria-label={lang === 'ar' ? 'أتعلم هذه الكلمة' : 'Learn this word'}
+                        onClick={(e) => { e.stopPropagation(); void saveCard({ original_word: f.original_word, translation: f.translation, analysis: f.analysis, emoji: f.emoji }, 'learn', i); }}
+                        className="min-h-8 px-1 py-1.5 bg-sky-500/10 text-sky-700 rounded-lg text-[11px] md:text-xs font-bold transition-all hover:bg-sky-600 hover:text-white border border-sky-100 disabled:opacity-50"
+                      >{savingWord === i ? (lang === 'ar' ? 'يُحفظ...' : 'Saving...') : (lang === 'ar' ? 'أتعلمها' : 'Learn it')}</button>
                    </div>
                  </div>
                </motion.div>
