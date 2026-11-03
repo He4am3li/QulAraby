@@ -29,7 +29,7 @@ assert.ok(!proxy.includes('req.headers[\'x-goog-api-key\']'), 'Never trust clien
 assert.ok(auth.includes('createVerify(\'RSA-SHA256\')') &&
   auth.includes('https://securetoken.google.com/'),
   'Require signature and issuer validation');
-assert.ok(auth.includes('payload.aud !== firebaseConfig.projectId') &&
+assert.ok(auth.includes('payload.aud !== FIREBASE_PROJECT_ID') &&
   auth.includes('payload.exp <= now'), 'Require audience and expiry validation');
 assert.ok(live.includes('uses: 1') && live.includes('newSessionExpireTime:'),
   'Live access must use single-use, short-lived tokens');
