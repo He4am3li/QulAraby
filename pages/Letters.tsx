@@ -2274,6 +2274,8 @@ export const Letters: React.FC = () => {
     setError(null);
     // Calling play() directly in the click handler keeps mobile user-activation.
     void playLetterName(char).catch((err) => {
+      // Rapidly changing letters intentionally interrupts the previous play().
+      if (err?.name === 'AbortError') return;
       console.warn('Local letter recording unavailable:', err);
       setError(lang === 'ar' ? 'تعذر تشغيل تسجيل الحرف.' : 'Unable to play the letter recording.');
     });
