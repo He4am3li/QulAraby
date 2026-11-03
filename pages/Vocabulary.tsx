@@ -460,7 +460,7 @@ export const VocabularyPage: React.FC = () => {
   const getRank = (count: number) => {
     if (count < 10) return { title: lang === 'ar' ? 'مبتدئ' : 'Beginner', color: 'slate' };
     if (count < 30) return { title: lang === 'ar' ? 'مستكشف' : 'Explorer', color: 'emerald' };
-    if (count < 60) return { title: lang === 'ar' ? 'باحث' : 'teal' };
+    if (count < 60) return { title: lang === 'ar' ? 'باحث' : 'Researcher', color: 'teal' };
     return { title: lang === 'ar' ? 'متقن' : 'Master', color: 'indigo' };
   };
   const currentRank = getRank(verifiedCount);
@@ -942,13 +942,13 @@ const INSECTS_REPTILES_DATA: Partial<Vocabulary>[] = [
   { original_word: 'صرصور', translation: 'Cockroach', emoji: '🪳', analysis: { details_ar: { example: 'الصرصور يخرج غالباً في الليل.' }, details_en: { example: 'The cockroach often comes out at night.' } } as any },
   { original_word: 'خنفساء', translation: 'Beetle', emoji: '🪲', analysis: { details_ar: { example: 'الخنفساء الصغيرة تسير الهوينى.' }, details_en: { example: 'The little beetle walks slowly.' } } as any },
   { original_word: 'يرقة', translation: 'Caterpillar', emoji: '🐛', analysis: { details_ar: { example: 'اليرقة تتحول يوماً ما إلى فراشة.' }, details_en: { example: 'The caterpillar will one day turn into a butterfly.' } } as any },
-  { original_word: 'عنكبوت', translation: 'Spider', emoji: '🕷️', analysis: { details_ar: { example: 'العنكبوت يبني شبكة قوية لصيد الفرائس.' }, details_en: { example: 'The spider builds a strong web to catch prey.' } } as any },
+  { original_word: 'دعسوقة', translation: 'Ladybug', emoji: '🐞', analysis: { details_ar: { example: 'الدعسوقة حشرة صغيرة ذات نقاط سوداء.' }, details_en: { example: 'The ladybug is a small insect with black spots.' } } as any },
   { original_word: 'ثعبان', translation: 'Snake', emoji: '🐍', analysis: { details_ar: { example: 'الثعبان يزحف على الأرض بصمت.' }, details_en: { example: 'The snake crawls silently on the ground.' } } as any },
   { original_word: 'سلحفاة', translation: 'Turtle', emoji: '🐢', analysis: { details_ar: { example: 'السلحفاة حيوان بطيء ومحمي بدرع.' }, details_en: { example: 'The turtle is a slow animal protected by a shell.' } } as any },
   { original_word: 'تمساح', translation: 'Crocodile', emoji: '🐊', analysis: { details_ar: { example: 'التمساح حيوان مفترس يعيش في الماء والبر.' }, details_en: { example: 'The crocodile is a predator that lives in water and on land.' } } as any },
   { original_word: 'سحلية', translation: 'Lizard', emoji: '🦎', analysis: { details_ar: { example: 'السحلية تختبئ بين الصخور في الشمس.' }, details_en: { example: 'The lizard hides among the rocks in the sun.' } } as any },
-  { original_word: 'ضفدع', translation: 'Frog', emoji: '🐸', analysis: { details_ar: { example: 'الضفدع يقفز ويصدر صوتاً في المستنقع.' }, details_en: { example: 'The frog jumps and makes a sound in the swamp.' } } as any },
-  { original_word: 'تنين', translation: 'Dragon', emoji: '🐉', analysis: { details_ar: { example: 'التنين كائن أسطوري ينفث النار.' }, details_en: { example: 'The dragon is a legendary creature that breathes fire.' } } as any },
+  { original_word: 'وزغ', translation: 'Gecko', emoji: '🦎', analysis: { details_ar: { example: 'الوزغ زاحف صغير يستطيع التسلق على الجدران.' }, details_en: { example: 'The gecko is a small reptile that can climb walls.' } } as any },
+  { original_word: 'حرباء', translation: 'Chameleon', emoji: '🦎', analysis: { details_ar: { example: 'الحرباء زاحف يستطيع تغيير لون جلده.' }, details_en: { example: 'The chameleon is a reptile that can change its skin color.' } } as any },
 ];
 
 const TIME_DATA: Partial<Vocabulary>[] = [
@@ -1716,11 +1716,26 @@ const TopicInterface: React.FC<{
   words: Partial<Vocabulary>[],
   onBack: () => void, 
   onSpeak: (text: string, lang: 'ar' | 'en') => void,
-  onAction: (word: Partial<Vocabulary>, status: 'know' | 'learn' | 'ignore') => void,
+  onAction: (word: Partial<Vocabulary>, status: 'know' | 'learn' | 'ignore') => Promise<void>,
   showHint: boolean,
   setShowHint: (val: boolean) => void
 }> = ({ topic, lang, words, onBack, onSpeak, onAction, showHint, setShowHint }) => {
   const [flippedIndex, setFlippedIndex] = React.useState<number | null>(null);
+  const [savingWord, setSavingWord] = React.useState<number | null>(null);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
+  const saveCard = async (word: Partial<Vocabulary>, status: 'know' | 'learn', index: number) => {
+    if (savingWord !== null) return;
+    setSavingWord(index);
+    setSaveError(null);
+    try {
+      await onAction(word, status);
+      setFlippedIndex(null);
+    } catch {
+      setSaveError(lang === 'ar' ? 'تعذر حفظ الكلمة. حاول مجددًا.' : 'Could not save this word. Try again.');
+    } finally {
+      setSavingWord(null);
+    }
+  };
   const [isGeneratingWorksheet, setIsGeneratingWorksheet] = React.useState(false);
   const [showWorksheetPreview, setShowWorksheetPreview] = React.useState(false);
   const worksheetRef = React.useRef<HTMLDivElement>(null);
@@ -1839,6 +1854,7 @@ const TopicInterface: React.FC<{
           onSpeak={onSpeak}
         />
 
+        {saveError && <p role="alert" className="mb-2 text-xs font-semibold text-red-600" dir={lang === 'ar' ? 'rtl' : 'ltr'}>{saveError}</p>}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2.5 md:gap-3.5 relative z-10">
            {words.map((f, i) => (
              <div key={i} className="perspective-1000 h-[142px] md:h-[154px]">
@@ -1898,15 +1914,9 @@ const TopicInterface: React.FC<{
                  {/* BACK SIDE */}
                  <div className="absolute inset-0 backface-hidden bg-white text-slate-800 rounded-2xl p-2 flex flex-col justify-between shadow-2xl rotate-y-180 border border-slate-100">
                    <div className="flex-1 flex flex-col justify-center items-center overflow-hidden">
-                     <span className={`font-black mb-1 text-slate-400 uppercase tracking-tighter text-center whitespace-nowrap overflow-hidden text-ellipsis w-full px-1 ${
-                       (f.translation || '').length > 22 ? 'text-[5.5px] md:text-[6.5px]' :
-                       (f.translation || '').length > 16 || (f.translation || '').includes(' ') || (f.translation || '').includes('/') ? 'text-[6.5px] md:text-[7.5px]' :
-                       (f.translation || '').length > 12 ? 'text-[7.5px] md:text-[8.5px]' :
-                       (f.translation || '').length > 8 ? 'text-[8.5px] md:text-[9.5px]' :
-                       'text-[10px] md:text-[11px]'
-                     }`}>{f.translation}</span>
+                     <span dir="ltr" className="font-black mb-1 text-slate-600 text-center whitespace-normal break-words leading-snug w-full px-1 text-[11px] md:text-xs">{f.translation}</span>
                      {f.analysis?.details_ar?.example && (
-                       <p className="text-[7px] md:text-[8px] arabic-font font-medium leading-relaxed text-slate-600 mb-2 px-1 pt-1">"{highlightWord(f.analysis.details_ar.example, f.original_word || '')}"</p>
+                       <p className="text-[11px] md:text-xs arabic-font font-medium leading-relaxed text-slate-600 mb-2 px-1 pt-1 line-clamp-3" dir="rtl">"{highlightWord(f.analysis.details_ar.example, f.original_word || '')}"</p>
                      )}
                      {f.analysis?.details_ar?.example && (
                        <button 
@@ -1919,14 +1929,16 @@ const TopicInterface: React.FC<{
                    </div>
 
                    <div className="grid grid-cols-2 gap-1 mt-auto">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); onAction({ original_word: f.original_word, translation: f.translation, analysis: f.analysis, emoji: f.emoji }, 'know'); setFlippedIndex(null); }}
-                        className="py-1 bg-emerald-500/10 text-emerald-600 rounded-lg text-[6px] font-black uppercase transition-all hover:bg-emerald-500 hover:text-white border border-emerald-100"
-                      >أعرفها</button>
-                      <button 
-                         onClick={(e) => { e.stopPropagation(); onAction({ original_word: f.original_word, translation: f.translation, analysis: f.analysis, emoji: f.emoji }, 'learn'); setFlippedIndex(null); }}
-                         className="py-1 bg-sky-500/10 text-sky-600 rounded-lg text-[6px] font-black uppercase transition-all hover:bg-sky-600 hover:text-white border border-sky-100"
-                      >أتعلمها</button>
+                      <button type="button" disabled={savingWord !== null}
+                        aria-label={lang === 'ar' ? 'أعرف هذه الكلمة' : 'I know this word'}
+                        onClick={(e) => { e.stopPropagation(); void saveCard({ original_word: f.original_word, translation: f.translation, analysis: f.analysis, emoji: f.emoji }, 'know', i); }}
+                        className="min-h-8 px-1 py-1.5 bg-emerald-500/10 text-emerald-700 rounded-lg text-[11px] md:text-xs font-bold transition-all hover:bg-emerald-500 hover:text-white border border-emerald-100 disabled:opacity-50"
+                      >{savingWord === i ? (lang === 'ar' ? 'يُحفظ...' : 'Saving...') : (lang === 'ar' ? 'أعرفها' : 'Know it')}</button>
+                      <button type="button" disabled={savingWord !== null}
+                        aria-label={lang === 'ar' ? 'أتعلم هذه الكلمة' : 'Learn this word'}
+                        onClick={(e) => { e.stopPropagation(); void saveCard({ original_word: f.original_word, translation: f.translation, analysis: f.analysis, emoji: f.emoji }, 'learn', i); }}
+                        className="min-h-8 px-1 py-1.5 bg-sky-500/10 text-sky-700 rounded-lg text-[11px] md:text-xs font-bold transition-all hover:bg-sky-600 hover:text-white border border-sky-100 disabled:opacity-50"
+                      >{savingWord === i ? (lang === 'ar' ? 'يُحفظ...' : 'Saving...') : (lang === 'ar' ? 'أتعلمها' : 'Learn it')}</button>
                    </div>
                  </div>
                </motion.div>
