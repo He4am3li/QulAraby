@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { ReadingPopUpPilot } from '../components/ReadingPopUpPilot';
 import { 
   BookOpen, Loader2, Sparkles, Volume2, HelpCircle, 
   Eraser, Globe, Bookmark as BookmarkIcon, Plus, Check, XCircle, BookText,
@@ -405,6 +406,7 @@ export const Reading: React.FC = () => {
   const [isPaused, setIsPaused] = React.useState(false);
   const [highlightIdx, setHighlightIdx] = React.useState(-1);
   const [showBook, setShowBook] = React.useState(false);
+  const [showPopUpPilot, setShowPopUpPilot] = React.useState(false);
   const [isBookOpen, setIsBookOpen] = React.useState(false);
   const [isOpening, setIsOpening] = React.useState(false);
   const [flippingDirection, setFlippingDirection] = React.useState<'next' | 'prev' | null>(null);
@@ -1502,6 +1504,16 @@ export const Reading: React.FC = () => {
                 className="w-full max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center gap-12 overflow-visible py-4 perspective-[3000px]"
               >
               
+              {isBookOpen && (
+                <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-3">
+                  <button type="button" onClick={() => setShowPopUpPilot(v => !v)}
+                    aria-expanded={showPopUpPilot}
+                    className="rounded-full border border-amber-300 bg-[#fffaf0] px-5 py-2 text-xs font-bold text-amber-900 shadow-sm focus-visible:outline-2">
+                    {showPopUpPilot ? (lang === 'ar' ? 'إخفاء المشهد الورقي' : 'Hide paper scene') : (lang === 'ar' ? 'استكشف المشهد الورقي' : 'Explore paper scene')}
+                  </button>
+                  {showPopUpPilot && <ReadingPopUpPilot text={processedText || text} lang={lang} />}
+                </div>
+              )}
               {!isBookOpen ? (
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.9 }}
