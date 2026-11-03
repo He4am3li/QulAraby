@@ -1,0 +1,39 @@
+name: QUL 43 independent-motion visual quality review
+on:
+  push:
+    branches:
+      - feat/dialect-43-editable-artwork-batch-20261101
+    paths:
+      - 'scripts/render-43-motion-review.py'
+      - '.github/workflows/preview-43-motion-quality.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch verified 43-layer source archives
+        uses: actions/download-artifact@v4
+        with:
+          name: QUL-43-original-pixel-editable-ORA-drafts
+          repository: He4am3li/QulAraby
+          run-id: 41349505958
+          github-token: ${{ github.token }}
+          path: artifacts/qul-43-layer-drafts
+      - name: Install image-review utilities
+        run: |
+          python3 -m pip install --disable-pip-version-check 'pillow>=10'
+      - name: Render all 43 paired source and motion QA panels
+        run: python3 scripts/render-43-motion-review.py --ora artifacts/qul-43-layer-drafts --output artifacts/qul-43-motion-reviews --expected 43
+      - name: Archive review contacts and individual sheets, NOT production assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: QUL-43-original-vs-draft-motion-quality-review
+          path: artifacts/qul-43-motion-reviews/
+          retention-days: 30
