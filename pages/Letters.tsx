@@ -247,7 +247,7 @@ const STRINGS = {
   }
 };
 
-const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, onMastered?: (stars: number) => void }> = ({ char, shapes, t, lang, onMastered }) => {
+const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, mode?: 'trace' | 'free', onMastered?: (stars: number) => void }> = ({ char, shapes, t, lang, mode = 'trace', onMastered }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const activePointerIdRef = React.useRef<number | null>(null);
   const [activeShape, setActiveShape] = React.useState<'isolated' | 'initial' | 'medial' | 'final'>('isolated');
@@ -406,111 +406,80 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
   ];
 
   return (
-    <div className="flex flex-col w-full h-full no-print">
-      <div className="flex flex-1 min-h-0 relative">
-        {/* Left Controls */}
-        <div className="w-28 border-l border-slate-50 p-3 flex flex-col items-center justify-center gap-4 bg-slate-50/30">
-          <div className="w-full flex flex-col gap-3">
-            {shapeOptions.slice(0, 2).map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => setActiveShape(opt.id as any)}
-                className={`p-2 rounded-2xl text-center transition-all border-2 ${activeShape === opt.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-200'}`}
-              >
-                <span className="text-2xl block mb-1 arabic-font">{(shapes as any)[opt.id]}</span>
-                <span className="text-[8px] font-black uppercase block">{opt.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Center Canvas - identical bounds for the pale guide and the drawing surface. */}
-        <div className="flex-1 relative bg-white flex items-center justify-center p-2 cursor-crosshair touch-none overflow-hidden">
-          <div className="relative w-full h-full max-w-[850px] max-h-[220px] min-w-0 min-h-0">
-            <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none" aria-hidden="true">
-              <span className="text-[clamp(64px,12vw,120px)] leading-none font-black arabic-font text-slate-900 opacity-10">
-                {(shapes as any)[activeShape]}
-              </span>
-            </div>
-            <p className="absolute bottom-1 left-0 right-0 text-center text-[8px] font-bold text-blue-600/30 uppercase tracking-[0.4em] select-none pointer-events-none">
-              {lang === 'ar' ? `شكل ${t[activeShape]}` : `${t[activeShape]} form`}
-            </p>
-            <canvas
-              ref={canvasRef}
-              width={850}
-              height={220}
-              onPointerDown={startDrawing}
-              onPointerUp={stopDrawing}
-              onPointerCancel={stopDrawing}
-              onLostPointerCapture={stopDrawing}
-              onPointerMove={draw}
-              style={{ touchAction: 'none' }}
-              className="absolute inset-0 z-10 w-full h-full cursor-crosshair"
-              aria-label={lang === 'ar' ? 'سبورة التدريب على كتابة الحرف' : 'Letter tracing canvas'}
-            />
-          </div>
-
-          {/* AI Feedback Overlay */}
-          {aiFeedback && (
-            <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500">
-              <div className="flex gap-2 mb-4">
-                {[1, 2, 3].map(s => (
-                  <Star key={s} size={32} fill={s <= aiFeedback.stars ? "#f59e0b" : "none"} className={s <= aiFeedback.stars ? "text-amber-500 animate-bounce" : "text-slate-200"} style={{ animationDelay: `${s * 100}ms` }} />
-                ))}
-              </div>
-              <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl shadow-xl mb-4 ${aiFeedback.isCorrect ? 'bg-green-500 text-white' : 'bg-amber-500 text-white'}`}>
-                {aiFeedback.isCorrect ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
-                <span className="text-lg font-black arabic-font">{aiFeedback.message}</span>
-              </div>
-              <button onClick={() => { clear(); setAiFeedback(null); }} className="px-8 py-2 bg-slate-900 text-white rounded-xl font-black text-xs hover:scale-105 transition-all">
-                {t.retry}
-              </button>
-            </div>
-          )}
-
-          {isAnalyzing && (
-            <div className="absolute inset-0 z-20 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center">
-              <div className="relative">
-                <Loader2 className="animate-spin text-blue-600" size={48} />
-                <PenTool className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-400" size={20} />
-              </div>
-              <p className="mt-4 text-xs font-black text-blue-600 uppercase tracking-widest animate-pulse">جاري فحص الرسم...</p>
-            </div>
-          )}
-        </div>
-
-        {/* Right Controls */}
-        <div className="w-28 border-r border-slate-50 p-3 flex flex-col justify-center gap-3 bg-slate-50/30">
-          {shapeOptions.slice(2, 4).map(opt => (
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl border border-slate-200/75 bg-white/85 no-print">
+      <div className="shrink-0 border-b border-slate-200/80 bg-white/85 px-2 py-2 sm:px-3">
+        <div className="grid grid-cols-4 gap-1.5" role="group" aria-label={lang === 'ar' ? 'أشكال الحرف الأربعة' : 'Four letter forms'}>
+          {shapeOptions.map((option) => (
             <button
-              key={opt.id}
-              onClick={() => setActiveShape(opt.id as any)}
-              className={`p-2 rounded-2xl text-center transition-all border-2 ${activeShape === opt.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-200'}`}
+              key={option.id}
+              onClick={() => setActiveShape(option.id as any)}
+              aria-pressed={activeShape === option.id}
+              className={activeShape === option.id
+                ? 'flex min-w-0 items-center justify-center gap-1.5 rounded-xl border border-blue-300 bg-blue-50 px-1 py-1.5 text-blue-800 shadow-inner transition-colors'
+                : 'flex min-w-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-1 py-1.5 text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50/50'}
             >
-              <span className="text-2xl block mb-1 arabic-font">{(shapes as any)[opt.id]}</span>
-              <span className="text-[8px] font-black uppercase block">{opt.label}</span>
+              <span className="arabic-font text-xl font-bold leading-none sm:text-2xl">{(shapes as any)[option.id]}</span>
+              <span className="truncate text-[8px] font-bold sm:text-[10px]">{option.label}</span>
             </button>
           ))}
         </div>
       </div>
-      
-      <div className="p-2 bg-blue-50 flex items-center justify-between px-6 shrink-0 border-t border-blue-100">
-        <div className="flex items-center gap-4">
-          <p className="text-[10px] font-bold text-blue-600 arabic-font">
-            {t.followShape}
-          </p>
+      <div className="relative min-h-0 flex-1 overflow-hidden bg-[#fcfaf5]">
+        <div className="pointer-events-none absolute inset-x-4 top-1/2 border-t border-dashed border-slate-300/70" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden="true">
+          {mode === 'trace' && (
+            <span className="arabic-font select-none text-[clamp(80px,14vw,150px)] font-black leading-none text-slate-500/20">
+              {(shapes as any)[activeShape]}
+            </span>
+          )}
         </div>
-        <div className="flex gap-2">
-          <button onClick={clear} className="px-4 py-2 bg-white border border-slate-200 text-slate-500 rounded-xl font-black text-[10px] hover:bg-slate-100 transition-all flex items-center gap-2">
-            <RefreshCcw size={12} /> {t.clear}
+        <canvas
+          ref={canvasRef}
+          width={850}
+          height={220}
+          onPointerDown={startDrawing}
+          onPointerUp={stopDrawing}
+          onPointerCancel={stopDrawing}
+          onLostPointerCapture={stopDrawing}
+          onPointerMove={draw}
+          style={{ touchAction: 'none' }}
+          className="absolute inset-0 z-10 h-full w-full cursor-crosshair"
+          aria-label={lang === 'ar' ? 'سبورة تدريب الكتابة' : 'Arabic handwriting board'}
+        />
+        {aiFeedback && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-white/85 p-3 text-center backdrop-blur-sm">
+            <div className="flex gap-1.5">
+              {[1, 2, 3].map((star) => (
+                <Star key={star} size={26} fill={star <= aiFeedback.stars ? '#f59e0b' : 'none'} className={star <= aiFeedback.stars ? 'text-amber-500' : 'text-slate-300'} />
+              ))}
+            </div>
+            <div className={aiFeedback.isCorrect
+              ? 'rounded-2xl bg-emerald-50 px-4 py-2 font-black text-emerald-800 arabic-font'
+              : 'rounded-2xl bg-amber-50 px-4 py-2 font-black text-amber-800 arabic-font'}>
+              {aiFeedback.message}
+            </div>
+            <button onClick={() => { clear(); setAiFeedback(null); }} className="rounded-xl bg-slate-900 px-5 py-2 text-xs font-bold text-white">
+              {t.retry}
+            </button>
+          </div>
+        )}
+        {isAnalyzing && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-white/75 backdrop-blur-sm">
+            <Loader2 className="animate-spin text-blue-600" size={34} />
+            <p className="arabic-font text-xs font-bold text-blue-700">{lang === 'ar' ? 'جاري فحص الكتابة...' : 'Checking handwriting...'}</p>
+          </div>
+        )}
+      </div>
+      <div className="flex shrink-0 items-center justify-between gap-2 border-t border-slate-200/80 bg-white/90 px-3 py-2">
+        <p className="arabic-font min-w-0 text-[10px] font-bold text-slate-500">
+          {mode === 'trace' ? t.followShape : (lang === 'ar' ? 'اكتب الحرف دون دليل' : 'Write without a guide')}
+        </p>
+        <div className="flex shrink-0 gap-2">
+          <button onClick={clear} className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50">
+            <RefreshCcw size={13} /> {t.clear}
           </button>
-          <button 
-            onClick={handleCheckWork}
-            disabled={isAnalyzing}
-            className="px-6 py-2 bg-blue-600 text-white rounded-xl font-black text-[10px] flex items-center gap-2 shadow-lg shadow-blue-100 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
-          >
-            <CheckCircle2 size={14} />
-            {t.checkMe}
+          <button onClick={handleCheckWork} disabled={isAnalyzing} className="flex items-center gap-1 rounded-xl bg-blue-700 px-3 py-2 text-[10px] font-bold text-white shadow-sm disabled:opacity-40 hover:bg-blue-800">
+            <CheckCircle2 size={13} /> {t.checkMe}
           </button>
         </div>
       </div>
