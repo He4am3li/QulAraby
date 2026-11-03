@@ -12,7 +12,8 @@
     "test:radio": "node scripts/test-radio.mjs && node tests/radio-ui.test.mjs",
     "test:vocabulary": "node tests/vocabulary-contexts.test.mjs && node tests/vocabulary-srs.test.mjs && node tests/vocabulary-editorial.test.mjs",
     "test:gateway": "node tests/gemini-gateway.test.mjs",
-    "prebuild": "npm run test:vocabulary && npm run test:gateway"
+    "prebuild": "npm run test:vocabulary && npm run test:gateway && npm run test:letter-audio",
+    "test:letter-audio": "node tests/letters-audio.test.mjs"
   },
   "dependencies": {
     "@google/genai": "2.31.0",
