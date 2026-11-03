@@ -39,7 +39,10 @@ const expects = [
   ['FISH_DATA', 'حلزون بحري', 'Sea snail'],
   ['FISH_DATA', 'دودة بحرية', 'Marine worm'],
   ['CLOTHING_DATA', 'حذاء بكعب عالٍ', 'High-heeled shoe'],
-  ['CLASS_DATA', 'قلم تلوين', 'Colored pencil']
+  ['CLASS_DATA', 'قلم تلوين', 'Colored pencil'],
+  ['INSECTS_REPTILES_DATA', 'دعسوقة', 'Ladybug'],
+  ['INSECTS_REPTILES_DATA', 'وزغ', 'Gecko'],
+  ['INSECTS_REPTILES_DATA', 'حرباء', 'Chameleon']
 ];
 for (const [group, ar, en] of expects) {
   assert.ok(byGroup.get(group)?.some(card => card.ar === ar && card.en === en),
@@ -61,3 +64,18 @@ assert.ok(source.includes('const result = updateSRS(current, correct'),
   'Do not score against a stale UI snapshot');
 
 console.log('Vocabulary editorial OK: 30 topics, 480 cards, accurate glossary guards and transactional reviews.');
+
+assert.ok(!byGroup.get('INSECTS_REPTILES_DATA').some(card =>
+  ['Spider','Frog','Dragon'].includes(card.en)), 'Do not classify arachnids, amphibians or fictional creatures as insects/reptiles');
+assert.ok(source.includes("lang === 'ar' ? 'أعرفها' : 'Know it'"),
+  'Card actions must localize in English');
+assert.ok(source.includes("lang === 'ar' ? 'أتعلمها' : 'Learn it'"),
+  'Second card action must localize in English');
+assert.ok(source.includes('text-[11px] md:text-xs">{f.translation}'),
+  'Every English gloss should have readable typography');
+assert.ok(!source.includes('text-[5.5px]') && !source.includes('text-[6px] font-black uppercase'),
+  'Tiny card text and buttons are inaccessible');
+assert.ok(source.includes('const [savingWord, setSavingWord]'),
+  'Saving needs a pending state, avoiding accidental repeated clicks');
+assert.ok(source.includes("Researcher', color: 'teal'"),
+  'Intermediate learner rank must translate correctly and keep its color');
