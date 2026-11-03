@@ -15,7 +15,7 @@ import { DialectVoiceOrb } from '../components/DialectVoiceOrb';
 import { DialectChatDock } from '../components/DialectChatDock';
 import { DialectPassportCover, DialectPassportLibrary } from '../components/DialectPassports';
 import { assessDialectMission, type MissionTurn } from '../services/dialectMissionAssessment';
-import { generateSpeech, decodeAudioData } from '../services/gemini';
+import { getAI, getLiveAI, generateSpeech, decodeAudioData } from '../services/gemini';
 
 declare global {
   interface Window {
@@ -1730,8 +1730,7 @@ export const Dialects: React.FC = () => {
     setIsChatLoading(true);
 
     try {
-      const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+      const ai = getAI();
       
       const rank = passportLevelsRef.current[selectedCountry.id] || 0;
       const missions = (selectedCountry as any).missions;
@@ -1833,9 +1832,9 @@ export const Dialects: React.FC = () => {
     const generation = ++liveGenerationRef.current;
     const stillCurrent = () => generation === liveGenerationRef.current;
     try {
-      const { GoogleGenAI, Modality } = await import("@google/genai");
+      const { Modality } = await import("@google/genai");
       if (!stillCurrent()) return;
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+      const ai = getAI();
       const rank = passportLevelsRef.current[country.id] || 0;
       const missions = country.missions;
       const currentMission = missions ? (rank === 0 ? missions.visitor.ar : rank === 1 ? missions.resident.ar : missions.native.ar) : "Learn the dialect";
@@ -1885,7 +1884,7 @@ export const Dialects: React.FC = () => {
             const translation = (result.text || '').trim().slice(0, 1100);
             if (translation && stillCurrent() && selectedCountryRef.current?.id === country.id) {
               setChatMessages(prev => {
-                const index = prev.findLastIndex(msg => msg.liveTurnKey === speaker + ':' + snapshot.id);
+                const index = prev.map(msg => msg.liveTurnKey).lastIndexOf(speaker + ':' + snapshot.id);
                 if (index < 0 || !prev[index].text.startsWith(snapshot.text)) return prev;
                 // Keep a useful partial translation on screen while newer words arrive.
                 // Never overwrite a newer result with a shorter, older snapshot.
@@ -1919,7 +1918,9 @@ export const Dialects: React.FC = () => {
         }
         void checkMissionCompletion(country, passportLevelsRef.current[country.id] || 0);
       };
-      const sessionPromise = ai.live.connect({
+      const liveAI = await getLiveAI();
+      if (!stillCurrent()) return;
+      const sessionPromise = liveAI.live.connect({
         model: "gemini-3.8-live",
         config: {
           responseModalities: [Modality.AUDIO],

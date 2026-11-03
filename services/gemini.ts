@@ -1,16 +1,55 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { Vocabulary, MasteryLevel, QuizQuestion, ChatMessage, IrabAnalysisResult } from "../types";
 import { getCachedAsset, setCachedAsset } from "./cache";
+import { auth } from '../firebase';
 import type { RadioCorpusText } from '../src/data/radioTextCorpus';
 
-// Always use a named parameter for the API key from process.env.API_KEY.
-// Exported to be used across the application for direct Gemini API access.
+// Google API credentials stay server-side. The browser uses authenticated
+// same-origin endpoints and never receives the long-lived Gemini API key.
 export const DEFAULT_TEXT_MODEL = 'gemini-3.8-flash';
 export const DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-lite-image';
 export const DEFAULT_TTS_MODEL = 'gemini-3.8-flash-lite-tts';
 export const DEFAULT_LIVE_MODEL = 'gemini-3.8-live';
 
-export const getAI = () => new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string });
+const privateGeminiFetch: typeof fetch = async (input, init) => {
+  const currentUser = auth.currentUser;
+  if (!currentUser) throw new Error('Sign in to use the language service');
+  const idToken = await currentUser.getIdToken();
+  const original = new Request(input, init);
+  const target = new URL(original.url);
+  if (!target.pathname.startsWith('/api/gemini/')) {
+    throw new Error('Unexpected language service endpoint');
+  }
+  const path = target.pathname.slice('/api/gemini'.length) + target.search;
+  const headers = new Headers(original.headers);
+  headers.delete('x-goog-api-key');
+  headers.delete('authorization');
+  headers.set('authorization', 'Bearer ' + idToken);
+  const method = original.method.toUpperCase();
+  const body = method === 'GET' || method === 'HEAD' ? undefined : await original.arrayBuffer();
+  return fetch('/api/gemini?path=' + encodeURIComponent(path), { method, headers, body });
+};
+
+export const getAI = () => new GoogleGenAI({
+  apiKey: 'server-managed',
+  httpOptions: {
+    baseUrl: typeof window === 'undefined' ? 'http://localhost:3000/api/gemini' : window.location.origin + '/api/gemini',
+    fetch: privateGeminiFetch,
+  },
+});
+
+export const getLiveAI = async (): Promise<GoogleGenAI> => {
+  const currentUser = auth.currentUser;
+  if (!currentUser) throw new Error('Sign in to start a live conversation');
+  const response = await fetch('/api/gemini-live-token', {
+    method: 'POST',
+    headers: { authorization: 'Bearer ' + await currentUser.getIdToken() },
+  });
+  if (!response.ok) throw new Error('Could not authorize a live conversation');
+  const result = await response.json() as { token?: string };
+  if (!result.token?.startsWith('auth_tokens/')) throw new Error('Invalid live session authorization');
+  return new GoogleGenAI({ apiKey: result.token, httpOptions: { apiVersion: 'v1alpha' } });
+};
 
 /**
  * Robustly parses JSON from AI responses, handling markdown backticks and repairing truncated JSON.

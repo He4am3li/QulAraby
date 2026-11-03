@@ -10,8 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PageHeader } from '../components/PageHeader';
 import { StudioMicIcon } from '../components/StudioMicIcon';
 import { FallingLetters } from '../components/Layout';
-import { GoogleGenAI, Modality, Type } from '@google/genai';
-import { generateSessionInsights, translateAndExpand, generateSpeech, decodeAudioData, speak as globalSpeak } from '../services/gemini';
+import { Modality, Type } from '@google/genai';
+import { getAI, getLiveAI, generateSessionInsights, translateAndExpand, generateSpeech, decodeAudioData, speak as globalSpeak } from '../services/gemini';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { useAuth } from '../components/AuthProvider';
@@ -304,7 +304,7 @@ export const Speak: React.FC = () => {
       const output = contexts.output;
       const input = contexts.input;
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = await getLiveAI();
       
       let stream: MediaStream;
       try {
@@ -529,7 +529,7 @@ export const Speak: React.FC = () => {
     if (!text || isGeneratingChallenge) return;
     setIsGeneratingChallenge(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = getAI();
       const response = await ai.models.generateContent({
         model: 'gemini-3.8-flash',
         contents: `Extract 3 meaningful Arabic words from this text for a spelling challenge. Return them as a JSON array of strings. Text: "${text}"`,

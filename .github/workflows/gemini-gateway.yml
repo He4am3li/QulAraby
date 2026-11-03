@@ -1,0 +1,37 @@
+name: Secure Gemini gateway
+
+on:
+  pull_request:
+    paths:
+      - 'api/**'
+      - 'services/gemini.ts'
+      - 'pages/Dialects.tsx'
+      - 'pages/Speak.tsx'
+      - 'pages/Preparation.tsx'
+      - 'pages/Quizzes.tsx'
+      - 'vite.config.ts'
+      - 'tests/gemini-gateway.test.mjs'
+      - 'package.json'
+      - '.github/workflows/gemini-gateway.yml'
+  push:
+    branches:
+      - 'fix/gemini-server-gateway-20261103'
+
+permissions:
+  contents: read
+
+jobs:
+  secure-gateway:
+    name: TypeScript, security and production bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:gateway
+      - run: npm run build

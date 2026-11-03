@@ -195,7 +195,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
               // 4/4 is awarded only after the final physical vault and document pickup.
               setCompleted(prev=>{
                 if(prev.includes('vault'))return prev;
-                const updated=[...prev,'vault'];
+                const updated: SecretRoomId[] = [...prev, 'vault'];
                 try{localStorage.setItem(key,JSON.stringify(updated));}catch{}
                 return updated;
               });
