@@ -406,6 +406,7 @@ export const Reading: React.FC = () => {
   const [isPaused, setIsPaused] = React.useState(false);
   const [highlightIdx, setHighlightIdx] = React.useState(-1);
   const [showBook, setShowBook] = React.useState(false);
+  const [mobileSourcesOpen, setMobileSourcesOpen] = React.useState(false);
   const [showPopUpPilot, setShowPopUpPilot] = React.useState(false);
   const [isBookOpen, setIsBookOpen] = React.useState(false);
   const [isOpening, setIsOpening] = React.useState(false);
@@ -1080,10 +1081,29 @@ export const Reading: React.FC = () => {
         onToggle={toggleLang}
       />
 
-      <div className="flex-1 flex overflow-hidden bg-slate-50/30 relative">
+      <div className="md:hidden shrink-0 grid grid-cols-2 gap-2 px-3 py-2 bg-[#fcfaf6] border-b border-amber-100 no-print">
+        <button type="button" onClick={() => { setActiveTab('library'); setShowBook(false); setMobileSourcesOpen(false); }}
+          aria-pressed={activeTab === 'library'}
+          className={`min-h-11 rounded-xl px-3 text-sm font-bold flex items-center justify-center gap-2 ${activeTab === 'library' ? 'bg-amber-800 text-white' : 'bg-white text-stone-700 border border-amber-200'}`}>
+          <Library size={17} />{t.myLibrary}
+        </button>
+        <button type="button" onClick={() => { setActiveTab('external'); setShowBook(false); setMobileSourcesOpen(false); }}
+          aria-pressed={activeTab === 'external'}
+          className={`min-h-11 rounded-xl px-3 text-sm font-bold flex items-center justify-center gap-2 ${activeTab === 'external' ? 'bg-amber-800 text-white' : 'bg-white text-stone-700 border border-amber-200'}`}>
+          <Plus size={17} />{lang === 'ar' ? 'نص جديد' : 'New text'}
+        </button>
+      </div>
+      <div className="md:hidden shrink-0 flex items-center justify-between gap-2 px-3 py-2 bg-white border-b border-stone-100 no-print">
+        <span className="text-xs font-semibold text-stone-600">{lang === 'ar' ? 'المستوى' : 'Level'}: {selectedLevel ? (lang === 'ar' ? selectedLevel.ar : selectedLevel.en) : (lang === 'ar' ? 'غير محدد' : 'Not selected')}</span>
+        <button type="button" onClick={() => setMobileSourcesOpen(v => !v)} aria-expanded={mobileSourcesOpen}
+          className="rounded-full border border-stone-200 bg-stone-50 px-4 min-h-10 text-xs font-bold">
+          {mobileSourcesOpen ? (lang === 'ar' ? 'إغلاق الخيارات' : 'Close options') : (lang === 'ar' ? 'المستويات والخيارات' : 'Levels & options')}
+        </button>
+      </div>
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden bg-slate-50/30 relative">
         
         {/* Sidebar - Right Side in RTL */}
-        <aside className="w-[300px] bg-slate-50/50 border-l rtl:border-l-0 rtl:border-r border-slate-100 flex flex-col shrink-0 no-print relative overflow-y-auto custom-scroll z-40">
+        <aside className={`${mobileSourcesOpen ? "flex" : "hidden"} md:flex w-full md:w-[300px] max-h-[42vh] md:max-h-none bg-slate-50/95 border-b md:border-b-0 border-slate-100 flex-col shrink-0 no-print relative overflow-y-auto custom-scroll z-40`}>
           <div className="p-8 border-b border-slate-100/50">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">{t.chooseSource}</h3>
             
@@ -1140,7 +1160,7 @@ export const Reading: React.FC = () => {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col overflow-y-auto custom-scroll relative bg-[#fcfcfd] p-8">
+        <main className="flex-1 min-h-0 min-w-0 flex flex-col overflow-y-auto custom-scroll relative bg-[#fcfcfd] p-3 sm:p-5 md:p-8">
           {/* Subtle Background Texture */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }} />
           
@@ -1479,7 +1499,7 @@ export const Reading: React.FC = () => {
           <button 
             onClick={handleToggleBook}
             disabled={isProcessing || !text || !textType}
-            className={`fixed bottom-8 left-8 w-14 h-14 bg-white text-slate-900 border border-slate-100 rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.08)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.12)] hover:scale-110 transition-all active:scale-95 disabled:opacity-50 z-[100] no-print group ${isGenerated && !showBook ? 'ring-4 ring-blue-400 ring-opacity-50 animate-pulse' : ''}`}
+            className={`fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-3 md:bottom-8 md:left-8 w-12 h-12 md:w-14 md:h-14 bg-white text-slate-900 border border-slate-100 rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.08)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.12)] hover:scale-110 transition-all active:scale-95 disabled:opacity-50 z-[100] no-print group ${isGenerated && !showBook ? 'ring-4 ring-blue-400 ring-opacity-50 animate-pulse' : ''}`}
             title={showBook ? t.btnEdit : t.btnDisplay}
           >
             {isProcessing ? (
@@ -1501,7 +1521,7 @@ export const Reading: React.FC = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="w-full max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center gap-12 overflow-visible py-4 perspective-[3000px]"
+                className="w-full max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center gap-4 md:gap-12 overflow-visible py-3 md:py-4 perspective-[3000px]"
               >
               
               {isBookOpen && (
@@ -1657,7 +1677,7 @@ export const Reading: React.FC = () => {
                 </motion.div>
               ) : (
                 <>
-                  <div className="relative w-full h-[380px] flex flex-col animate-in fade-in zoom-in duration-700 overflow-visible shrink-0 -translate-y-16">
+                  <div className="relative w-full h-[min(55vh,380px)] md:h-[380px] flex flex-col animate-in fade-in zoom-in duration-700 overflow-visible shrink-0 translate-y-0 md:-translate-y-16">
                   <div className="relative flex-1 w-full flex perspective-[3000px] preserve-3d py-1">
                     <div className="w-full h-full relative flex shadow-[0_20px_40px_rgba(0,0,0,0.2)] rounded-2xl bg-gradient-to-b from-[#3d1e09] via-[#2d160a] to-[#1a0d06] p-1.5 ring-[6px] ring-[#3d1e09] preserve-3d">
                       <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-6 bg-gradient-to-r from-black/20 via-black/40 to-black/20 z-30 pointer-events-none" />
