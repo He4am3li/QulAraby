@@ -14,7 +14,7 @@ import { FallingLetters } from '../components/Layout';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-import { GoogleGenAI } from '@google/genai';
+import { getAI } from '../services/gemini';
 
 interface ImplementationStep {
   id: string;
@@ -534,7 +534,7 @@ const Preparation: React.FC = () => {
 
     setIsAnalyzing(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY as string) || '' });
+      const ai = getAI();
       
       const reader = new FileReader();
       const base64Promise = new Promise<string>((resolve) => {
