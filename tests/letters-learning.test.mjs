@@ -50,7 +50,9 @@ for (const [, kind, word, markedLetter] of diacritics.matchAll(/^\s{4}(fatha|dam
 assert.equal(diacriticCount, 112, 'All 28 letters need four correctly marked examples');
 
 assert.deepEqual(letterCanvasPoint(150, 60, { left: 100, top: 10, width: 200, height: 100 }, 800, 200), { x: 200, y: 100 });
-assert.deepEqual(letterCanvasPoint(300, 210, { left: 100, top: 10, width: 200, height: 200 }, 850, 220), { x: 850, y: 220 });
+const scaledPoint = letterCanvasPoint(300, 210, { left: 100, top: 10, width: 200, height: 200 }, 850, 220);
+assert.ok(Math.abs(scaledPoint.x - 850) < 1e-7 && Math.abs(scaledPoint.y - 220) < 1e-7,
+  'Canvas coordinates should agree within floating-point precision');
 assert.match(src, /onPointerDown=\{startDrawing\}/);
 assert.match(src, /onPointerMove=\{draw\}/);
 assert.match(src, /onPointerCancel=\{stopDrawing\}/);
