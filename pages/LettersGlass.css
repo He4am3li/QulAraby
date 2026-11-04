@@ -447,17 +447,26 @@
       radial-gradient(ellipse at 50% 28%, rgba(233,242,255,.76), transparent 76%),
       rgba(255,255,255,.94) !important;
   }
-  .letters-liquid-page .letters-liquid-welcome-orb {
-    width: 70px;
+  .letters-liquid-page .letters-liquid-welcome {
+    padding-block: 10px;
   }
-  .letters-liquid-page .letters-liquid-welcome-orb-letter {
-    font-size: 45px;
-  }
-  .letters-liquid-page .letters-liquid-welcome-steps {
+  .letters-liquid-page .letters-liquid-welcome-content {
     gap: 5px;
   }
-  .letters-liquid-page .letters-liquid-welcome-steps span {
-    padding: 3px 7px;
+  .letters-liquid-page .letters-liquid-welcome-orb {
+    width: 54px;
+  }
+  .letters-liquid-page .letters-liquid-welcome-orb-letter {
+    font-size: 36px;
+  }
+  .letters-liquid-page .letters-liquid-welcome-steps {
+    display: none;
+  }
+}
+@media (max-width: 767px) and (max-height: 730px) {
+  .letters-liquid-page .letters-liquid-welcome-orb,
+  .letters-liquid-page .letters-liquid-welcome-eyebrow {
+    display: none;
   }
 }
 @media (max-height: 680px) {
