@@ -1,4 +1,6 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../components/AuthProvider';
 import { 
   Globe, MessageSquare, ChevronRight, ChevronLeft, 
   Volume2, Info, ArrowRight, ArrowLeft, Sparkles, Map as MapIcon,
@@ -1376,6 +1378,9 @@ const SafeImage: React.FC<SafeImageProps> = (props) => {
 };
 
 export const Dialects: React.FC = () => {
+  const navigate = useNavigate();
+  const { profile } = useAuth();
+  const staffVoiceLab = profile?.role === 'teacher' || profile?.role === 'admin';
   const { profiles: tutorVoices } = useDialectVoiceProfiles();
   const [lang, setLang] = React.useState<'ar' | 'en'>(
     (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar'
@@ -2245,6 +2250,11 @@ export const Dialects: React.FC = () => {
         onToggle={toggleLang}
         rightContent={
           <>
+            {staffVoiceLab && <button type="button" onClick={() => { stopLiveConversation(); navigate('/voice-lab'); }}
+              className="rounded-xl border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-white/20"
+              aria-label={lang === 'ar' ? 'فتح مختبر أصوات المعلمين' : 'Open tutor voice lab'}>
+              {lang === 'ar' ? 'مختبر الأصوات' : 'Voice Lab'}
+            </button>}
             <button 
               onClick={() => {
                 if (selectedCountry) {
