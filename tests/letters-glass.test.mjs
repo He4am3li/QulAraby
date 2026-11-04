@@ -51,14 +51,17 @@ assert.ok(
   app.includes('letters-liquid-alphabet bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex-none max-w-5xl mx-auto w-full'),
   'The alphabet panel retains its original width constraint'
 );
-assert.ok(app.includes('letters-liquid-welcome-orb'), 'Welcome should feature a crystal Arabic glyph');
-assert.ok(app.includes('letters-liquid-welcome-steps'), 'Empty state should explain the learning flow');
+assert.ok(app.includes('letters-liquid-idle-icon'), 'Empty state has one restrained visual icon');
+assert.ok(app.includes("lang === 'ar' ? 'اختر حرفًا للبدء' : 'Choose a letter to begin'"), 'Empty state has only one concise instruction');
+assert.ok(!app.includes('letters-liquid-welcome-orb'), 'No arbitrary letter ornament should remain');
+assert.ok(!app.includes('letters-liquid-welcome-steps'), 'No extra process captions should remain');
+assert.ok(!app.includes('{t.welcome}'), 'Verbose former welcome heading must be removed');
 assert.ok(app.includes('letters-liquid-action--worksheet'), 'Worksheet is a green-tinted crystal control');
 assert.ok(app.includes('letters-liquid-action--inbox'), 'Teacher inbox is a blue-tinted crystal control');
 assert.ok(app.includes('letters-liquid-action--upload'), 'Student upload shares the new crystal control');
 assert.ok(app.includes('data-glass-tone="emerald"'), 'Word discrimination uses green tint rather than flat button');
 assert.ok(app.includes('data-glass-tone="ocean"'), 'Writing uses blue tint rather than flat button');
-for(const style of ['.letters-liquid-welcome-orb', '.letters-liquid-action--worksheet',
+for(const style of ['.letters-liquid-idle-icon', '.letters-liquid-action--worksheet',
   '.letters-liquid-action--inbox', '.letters-liquid-tab[data-glass-active="true"]',
   'max-width: 64rem', '@media (max-height: 680px)']) {
   assert.ok(css.includes(style), 'Missing design refinement: '+style);
