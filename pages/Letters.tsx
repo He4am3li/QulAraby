@@ -488,8 +488,9 @@ const TracingBoard: React.FC<{
               <button
                 key={opt.id}
                 onClick={() => setActiveShape(opt.id as any)}
-                className={`p-2 rounded-2xl text-center transition-all border-2 ${activeShape === opt.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-200'}`}
+                className={`relative p-2 rounded-2xl text-center transition-all border-2 ${activeShape === opt.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-200'}`}
               >
+                                {verifiedForms[opt.id] && <CheckCircle2 size={12} className="absolute top-1 right-1 text-emerald-500" aria-label={lang === 'ar' ? 'تم التحقق من هذا الشكل' : 'Verified form'} />}
                 <span className="text-2xl block mb-1 arabic-font">{(shapes as any)[opt.id]}</span>
                 <span className="text-[8px] font-black uppercase block">{opt.label}</span>
               </button>
@@ -535,8 +536,8 @@ const TracingBoard: React.FC<{
                 {aiFeedback.isCorrect ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
                 <span className="text-lg font-black arabic-font">{aiFeedback.message}</span>
               </div>
-              <button onClick={() => { clear(); setAiFeedback(null); }} className="px-8 py-2 bg-slate-900 text-white rounded-xl font-black text-xs hover:scale-105 transition-all">
-                {t.retry}
+              <button onClick={continueAfterFeedback} className="px-8 py-2 bg-slate-900 text-white rounded-xl font-black text-xs hover:scale-105 transition-all">
+                {aiFeedback.isCorrect ? (lang === 'ar' ? 'تابع التدريب' : 'Continue') : t.retry}
               </button>
             </div>
           )}
@@ -547,7 +548,7 @@ const TracingBoard: React.FC<{
                 <Loader2 className="animate-spin text-blue-600" size={48} />
                 <PenTool className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-400" size={20} />
               </div>
-              <p className="mt-4 text-xs font-black text-blue-600 uppercase tracking-widest animate-pulse">جاري فحص الرسم...</p>
+              <p className="mt-4 text-xs font-black text-blue-600 arabic-font animate-pulse">{lang === 'ar' ? 'جاري فحص الرسم...' : 'Checking handwriting...'}</p>
             </div>
           )}
         </div>
@@ -558,8 +559,9 @@ const TracingBoard: React.FC<{
             <button
               key={opt.id}
               onClick={() => setActiveShape(opt.id as any)}
-              className={`p-2 rounded-2xl text-center transition-all border-2 ${activeShape === opt.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-200'}`}
+              className={`relative p-2 rounded-2xl text-center transition-all border-2 ${activeShape === opt.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-200'}`}
             >
+                            {verifiedForms[opt.id] && <CheckCircle2 size={12} className="absolute top-1 right-1 text-emerald-500" aria-label={lang === 'ar' ? 'تم التحقق من هذا الشكل' : 'Verified form'} />}
               <span className="text-2xl block mb-1 arabic-font">{(shapes as any)[opt.id]}</span>
               <span className="text-[8px] font-black uppercase block">{opt.label}</span>
             </button>
@@ -567,11 +569,14 @@ const TracingBoard: React.FC<{
         </div>
       </div>
       
-      <div className="p-2 bg-blue-50 flex items-center justify-between px-6 shrink-0 border-t border-blue-100">
-        <div className="flex items-center gap-4">
-          <p className="text-[10px] font-bold text-blue-600 arabic-font">
-            {t.followShape}
+      <div className="p-2 bg-blue-50 flex items-center justify-between gap-2 px-3 sm:px-6 shrink-0 border-t border-blue-100">
+        <div className="flex flex-col min-w-0 gap-0.5">
+          <p className="text-[10px] font-bold text-blue-700 arabic-font">{t.followShape}</p>
+          <p className="text-[9px] font-bold text-slate-500 arabic-font" aria-live="polite">
+            {lang === 'ar' ? 'أشكال موثقة' : 'Verified forms'} {LETTER_FORMS.filter(form => verifiedForms[form]).length}/4
+            {' · '}{lang === 'ar' ? 'الاستماع' : 'Listening'} {listeningScore}/{LISTENING_TOTAL}
           </p>
+          {checkError && <p role="alert" className="arabic-font text-[10px] font-bold text-rose-700 max-w-[240px]">{checkError}</p>}
         </div>
         <div className="flex gap-2">
           <button onClick={clear} className="px-4 py-2 bg-white border border-slate-200 text-slate-500 rounded-xl font-black text-[10px] hover:bg-slate-100 transition-all flex items-center gap-2">
