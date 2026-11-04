@@ -2494,6 +2494,7 @@ export const Letters: React.FC = () => {
                       <button 
                         onClick={() => setActiveTab('practice')}
                         data-glass-active={activeTab === 'practice'}
+                        data-glass-tone="ocean"
                         className={`letters-liquid-tab px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'practice' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
                       >
                         <PenTool size={14} />
@@ -2502,6 +2503,7 @@ export const Letters: React.FC = () => {
                       <button 
                         onClick={() => setActiveTab('soundlab')}
                         data-glass-active={activeTab === 'soundlab'}
+                        data-glass-tone="indigo"
                         className={`letters-liquid-tab px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'soundlab' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
                       >
                         <Activity size={14} />
@@ -2510,6 +2512,7 @@ export const Letters: React.FC = () => {
                       <button 
                         onClick={() => setActiveTab('game')}
                         data-glass-active={activeTab === 'game'}
+                        data-glass-tone="amber"
                         className={`letters-liquid-tab px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'game' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
                       >
                         <Music size={14} />
@@ -2518,6 +2521,7 @@ export const Letters: React.FC = () => {
                       <button 
                         onClick={() => setActiveTab('words')}
                         data-glass-active={activeTab === 'words'}
+                        data-glass-tone="emerald"
                         className={`letters-liquid-tab px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'words' ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
                       >
                         <BookOpen size={14} />
@@ -2526,6 +2530,7 @@ export const Letters: React.FC = () => {
                       <button 
                         onClick={() => setActiveTab('tashkeel')}
                         data-glass-active={activeTab === 'tashkeel'}
+                        data-glass-tone="violet"
                         className={`letters-liquid-tab px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'tashkeel' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
                       >
                         <TypeIcon size={14} />
@@ -2582,11 +2587,26 @@ export const Letters: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="letters-liquid-panel bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-2 animate-in fade-in zoom-in duration-700">
-                 <div>
-                    <h3 className="text-xl font-black text-slate-800 arabic-font mb-1">{t.welcome}</h3>
-                    {lang === 'en' && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.welcomeSub}</p>}
-                 </div>
+              <div className="letters-liquid-panel letters-liquid-welcome bg-white w-full max-w-5xl mx-auto min-h-0 flex-1 p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-700">
+                <div className="letters-liquid-welcome-content flex w-full flex-col items-center justify-center gap-2.5 sm:gap-3">
+                  <div className="letters-liquid-welcome-orb" aria-hidden="true">
+                    <span className="letters-liquid-welcome-orb-letter arabic-font">ب</span>
+                    <span className="letters-liquid-welcome-orb-rim" />
+                    <span className="letters-liquid-welcome-orb-glint" />
+                  </div>
+                  <div className="flex flex-col items-center gap-1.5">
+                    <span className="letters-liquid-welcome-eyebrow arabic-font">{lang === 'ar' ? 'رحلتك مع الحروف العربية' : 'YOUR ARABIC LETTER JOURNEY'}</span>
+                    <h3 className="arabic-font text-lg sm:text-xl font-black text-slate-800 leading-relaxed">{t.welcome}</h3>
+                    <p className="arabic-font max-w-md text-[11px] sm:text-xs font-medium leading-relaxed text-slate-500">{lang === 'ar' ? 'اختر حرفاً من اللوحة أعلاه، واكتشف صوته وأشكاله ثم تدرب على كتابته.' : t.welcomeSub}</p>
+                  </div>
+                  <div className="letters-liquid-welcome-steps" aria-hidden="true">
+                    <span>{lang === 'ar' ? 'استمع' : 'Listen'}</span>
+                    <i />
+                    <span>{lang === 'ar' ? 'ميّز' : 'Recognise'}</span>
+                    <i />
+                    <span>{lang === 'ar' ? 'اكتب' : 'Write'}</span>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -2709,17 +2729,17 @@ export const Letters: React.FC = () => {
                    <button 
                      onClick={() => setShowWorksheetPreview(true)} 
                      disabled={isGeneratingWorksheet}
-                     className="letters-liquid-action w-full py-2 bg-emerald-600 text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-100 transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
+                     className="letters-liquid-action letters-liquid-action--worksheet w-full py-2 bg-emerald-600 text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-100 transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
                    >
-                      {isGeneratingWorksheet ? <Loader2 className="animate-spin" size={14} /> : <FileText size={14} />} 
+                      <span className="letters-liquid-action-seal">{isGeneratingWorksheet ? <Loader2 className="animate-spin" size={14} /> : <FileText size={14} />}</span>
                       <span>{t.downloadBtn}</span>
                    </button>
                    {isTeacher ? (
                      <button 
                        onClick={() => setShowTeacherInbox(true)} 
-                       className="letters-liquid-action w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-blue-100 transition-all hover:from-blue-700 hover:to-indigo-700 active:scale-95 group relative"
+                       className="letters-liquid-action letters-liquid-action--inbox w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-blue-100 transition-all hover:from-blue-700 hover:to-indigo-700 active:scale-95 group relative"
                      >
-                       <Inbox size={14} className="text-amber-300 animate-pulse" /> 
+                       <span className="letters-liquid-action-seal"><Inbox size={14} /></span>
                        <span>{lang === 'ar' ? 'صندوق واجبات الطلاب' : 'Student Homework Inbox'}</span>
                        {pendingSubmissionsCount > 0 && (
                          <span className="bg-amber-400 text-slate-900 text-[9px] font-black px-1.5 py-0.2 rounded-full leading-tight mr-1 ml-1 animate-bounce">
@@ -2729,8 +2749,8 @@ export const Letters: React.FC = () => {
                      </button>
                    ) : (
                      <>
-                       <button onClick={() => fileInputRef.current?.click()} className="letters-liquid-action w-full py-2 bg-[#2563eb] text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 active:scale-95">
-                          {isVerifying ? <Loader2 className="animate-spin" size={14} /> : <Upload size={14} />} <span>{t.uploadBtn}</span>
+                       <button onClick={() => fileInputRef.current?.click()} className="letters-liquid-action letters-liquid-action--upload w-full py-2 bg-[#2563eb] text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 active:scale-95">
+                          <span className="letters-liquid-action-seal">{isVerifying ? <Loader2 className="animate-spin" size={14} /> : <Upload size={14} />}</span> <span>{t.uploadBtn}</span>
                        </button>
                        <input type="file" ref={fileInputRef} onChange={(e) => e.target.files && handleUpload(e)} className="hidden" accept="image/*" />
                      </>
