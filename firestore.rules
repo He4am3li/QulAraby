@@ -579,6 +579,39 @@ service cloud.firestore {
         (isTeacher() && submissionBelongsToCurrentScope(resource.data));
     }
 
+    // Dialect voice approvals are public to signed-in learners, but only
+    // platform administrators can publish reviewed voice identity changes.
+    match /dialect_voice_profiles/{profileId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() &&
+        request.resource.data.keys().hasOnly([
+          'countryId', 'gender', 'voiceName', 'delivery', 'approved',
+          'reviewedArabic', 'reviewedEnglish', 'updatedAt'
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'countryId', 'gender', 'voiceName', 'delivery', 'approved',
+          'reviewedArabic', 'reviewedEnglish', 'updatedAt'
+        ]) &&
+        request.resource.data.countryId is string &&
+        request.resource.data.countryId in [
+          'uae','egypt','saudi','morocco','jordan','lebanon','palestine','iraq',
+          'tunisia','algeria','libya','syria','sudan','oman','kuwait','qatar',
+          'bahrain','yemen','mauritania','somalia','djibouti','comoros'
+        ] &&
+        request.resource.data.gender in ['male', 'female'] &&
+        profileId == request.resource.data.countryId + '_' + request.resource.data.gender &&
+        request.resource.data.voiceName in [
+          'Puck','Charon','Fenrir','Orus','Enceladus',
+          'Kore','Aoede','Leda','Zephyr','Callirrhoe'
+        ] &&
+        request.resource.data.delivery in ['gentle', 'natural', 'expressive'] &&
+        request.resource.data.approved == true &&
+        request.resource.data.reviewedArabic == true &&
+        request.resource.data.reviewedEnglish == true &&
+        request.resource.data.updatedAt is timestamp;
+      allow delete: if isAdmin();
+    }
+
     // Default Deny
     match /{path=**} {
       allow read, write: if false;
