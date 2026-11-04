@@ -17,6 +17,7 @@ import { DialectPassportCover, DialectPassportLibrary } from '../components/Dial
 import { assessDialectMission, type MissionTurn } from '../services/dialectMissionAssessment';
 import { getAI, getLiveAI, generateSpeech, decodeAudioData } from '../services/gemini';
 import { SpeechLipSync, analyzeSpeechBuffer, startLipSyncedSource } from '../services/speechLipSync.mjs';
+import { buildDialectTutorPolicy, inferLearnerLanguage } from '../services/dialectTutorPolicy';
 
 declare global {
   interface Window {
@@ -1648,7 +1649,8 @@ export const Dialects: React.FC = () => {
       qatar: 'ar-QA', bahrain: 'ar-BH', mauritania: 'ar-MR',
       somalia: 'ar-SO', djibouti: 'ar-DJ', comoros: 'ar-KM'
     };
-    recognition.lang = speechLocales[selectedCountry?.id] || 'ar-SA';
+    recognition.lang = inferLearnerLanguage(chatInput, lang) === 'en'
+      ? 'en-US' : (speechLocales[selectedCountry?.id] || 'ar-SA');
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -1753,6 +1755,7 @@ export const Dialects: React.FC = () => {
       const journey = learningJourneysRef.current[countryForTurn.id];
       const priorTurns = journey?.turns || [];
       const returning = (journey?.visits || 0) > 1 && priorTurns.length > 0;
+      const countryPolicy = buildDialectTutorPolicy({ countryName: countryForTurn.nameEn, dialect: countryForTurn.dialect, tutorName: currentPersona.nameEn, history: priorTurns, learnerLanguage: inferLearnerLanguage(userMsg), culture: countryForTurn.culture, vocabulary: countryForTurn.vocab });
       const systemPrompt = `LEARNER CONTINUITY: ${returning ? 'RETURNING LEARNER. Do not introduce yourself again. Continue from previous practice, briefly acknowledge their return, and offer the next small step.' : 'New learner: introduce yourself once, without assuming their proficiency.'}
       Last practice: ${journey?.lastPracticed || 'not recorded'}.
       Recent learner history: ${JSON.stringify(priorTurns.slice(-12))}.
@@ -1798,8 +1801,8 @@ export const Dialects: React.FC = () => {
       const response = await ai.models.generateContent({
         model: "gemini-3.8-flash",
         contents: [
-          { role: 'user', parts: [{ text: systemPrompt }] },
-          ...chatMessages.map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] })),
+          { role: 'user', parts: [{ text: countryPolicy + '\n' + systemPrompt }] },
+          ...priorTurns.slice(-16).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] })),
           { role: 'user', parts: [{ text: userMsg }] }
         ],
         config: { responseMimeType: 'application/json', temperature: 0.5 }
@@ -1855,6 +1858,7 @@ export const Dialects: React.FC = () => {
       const journey = learningJourneysRef.current[country.id];
       const returningLearner = (journey?.visits || 0) > 1 && (journey?.turns?.length || 0) > 0;
       const recentContext = (journey?.turns || []).slice(-10).map(t => t.role + ': ' + t.text.slice(0, 180)).join(' | ');
+      const livePolicy = buildDialectTutorPolicy({ countryName: country.nameEn, dialect: country.dialect, tutorName: persona.nameEn, history: journey?.turns || [], learnerLanguage: inferLearnerLanguage((journey?.turns || []).filter(t => t.role === 'user').slice(-1)[0]?.text || '', 'en'), culture: country.culture, vocabulary: country.vocab });
       liveInputBufferRef.current = '';
       let liveTutorText = '';
       // Throttled progressive translation of live transcription snapshots.
@@ -1943,16 +1947,10 @@ export const Dialects: React.FC = () => {
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: persona.nameEn === country.characterFemale.nameEn ? "Kore" : "Puck" } },
           },
-          systemInstruction: 'You are ' + persona.nameEn + ' from ' + country.nameEn +
-            ', a patient language teacher. Teach authentic ' + country.dialect +
-            '. Current Mission: ' + currentMission +
-            (returningLearner
-              ? '. RETURNING LEARNER: Do not introduce yourself or restart the greeting lesson. Continue naturally from their previously practiced expressions. Prior conversation: ' + recentContext + '. '
-              : '. NEW LEARNER: Introduce yourself once, teach one greeting and let the student try it before discussing passport missions or landmarks. ') +
-            'CRITICAL SPEECH LANGUAGE RULE: Detect the language of the CURRENT student utterance. English speech (Hi, Hello, How are you, etc.) MUST get an immediate spoken ENGLISH response without the learner asking for translation, plus only one short local dialect example and its meaning in English. Arabic speech gets an initial simple authentic LOCAL ARABIC response. If the learner hesitates, struggles, uses short confused replies, says they do not understand, or changes to English, immediately switch to spoken ENGLISH to explain, encourage and teach one phrase. Re-evaluate at every turn. The website interface language does NOT determine reply language. ' +
-            'A learner who knows one greeting may still know no other Arabic. Reply briefly in the authentic local dialect, explain the meaning in easy English, ask ONE easy follow-up, and switch to English immediately when they hesitate or ask in English. Never assume fluency from one sentence. Speak one short sentence or question at a time. ' +
-            'If the student speaks English, says they know no Arabic, or appears lost, SPEAK ENGLISH FIRST: reassure them, explain one simple local Arabic phrase in English, and ask them to try it. Never answer their English-only confusion with unexplained Arabic. ' +
-            'Do not award passport stamps, and do not assume the student knows the language. Keep responses short and conversational.',
+          systemInstruction: livePolicy + '\nCurrent optional practice mission (never rush or force it): ' + currentMission + '\n' +
+            'A new audio session is NOT a new conversation. Continue the conversation in SHARED CHAT HISTORY even when the other tutor was speaking. ' +
+            'Use only the active country dialect in Arabic, or intelligible English with the authentic local speaker accent when the student uses English. ' +
+            'Reply to the learner naturally, and never force a greeting exercise or move to the mission before learner readiness.',
         },
         callbacks: {
           onopen: () => {
@@ -2170,7 +2168,7 @@ export const Dialects: React.FC = () => {
       && !isLiveActiveRef.current && !liveConnectingRef.current;
     setCurrentSpeechText(text);
     try {
-      const audioBytes = await generateSpeech(text, 'ar');
+      const audioBytes = await generateSpeech(text, inferLearnerLanguage(text, 'ar'));
       if (!current()) return;
       if (!audioBytes) {
         setIsSpeaking(false);
@@ -2457,7 +2455,7 @@ export const Dialects: React.FC = () => {
                             onSelect={() => {
                               stopLiveConversation();
                               setSelectedPersona(char);
-                              setChatMessages(learningJourneysRef.current[selectedCountry.id]?.turns || []);
+                              setChatMessages(previous => previous.length ? previous : (learningJourneysRef.current[selectedCountry.id]?.turns || []));
                             }}
                           />
                         );
