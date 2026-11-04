@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Globe, Volume2, Loader2, Type as TypeIcon, ChevronLeft, ArrowRight, AlertCircle, Music, Wind, Download, Upload, FileText, CheckCircle2, XCircle, Award, Share2, PenTool, RefreshCcw, Paintbrush, Palette, Play, Star, CheckCircle, Edit3, BrainCircuit, Mic, Activity, BookOpen, Layers, Search, X, Inbox } from 'lucide-react';
 import { LanguageToggle } from '../components/LanguageToggle';
 import { letterCanvasPoint } from '../utils/letterCanvas.js';
+import './LettersGlass.css';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { generateSpeech, decodeAudioData, verifyLetterWorksheet, fileToGenerativePart, generateContentWithRetry, speak } from '../services/gemini';
@@ -2381,7 +2382,7 @@ export const Letters: React.FC = () => {
       animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
       exit={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className={`w-full flex flex-col h-full bg-white overflow-hidden ${lang === 'ar' ? 'text-right' : 'text-left'}`} 
+      className={`letters-liquid-page w-full flex flex-col h-full bg-white overflow-hidden ${lang === 'ar' ? 'text-right' : 'text-left'}`} 
       dir={lang === 'ar' ? 'rtl' : 'ltr'}
     >
       
@@ -2450,10 +2451,10 @@ export const Letters: React.FC = () => {
 
       <div className="flex-1 overflow-hidden flex flex-col md:flex-row relative no-print">
         {/* Main Content Area */}
-        <div className="flex-1 min-w-0 p-2 md:p-3 overflow-hidden bg-slate-50/20 flex flex-col space-y-2">
+        <div className="letters-liquid-main-area flex-1 min-w-0 p-2 md:p-3 overflow-hidden bg-slate-50/20 flex flex-col space-y-2">
           
           {/* Alphabet Grid (Top Half) */}
-          <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex-none max-w-5xl mx-auto w-full">
+          <div className="letters-liquid-panel letters-liquid-alphabet bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex-none max-w-5xl mx-auto w-full">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-black text-slate-800 arabic-font">{t.subtitle}</h2>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t.instr}</p>
@@ -2465,7 +2466,8 @@ export const Letters: React.FC = () => {
                   <button
                     key={item.char}
                     onClick={() => { setSelectedChar(item); handlePlayLetterName(item.char); }}
-                    className={`group relative w-10 h-10 bg-white border-2 rounded-2xl flex flex-col items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-sm ${
+                    data-glass-selected={selectedChar?.char === item.char}
+                    className={`letters-liquid-letter group relative w-10 h-10 bg-white border-2 rounded-2xl flex flex-col items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-sm ${
                       selectedChar?.char === item.char ? 'border-blue-500 bg-blue-50' : 'border-slate-100 hover:border-blue-300'
                     }`}
                   >
@@ -2485,41 +2487,46 @@ export const Letters: React.FC = () => {
           <div className="flex-1 flex flex-col min-h-0">
             {selectedChar ? (
               <div className="flex flex-col h-full space-y-2">
-                <div className="bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden flex flex-col w-full max-w-5xl mx-auto animate-in slide-in-from-top-6 duration-500 no-print h-full">
+                <div className="letters-liquid-panel letters-liquid-activity bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden flex flex-col w-full max-w-5xl mx-auto animate-in slide-in-from-top-6 duration-500 no-print h-full">
                   {/* Shared Tool Header */}
-                  <div className="bg-slate-50 px-4 py-2 flex items-center justify-between border-b border-slate-100 shrink-0">
+                  <div className="letters-liquid-tabs bg-slate-50 px-4 py-2 flex items-center justify-between border-b border-slate-100 shrink-0">
                     <div className="flex gap-2">
                       <button 
                         onClick={() => setActiveTab('practice')}
-                        className={`px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'practice' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
+                        data-glass-active={activeTab === 'practice'}
+                        className={`letters-liquid-tab px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'practice' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
                       >
                         <PenTool size={14} />
                         <span>{t.practiceBtn}</span>
                       </button>
                       <button 
                         onClick={() => setActiveTab('soundlab')}
-                        className={`px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'soundlab' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
+                        data-glass-active={activeTab === 'soundlab'}
+                        className={`letters-liquid-tab px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'soundlab' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
                       >
                         <Activity size={14} />
                         <span>{t.soundLabBtn}</span>
                       </button>
                       <button 
                         onClick={() => setActiveTab('game')}
-                        className={`px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'game' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
+                        data-glass-active={activeTab === 'game'}
+                        className={`letters-liquid-tab px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'game' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
                       >
                         <Music size={14} />
                         <span>{t.auditGameBtn}</span>
                       </button>
                       <button 
                         onClick={() => setActiveTab('words')}
-                        className={`px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'words' ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
+                        data-glass-active={activeTab === 'words'}
+                        className={`letters-liquid-tab px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'words' ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
                       >
                         <BookOpen size={14} />
                         <span>{t.wordDiscrimBtn}</span>
                       </button>
                       <button 
                         onClick={() => setActiveTab('tashkeel')}
-                        className={`px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'tashkeel' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
+                        data-glass-active={activeTab === 'tashkeel'}
+                        className={`letters-liquid-tab px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'tashkeel' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
                       >
                         <TypeIcon size={14} />
                         <span>{t.letterTashkeelBtn}</span>
@@ -2575,7 +2582,7 @@ export const Letters: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="p-8 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-2 animate-in fade-in zoom-in duration-700">
+              <div className="letters-liquid-panel bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-2 animate-in fade-in zoom-in duration-700">
                  <div>
                     <h3 className="text-xl font-black text-slate-800 arabic-font mb-1">{t.welcome}</h3>
                     {lang === 'en' && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.welcomeSub}</p>}
@@ -2586,7 +2593,7 @@ export const Letters: React.FC = () => {
         </div>
 
         {/* Sidebar Detail */}
-        <div className={`w-full md:w-72 shrink-0 border-slate-100 ${lang === 'ar' ? 'md:border-r' : 'md:border-l'} bg-white p-3 flex flex-col items-center justify-between animate-in slide-in-from-right-5 overflow-hidden z-10`}>
+        <div className={`w-full md:w-72 shrink-0 border-slate-100 ${lang === 'ar' ? 'md:border-r' : 'md:border-l'} bg-white letters-liquid-panel letters-liquid-sidebar p-3 flex flex-col items-center justify-between animate-in slide-in-from-right-5 overflow-hidden z-10`}>
           {selectedChar ? (
             <div className="flex flex-col h-full w-full max-w-[260px] justify-between">
               
@@ -2634,7 +2641,7 @@ export const Letters: React.FC = () => {
                   )}
                 </div>
 
-                <div className="p-2 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="letters-liquid-shapes p-2 bg-slate-50 rounded-xl border border-slate-100">
                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1 text-center border-b border-slate-200 pb-0.5">{t.shapesTitle}</p>
                   <div className="grid grid-cols-4 gap-1 text-center">
                     {['initial', 'medial', 'final', 'isolated'].map((s:any) => (
@@ -2652,7 +2659,7 @@ export const Letters: React.FC = () => {
                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t.harakatTitle}</p>
                   <div className="grid grid-cols-4 gap-1">
                     {HARAKAT.map((h) => (
-                      <button key={h.symbol} onClick={() => handleSpeak(getCombinedChar(selectedChar.char, h.symbol), `h-${h.symbol}`)} className={`group flex flex-col items-center justify-center p-1.5 rounded-xl border border-transparent transition-all hover:shadow-md ${h.color}`}>
+                      <button key={h.symbol} onClick={() => handleSpeak(getCombinedChar(selectedChar.char, h.symbol), `h-${h.symbol}`)} className={`letters-liquid-sidecell group flex flex-col items-center justify-center p-1.5 rounded-xl border border-transparent transition-all hover:shadow-md ${h.color}`}>
                         <span className="text-lg font-black arabic-font">{getCombinedChar(selectedChar.char, h.symbol)}</span>
                         <span className="text-[6px] font-black uppercase opacity-60">{lang === 'ar' ? h.nameAr : h.nameEn}</span>
                       </button>
@@ -2664,7 +2671,7 @@ export const Letters: React.FC = () => {
                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t.shaddaTitle}</p>
                   <div className="grid grid-cols-3 gap-1">
                     {SHADDA_VARIATIONS.map((sv) => (
-                      <button key={sv.symbol} onClick={() => handleSpeak(getCombinedChar(selectedChar.char, sv.symbol), `sv-${sv.symbol}`)} className={`group flex flex-col items-center justify-center p-1.5 rounded-xl border border-transparent transition-all hover:shadow-md ${sv.color}`}>
+                      <button key={sv.symbol} onClick={() => handleSpeak(getCombinedChar(selectedChar.char, sv.symbol), `sv-${sv.symbol}`)} className={`letters-liquid-sidecell group flex flex-col items-center justify-center p-1.5 rounded-xl border border-transparent transition-all hover:shadow-md ${sv.color}`}>
                         <span className="text-lg font-black arabic-font">{getCombinedChar(selectedChar.char, sv.symbol)}</span>
                         <span className="text-[6px] font-black uppercase opacity-60">{lang === 'ar' ? sv.nameAr : sv.nameEn}</span>
                       </button>
@@ -2676,7 +2683,7 @@ export const Letters: React.FC = () => {
                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t.madTitle}</p>
                   <div className="grid grid-cols-3 gap-1">
                     {MAD_VOWELS.map((m) => (
-                      <button key={m.symbol} onClick={() => handleSpeak(getCombinedChar(selectedChar.char, m.symbol), `m-${m.symbol}`)} className={`group flex flex-col items-center justify-center p-1.5 rounded-xl border border-transparent transition-all hover:shadow-md ${m.color}`}>
+                      <button key={m.symbol} onClick={() => handleSpeak(getCombinedChar(selectedChar.char, m.symbol), `m-${m.symbol}`)} className={`letters-liquid-sidecell group flex flex-col items-center justify-center p-1.5 rounded-xl border border-transparent transition-all hover:shadow-md ${m.color}`}>
                         <span className="text-lg font-black arabic-font">{getCombinedChar(selectedChar.char, m.symbol)}</span>
                         <span className="text-[6px] font-black uppercase opacity-60">{lang === 'ar' ? m.nameAr : m.nameEn}</span>
                       </button>
@@ -2688,7 +2695,7 @@ export const Letters: React.FC = () => {
                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t.tanweenTitle}</p>
                   <div className="grid grid-cols-3 gap-1">
                     {TANWEEN.map((tn) => (
-                      <button key={tn.symbol} onClick={() => handleSpeak(getCombinedChar(selectedChar.char, tn.symbol), `tn-${tn.symbol}`)} className={`group flex flex-col items-center justify-center p-1.5 rounded-xl border border-transparent transition-all hover:shadow-md ${tn.color}`}>
+                      <button key={tn.symbol} onClick={() => handleSpeak(getCombinedChar(selectedChar.char, tn.symbol), `tn-${tn.symbol}`)} className={`letters-liquid-sidecell group flex flex-col items-center justify-center p-1.5 rounded-xl border border-transparent transition-all hover:shadow-md ${tn.color}`}>
                         <span className="text-lg font-black arabic-font">{getCombinedChar(selectedChar.char, tn.symbol)}</span>
                         <span className="text-[6px] font-black uppercase opacity-60">{lang === 'ar' ? tn.nameAr : tn.nameEn}</span>
                       </button>
@@ -2702,7 +2709,7 @@ export const Letters: React.FC = () => {
                    <button 
                      onClick={() => setShowWorksheetPreview(true)} 
                      disabled={isGeneratingWorksheet}
-                     className="w-full py-2 bg-emerald-600 text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-100 transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
+                     className="letters-liquid-action w-full py-2 bg-emerald-600 text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-100 transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
                    >
                       {isGeneratingWorksheet ? <Loader2 className="animate-spin" size={14} /> : <FileText size={14} />} 
                       <span>{t.downloadBtn}</span>
@@ -2710,7 +2717,7 @@ export const Letters: React.FC = () => {
                    {isTeacher ? (
                      <button 
                        onClick={() => setShowTeacherInbox(true)} 
-                       className="w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-blue-100 transition-all hover:from-blue-700 hover:to-indigo-700 active:scale-95 group relative"
+                       className="letters-liquid-action w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-blue-100 transition-all hover:from-blue-700 hover:to-indigo-700 active:scale-95 group relative"
                      >
                        <Inbox size={14} className="text-amber-300 animate-pulse" /> 
                        <span>{lang === 'ar' ? 'صندوق واجبات الطلاب' : 'Student Homework Inbox'}</span>
@@ -2722,7 +2729,7 @@ export const Letters: React.FC = () => {
                      </button>
                    ) : (
                      <>
-                       <button onClick={() => fileInputRef.current?.click()} className="w-full py-2 bg-[#2563eb] text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 active:scale-95">
+                       <button onClick={() => fileInputRef.current?.click()} className="letters-liquid-action w-full py-2 bg-[#2563eb] text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 active:scale-95">
                           {isVerifying ? <Loader2 className="animate-spin" size={14} /> : <Upload size={14} />} <span>{t.uploadBtn}</span>
                        </button>
                        <input type="file" ref={fileInputRef} onChange={(e) => e.target.files && handleUpload(e)} className="hidden" accept="image/*" />
