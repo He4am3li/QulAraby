@@ -2587,25 +2587,10 @@ export const Letters: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="letters-liquid-panel letters-liquid-welcome bg-white w-full max-w-5xl mx-auto min-h-0 flex-1 p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-700">
-                <div className="letters-liquid-welcome-content flex w-full flex-col items-center justify-center gap-2.5 sm:gap-3">
-                  <div className="letters-liquid-welcome-orb" aria-hidden="true">
-                    <span className="letters-liquid-welcome-orb-letter arabic-font">ب</span>
-                    <span className="letters-liquid-welcome-orb-rim" />
-                    <span className="letters-liquid-welcome-orb-glint" />
-                  </div>
-                  <div className="flex flex-col items-center gap-1.5">
-                    <span className="letters-liquid-welcome-eyebrow arabic-font">{lang === 'ar' ? 'رحلتك مع الحروف العربية' : 'YOUR ARABIC LETTER JOURNEY'}</span>
-                    <h3 className="arabic-font text-lg sm:text-xl font-black text-slate-800 leading-relaxed">{t.welcome}</h3>
-                    <p className="arabic-font max-w-md text-[11px] sm:text-xs font-medium leading-relaxed text-slate-500">{lang === 'ar' ? 'اختر حرفاً من اللوحة أعلاه، واكتشف صوته وأشكاله ثم تدرب على كتابته.' : t.welcomeSub}</p>
-                  </div>
-                  <div className="letters-liquid-welcome-steps" aria-hidden="true">
-                    <span>{lang === 'ar' ? 'استمع' : 'Listen'}</span>
-                    <i />
-                    <span>{lang === 'ar' ? 'ميّز' : 'Recognise'}</span>
-                    <i />
-                    <span>{lang === 'ar' ? 'اكتب' : 'Write'}</span>
-                  </div>
+              <div className="letters-liquid-panel letters-liquid-welcome bg-white w-full max-w-5xl mx-auto min-h-0 flex-1 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-center animate-in fade-in zoom-in duration-700" aria-label={lang === 'ar' ? 'مساحة التدريب' : 'Practice workspace'}>
+                <div className="letters-liquid-idle-content flex flex-col items-center justify-center gap-2.5 px-4 py-3 text-center">
+                  <span className="letters-liquid-idle-icon" aria-hidden="true"><TypeIcon size={20} strokeWidth={1.7} /></span>
+                  <p className="arabic-font text-sm sm:text-base font-bold text-slate-600">{lang === 'ar' ? 'اختر حرفًا للبدء' : 'Choose a letter to begin'}</p>
                 </div>
               </div>
             )}
