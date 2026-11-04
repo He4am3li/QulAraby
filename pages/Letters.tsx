@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Globe, Volume2, Loader2, Type as TypeIcon, ChevronLeft, ArrowRight, AlertCircle, Music, Wind, Download, Upload, FileText, CheckCircle2, XCircle, Award, Share2, PenTool, RefreshCcw, Paintbrush, Palette, Play, Star, CheckCircle, Edit3, BrainCircuit, Mic, Activity, BookOpen, Layers, Search, X, Inbox } from 'lucide-react';
 import { LanguageToggle } from '../components/LanguageToggle';
 import { letterCanvasPoint } from '../utils/letterCanvas.js';
+import { makeListeningQuestion, LISTENING_QUESTIONS_PER_STAGE, LISTENING_STAGE_COUNT, LISTENING_TOTAL_QUESTIONS } from '../utils/letterListening.js';
 import './LettersGlass.css';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
@@ -521,110 +522,162 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
 
 const SoundLab: React.FC<{ char: string, t: any, lang: string, onSpeak: (text: string, display: string) => void }> = ({ char, t, lang, onSpeak }) => {
   const [isRecording, setIsRecording] = React.useState(false);
+  const [isStarting, setIsStarting] = React.useState(false);
   const [audioUrl, setAudioUrl] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
+  const recorderRef = React.useRef<MediaRecorder | null>(null);
+  const streamRef = React.useRef<MediaStream | null>(null);
   const chunksRef = React.useRef<Blob[]>([]);
+  const sessionRef = React.useRef(0);
+  const urlRef = React.useRef<string | null>(null);
+  const playbackRef = React.useRef<HTMLAudioElement | null>(null);
+
+  const stopTracks = () => {
+    streamRef.current?.getTracks().forEach(track => track.stop());
+    streamRef.current = null;
+  };
+
+  // The lab is keyed by the selected letter. Close the microphone and release
+  // object URLs on a letter change, a tab switch, or navigation away.
+  React.useEffect(() => () => {
+    sessionRef.current += 1;
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.onstop = null;
+      try { recorder.stop(); } catch (_) {}
+    }
+    recorder?.stream.getTracks().forEach(track => track.stop());
+    streamRef.current?.getTracks().forEach(track => track.stop());
+    playbackRef.current?.pause();
+    if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+    urlRef.current = null;
+  }, []);
 
   const startRecording = async () => {
+    if (isStarting || isRecording) return;
     setError(null);
+    setIsStarting(true);
+    const session = ++sessionRef.current;
+    let stream: MediaStream | null = null;
     try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Browser does not support audio recording.");
+      if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+        throw new Error(lang === 'ar' ? 'هذا المتصفح لا يدعم تسجيل الصوت.' : 'This browser does not support recording.');
       }
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
-      // Try to find a supported mime type
-      const mimeTypes = ['audio/webm', 'audio/ogg', 'audio/mp4', 'audio/aac'];
-      const supportedType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || '';
-      
-      const recorder = new MediaRecorder(stream, supportedType ? { mimeType: supportedType } : {});
-      mediaRecorderRef.current = recorder;
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (session !== sessionRef.current) {
+        stream.getTracks().forEach(track => track.stop());
+        return;
+      }
+      streamRef.current = stream;
+      const type = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg']
+        .find(value => MediaRecorder.isTypeSupported(value));
+      const recorder = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
+      recorderRef.current = recorder;
       chunksRef.current = [];
-      
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
+      playbackRef.current?.pause();
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      urlRef.current = null;
+      setAudioUrl(null);
+      recorder.ondataavailable = event => {
+        if (session === sessionRef.current && event.data.size) chunksRef.current.push(event.data);
       };
-      
+      recorder.onerror = () => {
+        if (session !== sessionRef.current) return;
+        setError(lang === 'ar' ? 'تعذر إكمال التسجيل.' : 'Recording could not be completed.');
+        setIsRecording(false);
+        stopTracks();
+      };
       recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
-        if (audioUrl) URL.revokeObjectURL(audioUrl);
-        setAudioUrl(URL.createObjectURL(blob));
+        if (session !== sessionRef.current) return;
+        stopTracks();
+        recorderRef.current = null;
+        setIsRecording(false);
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || chunksRef.current[0]?.type || 'audio/webm' });
+        chunksRef.current = [];
+        if (!blob.size) {
+          setError(lang === 'ar' ? 'التسجيل فارغ. أعد المحاولة.' : 'Empty recording. Try again.');
+          return;
+        }
+        const nextUrl = URL.createObjectURL(blob);
+        urlRef.current = nextUrl;
+        setAudioUrl(nextUrl);
       };
-      
       recorder.start();
       setIsRecording(true);
     } catch (err: any) {
-      console.error("Recording failed:", err);
-      setError(err.message || "Failed to start recording.");
+      stream?.getTracks().forEach(track => track.stop());
+      stopTracks();
+      if (session === sessionRef.current) {
+        setError(err?.name === 'NotAllowedError'
+          ? (lang === 'ar' ? 'اسمح بالوصول إلى الميكروفون.' : 'Allow microphone access.')
+          : (err?.message || (lang === 'ar' ? 'تعذر بدء التسجيل.' : 'Recording could not start.')));
+        setIsRecording(false);
+      }
+    } finally {
+      if (session === sessionRef.current) setIsStarting(false);
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    const recorder = recorderRef.current;
+    if (!recorder || recorder.state === 'inactive') return;
+    try { recorder.stop(); } catch (_) {}
+    stopTracks();
+    setIsRecording(false);
+  };
+
+  const playRecording = async () => {
+    if (!playbackRef.current) return;
+    try {
+      playbackRef.current.currentTime = 0;
+      await playbackRef.current.play();
+    } catch (_) {
+      setError(lang === 'ar' ? 'تعذر تشغيل تسجيلك.' : 'Unable to play your recording.');
     }
   };
 
   return (
-    <div className="flex flex-col items-center space-y-4 animate-in slide-in-from-bottom-6 duration-500">
-      {error && (
-        <div className="w-full p-2 bg-red-50 text-red-600 rounded-xl flex items-center gap-2 text-[10px] font-bold">
-          <AlertCircle size={14} />
-          {error}
-        </div>
-      )}
-
+    <div className="flex flex-col items-center space-y-3 animate-in slide-in-from-bottom-6 duration-500">
+      {error && <div role="alert" className="w-full p-2 bg-red-50 text-red-700 rounded-xl flex items-center gap-2 text-[10px] font-bold arabic-font"><AlertCircle size={14} />{error}</div>}
       <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
-        {HARAKAT.slice(0, 3).map((h) => {
-          const combined = char + h.symbol;
+        {HARAKAT.slice(0, 3).map(h => {
+          const combined = getCombinedChar(char, h.symbol);
           return (
-            <button
-              key={h.symbol}
-              onClick={() => onSpeak(combined, combined)}
-              className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 border-transparent hover:border-indigo-500 transition-all shadow-sm hover:shadow-md ${h.color}`}
+            <button key={h.symbol} onClick={() => onSpeak(combined, combined)}
+              aria-label={lang === 'ar' ? 'استمع إلى ' + combined + ' مع ' + h.nameAr : 'Listen to ' + combined + ', ' + h.nameEn}
+              className={'flex flex-col items-center justify-center p-3 rounded-2xl border-2 border-transparent hover:border-indigo-500 transition-all shadow-sm hover:shadow-md ' + h.color}
             >
               <span className="text-3xl font-black arabic-font mb-1">{combined}</span>
-              <span className="text-[8px] font-black uppercase opacity-60">{(t as any || lang === 'ar') ? h.nameAr : h.nameEn}</span>
-              <Volume2 size={14} className="mt-2" />
+              <span className="text-[10px] font-black arabic-font opacity-75">{lang === 'ar' ? h.nameAr : h.nameEn}</span>
+              <Volume2 size={14} className="mt-2" aria-hidden="true" />
             </button>
           );
         })}
       </div>
-
       <div className="w-full h-px bg-slate-100" />
-
       <div className="flex flex-col items-center space-y-2 w-full">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.compare}</p>
-        <div className="flex gap-3">
+        <p className="arabic-font text-xs font-bold text-slate-600">{lang === 'ar' ? 'استمع إلى النموذج ثم سجّل صوتك' : 'Listen to a model, then record yourself'}</p>
+        <div className="flex flex-wrap justify-center gap-2">
           {!isRecording ? (
-            <button 
-              onClick={startRecording}
-              className="px-6 py-2 bg-rose-500 text-white rounded-xl font-black text-xs flex items-center gap-2 shadow-xl shadow-rose-100 hover:scale-105 transition-all"
-            >
-              <Mic size={16} /> {t.record}
+            <button onClick={startRecording} disabled={isStarting} className="px-5 py-2 bg-rose-500 text-white rounded-xl font-black text-xs flex items-center gap-2 shadow-md disabled:opacity-50 hover:bg-rose-600">
+              {isStarting ? <Loader2 size={15} className="animate-spin" /> : <Mic size={15} />}
+              {isStarting ? (lang === 'ar' ? 'فتح الميكروفون' : 'Opening microphone') : t.record}
             </button>
           ) : (
-            <button 
-              onClick={stopRecording}
-              className="px-6 py-2 bg-slate-900 text-white rounded-xl font-black text-xs flex items-center gap-2 shadow-xl animate-pulse"
-            >
-              <div className="w-2 h-2 bg-rose-500 rounded-full animate-ping" /> {t.stop}
+            <button onClick={stopRecording} className="px-5 py-2 bg-slate-900 text-white rounded-xl font-black text-xs flex items-center gap-2 shadow-md">
+              <span className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />{t.stop}
             </button>
           )}
-
-          {audioUrl && (
-            <button 
-              onClick={() => new Audio(audioUrl).play()}
-              className="px-6 py-2 bg-emerald-500 text-white rounded-xl font-black text-xs flex items-center gap-2 shadow-xl shadow-emerald-100 hover:scale-105 transition-all"
-            >
-              <Play size={16} fill="currentColor" /> {t.play}
+          {audioUrl && !isRecording && (
+            <button onClick={playRecording} className="px-5 py-2 bg-emerald-600 text-white rounded-xl font-black text-xs flex items-center gap-2 shadow-md hover:bg-emerald-700">
+              <Play size={15} fill="currentColor" />{lang === 'ar' ? 'استمع لتسجيلك' : 'Play your recording'}
             </button>
           )}
+          <audio ref={playbackRef} src={audioUrl || undefined} preload="none" className="hidden" />
         </div>
+        <p className="arabic-font text-[10px] font-medium text-slate-500 text-center max-w-xs leading-relaxed">
+          {lang === 'ar' ? 'قارن النطق بنفسك، لا يوجد تقييم آلي لصحة النطق.' : 'Compare by listening. Automatic pronunciation scoring is not available.'}
+        </p>
       </div>
     </div>
   );
@@ -674,174 +727,188 @@ const SIMILAR_SOUNDS: Record<string, string[]> = {
   'ي': ['أ', 'ل', 'ن']
 };
 
-const AuditoryGame: React.FC<{ char: string, t: any, onSpeak: (text: string, display: string) => void }> = ({ char, t, onSpeak }) => {
+const AuditoryGame: React.FC<{ char: string, t: any, lang: 'ar' | 'en', onSpeak: (text: string, display: string) => void }> = ({ char, t, lang, onSpeak }) => {
   const [level, setLevel] = React.useState(1);
-  const [currentQuestion, setCurrentQuestion] = React.useState<any>(null);
-  const [options, setOptions] = React.useState<any[]>([]);
+  const [round, setRound] = React.useState(1);
+  const [question, setQuestion] = React.useState<any>(null);
   const [feedback, setFeedback] = React.useState<'correct' | 'wrong' | null>(null);
-  const [score, setScore] = React.useState(0);
+  const [wrongOption, setWrongOption] = React.useState<string | null>(null);
+  const [firstTryCorrect, setFirstTryCorrect] = React.useState(0);
+  const [mistakeOnQuestion, setMistakeOnQuestion] = React.useState(false);
   const [isComplete, setIsComplete] = React.useState(false);
+  const [audioError, setAudioError] = React.useState(false);
+  const rotationsRef = React.useRef<number[]>([0, 0, 0, 0, 0]);
+  const playTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advanceTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const feedbackTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestSpeakRef = React.useRef(onSpeak);
+  latestSpeakRef.current = onSpeak;
 
-  const generateQuestion = (currentLevel: number) => {
-    let target = '';
-    let opts: any[] = [];
-    const cleanChar = char.replace('ـ', '').trim();
+  const clearTimers = () => {
+    if (playTimerRef.current !== null) clearTimeout(playTimerRef.current);
+    if (advanceTimerRef.current !== null) clearTimeout(advanceTimerRef.current);
+    if (feedbackTimerRef.current !== null) clearTimeout(feedbackTimerRef.current);
+    playTimerRef.current = null;
+    advanceTimerRef.current = null;
+    feedbackTimerRef.current = null;
+  };
 
-    switch(currentLevel) {
-      case 1: // Short Vowels
-        const h = HARAKAT[Math.floor(Math.random() * 3)]; // First 3 are most common
-        target = getCombinedChar(cleanChar, h.symbol);
-        opts = HARAKAT.slice(0, 3).map(v => ({ label: getCombinedChar(cleanChar, v.symbol), isCorrect: v.symbol === h.symbol }));
-        break;
-      case 2: // Shadda
-        const s = SHADDA_VARIATIONS[Math.floor(Math.random() * SHADDA_VARIATIONS.length)];
-        target = getCombinedChar(cleanChar, s.symbol);
-        opts = SHADDA_VARIATIONS.map(v => ({ label: getCombinedChar(cleanChar, v.symbol), isCorrect: v.symbol === s.symbol }));
-        break;
-      case 3: // Long Vowels
-        const m = MAD_VOWELS[Math.floor(Math.random() * MAD_VOWELS.length)];
-        target = getCombinedChar(cleanChar, m.symbol);
-        opts = MAD_VOWELS.map(v => ({ label: getCombinedChar(cleanChar, v.symbol), isCorrect: v.symbol === m.symbol }));
-        break;
-      case 4: // Tanween
-        const tn = TANWEEN[Math.floor(Math.random() * TANWEEN.length)];
-        target = getCombinedChar(cleanChar, tn.symbol);
-        opts = TANWEEN.map(v => ({ label: getCombinedChar(cleanChar, v.symbol), isCorrect: v.symbol === tn.symbol }));
-        break;
-      case 5: // Similar Sounds
-        target = cleanChar;
-        const similar = SIMILAR_SOUNDS[cleanChar] || [];
-        const decoys = [...similar];
-        while(decoys.length < 3) {
-          const r = ALPHABET[Math.floor(Math.random() * ALPHABET.length)].char;
-          if (r !== cleanChar && !decoys.includes(r)) decoys.push(r);
-        }
-        opts = [cleanChar, ...decoys.slice(0, 3)].map(c => ({ label: c, isCorrect: c === cleanChar }));
-        break;
+  const playQuestion = (current: any, automatic = false) => {
+    if (!current) return;
+    setAudioError(false);
+    if (current.audioKind === 'letter-name') {
+      // Locally recorded, distinct names for the target and its contrasts.
+      void playLetterName(current.target).catch((err: any) => {
+        if (err?.name !== 'AbortError' && !automatic) setAudioError(true);
+      });
+    } else {
+      latestSpeakRef.current(current.target, 'game');
     }
+  };
 
-    setCurrentQuestion(target);
-    setOptions(opts.sort(() => Math.random() - 0.5));
+  const generateQuestion = (currentLevel: number, currentRound: number) => {
+    if (playTimerRef.current !== null) clearTimeout(playTimerRef.current);
+    if (feedbackTimerRef.current !== null) clearTimeout(feedbackTimerRef.current);
+    const next = makeListeningQuestion({
+      char,
+      stage: currentLevel,
+      round: currentRound,
+      rotation: rotationsRef.current[currentLevel - 1],
+      harakat: HARAKAT,
+      shadda: SHADDA_VARIATIONS,
+      mad: MAD_VOWELS,
+      tanween: TANWEEN,
+      similarSounds: SIMILAR_SOUNDS,
+      combine: getCombinedChar
+    });
+    setQuestion(next);
     setFeedback(null);
-    
-    setTimeout(() => {
-      onSpeak(target, 'game');
-    }, 600);
+    setWrongOption(null);
+    setMistakeOnQuestion(false);
+    setAudioError(false);
+    // Autoplay is best-effort. Mobile browsers may require the replay button.
+    playTimerRef.current = setTimeout(() => playQuestion(next, true), 450);
+  };
+
+  const restart = () => {
+    clearTimers();
+    stopLetterName();
+    rotationsRef.current = Array.from({ length: LISTENING_STAGE_COUNT }, () => Math.floor(Math.random() * 3));
+    setLevel(1);
+    setRound(1);
+    setFirstTryCorrect(0);
+    setIsComplete(false);
+    setFeedback(null);
+    setWrongOption(null);
+    generateQuestion(1, 1);
   };
 
   React.useEffect(() => {
-    setLevel(1);
-    setIsComplete(false);
-    generateQuestion(1);
+    restart();
+    return () => {
+      clearTimers();
+      stopLetterName();
+    };
   }, [char]);
 
-  const handleAnswer = (opt: any) => {
-    if (feedback) return;
-    if (opt.isCorrect) {
+  const handleAnswer = (option: { label: string, isCorrect: boolean }) => {
+    if (feedback || isComplete) return;
+    if (option.isCorrect) {
       setFeedback('correct');
-      setScore(s => s + 20);
-      
-      setTimeout(() => {
-        if (level < 5) {
-          const nextLevel = level + 1;
-          setLevel(nextLevel);
-          generateQuestion(nextLevel);
+      if (!mistakeOnQuestion) setFirstTryCorrect(previous => previous + 1);
+      advanceTimerRef.current = setTimeout(() => {
+        if (round < LISTENING_QUESTIONS_PER_STAGE) {
+          setRound(round + 1);
+          generateQuestion(level, round + 1);
+        } else if (level < LISTENING_STAGE_COUNT) {
+          setLevel(level + 1);
+          setRound(1);
+          generateQuestion(level + 1, 1);
         } else {
+          clearTimers();
           setIsComplete(true);
         }
-      }, 1500);
+      }, 1050);
     } else {
       setFeedback('wrong');
-      setTimeout(() => setFeedback(null), 1500);
+      setWrongOption(option.label);
+      setMistakeOnQuestion(true);
+      feedbackTimerRef.current = setTimeout(() => setFeedback(null), 850);
     }
   };
 
-  const getLevelName = (lvl: number) => {
-    switch(lvl) {
+  const levelName = (value: number) => {
+    switch (value) {
       case 1: return t.harakatTitle;
       case 2: return t.shaddaTitle;
       case 3: return t.madTitle;
       case 4: return t.tanweenTitle;
       case 5: return t.similarSounds;
-      default: return "";
+      default: return '';
     }
   };
 
   if (isComplete) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-3 py-2 animate-in zoom-in duration-500">
-        <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 shadow-sm">
-          <Award size={24} className="animate-bounce" />
-        </div>
-        <div className="text-center">
-          <h3 className="text-base font-black text-slate-800 arabic-font leading-tight">{t.auditoryComplete}</h3>
-          <p className="text-slate-400 font-bold uppercase text-[6px] tracking-widest mt-0.5">{t.auditoryCompleteSub} {char}</p>
-        </div>
-        <button 
-          onClick={() => { setLevel(1); setIsComplete(false); generateQuestion(1); }}
-          className="px-4 py-1.5 bg-slate-900 text-white rounded-lg font-black text-[8px] uppercase tracking-widest hover:scale-105 transition-all shadow-md active:scale-95"
-        >
-          {t.auditoryCompleteBtn}
-        </button>
+      <div className="flex flex-col items-center justify-center space-y-2 py-2 animate-in zoom-in duration-500">
+        <Award size={30} className="text-emerald-600" />
+        <h3 className="arabic-font text-base font-black text-slate-800">{t.auditoryComplete}</h3>
+        <p className="arabic-font text-xs font-bold text-slate-600">
+          {lang === 'ar' ? 'إجابات صحيحة من أول محاولة' : 'Correct on the first attempt'}: {firstTryCorrect}/{LISTENING_TOTAL_QUESTIONS}
+        </p>
+        <p className="arabic-font max-w-xs text-center text-[10px] text-slate-500">
+          {lang === 'ar' ? 'هذه نتيجة تدريب وليست شهادة إتقان للنطق.' : 'This is a practice result, not a pronunciation assessment.'}
+        </p>
+        <button onClick={restart} className="px-4 py-2 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-slate-800">{t.auditoryCompleteBtn}</button>
       </div>
     );
   }
 
+  const progress = (level - 1) * LISTENING_QUESTIONS_PER_STAGE + round;
   return (
-    <div className="flex flex-col items-center space-y-2 animate-in zoom-in duration-500 w-full max-w-sm mx-auto py-1">
-      <div className="flex gap-1 mb-0.5">
-        {[1, 2, 3, 4, 5].map((lvl) => (
-          <div 
-            key={lvl} 
-            className={`w-1 h-1 rounded-full transition-all duration-500 ${lvl < level ? 'bg-emerald-500' : lvl === level ? 'bg-blue-600 scale-125 shadow-[0_0_8px_rgba(37,99,235,1)] ring-1 ring-blue-400' : 'bg-slate-200'}`}
-          />
+    <div className="flex flex-col items-center space-y-2 animate-in zoom-in duration-500 w-full max-w-sm mx-auto py-1" role="group" aria-label={t.auditGameBtn}>
+      <div className="flex items-center justify-between w-full px-2 gap-2">
+        <span className="arabic-font text-[10px] font-bold text-slate-500">{lang === 'ar' ? 'المستوى' : 'Stage'} {level}/{LISTENING_STAGE_COUNT}</span>
+        <span className="arabic-font text-[10px] font-bold text-slate-500" dir="ltr">{progress}/{LISTENING_TOTAL_QUESTIONS}</span>
+      </div>
+      <div className="flex gap-1 mb-0.5" aria-label={lang === 'ar' ? 'تقدم المستويات' : 'Stage progress'}>
+        {Array.from({ length: LISTENING_STAGE_COUNT }, (_, index) => index + 1).map(stage => (
+          <span key={stage} className={'w-5 h-1.5 rounded-full transition-colors ' + (stage < level ? 'bg-emerald-500' : stage === level ? 'bg-blue-600' : 'bg-slate-200')} />
         ))}
       </div>
-
-      <div className="text-center mb-0.5">
-        <h2 className="text-base font-black text-slate-800 arabic-font">{getLevelName(level)}</h2>
-      </div>
-
-      <div className="relative group mb-1">
-        <div className="absolute inset-0 bg-blue-100 rounded-full blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
-        <button 
-          onClick={() => onSpeak(currentQuestion, 'game')}
-          className="w-10 h-10 md:w-12 md:h-12 bg-white border border-slate-50 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all active:scale-95 z-10 relative group"
-        >
-          <Volume2 size={20} className="text-blue-600 group-hover:animate-pulse" />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 w-full px-2">
-        {options.map((opt, i) => (
-          <button
-            key={i}
-            onClick={() => handleAnswer(opt)}
-            className={`py-2 md:py-2.5 rounded-xl border-2 text-lg md:text-xl font-black arabic-font transition-all shadow-sm
-              ${feedback === 'correct' && opt.isCorrect ? 'bg-emerald-500 border-emerald-600 text-white shadow-emerald-200 scale-105' : 
-                feedback === 'wrong' && opt.label === currentQuestion ? 'border-emerald-500 text-emerald-600 bg-emerald-50' :
-                feedback === 'wrong' && !opt.isCorrect ? 'bg-red-50 border-red-200 text-red-600 opacity-50' :
-                'bg-white border-slate-100 hover:border-blue-300 text-slate-700 hover:bg-blue-50 active:scale-95'}
-            `}
+      <h2 className="text-base font-black text-slate-800 arabic-font">{levelName(level)}</h2>
+      <p className="arabic-font text-[10px] font-medium text-slate-500 text-center">
+        {level === 5
+          ? (lang === 'ar' ? 'استمع إلى اسم الحرف ثم اختر الحرف الذي سمعته.' : 'Listen to the recorded letter name, then choose it.')
+          : (lang === 'ar' ? 'استمع واختر النطق المطابق.' : 'Listen and choose the matching pronunciation.')}
+      </p>
+      <button onClick={() => playQuestion(question)} aria-label={lang === 'ar' ? 'استمع مرة أخرى' : 'Replay audio'}
+        className="w-12 h-12 bg-white border border-blue-100 rounded-full flex items-center justify-center shadow-md hover:border-blue-300 transition-colors active:scale-95">
+        <Volume2 size={21} className="text-blue-600" />
+      </button>
+      {audioError && <p className="arabic-font text-[10px] text-red-600" role="alert">{lang === 'ar' ? 'تعذر تشغيل التسجيل، حاول مرة أخرى.' : 'Audio failed to play. Try again.'}</p>}
+      <div className="grid grid-cols-2 gap-2 w-full px-2" role="group" aria-label={lang === 'ar' ? 'خيارات الإجابة' : 'Answer options'}>
+        {question?.options.map((option: any) => (
+          <button key={option.label} onClick={() => handleAnswer(option)} disabled={feedback === 'correct'}
+            aria-label={option.label} aria-pressed={feedback === 'correct' && option.isCorrect}
+            className={'min-h-12 py-2.5 rounded-xl border-2 text-xl font-black arabic-font transition-all shadow-sm ' +
+              (feedback === 'correct' && option.isCorrect
+                ? 'bg-emerald-500 border-emerald-600 text-white'
+                : feedback === 'wrong' && wrongOption === option.label
+                  ? 'bg-red-50 border-red-300 text-red-700'
+                  : 'bg-white border-slate-100 hover:border-blue-300 text-slate-700 hover:bg-blue-50')}
           >
-            {opt.label}
+            {option.label}
           </button>
         ))}
       </div>
-
-      <div className="h-8 flex items-center justify-center">
+      <div className="h-7 flex items-center justify-center" aria-live="polite">
         {feedback && (
-          <motion.div 
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`px-3 py-1 rounded-lg font-black text-[10px] arabic-font shadow-md flex items-center gap-2 ${feedback === 'correct' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}
-          >
-            {feedback === 'correct' ? (
-              <><CheckCircle size={14} /> {t.correct}</>
-            ) : (
-              <><XCircle size={14} /> {t.wrong}</>
-            )}
-          </motion.div>
+          <div className={'rounded-lg px-3 py-1 text-[10px] font-black arabic-font flex items-center gap-1.5 ' +
+            (feedback === 'correct' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800')}>
+            {feedback === 'correct' ? <CheckCircle size={13} /> : <XCircle size={13} />}
+            {feedback === 'correct' ? t.correct : t.wrong}
+          </div>
         )}
       </div>
     </div>
@@ -2551,6 +2618,7 @@ export const Letters: React.FC = () => {
                     )}
                     {activeTab === 'soundlab' && (
                       <SoundLab 
+                        key={selectedChar.char}
                         char={selectedChar.char} 
                         t={t} 
                         lang={lang}
@@ -2560,7 +2628,8 @@ export const Letters: React.FC = () => {
                     {activeTab === 'game' && (
                       <AuditoryGame 
                         char={selectedChar.char}
-                        t={t} 
+                        t={t}
+                        lang={lang} 
                         onSpeak={handleSpeak}
                       />
                     )}
