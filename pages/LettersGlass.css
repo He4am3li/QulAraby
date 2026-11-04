@@ -1,0 +1,172 @@
+/*
+ * QUL Letters, subtle Liquid Glass skin.
+ * Visual-only enhancement. Do not alter the original letter grid, activity
+ * layout, drawing canvas, worksheet, submission flows or interaction logic.
+ * Scoped to .letters-liquid-page so other modules stay unchanged.
+ */
+.letters-liquid-page {
+  --letters-glass-rim: rgba(255, 255, 255, .89);
+  --letters-glass-shadow: rgba(40, 72, 116, .10);
+  background:
+    radial-gradient(ellipse at 9% 15%, rgba(207, 226, 252, .48), transparent 47%),
+    radial-gradient(ellipse at 94% 85%, rgba(209, 231, 229, .38), transparent 44%),
+    linear-gradient(145deg, #f8fbff 0%, #eef3fa 53%, #f5f8fa 100%) !important;
+}
+
+.letters-liquid-page .letters-liquid-main-area {
+  background: transparent !important;
+}
+
+/* Each pane keeps the old geometry, with a soft refractive rim and top sheen. */
+.letters-liquid-page .letters-liquid-panel {
+  position: relative;
+  background: linear-gradient(154deg, rgba(255,255,255,.93), rgba(255,255,255,.76) 52%, rgba(247,251,255,.87)) !important;
+  border-color: var(--letters-glass-rim) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.98),
+    inset 1px 0 0 rgba(255,255,255,.58),
+    0 8px 30px var(--letters-glass-shadow),
+    0 1px 3px rgba(40, 72, 116, .04) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.11);
+  backdrop-filter: blur(10px) saturate(1.11);
+}
+
+.letters-liquid-page .letters-liquid-panel::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  top: 1px;
+  inset-inline: 8%;
+  height: 1px;
+  border-radius: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,1) 30%, rgba(189,220,250,.8) 65%, transparent);
+  opacity: .85;
+}
+
+/* A light glass finish around each letter, without reducing glyph contrast. */
+.letters-liquid-page .letters-liquid-letter {
+  border-color: rgba(224,234,246,.94);
+  background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(244,249,255,.85)) !important;
+  box-shadow: inset 0 1px 0 #fff, 0 3px 9px rgba(53,89,138,.055);
+}
+
+.letters-liquid-page .letters-liquid-letter[data-glass-selected="true"] {
+  border-color: rgba(67,132,225,.9) !important;
+  background: linear-gradient(155deg, #eef6ff, rgba(194,222,252,.91) 85%) !important;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    inset 0 -1px 4px rgba(74,145,233,.13),
+    0 0 0 2px rgba(72,149,240,.09),
+    0 5px 14px rgba(55,112,206,.12);
+}
+
+.letters-liquid-page .letters-liquid-letter:focus-visible,
+.letters-liquid-page .letters-liquid-tab:focus-visible,
+.letters-liquid-page .letters-liquid-sidecell:focus-visible,
+.letters-liquid-page .letters-liquid-action:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Keep tab colors and positions. Unselected tabs become translucent. */
+.letters-liquid-page .letters-liquid-tabs {
+  background: linear-gradient(180deg, rgba(246,251,255,.84), rgba(234,243,252,.69)) !important;
+  border-bottom-color: rgba(210,224,242,.75) !important;
+}
+
+.letters-liquid-page .letters-liquid-tab {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.50);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.54), 0 3px 9px rgba(39,76,122,.06);
+}
+
+.letters-liquid-page .letters-liquid-tab[data-glass-active="false"] {
+  background: linear-gradient(158deg, rgba(255,255,255,.92), rgba(237,245,255,.72)) !important;
+  border-color: rgba(207,222,243,.75) !important;
+  color: #52637b;
+}
+
+.letters-liquid-page .letters-liquid-tab[data-glass-active="true"] {
+  border-color: rgba(255,255,255,.52) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.42), 0 5px 13px rgba(35,74,125,.14);
+}
+
+.letters-liquid-page .letters-liquid-tab::after,
+.letters-liquid-page .letters-liquid-action::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  top: 1px;
+  left: 14%;
+  width: 72%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.78), transparent);
+}
+
+/* Side controls retain their different educational color meanings. */
+.letters-liquid-page .letters-liquid-shapes {
+  background: linear-gradient(135deg, rgba(255,255,255,.83), rgba(237,245,253,.65)) !important;
+  border-color: rgba(216,230,247,.84) !important;
+  box-shadow: inset 0 1px 0 #fff, 0 3px 10px rgba(51,89,131,.045);
+}
+
+.letters-liquid-page .letters-liquid-sidecell {
+  position: relative;
+  border: 1px solid rgba(255,255,255,.73) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.88), 0 3px 10px rgba(49,87,135,.055);
+}
+
+.letters-liquid-page .letters-liquid-action {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.38);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.31), 0 5px 16px rgba(37,82,135,.13);
+}
+
+/* The writing board, its pale guide and ink strokes remain opaque and untouched. */
+@media (hover: hover) and (pointer: fine) {
+  .letters-liquid-page .letters-liquid-letter,
+  .letters-liquid-page .letters-liquid-tab,
+  .letters-liquid-page .letters-liquid-sidecell,
+  .letters-liquid-page .letters-liquid-action {
+    transition: transform 190ms ease, box-shadow 190ms ease, border-color 190ms ease, background-color 190ms ease;
+  }
+  .letters-liquid-page .letters-liquid-letter:hover,
+  .letters-liquid-page .letters-liquid-sidecell:hover {
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 #fff, 0 5px 13px rgba(40,85,145,.12);
+  }
+}
+
+/* More economical transparency on mobile; geometry stays the original layout. */
+@media (max-width: 767px) {
+  .letters-liquid-page .letters-liquid-panel {
+    background: rgba(255,255,255,.92) !important;
+    -webkit-backdrop-filter: blur(4px) saturate(1.05);
+    backdrop-filter: blur(4px) saturate(1.05);
+    box-shadow: inset 0 1px 0 #fff, 0 4px 15px rgba(38,77,120,.08) !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .letters-liquid-page .letters-liquid-panel {
+    background: #fff !important;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .letters-liquid-page .letters-liquid-tab[data-glass-active="false"] {
+    background: #f7faff !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .letters-liquid-page .letters-liquid-letter,
+  .letters-liquid-page .letters-liquid-tab,
+  .letters-liquid-page .letters-liquid-sidecell,
+  .letters-liquid-page .letters-liquid-action {
+    transition: none !important;
+    transform: none !important;
+  }
+}
