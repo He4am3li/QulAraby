@@ -633,15 +633,12 @@ const SoundLab: React.FC<{ char: string, t: any, lang: string, onSpeak: (text: s
 const getCombinedChar = (base: string, symbol: string) => {
   const cleanBase = base.replace(/[\u0640\s]/g, '').trim();
   if (cleanBase === 'أ') {
-    if (symbol === '\u064E\u0627') return '\u0622\u064E';
+    if (symbol === '\u064E\u0627') return '\u0622'; // Madda already encodes the long /aa/ sound.
     if (symbol === '\u0650\u064A') return '\u0625\u0650\u064A';
     if (symbol === '\u064D') return '\u0625\u064D';
     if (symbol === '\u0650') return '\u0625\u0650';
   }
-  if (cleanBase === 'ل') {
-    if (symbol === '\u064E\u0627') return '\u0644\u0627\u064E'; 
-    if (symbol === '\u064B') return '\u0644\u0627\u064B'; 
-  }
+  // Lam uses the standard mark-before-alif spelling: لَا and لًا.
   if (symbol === '\u064B' && cleanBase !== 'أ') return cleanBase + '\u064B\u0627';
   return cleanBase + symbol;
 };
@@ -649,7 +646,7 @@ const getCombinedChar = (base: string, symbol: string) => {
 const SIMILAR_SOUNDS: Record<string, string[]> = {
   'أ': ['ع', 'هـ', 'ق'],
   'ب': ['ف', 'م', 'و'],
-  'ت': ['ط', 'د', 'ت'],
+  'ت': ['ط', 'د', 'ث'],
   'ث': ['س', 'ص', 'ذ'],
   'ج': ['ش', 'ز', 'ك'],
   'ح': ['هـ', 'خ', 'ع'],
@@ -872,7 +869,7 @@ const LETTER_WORDS: Record<string, {
     targetWords: [
       { word: 'بَيْت', position: 'initial', meaningAr: 'منزل', meaningEn: 'House' },
       { word: 'جَبَل', position: 'medial', meaningAr: 'مرتفع صخري', meaningEn: 'Mountain' },
-      { word: 'كِتَاب', position: 'final', meaningAr: 'دفتر وقراءة', meaningEn: 'Book' },
+      { word: 'كِتَاب', position: 'final', meaningAr: 'صفحات مكتوبة', meaningEn: 'Book' },
       { word: 'بَاب', position: 'initial', meaningAr: 'مدخل', meaningEn: 'Door' }
     ],
     distractors: [
@@ -883,7 +880,7 @@ const LETTER_WORDS: Record<string, {
   },
   'ت': {
     targetWords: [
-      { word: 'تُفَّاح', position: 'initial', meaningAr: 'فاكهة لديدة', meaningEn: 'Apple' },
+      { word: 'تُفَّاح', position: 'initial', meaningAr: 'فاكهة لذيذة', meaningEn: 'Apple' },
       { word: 'تِمْسَاح', position: 'initial', meaningAr: 'حيوان مائي', meaningEn: 'Crocodile' },
       { word: 'مَكْتَب', position: 'medial', meaningAr: 'طاولة عمل', meaningEn: 'Desk' },
       { word: 'بَيْت', position: 'final', meaningAr: 'مسكن', meaningEn: 'House' }
@@ -896,9 +893,9 @@ const LETTER_WORDS: Record<string, {
   },
   'ث': {
     targetWords: [
-      { word: 'ثَعْلَب', position: 'initial', meaningAr: 'حيوان ميكار', meaningEn: 'Fox' },
+      { word: 'ثَعْلَب', position: 'initial', meaningAr: 'حيوان بري', meaningEn: 'Fox' },
       { word: 'ثَوْم', position: 'initial', meaningAr: 'نبات عشبي', meaningEn: 'Garlic' },
-      { word: 'مَثَل', position: 'medial', meaningAr: 'حكمة', meaningEn: 'Example' },
+      { word: 'مَثَل', position: 'medial', meaningAr: 'قول مشهور', meaningEn: 'Proverb' },
       { word: 'بَحْث', position: 'final', meaningAr: 'دراسة', meaningEn: 'Research' }
     ],
     distractors: [
@@ -928,7 +925,7 @@ const LETTER_WORDS: Record<string, {
       { word: 'تُفَّاح', position: 'final', meaningAr: 'فاكهة', meaningEn: 'Apple' }
     ],
     distractors: [
-      { word: 'شَمْس', meaningAr: 'كوكب', meaningEn: 'Sun' },
+      { word: 'شَمْس', meaningAr: 'نجم', meaningEn: 'Sun' },
       { word: 'بَيْت', meaningAr: 'منزل', meaningEn: 'House' },
       { word: 'نَجْم', meaningAr: 'في السماء', meaningEn: 'Star' }
     ]
@@ -951,7 +948,7 @@ const LETTER_WORDS: Record<string, {
       { word: 'دُبّ', position: 'initial', meaningAr: 'حيوان ضخم', meaningEn: 'Bear' },
       { word: 'دَرَّاجَة', position: 'initial', meaningAr: 'مركبة خفيفة', meaningEn: 'Bicycle' },
       { word: 'مَدْرَسَة', position: 'medial', meaningAr: 'صرح تعليمي', meaningEn: 'School' },
-      { word: 'وَرْدَة', position: 'final', meaningAr: 'زهرة معطرة', meaningEn: 'Rose' }
+      { word: 'وَلَد', position: 'final', meaningAr: 'طفل ذكر', meaningEn: 'Boy' }
     ],
     distractors: [
       { word: 'بَحْر', meaningAr: 'ماء', meaningEn: 'Sea' },
@@ -964,7 +961,7 @@ const LETTER_WORDS: Record<string, {
       { word: 'ذِئْب', position: 'initial', meaningAr: 'حيوان بري', meaningEn: 'Wolf' },
       { word: 'ذُرَة', position: 'initial', meaningAr: 'نبات أصفر', meaningEn: 'Corn' },
       { word: 'جَذْر', position: 'medial', meaningAr: 'أسفل الشجرة', meaningEn: 'Root' },
-      { word: 'أُذُن', position: 'final', meaningAr: 'عضو السمع', meaningEn: 'Ear' }
+      { word: 'لَذِيذ', position: 'final', meaningAr: 'طيب الطعم', meaningEn: 'Delicious' }
     ],
     distractors: [
       { word: 'شَمْس', meaningAr: 'نجم', meaningEn: 'Sun' },
@@ -988,7 +985,7 @@ const LETTER_WORDS: Record<string, {
   'ز': {
     targetWords: [
       { word: 'زَرَافَة', position: 'initial', meaningAr: 'حيوان طويل', meaningEn: 'Giraffe' },
-      { word: 'زَهْرَة', position: 'initial', meaningAr: 'وريد جميل', meaningEn: 'Flower' },
+      { word: 'زَهْرَة', position: 'initial', meaningAr: 'زهرة جميلة', meaningEn: 'Flower' },
       { word: 'مَزْرَعَة', position: 'medial', meaningAr: 'أرض زراعية', meaningEn: 'Farm' },
       { word: 'كَنْز', position: 'final', meaningAr: 'ثروة ثَمينة', meaningEn: 'Treasure' }
     ],
@@ -1002,11 +999,11 @@ const LETTER_WORDS: Record<string, {
     targetWords: [
       { word: 'سَمَكَة', position: 'initial', meaningAr: 'كائن مائي', meaningEn: 'Fish' },
       { word: 'سَيَّارَة', position: 'initial', meaningAr: 'وسيلة نقل', meaningEn: 'Car' },
-      { word: 'مَشْمَس', position: 'medial', meaningAr: 'مكان مشمس', meaningEn: 'Sunny Place' },
+      { word: 'مَسْجِد', position: 'medial', meaningAr: 'مكان للصلاة', meaningEn: 'Mosque' },
       { word: 'شَمْس', position: 'final', meaningAr: 'نجم النهار', meaningEn: 'Sun' }
     ],
     distractors: [
-      { word: 'قَمَر', meaningAr: 'نجم', meaningEn: 'Moon' },
+      { word: 'قَمَر', meaningAr: 'جرم سماوي', meaningEn: 'Moon' },
       { word: 'جَمَل', meaningAr: 'حيوان', meaningEn: 'Camel' },
       { word: 'بَاب', meaningAr: 'مدخل', meaningEn: 'Door' }
     ]
@@ -1014,8 +1011,8 @@ const LETTER_WORDS: Record<string, {
   'ش': {
     targetWords: [
       { word: 'شَمْس', position: 'initial', meaningAr: 'نجم النهار', meaningEn: 'Sun' },
-      { word: 'شَجَرَة', position: 'initial', meaningAr: 'كائن حركي', meaningEn: 'Tree' },
-      { word: 'عُشَّاب', position: 'medial', meaningAr: 'نباتات', meaningEn: 'Herbs' },
+      { word: 'شَجَرَة', position: 'initial', meaningAr: 'نبات له جذع وأغصان', meaningEn: 'Tree' },
+      { word: 'مِشْمِش', position: 'medial', meaningAr: 'فاكهة برتقالية', meaningEn: 'Apricot' },
       { word: 'عُشّ', position: 'final', meaningAr: 'بيت الطائر', meaningEn: 'Nest' }
     ],
     distractors: [
@@ -1028,7 +1025,7 @@ const LETTER_WORDS: Record<string, {
     targetWords: [
       { word: 'صَقْر', position: 'initial', meaningAr: 'طائر جارح', meaningEn: 'Falcon' },
       { word: 'صُنْدُوق', position: 'initial', meaningAr: 'وعاء حفظ', meaningEn: 'Box' },
-      { word: 'عَصُور', position: 'medial', meaningAr: 'زمن', meaningEn: 'Ages' },
+      { word: 'عُصُور', position: 'medial', meaningAr: 'أزمنة', meaningEn: 'Ages' },
       { word: 'قَفَص', position: 'final', meaningAr: 'بيت الطيور', meaningEn: 'Cage' }
     ],
     distractors: [
@@ -1053,7 +1050,7 @@ const LETTER_WORDS: Record<string, {
   'ط': {
     targetWords: [
       { word: 'طَائِر', position: 'initial', meaningAr: 'حيوان ذو أجنحة', meaningEn: 'Bird' },
-      { word: 'طَمَاطِم', position: 'initial', meaningAr: 'خضار أحمر', meaningEn: 'Tomato' },
+      { word: 'طَمَاطِم', position: 'initial', meaningAr: 'ثمار حمراء', meaningEn: 'Tomatoes' },
       { word: 'قِطَّة', position: 'medial', meaningAr: 'حيوان أليف', meaningEn: 'Cat' },
       { word: 'بَطّ', position: 'final', meaningAr: 'طائر مائي', meaningEn: 'Duck' }
     ],
@@ -1068,7 +1065,7 @@ const LETTER_WORDS: Record<string, {
       { word: 'ظَبْي', position: 'initial', meaningAr: 'غزال جميل', meaningEn: 'Antelope' },
       { word: 'ظَرْف', position: 'initial', meaningAr: 'وعاء الرسالة', meaningEn: 'Envelope' },
       { word: 'نَظَّارَة', position: 'medial', meaningAr: 'أداة رؤية', meaningEn: 'Glasses' },
-      { word: 'حَفِظَ', position: 'final', meaningAr: 'صان الشيء', meaningEn: 'Memorized' }
+      { word: 'حَفِظَ', position: 'final', meaningAr: 'تعلّم عن ظهر قلب', meaningEn: 'Memorized' }
     ],
     distractors: [
       { word: 'قَلَم', meaningAr: 'كتابة', meaningEn: 'Pen' },
@@ -1484,7 +1481,7 @@ const TASHKEEL_WORDS: Record<string, {
     fatha: { word: 'تَمْر', charWithDiacritic: 'تَ', meaningAr: 'تمر', meaningEn: 'Dates' },
     damma: { word: 'تُفَّاح', charWithDiacritic: 'تُ', meaningAr: 'فاكهة', meaningEn: 'Apple' },
     kasra: { word: 'تِمْسَاح', charWithDiacritic: 'تِ', meaningAr: 'حيوان', meaningEn: 'Crocodile' },
-    sukoon: { word: 'مَكْتَب', charWithDiacritic: 'تْ', meaningAr: 'مكتب', meaningEn: 'Desk' }
+    sukoon: { word: 'مَتْحَف', charWithDiacritic: 'تْ', meaningAr: 'متحف', meaningEn: 'Museum' }
   },
   'ث': {
     fatha: { word: 'ثَعْلَب', charWithDiacritic: 'ثَ', meaningAr: 'حيوان', meaningEn: 'Fox' },
@@ -1562,7 +1559,7 @@ const TASHKEEL_WORDS: Record<string, {
     fatha: { word: 'طَائِر', charWithDiacritic: 'طَ', meaningAr: 'طائر', meaningEn: 'Bird' },
     damma: { word: 'طُيُور', charWithDiacritic: 'طُ', meaningAr: 'طيور', meaningEn: 'Birds' },
     kasra: { word: 'طِفْل', charWithDiacritic: 'طِ', meaningAr: 'صغير', meaningEn: 'Child' },
-    sukoon: { word: 'مَطَر', charWithDiacritic: 'طْ', meaningAr: 'ماء', meaningEn: 'Rain' }
+    sukoon: { word: 'مَطْبَخ', charWithDiacritic: 'طْ', meaningAr: 'مكان إعداد الطعام', meaningEn: 'Kitchen' }
   },
   'ظ': {
     fatha: { word: 'ظَرْف', charWithDiacritic: 'ظَ', meaningAr: 'ورق', meaningEn: 'Envelope' },
@@ -1574,7 +1571,7 @@ const TASHKEEL_WORDS: Record<string, {
     fatha: { word: 'عَلَم', charWithDiacritic: 'عَ', meaningAr: 'راية', meaningEn: 'Flag' },
     damma: { word: 'عُشّ', charWithDiacritic: 'عُ', meaningAr: 'بيت الطائر', meaningEn: 'Nest' },
     kasra: { word: 'عِنَب', charWithDiacritic: 'عِ', meaningAr: 'فاكهة', meaningEn: 'Grapes' },
-    sukoon: { word: 'مَلْعَب', charWithDiacritic: 'عْ', meaningAr: 'مكان', meaningEn: 'Playground' }
+    sukoon: { word: 'يَعْمَلُ', charWithDiacritic: 'عْ', meaningAr: 'يؤدي عملاً', meaningEn: 'Works' }
   },
   'غ': {
     fatha: { word: 'غَزَال', charWithDiacritic: 'غَ', meaningAr: 'حيوان', meaningEn: 'Deer' },
@@ -1586,7 +1583,7 @@ const TASHKEEL_WORDS: Record<string, {
     fatha: { word: 'فَرَاشَة', charWithDiacritic: 'فَ', meaningAr: 'حشرة', meaningEn: 'Butterfly' },
     damma: { word: 'فُلْفُل', charWithDiacritic: 'فُ', meaningAr: 'خضار', meaningEn: 'Pepper' },
     kasra: { word: 'فِيل', charWithDiacritic: 'فِ', meaningAr: 'حيوان', meaningEn: 'Elephant' },
-    sukoon: { word: 'سَقْف', charWithDiacritic: 'فْ', meaningAr: 'بناء', meaningEn: 'Roof' }
+    sukoon: { word: 'مَفْتَاح', charWithDiacritic: 'فْ', meaningAr: 'أداة لفتح الباب', meaningEn: 'Key' }
   },
   'ق': {
     fatha: { word: 'قَلَم', charWithDiacritic: 'قَ', meaningAr: 'أداة', meaningEn: 'Pen' },
@@ -1633,7 +1630,7 @@ const TASHKEEL_WORDS: Record<string, {
   'ي': {
     fatha: { word: 'يَد', charWithDiacritic: 'يَ', meaningAr: 'عضو', meaningEn: 'Hand' },
     damma: { word: 'يُوسُفِي', charWithDiacritic: 'يُ', meaningAr: 'فاكهة', meaningEn: 'Tangerine' },
-    kasra: { word: 'يَنَابِيع', charWithDiacritic: 'يِ', meaningAr: 'ماء', meaningEn: 'Springs' },
+    kasra: { word: 'حَيِيَ', charWithDiacritic: 'يِ', meaningAr: 'شعر بالخجل', meaningEn: 'Felt shy' },
     sukoon: { word: 'بَيْت', charWithDiacritic: 'يْ', meaningAr: 'منزل', meaningEn: 'House' }
   }
 };
