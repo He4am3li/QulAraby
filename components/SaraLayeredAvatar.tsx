@@ -1,5 +1,7 @@
 import React from 'react';
 import { useReducedMotion } from 'framer-motion';
+import { REST_LIPS, type SpeechLipSync } from '../services/speechLipSync.mjs';
+import { createMouthCompositor } from '../services/speechMouth.mjs';
 import { SARA_MANIFEST_URL, SARA_ORIGINAL_URL, paintSara, validateSaraManifest } from '../services/saraFacialRig.mjs';
 
 type Reaction = 'idle' | 'greeting' | 'correct' | 'retry';
@@ -13,12 +15,13 @@ type Manifest = {
   order: string[];
   eyeClips: Record<'R' | 'L', string>;
 };
-type Assets = { manifest: Manifest; images: Record<string, HTMLImageElement>; clips: Record<'R' | 'L', Path2D> };
+type Assets = { manifest: Manifest; images: Record<string, HTMLImageElement>; clips: Record<'R' | 'L', Path2D>; mouth: ReturnType<typeof createMouthCompositor> };
 interface Props {
   isSpeaking?: boolean;
   isListening?: boolean;
   isLoading?: boolean;
   audioLevel?: number;
+  lipSync?: SpeechLipSync;
   reaction?: Reaction;
   view?: 'portrait' | 'full';
   className?: string;
@@ -27,8 +30,8 @@ interface Props {
 let sharedAssets: Promise<Assets> | null = null;
 function loadSara(): Promise<Assets> {
   if (sharedAssets) return sharedAssets;
-  sharedAssets = fetch(SARA_MANIFEST_URL, { cache: 'force-cache' })
-    .then(async response => {
+  sharedAssets = Promise.all([fetch(SARA_MANIFEST_URL, { cache: 'force-cache' }), fetch('/avatars/sara-mouth-v1.json', { cache: 'force-cache' })])
+    .then(async ([response, mouthResponse]) => {
       if (!response.ok) throw new Error('Sara layers missing: ' + response.status);
       const manifest = validateSaraManifest(await response.json()) as Manifest | null;
       if (!manifest) throw new Error('Invalid Sara face layer manifest');
@@ -48,7 +51,23 @@ function loadSara(): Promise<Assets> {
         sprite.onerror = () => reject(new Error('Cannot decode Sara sprite: ' + name));
         sprite.src = layer.url;
       })));
-      return { manifest, clips, images };
+      if (!mouthResponse.ok) throw new Error('Sara speech mouth artwork missing');
+      const speech = await mouthResponse.json();
+      if (speech?.version !== 1 || speech.characterId !== 'saudi_female' || !speech.layers) throw new Error('Invalid Sara mouth artwork');
+      const mouthImages: Record<string, HTMLImageElement> = {};
+      await Promise.all(['Closed', 'A', 'E', 'O', 'FV'].map(name => new Promise<void>((resolve, reject) => {
+        const part = speech.layers[name];
+        if (!part || part.x !== 448 || part.y !== 186 || part.w !== 80 || part.h !== 44 ||
+            typeof part.url !== 'string' || !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(part.url)) { reject(new Error('Invalid Sara mouth sprite')); return; }
+        const image = new Image(); image.onload = () => {
+          if (image.naturalWidth !== part.w || image.naturalHeight !== part.h) reject(new Error('Sara mouth sprite dimensions changed'));
+          else { mouthImages[name] = image; resolve(); }
+        }; image.onerror = reject; image.src = part.url;
+      })));
+      const covering = Object.entries(manifest.layers).filter(([name, layer]) => /^FaceCover(?:_|$)/.test(name) && layer.visible)
+        .map(([name, layer]) => ({ ...layer, image: images[name] }));
+      const mouth = createMouthCompositor(speech.layers, mouthImages, { Closed: 'Closed', A: 'A', E: 'E', O: 'O', Open: 'A', FV: 'FV' }, () => document.createElement('canvas'), covering);
+      return { manifest, clips, images, mouth };
     })
     .catch(error => {
       sharedAssets = null;
@@ -60,7 +79,7 @@ function loadSara(): Promise<Assets> {
 /** Salman-style facial layers, with Sara's original body and face covering fixed. */
 export const SaraLayeredAvatar: React.FC<Props> = ({
   isSpeaking = false, isListening = false, isLoading = false,
-  audioLevel = 0, reaction = 'idle', view = 'full', className = ''
+  audioLevel = 0, lipSync, reaction = 'idle', view = 'full', className = ''
 }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const nativeFrameRef = React.useRef<HTMLCanvasElement | null>(null);
@@ -71,8 +90,8 @@ export const SaraLayeredAvatar: React.FC<Props> = ({
     ? { x: 350, y: 25, w: 300, h: 650 }
     : { x: 200, y: 0, w: 780, h: 1536 };
   const state: State = isSpeaking ? 'speaking' : isListening ? 'listening' : isLoading ? 'thinking' : reaction;
-  const motionRef = React.useRef({ state, audioLevel });
-  motionRef.current = { state, audioLevel };
+  const motionRef = React.useRef({ state, lipSync });
+  motionRef.current = { state, lipSync };
 
   React.useEffect(() => {
     let mounted = true;
@@ -112,7 +131,7 @@ export const SaraLayeredAvatar: React.FC<Props> = ({
     const paint = (time: number) => {
       if (!active) return;
       raf = requestAnimationFrame(paint);
-      if (document.hidden || time - lastFrame < 32) return;
+      if (document.hidden || time - lastFrame < 15) return;
       lastFrame = time;
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
@@ -145,7 +164,7 @@ export const SaraLayeredAvatar: React.FC<Props> = ({
       const gazeY = !reduceMotion && current.state === 'thinking' ? -0.6 : 0;
       nativeContext.clearRect(0, 0, nativeFrame.width, nativeFrame.height);
       paintSara(nativeContext, assets, {
-        blink, state: reduceMotion ? 'idle' : current.state, gazeX, gazeY
+        blink, state: reduceMotion ? 'idle' : current.state, gazeX, gazeY, lips: current.lipSync?.read() ?? REST_LIPS
       });
       context.drawImage(nativeFrame, 0, 0);
     };
@@ -158,7 +177,7 @@ export const SaraLayeredAvatar: React.FC<Props> = ({
 
   return (
     <div className={'relative overflow-hidden ' + className} role="img"
-      aria-label="سارة، معلمة اللهجة السعودية، من الرسم الأصلي مع رمش العينين والنظرات وتعبيرات الحاجبين"
+      aria-label="سارة، معلمة اللهجة السعودية، من الرسم الأصلي مع رمش العينين والنظرات وحركة الشفاه المتزامنة مع الصوت"
       style={{ background: 'transparent' }}>
       <svg viewBox={`${viewport.x} ${viewport.y} ${viewport.w} ${viewport.h}`}
         aria-hidden="true" preserveAspectRatio="xMidYMid meet"

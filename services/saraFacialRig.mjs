@@ -1,3 +1,4 @@
+import { paintSpeechMouth } from './speechMouth.mjs';
 /** Sara uses original-pixel face layers. This is not a Cubism model loader. */
 export const SARA_MANIFEST_URL = '/avatars/sara-layers.json';
 export const SARA_ORIGINAL_URL = '/avatars/sara-original.png';
@@ -87,7 +88,13 @@ export function paintSara(context, assets, options = {}, Path2DClass = globalThi
     if (!Path2DClass) throw new Error('Sara gaze requires eye clipping support');
     clips = { R: new Path2DClass(manifest.eyeClips.R), L: new Path2DClass(manifest.eyeClips.L) };
   }
+  let mouthPainted = false;
   for (const command of commands) {
+    // Speech is confined to the original visible mouth; metal covering stays on top.
+    if (!mouthPainted && assets.mouth && options.lips?.active && /^FaceCover(?:_|$)/.test(command.name)) {
+      paintSpeechMouth(context, assets.mouth, options.lips);
+      mouthPainted = true;
+    }
     const layer = manifest.layers[command.name];
     const sprite = images[command.name];
     if (!layer || !sprite) throw new Error('Missing Sara painting layer: ' + command.name);

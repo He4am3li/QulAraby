@@ -520,11 +520,14 @@ function decodeBase64(base64: string): Uint8Array {
   return bytes;
 }
 
-export async function decodeAudioData(data: Uint8Array, ctx: AudioContext): Promise<AudioBuffer> {
+export async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampleRate = 24000): Promise<AudioBuffer> {
+  if (!Number.isInteger(sampleRate) || sampleRate < 8000 || sampleRate > 96000 || data.byteLength === 0 || data.byteLength % 2 !== 0) {
+    throw new TypeError('Invalid PCM audio format');
+  }
   const bufferArray = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
   const dataInt16 = new Int16Array(bufferArray);
   const frameCount = dataInt16.length;
-  const buffer = ctx.createBuffer(1, frameCount, 24000);
+  const buffer = ctx.createBuffer(1, frameCount, sampleRate);
   const channelData = buffer.getChannelData(0);
   for (let i = 0; i < frameCount; i++) { channelData[i] = dataInt16[i] / 32768.0; }
   return buffer;

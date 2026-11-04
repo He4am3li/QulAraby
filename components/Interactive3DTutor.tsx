@@ -1,4 +1,5 @@
 import React from 'react';
+import type { SpeechLipSync } from '../services/speechLipSync.mjs';
 import { motion } from 'framer-motion';
 import { OriginalPortraitAvatar } from './OriginalPortraitAvatar';
 import { SalmanLayeredAvatar } from './SalmanLayeredAvatar';
@@ -21,6 +22,7 @@ interface Interactive3DTutorProps {
   isListening: boolean;
   isLoading: boolean;
   audioLevel?: number;
+  lipSync?: SpeechLipSync;
   countryNameAr: string;
   countryNameEn: string;
   dialectName: string;
@@ -42,6 +44,7 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
   isListening,
   isLoading,
   audioLevel = 0,
+  lipSync,
   lang,
   onSelect,
   successSignal = 0
@@ -99,6 +102,7 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
               isListening={isListening}
               isLoading={isLoading}
               audioLevel={audioLevel}
+              lipSync={lipSync}
               reaction={celebrating ? 'correct' : 'idle'}
               className="h-full w-full"
             />
@@ -109,6 +113,7 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
               isListening={isListening}
               isLoading={isLoading}
               audioLevel={audioLevel}
+              lipSync={lipSync}
               reaction={celebrating ? 'correct' : 'idle'}
               className="h-full w-full"
             />

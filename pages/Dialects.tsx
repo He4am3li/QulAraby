@@ -16,6 +16,7 @@ import { DialectChatDock } from '../components/DialectChatDock';
 import { DialectPassportCover, DialectPassportLibrary } from '../components/DialectPassports';
 import { assessDialectMission, type MissionTurn } from '../services/dialectMissionAssessment';
 import { getAI, getLiveAI, generateSpeech, decodeAudioData } from '../services/gemini';
+import { SpeechLipSync, analyzeSpeechBuffer, startLipSyncedSource } from '../services/speechLipSync.mjs';
 
 declare global {
   interface Window {
@@ -1495,6 +1496,8 @@ export const Dialects: React.FC = () => {
   };
 
   const audioContextRef = React.useRef<AudioContext | null>(null);
+  const lipSyncRef = React.useRef<SpeechLipSync | null>(null);
+  if (!lipSyncRef.current) lipSyncRef.current = new SpeechLipSync();
   const recognitionRef = React.useRef<any>(null);
   const micCleanupRef = React.useRef<(() => void) | null>(null);
   const liveAudioSourcesRef = React.useRef<Set<AudioBufferSourceNode>>(new Set());
@@ -1518,6 +1521,7 @@ export const Dialects: React.FC = () => {
   // Cancel pending TTS generation as well as already-playing audio.
   const stopOneShotAudio = React.useCallback(() => {
     oneShotGenerationRef.current++;
+    lipSyncRef.current?.clear('oneShot');
     const playing = oneShotSourceRef.current;
     oneShotSourceRef.current = null;
     if (playing) {
@@ -1531,6 +1535,7 @@ export const Dialects: React.FC = () => {
 
   const clearLiveAudio = React.useCallback(() => {
     livePlaybackVersionRef.current++;
+    lipSyncRef.current?.clear('live');
     livePlaybackHeadRef.current = 0;
     for (const source of liveAudioSourcesRef.current) {
       source.onended = null;
@@ -1563,6 +1568,15 @@ export const Dialects: React.FC = () => {
 
   React.useEffect(() => {
     return () => {
+      lipSyncRef.current?.clear();
+      oneShotGenerationRef.current++; liveGenerationRef.current++; livePlaybackVersionRef.current++;
+      isLiveActiveRef.current = false;
+      micCleanupRef.current?.();
+      for (const source of [...liveAudioSourcesRef.current, oneShotSourceRef.current]) {
+        if (!source) continue;
+        source.onended = null;
+        try { source.stop(); source.disconnect(); } catch (_) {}
+      }
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
@@ -2001,7 +2015,7 @@ export const Dialects: React.FC = () => {
                 const version = livePlaybackVersionRef.current;
                 liveDecodeQueueRef.current = liveDecodeQueueRef.current
                   .catch(() => {})
-                  .then(() => playLiveAudio(base64Audio, generation, version));
+                  .then(() => playLiveAudio(base64Audio, generation, version, part.inlineData?.mimeType));
               }
             }
             if (message.serverContent?.interrupted) {
@@ -2110,7 +2124,7 @@ export const Dialects: React.FC = () => {
   };
 
   // Decode and schedule successive PCM chunks sequentially, without overlap.
-  const playLiveAudio = async (base64: string, generation: number, version: number) => {
+  const playLiveAudio = async (base64: string, generation: number, version: number, mimeType = 'audio/pcm;rate=24000') => {
     const current = () => generation === liveGenerationRef.current
       && version === livePlaybackVersionRef.current && isLiveActiveRef.current;
     if (!current()) return;
@@ -2119,8 +2133,10 @@ export const Dialects: React.FC = () => {
       if (audioContext.state === 'suspended') await audioContext.resume();
       if (!current()) return;
       const bytes = Uint8Array.from(atob(base64), char => char.charCodeAt(0));
-      const audioData = await decodeAudioData(bytes, audioContext);
+      const sampleRate = Number(/(?:^|;)\s*rate=(\d+)/i.exec(mimeType)?.[1] || 24000);
+      const audioData = await decodeAudioData(bytes, audioContext, sampleRate);
       if (!current()) return;
+      const lipTrack = analyzeSpeechBuffer(audioData);
       const source = audioContext.createBufferSource();
       source.buffer = audioData;
       source.connect(audioContext.destination);
@@ -2136,7 +2152,7 @@ export const Dialects: React.FC = () => {
           setCurrentSpeechText('');
         }
       };
-      source.start(playAt);
+      startLipSyncedSource(audioContext, source, lipTrack, playAt, lipSyncRef.current!, 'live');
     } catch (err) {
       if (current()) {
         console.error('Live audio playback error:', err);
@@ -2152,7 +2168,6 @@ export const Dialects: React.FC = () => {
     const token = oneShotGenerationRef.current;
     const current = () => token === oneShotGenerationRef.current
       && !isLiveActiveRef.current && !liveConnectingRef.current;
-    setIsSpeaking(true);
     setCurrentSpeechText(text);
     try {
       const audioBytes = await generateSpeech(text, 'ar');
@@ -2167,6 +2182,7 @@ export const Dialects: React.FC = () => {
       if (!current()) return;
       const audioData = await decodeAudioData(audioBytes, audioContext);
       if (!current()) return;
+      const lipTrack = analyzeSpeechBuffer(audioData);
       const source = audioContext.createBufferSource();
       source.buffer = audioData;
       source.connect(audioContext.destination);
@@ -2178,9 +2194,12 @@ export const Dialects: React.FC = () => {
         setIsSpeaking(false);
         setCurrentSpeechText('');
       };
-      source.start(0);
+      const playAt = audioContext.currentTime + .025;
+      setIsSpeaking(true);
+      startLipSyncedSource(audioContext, source, lipTrack, playAt, lipSyncRef.current!, 'oneShot');
     } catch (err) {
       if (current()) {
+        lipSyncRef.current?.clear('oneShot');
         console.error('Speech error:', err);
         setIsSpeaking(false);
         setCurrentSpeechText('');
@@ -2429,6 +2448,7 @@ export const Dialects: React.FC = () => {
                             isListening={chosen && isListening}
                             isLoading={chosen && isChatLoading}
                             audioLevel={chosen ? audioLevel : 0}
+                            lipSync={chosen ? lipSyncRef.current : undefined}
                             countryNameAr={selectedCountry.nameAr}
                             countryNameEn={selectedCountry.nameEn}
                             dialectName={selectedCountry.dialect}

@@ -1,4 +1,7 @@
 import React from 'react';
+import { useReducedMotion } from 'framer-motion';
+import { REST_LIPS, type SpeechLipSync } from '../services/speechLipSync.mjs';
+import { createMouthCompositor, paintSpeechMouth } from '../services/speechMouth.mjs';
 
 /**
  * Salman uses the original approved 42 PSD sprites.
@@ -15,6 +18,7 @@ type Assets = {
   layers: Record<string, Layer>;
   images: Record<string, HTMLImageElement>;
   order: string[];
+  mouth: ReturnType<typeof createMouthCompositor>;
 };
 
 interface SalmanLayeredAvatarProps {
@@ -23,6 +27,7 @@ interface SalmanLayeredAvatarProps {
   isLoading?: boolean;
   reaction?: SalmanReaction;
   audioLevel?: number;
+  lipSync?: SpeechLipSync;
   view?: 'portrait' | 'full';
   className?: string;
 }
@@ -54,7 +59,8 @@ function loadSalman(): Promise<Assets> {
         image.onerror = () => reject(new Error('Cannot decode Salman sprite: ' + name));
         image.src = layer.url;
       })));
-      return { layers: data.layers, images, order };
+      const mouth = createMouthCompositor(data.layers, images, { Closed: 'Mouth_Closed', A: 'Mouth_A', E: 'Mouth_E', O: 'Mouth_O', Open: 'Mouth_Open', FV: 'Mouth_E' }, () => document.createElement('canvas'));
+      return { layers: data.layers, images, order, mouth };
     })
     .catch(error => {
       sharedAssets = null; // Allow retry after network failures.
@@ -69,12 +75,15 @@ export const SalmanLayeredAvatar: React.FC<SalmanLayeredAvatarProps> = ({
   isLoading = false,
   reaction = 'idle',
   audioLevel = 0,
+  lipSync,
   view = 'full',
   className = ''
 }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const assetsRef = React.useRef<Assets | null>(null);
   const [ready, setReady] = React.useState(false);
+  const reduceMotion = useReducedMotion();
+  const nativeFrameRef = React.useRef<HTMLCanvasElement | null>(null);
 
   const state: RigState = isSpeaking
     ? 'speaking'
@@ -84,12 +93,8 @@ export const SalmanLayeredAvatar: React.FC<SalmanLayeredAvatarProps> = ({
         ? 'thinking'
         : reaction;
 
-  const motionRef = React.useRef({ state, since: 0, audioLevel });
-  if (motionRef.current.state !== state) {
-    motionRef.current.state = state;
-    motionRef.current.since = 0;
-  }
-  motionRef.current.audioLevel = audioLevel;
+  const motionRef = React.useRef({ state, lipSync });
+  motionRef.current = { state, lipSync };
 
   React.useEffect(() => {
     let mounted = true;
@@ -106,11 +111,15 @@ export const SalmanLayeredAvatar: React.FC<SalmanLayeredAvatarProps> = ({
   }, []);
 
   React.useEffect(() => {
-    if (!ready) return;
+    if (!ready || reduceMotion) return;
     const canvas = canvasRef.current;
     const assets = assetsRef.current;
-    const ctx = canvas?.getContext('2d', { alpha: true });
-    if (!canvas || !ctx || !assets) return;
+    const destination = canvas?.getContext('2d', { alpha: true });
+    if (!canvas || !destination || !assets) return;
+    const native = nativeFrameRef.current ?? document.createElement('canvas');
+    nativeFrameRef.current = native; native.width = 1024; native.height = 1536;
+    const ctx = native.getContext('2d', { alpha: true });
+    if (!ctx) return;
 
     let active = true;
     let raf = 0;
@@ -124,7 +133,7 @@ export const SalmanLayeredAvatar: React.FC<SalmanLayeredAvatarProps> = ({
     const paint = (time: number) => {
       if (!active) return;
       raf = requestAnimationFrame(paint);
-      if (document.hidden || time - lastFrame < 32) return; // ~30 fps, mobile friendly.
+      if (document.hidden || time - lastFrame < 15) return; // At most one display frame behind the audio clock.
       lastFrame = time;
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
@@ -138,13 +147,16 @@ export const SalmanLayeredAvatar: React.FC<SalmanLayeredAvatarProps> = ({
         canvas.height = ch;
       }
       // Clear the actual drawing surface; never paint a black background.
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, cw, ch);
+      destination.setTransform(1, 0, 0, 1, 0, 0);
+      destination.clearRect(0, 0, cw, ch);
+      ctx.clearRect(0, 0, 1024, 1536);
       const padding = 2;
       const scale = Math.min((width - padding * 2) / viewport.w, (height - padding * 2) / viewport.h);
       const x = (width - viewport.w * scale) / 2 - viewport.x * scale;
       const y = (height - viewport.h * scale) / 2 - viewport.y * scale;
-      ctx.setTransform(dpr * scale, 0, 0, dpr * scale, x * dpr, y * dpr);
+      destination.setTransform(dpr * scale, 0, 0, dpr * scale, x * dpr, y * dpr);
+      destination.imageSmoothingEnabled = true;
+      destination.imageSmoothingQuality = 'high';
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
@@ -156,11 +168,8 @@ export const SalmanLayeredAvatar: React.FC<SalmanLayeredAvatarProps> = ({
       const blink = phase > 0 && phase < 1 ? Math.sin(Math.PI * phase) : 0;
 
       const motion = motionRef.current;
-      if (!motion.since) motion.since = time;
-      const elapsed = (time - motion.since) / 1000;
-      const speaking = motion.state === 'speaking';
+      const lips = motion.lipSync?.read() ?? REST_LIPS;
       const smile = ['greeting', 'correct', 'retry'].includes(motion.state);
-      const mouthBeat = (elapsed * (speaking ? 3.4 : 1)) % 1;
 
       const draw = (name: string, alpha = 1, dx = 0, dy = 0) => {
         const layer = assets.layers[name];
@@ -175,21 +184,8 @@ export const SalmanLayeredAvatar: React.FC<SalmanLayeredAvatarProps> = ({
         const layer = assets.layers[name];
         if (!layer.visible || HIDDEN.has(name)) continue;
         if (name === 'Mouth_Closed') {
-          if (speaking) {
-            // Simple speaking animation. Accurate phoneme alignment requires
-            // timestamps from speech synthesis, not only a boolean flag.
-            const energy = clamp(motion.audioLevel, 0, 1);
-            const beat = (mouthBeat + energy * 0.12) % 1;
-            const shape = beat < 0.16 ? 'Mouth_Closed'
-              : beat < 0.35 ? 'Mouth_E'
-              : beat < 0.52 ? 'Mouth_O'
-              : beat < 0.73 ? 'Mouth_A'
-              : beat < 0.86 ? 'Mouth_Open'
-              : 'Mouth_Closed';
-            draw(shape);
-          } else {
-            draw(smile ? 'Mouth_Smile' : 'Mouth_Closed');
-          }
+          if (smile && !lips.active) draw('Mouth_Smile');
+          else paintSpeechMouth(ctx, assets.mouth, lips);
           continue;
         }
         if (name === 'Brow_R' || name === 'Brow_L') {
@@ -211,6 +207,7 @@ export const SalmanLayeredAvatar: React.FC<SalmanLayeredAvatarProps> = ({
         }
         draw(name);
       }
+      destination.drawImage(native, 0, 0);
     };
 
     raf = requestAnimationFrame(paint);
@@ -218,7 +215,7 @@ export const SalmanLayeredAvatar: React.FC<SalmanLayeredAvatarProps> = ({
       active = false;
       cancelAnimationFrame(raf);
     };
-  }, [ready, view]);
+  }, [ready, view, reduceMotion]);
 
   return (
     <div
@@ -233,13 +230,13 @@ export const SalmanLayeredAvatar: React.FC<SalmanLayeredAvatarProps> = ({
         aria-hidden="true"
         draggable={false}
         className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-        style={{ opacity: ready ? 0 : 1, background: 'transparent' }}
+        style={{ opacity: ready && !reduceMotion ? 0 : 1, background: 'transparent' }}
       />
       <canvas
         ref={canvasRef}
         aria-hidden="true"
         className="absolute inset-0 w-full h-full pointer-events-none"
-        style={{ opacity: ready ? 1 : 0, background: 'transparent' }}
+        style={{ opacity: ready && !reduceMotion ? 1 : 0, background: 'transparent' }}
       />
     </div>
   );
