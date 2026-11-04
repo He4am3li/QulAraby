@@ -247,7 +247,7 @@ const STRINGS = {
   }
 };
 
-const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, mode?: 'trace' | 'free', onMastered?: (stars: number) => void }> = ({ char, shapes, t, lang, mode = 'trace', onMastered }) => {
+const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, onMastered?: (stars: number) => void }> = ({ char, shapes, t, lang, onMastered }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const activePointerIdRef = React.useRef<number | null>(null);
   const [activeShape, setActiveShape] = React.useState<'isolated' | 'initial' | 'medial' | 'final'>('isolated');
@@ -406,80 +406,111 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
   ];
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl border border-slate-200/75 bg-white/85 no-print">
-      <div className="shrink-0 border-b border-slate-200/80 bg-white/85 px-2 py-2 sm:px-3">
-        <div className="grid grid-cols-4 gap-1.5" role="group" aria-label={lang === 'ar' ? 'أشكال الحرف الأربعة' : 'Four letter forms'}>
-          {shapeOptions.map((option) => (
+    <div className="flex flex-col w-full h-full no-print">
+      <div className="flex flex-1 min-h-0 relative">
+        {/* Left Controls */}
+        <div className="w-28 border-l border-slate-50 p-3 flex flex-col items-center justify-center gap-4 bg-slate-50/30">
+          <div className="w-full flex flex-col gap-3">
+            {shapeOptions.slice(0, 2).map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => setActiveShape(opt.id as any)}
+                className={`p-2 rounded-2xl text-center transition-all border-2 ${activeShape === opt.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-200'}`}
+              >
+                <span className="text-2xl block mb-1 arabic-font">{(shapes as any)[opt.id]}</span>
+                <span className="text-[8px] font-black uppercase block">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Center Canvas - identical bounds for the pale guide and the drawing surface. */}
+        <div className="flex-1 relative bg-white flex items-center justify-center p-2 cursor-crosshair touch-none overflow-hidden">
+          <div className="relative w-full h-full max-w-[850px] max-h-[220px] min-w-0 min-h-0">
+            <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none" aria-hidden="true">
+              <span className="text-[clamp(64px,12vw,120px)] leading-none font-black arabic-font text-slate-900 opacity-10">
+                {(shapes as any)[activeShape]}
+              </span>
+            </div>
+            <p className="absolute bottom-1 left-0 right-0 text-center text-[8px] font-bold text-blue-600/30 uppercase tracking-[0.4em] select-none pointer-events-none">
+              {lang === 'ar' ? `شكل ${t[activeShape]}` : `${t[activeShape]} form`}
+            </p>
+            <canvas
+              ref={canvasRef}
+              width={850}
+              height={220}
+              onPointerDown={startDrawing}
+              onPointerUp={stopDrawing}
+              onPointerCancel={stopDrawing}
+              onLostPointerCapture={stopDrawing}
+              onPointerMove={draw}
+              style={{ touchAction: 'none' }}
+              className="absolute inset-0 z-10 w-full h-full cursor-crosshair"
+              aria-label={lang === 'ar' ? 'سبورة التدريب على كتابة الحرف' : 'Letter tracing canvas'}
+            />
+          </div>
+
+          {/* AI Feedback Overlay */}
+          {aiFeedback && (
+            <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500">
+              <div className="flex gap-2 mb-4">
+                {[1, 2, 3].map(s => (
+                  <Star key={s} size={32} fill={s <= aiFeedback.stars ? "#f59e0b" : "none"} className={s <= aiFeedback.stars ? "text-amber-500 animate-bounce" : "text-slate-200"} style={{ animationDelay: `${s * 100}ms` }} />
+                ))}
+              </div>
+              <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl shadow-xl mb-4 ${aiFeedback.isCorrect ? 'bg-green-500 text-white' : 'bg-amber-500 text-white'}`}>
+                {aiFeedback.isCorrect ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
+                <span className="text-lg font-black arabic-font">{aiFeedback.message}</span>
+              </div>
+              <button onClick={() => { clear(); setAiFeedback(null); }} className="px-8 py-2 bg-slate-900 text-white rounded-xl font-black text-xs hover:scale-105 transition-all">
+                {t.retry}
+              </button>
+            </div>
+          )}
+
+          {isAnalyzing && (
+            <div className="absolute inset-0 z-20 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center">
+              <div className="relative">
+                <Loader2 className="animate-spin text-blue-600" size={48} />
+                <PenTool className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-400" size={20} />
+              </div>
+              <p className="mt-4 text-xs font-black text-blue-600 uppercase tracking-widest animate-pulse">جاري فحص الرسم...</p>
+            </div>
+          )}
+        </div>
+
+        {/* Right Controls */}
+        <div className="w-28 border-r border-slate-50 p-3 flex flex-col justify-center gap-3 bg-slate-50/30">
+          {shapeOptions.slice(2, 4).map(opt => (
             <button
-              key={option.id}
-              onClick={() => setActiveShape(option.id as any)}
-              aria-pressed={activeShape === option.id}
-              className={activeShape === option.id
-                ? 'flex min-w-0 items-center justify-center gap-1.5 rounded-xl border border-blue-300 bg-blue-50 px-1 py-1.5 text-blue-800 shadow-inner transition-colors'
-                : 'flex min-w-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-1 py-1.5 text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50/50'}
+              key={opt.id}
+              onClick={() => setActiveShape(opt.id as any)}
+              className={`p-2 rounded-2xl text-center transition-all border-2 ${activeShape === opt.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-200'}`}
             >
-              <span className="arabic-font text-xl font-bold leading-none sm:text-2xl">{(shapes as any)[option.id]}</span>
-              <span className="truncate text-[8px] font-bold sm:text-[10px]">{option.label}</span>
+              <span className="text-2xl block mb-1 arabic-font">{(shapes as any)[opt.id]}</span>
+              <span className="text-[8px] font-black uppercase block">{opt.label}</span>
             </button>
           ))}
         </div>
       </div>
-      <div className="relative min-h-0 flex-1 overflow-hidden bg-[#fcfaf5]">
-        <div className="pointer-events-none absolute inset-x-4 top-1/2 border-t border-dashed border-slate-300/70" aria-hidden="true" />
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden="true">
-          {mode === 'trace' && (
-            <span className="arabic-font select-none text-[clamp(80px,14vw,150px)] font-black leading-none text-slate-500/20">
-              {(shapes as any)[activeShape]}
-            </span>
-          )}
+      
+      <div className="p-2 bg-blue-50 flex items-center justify-between px-6 shrink-0 border-t border-blue-100">
+        <div className="flex items-center gap-4">
+          <p className="text-[10px] font-bold text-blue-600 arabic-font">
+            {t.followShape}
+          </p>
         </div>
-        <canvas
-          ref={canvasRef}
-          width={850}
-          height={220}
-          onPointerDown={startDrawing}
-          onPointerUp={stopDrawing}
-          onPointerCancel={stopDrawing}
-          onLostPointerCapture={stopDrawing}
-          onPointerMove={draw}
-          style={{ touchAction: 'none' }}
-          className="absolute inset-0 z-10 h-full w-full cursor-crosshair"
-          aria-label={lang === 'ar' ? 'سبورة تدريب الكتابة' : 'Arabic handwriting board'}
-        />
-        {aiFeedback && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-white/85 p-3 text-center backdrop-blur-sm">
-            <div className="flex gap-1.5">
-              {[1, 2, 3].map((star) => (
-                <Star key={star} size={26} fill={star <= aiFeedback.stars ? '#f59e0b' : 'none'} className={star <= aiFeedback.stars ? 'text-amber-500' : 'text-slate-300'} />
-              ))}
-            </div>
-            <div className={aiFeedback.isCorrect
-              ? 'rounded-2xl bg-emerald-50 px-4 py-2 font-black text-emerald-800 arabic-font'
-              : 'rounded-2xl bg-amber-50 px-4 py-2 font-black text-amber-800 arabic-font'}>
-              {aiFeedback.message}
-            </div>
-            <button onClick={() => { clear(); setAiFeedback(null); }} className="rounded-xl bg-slate-900 px-5 py-2 text-xs font-bold text-white">
-              {t.retry}
-            </button>
-          </div>
-        )}
-        {isAnalyzing && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-white/75 backdrop-blur-sm">
-            <Loader2 className="animate-spin text-blue-600" size={34} />
-            <p className="arabic-font text-xs font-bold text-blue-700">{lang === 'ar' ? 'جاري فحص الكتابة...' : 'Checking handwriting...'}</p>
-          </div>
-        )}
-      </div>
-      <div className="flex shrink-0 items-center justify-between gap-2 border-t border-slate-200/80 bg-white/90 px-3 py-2">
-        <p className="arabic-font min-w-0 text-[10px] font-bold text-slate-500">
-          {mode === 'trace' ? t.followShape : (lang === 'ar' ? 'اكتب الحرف دون دليل' : 'Write without a guide')}
-        </p>
-        <div className="flex shrink-0 gap-2">
-          <button onClick={clear} className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50">
-            <RefreshCcw size={13} /> {t.clear}
+        <div className="flex gap-2">
+          <button onClick={clear} className="px-4 py-2 bg-white border border-slate-200 text-slate-500 rounded-xl font-black text-[10px] hover:bg-slate-100 transition-all flex items-center gap-2">
+            <RefreshCcw size={12} /> {t.clear}
           </button>
-          <button onClick={handleCheckWork} disabled={isAnalyzing} className="flex items-center gap-1 rounded-xl bg-blue-700 px-3 py-2 text-[10px] font-bold text-white shadow-sm disabled:opacity-40 hover:bg-blue-800">
-            <CheckCircle2 size={13} /> {t.checkMe}
+          <button 
+            onClick={handleCheckWork}
+            disabled={isAnalyzing}
+            className="px-6 py-2 bg-blue-600 text-white rounded-xl font-black text-[10px] flex items-center gap-2 shadow-lg shadow-blue-100 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+          >
+            <CheckCircle2 size={14} />
+            {t.checkMe}
           </button>
         </div>
       </div>
@@ -2116,13 +2147,13 @@ export const Letters: React.FC = () => {
   };
 
   const [loadingChar, setLoadingChar] = React.useState<string | null>(null);
-  const [selectedChar, setSelectedChar] = React.useState<typeof ALPHABET[0] | null>(ALPHABET[1]);
+  const [selectedChar, setSelectedChar] = React.useState<typeof ALPHABET[0] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [verificationResult, setVerificationResult] = React.useState<any>(null);
   const [masteredLetters, setMasteredLetters] = React.useState<string[]>([]);
   const [masteredDetailed, setMasteredDetailed] = React.useState<any[]>([]);
-  const [activeTab, setActiveTab] = React.useState<'listen' | 'trace' | 'write' | 'practice' | 'master' | 'soundlab' | 'game' | 'words' | 'tashkeel'>('trace');
+  const [activeTab, setActiveTab] = React.useState<'practice' | 'soundlab' | 'game' | 'words' | 'tashkeel'>('practice');
   const [isGeneratingWorksheet, setIsGeneratingWorksheet] = React.useState(false);
   const [showWorksheetPreview, setShowWorksheetPreview] = React.useState(false);
   
@@ -2344,24 +2375,6 @@ export const Letters: React.FC = () => {
     };
   }, [selectedChar]);
 
-  // The original five learning tools stay mounted by the same activity identifiers.
-  // Journey phases are an overlay of navigation and never replace the sound lab or games.
-  const journeySteps = [
-    { id: 'listen', label: lang === 'ar' ? 'استمع' : 'Listen', icon: Volume2 },
-    { id: 'trace', label: lang === 'ar' ? 'تتبّع' : 'Trace', icon: PenTool },
-    { id: 'write', label: lang === 'ar' ? 'اكتب' : 'Write', icon: Edit3 },
-    { id: 'practice', label: lang === 'ar' ? 'تدرّب' : 'Practice', icon: Layers },
-    { id: 'master', label: lang === 'ar' ? 'أتقن' : 'Master', icon: Award }
-  ] as const;
-  const trainingTools = [
-    { id: 'soundlab', label: t.soundLabBtn, icon: Mic },
-    { id: 'game', label: t.auditGameBtn, icon: Music },
-    { id: 'words', label: t.wordDiscrimBtn, icon: Search },
-    { id: 'tashkeel', label: t.letterTashkeelBtn, icon: TypeIcon }
-  ] as const;
-  const currentActivity = [...journeySteps, ...trainingTools].find(item => item.id === activeTab);
-  const masteryDetail = masteredDetailed.find((item: any) => item.char === selectedChar?.char);
-
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
@@ -2427,213 +2440,304 @@ export const Letters: React.FC = () => {
         </div>
       )}
 
-      {/* Compact studio header preserves the platform language toggle and QUL identity. */}
+      {/* Header */}
       <PageHeader
-        compact
-        title={lang === 'ar' ? 'مَرْسَم الحروف' : 'Letter Atelier'}
+        title={selectedChar ? `${t.letterHeading} ${lang === 'ar' ? selectedChar.name : selectedChar.translit}` : t.title}
         icon={TypeIcon}
         lang={lang}
         onToggle={toggleLang}
-        rightContent={<span className="hidden rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-bold text-white/80 backdrop-blur-md md:inline-block arabic-font">{lang === 'ar' ? 'اكتشف الحرف، استمع إليه، ثم اكتبْه بيدك' : 'Discover, listen and write'}</span>}
       />
 
-      {/* THE LETTER ATELIER: cabinet on the left, flexible studio centre, journey on the right. */}
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#e9eef6] p-2 sm:p-3 lg:p-4 no-print">
-        <div className="pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" style={{ background: 'radial-gradient(ellipse at 7% 8%, rgba(165,196,243,.65), transparent 46%), radial-gradient(ellipse at 92% 92%, rgba(183,213,211,.53), transparent 39%), linear-gradient(120deg,#edf2f9,#e7edf5 60%,#f5f5f0)' }} />
-        <div className="relative flex h-full min-h-0 flex-col gap-2.5">
-          <div className="flex min-h-0 flex-1 flex-col gap-2.5 lg:grid lg:grid-cols-[minmax(190px,0.96fr)_minmax(0,3.05fr)_minmax(212px,1fr)] lg:gap-3" dir="ltr">
-
-            {/* Letter cabinet, horizontal on mobile and a crystal grid on desktop. */}
-            <section dir={lang === 'ar' ? 'rtl' : 'ltr'} className="order-1 shrink-0 overflow-hidden rounded-[22px] border border-white/80 bg-white/75 p-2.5 shadow-[0_12px_38px_rgba(35,64,112,.08)] backdrop-blur-xl lg:order-none lg:flex lg:min-h-0 lg:flex-col lg:p-3" aria-label={lang === 'ar' ? 'خزانة الحروف' : 'Letter cabinet'}>
-              <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-700"><BookOpen size={14} /></span>
-                  <h2 className="arabic-font text-xs font-black text-slate-800 sm:text-sm">{lang === 'ar' ? 'خزانة الحروف' : 'Letter cabinet'}</h2>
-                </div>
-                <span className="text-[10px] font-bold tabular-nums text-slate-400">{masteredLetters.length}/28</span>
-              </div>
-              <div className="flex gap-1.5 overflow-x-auto pb-0.5 lg:grid lg:grid-cols-4 lg:content-start lg:gap-1.5 lg:overflow-visible" role="group" aria-label={lang === 'ar' ? 'اختر حرفاً' : 'Select a letter'}>
-                {ALPHABET.map((item) => {
-                  const selected = selectedChar?.char === item.char;
-                  const mastered = masteredLetters.includes(item.char);
-                  return (
-                    <button
-                      key={item.char}
-                      onClick={() => { setSelectedChar(item); handlePlayLetterName(item.char); }}
-                      aria-pressed={selected}
-                      aria-label={lang === 'ar' ? item.name : item.translit}
-                      title={lang === 'ar' ? item.name : item.translit}
-                      className={selected
-                        ? 'group relative flex h-10 min-w-10 shrink-0 items-center justify-center rounded-xl border border-blue-400/70 bg-gradient-to-br from-blue-50 to-sky-100 text-blue-800 shadow-[inset_0_1px_6px_rgba(45,99,190,.12)] ring-1 ring-blue-200 transition-all lg:h-11 lg:min-w-0'
-                        : 'group relative flex h-10 min-w-10 shrink-0 items-center justify-center rounded-xl border border-white bg-white/90 text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 lg:h-11 lg:min-w-0'}
-                    >
-                      <span className="arabic-font text-lg font-black leading-none lg:text-xl">{item.char}</span>
-                      {mastered && <span className="absolute -top-0.5 -right-0.5 text-amber-500" aria-label={lang === 'ar' ? 'تدريب مكتمل' : 'Completed writing'}><Star size={10} fill="currentColor" /></span>}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="mt-auto hidden pt-3 text-center lg:block">
-                <div className="mx-auto mb-2 h-px w-3/4 bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
-                <p className="arabic-font text-[10px] font-medium leading-relaxed text-slate-400">{lang === 'ar' ? 'اختر أي حرف لتستمع إلى تسجيله الأصلي وتبدأ التدريب' : 'Choose a letter to hear its recording'}</p>
-              </div>
-            </section>
-
-            {/* The actual educational components remain in this central, full-height activity stage. */}
-            <main dir={lang === 'ar' ? 'rtl' : 'ltr'} className="order-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[24px] border border-white/90 bg-white/85 p-2.5 shadow-[0_16px_50px_rgba(38,61,105,.11)] backdrop-blur-xl sm:p-3 lg:order-none" aria-label={lang === 'ar' ? 'منضدة مرسم الحروف' : 'Letter activity studio'}>
-              {selectedChar && shapes ? (
-                <>
-                  <div className="mb-2 flex shrink-0 items-center justify-between gap-3 rounded-2xl border border-blue-100/70 bg-gradient-to-l from-[#f4f8ff] to-white px-3 py-2 sm:px-4">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <button
-                        onClick={() => handlePlayLetterName(selectedChar.char)}
-                        aria-label={lang === 'ar' ? 'اسمع اسم الحرف' : 'Play letter recording'}
-                        title={lang === 'ar' ? 'انقر لسماع الحرف' : 'Play letter recording'}
-                        className="group flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-blue-200/80 bg-gradient-to-br from-blue-100 via-white to-slate-100 text-blue-800 shadow-inner transition-transform hover:scale-105 active:scale-95 sm:h-16 sm:w-16"
-                      >
-                        <span className="arabic-font text-4xl font-black leading-none">{selectedChar.char}</span>
-                      </button>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h2 className="arabic-font text-sm font-black text-slate-800 sm:text-base">{lang === 'ar' ? selectedChar.name : selectedChar.translit}</h2>
-                          <button onClick={() => handlePlayLetterName(selectedChar.char)} aria-label={lang === 'ar' ? 'إعادة سماع الحرف' : 'Replay letter'} className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-700 transition-colors hover:bg-blue-200"><Volume2 size={15} /></button>
-                        </div>
-                        <TranslitDisplay text={selectedChar.translit} className="block text-[9px] font-bold tracking-wider text-slate-400" />
-                        <button onClick={() => handleSpeak(selectedChar.example, selectedChar.example)} className="arabic-font mt-1 flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-blue-700" aria-label={lang === 'ar' ? 'استمع إلى الكلمة' : 'Hear example word'}>
-                          <span>{selectedChar.emoji}</span><span className="truncate">{selectedChar.example}</span><Volume2 size={12} className="opacity-60" />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="hidden shrink-0 gap-1.5 xl:flex" aria-label={t.shapesTitle}>
-                      {(['isolated', 'initial', 'medial', 'final'] as const).map(form => (
-                        <span key={form} className="arabic-font flex h-10 min-w-9 items-center justify-center rounded-lg border border-slate-100 bg-white/80 px-2 text-xl text-slate-600">{shapes[form]}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="mb-2 flex shrink-0 items-center justify-between gap-2 px-1">
-                    <div className="flex items-center gap-2">
-                      {currentActivity && <currentActivity.icon size={16} className="text-blue-700" />}
-                      <h3 className="arabic-font text-sm font-black text-slate-800">{currentActivity?.label}</h3>
-                    </div>
-                    <span className="arabic-font text-[10px] font-medium text-slate-400">{lang === 'ar' ? 'تعلم بطريقتك' : 'Learn your way'}</span>
-                  </div>
-                  <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-                    {(activeTab === 'trace' || activeTab === 'write') && (
-                      <TracingBoard key={selectedChar.char + ':' + activeTab} char={selectedChar.char} shapes={shapes} t={t} lang={lang} mode={activeTab === 'trace' ? 'trace' : 'free'} onMastered={(stars) => saveMastery(selectedChar.char, stars)} />
+      <div className="flex-1 overflow-hidden flex flex-col md:flex-row relative no-print">
+        {/* Main Content Area */}
+        <div className="flex-1 min-w-0 p-2 md:p-3 overflow-hidden bg-slate-50/20 flex flex-col space-y-2">
+          
+          {/* Alphabet Grid (Top Half) */}
+          <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex-none max-w-5xl mx-auto w-full">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-black text-slate-800 arabic-font">{t.subtitle}</h2>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t.instr}</p>
+            </div>
+            <div className="grid grid-cols-7 gap-2">
+              {ALPHABET.map((item) => {
+                const isMastered = masteredLetters.includes(item.char);
+                return (
+                  <button
+                    key={item.char}
+                    onClick={() => { setSelectedChar(item); handlePlayLetterName(item.char); }}
+                    className={`group relative w-10 h-10 bg-white border-2 rounded-2xl flex flex-col items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-sm ${
+                      selectedChar?.char === item.char ? 'border-blue-500 bg-blue-50' : 'border-slate-100 hover:border-blue-300'
+                    }`}
+                  >
+                    {isMastered && <div className="absolute top-0.5 right-0.5 text-amber-500"><Award size={8} fill="currentColor" /></div>}
+                    {loadingChar === item.char ? (
+                      <Loader2 className="animate-spin text-blue-500" size={14} />
+                    ) : (
+                      <span className="text-xl font-black text-slate-800 arabic-font">{item.char}</span>
                     )}
-                    {activeTab === 'listen' && (
-                      <div className="grid h-full min-h-0 grid-cols-2 gap-2 overflow-y-auto pr-0.5 xl:grid-cols-4" aria-label={lang === 'ar' ? 'لوحة سماع الأصوات' : 'Pronunciation practice'}>
-                        {[
-                          { label: t.harakatTitle, values: HARAKAT },
-                          { label: t.shaddaTitle, values: SHADDA_VARIATIONS },
-                          { label: t.madTitle, values: MAD_VOWELS },
-                          { label: t.tanweenTitle, values: TANWEEN }
-                        ].map((group) => (
-                          <div key={group.label} className="rounded-2xl border border-slate-200/80 bg-white/85 p-2 shadow-sm">
-                            <p className="arabic-font mb-2 text-center text-[10px] font-bold text-slate-500">{group.label}</p>
-                            <div className="grid gap-1.5">
-                              {group.values.map(value => (
-                                <button key={value.symbol} onClick={() => handleSpeak(getCombinedChar(selectedChar.char, value.symbol), value.symbol)} className="flex min-h-9 items-center justify-between rounded-xl border border-blue-100/60 bg-blue-50/50 px-2 py-1 text-blue-900 transition-colors hover:bg-blue-100" title={lang === 'ar' ? value.nameAr : value.nameEn}>
-                                  <span className="arabic-font text-xl font-black">{getCombinedChar(selectedChar.char, value.symbol)}</span>
-                                  <Volume2 size={13} className="shrink-0 opacity-70" />
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {activeTab === 'practice' && (
-                      <div className="grid h-full min-h-0 grid-cols-2 content-center gap-2.5 overflow-y-auto p-1">
-                        {trainingTools.map(({ id, label, icon: ToolIcon }) => (
-                          <button key={id} onClick={() => setActiveTab(id)} className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-2xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/75 p-3 shadow-sm transition-all hover:border-blue-300 hover:shadow-md">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100/80 text-blue-800 group-hover:bg-blue-200"><ToolIcon size={21} /></span>
-                            <span className="arabic-font text-center text-xs font-black text-slate-700">{label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {activeTab === 'master' && (
-                      <div className="flex h-full min-h-0 flex-col items-center justify-center gap-3 rounded-2xl border border-amber-100 bg-gradient-to-b from-amber-50/65 to-white p-4 text-center">
-                        <Award size={34} className={masteredLetters.includes(selectedChar.char) ? 'text-amber-500' : 'text-slate-300'} />
-                        <h3 className="arabic-font text-base font-black text-slate-800">{masteredLetters.includes(selectedChar.char) ? (lang === 'ar' ? 'أحسنت، أُنجز تدريب هذا الحرف' : 'Letter writing completed') : (lang === 'ar' ? 'رحلة الإتقان مستمرة' : 'Your learning journey continues')}</h3>
-                        <p className="arabic-font max-w-sm text-xs leading-relaxed text-slate-500">{masteredLetters.includes(selectedChar.char) ? (lang === 'ar' ? 'سُجّل اجتياز تدريب الكتابة لهذا الحرف. واصل تدريبات الاستماع والتمييز لتقوية مهاراتك.' : 'Writing completion is saved. Keep practising listening and recognition.') : (lang === 'ar' ? 'تدرّب على تتبّع الحرف وكتابته، ثم اختبر نفسك في التمييز السمعي والكلمات.' : 'Trace, write, then practise listening and recognising the letter.')}</p>
-                        {masteryDetail && <span className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-amber-700">{lang === 'ar' ? 'نجوم تدريب الكتابة' : 'Writing stars'}: {masteryDetail.stars} / 3</span>}
-                        <button onClick={() => setActiveTab('trace')} className="rounded-xl bg-slate-900 px-5 py-2 text-xs font-bold text-white">{lang === 'ar' ? 'تدرّب على الكتابة' : 'Practice writing'}</button>
-                      </div>
-                    )}
-                    {activeTab === 'soundlab' && <SoundLab char={selectedChar.char} t={t} lang={lang} onSpeak={handleSpeak} />}
-                    {activeTab === 'game' && <AuditoryGame char={selectedChar.char} t={t} onSpeak={handleSpeak} />}
-                    {activeTab === 'words' && <WordDiscriminationGame char={selectedChar.char} t={t} lang={lang} onSpeak={handleSpeak} />}
-                    {activeTab === 'tashkeel' && <WordTashkeelGame char={selectedChar.char} t={t} lang={lang} onSpeak={handleSpeak} />}
-                  </div>
-                </>
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <p className="arabic-font text-sm font-bold text-slate-500">{t.welcome}</p>
-                </div>
-              )}
-            </main>
-
-            {/* Always-visible journey and the four intact educational tools. */}
-            <aside dir={lang === 'ar' ? 'rtl' : 'ltr'} className="order-2 shrink-0 overflow-hidden rounded-[22px] border border-white/80 bg-white/75 p-2.5 shadow-[0_12px_38px_rgba(35,64,112,.08)] backdrop-blur-xl lg:order-none lg:flex lg:min-h-0 lg:flex-col lg:p-3" aria-label={lang === 'ar' ? 'رحلة الحرف وأدوات التدريب' : 'Journey and practice tools'}>
-              <div className="mb-1.5 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-700"><Layers size={15} /></span>
-                <h2 className="arabic-font text-xs font-black text-slate-800">{lang === 'ar' ? 'رحلة الحرف' : 'Letter journey'}</h2>
-              </div>
-              <div className="flex gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible" role="group" aria-label={lang === 'ar' ? 'مراحل التعلّم' : 'Learning stages'}>
-                {journeySteps.map(({ id, label, icon: StepIcon }, idx) => (
-                  <button key={id} onClick={() => setActiveTab(id)} aria-pressed={activeTab === id} className={activeTab === id
-                    ? 'arabic-font flex min-h-9 shrink-0 items-center gap-2 rounded-xl border border-blue-200 bg-blue-100/75 px-3 py-2 text-[11px] font-black text-blue-900 shadow-inner lg:w-full'
-                    : 'arabic-font flex min-h-9 shrink-0 items-center gap-2 rounded-xl border border-white bg-white/90 px-3 py-2 text-[11px] font-bold text-slate-600 transition-colors hover:border-blue-100 hover:bg-blue-50 lg:w-full'}>
-                    <span className="hidden h-5 w-5 shrink-0 items-center justify-center rounded-lg bg-white/70 text-[9px] tabular-nums lg:flex">{idx + 1}</span>
-                    <StepIcon size={15} className="shrink-0" /><span className="whitespace-nowrap">{label}</span>
                   </button>
-                ))}
-              </div>
-              <div className="my-2 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
-              <div className="mb-1.5 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-700"><Activity size={15} /></span>
-                <h2 className="arabic-font text-xs font-black text-slate-800">{lang === 'ar' ? 'أدوات التدريب' : 'Learning tools'}</h2>
-              </div>
-              <div className="flex gap-1.5 overflow-x-auto pb-0.5 lg:grid lg:grid-cols-2 lg:gap-2 lg:overflow-visible" role="group" aria-label={lang === 'ar' ? 'تدريبات الحروف' : 'Letter exercises'}>
-                {trainingTools.map(({ id, label, icon: ToolIcon }) => (
-                  <button key={id} onClick={() => setActiveTab(id)} aria-pressed={activeTab === id} className={activeTab === id
-                    ? 'arabic-font flex min-h-12 min-w-28 shrink-0 items-center gap-2 rounded-xl border border-blue-300 bg-blue-100/90 px-2 py-2 text-[10px] font-black text-blue-900 shadow-inner lg:min-h-20 lg:min-w-0 lg:flex-col lg:justify-center lg:gap-1 lg:text-center'
-                    : 'arabic-font flex min-h-12 min-w-28 shrink-0 items-center gap-2 rounded-xl border border-white bg-white/90 px-2 py-2 text-[10px] font-bold text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50 lg:min-h-20 lg:min-w-0 lg:flex-col lg:justify-center lg:gap-1 lg:text-center'}>
-                    <ToolIcon size={18} className="shrink-0 text-blue-700" /><span className="leading-tight">{label}</span>
-                  </button>
-                ))}
-              </div>
-              <p className="arabic-font mt-auto hidden pt-3 text-center text-[10px] leading-relaxed text-slate-400 lg:block">{lang === 'ar' ? 'يمكنك الانتقال بين الأدوات في أي وقت' : 'Switch tools at any time'}</p>
-            </aside>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Original worksheet preview, original homework inbox, original student upload handlers. */}
-          <footer dir={lang === 'ar' ? 'rtl' : 'ltr'} className="flex shrink-0 flex-col gap-1.5 rounded-2xl border border-white/80 bg-white/80 p-2 shadow-[0_8px_30px_rgba(38,61,105,.07)] backdrop-blur-xl">
-            <div className="flex items-center gap-2">
-              <button onClick={() => setShowWorksheetPreview(true)} disabled={!selectedChar || isGeneratingWorksheet} className="arabic-font flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-[11px] font-black text-emerald-800 transition-colors hover:bg-emerald-100 disabled:opacity-40">
-                {isGeneratingWorksheet ? <Loader2 className="animate-spin" size={15} /> : <FileText size={16} />}
-                <span>{t.downloadBtn}</span>
-              </button>
-              {isTeacher ? (
-                <button onClick={() => setShowTeacherInbox(true)} className="arabic-font flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 text-[11px] font-black text-indigo-800 transition-colors hover:bg-indigo-100">
-                  <Inbox size={16} />
-                  <span>{lang === 'ar' ? 'صندوق واجبات الطلاب' : 'Student Homework Inbox'}</span>
-                  {pendingSubmissionsCount > 0 && <span className="rounded-lg bg-amber-300 px-1.5 py-0.5 text-[10px] tabular-nums text-slate-900">{pendingSubmissionsCount}</span>}
-                </button>
-              ) : (
-                <>
-                  <button onClick={() => fileInputRef.current?.click()} disabled={!selectedChar || isVerifying} className="arabic-font flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 text-[11px] font-black text-blue-800 transition-colors hover:bg-blue-100 disabled:opacity-40">
-                    {isVerifying ? <Loader2 className="animate-spin" size={15} /> : <Upload size={16} />}
-                    <span>{t.uploadBtn}</span>
+          {/* Tool Container Area (Bottom Half) */}
+          <div className="flex-1 flex flex-col min-h-0">
+            {selectedChar ? (
+              <div className="flex flex-col h-full space-y-2">
+                <div className="bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden flex flex-col w-full max-w-5xl mx-auto animate-in slide-in-from-top-6 duration-500 no-print h-full">
+                  {/* Shared Tool Header */}
+                  <div className="bg-slate-50 px-4 py-2 flex items-center justify-between border-b border-slate-100 shrink-0">
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setActiveTab('practice')}
+                        className={`px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'practice' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
+                      >
+                        <PenTool size={14} />
+                        <span>{t.practiceBtn}</span>
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('soundlab')}
+                        className={`px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'soundlab' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
+                      >
+                        <Activity size={14} />
+                        <span>{t.soundLabBtn}</span>
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('game')}
+                        className={`px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'game' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
+                      >
+                        <Music size={14} />
+                        <span>{t.auditGameBtn}</span>
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('words')}
+                        className={`px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'words' ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
+                      >
+                        <BookOpen size={14} />
+                        <span>{t.wordDiscrimBtn}</span>
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('tashkeel')}
+                        className={`px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 ${activeTab === 'tashkeel' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'}`}
+                      >
+                        <TypeIcon size={14} />
+                        <span>{t.letterTashkeelBtn}</span>
+                      </button>
+                    </div>
+                    <button onClick={() => setSelectedChar(null)} className="p-1 text-slate-400 hover:text-red-500 transition-colors">
+                      <XCircle size={20} />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-hidden p-3 flex flex-col">
+                    {activeTab === 'practice' && (
+                      <TracingBoard 
+                        char={selectedChar.char} 
+                        shapes={shapes} 
+                        t={t}
+                        lang={lang}
+                        onMastered={(stars) => saveMastery(selectedChar.char, stars)}
+                      />
+                    )}
+                    {activeTab === 'soundlab' && (
+                      <SoundLab 
+                        char={selectedChar.char} 
+                        t={t} 
+                        lang={lang}
+                        onSpeak={handleSpeak}
+                      />
+                    )}
+                    {activeTab === 'game' && (
+                      <AuditoryGame 
+                        char={selectedChar.char}
+                        t={t} 
+                        onSpeak={handleSpeak}
+                      />
+                    )}
+                    {activeTab === 'words' && (
+                      <WordDiscriminationGame 
+                        char={selectedChar.char}
+                        t={t}
+                        lang={lang}
+                        onSpeak={handleSpeak}
+                      />
+                    )}
+                    {activeTab === 'tashkeel' && (
+                      <WordTashkeelGame 
+                        char={selectedChar.char}
+                        t={t}
+                        lang={lang}
+                        onSpeak={handleSpeak}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-8 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-2 animate-in fade-in zoom-in duration-700">
+                 <div>
+                    <h3 className="text-xl font-black text-slate-800 arabic-font mb-1">{t.welcome}</h3>
+                    {lang === 'en' && <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t.welcomeSub}</p>}
+                 </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar Detail */}
+        <div className={`w-full md:w-72 shrink-0 border-slate-100 ${lang === 'ar' ? 'md:border-r' : 'md:border-l'} bg-white p-3 flex flex-col items-center justify-between animate-in slide-in-from-right-5 overflow-hidden z-10`}>
+          {selectedChar ? (
+            <div className="flex flex-col h-full w-full max-w-[260px] justify-between">
+              
+              <div className="space-y-1 shrink-0 pb-1">
+                {/* Clean Letter Name Header */}
+                <div className="text-center pt-0.5">
+                  <h3 className="text-base font-black text-slate-800 arabic-font">
+                    {lang === 'ar' ? selectedChar.name : selectedChar.translit}
+                  </h3>
+                  <TranslitDisplay text={selectedChar.translit} className={`text-[9px] font-black text-slate-400 uppercase tracking-widest block ${lang === 'en' ? 'hidden' : ''}`} />
+                </div>
+
+                {/* Interactive Seamless Letter & Example Word Row */}
+                <div className="flex items-center justify-around py-1 px-2">
+                  {/* Clickable Letter */}
+                  <button
+                    onClick={() => handlePlayLetterName(selectedChar.char)}
+                    className="relative group flex items-center justify-center transition-transform duration-200 hover:scale-110 active:scale-95 focus:outline-none cursor-pointer"
+                    title={lang === 'ar' ? 'انقر لنطق الحرف' : 'Click to pronounce letter'}
+                  >
+                    <span className="text-5xl font-black text-blue-600 group-hover:text-blue-700 arabic-font transition-colors">
+                      {selectedChar.char}
+                    </span>
+                    {loadingChar && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px] rounded-full">
+                        <Loader2 className="animate-spin text-blue-600" size={20} />
+                      </div>
+                    )}
                   </button>
-                  <input type="file" ref={fileInputRef} onChange={(e) => e.target.files && handleUpload(e)} className="hidden" accept="image/*" />
-                </>
-              )}
+
+                  {/* Clickable Example Word & Emoji */}
+                  {selectedChar.example && (
+                    <button
+                      onClick={() => handleSpeak(selectedChar.example, selectedChar.example)}
+                      className="group flex items-center gap-2 transition-transform duration-200 hover:scale-105 active:scale-95 focus:outline-none cursor-pointer"
+                      title={lang === 'ar' ? `انقر لنطق ${selectedChar.example}` : `Click to pronounce ${selectedChar.example}`}
+                    >
+                      <span className="text-3xl select-none transition-transform duration-200 group-hover:scale-125">
+                        {selectedChar.emoji}
+                      </span>
+                      <span className="text-xl font-black text-slate-800 group-hover:text-amber-600 arabic-font leading-none transition-colors">
+                        {selectedChar.example}
+                      </span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="p-2 bg-slate-50 rounded-xl border border-slate-100">
+                  <p className="text-[8px] font-black text-slate-400 uppercase mb-1 text-center border-b border-slate-200 pb-0.5">{t.shapesTitle}</p>
+                  <div className="grid grid-cols-4 gap-1 text-center">
+                    {['initial', 'medial', 'final', 'isolated'].map((s:any) => (
+                      <div key={s} className="flex flex-col">
+                        <span className="text-lg arabic-font text-slate-700">{(shapes as any)[s]}</span>
+                        <span className="text-[6px] font-bold text-slate-400 uppercase">{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 flex flex-col justify-center space-y-1.5 py-1.5 overflow-y-auto custom-scroll px-1">
+                <div className="space-y-1">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t.harakatTitle}</p>
+                  <div className="grid grid-cols-4 gap-1">
+                    {HARAKAT.map((h) => (
+                      <button key={h.symbol} onClick={() => handleSpeak(getCombinedChar(selectedChar.char, h.symbol), `h-${h.symbol}`)} className={`group flex flex-col items-center justify-center p-1.5 rounded-xl border border-transparent transition-all hover:shadow-md ${h.color}`}>
+                        <span className="text-lg font-black arabic-font">{getCombinedChar(selectedChar.char, h.symbol)}</span>
+                        <span className="text-[6px] font-black uppercase opacity-60">{lang === 'ar' ? h.nameAr : h.nameEn}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t.shaddaTitle}</p>
+                  <div className="grid grid-cols-3 gap-1">
+                    {SHADDA_VARIATIONS.map((sv) => (
+                      <button key={sv.symbol} onClick={() => handleSpeak(getCombinedChar(selectedChar.char, sv.symbol), `sv-${sv.symbol}`)} className={`group flex flex-col items-center justify-center p-1.5 rounded-xl border border-transparent transition-all hover:shadow-md ${sv.color}`}>
+                        <span className="text-lg font-black arabic-font">{getCombinedChar(selectedChar.char, sv.symbol)}</span>
+                        <span className="text-[6px] font-black uppercase opacity-60">{lang === 'ar' ? sv.nameAr : sv.nameEn}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t.madTitle}</p>
+                  <div className="grid grid-cols-3 gap-1">
+                    {MAD_VOWELS.map((m) => (
+                      <button key={m.symbol} onClick={() => handleSpeak(getCombinedChar(selectedChar.char, m.symbol), `m-${m.symbol}`)} className={`group flex flex-col items-center justify-center p-1.5 rounded-xl border border-transparent transition-all hover:shadow-md ${m.color}`}>
+                        <span className="text-lg font-black arabic-font">{getCombinedChar(selectedChar.char, m.symbol)}</span>
+                        <span className="text-[6px] font-black uppercase opacity-60">{lang === 'ar' ? m.nameAr : m.nameEn}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t.tanweenTitle}</p>
+                  <div className="grid grid-cols-3 gap-1">
+                    {TANWEEN.map((tn) => (
+                      <button key={tn.symbol} onClick={() => handleSpeak(getCombinedChar(selectedChar.char, tn.symbol), `tn-${tn.symbol}`)} className={`group flex flex-col items-center justify-center p-1.5 rounded-xl border border-transparent transition-all hover:shadow-md ${tn.color}`}>
+                        <span className="text-lg font-black arabic-font">{getCombinedChar(selectedChar.char, tn.symbol)}</span>
+                        <span className="text-[6px] font-black uppercase opacity-60">{lang === 'ar' ? tn.nameAr : tn.nameEn}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="shrink-0 pt-1 border-t border-slate-50 space-y-1.5">
+                <div className="grid grid-cols-1 gap-1.5">
+                   <button 
+                     onClick={() => setShowWorksheetPreview(true)} 
+                     disabled={isGeneratingWorksheet}
+                     className="w-full py-2 bg-emerald-600 text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-100 transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
+                   >
+                      {isGeneratingWorksheet ? <Loader2 className="animate-spin" size={14} /> : <FileText size={14} />} 
+                      <span>{t.downloadBtn}</span>
+                   </button>
+                   {isTeacher ? (
+                     <button 
+                       onClick={() => setShowTeacherInbox(true)} 
+                       className="w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-blue-100 transition-all hover:from-blue-700 hover:to-indigo-700 active:scale-95 group relative"
+                     >
+                       <Inbox size={14} className="text-amber-300 animate-pulse" /> 
+                       <span>{lang === 'ar' ? 'صندوق واجبات الطلاب' : 'Student Homework Inbox'}</span>
+                       {pendingSubmissionsCount > 0 && (
+                         <span className="bg-amber-400 text-slate-900 text-[9px] font-black px-1.5 py-0.2 rounded-full leading-tight mr-1 ml-1 animate-bounce">
+                           {pendingSubmissionsCount}
+                         </span>
+                       )}
+                     </button>
+                   ) : (
+                     <>
+                       <button onClick={() => fileInputRef.current?.click()} className="w-full py-2 bg-[#2563eb] text-white rounded-xl font-black text-[10px] flex items-center justify-center gap-1.5 shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 active:scale-95">
+                          {isVerifying ? <Loader2 className="animate-spin" size={14} /> : <Upload size={14} />} <span>{t.uploadBtn}</span>
+                       </button>
+                       <input type="file" ref={fileInputRef} onChange={(e) => e.target.files && handleUpload(e)} className="hidden" accept="image/*" />
+                     </>
+                   )}
+                </div>
+                {error && <div className="flex items-center gap-1.5 p-1.5 bg-red-50 text-red-600 text-[7px] font-bold rounded-lg"><AlertCircle size={10} /> <p>{error}</p></div>}
+              </div>
             </div>
-            {error && <p role="alert" className="arabic-font flex items-center gap-1.5 rounded-lg bg-red-50 px-2 py-1 text-[10px] font-bold text-red-700"><AlertCircle size={12} />{error}</p>}
-          </footer>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-center opacity-30 select-none px-4">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4"><TypeIcon size={32} className="text-slate-300" /></div>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest leading-relaxed">Select a letter to explore</p>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
