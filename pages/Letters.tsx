@@ -296,6 +296,8 @@ const TracingBoard: React.FC<{
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     activePointerIdRef.current = null;
+    drawSound.current?.pause();
+    if (drawSound.current) drawSound.current.currentTime = 0;
     drawingMovesRef.current = 0;
     canvasRevisionRef.current += 1;
     assessmentSeqRef.current += 1;
@@ -450,6 +452,8 @@ const TracingBoard: React.FC<{
       }
     } catch (error) {
       if (id !== assessmentSeqRef.current) return;
+      // Network errors must not force a learner to redraw valid handwriting.
+      if (lastCheckedRevisionRef.current === version) lastCheckedRevisionRef.current = -1;
       console.error('Letter assessment failed:', error);
       setCheckError(lang === 'ar' ? 'تعذر فحص الكتابة الآن. حاول مرة أخرى.' : 'Could not check handwriting. Try again.');
     } finally {
