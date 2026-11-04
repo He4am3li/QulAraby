@@ -178,7 +178,7 @@
  * paperweight. No extra navigation, absolute input layer, or canvas changes.
  */
 
-/* Exactly the same horizontal bounds as the alphabet card, both states. */
+/* Empty activity workspace: one understated cue, no hero lettering or copy. */
 .letters-liquid-page .letters-liquid-welcome {
   width: 100%;
   max-width: 64rem;
@@ -186,126 +186,27 @@
   flex: 1 1 0%;
   margin-inline: auto;
   overflow: hidden;
-  isolation: isolate;
   border-radius: 1.5rem;
   background:
-    radial-gradient(ellipse 42% 75% at 50% 30%, rgba(226,240,255,.86), transparent 90%),
-    radial-gradient(ellipse 54% 62% at 6% 100%, rgba(221,239,244,.42), transparent 83%),
-    linear-gradient(154deg, rgba(255,255,255,.96), rgba(247,251,255,.84) 50%, rgba(251,253,255,.95)) !important;
+    radial-gradient(ellipse at 50% 15%, rgba(234,244,255,.76), transparent 68%),
+    linear-gradient(150deg, rgba(255,255,255,.95), rgba(245,250,255,.88)) !important;
 }
-.letters-liquid-page .letters-liquid-welcome::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  pointer-events: none;
-  inset: 2px;
-  border: 1px solid rgba(255,255,255,.75);
-  border-radius: calc(1.5rem - 2px);
-  background: linear-gradient(115deg, rgba(255,255,255,.26), transparent 37%, rgba(255,255,255,.12) 62%, transparent);
-}
-.letters-liquid-page .letters-liquid-welcome-content {
+.letters-liquid-page .letters-liquid-idle-content {
   position: relative;
   z-index: 2;
-  min-height: 0;
 }
-.letters-liquid-page .letters-liquid-welcome-orb {
-  position: relative;
-  display: grid;
+.letters-liquid-page .letters-liquid-idle-icon {
+  display: inline-flex;
   flex: none;
-  place-items: center;
-  width: clamp(68px, 8.4vw, 99px);
-  aspect-ratio: 1;
-  border: 1px solid rgba(255,255,255,.98);
-  border-radius: 50%;
-  isolation: isolate;
-  background:
-    radial-gradient(ellipse 36% 17% at 24% 15%, rgba(255,255,255,.97), transparent 98%),
-    radial-gradient(circle at 26% 23%, rgba(255,255,255,.74), transparent 36%),
-    radial-gradient(ellipse at 69% 95%, rgba(63,109,152,.27), transparent 58%),
-    linear-gradient(148deg, rgba(247,251,255,.98), rgba(224,239,251,.58) 52%, rgba(193,216,235,.65));
-  box-shadow:
-    inset 2px 3px 4px #fff,
-    inset -7px -9px 14px rgba(53,77,101,.20),
-    inset 0 -2px 4px rgba(40,65,91,.16),
-    inset 0 0 0 2px rgba(255,255,255,.63),
-    0 9px 19px -7px rgba(23,66,113,.33),
-    0 2px 6px rgba(40,72,112,.08);
-}
-.letters-liquid-page .letters-liquid-welcome-orb::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  bottom: -13px;
-  left: 12%;
-  width: 76%;
-  height: 10px;
-  border-radius: 50%;
-  filter: blur(4px);
-  background: radial-gradient(ellipse, rgba(41,71,101,.20), transparent 76%);
-}
-.letters-liquid-page .letters-liquid-welcome-orb-letter {
-  position: relative;
-  z-index: 1;
-  color: #2b5d91;
-  font-size: clamp(40px, 5vw, 60px);
-  font-weight: 900;
-  line-height: 1;
-  transform: translateY(-2px);
-  text-shadow: 0 1px 0 rgba(255,255,255,.95), 1px 4px 6px rgba(40,84,136,.12);
-}
-.letters-liquid-page .letters-liquid-welcome-orb-rim,
-.letters-liquid-page .letters-liquid-welcome-orb-glint {
-  position: absolute;
-  z-index: 3;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-}
-.letters-liquid-page .letters-liquid-welcome-orb-rim {
-  background: radial-gradient(circle at 50% 51%,
-    transparent 0 57%, rgba(255,255,255,.13) 64%,
-    rgba(255,255,255,.63) 85%, rgba(24,59,91,.16) 96%, rgba(255,255,255,.9));
-  -webkit-mask-image: radial-gradient(circle, transparent 0 54%, #000 76% 100%);
-  mask-image: radial-gradient(circle, transparent 0 54%, #000 76% 100%);
-  -webkit-backdrop-filter: blur(1px);
-  backdrop-filter: blur(1px);
-}
-.letters-liquid-page .letters-liquid-welcome-orb-glint {
-  background:
-    radial-gradient(ellipse 39% 9% at 27% 13%, rgba(255,255,255,.99), transparent),
-    radial-gradient(ellipse 10% 29% at 88% 36%, rgba(255,255,255,.78), transparent),
-    radial-gradient(ellipse 42% 11% at 50% 97%, rgba(255,255,255,.32), transparent);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.65);
-}
-.letters-liquid-page .letters-liquid-welcome-eyebrow {
-  color: #6c819e;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .02em;
-}
-.letters-liquid-page .letters-liquid-welcome-steps {
-  display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  color: #526b88;
-  font-size: 10px;
-  font-weight: 700;
-}
-.letters-liquid-page .letters-liquid-welcome-steps span {
-  padding: 4px 10px;
-  border: 1px solid rgba(255,255,255,.85);
-  border-radius: 999px;
-  background: linear-gradient(146deg, rgba(255,255,255,.96), rgba(236,246,255,.62));
-  box-shadow: inset 0 1px 0 #fff, 0 3px 9px rgba(55,96,142,.055);
-}
-.letters-liquid-page .letters-liquid-welcome-steps i {
-  display: block;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #91b5d9;
+  width: 44px;
+  height: 44px;
+  border-radius: 15px;
+  color: #547ba7;
+  border: 1px solid rgba(255,255,255,.95);
+  background: linear-gradient(148deg, rgba(255,255,255,.98), rgba(225,238,251,.78));
+  box-shadow: inset 0 1px 0 #fff, inset 0 -2px 4px rgba(82,124,165,.08), 0 5px 13px rgba(38,80,125,.08);
 }
 
 /* Tiny lenses give the 28 keys the sculpted material of the word gallery. */
@@ -443,43 +344,19 @@
 }
 @media (max-width: 767px) {
   .letters-liquid-page .letters-liquid-welcome {
-    background:
-      radial-gradient(ellipse at 50% 28%, rgba(233,242,255,.76), transparent 76%),
-      rgba(255,255,255,.94) !important;
+    background: rgba(255,255,255,.95) !important;
   }
-  .letters-liquid-page .letters-liquid-welcome {
-    padding-block: 10px;
+  .letters-liquid-page .letters-liquid-idle-content {
+    gap: 7px;
   }
-  .letters-liquid-page .letters-liquid-welcome-content {
-    gap: 5px;
-  }
-  .letters-liquid-page .letters-liquid-welcome-orb {
-    width: 54px;
-  }
-  .letters-liquid-page .letters-liquid-welcome-orb-letter {
-    font-size: 36px;
-  }
-  .letters-liquid-page .letters-liquid-welcome-steps {
-    display: none;
-  }
-}
-@media (max-width: 767px) and (max-height: 730px) {
-  .letters-liquid-page .letters-liquid-welcome-orb,
-  .letters-liquid-page .letters-liquid-welcome-eyebrow {
-    display: none;
+  .letters-liquid-page .letters-liquid-idle-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
   }
 }
 @media (max-height: 680px) {
-  .letters-liquid-page .letters-liquid-welcome-content {
-    gap: 6px;
-  }
-  .letters-liquid-page .letters-liquid-welcome-orb {
-    width: 56px;
-  }
-  .letters-liquid-page .letters-liquid-welcome-orb-letter {
-    font-size: 37px;
-  }
-  .letters-liquid-page .letters-liquid-welcome-steps {
+  .letters-liquid-page .letters-liquid-idle-icon {
     display: none;
   }
 }
@@ -492,8 +369,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .letters-liquid-page .letters-liquid-action:hover,
-  .letters-liquid-page .letters-liquid-welcome-orb {
+  .letters-liquid-page .letters-liquid-action:hover {
     transform: none !important;
     transition: none !important;
   }
