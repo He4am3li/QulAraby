@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { OriginalPortraitAvatar } from './OriginalPortraitAvatar';
 import { SalmanLayeredAvatar } from './SalmanLayeredAvatar';
+import { SaraLayeredAvatar } from './SaraLayeredAvatar';
 
 interface TutorCharacter {
   nameAr: string;
@@ -48,6 +49,7 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
   const [celebrating, setCelebrating] = React.useState(false);
   const previousSuccessRef = React.useRef(successSignal);
   const isLayeredSalman = countryId === 'saudi' && gender === 'male';
+  const isLayeredSara = countryId === 'saudi' && gender === 'female';
 
   React.useEffect(() => {
     const previous = previousSuccessRef.current;
@@ -92,6 +94,16 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
         <div className="absolute inset-0 overflow-visible">
           {isLayeredSalman ? (
             <SalmanLayeredAvatar
+              view="full"
+              isSpeaking={isSpeaking}
+              isListening={isListening}
+              isLoading={isLoading}
+              audioLevel={audioLevel}
+              reaction={celebrating ? 'correct' : 'idle'}
+              className="h-full w-full"
+            />
+          ) : isLayeredSara ? (
+            <SaraLayeredAvatar
               view="full"
               isSpeaking={isSpeaking}
               isListening={isListening}
