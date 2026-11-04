@@ -547,6 +547,11 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
                   { title: 'إعدادات المنصة', english: 'PLATFORM SETTINGS', icon: SlidersHorizontal, color: 'from-teal-600 to-emerald-800', tab: 'settings' as TabKey },
                 ].map(item => <ModuleCard key={item.tab} icon={<item.icon />} title={item.english} arTitle={item.title} description="" color={item.color} onClick={() => setTab(item.tab)} enterLabel={isEnglish ? 'Open section' : 'فتح القسم'} lang={lang} />)}
               </div>
+              <button type="button" onClick={() => navigate('/voice-lab')}
+                className="mt-4 flex w-full items-center justify-between rounded-2xl border border-emerald-200 bg-white/90 px-5 py-3 text-right text-sm font-black text-emerald-950 transition-colors hover:bg-emerald-50">
+                <span className="flex items-center gap-3"><Headphones size={21}/>{isEnglish ? 'Dialects Voice Lab' : 'مختبر أصوات معلمي اللهجات'}</span>
+                <ExternalLink size={16}/>
+              </button>
             </section>)}
 
             {tab === 'schools' && <section className="space-y-5">
