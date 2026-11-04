@@ -13,6 +13,7 @@ import { Listening } from './pages/Listening';
 import { Writing } from './pages/Writing';
 import { Games } from './pages/Games';
 import { Dialects } from './pages/Dialects';
+import { VoiceLab } from './pages/VoiceLab';
 import { Worksheets } from './pages/Worksheets';
 import Preparation from './pages/Preparation';
 import Quizzes from './pages/Quizzes';
@@ -100,6 +101,7 @@ const AppContent: React.FC = () => {
             <Route path="/assistant" element={<FeatureGate moduleId="grammar"><AIStudyMate /></FeatureGate>} />
             <Route path="/games" element={<FeatureGate moduleId="games"><Games /></FeatureGate>} />
             <Route path="/dialects" element={<FeatureGate moduleId="dialects"><Dialects /></FeatureGate>} />
+            <Route path="/voice-lab" element={isTeacher ? <VoiceLab /> : <Navigate to="/" replace />} />
             <Route path="/quizzes" element={<FeatureGate moduleId="quizzes"><Quizzes /></FeatureGate>} />
             <Route path="/worksheets" element={<FeatureGate moduleId="worksheets"><Worksheets /></FeatureGate>} />
             <Route path="/preparation" element={<FeatureGate moduleId="preparation"><Preparation /></FeatureGate>} />
