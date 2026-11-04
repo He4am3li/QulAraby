@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Live3DCharacter } from './Live3DCharacter';
 
 /**
  * Approved, identity-preserving portrait renderer.
@@ -82,7 +81,7 @@ const spriteIsConservative = (image: HTMLImageElement, source: HTMLImageElement)
 
 export const OriginalPortraitAvatar: React.FC<Props> = ({
   countryId, gender, nameAr, isSelected, isSpeaking, isListening, isLoading,
-  audioLevel = 0, reaction = 'idle', className = '', fallbackImage
+  audioLevel = 0, reaction = 'idle', className = ''
 }) => {
   const base = basePath(countryId, gender);
   const source = base + 'cutout.webp';
@@ -168,20 +167,14 @@ export const OriginalPortraitAvatar: React.FC<Props> = ({
     return () => window.clearInterval(id);
   }, [rig, isSpeaking, audioLevel, reduceMotion]);
 
+  // Never flash a draft/legacy 3D character while the approved source loads.
+  // A missing reviewed portrait is an asset error, not permission to substitute art.
   if (load !== 'available') {
     return (
-      <Live3DCharacter
-        countryId={countryId}
-        gender={gender}
-        nameAr={nameAr}
-        imageSrc={fallbackImage}
-        isSelected={isSelected}
-        isSpeaking={isSpeaking}
-        isListening={isListening}
-        isLoading={isLoading}
-        audioLevel={audioLevel}
-        reaction={reaction}
-        className={className}
+      <div
+        className={'relative h-full w-full ' + className}
+        role="status"
+        aria-label={load === 'loading' ? 'جارٍ تجهيز الشخصية الأصلية' : 'الصورة الأصلية غير متاحة'}
       />
     );
   }
