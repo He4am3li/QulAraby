@@ -18,6 +18,7 @@ import { assessDialectMission, type MissionTurn } from '../services/dialectMissi
 import { getAI, getLiveAI, generateSpeech, decodeAudioData } from '../services/gemini';
 import { SpeechLipSync, analyzeSpeechBuffer, startLipSyncedSource } from '../services/speechLipSync.mjs';
 import { buildDialectTutorPolicy, inferLearnerLanguage } from '../services/dialectTutorPolicy';
+import { publishedVoice, useDialectVoiceProfiles } from '../services/dialectVoiceProfiles';
 
 declare global {
   interface Window {
@@ -27,7 +28,7 @@ declare global {
 }
 
 // --- Country Journey Data (v4 - Verified Strategic Landmarks) ---
-const COUNTRY_DATA = [
+export const COUNTRY_DATA = [
   {
     id: 'uae',
     nameAr: 'الإمارات',
@@ -1375,6 +1376,7 @@ const SafeImage: React.FC<SafeImageProps> = (props) => {
 };
 
 export const Dialects: React.FC = () => {
+  const { profiles: tutorVoices } = useDialectVoiceProfiles();
   const [lang, setLang] = React.useState<'ar' | 'en'>(
     (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar'
   );
@@ -1858,6 +1860,7 @@ export const Dialects: React.FC = () => {
       const journey = learningJourneysRef.current[country.id];
       const returningLearner = (journey?.visits || 0) > 1 && (journey?.turns?.length || 0) > 0;
       const recentContext = (journey?.turns || []).slice(-10).map(t => t.role + ': ' + t.text.slice(0, 180)).join(' | ');
+      const liveProfile = publishedVoice(tutorVoices, country.id, persona.nameEn === country.characterFemale.nameEn ? 'female' : 'male');
       const livePolicy = buildDialectTutorPolicy({ countryName: country.nameEn, dialect: country.dialect, tutorName: persona.nameEn, history: journey?.turns || [], learnerLanguage: inferLearnerLanguage((journey?.turns || []).filter(t => t.role === 'user').slice(-1)[0]?.text || '', 'en'), culture: country.culture, vocabulary: country.vocab });
       liveInputBufferRef.current = '';
       let liveTutorText = '';
@@ -1945,9 +1948,9 @@ export const Dialects: React.FC = () => {
           inputAudioTranscription: {},
           outputAudioTranscription: {},
           speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: persona.nameEn === country.characterFemale.nameEn ? "Kore" : "Puck" } },
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: publishedVoice(tutorVoices, country.id, persona.nameEn === country.characterFemale.nameEn ? "female" : "male").voiceName } },
           },
-          systemInstruction: livePolicy + '\nCurrent optional practice mission (never rush or force it): ' + currentMission + '\n' +
+          systemInstruction: livePolicy + '\nSpeaking delivery: ' + liveProfile.delivery + ', conversational, warm, and natural. Never change the local speaker identity when switching languages.\nCurrent optional practice mission (never rush or force it): ' + currentMission + '\n' +
             'A new audio session is NOT a new conversation. Continue the conversation in SHARED CHAT HISTORY even when the other tutor was speaking. ' +
             'Use only the active country dialect in Arabic, or intelligible English with the authentic local speaker accent when the student uses English. ' +
             'Reply to the learner naturally, and never force a greeting exercise or move to the mission before learner readiness.',
@@ -2168,7 +2171,10 @@ export const Dialects: React.FC = () => {
       && !isLiveActiveRef.current && !liveConnectingRef.current;
     setCurrentSpeechText(text);
     try {
-      const audioBytes = await generateSpeech(text, inferLearnerLanguage(text, 'ar'));
+      const speechCountry = selectedCountryRef.current;
+      const speechGender = speechCountry?.characterFemale?.nameEn === selectedPersona?.nameEn ? 'female' : 'male';
+      const speechVoice = speechCountry ? publishedVoice(tutorVoices, speechCountry.id, speechGender).voiceName : undefined;
+      const audioBytes = await generateSpeech(text, inferLearnerLanguage(text, 'ar'), speechVoice);
       if (!current()) return;
       if (!audioBytes) {
         setIsSpeaking(false);
