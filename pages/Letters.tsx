@@ -100,7 +100,7 @@ const STRINGS = {
     downloadBtn: 'معاينة ورقة العمل',
     uploadBtn: 'رفع الواجب',
     verifyTitle: 'تدقيق كتابة الحرف',
-    passed: 'تهانينا! لقد أتقنت الحرف بنجاح.',
+    passed: 'أحسنت! تمت مراجعة ورقة العمل. أكمل الكتابة والاستماع لإثبات الإتقان.',
     failed: 'محاولة جيدة، حاول تحسين كتابتك واتباع الملاحظات.',
     masteredTitle: 'حروف متقنة',
     practiceBtn: 'تدرب على الرسم',
@@ -183,7 +183,7 @@ const STRINGS = {
     downloadBtn: 'Preview Worksheet',
     uploadBtn: 'Upload Homework',
     verifyTitle: 'Verify Handwriting',
-    passed: 'Congratulations! You have mastered the letter.',
+    passed: 'Worksheet reviewed. Continue writing and listening practice to verify mastery.',
     failed: 'Good try! Keep practicing and follow the feedback.',
     masteredTitle: 'Mastered Letters',
     practiceBtn: 'Practice Drawing',
@@ -2292,8 +2292,11 @@ export const Letters: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [verificationResult, setVerificationResult] = React.useState<any>(null);
-  const [masteredLetters, setMasteredLetters] = React.useState<string[]>([]);
-  const [masteredDetailed, setMasteredDetailed] = React.useState<any[]>([]);
+  // Preserve old single-success history but show badges only for evidence-based mastery.
+  const [skillEvidence, setSkillEvidence] = React.useState<any>(() => emptyLetterEvidence());
+  const evidenceRef = React.useRef<any>(emptyLetterEvidence());
+  const evidenceKeyRef = React.useRef<string>(evidenceStorageKey(user?.uid));
+  const masteredLetters = React.useMemo(() => masteredFromEvidence(skillEvidence), [skillEvidence]);
   const [activeTab, setActiveTab] = React.useState<'practice' | 'soundlab' | 'game' | 'words' | 'tashkeel'>('practice');
   const [isGeneratingWorksheet, setIsGeneratingWorksheet] = React.useState(false);
   const [showWorksheetPreview, setShowWorksheetPreview] = React.useState(false);
@@ -2384,12 +2387,20 @@ export const Letters: React.FC = () => {
   };
 
   React.useEffect(() => {
-    const saved = localStorage.getItem('hub_mastered_letters');
-    if (saved) setMasteredLetters(JSON.parse(saved));
+    const key = evidenceStorageKey(user?.uid);
+    evidenceKeyRef.current = key;
+    let saved = emptyLetterEvidence();
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) saved = normalizeLetterEvidence(JSON.parse(raw));
+    } catch (err) {
+      console.warn('Could not read saved letter evidence:', err);
+    }
+    evidenceRef.current = saved;
+    setSkillEvidence(saved);
+  }, [user?.uid]);
 
-    const savedDetailed = localStorage.getItem('hub_mastered_letters_detailed');
-    if (savedDetailed) setMasteredDetailed(JSON.parse(savedDetailed));
-
+  React.useEffect(() => {
     const handleLangChange = () => {
       const currentLang = (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar';
       setLang(currentLang);
@@ -2398,15 +2409,25 @@ export const Letters: React.FC = () => {
     return () => window.removeEventListener('langChanged', handleLangChange);
   }, []);
 
-  const saveMastery = (char: string, stars: number = 3) => {
-    const updated = Array.from(new Set([...masteredLetters, char]));
-    setMasteredLetters(updated);
-    localStorage.setItem('hub_mastered_letters', JSON.stringify(updated));
+  const updateSkillEvidence = (update: (previous: any) => any) => {
+    const key = evidenceStorageKey(user?.uid);
+    if (evidenceKeyRef.current !== key) return;
+    const next = update(evidenceRef.current);
+    evidenceRef.current = next;
+    setSkillEvidence(next);
+    try {
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch (err) {
+      console.warn('Could not persist letter evidence on this device:', err);
+    }
+  };
 
-    const newDetail = { char, stars, date: new Date().toISOString() };
-    const updatedDetailed = [...masteredDetailed.filter(m => m.char !== char), newDetail];
-    setMasteredDetailed(updatedDetailed);
-    localStorage.setItem('hub_mastered_letters_detailed', JSON.stringify(updatedDetailed));
+  const verifyWritingForm = (char: string, form: string, stars: number) => {
+    updateSkillEvidence(previous => recordVerifiedWriting(previous, char, form, stars));
+  };
+
+  const saveListeningPractice = (char: string, firstTryCorrect: number, total: number) => {
+    updateSkillEvidence(previous => recordListeningExercise(previous, char, firstTryCorrect, total));
   };
 
   const initAudio = () => {
@@ -2450,7 +2471,8 @@ export const Letters: React.FC = () => {
       const filePart = await fileToGenerativePart(file);
       const result = await verifyLetterWorksheet(filePart, selectedChar.char, selectedChar.name);
       setVerificationResult(result);
-      if (result.passed) saveMastery(selectedChar.char);
+      // A reviewed worksheet is teacher feedback, not verified mastery.
+      // Only checked writing forms and a listening result can grant a badge.
 
       // Save submission to database for teacher inbox review
       try {
@@ -2575,7 +2597,7 @@ export const Letters: React.FC = () => {
               </div>
               <div className="mt-8 flex gap-3 w-full">
                  <button onClick={() => setVerificationResult(null)} className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase">Close</button>
-                 {verificationResult.passed && <button onClick={() => window.print()} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2"><Share2 size={18} /> Share Mastery</button>}
+                 {verificationResult.passed && <button onClick={() => window.print()} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2"><Share2 size={18} /> {lang === 'ar' ? 'طباعة الملاحظات' : 'Print Feedback'}</button>}
               </div>
            </div>
         </div>
@@ -2684,12 +2706,15 @@ export const Letters: React.FC = () => {
 
                   <div className="flex-1 overflow-hidden p-3 flex flex-col">
                     {activeTab === 'practice' && (
-                      <TracingBoard 
-                        char={selectedChar.char} 
-                        shapes={shapes} 
+                      <TracingBoard
+                        key={selectedChar.char}
+                        char={selectedChar.char}
+                        shapes={shapes}
                         t={t}
                         lang={lang}
-                        onMastered={(stars) => saveMastery(selectedChar.char, stars)}
+                        verifiedForms={skillEvidence.letters?.[selectedChar.char]?.forms || {}}
+                        listeningScore={skillEvidence.letters?.[selectedChar.char]?.listening?.score || 0}
+                        onVerified={(form, stars) => verifyWritingForm(selectedChar.char, form, stars)}
                       />
                     )}
                     {activeTab === 'soundlab' && (
@@ -2702,11 +2727,12 @@ export const Letters: React.FC = () => {
                       />
                     )}
                     {activeTab === 'game' && (
-                      <AuditoryGame 
+                      <AuditoryGame
                         char={selectedChar.char}
                         t={t}
-                        lang={lang} 
+                        lang={lang}
                         onSpeak={handleSpeak}
+                        onPracticeComplete={(score, total) => saveListeningPractice(selectedChar.char, score, total)}
                       />
                     )}
                     {activeTab === 'words' && (
