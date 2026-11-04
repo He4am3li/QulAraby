@@ -170,3 +170,331 @@
     transform: none !important;
   }
 }
+
+
+/*
+ * Letter refinement II: keep the classic three surfaces and their original
+ * proportions, while borrowing the material quality of Vocabulary's crystal
+ * paperweight. No extra navigation, absolute input layer, or canvas changes.
+ */
+
+/* Exactly the same horizontal bounds as the alphabet card, both states. */
+.letters-liquid-page .letters-liquid-welcome {
+  width: 100%;
+  max-width: 64rem;
+  min-height: 0;
+  flex: 1 1 0%;
+  margin-inline: auto;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(ellipse 42% 75% at 50% 30%, rgba(226,240,255,.86), transparent 90%),
+    radial-gradient(ellipse 54% 62% at 6% 100%, rgba(221,239,244,.42), transparent 83%),
+    linear-gradient(154deg, rgba(255,255,255,.96), rgba(247,251,255,.84) 50%, rgba(251,253,255,.95)) !important;
+}
+.letters-liquid-page .letters-liquid-welcome::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  inset: 2px;
+  border: 1px solid rgba(255,255,255,.75);
+  border-radius: calc(1.5rem - 2px);
+  background: linear-gradient(115deg, rgba(255,255,255,.26), transparent 37%, rgba(255,255,255,.12) 62%, transparent);
+}
+.letters-liquid-page .letters-liquid-welcome-content {
+  position: relative;
+  z-index: 2;
+  min-height: 0;
+}
+.letters-liquid-page .letters-liquid-welcome-orb {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: clamp(68px, 8.4vw, 99px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(255,255,255,.98);
+  border-radius: 50%;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse 36% 17% at 24% 15%, rgba(255,255,255,.97), transparent 98%),
+    radial-gradient(circle at 26% 23%, rgba(255,255,255,.74), transparent 36%),
+    radial-gradient(ellipse at 69% 95%, rgba(63,109,152,.27), transparent 58%),
+    linear-gradient(148deg, rgba(247,251,255,.98), rgba(224,239,251,.58) 52%, rgba(193,216,235,.65));
+  box-shadow:
+    inset 2px 3px 4px #fff,
+    inset -7px -9px 14px rgba(53,77,101,.20),
+    inset 0 -2px 4px rgba(40,65,91,.16),
+    inset 0 0 0 2px rgba(255,255,255,.63),
+    0 9px 19px -7px rgba(23,66,113,.33),
+    0 2px 6px rgba(40,72,112,.08);
+}
+.letters-liquid-page .letters-liquid-welcome-orb::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  bottom: -13px;
+  left: 12%;
+  width: 76%;
+  height: 10px;
+  border-radius: 50%;
+  filter: blur(4px);
+  background: radial-gradient(ellipse, rgba(41,71,101,.20), transparent 76%);
+}
+.letters-liquid-page .letters-liquid-welcome-orb-letter {
+  position: relative;
+  z-index: 1;
+  color: #2b5d91;
+  font-size: clamp(40px, 5vw, 60px);
+  font-weight: 900;
+  line-height: 1;
+  transform: translateY(-2px);
+  text-shadow: 0 1px 0 rgba(255,255,255,.95), 1px 4px 6px rgba(40,84,136,.12);
+}
+.letters-liquid-page .letters-liquid-welcome-orb-rim,
+.letters-liquid-page .letters-liquid-welcome-orb-glint {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.letters-liquid-page .letters-liquid-welcome-orb-rim {
+  background: radial-gradient(circle at 50% 51%,
+    transparent 0 57%, rgba(255,255,255,.13) 64%,
+    rgba(255,255,255,.63) 85%, rgba(24,59,91,.16) 96%, rgba(255,255,255,.9));
+  -webkit-mask-image: radial-gradient(circle, transparent 0 54%, #000 76% 100%);
+  mask-image: radial-gradient(circle, transparent 0 54%, #000 76% 100%);
+  -webkit-backdrop-filter: blur(1px);
+  backdrop-filter: blur(1px);
+}
+.letters-liquid-page .letters-liquid-welcome-orb-glint {
+  background:
+    radial-gradient(ellipse 39% 9% at 27% 13%, rgba(255,255,255,.99), transparent),
+    radial-gradient(ellipse 10% 29% at 88% 36%, rgba(255,255,255,.78), transparent),
+    radial-gradient(ellipse 42% 11% at 50% 97%, rgba(255,255,255,.32), transparent);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.65);
+}
+.letters-liquid-page .letters-liquid-welcome-eyebrow {
+  color: #6c819e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+.letters-liquid-page .letters-liquid-welcome-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #526b88;
+  font-size: 10px;
+  font-weight: 700;
+}
+.letters-liquid-page .letters-liquid-welcome-steps span {
+  padding: 4px 10px;
+  border: 1px solid rgba(255,255,255,.85);
+  border-radius: 999px;
+  background: linear-gradient(146deg, rgba(255,255,255,.96), rgba(236,246,255,.62));
+  box-shadow: inset 0 1px 0 #fff, 0 3px 9px rgba(55,96,142,.055);
+}
+.letters-liquid-page .letters-liquid-welcome-steps i {
+  display: block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #91b5d9;
+}
+
+/* Tiny lenses give the 28 keys the sculpted material of the word gallery. */
+.letters-liquid-page .letters-liquid-letter {
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 #fff, inset 0 -1px 1px rgba(111,147,190,.13), 0 3px 9px rgba(38,75,125,.07);
+}
+.letters-liquid-page .letters-liquid-letter::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  inset: 3px 5px 7px;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse 60% 30% at 20% 10%, rgba(255,255,255,.95), transparent 95%),
+    linear-gradient(165deg, rgba(255,255,255,.49), rgba(217,230,247,.32));
+  border: 1px solid rgba(255,255,255,.75);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.9), inset -2px -2px 4px rgba(85,125,163,.08);
+}
+.letters-liquid-page .letters-liquid-letter > span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Common palette, different accents: no flat blue/green/purple tiles. */
+.letters-liquid-page .letters-liquid-tab[data-glass-tone="ocean"] {
+  --letters-tab-top: #f0f7ff; --letters-tab-bottom: #d7e9ff;
+  --letters-tab-rim: rgba(57,127,213,.42); --letters-tab-ink: #184a86;
+}
+.letters-liquid-page .letters-liquid-tab[data-glass-tone="indigo"] {
+  --letters-tab-top: #f2f3ff; --letters-tab-bottom: #dfe2fd;
+  --letters-tab-rim: rgba(91,96,211,.33); --letters-tab-ink: #45438b;
+}
+.letters-liquid-page .letters-liquid-tab[data-glass-tone="amber"] {
+  --letters-tab-top: #fffbef; --letters-tab-bottom: #fbecd0;
+  --letters-tab-rim: rgba(185,131,36,.34); --letters-tab-ink: #875b19;
+}
+.letters-liquid-page .letters-liquid-tab[data-glass-tone="emerald"] {
+  --letters-tab-top: #effdf7; --letters-tab-bottom: #d6f2e4;
+  --letters-tab-rim: rgba(27,145,103,.34); --letters-tab-ink: #146b50;
+}
+.letters-liquid-page .letters-liquid-tab[data-glass-tone="violet"] {
+  --letters-tab-top: #f8f3ff; --letters-tab-bottom: #ebdcfa;
+  --letters-tab-rim: rgba(139,92,185,.35); --letters-tab-ink: #75458f;
+}
+.letters-liquid-page .letters-liquid-tab[data-glass-active="true"] {
+  background:
+    radial-gradient(ellipse 85% 48% at 24% 0%, rgba(255,255,255,.96), transparent 96%),
+    linear-gradient(165deg, var(--letters-tab-top), var(--letters-tab-bottom)) !important;
+  border: 1px solid var(--letters-tab-rim) !important;
+  color: var(--letters-tab-ink) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.97),
+    inset 0 -1px 2px rgba(54,104,145,.07),
+    0 4px 12px rgba(35,74,119,.10) !important;
+}
+
+/* The original teacher/student controls become compact optical glass keys.
+ * Preserve existing click handlers, permissions, count and loading behavior.
+ */
+.letters-liquid-page .letters-liquid-action {
+  min-height: 42px;
+  gap: 8px;
+  border-radius: 15px !important;
+  border: 1px solid rgba(72,138,185,.25) !important;
+  overflow: hidden;
+  color: #164c70 !important;
+  background:
+    radial-gradient(ellipse 85% 65% at 22% -19%, rgba(255,255,255,.98), transparent 96%),
+    linear-gradient(155deg, #f9fdff 0%, #eaf3ff 52%, #dae9fa 100%) !important;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    inset 0 -2px 3px rgba(64,105,152,.11),
+    0 5px 12px rgba(34,79,125,.09) !important;
+}
+.letters-liquid-page .letters-liquid-action--worksheet {
+  color: #136147 !important;
+  border-color: rgba(44,153,110,.31) !important;
+  background:
+    radial-gradient(ellipse 85% 65% at 23% -21%, rgba(255,255,255,.99), transparent 96%),
+    linear-gradient(154deg, #fbfffd, #e7f8ef 58%, #d0eadf) !important;
+  box-shadow: inset 0 1px 0 #fff, inset 0 -2px 3px rgba(42,115,83,.10), 0 5px 12px rgba(36,112,86,.09) !important;
+}
+.letters-liquid-page .letters-liquid-action--inbox {
+  color: #284b8b !important;
+  border-color: rgba(86,116,203,.29) !important;
+  background:
+    radial-gradient(ellipse 85% 65% at 23% -21%, rgba(255,255,255,.99), transparent 96%),
+    linear-gradient(154deg, #fbfcff, #edf2ff 58%, #d9e3fc) !important;
+}
+.letters-liquid-page .letters-liquid-action--upload {
+  color: #18538c !important;
+  border-color: rgba(63,131,202,.30) !important;
+}
+.letters-liquid-page .letters-liquid-action::before {
+  content: "";
+  position: absolute;
+  inset: 2px 7px auto;
+  z-index: 0;
+  pointer-events: none;
+  height: 42%;
+  border-radius: 14px 14px 50% 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,.67), transparent);
+}
+.letters-liquid-page .letters-liquid-action > * {
+  position: relative;
+  z-index: 1;
+}
+.letters-liquid-page .letters-liquid-action-seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 27px;
+  height: 27px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.89);
+  background: linear-gradient(145deg, rgba(255,255,255,.97), rgba(255,255,255,.46));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.99), 0 2px 6px rgba(36,80,124,.09);
+}
+@media (hover: hover) and (pointer: fine) {
+  .letters-liquid-page .letters-liquid-action:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: saturate(1.08);
+    box-shadow: inset 0 1px 0 #fff, inset 0 -2px 3px rgba(64,105,152,.10), 0 7px 16px rgba(34,79,125,.14) !important;
+  }
+}
+@media (hover: none) {
+  .letters-liquid-page .letters-liquid-action:hover:not(:focus-visible) {
+    transform: none;
+  }
+}
+@media (max-width: 767px) {
+  .letters-liquid-page .letters-liquid-welcome {
+    background:
+      radial-gradient(ellipse at 50% 28%, rgba(233,242,255,.76), transparent 76%),
+      rgba(255,255,255,.94) !important;
+  }
+  .letters-liquid-page .letters-liquid-welcome {
+    padding-block: 10px;
+  }
+  .letters-liquid-page .letters-liquid-welcome-content {
+    gap: 5px;
+  }
+  .letters-liquid-page .letters-liquid-welcome-orb {
+    width: 54px;
+  }
+  .letters-liquid-page .letters-liquid-welcome-orb-letter {
+    font-size: 36px;
+  }
+  .letters-liquid-page .letters-liquid-welcome-steps {
+    display: none;
+  }
+}
+@media (max-width: 767px) and (max-height: 730px) {
+  .letters-liquid-page .letters-liquid-welcome-orb,
+  .letters-liquid-page .letters-liquid-welcome-eyebrow {
+    display: none;
+  }
+}
+@media (max-height: 680px) {
+  .letters-liquid-page .letters-liquid-welcome-content {
+    gap: 6px;
+  }
+  .letters-liquid-page .letters-liquid-welcome-orb {
+    width: 56px;
+  }
+  .letters-liquid-page .letters-liquid-welcome-orb-letter {
+    font-size: 37px;
+  }
+  .letters-liquid-page .letters-liquid-welcome-steps {
+    display: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .letters-liquid-page .letters-liquid-welcome,
+  .letters-liquid-page .letters-liquid-action {
+    background: #fff !important;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .letters-liquid-page .letters-liquid-action:hover,
+  .letters-liquid-page .letters-liquid-welcome-orb {
+    transform: none !important;
+    transition: none !important;
+  }
+}
