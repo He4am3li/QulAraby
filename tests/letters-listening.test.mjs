@@ -84,7 +84,7 @@ for (const fragment of [
   assert.ok(auditory.includes(fragment), 'Listening quiz safeguard missing: ' + fragment);
 }
 assert.ok(file.includes('<SoundLab \n                        key={selectedChar.char}'), 'Switching letters must reset recording');
-assert.ok(file.includes('<AuditoryGame \n                        char={selectedChar.char}\n                        t={t}\n                        lang={lang}'), 'Correct language must reach the game');
+assert.match(file, /<AuditoryGame\s+char=\{selectedChar\.char\}[\s\S]{0,250}lang=\{lang\}/, 'Correct language must reach the game');
 assert.ok(!soundLab.includes('(t as any || lang'), 'English vowel labels must not always render Arabic');
 assert.ok(!auditory.includes("opts.sort(() => Math.random() - 0.5)"), 'Remove biased answer shuffle');
 assert.ok(!auditory.includes("setScore(s => s + 20)"), 'No unearned scores for unlimited attempts');

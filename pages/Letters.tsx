@@ -4,6 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Globe, Volume2, Loader2, Type as TypeIcon, ChevronLeft, ArrowRight, AlertCircle, Music, Wind, Download, Upload, FileText, CheckCircle2, XCircle, Award, Share2, PenTool, RefreshCcw, Paintbrush, Palette, Play, Star, CheckCircle, Edit3, BrainCircuit, Mic, Activity, BookOpen, Layers, Search, X, Inbox } from 'lucide-react';
 import { LanguageToggle } from '../components/LanguageToggle';
 import { letterCanvasPoint } from '../utils/letterCanvas.js';
+import {
+  LETTER_FORMS, LISTENING_TOTAL, MIN_LISTENING_FIRST_TRY, evidenceStorageKey,
+  emptyLetterEvidence, normalizeLetterEvidence, recordVerifiedWriting,
+  recordListeningExercise, masteredFromEvidence, assessInkSamples
+} from '../utils/letterMastery.js';
 import { makeListeningQuestion, LISTENING_QUESTIONS_PER_STAGE, LISTENING_STAGE_COUNT, LISTENING_TOTAL_QUESTIONS } from '../utils/letterListening.js';
 import './LettersGlass.css';
 import { PageHeader } from '../components/PageHeader';
@@ -95,7 +100,7 @@ const STRINGS = {
     downloadBtn: 'معاينة ورقة العمل',
     uploadBtn: 'رفع الواجب',
     verifyTitle: 'تدقيق كتابة الحرف',
-    passed: 'تهانينا! لقد أتقنت الحرف بنجاح.',
+    passed: 'أحسنت! تمت مراجعة ورقة العمل. أكمل الكتابة والاستماع لإثبات الإتقان.',
     failed: 'محاولة جيدة، حاول تحسين كتابتك واتباع الملاحظات.',
     masteredTitle: 'حروف متقنة',
     practiceBtn: 'تدرب على الرسم',
@@ -178,7 +183,7 @@ const STRINGS = {
     downloadBtn: 'Preview Worksheet',
     uploadBtn: 'Upload Homework',
     verifyTitle: 'Verify Handwriting',
-    passed: 'Congratulations! You have mastered the letter.',
+    passed: 'Worksheet reviewed. Continue writing and listening practice to verify mastery.',
     failed: 'Good try! Keep practicing and follow the feedback.',
     masteredTitle: 'Mastered Letters',
     practiceBtn: 'Practice Drawing',
@@ -249,12 +254,22 @@ const STRINGS = {
   }
 };
 
-const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, onMastered?: (stars: number) => void }> = ({ char, shapes, t, lang, onMastered }) => {
+const TracingBoard: React.FC<{
+  char: string, shapes: any, t: any, lang: string,
+  verifiedForms?: Record<string, { stars: number, date: string }>,
+  listeningScore?: number, onVerified?: (shape: string, stars: number) => void
+}> = ({ char, shapes, t, lang, verifiedForms = {}, listeningScore = 0, onVerified }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const activePointerIdRef = React.useRef<number | null>(null);
   const [activeShape, setActiveShape] = React.useState<'isolated' | 'initial' | 'medial' | 'final'>('isolated');
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [aiFeedback, setAiFeedback] = React.useState<{ stars: number, message: string, isCorrect: boolean } | null>(null);
+  const [checkError, setCheckError] = React.useState<string | null>(null);
+  const drawingMovesRef = React.useRef(0);
+  const canvasRevisionRef = React.useRef(0);
+  const lastCheckedRevisionRef = React.useRef(-1);
+  const assessmentSeqRef = React.useRef(0);
+  const assessmentLockRef = React.useRef(false);
   
   // Audio refs
   const drawSound = React.useRef<HTMLAudioElement | null>(null);
@@ -281,7 +296,16 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     activePointerIdRef.current = null;
+    drawSound.current?.pause();
+    if (drawSound.current) drawSound.current.currentTime = 0;
+    drawingMovesRef.current = 0;
+    canvasRevisionRef.current += 1;
+    assessmentSeqRef.current += 1;
+    assessmentLockRef.current = false;
+    setIsAnalyzing(false);
+    setCheckError(null);
     setAiFeedback(null);
+    return () => { assessmentSeqRef.current += 1; };
   }, [activeShape, char]);
 
   // Pointer events work with mouse, touch and stylus, without duplicate touch/mouse callbacks.
@@ -302,6 +326,9 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
     activePointerIdRef.current = e.pointerId;
     canvas.setPointerCapture(e.pointerId);
     const { x, y } = pointFromEvent(e);
+    drawingMovesRef.current += 1;
+    canvasRevisionRef.current += 1;
+    setCheckError(null);
     ctx.beginPath();
     ctx.moveTo(x, y);
     // Render the first contact immediately, including a single tap.
@@ -330,6 +357,8 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
     const ctx = e.currentTarget.getContext('2d');
     if (!ctx) return;
     const { x, y } = pointFromEvent(e);
+    drawingMovesRef.current += 1;
+    canvasRevisionRef.current += 1;
     ctx.lineTo(x, y);
     ctx.stroke();
     ctx.beginPath();
@@ -341,36 +370,62 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    drawingMovesRef.current = 0;
+    canvasRevisionRef.current += 1;
+    assessmentSeqRef.current += 1;
+    assessmentLockRef.current = false;
+    setCheckError(null);
     setAiFeedback(null);
   };
 
   const handleCheckWork = async () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    
+    if (!canvas || assessmentLockRef.current || isAnalyzing) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const ink = assessInkSamples(ctx.getImageData(0, 0, canvas.width, canvas.height), drawingMovesRef.current);
+    if (!ink.sufficient) {
+      setCheckError(lang === 'ar'
+        ? 'ارسم الحرف أولاً بخط واضح قبل طلب التصحيح.'
+        : 'Draw the letter clearly before requesting feedback.');
+      return;
+    }
+    if (canvasRevisionRef.current === lastCheckedRevisionRef.current) {
+      setCheckError(lang === 'ar'
+        ? 'أضف كتابة جديدة أو امسح السبورة قبل إعادة التصحيح.'
+        : 'Draw again or clear the board before checking again.');
+      return;
+    }
+    const version = canvasRevisionRef.current;
+    lastCheckedRevisionRef.current = version;
+    const id = ++assessmentSeqRef.current;
+    assessmentLockRef.current = true;
     setIsAnalyzing(true);
+    setCheckError(null);
     setAiFeedback(null);
-
     try {
-      const dataUrl = canvas.toDataURL('image/png');
-      const base64Data = dataUrl.split(',')[1];
-
+      const image = canvas.toDataURL('image/png').split(',')[1];
+      const prompt = [
+        'Evaluate ONLY the blue handwritten ink strokes on this transparent canvas.',
+        'The pale tracing guide is not in the image. Never assume a valid letter exists.',
+        'Target Arabic letter: ' + char,
+        'Required positional form: ' + activeShape,
+        'Expected printed reference: ' + String(shapes[activeShape]),
+        'Reject dots alone, short marks, empty images, random scribbles, other Arabic letters,',
+        'missing distinguishing dots or a different positional form.',
+        'Rate actual handwriting with 1 to 3 stars.',
+        'isCorrect must be true ONLY if it genuinely represents the target form with at least 2 stars.',
+        'Provide one short supportive message in ' + (lang === 'ar' ? 'Arabic' : 'English') + '.',
+        'Return ONLY JSON with stars (number), isCorrect (boolean), message (string).'
+      ].join('\n');
       const response = await generateContentWithRetry({
-        model: "gemini-3.8-flash",
-        contents: [
-          {
-            parts: [
-              { text: `Analyze this handwritten Arabic letter. The target letter is "${char}" in its ${activeShape} form. 
-              1. Rate the accuracy from 1 to 3 stars.
-              2. Determine if it is correctly written (true/false).
-              3. Provide a very short encouraging feedback message in ${lang === 'ar' ? 'Arabic' : 'English'}.
-              Return ONLY a JSON object with keys: stars (number), isCorrect (boolean), message (string).` },
-              { inlineData: { mimeType: "image/png", data: base64Data } }
-            ]
-          }
-        ],
+        model: 'gemini-3.8-flash',
+        contents: [{ parts: [
+          { text: prompt },
+          { inlineData: { mimeType: 'image/png', data: image } }
+        ] }],
         config: {
-          responseMimeType: "application/json",
+          responseMimeType: 'application/json',
           responseSchema: {
             type: Type.OBJECT,
             properties: {
@@ -378,26 +433,46 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
               isCorrect: { type: Type.BOOLEAN },
               message: { type: Type.STRING }
             },
-            required: ["stars", "isCorrect", "message"]
+            required: ['stars', 'isCorrect', 'message']
           }
         }
       });
-
-      const result = JSON.parse(response.text || '{}');
-      setAiFeedback(result);
-      
-      if (result.isCorrect) {
-        if (onMastered) onMastered(result.stars);
+      if (id !== assessmentSeqRef.current) return;
+      const raw = JSON.parse(response.text || '{}');
+      const stars = Number.isInteger(raw.stars) ? Math.max(1, Math.min(3, raw.stars)) : 1;
+      const isCorrect = raw.isCorrect === true && stars >= 2;
+      const message = typeof raw.message === 'string' && raw.message.trim()
+        ? raw.message.trim().slice(0, 140)
+        : (lang === 'ar' ? 'تابع التدريب على شكل الحرف.' : 'Keep practicing this letter form.');
+      setAiFeedback({ stars, isCorrect, message });
+      if (isCorrect) {
+        onVerified?.(activeShape, stars);
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
-        audio.play().catch(() => {});
-      } else {
-        // feedback handled by overlay
+        void audio.play().catch(() => {});
       }
-    } catch (err) {
-      console.error("AI Analysis failed:", err);
+    } catch (error) {
+      if (id !== assessmentSeqRef.current) return;
+      // Network errors must not force a learner to redraw valid handwriting.
+      if (lastCheckedRevisionRef.current === version) lastCheckedRevisionRef.current = -1;
+      console.error('Letter assessment failed:', error);
+      setCheckError(lang === 'ar' ? 'تعذر فحص الكتابة الآن. حاول مرة أخرى.' : 'Could not check handwriting. Try again.');
     } finally {
-      setIsAnalyzing(false);
+      if (id === assessmentSeqRef.current) {
+        assessmentLockRef.current = false;
+        setIsAnalyzing(false);
+      }
     }
+  };
+
+  const continueAfterFeedback = () => {
+    if (aiFeedback?.isCorrect) {
+      const next = LETTER_FORMS.find(form => form !== activeShape && !verifiedForms[form]);
+      if (next) {
+        setActiveShape(next as 'isolated' | 'initial' | 'medial' | 'final');
+        return;
+      }
+    }
+    clear();
   };
 
   const shapeOptions = [
@@ -417,8 +492,9 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
               <button
                 key={opt.id}
                 onClick={() => setActiveShape(opt.id as any)}
-                className={`p-2 rounded-2xl text-center transition-all border-2 ${activeShape === opt.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-200'}`}
+                className={`relative p-2 rounded-2xl text-center transition-all border-2 ${activeShape === opt.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-200'}`}
               >
+                                {verifiedForms[opt.id] && <CheckCircle2 size={12} className="absolute top-1 right-1 text-emerald-500" aria-label={lang === 'ar' ? 'تم التحقق من هذا الشكل' : 'Verified form'} />}
                 <span className="text-2xl block mb-1 arabic-font">{(shapes as any)[opt.id]}</span>
                 <span className="text-[8px] font-black uppercase block">{opt.label}</span>
               </button>
@@ -464,8 +540,8 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
                 {aiFeedback.isCorrect ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
                 <span className="text-lg font-black arabic-font">{aiFeedback.message}</span>
               </div>
-              <button onClick={() => { clear(); setAiFeedback(null); }} className="px-8 py-2 bg-slate-900 text-white rounded-xl font-black text-xs hover:scale-105 transition-all">
-                {t.retry}
+              <button onClick={continueAfterFeedback} className="px-8 py-2 bg-slate-900 text-white rounded-xl font-black text-xs hover:scale-105 transition-all">
+                {aiFeedback.isCorrect ? (lang === 'ar' ? 'تابع التدريب' : 'Continue') : t.retry}
               </button>
             </div>
           )}
@@ -476,7 +552,7 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
                 <Loader2 className="animate-spin text-blue-600" size={48} />
                 <PenTool className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-400" size={20} />
               </div>
-              <p className="mt-4 text-xs font-black text-blue-600 uppercase tracking-widest animate-pulse">جاري فحص الرسم...</p>
+              <p className="mt-4 text-xs font-black text-blue-600 arabic-font animate-pulse">{lang === 'ar' ? 'جاري فحص الرسم...' : 'Checking handwriting...'}</p>
             </div>
           )}
         </div>
@@ -487,8 +563,9 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
             <button
               key={opt.id}
               onClick={() => setActiveShape(opt.id as any)}
-              className={`p-2 rounded-2xl text-center transition-all border-2 ${activeShape === opt.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-200'}`}
+              className={`relative p-2 rounded-2xl text-center transition-all border-2 ${activeShape === opt.id ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-blue-200'}`}
             >
+                            {verifiedForms[opt.id] && <CheckCircle2 size={12} className="absolute top-1 right-1 text-emerald-500" aria-label={lang === 'ar' ? 'تم التحقق من هذا الشكل' : 'Verified form'} />}
               <span className="text-2xl block mb-1 arabic-font">{(shapes as any)[opt.id]}</span>
               <span className="text-[8px] font-black uppercase block">{opt.label}</span>
             </button>
@@ -496,11 +573,15 @@ const TracingBoard: React.FC<{ char: string, shapes: any, t: any, lang: string, 
         </div>
       </div>
       
-      <div className="p-2 bg-blue-50 flex items-center justify-between px-6 shrink-0 border-t border-blue-100">
-        <div className="flex items-center gap-4">
-          <p className="text-[10px] font-bold text-blue-600 arabic-font">
-            {t.followShape}
+      <div className="p-2 bg-blue-50 flex items-center justify-between gap-2 px-3 sm:px-6 shrink-0 border-t border-blue-100">
+        <div className="flex flex-col min-w-0 gap-0.5">
+          <p className="text-[10px] font-bold text-blue-700 arabic-font">{t.followShape}</p>
+          <p className="text-[9px] font-bold text-slate-500 arabic-font" aria-live="polite">
+            {lang === 'ar' ? 'أشكال موثقة' : 'Verified forms'} {LETTER_FORMS.filter(form => verifiedForms[form]).length}/4
+            {' · '}{lang === 'ar' ? 'الاستماع' : 'Listening'} {listeningScore}/{LISTENING_TOTAL}
+            <span className="text-slate-400">{' ('}{MIN_LISTENING_FIRST_TRY}{lang === 'ar' ? ' مطلوب)' : ' needed)'}</span>
           </p>
+          {checkError && <p role="alert" className="arabic-font text-[10px] font-bold text-rose-700 max-w-[240px]">{checkError}</p>}
         </div>
         <div className="flex gap-2">
           <button onClick={clear} className="px-4 py-2 bg-white border border-slate-200 text-slate-500 rounded-xl font-black text-[10px] hover:bg-slate-100 transition-all flex items-center gap-2">
@@ -727,7 +808,11 @@ const SIMILAR_SOUNDS: Record<string, string[]> = {
   'ي': ['أ', 'ل', 'ن']
 };
 
-const AuditoryGame: React.FC<{ char: string, t: any, lang: 'ar' | 'en', onSpeak: (text: string, display: string) => void }> = ({ char, t, lang, onSpeak }) => {
+const AuditoryGame: React.FC<{
+  char: string, t: any, lang: 'ar' | 'en',
+  onSpeak: (text: string, display: string) => void,
+  onPracticeComplete?: (firstTryCorrect: number, total: number) => void
+}> = ({ char, t, lang, onSpeak, onPracticeComplete }) => {
   const [level, setLevel] = React.useState(1);
   const [round, setRound] = React.useState(1);
   const [question, setQuestion] = React.useState<any>(null);
@@ -743,6 +828,9 @@ const AuditoryGame: React.FC<{ char: string, t: any, lang: 'ar' | 'en', onSpeak:
   const feedbackTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestSpeakRef = React.useRef(onSpeak);
   latestSpeakRef.current = onSpeak;
+  const latestCompleteRef = React.useRef(onPracticeComplete);
+  latestCompleteRef.current = onPracticeComplete;
+  const reportedRef = React.useRef(false);
 
   const clearTimers = () => {
     if (playTimerRef.current !== null) clearTimeout(playTimerRef.current);
@@ -797,6 +885,7 @@ const AuditoryGame: React.FC<{ char: string, t: any, lang: 'ar' | 'en', onSpeak:
     setLevel(1);
     setRound(1);
     setFirstTryCorrect(0);
+    reportedRef.current = false;
     setIsComplete(false);
     setFeedback(null);
     setWrongOption(null);
@@ -826,6 +915,11 @@ const AuditoryGame: React.FC<{ char: string, t: any, lang: 'ar' | 'en', onSpeak:
           generateQuestion(level + 1, 1);
         } else {
           clearTimers();
+          if (!reportedRef.current) {
+            reportedRef.current = true;
+            const firstTryTotal = firstTryCorrect + (mistakeOnQuestion ? 0 : 1);
+            latestCompleteRef.current?.(firstTryTotal, LISTENING_TOTAL_QUESTIONS);
+          }
           setIsComplete(true);
         }
       }, 1050);
@@ -2216,8 +2310,11 @@ export const Letters: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [verificationResult, setVerificationResult] = React.useState<any>(null);
-  const [masteredLetters, setMasteredLetters] = React.useState<string[]>([]);
-  const [masteredDetailed, setMasteredDetailed] = React.useState<any[]>([]);
+  // Preserve old single-success history but show badges only for evidence-based mastery.
+  const [skillEvidence, setSkillEvidence] = React.useState<any>(() => emptyLetterEvidence());
+  const evidenceRef = React.useRef<any>(emptyLetterEvidence());
+  const evidenceKeyRef = React.useRef<string>(evidenceStorageKey(user?.uid));
+  const masteredLetters = React.useMemo(() => masteredFromEvidence(skillEvidence), [skillEvidence]);
   const [activeTab, setActiveTab] = React.useState<'practice' | 'soundlab' | 'game' | 'words' | 'tashkeel'>('practice');
   const [isGeneratingWorksheet, setIsGeneratingWorksheet] = React.useState(false);
   const [showWorksheetPreview, setShowWorksheetPreview] = React.useState(false);
@@ -2308,12 +2405,20 @@ export const Letters: React.FC = () => {
   };
 
   React.useEffect(() => {
-    const saved = localStorage.getItem('hub_mastered_letters');
-    if (saved) setMasteredLetters(JSON.parse(saved));
+    const key = evidenceStorageKey(user?.uid);
+    evidenceKeyRef.current = key;
+    let saved = emptyLetterEvidence();
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) saved = normalizeLetterEvidence(JSON.parse(raw));
+    } catch (err) {
+      console.warn('Could not read saved letter evidence:', err);
+    }
+    evidenceRef.current = saved;
+    setSkillEvidence(saved);
+  }, [user?.uid]);
 
-    const savedDetailed = localStorage.getItem('hub_mastered_letters_detailed');
-    if (savedDetailed) setMasteredDetailed(JSON.parse(savedDetailed));
-
+  React.useEffect(() => {
     const handleLangChange = () => {
       const currentLang = (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar';
       setLang(currentLang);
@@ -2322,15 +2427,25 @@ export const Letters: React.FC = () => {
     return () => window.removeEventListener('langChanged', handleLangChange);
   }, []);
 
-  const saveMastery = (char: string, stars: number = 3) => {
-    const updated = Array.from(new Set([...masteredLetters, char]));
-    setMasteredLetters(updated);
-    localStorage.setItem('hub_mastered_letters', JSON.stringify(updated));
+  const updateSkillEvidence = (update: (previous: any) => any) => {
+    const key = evidenceStorageKey(user?.uid);
+    if (evidenceKeyRef.current !== key) return;
+    const next = update(evidenceRef.current);
+    evidenceRef.current = next;
+    setSkillEvidence(next);
+    try {
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch (err) {
+      console.warn('Could not persist letter evidence on this device:', err);
+    }
+  };
 
-    const newDetail = { char, stars, date: new Date().toISOString() };
-    const updatedDetailed = [...masteredDetailed.filter(m => m.char !== char), newDetail];
-    setMasteredDetailed(updatedDetailed);
-    localStorage.setItem('hub_mastered_letters_detailed', JSON.stringify(updatedDetailed));
+  const verifyWritingForm = (char: string, form: string, stars: number) => {
+    updateSkillEvidence(previous => recordVerifiedWriting(previous, char, form, stars));
+  };
+
+  const saveListeningPractice = (char: string, firstTryCorrect: number, total: number) => {
+    updateSkillEvidence(previous => recordListeningExercise(previous, char, firstTryCorrect, total));
   };
 
   const initAudio = () => {
@@ -2374,7 +2489,8 @@ export const Letters: React.FC = () => {
       const filePart = await fileToGenerativePart(file);
       const result = await verifyLetterWorksheet(filePart, selectedChar.char, selectedChar.name);
       setVerificationResult(result);
-      if (result.passed) saveMastery(selectedChar.char);
+      // A reviewed worksheet is teacher feedback, not verified mastery.
+      // Only checked writing forms and a listening result can grant a badge.
 
       // Save submission to database for teacher inbox review
       try {
@@ -2499,7 +2615,7 @@ export const Letters: React.FC = () => {
               </div>
               <div className="mt-8 flex gap-3 w-full">
                  <button onClick={() => setVerificationResult(null)} className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase">Close</button>
-                 {verificationResult.passed && <button onClick={() => window.print()} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2"><Share2 size={18} /> Share Mastery</button>}
+                 {verificationResult.passed && <button onClick={() => window.print()} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2"><Share2 size={18} /> {lang === 'ar' ? 'طباعة الملاحظات' : 'Print Feedback'}</button>}
               </div>
            </div>
         </div>
@@ -2608,12 +2724,15 @@ export const Letters: React.FC = () => {
 
                   <div className="flex-1 overflow-hidden p-3 flex flex-col">
                     {activeTab === 'practice' && (
-                      <TracingBoard 
-                        char={selectedChar.char} 
-                        shapes={shapes} 
+                      <TracingBoard
+                        key={selectedChar.char}
+                        char={selectedChar.char}
+                        shapes={shapes}
                         t={t}
                         lang={lang}
-                        onMastered={(stars) => saveMastery(selectedChar.char, stars)}
+                        verifiedForms={skillEvidence.letters?.[selectedChar.char]?.forms || {}}
+                        listeningScore={skillEvidence.letters?.[selectedChar.char]?.listening?.score || 0}
+                        onVerified={(form, stars) => verifyWritingForm(selectedChar.char, form, stars)}
                       />
                     )}
                     {activeTab === 'soundlab' && (
@@ -2626,11 +2745,12 @@ export const Letters: React.FC = () => {
                       />
                     )}
                     {activeTab === 'game' && (
-                      <AuditoryGame 
+                      <AuditoryGame
                         char={selectedChar.char}
                         t={t}
-                        lang={lang} 
+                        lang={lang}
                         onSpeak={handleSpeak}
+                        onPracticeComplete={(score, total) => saveListeningPractice(selectedChar.char, score, total)}
                       />
                     )}
                     {activeTab === 'words' && (
