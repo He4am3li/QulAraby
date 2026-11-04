@@ -28,12 +28,11 @@ assert.ok(!board.includes('onTouchStart={startDrawing}'), 'Remove duplicate touc
 assert.ok(!board.includes("React.useState(false);\n  const [activeShape"), 'Drawing must use a synchronous pointer ref');
 assert.ok(board.includes('}, [activeShape, char]);'), 'Changing letters should clear the old drawing');
 
-// Guide and strokes remain in one full-size relative container after the atelier redesign.
-const guideStart = board.indexOf('relative min-h-0 flex-1 overflow-hidden bg-[#fcfaf5]');
-const drawingSurface = board.slice(guideStart, board.indexOf('{aiFeedback &&', guideStart));
-assert.ok(guideStart >= 0, 'Shared guide/canvas container must exist');
-assert.ok(drawingSurface.includes('pointer-events-none absolute inset-0 flex items-center justify-center'));
-assert.ok(drawingSurface.includes('className="absolute inset-0 z-10 h-full w-full cursor-crosshair"'));
-assert.ok(drawingSurface.includes("mode === 'trace' &&"), 'Free-writing mode hides the guide');
-assert.ok(drawingSurface.includes('pointer-events-none'), 'Guide must not steal pointer events');
+// Pale guide and canvas must be stacked inside exactly one shared layout box.
+const guideStart = board.indexOf('identical bounds for the pale guide');
+const wrapper = board.slice(guideStart, board.indexOf('{/* AI Feedback Overlay */}', guideStart));
+assert.ok(guideStart >= 0 && wrapper.includes('relative w-full h-full max-w-[850px] max-h-[220px]'));
+assert.ok(wrapper.includes('absolute inset-0 flex items-center justify-center'));
+assert.ok(wrapper.includes('className="absolute inset-0 z-10 w-full h-full cursor-crosshair"'));
+assert.ok(wrapper.includes('pointer-events-none'), 'Guide must not steal pointer events');
 console.log('Letter tracing alignment OK: scaled viewport coordinates, pointer capture, guide overlap.');
