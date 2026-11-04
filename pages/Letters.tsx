@@ -5,9 +5,9 @@ import { Sparkles, Globe, Volume2, Loader2, Type as TypeIcon, ChevronLeft, Arrow
 import { LanguageToggle } from '../components/LanguageToggle';
 import { letterCanvasPoint } from '../utils/letterCanvas.js';
 import {
-  LETTER_FORMS, LISTENING_TOTAL, evidenceStorageKey,
+  LETTER_FORMS, LISTENING_TOTAL, MIN_LISTENING_FIRST_TRY, evidenceStorageKey,
   emptyLetterEvidence, normalizeLetterEvidence, recordVerifiedWriting,
-  recordListeningExercise, verifiedFormCount, masteredFromEvidence, assessInkSamples
+  recordListeningExercise, masteredFromEvidence, assessInkSamples
 } from '../utils/letterMastery.js';
 import { makeListeningQuestion, LISTENING_QUESTIONS_PER_STAGE, LISTENING_STAGE_COUNT, LISTENING_TOTAL_QUESTIONS } from '../utils/letterListening.js';
 import './LettersGlass.css';
@@ -575,6 +575,7 @@ const TracingBoard: React.FC<{
           <p className="text-[9px] font-bold text-slate-500 arabic-font" aria-live="polite">
             {lang === 'ar' ? 'أشكال موثقة' : 'Verified forms'} {LETTER_FORMS.filter(form => verifiedForms[form]).length}/4
             {' · '}{lang === 'ar' ? 'الاستماع' : 'Listening'} {listeningScore}/{LISTENING_TOTAL}
+            <span className="text-slate-400">{' ('}{MIN_LISTENING_FIRST_TRY}{lang === 'ar' ? ' مطلوب)' : ' needed)'}</span>
           </p>
           {checkError && <p role="alert" className="arabic-font text-[10px] font-bold text-rose-700 max-w-[240px]">{checkError}</p>}
         </div>
@@ -803,7 +804,11 @@ const SIMILAR_SOUNDS: Record<string, string[]> = {
   'ي': ['أ', 'ل', 'ن']
 };
 
-const AuditoryGame: React.FC<{ char: string, t: any, lang: 'ar' | 'en', onSpeak: (text: string, display: string) => void }> = ({ char, t, lang, onSpeak }) => {
+const AuditoryGame: React.FC<{
+  char: string, t: any, lang: 'ar' | 'en',
+  onSpeak: (text: string, display: string) => void,
+  onPracticeComplete?: (firstTryCorrect: number, total: number) => void
+}> = ({ char, t, lang, onSpeak, onPracticeComplete }) => {
   const [level, setLevel] = React.useState(1);
   const [round, setRound] = React.useState(1);
   const [question, setQuestion] = React.useState<any>(null);
@@ -819,6 +824,9 @@ const AuditoryGame: React.FC<{ char: string, t: any, lang: 'ar' | 'en', onSpeak:
   const feedbackTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestSpeakRef = React.useRef(onSpeak);
   latestSpeakRef.current = onSpeak;
+  const latestCompleteRef = React.useRef(onPracticeComplete);
+  latestCompleteRef.current = onPracticeComplete;
+  const reportedRef = React.useRef(false);
 
   const clearTimers = () => {
     if (playTimerRef.current !== null) clearTimeout(playTimerRef.current);
@@ -873,6 +881,7 @@ const AuditoryGame: React.FC<{ char: string, t: any, lang: 'ar' | 'en', onSpeak:
     setLevel(1);
     setRound(1);
     setFirstTryCorrect(0);
+    reportedRef.current = false;
     setIsComplete(false);
     setFeedback(null);
     setWrongOption(null);
@@ -902,6 +911,11 @@ const AuditoryGame: React.FC<{ char: string, t: any, lang: 'ar' | 'en', onSpeak:
           generateQuestion(level + 1, 1);
         } else {
           clearTimers();
+          if (!reportedRef.current) {
+            reportedRef.current = true;
+            const firstTryTotal = firstTryCorrect + (mistakeOnQuestion ? 0 : 1);
+            latestCompleteRef.current?.(firstTryTotal, LISTENING_TOTAL_QUESTIONS);
+          }
           setIsComplete(true);
         }
       }, 1050);
