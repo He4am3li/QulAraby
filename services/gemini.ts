@@ -395,15 +395,17 @@ export const generateAssistantQuiz = async (topic: string, vocabWords: string[])
   });
 };
 
-export const generateSpeech = async (text: string, lang: 'ar' | 'en'): Promise<Uint8Array | undefined> => {
+export const generateSpeech = async (text: string, lang: 'ar' | 'en', preferredVoice?: string): Promise<Uint8Array | undefined> => {
   if (!text || text.trim().length === 0) return undefined;
-  
-  const cacheKey = `tts_${lang}_${text.trim()}`;
+
+  const allowedVoices = ['Puck', 'Charon', 'Fenrir', 'Orus', 'Enceladus', 'Kore', 'Aoede', 'Leda', 'Zephyr', 'Callirrhoe'];
+  const voiceName = preferredVoice && allowedVoices.includes(preferredVoice) ? preferredVoice : (lang === 'ar' ? 'Kore' : 'Zephyr');
+  // The cache must include the selected voice, otherwise changing profiles replays an old speaker.
+  const cacheKey = `tts_v2_${lang}_${voiceName}_${text.trim()}`;
   const cached = await getCachedAsset(cacheKey);
   if (cached) return cached;
 
   const ai = getAI();
-  const voiceName = lang === 'ar' ? 'Kore' : 'Zephyr';
   try {
     return await withRetry(async () => {
       const response = await ai.models.generateContent({
@@ -521,10 +523,17 @@ function decodeBase64(base64: string): Uint8Array {
 }
 
 export async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampleRate = 24000): Promise<AudioBuffer> {
-  if (!Number.isInteger(sampleRate) || sampleRate < 8000 || sampleRate > 96000 || data.byteLength === 0 || data.byteLength % 2 !== 0) {
-    throw new TypeError('Invalid PCM audio format');
+  if (!Number.isInteger(sampleRate) || sampleRate < 8000 || sampleRate > 96000 || data.byteLength === 0) {
+    throw new TypeError('Invalid audio format');
   }
   const bufferArray = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+  // Gemini 3.8 unary TTS emits RIFF/WAV by default, unlike legacy headerless PCM.
+  // Decode both formats without treating WAV header bytes as actual sound samples.
+  if (data.byteLength >= 12 && data[0] === 82 && data[1] === 73 && data[2] === 70 && data[3] === 70 &&
+      data[8] === 87 && data[9] === 65 && data[10] === 86 && data[11] === 69) {
+    return ctx.decodeAudioData(bufferArray);
+  }
+  if (data.byteLength % 2 !== 0) throw new TypeError('Invalid PCM audio length');
   const dataInt16 = new Int16Array(bufferArray);
   const frameCount = dataInt16.length;
   const buffer = ctx.createBuffer(1, frameCount, sampleRate);
