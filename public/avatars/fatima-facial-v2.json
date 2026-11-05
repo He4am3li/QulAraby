@@ -1,0 +1,105 @@
+{
+  "version": 2,
+  "status": "reviewed",
+  "characterId": "egypt_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/fatima-stance-v2.webp",
+  "sourceSha256": "ea9d0b0ee3d595fa285a2b8b717da721df216171518d24f98720cbc226b38d23",
+  "layers": {
+    "Mouth_Closed": {
+      "x": 474,
+      "y": 175,
+      "w": 66,
+      "h": 50,
+      "visible": true,
+      "url": "/avatars/fatima-stance-v2/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 474,
+      "y": 175,
+      "w": 66,
+      "h": 50,
+      "visible": false,
+      "url": "/avatars/fatima-stance-v2/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 474,
+      "y": 175,
+      "w": 66,
+      "h": 50,
+      "visible": false,
+      "url": "/avatars/fatima-stance-v2/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 474,
+      "y": 175,
+      "w": 66,
+      "h": 50,
+      "visible": false,
+      "url": "/avatars/fatima-stance-v2/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 474,
+      "y": 175,
+      "w": 66,
+      "h": 50,
+      "visible": false,
+      "url": "/avatars/fatima-stance-v2/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 474,
+      "y": 175,
+      "w": 66,
+      "h": 50,
+      "visible": false,
+      "url": "/avatars/fatima-stance-v2/Mouth_Smile.png"
+    },
+    "Blink_R_Closed": {
+      "x": 439,
+      "y": 119,
+      "w": 61,
+      "h": 43,
+      "visible": false,
+      "url": "/avatars/fatima-stance-v2/Blink_R_Closed.png"
+    },
+    "Blink_L_Closed": {
+      "x": 513,
+      "y": 119,
+      "w": 61,
+      "h": 43,
+      "visible": false,
+      "url": "/avatars/fatima-stance-v2/Blink_L_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 439,
+      "y": 119,
+      "w": 135,
+      "h": 43,
+      "visible": false,
+      "url": "/avatars/fatima-stance-v2/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 439,
+      "y": 119,
+      "w": 135,
+      "h": 43,
+      "visible": false,
+      "url": "/avatars/fatima-stance-v2/Eyes_Right.png"
+    },
+    "Brows_Thinking": {
+      "x": 442,
+      "y": 102,
+      "w": 130,
+      "h": 23,
+      "visible": false,
+      "url": "/avatars/fatima-stance-v2/Brows_Thinking.png"
+    }
+  },
+  "pose": {
+    "bodyFacing": "right",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "left"
+  }
+}

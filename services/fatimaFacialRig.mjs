@@ -1,12 +1,12 @@
 import { paintSpeechMouth } from './speechMouth.mjs';
 
-export const FATIMA_MANIFEST_URL = '/avatars/fatima-facial-v1.json';
-export const FATIMA_ORIGINAL_URL = '/avatars/fatima-original.png';
+export const FATIMA_MANIFEST_URL = '/avatars/fatima-facial-v2.json';
+export const FATIMA_ORIGINAL_URL = '/avatars/fatima-stance-v2.webp';
 const required = ['Blink_R_Closed', 'Blink_L_Closed', 'Eyes_Left', 'Eyes_Right', 'Brows_Thinking',
   ...['Closed', 'A', 'E', 'O', 'FV', 'Smile'].map(shape => `Mouth_${shape}`)];
 
 export function validateFatimaManifest(value) {
-  if (!value || value.version !== 1 || value.status !== 'reviewed' || value.characterId !== 'egypt_female' ||
+  if (!value || value.version !== 2 || value.status !== 'reviewed' || value.characterId !== 'egypt_female' ||
       value.width !== 1024 || value.height !== 1536 || value.source !== FATIMA_ORIGINAL_URL ||
       !value.layers || required.some(name => !Object.hasOwn(value.layers, name))) return null;
   for (const layer of Object.values(value.layers)) {
@@ -14,7 +14,7 @@ export function validateFatimaManifest(value) {
         layer.x < 0 || layer.y < 0 || layer.w <= 0 || layer.h <= 0 ||
         layer.x + layer.w > value.width || layer.y + layer.h > value.height ||
         typeof layer.visible !== 'boolean' || typeof layer.url !== 'string' ||
-        !/^\/avatars\/fatima-layers\/[A-Za-z0-9_-]+\.png$/.test(layer.url)) return null;
+        !/^\/avatars\/fatima-stance-v2\/[A-Za-z0-9_-]+\.png$/.test(layer.url)) return null;
   }
   const mouth = value.layers.Mouth_Closed;
   if (['A', 'E', 'O', 'FV', 'Smile'].some(shape => ['x', 'y', 'w', 'h'].some(key =>

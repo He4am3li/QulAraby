@@ -20,6 +20,7 @@ import { DialectPassportCover, DialectPassportLibrary } from '../components/Dial
 import { assessDialectMission, type MissionTurn } from '../services/dialectMissionAssessment';
 import { getAI, getLiveAI, generateSpeech, decodeAudioData } from '../services/gemini';
 import { SpeechLipSync, analyzeSpeechBuffer, startLipSyncedSource } from '../services/speechLipSync.mjs';
+import { getTutorStageDirection, getTutorPartnerDirection } from '../services/tutorAttention.mjs';
 import { buildDialectTutorPolicy, inferLearnerLanguage } from '../services/dialectTutorPolicy';
 import { publishedVoice, useDialectVoiceProfiles } from '../services/dialectVoiceProfiles';
 
@@ -2445,7 +2446,7 @@ export const Dialects: React.FC = () => {
                       <div className="mx-auto h-[16px] w-[70%] rounded-[50%] bg-[#1c3c34]/15 blur-[10px]" />
                     </div>
                     {/* Reserve no unnecessary floor gap: the characters stand fully on the scene. */}
-                    <div className="absolute inset-0 grid grid-cols-2 gap-[clamp(23px,4vw,62px)] px-[clamp(5px,1vw,14px)] pb-[3px] pt-0">
+                    <div dir={getTutorStageDirection(selectedCountry.id, lang)} className="absolute inset-0 grid grid-cols-2 gap-[clamp(23px,4vw,62px)] px-[clamp(5px,1vw,14px)] pb-[3px] pt-0">
                       {[
                         { char: selectedCountry.characterMale, gender: 'male' as const, isFemale: false },
                         { char: selectedCountry.characterFemale, gender: 'female' as const, isFemale: true }
@@ -2463,7 +2464,7 @@ export const Dialects: React.FC = () => {
                             isListening={chosen && isListening}
                             isLoading={chosen && isChatLoading}
                             partnerState={!chosen && isSpeaking ? 'speaking' : !chosen && isListening ? 'listening' : 'idle'}
-                            partnerDirection={gender === 'female' ? (lang === 'ar' ? 'right' : 'left') : (lang === 'ar' ? 'left' : 'right')}
+                            partnerDirection={getTutorPartnerDirection(selectedCountry.id, gender, lang)}
                             audioLevel={chosen ? audioLevel : 0}
                             lipSync={chosen ? lipSyncRef.current : undefined}
                             countryNameAr={selectedCountry.nameAr}

@@ -5,15 +5,20 @@ import crypto from 'node:crypto';
 import { validateAhmedManifest, planAhmedFrame, paintAhmed, resolveAhmedAttention } from '../services/ahmedFacialRig.mjs';
 import { REST_LIPS, SpeechLipSync } from '../services/speechLipSync.mjs';
 
-const manifest = JSON.parse(fs.readFileSync(new URL('../public/avatars/ahmed-facial-v1.json', import.meta.url)));
+const manifest = JSON.parse(fs.readFileSync(new URL('../public/avatars/ahmed-facial-v2.json', import.meta.url)));
 test('Ahmed uses the exact prepared original with all required expressions', () => {
   assert.ok(validateAhmedManifest(manifest));
-  const hash = crypto.createHash('sha256').update(fs.readFileSync(new URL('../public/avatars/ahmed-original.png', import.meta.url))).digest('hex');
+  const hash = crypto.createHash('sha256').update(fs.readFileSync(new URL('../public' + manifest.source, import.meta.url))).digest('hex');
   assert.equal(hash, manifest.sourceSha256);
   assert.deepEqual(planAhmedFrame(manifest), []);
+  for (const layer of Object.values(manifest.layers)) {
+    const png = fs.readFileSync(new URL('../public' + layer.url, import.meta.url));
+    assert.equal(png.readUInt32BE(16), layer.w);
+    assert.equal(png.readUInt32BE(20), layer.h);
+  }
 });
 test('incomplete, unapproved, other-character and out-of-bounds artwork cannot activate', () => {
-  for (const mutate of [m => m.status = 'draft', m => m.characterId = 'saudi_male',
+  for (const mutate of [m => m.version = 1, m => m.status = 'draft', m => m.characterId = 'saudi_male',
     m => delete m.layers.Mouth_O, m => m.layers.Blink_L_Closed.x = 1024,
     m => m.layers.Mouth_A.url = 'https://example.com/face.png', m => m.eyeClips.R = '']) {
     const m = structuredClone(manifest); mutate(m); assert.equal(validateAhmedManifest(m), null);
