@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Generated at dev/build time from tracked compressed beginner-case artwork
+/public/detective/beginner/
