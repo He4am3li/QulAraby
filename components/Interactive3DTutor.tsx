@@ -23,6 +23,8 @@ interface Interactive3DTutorProps {
   isSpeaking: boolean;
   isListening: boolean;
   isLoading: boolean;
+  partnerState?: 'idle' | 'speaking' | 'listening';
+  partnerDirection?: 'left' | 'right';
   audioLevel?: number;
   lipSync?: SpeechLipSync;
   countryNameAr: string;
@@ -45,6 +47,8 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
   isSpeaking,
   isListening,
   isLoading,
+  partnerState = 'idle',
+  partnerDirection = 'left',
   audioLevel = 0,
   lipSync,
   lang,
@@ -135,8 +139,10 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
             <FatimaLayeredAvatar
               view="full"
               isSpeaking={isSpeaking}
-              isListening={isListening}
+              isListening={isListening || partnerState === 'listening'}
               isLoading={isLoading}
+              partnerSpeaking={partnerState === 'speaking'}
+              partnerDirection={partnerDirection}
               lipSync={lipSync}
               reaction={celebrating ? 'correct' : 'idle'}
               className="h-full w-full"

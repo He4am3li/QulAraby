@@ -23,13 +23,27 @@ export function validateFatimaManifest(value) {
 }
 
 const clamp = (n, min, max) => Math.min(max, Math.max(min, Number.isFinite(n) ? n : 0));
+/** The active speaker owns attention; never borrow the partner's audio for Fatima's mouth. */
+export function resolveFatimaAttention({ isSpeaking = false, isListening = false, isLoading = false,
+  partnerSpeaking = false, partnerDirection = 'left', reaction = 'idle' } = {}) {
+  if (isSpeaking) return { state: 'speaking', gazeX: 0 };
+  if (partnerSpeaking) return { state: 'listening', gazeX: partnerDirection === 'right' ? 1 : -1 };
+  if (isListening) return { state: 'listening', gazeX: 0 };
+  if (isLoading) return { state: 'thinking', gazeX: 0 };
+  return { state: reaction, gazeX: 0 };
+}
+
 /** Facial patches are registered to the source; dress, veil and jewelry remain untouched. */
-export function planFatimaFrame(manifest, { blink = 0, gazeX = 0, state = 'idle' } = {}) {
+export function planFatimaFrame(manifest, { blink = 0, gazeX = 0, state = 'idle', emphasis = 0 } = {}) {
   const commands = [];
   const add = (name, alpha = 1) => commands.push({ name, alpha });
   const closed = clamp(blink, 0, 1), gaze = clamp(gazeX, -1, 1);
   if (state === 'thinking') add('Brows_Thinking');
-  if (gaze && closed < 1) add(gaze < 0 ? 'Eyes_Left' : 'Eyes_Right', Math.abs(gaze) * (1 - closed));
+  else if (state === 'listening') add('Brows_Thinking', 0.16);
+  else if (state === 'speaking' && emphasis > 0) add('Brows_Thinking', clamp(emphasis, 0, 0.35));
+  // Replace the complete eye patch: crossfading it with the original produces double pupils.
+  // The avatar changes direction under a blink instead.
+  if (gaze && closed < 1) add(gaze < 0 ? 'Eyes_Left' : 'Eyes_Right');
   if (closed) for (const side of ['R', 'L']) add(`Blink_${side}_Closed`, closed);
   return commands;
 }
@@ -44,7 +58,7 @@ export function paintFatima(context, assets, options = {}) {
     context.restore();
   }
   if (options.lips?.active) paintSpeechMouth(context, assets.mouth, options.lips);
-  else if (['correct', 'greeting', 'retry'].includes(options.state)) {
+  else if (['correct', 'greeting', 'retry', 'listening'].includes(options.state)) {
     const layer = assets.manifest.layers.Mouth_Smile;
     context.drawImage(assets.images.Mouth_Smile, layer.x, layer.y, layer.w, layer.h);
   }
