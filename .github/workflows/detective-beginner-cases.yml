@@ -1,0 +1,32 @@
+name: Detective Beginner Cases
+
+on:
+  push:
+    paths:
+      - 'assets/detective/**'
+      - 'components/games/DetectiveMystery.tsx'
+      - 'components/games/beginnerDetectiveCases.ts'
+      - 'scripts/install-beginner-detective-assets.mjs'
+      - 'tests/detective-beginner-cases.test.mjs'
+      - 'package.json'
+      - '.github/workflows/detective-beginner-cases.yml'
+  pull_request:
+    paths:
+      - 'assets/detective/**'
+      - 'components/games/DetectiveMystery.tsx'
+      - 'components/games/beginnerDetectiveCases.ts'
+      - 'scripts/install-beginner-detective-assets.mjs'
+      - 'tests/detective-beginner-cases.test.mjs'
+      - 'package.json'
+      - '.github/workflows/detective-beginner-cases.yml'
+
+jobs:
+  verify-artwork-and-cases:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/install-beginner-detective-assets.mjs
+      - run: node tests/detective-beginner-cases.test.mjs

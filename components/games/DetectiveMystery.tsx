@@ -1,3 +1,4 @@
+import { BEGINNER_DETECTIVE_CASES } from './beginnerDetectiveCases';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Volume2, VolumeX, ShieldCheck, UserX, 
@@ -1059,7 +1060,7 @@ ALL_24_SUSPECTS.forEach(s => {
 });
 
 // ============================================================================
-// 15 CASES ACROSS 3 DISTINCT DIFFICULTY LEVELS - TESTED & MATHEMATICALLY VERIFIED
+// DISTINGUISHED CASE SETS: ten new A1 dossiers, existing stories retained at B1+
 // ============================================================================
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
 
@@ -1092,12 +1093,13 @@ export interface DetectiveCase {
 }
 
 export const CASES_DATABASE: DetectiveCase[] = [
+  ...BEGINNER_DETECTIVE_CASES,
   // ==========================================================================
-  // LEVEL 1: المبتدئ (2.webp و 3.webp بالتناوب)
+  // EXISTING CASES MOVED FROM BEGINNER TO INTERMEDIATE (original assets retained)
   // ==========================================================================
   {
     id: 1,
-    level: 'beginner',
+    level: 'intermediate',
     caseNumber: 1,
     caseIndex: 0,
     codeName: 'لغز اللوحة المسروقة',
@@ -1128,7 +1130,7 @@ export const CASES_DATABASE: DetectiveCase[] = [
   },
   {
     id: 2,
-    level: 'beginner',
+    level: 'intermediate',
     caseNumber: 2,
     caseIndex: 1,
     codeName: 'قضية الماسة الزرقاء',
@@ -1159,12 +1161,12 @@ export const CASES_DATABASE: DetectiveCase[] = [
   },
 
   // ==========================================================================
-  // LEVEL 2: المتوسط (4.webp و 5.webp بالتناوب)
+  // LEVEL 2: المتوسط، cases 3 and 4 (4.webp and 5.webp)
   // ==========================================================================
   {
     id: 3,
     level: 'intermediate',
-    caseNumber: 1,
+    caseNumber: 3,
     caseIndex: 2,
     codeName: 'لغز الساعة الصامتة',
     bgImage: 'url(/٤.webp), url(/4.webp)',
@@ -1195,7 +1197,7 @@ export const CASES_DATABASE: DetectiveCase[] = [
   {
     id: 4,
     level: 'intermediate',
-    caseNumber: 2,
+    caseNumber: 4,
     caseIndex: 3,
     codeName: 'سر شيفرة المنارة',
     bgImage: 'url(/٥.webp), url(/5.webp)',
