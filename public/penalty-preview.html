@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#071513">
+<title>معاينة تحدي الأهداف | قُل</title>
+<style>
+:root{font-family:system-ui,'Segoe UI',Tahoma,sans-serif;color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#030b0d;color:#fff}
+.game{position:relative;height:100dvh;min-height:480px;overflow:hidden;display:flex;flex-direction:column;background:#05100b;isolation:isolate}
+.backdrop{position:absolute;inset:0;overflow:hidden;z-index:-1}
+.backdrop img,.backdrop video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center}
+.backdrop video{display:none}
+.backdrop:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#041211d9 0%,#05100a43 28%,transparent 54%,#031014b0 100%);pointer-events:none}
+header{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:clamp(12px,3vh,23px) clamp(13px,3vw,30px);position:relative}
+.brand{font-weight:950;font-size:clamp(20px,3vw,28px);color:#f7d08c}.brand span{font-size:12px;font-weight:500;color:#d3e3dd}
+.counter{font-size:clamp(11px,1.5vw,14px);font-weight:800;background:#051a1ded;border:1px solid #e7b76869;border-radius:15px;padding:10px 14px;backdrop-filter:blur(16px)}
+.question{width:min(750px,calc(100% - 32px));margin:0 auto auto;text-align:center;padding:clamp(14px,3vh,22px) 18px;background:linear-gradient(125deg,#061e24e8,#0c292ad9);border:1px solid #e6bd7c99;border-radius:17px;box-shadow:0 15px 50px #0007;backdrop-filter:blur(14px)}
+.eyebrow{display:block;font-size:11px;font-weight:850;color:#f6ce8b;margin-bottom:5px;letter-spacing:.7px}.question h1{font-size:clamp(18px,3vw,27px);line-height:1.35;margin:0}
+.choices{width:min(860px,calc(100% - 28px));display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:0 auto;padding-bottom:clamp(12px,3vh,26px)}
+.choices button,.result button{appearance:none;cursor:pointer;border:1px solid #e7b76a94;border-radius:16px;background:#041d22ee;box-shadow:0 8px 20px #0007;backdrop-filter:blur(14px);color:white;font-weight:850;padding:14px 10px;min-height:53px;font-size:clamp(12px,2vw,17px);transition:background .15s,transform .15s}
+.choices button:active,.result button:active{transform:scale(.97)}.choices button:disabled{opacity:.4;cursor:default}
+.choices button:hover:not(:disabled){background:#1c4144}.choices button:focus-visible,.result button:focus-visible{outline:3px solid #ffd58d}
+.result{position:absolute;z-index:3;left:50%;bottom:105px;transform:translateX(-50%);width:min(430px,calc(100% - 32px));padding:17px;text-align:center;background:#051e22f5;border:1px solid #e8bb78;border-radius:18px;box-shadow:0 20px 70px #000b;display:none}
+.result strong{font-size:clamp(20px,3vw,28px);display:block}.result p{font-size:13px;color:#d4e0de;margin:8px 0 12px}.result button{background:#dfad5d;color:#15150e;padding:12px 28px}
+#intro{position:absolute;bottom:28%;left:50%;transform:translateX(-50%);white-space:nowrap;text-align:center;background:#07191ebf;padding:7px 14px;border-radius:10px;color:#f6ddb2;font-size:11px}
+@media(max-width:650px){.game{min-height:0}.backdrop img,.backdrop video{object-fit:contain}.choices{gap:6px;padding-bottom:max(12px,env(safe-area-inset-bottom))}.choices button{padding:10px 5px;min-height:47px;font-size:12px;border-radius:11px}.question{padding:13px 11px}.question h1{font-size:18px}.result{bottom:83px}.brand span{display:none}#intro{bottom:24%}}
+@media(max-height:570px){.question{padding:9px 12px}.question h1{font-size:16px}.choices button{min-height:40px;padding:8px 4px}.result{bottom:70px;padding:10px}#intro{display:none}}
+</style>
+</head>
+<body>
+<div class="game">
+  <div class="backdrop"><img id="poster" src="/penalty-cinematic/ready.webp" alt="لاعب وحارس مرمى من العرض الأصلي"><video id="scene" muted playsinline webkit-playsinline preload="auto" poster="/penalty-cinematic/ready.webp"></video></div>
+  <header><div class="brand">قُل <span> | معاينة تحدي الأهداف</span></div><div class="counter" id="counter" aria-live="polite">الأهداف 0 ، الركلة 1 / 5</div></header>
+  <section class="question" aria-label="سؤال الركلة"><span class="eyebrow" id="category">معاني المفردات</span><h1 id="prompt">أين يلعب الأطفال كرة القدم؟</h1></section>
+  <span id="intro">اختر الإجابة، وشاهد حركة اللاعب والحارس الأصليين</span>
+  <div class="choices" id="choices"></div>
+  <div class="result" id="result" role="status" aria-live="polite"><strong id="message"></strong><p id="detail"></p><button id="next">الركلة التالية</button></div>
+</div>
+<script>
+const questions=[
+{category:"المفردات",q:"أين يلعب الأطفال كرة القدم؟",a:["المكتبة","الملعب","المطعم"],correct:1},
+{category:"المفردات",q:"ماذا يرتدي اللاعب في قدمه؟",a:["الحذاء","القبعة","الساعة"],correct:0},
+{category:"فهم الجملة",q:"أكمل: حارس المرمى ____ الكرة.",a:["يقرأ","يأكل","يمسك"],correct:2},
+{category:"التراكيب",q:"اختر الجملة الصحيحة.",a:["اللاعب يسدد الكرة","اللاعب يسدد الكتاب","اللاعب يسدد الماء"],correct:0},
+{category:"المفردات",q:"ما معنى كلمة «هدف» في كرة القدم؟",a:["مكان النوم","دخول الكرة في المرمى","فتح النافذة"],correct:1}
+];
+let score=0,round=0,playing=false;
+const poster=document.querySelector('#poster'),video=document.querySelector('#scene'),choices=document.querySelector('#choices'),counter=document.querySelector('#counter'),prompt=document.querySelector('#prompt'),category=document.querySelector('#category'),result=document.querySelector('#result'),message=document.querySelector('#message'),detail=document.querySelector('#detail'),next=document.querySelector('#next'),intro=document.querySelector('#intro');
+function render(){
+ const q=questions[round];playing=false;video.pause();video.removeAttribute('src');video.load();video.style.display='none';poster.style.display='block';result.style.display='none';intro.style.display='block';prompt.textContent=q.q;category.textContent=q.category;
+ counter.textContent=`الأهداف ${score} ، الركلة ${round+1} / ${questions.length}`;
+ choices.innerHTML='';q.a.forEach((a,i)=>{const b=document.createElement('button');b.textContent=a;b.addEventListener('click',()=>shoot(i===q.correct));choices.append(b)});
+}
+function shoot(correct){
+ if(playing)return;playing=true;intro.style.display='none';choices.querySelectorAll('button').forEach(b=>b.disabled=true);
+ video.src=`/penalty-cinematic/${correct?'goal':'save'}.webm`;video.style.display='block';poster.style.display='none';video.currentTime=0;
+ video.play().catch(()=>{video.style.display='none';poster.style.display='block'});
+ if(correct)score++;
+ counter.textContent=`الأهداف ${score} ، الركلة ${round+1} / ${questions.length}`;
+ window.setTimeout(()=>{message.textContent=correct?'⚽ هدف رائع!':'🧤 تصدى لها الحارس!';detail.textContent=correct?'إجابة صحيحة، أحسنت!':'إجابة غير صحيحة، تابع إلى الركلة التالية.';next.textContent=round===questions.length-1?'العب مجددًا':'الركلة التالية';result.style.display='block'},2200);
+}
+next.addEventListener('click',()=>{if(round===questions.length-1){round=0;score=0}else{round++}render()});
+render();
+</script>
+</body>
+</html>
