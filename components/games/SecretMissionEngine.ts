@@ -25,7 +25,7 @@ export type SecretEvents = {
   onLoot?: (index:number) => void;
   onError: (message:string) => void;
 };
-type Combatant = { root:THREE.Group; body:THREE.Group; fallback:THREE.Group; mixer:THREE.AnimationMixer|null; action:THREE.AnimationAction|null; hp:number; maxHp:number; cooldown:number; dying:number; alive:boolean; isBoss:boolean; awareness:number; alerted:boolean; };
+type Combatant = { root:THREE.Group; body:THREE.Group; fallback:THREE.Group; visual:THREE.Group|null; seat:THREE.Group|null; legs:THREE.Mesh[]; thighBones:THREE.Bone[]; readiness:number; mixer:THREE.AnimationMixer|null; action:THREE.AnimationAction|null; hp:number; maxHp:number; cooldown:number; dying:number; alive:boolean; isBoss:boolean; awareness:number; alerted:boolean; };
 type Room = { info:typeof SECRET_ROOMS[number]; group:THREE.Group; door:THREE.Group; doorAngle:number; doorTarget:number; safes:{door:THREE.Group; opened:number; target:number; name:THREE.Sprite; indicator:THREE.MeshBasicMaterial; contents:THREE.Group; instrument:THREE.Group; instrumentMoving:THREE.Group}[]; reward:THREE.Group; enemies:Combatant[]; prepared:boolean;};
 type Traverse = {type:'intro'|'enter'|'exit';time:number;duration:number;from:THREE.Vector3;to:THREE.Vector3;fromYaw:number;toYaw:number; room?:Room};
 type Trail = { mesh:THREE.Mesh; age:number; lifespan:number };
@@ -524,6 +524,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const dressGuard=(enemy:Combatant)=>{
     if(phone||!model||enemy.isBoss||!enemy.alive||enemy.mixer)return;
     const copy=cloneSkeleton(model) as THREE.Group;
+    enemy.visual=copy;
+    enemy.thighBones=[];
+    copy.traverse(n=>{if(n instanceof THREE.Bone&&/upleg|thigh/i.test(n.name))enemy.thighBones.push(n);});
     // Keep the animated rig at the same scale as the playable operator.
     copy.scale.copy(model.scale);
     // Enemy uniforms must not reuse the player's green military outfit.
@@ -541,6 +544,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       node.material=Array.isArray(node.material)?node.material.map(recolor):recolor(node.material);
     });
     copy.rotation.y=0;
+    copy.position.y=-.38;
     enemy.root.add(copy);
     enemy.fallback.visible=false;
     const mixer=new THREE.AnimationMixer(copy);
@@ -588,7 +592,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     for(const side of [-1,1]){
       const arm=round(g,boss?.22:.13,boss?.89:.72,boss?steel:guardVest,[side*(boss?.93:.46),boss?1.42:1.28,0]);
       arm.rotation.z=side*.16;
-      round(g,boss?.25:.16,boss?1.0:.87,boss?trim:guardCloth,[side*(boss?.42:.2),.55,0]);
+      const leg=round(g,boss?.25:.16,boss?1.0:.87,boss?trim:guardCloth,[side*(boss?.42:.2),.55,0]);
+      if(!boss)leg.name='seated-guard-leg';
     }
     poly(g,[.22,.17,.77],black,[.39,1.19,-.45]);
     poly(g,[.22,.23,.19],boss?red:amber,[.39,1.22,-.87]);
@@ -608,7 +613,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         enemy.root.rotation.set(0,Math.PI,0);
         enemy.root.scale.set(1,1,1);
         enemy.hp=enemy.maxHp;
-        enemy.cooldown=3.2+i*.65;
+        enemy.cooldown=1.9+i*.35;
+        enemy.readiness=boss?1:0;
+        if(enemy.seat)enemy.seat.visible=true;
         enemy.dying=0;
         enemy.alive=true;
         enemy.awareness=0;
@@ -627,12 +634,24 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       root.position.set((i-(count-1)/2)*2.45,0,boss?-1.75:-.6-(i%2)*.6);
       root.rotation.y=Math.PI;
       const fall=enemyFallback(root,boss);
+      const legs:THREE.Mesh[]=[];
+      fall.traverse(n=>{if(n instanceof THREE.Mesh&&n.name==='seated-guard-leg')legs.push(n);});
+      // A physical chair stays behind when the guard stands to pursue the player.
+      const seat=boss?null:new THREE.Group();
+      if(seat){
+        room.group.add(seat);
+        seat.position.copy(root.position);
+        poly(seat,[.89,.12,.85],guardVest,[0,.57,-.17]);
+        poly(seat,[.88,.85,.13],guardHelmet,[0,1.0,-.56]);
+        for(const x of [-.34,.34])for(const z of [-.45,.16])
+          poly(seat,[.1,.52,.11],steel,[x,.26,z]);
+      }
       const hitRing=new THREE.Mesh(geometry(new THREE.TorusGeometry(boss?.54:.31,.065,8,24)),boss?red:amber);
       hitRing.rotation.x=Math.PI/2;hitRing.position.set(0,boss?2.55:2.18,0);root.add(hitRing);
-      const enemy:Combatant={root,body:root,fallback:fall,mixer:null,action:null,
+      const enemy:Combatant={root,body:root,fallback:fall,visual:null,seat,legs,thighBones:[],readiness:boss?1:0,mixer:null,action:null,
         hp:boss?12:room.info.id==='archive'?4:room.info.id==='comms'?3:2,
         maxHp:boss?12:room.info.id==='archive'?4:room.info.id==='comms'?3:2,
-        cooldown:3.2+i*.65,dying:0,alive:true,isBoss:boss,awareness:0,alerted:boss};
+        cooldown:1.9+i*.35,dying:0,alive:true,isBoss:boss,awareness:0,alerted:boss};
       room.enemies.push(enemy);guards.push(enemy);
       dressGuard(enemy);
     }
@@ -831,7 +850,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(musicOutput&&audioContext)musicOutput.gain.setTargetAtTime(musicEnabled?.055:0,audioContext.currentTime,.1);
   };
   const start=()=>{
-    if(phase!=='intro')return;
+    if(phase!=='intro'||!operatorReady)return;
     beginMusic();
     gateProgress=.001;
     transitionTo('intro',new THREE.Vector3(0,0,12),0,2.6);
@@ -1532,6 +1551,17 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     if(['combat','safes'].includes(phase)&&activeRoom){
       for(const guard of guards){
         guard.mixer?.update(dt);
+        if(!guard.isBoss){
+          const sitting=1-guard.readiness;
+          guard.fallback.position.y=-.38*sitting;
+          if(guard.visual){guard.visual.position.y=-.38*sitting;guard.visual.rotation.x=-.15*sitting;}
+          for(const leg of guard.legs){
+            leg.rotation.x=-1.15*sitting;
+            leg.position.z=.34*sitting;
+          }
+          // The bones are adjusted after the animation mixer has sampled the idle pose.
+          for(const thigh of guard.thighBones)thigh.rotateX(-.78*sitting);
+        }
         if(!guard.alive){
           guard.dying+=dt;
           guard.root.rotation.z=THREE.MathUtils.damp(guard.root.rotation.z,Math.PI*.43,4,dt);
@@ -1542,7 +1572,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         const dist=guard.root.getWorldPosition(new THREE.Vector3()).distanceTo(player);
         // Suspenseful stealth: patrols only engage after detecting the operator,
         // unless gunfire has already triggered the alarm. Prone movement hides better.
-        const detectRadius=guard.isBoss?16:crouch?3.8:sprint?11:7.0;
+        const detectRadius=guard.isBoss?16:crouch?5.0:sprint?12.5:9.3;
         // Awareness depends on line of sight, not distance alone. Guards
         // investigate footsteps but cannot see the operator through cover.
         const guardForward=new THREE.Vector3(0,0,-1).applyQuaternion(guard.root.getWorldQuaternion(new THREE.Quaternion()));
@@ -1557,25 +1587,20 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         if(!guard.alerted){
           // The operator is unmistakably visible at close range. Avoid an
           // orientation-dependent dead zone where guards never react.
-          if(dist<4.2&&!behindCabinets)guard.alerted=true;
-          if(dist<detectRadius&&clearSight)guard.awareness+=dt*(crouch?.55:sprint?2.8:1.6);
+          if(dist<5.4&&!behindCabinets)guard.alerted=true;
+          if(dist<detectRadius&&clearSight)guard.awareness+=dt*(crouch?.75:sprint?3.6:2.7);
           else guard.awareness=Math.max(0,guard.awareness-dt*.55);
           if(guard.awareness>1.1)guard.alerted=true;
           if(!guard.alerted){
-            // Guards patrol short lanes, pause, and scan before engaging.
-            // Stable per-guard offsets avoid random jumps or extra allocations.
-            const patrolId=guards.indexOf(guard);
-            const patrolPhase=time*.52+patrolId*2.1;
-            const baseX=(patrolId-(guards.length-1)/2)*2.45;
-            const baseZ=-.6-(patrolId%2)*.6;
-            const targetX=clamp(baseX+Math.sin(patrolPhase)*.68,-4.15,4.15);
-            const targetZ=baseZ+Math.cos(patrolPhase*.73)*.36;
-            guard.root.position.x=THREE.MathUtils.damp(guard.root.position.x,targetX,1.4,dt);
-            guard.root.position.z=THREE.MathUtils.damp(guard.root.position.z,targetZ,1.4,dt);
-            const scanAngle=Math.PI+Math.sin(time*.8+patrolId*1.7)*.7;
-            guard.root.rotation.y=THREE.MathUtils.damp(guard.root.rotation.y,scanAngle,1.8,dt);
+            // Security is seated and distracted until it sees the operator.
+            guard.root.rotation.y=THREE.MathUtils.damp(guard.root.rotation.y,Math.PI+Math.sin(time*.42+guards.indexOf(guard))*.14,2,dt);
             continue;
           }
+        }
+        // Stand up before drawing a weapon: no immediate hit from a seated NPC.
+        if(!guard.isBoss&&guard.readiness<1){
+          guard.readiness=Math.min(1,guard.readiness+dt*1.6);
+          if(guard.readiness<.95)continue;
         }
         const gh=guard.root.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.32,0));
         const ph=player.clone().add(new THREE.Vector3(0,crouch?.92:1.38,0));
@@ -1599,14 +1624,14 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         // A cabinet between the two characters is actual cover, not merely
         // a visibility hint: enemies cannot damage the player through it.
         if(dist<13&&clearSight&&guard.cooldown<=0){
-          const risk=guard.isBoss?14:activeRoom.info.id==='archive'?10:8;
-          const base=guard.isBoss?2.1:2.55;
-          guard.cooldown=base + Math.random()*.9;
+          const risk=guard.isBoss?24:activeRoom.info.id==='archive'?20:16;
+          const base=guard.isBoss?1.3:1.55;
+          guard.cooldown=base + Math.random()*.4;
           const from=guard.root.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,1.38,0));
           const to=player.clone().add(new THREE.Vector3(0,crouch?.95:1.35,0));
           makeTrail(from,to,red,.31);
           // Crouching, moving and using cover reduce the chance of taking damage.
-          const chance=crouch?.35:moving?.64:.85;
+          const chance=crouch?.42:moving?.76:.95;
           if(Math.random()<chance)setHealth(hp-risk);
         }
       }
@@ -1642,7 +1667,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const roomView=Boolean(activeRoom)&&phase!=='hall'&&!crossingExit;
     const usingWorkstation=roomView&&phase==='safes'&&Boolean(safeApproach?.ready)&&Boolean(activeRoom);
     const exitingPortal=phase==='room-exit'&&Boolean(activeRoom);
-    const camTarget=exitingPortal&&activeRoom?
+    const camTarget=phase==='intro'?new THREE.Vector3(2.75,1.78,20.2):exitingPortal&&activeRoom?
       new THREE.Vector3(
         activeRoom.info.side*(Math.abs(player.x)>3.05?Math.max(3.4,Math.abs(player.x)-1.2):1.35),
         1.65,
@@ -1680,7 +1705,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const cameraOffset=camTarget.clone().sub(head);
     const maxBoom=exitingPortal?4.8:usingWorkstation?4.0:roomView?3.1:4.8;
     if(cameraOffset.length()>maxBoom)camTarget.copy(head).add(cameraOffset.setLength(maxBoom));
-    const lookTarget=exitingPortal?
+    const lookTarget=phase==='intro'?new THREE.Vector3(1.48,1.35,24):exitingPortal?
       head.clone().add(new THREE.Vector3(0,.12,0)):
       usingWorkstation&&activeRoom?
       new THREE.Vector3(activeRoom.group.position.x-3.32+safeIndex*2.18,1.45,activeRoom.info.z-3.05):
