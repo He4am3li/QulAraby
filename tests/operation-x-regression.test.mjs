@@ -9,10 +9,12 @@ const gameList=read('pages/Games.tsx');
 const styles=read('components/games/SecretMission.css');
 const cover=read('public/operation-x-cover.svg');
 for(const [name,code] of [['scene',engine],['interface',ui],['catalog',gameList]]){
+  const syntax=ts.createSourceFile(name+'.tsx',code,ts.ScriptTarget.ES2022,true,ts.ScriptKind.TSX);
+  assert.equal(syntax.parseDiagnostics.length,0,name+' must parse without syntax errors');
   const compilation=ts.transpileModule(code,{compilerOptions:{
     jsx:ts.JsxEmit.ReactJSX,module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022
   },reportDiagnostics:true,fileName:name+'.tsx'});
-  assert.equal(compilation.diagnostics?.filter(d=>d.category===ts.DiagnosticCategory.Error).length??0,0,name+' must parse');
+  assert.equal(compilation.diagnostics?.filter(d=>d.category===ts.DiagnosticCategory.Error).length??0,0,name+' must transpile');
 }
 assert.match(gameList,/titleAr: 'العملية X', titleEn: 'Operation X'/);
 assert.match(gameList,/operation-x-cover\.svg/);
