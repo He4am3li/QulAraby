@@ -1,0 +1,231 @@
+{
+  "version": 2,
+  "status": "reviewed",
+  "characterId": "saudi_male",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/salman-stance-v2.webp",
+  "sourceSha256": "d8b229ae2457e0e89965909be77cd7fb16d4113d8131d968aa95be3e3ecb8d7d",
+  "pose": {
+    "bodyFacing": "left",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "right"
+  },
+  "coverings": [],
+  "mouthVisible": true,
+  "eyeClips": {
+    "R": "M471.034 130Q484.143 117 496.244 120Q506.328 121 514.395 129Q505.319 142 492.21 141Q479.101 141 471.034 132Z",
+    "L": "M541.622 131Q549.689 118 561.79 121Q573.891 121 581.958 130Q572.882 142 560.782 142Q549.689 141 541.622 133Z"
+  },
+  "layers": {
+    "Brow_R": {
+      "x": 458,
+      "y": 100,
+      "w": 62,
+      "h": 20,
+      "visible": true,
+      "url": "/avatars/salman-stance-v2/Brow_R.png"
+    },
+    "Brow_L": {
+      "x": 537,
+      "y": 101,
+      "w": 54,
+      "h": 20,
+      "visible": true,
+      "url": "/avatars/salman-stance-v2/Brow_L.png"
+    },
+    "Pupil_R": {
+      "x": 490,
+      "y": 124,
+      "w": 10,
+      "h": 11,
+      "visible": true,
+      "url": "/avatars/salman-stance-v2/Pupil_R.png"
+    },
+    "Pupil_L": {
+      "x": 557,
+      "y": 124,
+      "w": 10,
+      "h": 11,
+      "visible": true,
+      "url": "/avatars/salman-stance-v2/Pupil_L.png"
+    },
+    "Iris_R": {
+      "x": 486,
+      "y": 120,
+      "w": 18,
+      "h": 20,
+      "visible": true,
+      "url": "/avatars/salman-stance-v2/Iris_R.png"
+    },
+    "Iris_L": {
+      "x": 553,
+      "y": 121,
+      "w": 18,
+      "h": 19,
+      "visible": true,
+      "url": "/avatars/salman-stance-v2/Iris_L.png"
+    },
+    "LidUpper_R": {
+      "x": 467,
+      "y": 120,
+      "w": 49,
+      "h": 15,
+      "visible": true,
+      "url": "/avatars/salman-stance-v2/LidUpper_R.png"
+    },
+    "LidUpper_L": {
+      "x": 539,
+      "y": 121,
+      "w": 46,
+      "h": 15,
+      "visible": true,
+      "url": "/avatars/salman-stance-v2/LidUpper_L.png"
+    },
+    "LidLower_R": {
+      "x": 470,
+      "y": 133,
+      "w": 46,
+      "h": 13,
+      "visible": true,
+      "url": "/avatars/salman-stance-v2/LidLower_R.png"
+    },
+    "LidLower_L": {
+      "x": 542,
+      "y": 135,
+      "w": 40,
+      "h": 11,
+      "visible": true,
+      "url": "/avatars/salman-stance-v2/LidLower_L.png"
+    },
+    "Mouth_Closed": {
+      "x": 480,
+      "y": 176,
+      "w": 89,
+      "h": 46,
+      "visible": true,
+      "url": "/avatars/salman-stance-v2/Mouth_Closed.png"
+    },
+    "EyeWhite_R_Rebuilt": {
+      "x": 471,
+      "y": 119,
+      "w": 43,
+      "h": 24,
+      "visible": true,
+      "url": "/avatars/salman-stance-v2/EyeWhite_R_Rebuilt.png"
+    },
+    "EyeWhite_L_Rebuilt": {
+      "x": 542,
+      "y": 120,
+      "w": 40,
+      "h": 23,
+      "visible": true,
+      "url": "/avatars/salman-stance-v2/EyeWhite_L_Rebuilt.png"
+    },
+    "Blink_R_Closed": {
+      "x": 469,
+      "y": 113,
+      "w": 50,
+      "h": 34,
+      "visible": false,
+      "url": "/avatars/salman-stance-v2/Blink_R_Closed.png"
+    },
+    "Blink_L_Closed": {
+      "x": 538,
+      "y": 113,
+      "w": 48,
+      "h": 34,
+      "visible": false,
+      "url": "/avatars/salman-stance-v2/Blink_L_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 480,
+      "y": 176,
+      "w": 89,
+      "h": 46,
+      "visible": false,
+      "url": "/avatars/salman-stance-v2/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 480,
+      "y": 176,
+      "w": 89,
+      "h": 46,
+      "visible": false,
+      "url": "/avatars/salman-stance-v2/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 480,
+      "y": 176,
+      "w": 89,
+      "h": 46,
+      "visible": false,
+      "url": "/avatars/salman-stance-v2/Mouth_O.png"
+    },
+    "Mouth_Smile": {
+      "x": 480,
+      "y": 176,
+      "w": 89,
+      "h": 46,
+      "visible": false,
+      "url": "/avatars/salman-stance-v2/Mouth_Smile.png"
+    },
+    "Mouth_Open": {
+      "x": 480,
+      "y": 176,
+      "w": 89,
+      "h": 46,
+      "visible": false,
+      "url": "/avatars/salman-stance-v2/Mouth_Open.png"
+    },
+    "Brow_R_Attentive": {
+      "x": 449,
+      "y": 91,
+      "w": 81,
+      "h": 38,
+      "visible": false,
+      "url": "/avatars/salman-stance-v2/Brow_R_Attentive.png"
+    },
+    "Brow_L_Attentive": {
+      "x": 528,
+      "y": 92,
+      "w": 72,
+      "h": 38,
+      "visible": false,
+      "url": "/avatars/salman-stance-v2/Brow_L_Attentive.png"
+    },
+    "Brow_R_Thinking": {
+      "x": 449,
+      "y": 91,
+      "w": 81,
+      "h": 38,
+      "visible": false,
+      "url": "/avatars/salman-stance-v2/Brow_R_Thinking.png"
+    },
+    "Brow_L_Thinking": {
+      "x": 528,
+      "y": 92,
+      "w": 72,
+      "h": 38,
+      "visible": false,
+      "url": "/avatars/salman-stance-v2/Brow_L_Thinking.png"
+    },
+    "Face_BrowSkin_Rebuilt": {
+      "x": 448,
+      "y": 92,
+      "w": 152,
+      "h": 35,
+      "visible": false,
+      "url": "/avatars/salman-stance-v2/Face_BrowSkin_Rebuilt.png"
+    },
+    "Mouth_FV": {
+      "x": 480,
+      "y": 176,
+      "w": 89,
+      "h": 46,
+      "visible": false,
+      "url": "/avatars/salman-stance-v2/Mouth_FV.png"
+    }
+  }
+}
