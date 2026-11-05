@@ -51,6 +51,13 @@ export const DialectSpeechOverlay: React.FC<Props> = React.memo(({
   const translation = focusedIndex === null && isLiveSpeech && record?.text !== currentText
     ? '' : record?.translationEn?.trim() || '';
   const translated = translation && translation !== currentText.trim() ? translation : '';
+  const containsArabic = (value: string) => /[\u0600-\u06ff]/.test(value);
+  // Two language rays, always Arabic on the right and English on the left.
+  // A single-language utterance remains attached to its speaking character.
+  const arabicLine = containsArabic(currentText) ? currentText : containsArabic(translated) ? translated : '';
+  const englishLine = !containsArabic(currentText) ? currentText
+    : translated && !containsArabic(translated) ? translated : '';
+  const bilingual = Boolean(arabicLine && englishLine);
   // The original grid reverses under LTR; anchor the glow to the correct portrait.
   const male = speaker === maleTutorName || (isTutor && speaker !== femaleTutorName);
   const onRight = ar ? male : !male;
@@ -141,63 +148,84 @@ export const DialectSpeechOverlay: React.FC<Props> = React.memo(({
         {reveal && hasTranscript && (
           <motion.div
             key={(focusedIndex ?? record?.liveTurnKey ?? records.length) + ':' + placement}
-            initial={reduceMotion ? false : { opacity: 0, x: placement === 'right' ? 14 : placement === 'left' ? -14 : 0, y: 9, scale: .97 }}
-            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-            exit={reduceMotion ? {} : { opacity: 0, y: -7, scale: .96 }}
-            transition={{ duration: .25, ease: 'easeOut' }}
-            className={
-              'pointer-events-none absolute bottom-[clamp(68px,10vh,96px)] flex max-h-[132px] flex-col justify-center ' +
-              (placement === 'right'
-                ? 'right-[clamp(7px,1vw,14px)] w-[min(45%,295px)] items-end text-right'
-                : placement === 'left'
-                  ? 'left-[clamp(7px,1vw,14px)] w-[min(45%,295px)] items-start text-left'
-                  : 'left-1/2 w-[min(80%,360px)] -translate-x-1/2 items-center text-center')
-            }
+            initial={reduceMotion ? false : { opacity: 0, y: 8, scale: .97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={reduceMotion ? {} : { opacity: 0, y: -7, scale: .98 }}
+            transition={{ duration: .29, ease: 'easeOut' }}
+            className={'pointer-events-none absolute bottom-[clamp(68px,10vh,95px)] flex max-h-[142px] flex-col justify-end ' +
+              (bilingual ? 'inset-x-[clamp(9px,2vw,23px)]' :
+                placement === 'right' ? 'right-[clamp(8px,1.3vw,18px)] w-[min(49%,330px)]' :
+                placement === 'left' ? 'left-[clamp(8px,1.3vw,18px)] w-[min(49%,330px)]' :
+                'inset-x-[10%]')}
             role="status" aria-live="polite" aria-atomic="false"
           >
-            {/* An atmospheric light washes behind the captions. It has no edges,
-                header bar, rectangular window, scroll area, or chat bubbles. */}
-            <div aria-hidden="true" className={
-              'absolute -inset-x-3 -inset-y-4 -z-10 rounded-[60%] blur-[14px] ' +
-              (isTutor
-                ? 'bg-[radial-gradient(ellipse,rgba(13,67,57,.86),rgba(13,67,57,.40)_49%,transparent_77%)]'
-                : 'bg-[radial-gradient(ellipse,rgba(23,53,89,.84),rgba(23,53,89,.36)_49%,transparent_78%)]')
-            }/>
-            <div className="mb-1 flex items-center gap-1.5 text-[10px] font-extrabold text-white/85 drop-shadow-[0_1px_3px_rgba(0,0,0,.75)]">
-              <span aria-hidden="true" className={'h-[5px] w-[5px] rounded-full motion-safe:animate-pulse ' +
-                (isTutor ? 'bg-amber-200 shadow-[0_0_9px_rgba(253,230,138,.8)]'
-                  : 'bg-sky-200 shadow-[0_0_9px_rgba(186,230,253,.8)]')}/>
-              {speaker}
-            </div>
-            <p dir="auto" className="line-clamp-3 w-full text-[clamp(12px,1.05vw,15px)] font-black leading-[1.37] text-white drop-shadow-[0_2px_5px_rgba(0,0,0,.85)] arabic-font"
-              title={currentText}>
-              {currentText}
-            </p>
-            {translated && (
-              <p dir="auto" className="mt-1 line-clamp-2 w-full text-[clamp(10px,.86vw,12px)] font-semibold leading-[1.3] text-[#d7fce7] drop-shadow-[0_1px_4px_rgba(0,0,0,.8)]"
-                title={translated}>
-                {translated}
-              </p>
+            {bilingual ? (
+              <div dir="ltr" className="relative grid w-full grid-cols-2 items-end gap-[clamp(16px,3vw,42px)]">
+                <div className="relative flex min-w-0 flex-col items-start justify-end text-left">
+                  <div aria-hidden="true" className="pointer-events-none absolute -inset-3 -z-10 rounded-[65%] bg-[radial-gradient(ellipse,rgba(20,53,74,.88),rgba(20,53,74,.30)_55%,transparent_80%)] blur-[13px]"/>
+                  <span className="mb-1 flex items-center gap-1.5 text-[9px] font-extrabold tracking-[.12em] text-[#c1f0ff] drop-shadow-[0_1px_3px_rgba(0,0,0,.8)]" dir="ltr">
+                    <span className="h-[5px] w-[5px] rounded-full bg-sky-300 shadow-[0_0_8px_#7dd3fc]"/>
+                    ENGLISH
+                  </span>
+                  <p dir="ltr" lang="en" title={englishLine}
+                    className="line-clamp-3 max-w-full text-[clamp(11px,.93vw,13px)] font-semibold leading-[1.42] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,.85)]">
+                    {englishLine}
+                  </p>
+                  <div aria-hidden="true" className="mt-2 h-[2px] w-[72%] max-w-[150px] rounded-full bg-gradient-to-r from-sky-200/75 via-cyan-200/35 to-transparent"/>
+                </div>
+                <div className="relative flex min-w-0 flex-col items-end justify-end text-right">
+                  <div aria-hidden="true" className="pointer-events-none absolute -inset-3 -z-10 rounded-[65%] bg-[radial-gradient(ellipse,rgba(8,69,51,.9),rgba(8,69,51,.34)_55%,transparent_80%)] blur-[13px]"/>
+                  <span className="mb-1 flex items-center gap-1.5 text-[9px] font-extrabold text-[#ffe5ac] drop-shadow-[0_1px_3px_rgba(0,0,0,.8)]">
+                    {speaker}
+                    <span aria-hidden="true" className="h-[5px] w-[5px] rounded-full bg-amber-300 shadow-[0_0_8px_#fde68a]"/>
+                  </span>
+                  <p dir="rtl" lang="ar" title={arabicLine}
+                    className="line-clamp-3 max-w-full text-[clamp(12px,1.04vw,15px)] font-black leading-[1.4] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,.85)] arabic-font">
+                    {arabicLine}
+                  </p>
+                  <div aria-hidden="true" className="mt-2 h-[2px] w-[72%] max-w-[150px] rounded-full bg-gradient-to-l from-amber-200/85 via-emerald-200/35 to-transparent"/>
+                </div>
+                {/* The moving light is the translation connection, not a divider between cells. */}
+                <svg aria-hidden="true" className="pointer-events-none absolute bottom-[-5px] left-1/2 h-10 w-[clamp(40px,6vw,70px)] -translate-x-1/2 overflow-visible"
+                  viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="qulMeaningLight" x1="0" y1="0" x2="100" y2="0">
+                      <stop stopColor="#93c5fd" stopOpacity=".48"/>
+                      <stop offset=".5" stopColor="#f5f9d3" stopOpacity=".9"/>
+                      <stop offset="1" stopColor="#fcd34d" stopOpacity=".54"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M2 24 Q50 -4 98 24" stroke="url(#qulMeaningLight)" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 5"/>
+                  <circle cx="50" cy="11" r="3" fill="#f7f6cf" opacity=".85" className={liveActive ? 'motion-safe:animate-pulse' : ''}/>
+                </svg>
+              </div>
+            ) : (
+              <div className={'relative flex flex-col justify-center ' +
+                (placement === 'right' ? 'items-end text-right' :
+                placement === 'left' ? 'items-start text-left' : 'items-center text-center')}>
+                <div aria-hidden="true" className={'pointer-events-none absolute -inset-4 -z-10 rounded-[65%] blur-[13px] ' +
+                  (isTutor
+                    ? 'bg-[radial-gradient(ellipse,rgba(7,67,51,.86),rgba(7,67,51,.32)_50%,transparent_80%)]'
+                    : 'bg-[radial-gradient(ellipse,rgba(16,55,79,.84),rgba(16,55,79,.3)_50%,transparent_78%)]')}/>
+                <span className="mb-1 flex items-center gap-1.5 text-[10px] font-black text-white/90 drop-shadow-[0_1px_3px_rgba(0,0,0,.8)]">
+                  <span className={'h-[5px] w-[5px] rounded-full motion-safe:animate-pulse ' +
+                    (isTutor ? 'bg-amber-300 shadow-[0_0_9px_#fde68a]' : 'bg-sky-300 shadow-[0_0_9px_#7dd3fc]')}/>
+                  {speaker}
+                </span>
+                <p dir="auto" title={currentText}
+                  className="line-clamp-3 w-full text-[clamp(12px,1.05vw,15px)] font-black leading-[1.4] text-white drop-shadow-[0_2px_5px_rgba(0,0,0,.85)] arabic-font">
+                  {currentText}
+                </p>
+                <div aria-hidden="true" className={'mt-2 h-[2px] w-2/3 rounded-full ' +
+                  (isTutor ? 'bg-gradient-to-r from-amber-300/20 via-amber-200/80 to-amber-300/20' :
+                    'bg-gradient-to-r from-sky-300/20 via-sky-200/80 to-sky-300/20')}/>
+              </div>
             )}
-            <div aria-hidden="true" className={'mt-2 flex h-[10px] items-center gap-[3px] opacity-80 ' +
-                (placement === 'right' ? 'justify-end' : placement === 'left' ? 'justify-start' : 'justify-center')}>
-              {[1,2,3,4,5,6,7].map((v) => (
-                <span key={v} className={'w-[3px] rounded-full bg-gradient-to-t ' +
-                  (isTutor ? 'from-amber-300/10 to-amber-200' : 'from-sky-300/10 to-sky-200') +
-                  (liveActive || speaking ? ' motion-safe:animate-pulse' : '')}
-                  style={{ height: [4,8,5,10,6,9,4][v - 1] + 'px',
-                    animationDelay: v * 110 + 'ms' }}/>
-              ))}
-            </div>
-            {/* The glow's terminating trace visually points back to the speaker. */}
-            {isTutor && <div aria-hidden="true" className={'absolute -bottom-[2px] h-px w-[34%] bg-gradient-to-r ' +
-              (placement === 'right'
-                ? 'right-0 from-transparent to-amber-300/80'
-                : 'left-0 from-amber-300/80 to-transparent')}/>}
             {isTutor && !liveActive && (
               <button type="button" onClick={() => onPronounce(currentText)}
-                aria-label={ar ? 'استمع مجددًا' : 'Replay utterance'}
-                className="pointer-events-auto mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/25 bg-emerald-950/35 text-white backdrop-blur-md hover:bg-emerald-800/70">
+                aria-label={ar ? 'الاستماع مجددًا' : 'Replay utterance'}
+                className={'pointer-events-auto mt-1 inline-flex h-6 w-6 items-center justify-center self-end rounded-full border border-white/25 bg-emerald-950/35 text-white backdrop-blur-md hover:bg-emerald-800/70 ' +
+                  (!bilingual && placement === 'left' ? 'self-start' : '')}>
                 <Volume2 size={13}/>
               </button>
             )}
