@@ -223,7 +223,7 @@ export const DialectChatDock: React.FC<Props> = React.memo(({
       )}
 
       <form className="relative flex h-[36px] shrink-0 items-center gap-[5px] rounded-[12px] border border-emerald-950/10 bg-white/80 p-[3px] shadow-sm"
-        onSubmit={event => { event.preventDefault(); if (value.trim() && !loading) onSend(); }}>
+        onSubmit={event => { event.preventDefault(); if (value.trim() && !loading) { setView('conversation'); setBack(0); onSend(); } }}>
         <input ref={inputRef} type="text" autoComplete="off" value={value} onChange={event => onChange(event.target.value)}
           dir="auto" placeholder={ar ? 'اسأل بلغتك...' : 'Ask in your language...'}
           aria-label={ar ? 'رسالتك' : 'Your message'}
