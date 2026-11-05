@@ -1407,8 +1407,8 @@ export const Dialects: React.FC = () => {
   const selectedCountryRef = React.useRef<any>(null);
   selectedCountryRef.current = selectedCountry;
   const [selectedPersona, setSelectedPersona] = React.useState<any>(null);
-  const [chatMessages, setChatMessages] = React.useState<{role: string, text: string, translationEn?: string, liveTurnKey?: string}[]>([]);
-  type LearningJourney = { turns: {role: string; text: string; translationEn?: string}[]; lastPracticed: string; visits: number };
+  const [chatMessages, setChatMessages] = React.useState<{role: string, text: string, translationEn?: string, speakerName?: string, liveTurnKey?: string}[]>([]);
+  type LearningJourney = { turns: {role: string; text: string; translationEn?: string; speakerName?: string}[]; lastPracticed: string; visits: number };
   const [learningJourneys, setLearningJourneys] = React.useState<Record<string, LearningJourney>>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('qul_dialect_learning_journeys_v1') || '{}');
@@ -1420,7 +1420,7 @@ export const Dialects: React.FC = () => {
   React.useEffect(() => {
     try { localStorage.setItem('qul_dialect_learning_journeys_v1', JSON.stringify(learningJourneys)); } catch (_) {}
   }, [learningJourneys]);
-  const updateJourney = (countryId: string, turn: {role: string; text: string; translationEn?: string}) => {
+  const updateJourney = (countryId: string, turn: {role: string; text: string; translationEn?: string; speakerName?: string}) => {
     if (!countryId || !turn.text.trim()) return;
     setLearningJourneys(previous => ({
       ...previous,
@@ -1824,8 +1824,8 @@ export const Dialects: React.FC = () => {
       } catch (parseError) {
         console.warn('Dialect reply was not valid bilingual JSON.', parseError);
       }
-      setChatMessages(prev => [...prev, { role: 'model', text: modelText, translationEn }]);
-      updateJourney(countryForTurn.id, { role: 'model', text: modelText, translationEn });
+      setChatMessages(prev => [...prev, { role: 'model', text: modelText, translationEn, speakerName: currentPersona.nameAr }]);
+      updateJourney(countryForTurn.id, { role: 'model', text: modelText, translationEn, speakerName: currentPersona.nameAr });
       captureMissionTurn(countryForTurn.id, { role: 'model', text: modelText });
       // Only authentic student work can unlock a passport. Never count prompts or replies.
       void checkMissionCompletion(countryForTurn, rank);
@@ -1999,7 +1999,7 @@ export const Dialects: React.FC = () => {
                 setChatMessages(prev => {
                   const last = prev[prev.length - 1];
                   if (last?.role === 'live-model' && last.liveTurnKey === 'tutor:' + tutorTurnId) return [...prev.slice(0, -1), { ...last, text: caption, translationEn: last.translationEn }];
-                  return [...prev, { role: 'live-model', text: caption, liveTurnKey: 'tutor:' + tutorTurnId }];
+                  return [...prev, { role: 'live-model', text: caption, speakerName: persona.nameAr, liveTurnKey: 'tutor:' + tutorTurnId }];
                 });
               }
             }
@@ -2008,7 +2008,7 @@ export const Dialects: React.FC = () => {
               const completedTutorReply = liveTutorText.trim();
               if (completedTutorReply) {
                 requestTranslation('tutor', completedTutorReply, tutorTurnId, true);
-                updateJourney(country.id, { role: 'model', text: completedTutorReply });
+                updateJourney(country.id, { role: 'model', text: completedTutorReply, speakerName: persona.nameAr });
               }
               liveTutorText = '';
               tutorTurnId++;
@@ -2492,10 +2492,11 @@ export const Dialects: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Fixed-height, paged transcript and input: the document never needs to scroll. */}
-                  <div className="mt-[clamp(6px,.75vh,9px)] h-[clamp(145px,18vh,158px)] min-h-0 shrink-0">
+                  {/* Compact interactive practice and glass dialogue console, never a scrolling page. */}
+                  <div className="mt-[clamp(5px,.65vh,8px)] h-[clamp(160px,20vh,184px)] min-h-0 shrink-0">
                     <DialectChatDock
                       lang={lang}
+                      countryId={selectedCountry.id}
                       name={lang === 'ar' ? selectedPersona?.nameAr : selectedPersona?.nameEn}
                       messages={chatMessages}
                       value={chatInput}
