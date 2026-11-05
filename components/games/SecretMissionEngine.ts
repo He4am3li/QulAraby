@@ -87,17 +87,17 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   renderer.setPixelRatio(renderPixelRatio);
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=1.35;
+  renderer.toneMappingExposure=1.14;
   renderer.shadowMap.enabled=false; // avoid expensive indoor shadow pass
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   container.appendChild(renderer.domElement);
   renderer.domElement.style.touchAction='none';
   const scene=new THREE.Scene();
-  scene.background=new THREE.Color('#111b23');
-  scene.fog=new THREE.FogExp2('#182a32',.012);
+  scene.background=new THREE.Color('#070d14');
+  scene.fog=new THREE.FogExp2('#101e29',.019);
   const camera=new THREE.PerspectiveCamera(phone?69:65,1,.07,140);
-  scene.add(new THREE.HemisphereLight('#b4cbd5','#202c32',phone?1.65:1.95));
-  const mainLight=new THREE.DirectionalLight('#f4e3c8',phone?1.8:2.2);
+  scene.add(new THREE.HemisphereLight('#b5d5ec','#12151e',phone?1.12:1.25));
+  const mainLight=new THREE.DirectionalLight('#cedbef',phone?1.18:1.48);
   mainLight.position.set(-6,12,12);
   mainLight.castShadow=false;
   if(!phone){mainLight.shadow.mapSize.set(1024,1024);mainLight.shadow.camera.left=-20;mainLight.shadow.camera.right=20;mainLight.shadow.camera.top=20;mainLight.shadow.camera.bottom=-20;}
@@ -284,8 +284,53 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const sectorStrip=material(new THREE.MeshBasicMaterial({color:sectorColor}));
     for(const x of [-4.55,4.55])poly(group,[.09,.045,8.7],sectorStrip,[x,3.37,0]);
     poly(group,[3.2,.04,.09],sectorStrip,[0,3.4,-4.72]);
-    const point=new THREE.PointLight(sectorColor,phone?9:16,13,2);
-    point.position.set(0,2.8,1);group.add(point);
+    const point=new THREE.PointLight(sectorColor,phone?7:10,11,2);
+    point.position.set(0,3.15,-.7);group.add(point);
+    // Operation X bunker dressing: red clearance marks, workstations, ceiling
+    // panels and light pools. Furniture is kept against walls, leaving the
+    // center aisle and the code lockers unobstructed.
+    const charcoal=material(new THREE.MeshStandardMaterial({color:'#18242e',metalness:.42,roughness:.74}));
+    const deskMetal=material(new THREE.MeshStandardMaterial({color:'#44515b',metalness:.68,roughness:.4}));
+    const display=material(new THREE.MeshBasicMaterial({color:info.id==='vault'?'#d44e56':'#3e8bba'}));
+    const forbidden=material(new THREE.MeshBasicMaterial({color:'#d5354f'}));
+    const whiteLight=material(new THREE.MeshBasicMaterial({color:'#e6eefa'}));
+    const rearX=new THREE.Group();rearX.position.set(0,2.16,-4.82);group.add(rearX);
+    for(const angle of [-Math.PI/4,Math.PI/4]){
+      const slash=poly(rearX,[.14,1.68,.035],forbidden,[0,0,0]);
+      slash.rotation.z=angle;
+    }
+    for(const sx of [-1,1]){
+      const station=new THREE.Group();
+      station.position.set(sx*3.65,0,1.6);
+      group.add(station);
+      poly(station,[1.85,.11,1.03],deskMetal,[0,.95,0]);
+      for(const xx of [-.72,.72])poly(station,[.09,.91,.09],charcoal,[xx,.46,0]);
+      poly(station,[.77,.62,.08],charcoal,[0,1.36,-.28]);
+      poly(station,[.64,.48,.025],display,[0,1.37,-.325]);
+      poly(station,[.59,.035,.025],whiteLight,[0,1.57,-.344]);
+      poly(station,[.5,.06,.25],charcoal,[0,1.02,.18]);
+      poly(station,[.18,.2,.28],charcoal,[-sx*.5,1.1,-.08]);
+      // A warm worklamp makes the metallic desk feel inhabited.
+      const lampStem=poly(station,[.055,.38,.055],deskMetal,[.58,1.18,-.25]);
+      lampStem.rotation.z=.22*sx;
+      poly(station,[.30,.065,.21],whiteLight,[.53,1.36,-.26]);
+    }
+    for(const zz of [-2.35,1.75]){
+      poly(group,[3.5,.065,.36],charcoal,[0,3.31,zz]);
+      poly(group,[2.94,.038,.20],whiteLight,[0,3.255,zz]);
+      for(const sx of [-1,1]){
+        poly(group,[.08,.36,.1],deskMetal,[sx*1.5,3.45,zz]);
+      }
+    }
+    for(const sx of [-1,1]){
+      for(const zz of [-2.25,1.95]){
+        poly(group,[.34,.012,1.45],sectorStrip,[sx*4.35,-.043,zz]);
+      }
+    }
+    // Low-cost dark reflective floor panels, without extra dynamic lights.
+    const floorFinish=material(new THREE.MeshStandardMaterial({color:'#25343b',metalness:.52,roughness:.34}));
+    for(const x of [-2.4,0,2.4])
+      poly(group,[1.7,.008,2.4],floorFinish,[x,-.048,.7]);
     // Sector architecture: reinforced bulkhead ribs and illuminated floor
     // threshold. Shared materials avoid extra texture downloads on phones.
     for(const x of [-4.7,4.7]){
@@ -479,6 +524,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let skeletalHands:THREE.Bone[]=[];
   let weaponGrip:THREE.Bone|null=null;
   let skeletalShoulders:THREE.Bone[]=[];
+  type ArmChain={hand:THREE.Bone; elbow:THREE.Bone; shoulder:THREE.Bone; side:'left'|'right'};
+  const armChains:ArmChain[]=[];
+  const lastAimRotations=new Map<THREE.Bone,THREE.Quaternion>();
   const lastReachRotations=new Map<THREE.Bone,THREE.Quaternion>();
   for(const side of [-1,1]){
     const sleeve=round(interactionHands,.115,.48,armor,[side*.28,1.12,-.3]);
@@ -514,6 +562,72 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const upgradeScope=poly(heroWeapon,[.19,.16,.34],black,[0,.34,-.4]);
   const upgradeEmitter=poly(heroWeapon,[.29,.14,.3],amber,[0,.01,-.87]);
   upgradeRail.visible=upgradeCoil.visible=upgradeScope.visible=upgradeEmitter.visible=false;
+  // Tactical rifle geometry: recognisable stock, magazine, barrel shroud,
+  // optic, foregrip, suppressor and shoulder sling, not a floating rod.
+  const gunmetal=material(new THREE.MeshStandardMaterial({color:'#192630',metalness:.64,roughness:.47}));
+  const polymer=material(new THREE.MeshStandardMaterial({color:'#303942',metalness:.23,roughness:.74}));
+  const receiver=poly(heroWeapon,[.29,.23,.56],gunmetal,[0,.035,-.18]);
+  poly(heroWeapon,[.35,.065,.69],gunmetal,[0,.195,-.30]);
+  poly(heroWeapon,[.28,.13,.38],polymer,[0,.075,.25]);
+  poly(heroWeapon,[.22,.06,.42],gunmetal,[0,-.11,.43]);
+  poly(heroWeapon,[.18,.16,.27],polymer,[0,-.025,.52]);
+  poly(heroWeapon,[.26,.12,.08],gunmetal,[0,.02,.68]);
+  const magazine=poly(heroWeapon,[.16,.38,.23],polymer,[0,-.27,-.11]);
+  magazine.rotation.x=-.17;
+  poly(heroWeapon,[.13,.34,.12],polymer,[-.09,-.22,-.50]);
+  poly(heroWeapon,[.09,.12,.15],gunmetal,[0,.35,-.19]);
+  poly(heroWeapon,[.18,.08,.42],polymer,[0,.39,-.26]);
+  const opticGlass=material(new THREE.MeshBasicMaterial({color:'#7cb1bd'}));
+  poly(heroWeapon,[.06,.04,.1],opticGlass,[0,.39,-.50]);
+  const suppressor=round(heroWeapon,.092,.45,gunmetal,[0,.025,-1.10],12);
+  suppressor.rotation.x=Math.PI/2;
+  for(const z of [-.55,-.73,-.91]){
+    poly(heroWeapon,[.30,.026,.045],polymer,[0,.18,z]);
+    poly(heroWeapon,[.03,.15,.046],polymer,[.15,.02,z]);
+  }
+  const sling=material(new THREE.MeshStandardMaterial({color:'#1b2427',roughness:.95}));
+  const slingStrap=poly(heroWeapon,[.037,.03,1.02],sling,[.18,-.13,-.24]);
+  slingStrap.rotation.y=.13;
+  receiver.castShadow=false;
+  // Reference-inspired uniform parts remain small reusable meshes so that
+  // this extra fidelity does not introduce a large textured GLB dependency.
+  const operatorGear=new THREE.Group();avatar.add(operatorGear);operatorGear.visible=false;
+  const vest=material(new THREE.MeshStandardMaterial({color:'#263340',roughness:.87,metalness:.12}));
+  const slate=material(new THREE.MeshStandardMaterial({color:'#455466',roughness:.85,metalness:.1}));
+  const webbing=material(new THREE.MeshStandardMaterial({color:'#161e29',roughness:.91}));
+  const headset=material(new THREE.MeshStandardMaterial({color:'#161f27',roughness:.7,metalness:.16}));
+  const headsetPad=material(new THREE.MeshStandardMaterial({color:'#636f7c',roughness:.62}));
+  // Front plate and radio-equipped chest rig.
+  poly(operatorGear,[.75,.78,.22],vest,[0,1.27,-.25]);
+  poly(operatorGear,[.60,.48,.035],slate,[0,1.43,-.39]);
+  poly(operatorGear,[.63,.15,.14],webbing,[0,.99,-.33]);
+  poly(operatorGear,[.69,.84,.23],webbing,[0,1.33,.30]); // backpack
+  poly(operatorGear,[.51,.41,.18],vest,[0,1.13,.49]);
+  for(const side of [-1,1]){
+    const strap=poly(operatorGear,[.12,.89,.07],webbing,[side*.29,1.44,-.28]);
+    strap.rotation.z=side*.19;
+    poly(operatorGear,[.27,.19,.23],slate,[side*.38,1.63,0]);
+    poly(operatorGear,[.19,.23,.18],vest,[side*.24,.91,-.35]);
+    poly(operatorGear,[.15,.34,.2],headset,[side*.31,1.30,.44]);
+    const ear=round(operatorGear,.17,.11,headset,[side*.302,1.98,0],12);
+    ear.rotation.z=Math.PI/2;
+    const earCore=round(operatorGear,.105,.12,headsetPad,[side*.365,1.98,0],10);
+    earCore.rotation.z=Math.PI/2;
+  }
+  const radio=poly(operatorGear,[.15,.26,.13],webbing,[.44,1.63,-.05]);
+  poly(operatorGear,[.035,.36,.035],gunmetal,[.48,1.9,-.05]);
+  const headband=new THREE.Mesh(
+    geometry(new THREE.TorusGeometry(.295,.04,7,22,Math.PI)),headset);
+  headband.position.set(0,2.07,.016);operatorGear.add(headband);
+  // Scarf fabric wrap under the jaw, matching the reference silhouette.
+  round(operatorGear,.315,.17,webbing,[0,1.73,0],18);
+  poly(operatorGear,[.23,.22,.11],vest,[-.13,1.62,-.18]);
+  for(const side of [-1,1]){
+    const scarfFold=poly(operatorGear,[.09,.38,.04],slate,[side*.22,1.55,-.18]);
+    scarfFold.rotation.z=side*.18;
+  }
+  // The backpack and operator headset give the character the same broad
+  // tactical silhouette from both the menu camera and shoulder camera.
   let model:THREE.Group|null=null,modelMixer:THREE.AnimationMixer|null=null,modelAction:THREE.AnimationAction|null=null;
   let operatorReady=false;
   const clips=new Map<string,THREE.AnimationAction>();
@@ -663,6 +777,21 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   gltfLoader.load('https://threejs.org/examples/models/gltf/Soldier.glb',gltf=>{
     if(loaderDisposed){gltf.scene.traverse(n=>{if(n instanceof THREE.Mesh)n.geometry.dispose();});return;}
     model=gltf.scene;
+    // Dark blue tactical palette instead of the original bright green asset.
+    model.traverse(node=>{
+      if(!(node instanceof THREE.Mesh))return;
+      const darken=(source:THREE.Material):THREE.Material=>{
+        const copy=source.clone();
+        if(copy instanceof THREE.MeshStandardMaterial){
+          copy.color.multiply(new THREE.Color('#a1aebd'));
+          copy.roughness=Math.max(.72,copy.roughness);
+          copy.metalness=Math.min(.22,copy.metalness);
+        }
+        return copy;
+      };
+      node.material=Array.isArray(node.material)?node.material.map(darken):darken(node.material);
+    });
+    operatorGear.visible=true;
     guardAnimations.push(...gltf.animations);
     model.scale.setScalar(.96);
     avatar.add(model);heroFallback.visible=false;
@@ -685,6 +814,16 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
           upper=upper.parent;
         }
         if(upper instanceof THREE.Bone)skeletalShoulders.push(upper);
+        let forearm:THREE.Bone|null=null;
+        let node:THREE.Object3D|null=candidate.parent;
+        while(node&&node!==model){
+          if(node instanceof THREE.Bone&&/forearm|lowerarm|elbow/i.test(node.name)){
+            forearm=node;break;
+          }
+          node=node.parent;
+        }
+        if(forearm&&upper instanceof THREE.Bone)
+          armChains.push({hand:candidate,elbow:forearm,shoulder:upper,side:side as 'left'|'right'});
       }
     }
     modelMixer=new THREE.AnimationMixer(model);
@@ -1158,7 +1297,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const w=container.clientWidth,h=container.clientHeight;
     if(!w||!h)return;
     renderer.setSize(w,h,false);camera.aspect=w/h;
-    camera.fov=w<650?71:65;camera.updateProjectionMatrix();
+    camera.fov=w<650?67:60;camera.updateProjectionMatrix();
   };
   const observer=new ResizeObserver(resize);observer.observe(container);resize();
   const preventMenu=(e:MouseEvent)=>e.preventDefault();
@@ -1481,8 +1620,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const weaponLift=danger?.035:0;
     // Grip a weapon in front of the character even if the remote skeletal rig fails.
     if(heroWeapon.parent===playerRoot){
-      heroWeapon.position.set(.45,crouch?1.02:1.26+weaponLift,-.73);
-      heroWeapon.rotation.set(-pitch*.4,0,0);
+      // Keep the rifle supported against the chest and aimed forward.
+      // It is not attached to a drifting animation wrist. Both hands are
+      // subsequently pulled to its physical grip and handguard positions.
+      const breathing=Math.sin(time*1.9)*.008;
+      heroWeapon.position.set(.19+breathing,crouch?1.17:1.33+weaponLift,-.47+shotKick*.075);
+      heroWeapon.rotation.set(-.12-pitch*.27-shotKick*.18,-.065,.015+breathing*.6);
     }
     if(modelMixer){
       // Finite-state locomotion: grounded, airborne, prone and transitions.
@@ -1511,25 +1654,47 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         if(/walk|run/.test(clipName))modelAction.setEffectiveTimeScale(
           clamp(locomotionBlend/(clipName.includes('run')?5.8:3.2),.55,1.4));
       }
+      // Reset previous IK offsets for animation channels that do not key
+      // every elbow and shoulder on each frame. This prevents pose drift.
+      for(const [bone,rotation] of lastAimRotations)
+        bone.quaternion.premultiply(rotation.clone().invert());
+      lastAimRotations.clear();
       modelMixer.update(dt);
-      // Follow the real animated right hand in actor-local coordinates, but
-      // clamp the grip to the visible right side of the torso. This avoids
-      // off-screen / inside-mesh guns when GLB skeleton axes differ.
-      if(weaponGrip){
-        model.updateMatrixWorld(true);
+      // Rifle mount stays torso-stable; arm bones align to its two grip points.
+      // This prevents the weapon swinging independently of the soldier.
+      // Two-hand aim rig, small per-joint CCD rotations in world space.
+      // The trigger hand aligns with the receiver and the support hand
+      // aligns with the foregrip. Both remain connected while moving.
+      const holdingWeapon=heroWeapon.visible&&['intro','entering','hall','room-enter','combat','room-exit'].includes(phase);
+      if(holdingWeapon&&armChains.length){
         playerRoot.updateMatrixWorld(true);
-        const handLocal=playerRoot.worldToLocal(weaponGrip.getWorldPosition(new THREE.Vector3()));
-        // Hand rigs vary by GLB: a grip inside the torso is visually lost.
-        // Keep the weapon just forward of the right hand and outside the chest.
-        const gripTarget=new THREE.Vector3(
-          clamp(handLocal.x+.24,.42,.76),
-          clamp(handLocal.y,1.08,1.48),
-          clamp(handLocal.z-.56,-1.08,-.7)
-        );
-        heroWeapon.position.lerp(gripTarget,Math.min(1,dt*13));
-        // Smooth weapon presentation without copying arbitrary wrist axes.
-        heroWeapon.rotation.x=THREE.MathUtils.damp(heroWeapon.rotation.x,-.14-shotKick*.22,12,dt);
-        heroWeapon.rotation.y=THREE.MathUtils.damp(heroWeapon.rotation.y,-.16,12,dt);
+        heroWeapon.updateMatrixWorld(true);
+        for(const chain of armChains){
+          const grip=heroWeapon.localToWorld(new THREE.Vector3(
+            chain.side==='right'?.09:-.12,
+            chain.side==='right'?-.06:-.13,
+            chain.side==='right'?.18:-.52
+          ));
+          for(let pass=0;pass<(phone?2:3);pass++){
+            for(const bone of [chain.elbow,chain.shoulder]){
+              model.updateMatrixWorld(true);
+              const joint=bone.getWorldPosition(new THREE.Vector3());
+              const hand=chain.hand.getWorldPosition(new THREE.Vector3());
+              const from=hand.sub(joint);
+              const to=grip.clone().sub(joint);
+              if(from.lengthSq()<.0001||to.lengthSq()<.0001)continue;
+              const desired=new THREE.Quaternion().setFromUnitVectors(from.normalize(),to.normalize());
+              const angle=2*Math.acos(clamp(desired.w,-1,1));
+              if(angle<.004)continue;
+              const bounded=new THREE.Quaternion().identity().slerp(desired,Math.min(1,.35/angle));
+              const parentWorld=bone.parent!.getWorldQuaternion(new THREE.Quaternion());
+              const local=parentWorld.clone().invert().multiply(bounded).multiply(parentWorld);
+              bone.quaternion.premultiply(local);
+              const previous=lastAimRotations.get(bone);
+              lastAimRotations.set(bone,previous?local.clone().multiply(previous):local);
+            }
+          }
+        }
       }
       // Apply reach after animation sampling; the mixer otherwise resets the
       // hand bones on every frame. Use a bounded additive wrist rotation.
@@ -1679,8 +1844,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       ):
       usingWorkstation&&activeRoom?
         new THREE.Vector3(activeRoom.group.position.x-3.32+safeIndex*2.18+1.05,2.16,activeRoom.info.z-.48):
-        head.clone().addScaledVector(forward,roomView?-2.65:-4.4)
-          .addScaledVector(right,roomView?.62:1.15);
+        head.clone().addScaledVector(forward,phone?(roomView?-2.15:-2.65):(roomView?-1.95:-2.6))
+          .addScaledVector(right,phone?(roomView?.68:.78):(roomView?.83:.96));
     if(!exitingPortal)camTarget.y+=roomView?.82:1.0;
     // Keep the third-person camera inside the playable corridor or room,
     // rather than letting it pass through walls and expose exterior geometry.
