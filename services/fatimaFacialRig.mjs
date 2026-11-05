@@ -23,15 +23,7 @@ export function validateFatimaManifest(value) {
 }
 
 const clamp = (n, min, max) => Math.min(max, Math.max(min, Number.isFinite(n) ? n : 0));
-/** The active speaker owns attention; never borrow the partner's audio for Fatima's mouth. */
-export function resolveFatimaAttention({ isSpeaking = false, isListening = false, isLoading = false,
-  partnerSpeaking = false, partnerDirection = 'left', reaction = 'idle' } = {}) {
-  if (isSpeaking) return { state: 'speaking', gazeX: 0 };
-  if (partnerSpeaking) return { state: 'listening', gazeX: partnerDirection === 'right' ? 1 : -1 };
-  if (isListening) return { state: 'listening', gazeX: 0 };
-  if (isLoading) return { state: 'thinking', gazeX: 0 };
-  return { state: reaction, gazeX: 0 };
-}
+export { resolveTutorAttention as resolveFatimaAttention } from './tutorAttention.mjs';
 
 /** Facial patches are registered to the source; dress, veil and jewelry remain untouched. */
 export function planFatimaFrame(manifest, { blink = 0, gazeX = 0, state = 'idle', emphasis = 0 } = {}) {

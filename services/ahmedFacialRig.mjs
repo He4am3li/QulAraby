@@ -1,4 +1,5 @@
 import { paintSpeechMouth } from './speechMouth.mjs';
+export { resolveTutorAttention as resolveAhmedAttention } from './tutorAttention.mjs';
 
 export const AHMED_MANIFEST_URL = '/avatars/ahmed-facial-v1.json';
 export const AHMED_ORIGINAL_URL = '/avatars/ahmed-original.png';
@@ -24,14 +25,18 @@ export function validateAhmedManifest(value) {
 
 const clamp = (n, a, b) => Math.min(b, Math.max(a, Number.isFinite(n) ? n : 0));
 /** The original is drawn once. Only reviewed facial patches may overlay it. */
-export function planAhmedFrame(manifest, { blink = 0, gazeX = 0, gazeY = 0, state = 'idle' } = {}) {
+export function planAhmedFrame(manifest, { blink = 0, gazeX = 0, gazeY = 0, state = 'idle', emphasis = 0 } = {}) {
   const result = [];
   const add = (name, alpha = 1, dx = 0, dy = 0, clip) => result.push({ name, alpha, dx, dy, ...(clip ? { clip } : {}) });
   const amount = clamp(blink, 0, 1), dx = clamp(gazeX, -2, 2), dy = clamp(gazeY, -1.5, 1.5);
-  const suffix = state === 'thinking' ? 'Thinking' : ['speaking', 'listening', 'greeting', 'correct', 'retry'].includes(state) ? 'Attentive' : '';
+  const suffix = state === 'thinking' ? 'Thinking' : ['listening', 'greeting', 'correct', 'retry'].includes(state) ? 'Attentive' : '';
   if (suffix) {
     add('Face_BrowSkin_Rebuilt');
     for (const s of ['R', 'L']) add(`Brow_${s}_${suffix}`);
+  } else if (state === 'speaking' && emphasis > 0) {
+    add('Face_BrowSkin_Rebuilt');
+    // Reposition each original brow on rebuilt skin, keeping a single brow outline.
+    for (const s of ['R', 'L']) add(`Brow_${s}`, 1, 0, -3 * clamp(emphasis, 0, 0.35));
   }
   if (dx || dy) for (const s of ['R', 'L']) {
     add(`EyeWhite_${s}_Rebuilt`, 1, 0, 0, s);
@@ -54,7 +59,7 @@ export function paintAhmed(context, assets, options = {}) {
     context.restore();
   }
   if (options.lips?.active) paintSpeechMouth(context, assets.mouth, options.lips);
-  else if (options.state === 'correct' || options.state === 'greeting') {
+  else if (['correct', 'greeting', 'retry', 'listening'].includes(options.state)) {
     const layer = assets.manifest.layers.Mouth_Smile;
     context.drawImage(assets.images.Mouth_Smile, layer.x, layer.y, layer.w, layer.h);
   }

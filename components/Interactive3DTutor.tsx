@@ -129,8 +129,10 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
             <AhmedLayeredAvatar
               view="full"
               isSpeaking={isSpeaking}
-              isListening={isListening}
+              isListening={isListening || partnerState === 'listening'}
               isLoading={isLoading}
+              partnerSpeaking={partnerState === 'speaking'}
+              partnerDirection={partnerDirection}
               lipSync={lipSync}
               reaction={celebrating ? 'correct' : 'idle'}
               className="h-full w-full"
