@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img" aria-label="Operation X tactical agent">
+<defs>
+ <linearGradient id="bg" x2=".8" y2="1"><stop stop-color="#111c2c"/><stop offset=".58" stop-color="#11111c"/><stop offset="1" stop-color="#040911"/></linearGradient>
+ <linearGradient id="armor" x2=".9" y2="1"><stop stop-color="#64717a"/><stop offset=".46" stop-color="#252f3d"/><stop offset="1" stop-color="#131c27"/></linearGradient>
+ <linearGradient id="steel" x2=".5" y2="1"><stop stop-color="#879096"/><stop offset=".5" stop-color="#313c47"/><stop offset="1" stop-color="#101a26"/></linearGradient>
+ <radialGradient id="red"><stop stop-color="#e83c57" stop-opacity=".56"/><stop offset="1" stop-color="#8a1b31" stop-opacity="0"/></radialGradient>
+ <filter id="glow"><feGaussianBlur stdDeviation="16"/></filter>
+ <pattern id="grid" width="72" height="72" patternUnits="userSpaceOnUse"><path d="M72 0H0V72" fill="none" stroke="#b1c1c7" stroke-opacity=".07"/></pattern>
+</defs>
+<rect width="1200" height="680" fill="url(#bg)"/><rect width="1200" height="680" fill="url(#grid)"/>
+<ellipse cx="810" cy="260" rx="430" ry="430" fill="url(#red)"/>
+<path d="M800 0H1200V680H690Z" fill="#1d2430" opacity=".58"/>
+<path d="M880 0 1095 0 805 340 1180 680H935L675 430 485 680H300L610 345 340 0H555L750 245Z" fill="#e32f4f" opacity=".16" stroke="#e9505b" stroke-width="4"/>
+<g opacity=".42" stroke="#bd3245" stroke-width="2"><path d="M730 67H1140V635H745"/><path d="M790 110H1090V570H780"/><path d="M890 110V570"/><path d="M1045 110V570"/></g>
+<g opacity=".7"><path d="M0 606h1200v74H0z" fill="#0b1019"/><path d="M0 606h1200" stroke="#f84b5d" stroke-width="3"/><path d="M0 625h1200M0 656h1200" stroke="#d3d6da" stroke-opacity=".18"/></g>
+<!-- tactical figure, intentionally faceless and unidentifiable -->
+<g transform="translate(130 18)">
+ <ellipse cx="302" cy="608" rx="235" ry="24" fill="#03070c" opacity=".8"/>
+ <path d="M235 350 215 610h80l38-185 46 185h80l-34-252Z" fill="url(#steel)" stroke="#73818a" stroke-width="5"/>
+ <path d="M207 600h107l-8 34H197zM363 601h111l15 36H365z" fill="#121b25"/>
+ <path d="M200 205Q255 166 342 173L403 211 437 355 366 426 231 424 169 344Z" fill="url(#armor)" stroke="#778895" stroke-width="7"/>
+ <path d="M212 236 248 217h118l39 34-19 144h-150l-26-122Z" fill="#202d38" stroke="#8c9da7" stroke-width="5"/>
+ <path d="M245 255h128v32H245zM239 301h140v35H239zM248 347h125v33H248z" fill="#495965" stroke="#778a98" stroke-width="3"/>
+ <path d="M170 240 129 291 116 407l67 18 54-129Z" fill="url(#steel)" stroke="#778895" stroke-width="6"/>
+ <path d="M404 224 473 255l45 129-57 25-92-130Z" fill="url(#steel)" stroke="#778895" stroke-width="6"/>
+ <path d="M223 204 226 139 272 104l69 1 43 40-12 74-59 38Z" fill="#212f3c"/>
+ <path d="M253 111Q280 47 330 62q55 17 55 93l-21 31-112-12Z" fill="url(#steel)" stroke="#82939a" stroke-width="7"/>
+ <path d="M246 149 376 148l-21 45-72 27-40-36Z" fill="#121e29"/>
+ <path d="M252 159H370" stroke="#e34f5f" stroke-opacity=".72" stroke-width="5"/>
+ <path d="M250 195Q301 235 362 199" fill="none" stroke="#0a1019" stroke-width="10"/>
+ <path d="M182 290 270 325" fill="none" stroke="#161e2b" stroke-width="42" stroke-linecap="round"/>
+ <path d="M435 282 354 333" fill="none" stroke="#1c2833" stroke-width="44" stroke-linecap="round"/>
+ <!-- held rifle, prominent foregrip and barrel -->
+ <g transform="rotate(-12 336 320)">
+ <path d="M167 315h409v23H167z" fill="#0d1823" stroke="#87949c" stroke-width="5"/>
+ <path d="M235 296h253v30H235z" fill="#485663" stroke="#a1aab0" stroke-width="4"/>
+ <path d="M285 276h158v16H285z" fill="#161f29" stroke="#82949c" stroke-width="3"/>
+ <path d="M315 338h37l-17 92h-32z" fill="#0e1924" stroke="#7e8f9c" stroke-width="4"/>
+ <path d="M169 300h67l17 42h-86z" fill="#313f49"/>
+ <path d="M575 315h75v14h-75z" fill="#94a0a6"/>
+ <path d="M590 302h14v38h-14z" fill="#e8535b" opacity=".9"/>
+ </g>
+ <circle cx="239" cy="334" r="19" fill="#4c5864"/><circle cx="407" cy="326" r="20" fill="#455562"/>
+ <path d="M184 260 225 251" stroke="#f5525e" stroke-width="8"/>
+</g>
+<path d="M1150 150h-78v-4h78M1150 160h-124v-4h124M1150 170h-42v-4h42" fill="#f56a76" opacity=".8"/>
+<text x="1150" y="455" text-anchor="end" font-family="Arial,sans-serif" font-size="240" font-weight="900" fill="#ff4c62" opacity=".88">X</text>
+<text x="1150" y="500" text-anchor="end" font-family="Arial,sans-serif" font-size="32" letter-spacing="11" fill="#f1e6e7">OPERATION</text>
+</svg>
