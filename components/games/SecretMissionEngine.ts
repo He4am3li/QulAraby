@@ -87,17 +87,17 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   renderer.setPixelRatio(renderPixelRatio);
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=1.35;
+  renderer.toneMappingExposure=1.14;
   renderer.shadowMap.enabled=false; // avoid expensive indoor shadow pass
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   container.appendChild(renderer.domElement);
   renderer.domElement.style.touchAction='none';
   const scene=new THREE.Scene();
-  scene.background=new THREE.Color('#111b23');
-  scene.fog=new THREE.FogExp2('#182a32',.012);
+  scene.background=new THREE.Color('#070d14');
+  scene.fog=new THREE.FogExp2('#101e29',.019);
   const camera=new THREE.PerspectiveCamera(phone?69:65,1,.07,140);
-  scene.add(new THREE.HemisphereLight('#b4cbd5','#202c32',phone?1.65:1.95));
-  const mainLight=new THREE.DirectionalLight('#f4e3c8',phone?1.8:2.2);
+  scene.add(new THREE.HemisphereLight('#b5d5ec','#12151e',phone?1.12:1.25));
+  const mainLight=new THREE.DirectionalLight('#cedbef',phone?1.18:1.48);
   mainLight.position.set(-6,12,12);
   mainLight.castShadow=false;
   if(!phone){mainLight.shadow.mapSize.set(1024,1024);mainLight.shadow.camera.left=-20;mainLight.shadow.camera.right=20;mainLight.shadow.camera.top=20;mainLight.shadow.camera.bottom=-20;}
@@ -284,8 +284,53 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const sectorStrip=material(new THREE.MeshBasicMaterial({color:sectorColor}));
     for(const x of [-4.55,4.55])poly(group,[.09,.045,8.7],sectorStrip,[x,3.37,0]);
     poly(group,[3.2,.04,.09],sectorStrip,[0,3.4,-4.72]);
-    const point=new THREE.PointLight(sectorColor,phone?9:16,13,2);
-    point.position.set(0,2.8,1);group.add(point);
+    const point=new THREE.PointLight(sectorColor,phone?7:10,11,2);
+    point.position.set(0,3.15,-.7);group.add(point);
+    // Operation X bunker dressing: red clearance marks, workstations, ceiling
+    // panels and light pools. Furniture is kept against walls, leaving the
+    // center aisle and the code lockers unobstructed.
+    const charcoal=material(new THREE.MeshStandardMaterial({color:'#18242e',metalness:.42,roughness:.74}));
+    const deskMetal=material(new THREE.MeshStandardMaterial({color:'#44515b',metalness:.68,roughness:.4}));
+    const display=material(new THREE.MeshBasicMaterial({color:info.id==='vault'?'#d44e56':'#3e8bba'}));
+    const forbidden=material(new THREE.MeshBasicMaterial({color:'#d5354f'}));
+    const whiteLight=material(new THREE.MeshBasicMaterial({color:'#e6eefa'}));
+    const rearX=new THREE.Group();rearX.position.set(0,2.16,-4.82);group.add(rearX);
+    for(const angle of [-Math.PI/4,Math.PI/4]){
+      const slash=poly(rearX,[.14,1.68,.035],forbidden,[0,0,0]);
+      slash.rotation.z=angle;
+    }
+    for(const sx of [-1,1]){
+      const station=new THREE.Group();
+      station.position.set(sx*3.65,0,1.6);
+      group.add(station);
+      poly(station,[1.85,.11,1.03],deskMetal,[0,.95,0]);
+      for(const xx of [-.72,.72])poly(station,[.09,.91,.09],charcoal,[xx,.46,0]);
+      poly(station,[.77,.62,.08],charcoal,[0,1.36,-.28]);
+      poly(station,[.64,.48,.025],display,[0,1.37,-.325]);
+      poly(station,[.59,.035,.025],whiteLight,[0,1.57,-.344]);
+      poly(station,[.5,.06,.25],charcoal,[0,1.02,.18]);
+      poly(station,[.18,.2,.28],charcoal,[-sx*.5,1.1,-.08]);
+      // A warm worklamp makes the metallic desk feel inhabited.
+      const lampStem=poly(station,[.055,.38,.055],deskMetal,[.58,1.18,-.25]);
+      lampStem.rotation.z=.22*sx;
+      poly(station,[.30,.065,.21],whiteLight,[.53,1.36,-.26]);
+    }
+    for(const zz of [-2.35,1.75]){
+      poly(group,[3.5,.065,.36],charcoal,[0,3.31,zz]);
+      poly(group,[2.94,.038,.20],whiteLight,[0,3.255,zz]);
+      for(const sx of [-1,1]){
+        poly(group,[.08,.36,.1],deskMetal,[sx*1.5,3.45,zz]);
+      }
+    }
+    for(const sx of [-1,1]){
+      for(const zz of [-2.25,1.95]){
+        poly(group,[.34,.012,1.45],sectorStrip,[sx*4.35,-.043,zz]);
+      }
+    }
+    // Low-cost dark reflective floor panels, without extra dynamic lights.
+    const floorFinish=material(new THREE.MeshStandardMaterial({color:'#25343b',metalness:.52,roughness:.34}));
+    for(const x of [-2.4,0,2.4])
+      poly(group,[1.7,.008,2.4],floorFinish,[x,-.048,.7]);
     // Sector architecture: reinforced bulkhead ribs and illuminated floor
     // threshold. Shared materials avoid extra texture downloads on phones.
     for(const x of [-4.7,4.7]){
