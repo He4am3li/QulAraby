@@ -559,6 +559,72 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   const upgradeScope=poly(heroWeapon,[.19,.16,.34],black,[0,.34,-.4]);
   const upgradeEmitter=poly(heroWeapon,[.29,.14,.3],amber,[0,.01,-.87]);
   upgradeRail.visible=upgradeCoil.visible=upgradeScope.visible=upgradeEmitter.visible=false;
+  // Tactical rifle geometry: recognisable stock, magazine, barrel shroud,
+  // optic, foregrip, suppressor and shoulder sling, not a floating rod.
+  const gunmetal=material(new THREE.MeshStandardMaterial({color:'#192630',metalness:.64,roughness:.47}));
+  const polymer=material(new THREE.MeshStandardMaterial({color:'#303942',metalness:.23,roughness:.74}));
+  const receiver=poly(heroWeapon,[.29,.23,.56],gunmetal,[0,.035,-.18]);
+  poly(heroWeapon,[.35,.065,.69],gunmetal,[0,.195,-.30]);
+  poly(heroWeapon,[.28,.13,.38],polymer,[0,.075,.25]);
+  poly(heroWeapon,[.22,.06,.42],gunmetal,[0,-.11,.43]);
+  poly(heroWeapon,[.18,.16,.27],polymer,[0,-.025,.52]);
+  poly(heroWeapon,[.26,.12,.08],gunmetal,[0,.02,.68]);
+  const magazine=poly(heroWeapon,[.16,.38,.23],polymer,[0,-.27,-.11]);
+  magazine.rotation.x=-.17;
+  poly(heroWeapon,[.13,.34,.12],polymer,[-.09,-.22,-.50]);
+  poly(heroWeapon,[.09,.12,.15],gunmetal,[0,.35,-.19]);
+  poly(heroWeapon,[.18,.08,.42],polymer,[0,.39,-.26]);
+  const opticGlass=material(new THREE.MeshBasicMaterial({color:'#7cb1bd'}));
+  poly(heroWeapon,[.06,.04,.1],opticGlass,[0,.39,-.50]);
+  const suppressor=round(heroWeapon,.092,.45,gunmetal,[0,.025,-1.10],12);
+  suppressor.rotation.x=Math.PI/2;
+  for(const z of [-.55,-.73,-.91]){
+    poly(heroWeapon,[.30,.026,.045],polymer,[0,.18,z]);
+    poly(heroWeapon,[.03,.15,.046],polymer,[.15,.02,z]);
+  }
+  const sling=material(new THREE.MeshStandardMaterial({color:'#1b2427',roughness:.95}));
+  const slingStrap=poly(heroWeapon,[.037,.03,1.02],sling,[.18,-.13,-.24]);
+  slingStrap.rotation.y=.13;
+  receiver.castShadow=false;
+  // Reference-inspired uniform parts remain small reusable meshes so that
+  // this extra fidelity does not introduce a large textured GLB dependency.
+  const operatorGear=new THREE.Group();avatar.add(operatorGear);operatorGear.visible=false;
+  const vest=material(new THREE.MeshStandardMaterial({color:'#263340',roughness:.87,metalness:.12}));
+  const slate=material(new THREE.MeshStandardMaterial({color:'#455466',roughness:.85,metalness:.1}));
+  const webbing=material(new THREE.MeshStandardMaterial({color:'#161e29',roughness:.91}));
+  const headset=material(new THREE.MeshStandardMaterial({color:'#161f27',roughness:.7,metalness:.16}));
+  const headsetPad=material(new THREE.MeshStandardMaterial({color:'#636f7c',roughness:.62}));
+  // Front plate and radio-equipped chest rig.
+  poly(operatorGear,[.75,.78,.22],vest,[0,1.27,-.25]);
+  poly(operatorGear,[.60,.48,.035],slate,[0,1.43,-.39]);
+  poly(operatorGear,[.63,.15,.14],webbing,[0,.99,-.33]);
+  poly(operatorGear,[.69,.84,.23],webbing,[0,1.33,.30]); // backpack
+  poly(operatorGear,[.51,.41,.18],vest,[0,1.13,.49]);
+  for(const side of [-1,1]){
+    const strap=poly(operatorGear,[.12,.89,.07],webbing,[side*.29,1.44,-.28]);
+    strap.rotation.z=side*.19;
+    poly(operatorGear,[.27,.19,.23],slate,[side*.38,1.63,0]);
+    poly(operatorGear,[.19,.23,.18],vest,[side*.24,.91,-.35]);
+    poly(operatorGear,[.15,.34,.2],headset,[side*.31,1.30,.44]);
+    const ear=round(operatorGear,.17,.11,headset,[side*.302,1.98,0],12);
+    ear.rotation.z=Math.PI/2;
+    const earCore=round(operatorGear,.105,.12,headsetPad,[side*.365,1.98,0],10);
+    earCore.rotation.z=Math.PI/2;
+  }
+  const radio=poly(operatorGear,[.15,.26,.13],webbing,[.44,1.63,-.05]);
+  poly(operatorGear,[.035,.36,.035],gunmetal,[.48,1.9,-.05]);
+  const headband=new THREE.Mesh(
+    geometry(new THREE.TorusGeometry(.295,.04,7,22,Math.PI)),headset);
+  headband.position.set(0,2.07,.016);operatorGear.add(headband);
+  // Scarf fabric wrap under the jaw, matching the reference silhouette.
+  round(operatorGear,.315,.17,webbing,[0,1.73,0],18);
+  poly(operatorGear,[.23,.22,.11],vest,[-.13,1.62,-.18]);
+  for(const side of [-1,1]){
+    const scarfFold=poly(operatorGear,[.09,.38,.04],slate,[side*.22,1.55,-.18]);
+    scarfFold.rotation.z=side*.18;
+  }
+  // The backpack and operator headset give the character the same broad
+  // tactical silhouette from both the menu camera and shoulder camera.
   let model:THREE.Group|null=null,modelMixer:THREE.AnimationMixer|null=null,modelAction:THREE.AnimationAction|null=null;
   let operatorReady=false;
   const clips=new Map<string,THREE.AnimationAction>();
@@ -708,6 +774,21 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   gltfLoader.load('https://threejs.org/examples/models/gltf/Soldier.glb',gltf=>{
     if(loaderDisposed){gltf.scene.traverse(n=>{if(n instanceof THREE.Mesh)n.geometry.dispose();});return;}
     model=gltf.scene;
+    // Dark blue tactical palette instead of the original bright green asset.
+    model.traverse(node=>{
+      if(!(node instanceof THREE.Mesh))return;
+      const darken=(source:THREE.Material):THREE.Material=>{
+        const copy=source.clone();
+        if(copy instanceof THREE.MeshStandardMaterial){
+          copy.color.multiply(new THREE.Color('#a1aebd'));
+          copy.roughness=Math.max(.72,copy.roughness);
+          copy.metalness=Math.min(.22,copy.metalness);
+        }
+        return copy;
+      };
+      node.material=Array.isArray(node.material)?node.material.map(darken):darken(node.material);
+    });
+    operatorGear.visible=true;
     guardAnimations.push(...gltf.animations);
     model.scale.setScalar(.96);
     avatar.add(model);heroFallback.visible=false;
