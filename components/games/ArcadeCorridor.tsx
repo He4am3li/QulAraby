@@ -230,7 +230,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
             }
           },
           onHealth(value){if(!stopped)setHealth(value);},
-          onOperatorStatus(status){if(!stopped)setOperatorStatus(status);},,
+          onOperatorStatus(status){if(!stopped)setOperatorStatus(status);},
           onWeaponChange(tier){if(!stopped)setSelectedWeapon(tier);},
           onSafeReady(){if(!stopped)setSafeStage('challenge');},
           onInstrumentTap(id){
