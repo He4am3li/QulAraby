@@ -5,13 +5,12 @@ import {
   ArrowLeft, X, Play, ArrowRight
 } from 'lucide-react';
 
-// Realistic High-Fidelity Assets
-import stadiumPanorama from '/src/assets/images/champions_stadium_panorama_1790675976521.jpg';
+// The supplied PowerPoint's original footage (verified SHA-256) is rendered directly.
+// The striker, goalkeeper, ball, net and stadium are already inside each shot.
 import trophyCelebrationTeam from '/src/assets/images/trophy_celebration_team_1790692147994.jpg';
-import strikerBackImg from '/src/assets/images/striker_back_kick_1792467094797.jpg';
-import goalkeeperReadyImg from '/src/assets/images/goalkeeper_ready_1792467075804.jpg';
-import goalkeeperDivingImg from '/src/assets/images/goalkeeper_diving_1792467117800.jpg';
-import championsBallTexture from '/src/assets/images/champions_ball_texture_1790676004465.jpg';
+const PPT_READY_SCENE = '/penalty-cinematic/ready.webp';
+const PPT_GOAL_VIDEO = '/penalty-cinematic/goal.webm';
+const PPT_SAVE_VIDEO = '/penalty-cinematic/save.webm';
 
 // ========================================================
 // 1. أسئلة لغوية دقيقة بثلاثة خيارات فقط (إجابة واحدة صحيحة واثنتان خاطئتان)
@@ -314,7 +313,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
 
   // Realistic match animation state
   const [shotPhase, setShotPhase] = useState<'idle' | 'runup' | 'kick' | 'goal' | 'miss'>('idle');
-  const [diveSide, setDiveSide] = useState<'left' | 'right'>('right');
+  const [shotClip, setShotClip] = useState<'goal' | 'save' | null>(null);
   const [lastShotResult, setLastShotResult] = useState<'goal' | 'miss' | null>(null);
   const [screenShake, setScreenShake] = useState<boolean>(false);
 
@@ -352,6 +351,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
     setScore(0);
     setRoundsResult([]);
     setShotPhase('idle');
+    setShotClip(null);
     setLastShotResult(null);
     setScreen('match');
     soundRef.current.playWhistle();
@@ -368,8 +368,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
 
     // 2. انطلاق اللاعب نحو الكرة
     setShotPhase('runup');
-    const randomDive = Math.random() > 0.5 ? 'left' : 'right';
-    setDiveSide(randomDive);
+    setShotClip(option.correct ? 'goal' : 'save');
 
     // 3. A visible run-up gives the player time to anticipate the shot
     setTimeout(() => {
@@ -409,6 +408,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
   // Retry same question on miss
   const handleRetrySameQuestion = () => {
     setShotPhase('idle');
+    setShotClip(null);
     setLastShotResult(null);
     setRoundsResult(prev => prev.slice(0, prev.length - 1));
   };
@@ -416,6 +416,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
   // Proceed to next question or victory
   const handleProceedNext = (wasGoal?: boolean) => {
     setShotPhase('idle');
+    setShotClip(null);
     setLastShotResult(null);
 
     const nextRoundIndex = currentRound + 1;
@@ -447,7 +448,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
         {/* Background Stadium Panorama */}
         <div className="absolute inset-0 z-0">
           <img
-            src={stadiumPanorama}
+            src={PPT_READY_SCENE}
             alt="Stadium Atmosphere"
             className="w-full h-full object-cover filter brightness-[0.45]"
           />
@@ -517,84 +518,23 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
         {/* =====================================================
             A. THE REALISTIC FOOTBALL FIELD (خلفية الملعب والمرمى الواقعي)
         ===================================================== */}
-        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          {/* Panoramic Stadium Background */}
-          <img
-            src={stadiumPanorama}
-            alt="Stadium Field"
-            className="w-full h-full object-cover object-center filter brightness-[0.68] saturate-[1.15]"
-          />
-
-          {/* Stadium Floodlights & Green Pitch Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/35 via-transparent to-slate-950/75" />
-
-          {/* The Goal Structure (إطار المرمى والشباك الواقعية في المنتصف) */}
-          <div className="absolute top-[28%] md:top-[26%] left-1/2 -translate-x-1/2 w-[82%] max-w-2xl h-44 md:h-52 border-x-[7px] border-t-[7px] border-white rounded-t-lg bg-white/[0.025] shadow-[0_15px_45px_rgba(0,0,0,0.75),0_0_16px_rgba(255,255,255,0.22)] flex items-end justify-center">
-
-            {/* Real Goal Net Mesh Grid */}
-            <div className={`absolute inset-0 border-b-2 border-white/40 bg-[linear-gradient(90deg,transparent_95%,rgba(255,255,255,.18)_96%),linear-gradient(0deg,transparent_94%,rgba(255,255,255,.18)_95%)] [background-size:21px_18px] transition-all duration-300 ${
-              shotPhase === 'goal' ? 'scale-105 bg-white/[0.12] shadow-[inset_0_0_40px_rgba(16,185,129,0.5)]' : ''
-            }`} />
-
-            {/* The crossbar and goal posts remain in the same perspective as the pitch. */}
-            <div className="absolute -top-[7px] left-0 right-0 h-[5px] rounded-full bg-gradient-to-b from-white via-slate-100 to-slate-400 shadow-[0_2px_7px_rgba(255,255,255,.5)]" />
-            {/* REALISTIC ATHLETIC GOALKEEPER (حارس المرمى الواقعي) */}
-            <div className={`relative z-10 w-28 h-36 md:w-36 md:h-44 transition-all duration-300 ${
-              shotPhase === 'runup' || shotPhase === 'idle'
-                ? 'translate-x-0 translate-y-0 animate-pulse'
-                : shotPhase === 'goal'
-                  ? diveSide === 'left' ? 'translate-x-[110px] translate-y-6 rotate-45 opacity-90' : '-translate-x-[110px] translate-y-6 -rotate-45 opacity-90'
-                  : diveSide === 'left' ? '-translate-x-[80px] translate-y-2 -rotate-25 scale-105' : 'translate-x-[80px] translate-y-2 rotate-25 scale-105'
-            }`}>
-              <img
-                src={shotPhase === 'goal' || shotPhase === 'miss' ? goalkeeperDivingImg : goalkeeperReadyImg}
-                alt="Goalkeeper"
-                className="w-full h-full object-contain filter drop-shadow-[0_15px_25px_rgba(0,0,0,0.9)]"
-              />
-            </div>
-          </div>
-
-          {/* Floodlight spill and penalty-box perspective enhance depth without adding heavy 3D rendering. */}
-          <div className="absolute bottom-0 left-1/2 w-[110%] h-[43%] -translate-x-1/2 bg-[repeating-linear-gradient(0deg,rgba(255,255,255,.025)_0px,rgba(255,255,255,.025)_24px,transparent_24px,transparent_54px)] opacity-60" />
-          <div className="absolute bottom-0 left-1/2 w-[86%] h-[45%] -translate-x-1/2 border-x border-t border-white/20 [clip-path:polygon(24%_0,76%_0,100%_100%,0_100%)]" />
-          {/* Pitch White Lines (نقطة الجزاء وقوس منطقة الجزاء) */}
-          <div className="absolute bottom-[24%] left-1/2 -translate-x-1/2 w-48 h-24 border-t-2 border-white/40 rounded-t-full pointer-events-none" />
-          <div className="absolute bottom-[20%] left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_15px_#ffffff] pointer-events-none" />
-
-          {/* THE OFFICIAL CHAMPIONS BALL (كرة القدم الواقعية) */}
-          <div className={`absolute z-10 w-11 h-11 md:w-14 md:h-14 rounded-full overflow-hidden shadow-2xl transition-all duration-500 ease-out ${
-            shotPhase === 'idle'
-              ? 'bottom-[20%] left-1/2 -translate-x-1/2 scale-100 rotate-0'
-              : shotPhase === 'runup'
-                ? 'bottom-[20%] left-1/2 -translate-x-1/2 scale-100'
-                : shotPhase === 'kick'
-                  ? 'bottom-[34%] left-1/2 -translate-x-1/2 scale-75 rotate-180'
-                  : shotPhase === 'goal'
-                    ? diveSide === 'left'
-                      ? 'top-[31%] left-[26%] scale-[0.38] rotate-[720deg]'
-                      : 'top-[31%] left-[72%] scale-[0.38] rotate-[720deg]'
-                    : 'top-[33%] left-1/2 -translate-x-1/2 scale-[0.4] rotate-[540deg] translate-y-2'
-          }`}>
-            <img src={championsBallTexture} alt="Ball" className="w-full h-full object-cover animate-spin-slow" />
-          </div>
-
-          {/* REALISTIC STRIKER FROM BEHIND (المسدد الرياضي - ظهره للمشاهد) */}
-          <div className={`absolute z-20 bottom-0 left-1/2 -translate-x-1/2 w-48 h-56 md:w-60 md:h-72 transition-all duration-700 ease-out ${
-            shotPhase === 'idle'
-              ? 'translate-y-0 scale-100'
-              : shotPhase === 'runup'
-                ? 'translate-y-[-24px] scale-105'
-                : shotPhase === 'kick' || shotPhase === 'goal'
-                  ? 'translate-y-[-38px] scale-110'
-                  : 'translate-y-[-10px] scale-95 opacity-80'
-          }`}>
-            <img 
-              src={strikerBackImg}
-              alt="Striker"
-              className="w-full h-full object-contain object-bottom filter drop-shadow-[0_20px_35px_rgba(0,0,0,0.95)]"
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#04120a]" aria-label="ملعب ركلات الترجيح الأصلي">
+          <img src={PPT_READY_SCENE} alt="" draggable={false}
+            className="absolute inset-0 h-full w-full object-contain lg:object-cover object-center" />
+          {shotClip !== null && shotPhase !== 'idle' && (
+            <video
+              key={`${currentRound}-${shotClip}`}
+              src={shotClip === 'goal' ? PPT_GOAL_VIDEO : PPT_SAVE_VIDEO}
+              poster={PPT_READY_SCENE}
+              autoPlay
+              muted
+              playsInline
+              preload="auto"
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-contain lg:object-cover object-center"
             />
-          </div>
-
+          )}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/45 via-transparent to-slate-950/65" />
         </div>
 
         {/* =====================================================
