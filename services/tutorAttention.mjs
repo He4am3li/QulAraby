@@ -1,5 +1,6 @@
 // Both full-body portraits use the same camera scale and foot plane.
-export const EGYPT_BODY_VIEWPORT = Object.freeze({ x: 100, y: 0, w: 824, h: 1536 });
+export const TUTOR_BODY_VIEWPORT = Object.freeze({ x: 100, y: 0, w: 824, h: 1536 });
+export const EGYPT_BODY_VIEWPORT = TUTOR_BODY_VIEWPORT;
 
 /** Only the active speaker uses speech animation; both tutors attend to the student. */
 export function resolveTutorAttention({ isSpeaking = false, isListening = false, isLoading = false,
@@ -11,9 +12,9 @@ export function resolveTutorAttention({ isSpeaking = false, isListening = false,
   return { state: reaction, gazeX: 0 };
 }
 
-/** The authored Egyptian body poses face inward in this fixed stage order. */
+/** Authored inward-facing pairs retain their physical order in both languages. */
 export function getTutorStageDirection(countryId, lang) {
-  return countryId === 'egypt' || lang === 'ar' ? 'rtl' : 'ltr';
+  return countryId === 'egypt' || countryId === 'saudi' || lang === 'ar' ? 'rtl' : 'ltr';
 }
 
 export function getTutorPartnerDirection(countryId, gender, lang) {

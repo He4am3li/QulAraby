@@ -107,8 +107,10 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
             <SalmanLayeredAvatar
               view="full"
               isSpeaking={isSpeaking}
-              isListening={isListening}
+              isListening={isListening || partnerState === 'listening'}
               isLoading={isLoading}
+              partnerSpeaking={partnerState === 'speaking'}
+              partnerDirection={partnerDirection}
               audioLevel={audioLevel}
               lipSync={lipSync}
               reaction={celebrating ? 'correct' : 'idle'}
@@ -118,8 +120,10 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
             <SaraLayeredAvatar
               view="full"
               isSpeaking={isSpeaking}
-              isListening={isListening}
+              isListening={isListening || partnerState === 'listening'}
               isLoading={isLoading}
+              partnerSpeaking={partnerState === 'speaking'}
+              partnerDirection={partnerDirection}
               audioLevel={audioLevel}
               lipSync={lipSync}
               reaction={celebrating ? 'correct' : 'idle'}

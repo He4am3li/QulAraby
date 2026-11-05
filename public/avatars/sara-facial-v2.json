@@ -1,0 +1,243 @@
+{
+  "version": 2,
+  "status": "reviewed",
+  "characterId": "saudi_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/sara-stance-v2.webp",
+  "sourceSha256": "3e323d558768861505aa56a74d1ee064c601123c6c748ba960e3e14e8ec3f953",
+  "pose": {
+    "bodyFacing": "right",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "left"
+  },
+  "coverings": [
+    "FaceCover",
+    "FaceCover_Band",
+    "FaceCover_Strap"
+  ],
+  "mouthVisible": true,
+  "eyeClips": {
+    "R": "M425 138.467 Q434 125.033 448 128.133 Q462 129.167 474 141.567 Q460 151.9 445 149.833 Q434 148.8 425 141.567Z",
+    "L": "M498 140.533 Q506 126.067 520 127.1 Q536 127.1 545 137.433 Q536 149.833 521 149.833 Q507 149.833 498 143.633Z"
+  },
+  "layers": {
+    "FaceCover_Strap": {
+      "x": 477,
+      "y": 87,
+      "w": 11,
+      "h": 103,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/FaceCover_Strap.png"
+    },
+    "FaceCover_Band": {
+      "x": 407,
+      "y": 88,
+      "w": 147,
+      "h": 20,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/FaceCover_Band.png"
+    },
+    "FaceCover": {
+      "x": 410,
+      "y": 145,
+      "w": 148,
+      "h": 52,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/FaceCover.png"
+    },
+    "Brow_R": {
+      "x": 418,
+      "y": 106,
+      "w": 56,
+      "h": 21,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/Brow_R.png"
+    },
+    "Brow_L": {
+      "x": 493,
+      "y": 106,
+      "w": 58,
+      "h": 23,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/Brow_L.png"
+    },
+    "Pupil_R": {
+      "x": 444,
+      "y": 133,
+      "w": 9,
+      "h": 12,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/Pupil_R.png"
+    },
+    "Pupil_L": {
+      "x": 511,
+      "y": 132,
+      "w": 9,
+      "h": 12,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/Pupil_L.png"
+    },
+    "Iris_R": {
+      "x": 440,
+      "y": 128,
+      "w": 17,
+      "h": 22,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/Iris_R.png"
+    },
+    "Iris_L": {
+      "x": 506,
+      "y": 127,
+      "w": 19,
+      "h": 23,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/Iris_L.png"
+    },
+    "LidUpper_R": {
+      "x": 420,
+      "y": 122,
+      "w": 56,
+      "h": 23,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/LidUpper_R.png"
+    },
+    "LidUpper_L": {
+      "x": 496,
+      "y": 124,
+      "w": 55,
+      "h": 20,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/LidUpper_L.png"
+    },
+    "LidLower_R": {
+      "x": 424,
+      "y": 142,
+      "w": 51,
+      "h": 10,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/LidLower_R.png"
+    },
+    "LidLower_L": {
+      "x": 497,
+      "y": 142,
+      "w": 50,
+      "h": 16,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/LidLower_L.png"
+    },
+    "EyeWhite_R_Rebuilt": {
+      "x": 425,
+      "y": 128,
+      "w": 48,
+      "h": 22,
+      "visible": false,
+      "url": "/avatars/sara-stance-v2/EyeWhite_R_Rebuilt.png"
+    },
+    "EyeWhite_L_Rebuilt": {
+      "x": 498,
+      "y": 127,
+      "w": 47,
+      "h": 23,
+      "visible": false,
+      "url": "/avatars/sara-stance-v2/EyeWhite_L_Rebuilt.png"
+    },
+    "Blink_R_Closed": {
+      "x": 419,
+      "y": 121,
+      "w": 57,
+      "h": 32,
+      "visible": false,
+      "url": "/avatars/sara-stance-v2/Blink_R_Closed.png"
+    },
+    "Blink_L_Closed": {
+      "x": 496,
+      "y": 121,
+      "w": 56,
+      "h": 39,
+      "visible": false,
+      "url": "/avatars/sara-stance-v2/Blink_L_Closed.png"
+    },
+    "Brow_R_Thinking": {
+      "x": 416,
+      "y": 104,
+      "w": 60,
+      "h": 23,
+      "visible": false,
+      "url": "/avatars/sara-stance-v2/Brow_R_Thinking.png"
+    },
+    "Brow_L_Thinking": {
+      "x": 492,
+      "y": 104,
+      "w": 61,
+      "h": 25,
+      "visible": false,
+      "url": "/avatars/sara-stance-v2/Brow_L_Thinking.png"
+    },
+    "Brow_R_Attentive": {
+      "x": 416,
+      "y": 104,
+      "w": 60,
+      "h": 23,
+      "visible": false,
+      "url": "/avatars/sara-stance-v2/Brow_R_Attentive.png"
+    },
+    "Brow_L_Attentive": {
+      "x": 492,
+      "y": 104,
+      "w": 61,
+      "h": 25,
+      "visible": false,
+      "url": "/avatars/sara-stance-v2/Brow_L_Attentive.png"
+    },
+    "Face_BrowSkin_Rebuilt": {
+      "x": 418,
+      "y": 106,
+      "w": 133,
+      "h": 23,
+      "visible": false,
+      "url": "/avatars/sara-stance-v2/Face_BrowSkin_Rebuilt.png"
+    },
+    "Mouth_Closed": {
+      "x": 448,
+      "y": 187,
+      "w": 82,
+      "h": 44,
+      "visible": true,
+      "url": "/avatars/sara-stance-v2/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 448,
+      "y": 187,
+      "w": 82,
+      "h": 44,
+      "visible": false,
+      "url": "/avatars/sara-stance-v2/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 448,
+      "y": 187,
+      "w": 82,
+      "h": 44,
+      "visible": false,
+      "url": "/avatars/sara-stance-v2/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 448,
+      "y": 187,
+      "w": 82,
+      "h": 44,
+      "visible": false,
+      "url": "/avatars/sara-stance-v2/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 448,
+      "y": 187,
+      "w": 82,
+      "h": 44,
+      "visible": false,
+      "url": "/avatars/sara-stance-v2/Mouth_FV.png"
+    }
+  }
+}
