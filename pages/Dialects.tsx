@@ -2482,7 +2482,9 @@ export const Dialects: React.FC = () => {
                     <DialectSpeechOverlay
                       countryId={selectedCountry.id}
                       lang={lang}
-                      tutorName={lang === 'ar' ? selectedPersona?.nameAr : selectedPersona?.nameEn}
+                      tutorName={selectedPersona?.nameAr}
+                      maleTutorName={selectedCountry.characterMale?.nameAr}
+                      femaleTutorName={selectedCountry.characterFemale?.nameAr}
                       turns={chatMessages}
                       liveActive={isLiveActive}
                       speaking={isSpeaking}
