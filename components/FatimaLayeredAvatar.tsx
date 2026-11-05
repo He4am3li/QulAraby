@@ -2,10 +2,9 @@ import React from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { REST_LIPS, type SpeechLipSync } from '../services/speechLipSync.mjs';
 import { createMouthCompositor } from '../services/speechMouth.mjs';
-import { FATIMA_MANIFEST_URL, FATIMA_ORIGINAL_URL, paintFatima, validateFatimaManifest } from '../services/fatimaFacialRig.mjs';
+import { FATIMA_MANIFEST_URL, FATIMA_ORIGINAL_URL, paintFatima, resolveFatimaAttention, validateFatimaManifest } from '../services/fatimaFacialRig.mjs';
 
 type Reaction = 'idle' | 'greeting' | 'correct' | 'retry';
-type State = Reaction | 'speaking' | 'listening' | 'thinking';
 type Layer = { x: number; y: number; w: number; h: number; visible: boolean; url: string };
 type Manifest = {
   width: number;
@@ -19,6 +18,8 @@ interface Props {
   isSpeaking?: boolean;
   isListening?: boolean;
   isLoading?: boolean;
+  partnerSpeaking?: boolean;
+  partnerDirection?: 'left' | 'right';
   audioLevel?: number;
   lipSync?: SpeechLipSync;
   reaction?: Reaction;
@@ -61,6 +62,7 @@ function loadFatima(): Promise<Assets> {
 /** Original Fatima artwork with independent facial animation and output-audio lip sync. */
 export const FatimaLayeredAvatar: React.FC<Props> = ({
   isSpeaking = false, isListening = false, isLoading = false,
+  partnerSpeaking = false, partnerDirection = 'left',
   audioLevel = 0, lipSync, reaction = 'idle', view = 'full', className = ''
 }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -71,9 +73,9 @@ export const FatimaLayeredAvatar: React.FC<Props> = ({
   const viewport = view === 'portrait'
     ? { x: 325, y: 0, w: 375, h: 540 }
     : { x: 100, y: 0, w: 824, h: 1536 };
-  const state: State = isSpeaking ? 'speaking' : isListening ? 'listening' : isLoading ? 'thinking' : reaction;
-  const motionRef = React.useRef({ state, lipSync });
-  motionRef.current = { state, lipSync };
+  const attention = resolveFatimaAttention({ isSpeaking, isListening, isLoading, partnerSpeaking, partnerDirection, reaction });
+  const motionRef = React.useRef({ ...attention, lipSync });
+  motionRef.current = { ...attention, lipSync };
 
   React.useEffect(() => {
     let mounted = true;
@@ -109,11 +111,15 @@ export const FatimaLayeredAvatar: React.FC<Props> = ({
     let lastFrame = -Infinity;
     let nextBlink = performance.now() + 2200 + Math.random() * 1900;
     let blinkStart = -Infinity;
+    let displayedGaze = 0;
+    let requestedGaze = 0;
+    let emphasis = 0;
     // The complete original silhouette remains inside the viewport, including shoes.
     const paint = (time: number) => {
       if (!active) return;
       raf = requestAnimationFrame(paint);
       if (document.hidden || time - lastFrame < 15) return;
+      const elapsed = Math.min(100, Math.max(0, time - lastFrame));
       lastFrame = time;
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
@@ -133,20 +139,24 @@ export const FatimaLayeredAvatar: React.FC<Props> = ({
       context.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * x, dpr * y);
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = 'high';
-      if (!reduceMotion && time >= nextBlink) {
+      const current = motionRef.current;
+      if (current.gazeX !== requestedGaze) {
+        requestedGaze = current.gazeX;
+        blinkStart = time;
+        nextBlink = time + 3400 + Math.random() * 2600;
+      } else if (time >= nextBlink) {
         blinkStart = time;
         nextBlink = time + 3400 + Math.random() * 2600;
       }
       const phase = (time - blinkStart) / 220;
       const blink = !reduceMotion && phase > 0 && phase < 1 ? Math.sin(Math.PI * phase) : 0;
-      const current = motionRef.current;
-      const gazeX = reduceMotion ? 0 : current.state === 'thinking' ? 1.2
-        : current.state === 'listening' ? -0.55
-          : current.state === 'speaking' ? 0.3 * Math.sin(time / 1100) : 0;
-      const gazeY = !reduceMotion && current.state === 'thinking' ? -0.6 : 0;
+      if (phase >= 0.5) displayedGaze = requestedGaze;
+      const lips = current.state === 'speaking' ? current.lipSync?.read() ?? REST_LIPS : REST_LIPS;
+      const targetEmphasis = lips.active ? Math.min(0.35, Math.max(0, lips.energy) * 0.35) : 0;
+      emphasis += (targetEmphasis - emphasis) * (1 - Math.exp(-elapsed / 140));
       nativeContext.clearRect(0, 0, nativeFrame.width, nativeFrame.height);
       paintFatima(nativeContext, assets, {
-        blink, state: reduceMotion ? 'idle' : current.state, gazeX, gazeY, lips: current.lipSync?.read() ?? REST_LIPS
+        blink, state: current.state, gazeX: displayedGaze, emphasis: lips.active ? emphasis : 0, lips
       });
       context.drawImage(nativeFrame, 0, 0);
     };

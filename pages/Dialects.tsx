@@ -2462,6 +2462,8 @@ export const Dialects: React.FC = () => {
                             isSpeaking={chosen && isSpeaking}
                             isListening={chosen && isListening}
                             isLoading={chosen && isChatLoading}
+                            partnerState={!chosen && isSpeaking ? 'speaking' : !chosen && isListening ? 'listening' : 'idle'}
+                            partnerDirection={gender === 'female' ? (lang === 'ar' ? 'right' : 'left') : (lang === 'ar' ? 'left' : 'right')}
                             audioLevel={chosen ? audioLevel : 0}
                             lipSync={chosen ? lipSyncRef.current : undefined}
                             countryNameAr={selectedCountry.nameAr}
