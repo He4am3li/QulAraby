@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, ChevronLeft, Crosshair,
   DoorOpen, FileLock2, FileText, Footprints, LockKeyhole, RotateCcw,
@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../AuthProvider';
 import { SECRET_ROOMS } from './SecretMissionEngine';
 import type { SecretPhase, SecretRoomId, createSecretMission } from './SecretMissionEngine';
+import { buildMissionDeck, normalizeArabic } from './SecretMissionChallengeBank';
 import './SecretMission.css';
 
 type Bilingual = { ar:string; en:string };
@@ -137,6 +138,14 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const [input,setInput]=useState<Input>({forward:0,strafe:0,run:false});
   const [crouch,setCrouch]=useState(false);
   const [paused,setPaused]=useState(false);
+  const [questionRun,setQuestionRun]=useState(0);
+  const missionDeck=useMemo(()=>buildMissionDeck(MISSIONS),[questionRun]);
+  const [selectedTokens,setSelectedTokens]=useState<number[]>([]);
+  const [textAnswer,setTextAnswer]=useState('');
+  const [hintVisible,setHintVisible]=useState(false);
+  const [hintsUsed,setHintsUsed]=useState(0);
+  const [mistakes,setMistakes]=useState(0);
+  const [solvedCount,setSolvedCount]=useState(0);
   const host=useRef<HTMLDivElement>(null);
   const engine=useRef<ReturnType<typeof createSecretMission>|null>(null);
   const completedRef=useRef(completed);
@@ -156,6 +165,20 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const next=sequence.find(x=>!completed.includes(x))??'vault';
   const allowed=[...completed,next];
   const allSafesOpen=opened.every(Boolean);
+  const activeChallenge=room?missionDeck[room][activeSafe]:null;
+  const clearAnswer=()=>{
+    setSelectedTokens([]);setTextAnswer('');setHintVisible(false);
+  };
+  const toggleToken=(index:number)=>setSelectedTokens(prev=>
+    prev.includes(index)?prev.filter(item=>item!==index):[...prev,index]);
+  const replayMission=()=>{
+    try{localStorage.removeItem(key);}catch{}
+    setCompleted([]);setDocuments(false);setScore(0);
+    setHintsUsed(0);setMistakes(0);setSolvedCount(0);
+    setOpened([false,false,false,false]);setActiveSafe(0);
+    setSelectedPin(null);setRoom(null);setPhase('intro');setReady(false);
+    clearAnswer();setQuestionRun(v=>v+1);setAttempt(v=>v+1);
+  };
 
   useEffect(()=>{setCompleted(readProgress(key));},[key]);
 
@@ -182,6 +205,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
               setSelectedPin(null);setSafeStage('approach');setLootReady(false);setHealth(100);
               advancingRef.current=false;
               setFrequency(0);setArchiveChoice(null);setDefenseSequence([]);
+              setSelectedTokens([]);setTextAnswer('');setHintVisible(false);
             }
             if(state==='hall'){
               heldDirections.current.clear();directionPointers.current.clear();
@@ -283,13 +307,19 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
       room==='vault'?defenseSequence.join(',')===[activeSafe%3,(activeSafe+1)%3].join(','):true;
     engine.current?.setInstrumentValue(activeSafe,value,correct);
   },[phase,safeStage,room,activeSafe,frequency,archiveChoice,defenseSequence]);
-  const answer=(idx:number)=>{
+  const answer=(idx:number=0)=>{
     if(paused||!room||phase!=='safes'||safeStage!=='challenge'||opened[activeSafe]||selectedPin!==null)return;
-    const q=MISSIONS[room].safes[activeSafe];
-    if(idx!==q.answer){
+    const q=missionDeck[room][activeSafe];
+    const correct=q.mode==='order'
+      ?selectedTokens.length===q.tokenOrder?.length&&selectedTokens.every((token,i)=>q.tokenOrder?.[token]===i)
+      :q.mode==='write'
+        ?Boolean(q.accepted?.some(value=>normalizeArabic(value)===normalizeArabic(textAnswer)))
+        :idx===q.answer;
+    if(!correct){
+      setMistakes(v=>v+1);
       setSelectedPin('wrong');
       if(flashTimer.current)clearTimeout(flashTimer.current);
-      flashTimer.current=setTimeout(()=>setSelectedPin(null),850);
+      flashTimer.current=setTimeout(()=>setSelectedPin(null),1100);
       return;
     }
     const deviceReady=room==='depot'||
@@ -307,13 +337,14 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
     setLootReady(false);
     setSafeStage('unlock');
     setOpened(prev=>prev.map((done,i)=>i===activeSafe?true:done));
-    setScore(n=>n+125);
+    setSolvedCount(n=>n+1);
+    setScore(n=>n+(hintVisible?85:125));
   };
   const advanceSafe=()=>{
     if(advancingRef.current||paused||!room||phase!=='safes'||safeStage!=='unlock'||!lootReady||!opened[activeSafe]||selectedPin==='wrong'||selectedPin==='device')return;
     if(activeSafe<3){
       advancingRef.current=true;
-      const index=activeSafe+1;safeRef.current=index;setActiveSafe(index);setSelectedPin(null);setLootReady(false);setSafeStage('approach');setFrequency(0);setArchiveChoice(null);setDefenseSequence([]);return;
+      const index=activeSafe+1;safeRef.current=index;setActiveSafe(index);setSelectedPin(null);setLootReady(false);setSafeStage('approach');setFrequency(0);setArchiveChoice(null);setDefenseSequence([]);clearAnswer();return;
     }
     // Claim the visible 3D item from the final safe before recording success.
     if(!opened.every(Boolean)||!engine.current?.collectReward())return;
@@ -456,6 +487,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
               <ShieldCheck size={32}/>
               <strong>{!lootReady?(ar?'القفل يفتح الآن…':'UNLOCKING SAFE…'):(ar?'تم جمع الغنيمة':'LOOT COLLECTED')}</strong>
               <span>PIN: {selectedPin}</span>
+              <p className="qul-secret-learned">{activeChallenge?.explanation[lang]}</p>
               <p>{ar?'الغنيمة:':'LOOT:'} <b>{activeSafe===0?(ar?'طلقات إضافية':'EXTRA AMMO'):activeSafe===1?(ar?'درع واقٍ':'ARMOR PLATE'):activeSafe===2?(ar?'وحدة تحسين التصويب':'AIM MODULE'):REWARDS[room][lang]}</b></p>
               {activeSafe===3&&<div className="qul-secret-equipment-reveal">
                 <Zap size={22}/><span>{ar?'المكافأة التي ستجمعها:':'REWARD TO COLLECT:'}</span>
@@ -471,7 +503,10 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
           ):(
             <div className="qul-secret-safe-challenge">
               <span>{ar?'رمز الخزنة '+(activeSafe+1):'SAFE '+(activeSafe+1)+' CODE'}</span>
-              <p>{MISSIONS[room].safes[activeSafe].prompt[lang]}</p>
+              <div className="qul-secret-challenge-kind">
+                {({select:ar?'اختر الدليل الصحيح':'CHOOSE THE CLUE',order:ar?'رتّب الرسالة':'REASSEMBLE MESSAGE',verify:ar?'صح أم خطأ؟':'VERIFY THE STATEMENT',write:ar?'اكتب الشفرة':'TYPE THE CODE'} as const)[missionDeck[room][activeSafe].mode]}
+              </div>
+              <p>{missionDeck[room][activeSafe].prompt[lang]}</p>
               {room==='comms'&&<div className="qul-secret-choices" aria-label={ar?'ضبط التردد':'Tune frequency'}>
                 <button onClick={()=>setFrequency(v=>(v+7)%8)}>−</button>
                 <strong>{ar?'التردد':'FREQUENCY'} {frequency+1} / 8</strong>
@@ -486,12 +521,46 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
                 {[0,1,2].map(n=><button key={n} onClick={()=>setDefenseSequence(v=>[...v,n].slice(-2))}>{ar?'دائرة':'CIRCUIT'} {n+1}</button>)}
                 <small>{ar?'تسلسل التعطيل':'OVERRIDE ORDER'} {activeSafe%3+1} → {(activeSafe+1)%3+1} · {defenseSequence.map(n=>n+1).join(' → ')}</small>
               </div>}
-              <div className="qul-secret-choices">
-                {MISSIONS[room].safes[activeSafe].choices.map((choice,i)=>
+              {activeChallenge?.mode==='select'&&<div className="qul-secret-choices qul-secret-answer-grid">
+                {activeChallenge.options?.map((choice,i)=>
                   <button key={i} onClick={()=>answer(i)}>
-                    <b>{String.fromCharCode(65+i)}</b>
-                    {choice[lang]}
+                    <b>{String.fromCharCode(65+i)}</b>{choice.ar}
+                    {lang==='en'&&<small>{choice.en}</small>}
                   </button>)}
+              </div>}
+              {activeChallenge?.mode==='verify'&&<div className="qul-secret-choices qul-secret-answer-grid">
+                <button onClick={()=>answer(0)}><b>✓</b>{ar?'صحيح':'TRUE'}</button>
+                <button onClick={()=>answer(1)}><b>✕</b>{ar?'خطأ':'FALSE'}</button>
+              </div>}
+              {activeChallenge?.mode==='order'&&<div className="qul-secret-arrange">
+                <div className="qul-secret-arranged" aria-live="polite">
+                  {selectedTokens.length?selectedTokens.map(i=><button key={i} onClick={()=>toggleToken(i)}>{activeChallenge.tokens?.[i].ar}</button>):
+                    <span>{ar?'اضغط على الكلمات لتكوين الجملة':'Tap the words to assemble the Arabic sentence'}</span>}
+                </div>
+                <div className="qul-secret-word-bank">
+                  {activeChallenge.tokens?.map((token,i)=><button key={i} disabled={selectedTokens.includes(i)} onClick={()=>toggleToken(i)}>
+                    <strong>{token.ar}</strong>{lang==='en'&&<small>{token.en}</small>}
+                  </button>)}
+                </div>
+                <button className="qul-secret-primary" disabled={selectedTokens.length!==activeChallenge.tokens?.length} onClick={()=>answer()}>
+                  <Check size={17}/>{ar?'تحقق من الترتيب':'CHECK ORDER'}
+                </button>
+              </div>}
+              {activeChallenge?.mode==='write'&&<div className="qul-secret-write">
+                <input dir="rtl" lang="ar" autoComplete="off" autoCorrect="off" spellCheck={false}
+                  value={textAnswer} onChange={e=>setTextAnswer(e.target.value)}
+                  onKeyDown={e=>{if(e.key==='Enter')answer();}}
+                  placeholder={ar?'اكتب الإجابة بالعربية':'Type the Arabic answer'}
+                  aria-label={ar?'إجابة عربية':'Answer in Arabic'}/>
+                <button className="qul-secret-primary" disabled={!textAnswer.trim()} onClick={()=>answer()}>
+                  <Check size={17}/>{ar?'تحقق من الكلمة':'CHECK ANSWER'}
+                </button>
+              </div>}
+              <div className="qul-secret-help">
+                <button onClick={()=>{if(!hintVisible){setHintVisible(true);setHintsUsed(n=>n+1);}}} disabled={hintVisible}>
+                  {ar?'مساعدة من غرفة العمليات':'HINT FROM HQ'} {hintVisible?'✓':'?'}
+                </button>
+                {hintVisible&&<p role="status">{activeChallenge?.hint[lang]}</p>}
               </div>
             </div>
           )}
@@ -509,7 +578,9 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
         <Trophy size={43}/><small>MISSION ACCOMPLISHED</small>
         <h2>{ar?'استعدت الأوراق السرية!':'CLASSIFIED DOCUMENTS RECOVERED!'}</h2>
         <p>{ar?'نجحت في تجاوز حراس المنشأة، وفتح الخزائن الست عشرة، وتعطيل السلاح المتطور، واستعادة الوثائق.':'You cleared the guards, unlocked sixteen safes, disabled the advanced defense system and recovered the secret documents.'}</p>
-        <div className="qul-secret-win-stats"><span>16 / 16 {ar?'خزنة':'SAFES'}</span><span>{score} XP</span></div>
+        <div className="qul-secret-win-stats"><span>{solvedCount} / 16 {ar?'شفرة':'CODES'}</span><span>{score} XP</span></div>
+        <p>{ar?`محاولات غير صحيحة: ${mistakes} · مساعدات مستخدمة: ${hintsUsed}`:`Incorrect tries: ${mistakes} · Hints used: ${hintsUsed}`}</p>
+        <button className="qul-secret-secondary" onClick={replayMission}><RotateCcw size={16}/>{ar?'مهمة جديدة بأسئلة مختلفة':'REPLAY WITH NEW QUESTIONS'}</button>
         <button className="qul-secret-primary" onClick={onBack}><FileText size={18}/>{ar?'العودة للألعاب':'BACK TO GAMES'}</button>
       </div>}
 
