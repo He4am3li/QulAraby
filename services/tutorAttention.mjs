@@ -1,3 +1,6 @@
+// Both full-body portraits use the same camera scale and foot plane.
+export const EGYPT_BODY_VIEWPORT = Object.freeze({ x: 100, y: 0, w: 824, h: 1536 });
+
 /** Only the active speaker uses speech animation; both tutors attend to the student. */
 export function resolveTutorAttention({ isSpeaking = false, isListening = false, isLoading = false,
   partnerSpeaking = false, partnerDirection = 'left', reaction = 'idle' } = {}) {

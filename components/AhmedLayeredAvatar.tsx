@@ -2,6 +2,7 @@ import React from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { REST_LIPS, type SpeechLipSync } from '../services/speechLipSync.mjs';
 import { createMouthCompositor } from '../services/speechMouth.mjs';
+import { EGYPT_BODY_VIEWPORT } from '../services/tutorAttention.mjs';
 import { AHMED_MANIFEST_URL, AHMED_ORIGINAL_URL, paintAhmed, resolveAhmedAttention, validateAhmedManifest } from '../services/ahmedFacialRig.mjs';
 
 type Reaction = 'idle' | 'greeting' | 'correct' | 'retry';
@@ -74,7 +75,7 @@ export const AhmedLayeredAvatar: React.FC<Props> = ({
   const reduceMotion = useReducedMotion();
   const viewport = view === 'portrait'
     ? { x: 315, y: 0, w: 400, h: 650 }
-    : { x: 180, y: 0, w: 670, h: 1536 };
+    : EGYPT_BODY_VIEWPORT;
   const attention = resolveAhmedAttention({ isSpeaking, isListening, isLoading, partnerSpeaking, partnerDirection, reaction });
   const motionRef = React.useRef({ ...attention, lipSync });
   motionRef.current = { ...attention, lipSync };

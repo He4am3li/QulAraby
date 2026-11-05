@@ -2,6 +2,7 @@ import React from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { REST_LIPS, type SpeechLipSync } from '../services/speechLipSync.mjs';
 import { createMouthCompositor } from '../services/speechMouth.mjs';
+import { EGYPT_BODY_VIEWPORT } from '../services/tutorAttention.mjs';
 import { FATIMA_MANIFEST_URL, FATIMA_ORIGINAL_URL, paintFatima, resolveFatimaAttention, validateFatimaManifest } from '../services/fatimaFacialRig.mjs';
 
 type Reaction = 'idle' | 'greeting' | 'correct' | 'retry';
@@ -72,7 +73,7 @@ export const FatimaLayeredAvatar: React.FC<Props> = ({
   const reduceMotion = useReducedMotion();
   const viewport = view === 'portrait'
     ? { x: 325, y: 0, w: 375, h: 540 }
-    : { x: 100, y: 0, w: 824, h: 1536 };
+    : EGYPT_BODY_VIEWPORT;
   const attention = resolveFatimaAttention({ isSpeaking, isListening, isLoading, partnerSpeaking, partnerDirection, reaction });
   const motionRef = React.useRef({ ...attention, lipSync });
   motionRef.current = { ...attention, lipSync };
