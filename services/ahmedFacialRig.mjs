@@ -1,15 +1,15 @@
 import { paintSpeechMouth } from './speechMouth.mjs';
 export { resolveTutorAttention as resolveAhmedAttention } from './tutorAttention.mjs';
 
-export const AHMED_MANIFEST_URL = '/avatars/ahmed-facial-v1.json';
-export const AHMED_ORIGINAL_URL = '/avatars/ahmed-original.png';
+export const AHMED_MANIFEST_URL = '/avatars/ahmed-facial-v2.json';
+export const AHMED_ORIGINAL_URL = '/avatars/ahmed-stance-v2.webp';
 const required = ['Face_BrowSkin_Rebuilt', ...['R', 'L'].flatMap(s => [
   `Brow_${s}`, `Brow_${s}_Thinking`, `Brow_${s}_Attentive`, `EyeWhite_${s}_Rebuilt`,
   `Iris_${s}`, `Pupil_${s}`, `Blink_${s}_Closed`
 ]), ...['Closed', 'A', 'E', 'O', 'FV', 'Smile'].map(s => `Mouth_${s}`)];
 
 export function validateAhmedManifest(value) {
-  if (!value || value.status !== 'approved' || value.characterId !== 'egypt_male' ||
+  if (!value || value.version !== 2 || value.status !== 'approved' || value.characterId !== 'egypt_male' ||
       value.width !== 1024 || value.height !== 1536 || value.source !== AHMED_ORIGINAL_URL ||
       !value.layers || required.some(name => !value.layers[name]) ||
       !['R', 'L'].every(s => typeof value.eyeClips?.[s] === 'string' && value.eyeClips[s].length)) return null;
@@ -18,7 +18,7 @@ export function validateAhmedManifest(value) {
         layer.x < 0 || layer.y < 0 || layer.w <= 0 || layer.h <= 0 ||
         layer.x + layer.w > value.width || layer.y + layer.h > value.height ||
         typeof layer.visible !== 'boolean' || typeof layer.url !== 'string' ||
-        !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(layer.url)) return null;
+        !/^\/avatars\/ahmed-stance-v2\/[A-Za-z0-9_-]+\.png$/.test(layer.url)) return null;
   }
   return value;
 }

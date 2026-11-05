@@ -4,7 +4,8 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import {validateFatimaManifest,planFatimaFrame,paintFatima,resolveFatimaAttention} from '../services/fatimaFacialRig.mjs';
 import {REST_LIPS,SpeechLipSync} from '../services/speechLipSync.mjs';
-const manifest=JSON.parse(fs.readFileSync(new URL('../public/avatars/fatima-facial-v1.json',import.meta.url)));
+import {getTutorStageDirection,getTutorPartnerDirection} from '../services/tutorAttention.mjs';
+const manifest=JSON.parse(fs.readFileSync(new URL('../public/avatars/fatima-facial-v2.json',import.meta.url)));
 test('Fatima assets have their declared dimensions and retain the reviewed source',()=>{
  assert.ok(validateFatimaManifest(manifest));
  const original=fs.readFileSync(new URL('../public'+manifest.source,import.meta.url));
@@ -16,9 +17,19 @@ test('Fatima assets have their declared dimensions and retain the reviewed sourc
  }
 });
 test('invalid identity, unreviewed assets, traversal and mouth misregistration fail closed',()=>{
- for(const mutate of [m=>m.characterId='libya_female',m=>m.status='draft',m=>delete m.layers.Mouth_FV,
+ for(const mutate of [m=>m.version=1,m=>m.characterId='libya_female',m=>m.status='draft',m=>delete m.layers.Mouth_FV,
   m=>m.layers.Mouth_A.x++,m=>m.layers.Eyes_Left.url='/avatars/fatima-layers/../other.png',
   m=>m.layers.Blink_L_Closed.w=1024]){const m=structuredClone(manifest);mutate(m);assert.equal(validateFatimaManifest(m),null);}
+});
+test('Egyptian body poses face inward in both languages without reversing other countries',()=>{
+ for(const lang of ['ar','en']) {
+  assert.equal(getTutorStageDirection('egypt',lang),'rtl');
+  assert.equal(getTutorPartnerDirection('egypt','male',lang),'left');
+  assert.equal(getTutorPartnerDirection('egypt','female',lang),'right');
+ }
+ assert.equal(getTutorStageDirection('saudi','en'),'ltr');
+ assert.equal(getTutorPartnerDirection('saudi','male','en'),'right');
+ assert.equal(getTutorPartnerDirection('saudi','female','ar'),'right');
 });
 test('complete blinks suppress gaze, invalid inputs remain bounded, idle preserves source',()=>{
  assert.deepEqual(planFatimaFrame(manifest),[]);

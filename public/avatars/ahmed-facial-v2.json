@@ -1,0 +1,217 @@
+{
+  "version": 2,
+  "status": "approved",
+  "characterId": "egypt_male",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/ahmed-stance-v2.webp",
+  "sourceSha256": "d21c0921b8b48e169a3605279ca51612820f34b905d2b2a720f5c94ad88d20ca",
+  "eyeClips": {
+    "R": "M460.035 147Q477.186 135 500.389 146Q481.221 158 460.035 149Z",
+    "L": "M526.619 146Q545.788 134 565.965 145Q549.823 158 527.628 149Z"
+  },
+  "mouthBounds": {
+    "x": 475,
+    "y": 193,
+    "w": 81,
+    "h": 49
+  },
+  "faceBounds": {
+    "x": 447,
+    "y": 115,
+    "w": 132,
+    "h": 127
+  },
+  "layers": {
+    "Mouth_Closed": {
+      "x": 475,
+      "y": 193,
+      "w": 81,
+      "h": 49,
+      "visible": true,
+      "url": "/avatars/ahmed-stance-v2/Mouth_Closed.png"
+    },
+    "Brow_R": {
+      "x": 451,
+      "y": 121,
+      "w": 53,
+      "h": 20,
+      "visible": true,
+      "url": "/avatars/ahmed-stance-v2/Brow_R.png"
+    },
+    "Brow_L": {
+      "x": 525,
+      "y": 121,
+      "w": 50,
+      "h": 20,
+      "visible": true,
+      "url": "/avatars/ahmed-stance-v2/Brow_L.png"
+    },
+    "Pupil_R": {
+      "x": 477,
+      "y": 142,
+      "w": 8,
+      "h": 10,
+      "visible": true,
+      "url": "/avatars/ahmed-stance-v2/Pupil_R.png"
+    },
+    "Pupil_L": {
+      "x": 541,
+      "y": 141,
+      "w": 10,
+      "h": 11,
+      "visible": true,
+      "url": "/avatars/ahmed-stance-v2/Pupil_L.png"
+    },
+    "Iris_R": {
+      "x": 472,
+      "y": 141,
+      "w": 18,
+      "h": 12,
+      "visible": true,
+      "url": "/avatars/ahmed-stance-v2/Iris_R.png"
+    },
+    "Iris_L": {
+      "x": 537,
+      "y": 140,
+      "w": 18,
+      "h": 13,
+      "visible": true,
+      "url": "/avatars/ahmed-stance-v2/Iris_L.png"
+    },
+    "EyeWhite_R_Original": {
+      "x": 460,
+      "y": 141,
+      "w": 39,
+      "h": 12,
+      "visible": true,
+      "url": "/avatars/ahmed-stance-v2/EyeWhite_R_Original.png"
+    },
+    "EyeWhite_L_Original": {
+      "x": 527,
+      "y": 140,
+      "w": 38,
+      "h": 12,
+      "visible": true,
+      "url": "/avatars/ahmed-stance-v2/EyeWhite_L_Original.png"
+    },
+    "Face_BrowSkin_Rebuilt": {
+      "x": 449,
+      "y": 119,
+      "w": 128,
+      "h": 24,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/Face_BrowSkin_Rebuilt.png"
+    },
+    "EyeWhite_R_Rebuilt": {
+      "x": 460,
+      "y": 141,
+      "w": 39,
+      "h": 12,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/EyeWhite_R_Rebuilt.png"
+    },
+    "EyeWhite_L_Rebuilt": {
+      "x": 527,
+      "y": 140,
+      "w": 38,
+      "h": 13,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/EyeWhite_L_Rebuilt.png"
+    },
+    "Blink_R_Closed": {
+      "x": 454,
+      "y": 134,
+      "w": 53,
+      "h": 29,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/Blink_R_Closed.png"
+    },
+    "Blink_L_Closed": {
+      "x": 524,
+      "y": 133,
+      "w": 51,
+      "h": 30,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/Blink_L_Closed.png"
+    },
+    "Brow_R_Thinking": {
+      "x": 451,
+      "y": 119,
+      "w": 53,
+      "h": 20,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/Brow_R_Thinking.png"
+    },
+    "Brow_L_Thinking": {
+      "x": 525,
+      "y": 122,
+      "w": 50,
+      "h": 20,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/Brow_L_Thinking.png"
+    },
+    "Brow_R_Attentive": {
+      "x": 451,
+      "y": 120,
+      "w": 53,
+      "h": 20,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/Brow_R_Attentive.png"
+    },
+    "Brow_L_Attentive": {
+      "x": 525,
+      "y": 120,
+      "w": 50,
+      "h": 20,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/Brow_L_Attentive.png"
+    },
+    "Mouth_A": {
+      "x": 475,
+      "y": 193,
+      "w": 81,
+      "h": 49,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 475,
+      "y": 193,
+      "w": 81,
+      "h": 49,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 475,
+      "y": 193,
+      "w": 81,
+      "h": 49,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 475,
+      "y": 193,
+      "w": 81,
+      "h": 49,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 475,
+      "y": 193,
+      "w": 81,
+      "h": 49,
+      "visible": false,
+      "url": "/avatars/ahmed-stance-v2/Mouth_Smile.png"
+    }
+  },
+  "pose": {
+    "bodyFacing": "left",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "right"
+  }
+}
