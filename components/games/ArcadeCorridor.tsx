@@ -133,6 +133,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const [rewardToast,setRewardToast]=useState<SecretRoomId|null>(null);
   const [score,setScore]=useState(0);
   const [ready,setReady]=useState(false);
+  const [operatorStatus,setOperatorStatus]=useState<'loading'|'ready'|'error'>('loading');
   const [error,setError]=useState('');
   const [attempt,setAttempt]=useState(0);
   const [input,setInput]=useState<Input>({forward:0,strafe:0,run:false});
@@ -185,6 +186,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   useEffect(()=>{
     const container=host.current;if(!container)return;
     let stopped=false;
+    setOperatorStatus('loading');
     let scene:ReturnType<typeof createSecretMission>|null=null;
     import('./SecretMissionEngine').then(module=>{
       if(stopped)return;
@@ -228,6 +230,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
             }
           },
           onHealth(value){if(!stopped)setHealth(value);},
+          onOperatorStatus(status){if(!stopped)setOperatorStatus(status);},,
           onWeaponChange(tier){if(!stopped)setSelectedWeapon(tier);},
           onSafeReady(){if(!stopped)setSafeStage('challenge');},
           onInstrumentTap(id){
@@ -402,17 +405,18 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
   const accessible=SECRET_ROOMS.filter(r=>allowed.includes(r.id));
   const gear=completed.length;
   return (
-    <section className={"qul-secret"+(phase==='safes'?" qul-secret-solving":"")} dir={ar?'rtl':'ltr'}>
+    <section className={"qul-secret"+(phase==='safes'?" qul-secret-solving":"")+(phase==='intro'?" qul-secret-cinematic":"")} dir={ar?'rtl':'ltr'}>
       <div ref={host} className="qul-secret-scene" aria-label={ar?'منشأة العمليات ثلاثية الأبعاد':'3D tactical facility'} />
       <div className="qul-secret-shade" aria-hidden="true" />
+      {ready&&phase==='intro'&&<div className="qul-secret-cinema-atmosphere" aria-hidden="true"><span className="qul-secret-cinema-x">X</span><span className="qul-secret-cinema-grid"/></div>}
       <div className="qul-secret-top">
-        <div className="qul-secret-logo"><Crosshair size={22}/><div><strong>QUL OPS</strong><small>{ar?'العملية: استرداد الوثائق':'OPERATION: DOCUMENT RECOVERY'}</small></div></div>
+        <div className="qul-secret-logo"><Crosshair size={22}/><div><strong>OPERATION <em>X</em></strong><small>{ar?'عملية استرداد الملفات السرية':'CLASSIFIED DOSSIER RECOVERY'}</small></div></div>
         <div className="qul-secret-gear"><Zap size={15}/> MK-{gear+1}</div>
         <button className="qul-secret-exit" onClick={onBack}><X size={17}/>{ar?'خروج':'EXIT'}</button>
       </div>
       {ready&&['hall','combat','safes'].includes(phase)&&<div className="qul-secret-tactical-hud">
         <div className="qul-secret-hud-vitals"><small>OPERATOR / STATUS</small><div className="qul-secret-hud-health"><ShieldCheck size={17}/><strong>{health}%</strong><div className="qul-secret-hud-meter"><i style={{width:health+'%'}}/></div></div><div className="qul-secret-hud-metrics"><span><Target size={13}/>{threats}</span><span><FileLock2 size={13}/>{completed.length}/4</span><span><Zap size={13}/>{score} XP</span></div></div>
-        <div className="qul-secret-hud-arsenal"><small>{ar?'منظومة التسليح':'TACTICAL LOADOUT'} / QUL OPS</small><div className="qul-secret-hud-weapon"><div className="qul-secret-hud-silhouette" aria-hidden="true"><span/></div><div><small>{ar?'السلاح النشط':'ACTIVE WEAPON'}</small><strong>{[ar?'قاذف الطاقة الأساسي':'STANDARD BLASTER',REWARDS.depot[lang],REWARDS.comms[lang],REWARDS.archive[lang],ar?'قاذف الطاقة المتقدم':'ADVANCED BLASTER'][selectedWeapon]}</strong><b>MK-{selectedWeapon+1} · {ammo.loaded}/{ammo.reserve}</b></div></div><div className="qul-secret-hud-slots" role="group" aria-label={ar?'اختيار السلاح':'Select weapon'}>{[0,1,2,3,4].map(tier=><button key={tier} disabled={tier>gear} className={selectedWeapon===tier?'selected':''} aria-pressed={selectedWeapon===tier} aria-label={(ar?'السلاح ':'Weapon ')+(tier+1)} onClick={()=>engine.current?.setWeaponTier(tier)}><span>{tier+1}</span>{tier>gear?<LockKeyhole size={13}/>:<Zap size={16}/>}</button>)}</div><div className="qul-secret-hud-hint">{ar?'1–5 سلاح · F إطلاق · R تلقيم':'1–5 WEAPON · F FIRE · R RELOAD'}</div></div>
+        <div className="qul-secret-hud-arsenal"><small>{ar?'منظومة التسليح':'TACTICAL LOADOUT'} / OPERATION X</small><div className="qul-secret-hud-weapon"><div className="qul-secret-hud-silhouette" aria-hidden="true"><span/></div><div><small>{ar?'السلاح النشط':'ACTIVE WEAPON'}</small><strong>{[ar?'قاذف الطاقة الأساسي':'STANDARD BLASTER',REWARDS.depot[lang],REWARDS.comms[lang],REWARDS.archive[lang],ar?'قاذف الطاقة المتقدم':'ADVANCED BLASTER'][selectedWeapon]}</strong><b>MK-{selectedWeapon+1} · {ammo.loaded}/{ammo.reserve}</b></div></div><div className="qul-secret-hud-slots" role="group" aria-label={ar?'اختيار السلاح':'Select weapon'}>{[0,1,2,3,4].map(tier=><button key={tier} disabled={tier>gear} className={selectedWeapon===tier?'selected':''} aria-pressed={selectedWeapon===tier} aria-label={(ar?'السلاح ':'Weapon ')+(tier+1)} onClick={()=>engine.current?.setWeaponTier(tier)}><span>{tier+1}</span>{tier>gear?<LockKeyhole size={13}/>:<Zap size={16}/>}</button>)}</div><div className="qul-secret-hud-hint">{ar?'المسطرة إطلاق · J قفز · R تلقيم':'SPACE FIRE · J JUMP · R RELOAD'}</div></div>
       </div>}
       {!ready&&<div className="qul-secret-loader" role="status"><Crosshair size={40}/>
         <h2>{error||(ar?'جارٍ تجهيز المهمة...':'Preparing your mission...')}</h2>
@@ -420,17 +424,25 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
         <button onClick={onBack}>{ar?'العودة للألعاب':'Back to games'}</button>
       </div>}
 
-      {ready&&phase==='intro'&&<div className="qul-secret-brief">
-        <div className="qul-secret-case">TOP SECRET / ملف سري</div>
-        <h1>{ar?'عملية استرداد الأوراق السرية':'THE STOLEN DOCUMENTS'}</h1>
-        <p>{ar?'سرقت مجموعة مسلحة وثائق حساسة وأخفتها في منشأة محصنة. ادخل بترقّب، وتعامل مع الحراس، وافتح ٤ خزائن في كل غرفة بحل شفرات عربية متدرجة الصعوبة، ثم عطّل السلاح الآلي واستعد الأوراق.':'Stolen documents are hidden in a guarded facility. Clear the security threats, open four language-coded safes in each room, disable the final turret, and recover the documents.'}</p>
-        <div className="qul-secret-brief-facts">
-          <span>{ar?'٤ غرف':'4 ROOMS'}</span><span>{ar?'١٦ خزنة':'16 SAFES'}</span><span>{ar?'تدرج A1–B2':'A1–B2'}</span>
+      {ready&&phase==='intro'&&<>
+        <div className="qul-secret-operator-caption" aria-hidden="true">
+          <b>QUL SPECIAL OPERATIONS</b><span>{ar?'العميل جاهز للتسلل':'OPERATOR DEPLOYMENT'}</span>
+          <i/>
         </div>
-        <button className="qul-secret-primary" onClick={()=>engine.current?.start()}>
-          <DoorOpen size={20}/>{ar?'ابدأ التسلل':'BEGIN INFILTRATION'}
-        </button>
-      </div>}
+        <div className="qul-secret-brief">
+          <div className="qul-secret-case"><span className="qul-secret-alert-dot"/> {ar?'سري للغاية · المهمة 001':'TOP SECRET · MISSION 001'}</div>
+          <div className="qul-secret-intro-title"><span>{ar?'العملية':'OPERATION'}</span><b>X</b></div>
+          <h1>{ar?'تسلّل. فكّ الشفرة. استردّ الملفات.':'INFILTRATE. DECODE. RECOVER.'}</h1>
+          <p>{ar?'منشأة معادية، حراس يراقبون الممرات، وملفات سرية داخل الخزائن. كل شفرة عربية تقرّبك من الهدف.':'A guarded facility. Missing dossiers. Arabic codes that unlock the route to extraction.'}</p>
+          <div className="qul-secret-brief-facts">
+            <span>{ar?'٤ قطاعات':'4 SECTORS'}</span><span>{ar?'١٦ ملفًا':'16 DOSSIERS'}</span><span>A1 · B2</span>
+          </div>
+          <button className="qul-secret-primary qul-secret-start" disabled={operatorStatus!=='ready'} onClick={()=>engine.current?.start()}>
+            <DoorOpen size={20}/>{operatorStatus==='ready'?(ar?'ابدأ العملية':'START OPERATION'):(ar?'جارٍ تجهيز الجندي الحقيقي...':'LOADING REAL OPERATOR...')}
+          </button>
+          <small className="qul-secret-intro-footnote">{ar?'WASD للتحرك · المسطرة لإطلاق النار · J للقفز':'WASD MOVE · SPACE FIRE · J JUMP'}</small>
+        </div>
+      </>}
 
       {ready&&phase==='entering'&&<div className="qul-secret-status">{ar?'فتح بوابة المنشأة...':'OPENING FACILITY GATE...'}</div>}
       {ready&&phase==='room-enter'&&<div className="qul-secret-status">{ar?'دخول الغرفة بترقّب...':'ENTERING ROOM...'}</div>}
@@ -465,7 +477,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
         <strong><ShieldAlert size={20}/>{ar?'تحذير: حراس مسلحون':'HOSTILES DETECTED'}</strong>
         <p>{MISSIONS[room].briefing[lang]}</p>
         <span>{ar?'الحراس المتبقون':'HOSTILES REMAINING'}: {threats}</span>
-        <small>{ar?'استخدم التصويب وإطلاق نبضات الطاقة. المشي البطيء والزحف يقللان احتمال إصابتك.':'Aim and fire energy pulses. Crouching and moving reduce your exposure.'}</small>
+        <small>{ar?'تقدّم بحذر، أطلق النار بالمسطرة، واستخدم الانحناء والغطاء لتفادي إطلاق الحارس.':'Move carefully, use Space to fire, and take cover before the guard shoots.'}</small>
       </div>}
 
       {ready&&phase==='safes'&&room&&safeStage!=='approach'&&
@@ -602,7 +614,7 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
               <ArrowUp size={19}/><small>{ar?'قفز':'JUMP'}</small>
             </button>
             <button className={'qul-secret-action crouch '+(crouch?'active':'')}
-              onClick={()=>setCrouch(x=>!x)}><Footprints size={18}/><small>{ar?'زحف':'CROUCH'}</small></button>
+              onClick={()=>setCrouch(x=>!x)}><Footprints size={18}/><small>{ar?'انحناء':'CROUCH'}</small></button>
             <button className="qul-secret-action run"
               onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);setInput(p=>({...p,run:true}));}}
               onPointerUp={()=>setInput(p=>({...p,run:false}))}
@@ -619,8 +631,8 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
           </div>
         </div>}
       {ready&&<div className="qul-secret-bottom-help">{ar?
-        'WASD حركة · الفأرة لتوجيه الكاميرا · Shift ركض · Space قفز · C انحناء · اضغط F للإطلاق · R تلقيم · E اقتحام':
-        'WASD MOVE · DRAG CAMERA · SHIFT SPRINT · SPACE JUMP · C CROUCH · F FIRE · E ENTER'}</div>}
+        'WASD حركة · الفأرة للتصويب · المسطرة إطلاق · J قفز · C انحناء · Shift ركض · R تلقيم':
+        'WASD MOVE · MOUSE AIM · SPACE FIRE · J JUMP · C CROUCH · SHIFT RUN · R RELOAD'}</div>}
       {ready&&<button className="qul-secret-pause" onClick={()=>setPaused(p=>!p)}>
         {paused?(ar?'استئناف':'RESUME'):(ar?'إيقاف مؤقت':'PAUSE')}
       </button>}
