@@ -524,6 +524,9 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   let skeletalHands:THREE.Bone[]=[];
   let weaponGrip:THREE.Bone|null=null;
   let skeletalShoulders:THREE.Bone[]=[];
+  type ArmChain={hand:THREE.Bone; elbow:THREE.Bone; shoulder:THREE.Bone; side:'left'|'right'};
+  const armChains:ArmChain[]=[];
+  const lastAimRotations=new Map<THREE.Bone,THREE.Quaternion>();
   const lastReachRotations=new Map<THREE.Bone,THREE.Quaternion>();
   for(const side of [-1,1]){
     const sleeve=round(interactionHands,.115,.48,armor,[side*.28,1.12,-.3]);
@@ -811,6 +814,16 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
           upper=upper.parent;
         }
         if(upper instanceof THREE.Bone)skeletalShoulders.push(upper);
+        let forearm:THREE.Bone|null=null;
+        let node:THREE.Object3D|null=candidate.parent;
+        while(node&&node!==model){
+          if(node instanceof THREE.Bone&&/forearm|lowerarm|elbow/i.test(node.name)){
+            forearm=node;break;
+          }
+          node=node.parent;
+        }
+        if(forearm&&upper instanceof THREE.Bone)
+          armChains.push({hand:candidate,elbow:forearm,shoulder:upper,side:side as 'left'|'right'});
       }
     }
     modelMixer=new THREE.AnimationMixer(model);
@@ -1284,7 +1297,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const w=container.clientWidth,h=container.clientHeight;
     if(!w||!h)return;
     renderer.setSize(w,h,false);camera.aspect=w/h;
-    camera.fov=w<650?71:65;camera.updateProjectionMatrix();
+    camera.fov=w<650?67:60;camera.updateProjectionMatrix();
   };
   const observer=new ResizeObserver(resize);observer.observe(container);resize();
   const preventMenu=(e:MouseEvent)=>e.preventDefault();
@@ -1607,8 +1620,12 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
     const weaponLift=danger?.035:0;
     // Grip a weapon in front of the character even if the remote skeletal rig fails.
     if(heroWeapon.parent===playerRoot){
-      heroWeapon.position.set(.45,crouch?1.02:1.26+weaponLift,-.73);
-      heroWeapon.rotation.set(-pitch*.4,0,0);
+      // Keep the rifle supported against the chest and aimed forward.
+      // It is not attached to a drifting animation wrist. Both hands are
+      // subsequently pulled to its physical grip and handguard positions.
+      const breathing=Math.sin(time*1.9)*.008;
+      heroWeapon.position.set(.19+breathing,crouch?1.17:1.33+weaponLift,-.47+shotKick*.075);
+      heroWeapon.rotation.set(-.12-pitch*.27-shotKick*.18,-.065,.015+breathing*.6);
     }
     if(modelMixer){
       // Finite-state locomotion: grounded, airborne, prone and transitions.
@@ -1637,25 +1654,47 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
         if(/walk|run/.test(clipName))modelAction.setEffectiveTimeScale(
           clamp(locomotionBlend/(clipName.includes('run')?5.8:3.2),.55,1.4));
       }
+      // Reset previous IK offsets for animation channels that do not key
+      // every elbow and shoulder on each frame. This prevents pose drift.
+      for(const [bone,rotation] of lastAimRotations)
+        bone.quaternion.premultiply(rotation.clone().invert());
+      lastAimRotations.clear();
       modelMixer.update(dt);
-      // Follow the real animated right hand in actor-local coordinates, but
-      // clamp the grip to the visible right side of the torso. This avoids
-      // off-screen / inside-mesh guns when GLB skeleton axes differ.
-      if(weaponGrip){
-        model.updateMatrixWorld(true);
+      // Rifle mount stays torso-stable; arm bones align to its two grip points.
+      // This prevents the weapon swinging independently of the soldier.
+      // Two-hand aim rig, small per-joint CCD rotations in world space.
+      // The trigger hand aligns with the receiver and the support hand
+      // aligns with the foregrip. Both remain connected while moving.
+      const holdingWeapon=heroWeapon.visible&&['intro','entering','hall','room-enter','combat','room-exit'].includes(phase);
+      if(holdingWeapon&&armChains.length){
         playerRoot.updateMatrixWorld(true);
-        const handLocal=playerRoot.worldToLocal(weaponGrip.getWorldPosition(new THREE.Vector3()));
-        // Hand rigs vary by GLB: a grip inside the torso is visually lost.
-        // Keep the weapon just forward of the right hand and outside the chest.
-        const gripTarget=new THREE.Vector3(
-          clamp(handLocal.x+.24,.42,.76),
-          clamp(handLocal.y,1.08,1.48),
-          clamp(handLocal.z-.56,-1.08,-.7)
-        );
-        heroWeapon.position.lerp(gripTarget,Math.min(1,dt*13));
-        // Smooth weapon presentation without copying arbitrary wrist axes.
-        heroWeapon.rotation.x=THREE.MathUtils.damp(heroWeapon.rotation.x,-.14-shotKick*.22,12,dt);
-        heroWeapon.rotation.y=THREE.MathUtils.damp(heroWeapon.rotation.y,-.16,12,dt);
+        heroWeapon.updateMatrixWorld(true);
+        for(const chain of armChains){
+          const grip=heroWeapon.localToWorld(new THREE.Vector3(
+            chain.side==='right'?.09:-.12,
+            chain.side==='right'?-.06:-.13,
+            chain.side==='right'?.18:-.52
+          ));
+          for(let pass=0;pass<(phone?2:3);pass++){
+            for(const bone of [chain.elbow,chain.shoulder]){
+              model.updateMatrixWorld(true);
+              const joint=bone.getWorldPosition(new THREE.Vector3());
+              const hand=chain.hand.getWorldPosition(new THREE.Vector3());
+              const from=hand.sub(joint);
+              const to=grip.clone().sub(joint);
+              if(from.lengthSq()<.0001||to.lengthSq()<.0001)continue;
+              const desired=new THREE.Quaternion().setFromUnitVectors(from.normalize(),to.normalize());
+              const angle=2*Math.acos(clamp(desired.w,-1,1));
+              if(angle<.004)continue;
+              const bounded=new THREE.Quaternion().identity().slerp(desired,Math.min(1,.35/angle));
+              const parentWorld=bone.parent!.getWorldQuaternion(new THREE.Quaternion());
+              const local=parentWorld.clone().invert().multiply(bounded).multiply(parentWorld);
+              bone.quaternion.premultiply(local);
+              const previous=lastAimRotations.get(bone);
+              lastAimRotations.set(bone,previous?local.clone().multiply(previous):local);
+            }
+          }
+        }
       }
       // Apply reach after animation sampling; the mixer otherwise resets the
       // hand bones on every frame. Use a bounded additive wrist rotation.
@@ -1805,8 +1844,8 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       ):
       usingWorkstation&&activeRoom?
         new THREE.Vector3(activeRoom.group.position.x-3.32+safeIndex*2.18+1.05,2.16,activeRoom.info.z-.48):
-        head.clone().addScaledVector(forward,roomView?-2.65:-4.4)
-          .addScaledVector(right,roomView?.62:1.15);
+        head.clone().addScaledVector(forward,phone?(roomView?-2.15:-2.65):(roomView?-1.95:-2.6))
+          .addScaledVector(right,phone?(roomView?.68:.78):(roomView?.83:.96));
     if(!exitingPortal)camTarget.y+=roomView?.82:1.0;
     // Keep the third-person camera inside the playable corridor or room,
     // rather than letting it pass through walls and expose exterior geometry.
