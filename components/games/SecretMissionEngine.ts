@@ -663,8 +663,6 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
   gltfLoader.load('https://threejs.org/examples/models/gltf/Soldier.glb',gltf=>{
     if(loaderDisposed){gltf.scene.traverse(n=>{if(n instanceof THREE.Mesh)n.geometry.dispose();});return;}
     model=gltf.scene;
-    operatorReady=true;
-    events.onOperatorStatus?.('ready');
     guardAnimations.push(...gltf.animations);
     model.scale.setScalar(.96);
     avatar.add(model);heroFallback.visible=false;
@@ -696,7 +694,13 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       clips.set(anim.name.toLowerCase(),action);
     }
     modelAction=clips.get('idle')||null;modelAction?.play();
-    for(const guard of guards)dressGuard(guard);
+    // Prepare all room security while the intro is still displayed, not at
+    // the doorway. This removes the first-entry skeletal clone hitch.
+    for(const room of rooms)spawnGuards(room);
+    guards.length=0;
+    events.onThreats(0);
+    operatorReady=true;
+    events.onOperatorStatus?.('ready');
     // Use a body-space grip as a reliable initial pose; the update loop
     // tracks the animated right hand without inheriting unpredictable GLB
     // wrist axes that can bury the rifle inside the soldier mesh.
@@ -1560,7 +1564,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
             leg.position.z=.34*sitting;
           }
           // The bones are adjusted after the animation mixer has sampled the idle pose.
-          for(const thigh of guard.thighBones)thigh.rotateX(-.78*sitting);
+          for(const thigh of guard.thighBones)thigh.rotation.x=-.78*sitting;
         }
         if(!guard.alive){
           guard.dying+=dt;
