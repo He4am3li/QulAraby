@@ -15,6 +15,7 @@ import { Interactive3DTutor } from '../components/Interactive3DTutor';
 import { DialectReferencePanel } from '../components/DialectReferencePanel';
 import { DialectVoiceOrb } from '../components/DialectVoiceOrb';
 import { DialectChatDock } from '../components/DialectChatDock';
+import { DialectSpeechOverlay } from '../components/DialectSpeechOverlay';
 import { DialectPassportCover, DialectPassportLibrary } from '../components/DialectPassports';
 import { assessDialectMission, type MissionTurn } from '../services/dialectMissionAssessment';
 import { getAI, getLiveAI, generateSpeech, decodeAudioData } from '../services/gemini';
@@ -2436,7 +2437,7 @@ export const Dialects: React.FC = () => {
                     </button>
                   </div>
 
-                  <div className="relative min-h-0 flex-1 overflow-hidden rounded-[18px] bg-[radial-gradient(ellipse_at_50%_45%,rgba(235,248,242,.9),rgba(247,250,248,.96)_55%,rgba(223,237,230,.95)_100%)]">
+                  <div className="relative min-h-0 flex-1 overflow-hidden rounded-t-[18px] bg-[radial-gradient(ellipse_at_50%_45%,rgba(235,248,242,.9),rgba(247,250,248,.96)_55%,rgba(223,237,230,.95)_100%)]">
                     {/* Diffuse ground light and soft contact shadows, without an artificial floor line. */}
                     <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[29%] bg-gradient-to-t from-[#ddeae4]/50 to-transparent"/>
                     <div aria-hidden="true" className="pointer-events-none absolute inset-x-[7%] bottom-[36px] grid h-[25px] grid-cols-2 gap-[clamp(22px,4vw,60px)]">
@@ -2477,6 +2478,17 @@ export const Dialects: React.FC = () => {
                         );
                       })}
                     </div>
+                    {/* Dialogue belongs to the character stage, like film subtitles, never a separate table. */}
+                    <DialectSpeechOverlay
+                      countryId={selectedCountry.id}
+                      lang={lang}
+                      tutorName={lang === 'ar' ? selectedPersona?.nameAr : selectedPersona?.nameEn}
+                      turns={chatMessages}
+                      liveActive={isLiveActive}
+                      speaking={isSpeaking}
+                      currentSpeechText={currentSpeechText}
+                      onPronounce={text => { void playAudio(text); }}
+                    />
                     <div className="absolute inset-x-0 bottom-[3px] z-30 flex h-[60px] items-center justify-center pointer-events-none">
                       <div className="pointer-events-auto">
                         <DialectVoiceOrb
@@ -2492,8 +2504,8 @@ export const Dialects: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Compact interactive practice and glass dialogue console, never a scrolling page. */}
-                  <div className="mt-[clamp(5px,.65vh,8px)] h-[clamp(160px,20vh,184px)] min-h-0 shrink-0">
+                  {/* A compact teaching control rail continues the stage; no transcript box. */}
+                  <div className="h-[clamp(89px,12vh,102px)] min-h-0 shrink-0">
                     <DialectChatDock
                       lang={lang}
                       countryId={selectedCountry.id}
