@@ -1,0 +1,47 @@
+name: Build authentic QUL penalty cinematic assets
+
+on:
+  push:
+    branches:
+      - preview/penalty-characters-ppt
+    paths:
+      - scripts/prepare-penalty-assets.py
+      - .github/workflows/penalty-cinematic-assets.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/preview/penalty-characters-ppt'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout preview branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Check ffmpeg
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          fi
+
+      - name: Verify source PPTX and extract striker and keeper sequences
+        run: python3 scripts/prepare-penalty-assets.py
+
+      - name: Check outputs
+        run: |
+          test -s public/penalty-cinematic/ready.webp
+          test -s public/penalty-cinematic/goal.webm
+          test -s public/penalty-cinematic/save.webm
+
+      - name: Commit optimized media for preview
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/penalty-cinematic/ready.webp public/penalty-cinematic/goal.webm public/penalty-cinematic/save.webm
+          if ! git diff --staged --quiet; then
+            git commit -m "assets(games): add verified original penalty scene and outcomes"
+            git push origin HEAD:refs/heads/preview/penalty-characters-ppt
+          fi
