@@ -204,6 +204,8 @@ export const ArcadeCorridor:React.FC<{lang:'ar'|'en';onBack:()=>void;onLaunch?:(
               setRoom(id||null);setOpened([false,false,false,false]);setActiveSafe(0);safeRef.current=0;
               setSelectedPin(null);setSafeStage('approach');setLootReady(false);setHealth(100);
               advancingRef.current=false;
+              // Retried rooms must not inflate the number of recovered codes.
+              setSolvedCount(completedRef.current.length*4);
               setFrequency(0);setArchiveChoice(null);setDefenseSequence([]);
               setSelectedTokens([]);setTextAnswer('');setHintVisible(false);
             }
