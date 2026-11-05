@@ -13,9 +13,9 @@ import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { Interactive3DTutor } from '../components/Interactive3DTutor';
 import { DialectReferencePanel } from '../components/DialectReferencePanel';
-import { DialectVoiceOrb } from '../components/DialectVoiceOrb';
+
 import { DialectChatDock } from '../components/DialectChatDock';
-import { DialectSpeechOverlay } from '../components/DialectSpeechOverlay';
+import { DialectVoiceHalo } from '../components/DialectVoiceHalo';
 import { DialectPassportCover, DialectPassportLibrary } from '../components/DialectPassports';
 import { assessDialectMission, type MissionTurn } from '../services/dialectMissionAssessment';
 import { getAI, getLiveAI, generateSpeech, decodeAudioData } from '../services/gemini';
@@ -2478,32 +2478,21 @@ export const Dialects: React.FC = () => {
                         );
                       })}
                     </div>
-                    {/* Dialogue belongs to the character stage, like film subtitles, never a separate table. */}
-                    <DialectSpeechOverlay
+                    {/* The voice orb becomes a single bilingual recorder, no scattered captions. */}
+                    <DialectVoiceHalo
                       countryId={selectedCountry.id}
                       lang={lang}
                       tutorName={selectedPersona?.nameAr}
-                      maleTutorName={selectedCountry.characterMale?.nameAr}
-                      femaleTutorName={selectedCountry.characterFemale?.nameAr}
                       turns={chatMessages}
-                      liveActive={isLiveActive}
+                      active={isLiveActive}
+                      listening={isListening}
                       speaking={isSpeaking}
+                      loading={isChatLoading}
+                      disabled={!selectedPersona}
                       currentSpeechText={currentSpeechText}
+                      onToggle={() => { void startLiveConversation(); }}
                       onPronounce={text => { void playAudio(text); }}
                     />
-                    <div className="absolute inset-x-0 bottom-[3px] z-30 flex h-[60px] items-center justify-center pointer-events-none">
-                      <div className="pointer-events-auto">
-                        <DialectVoiceOrb
-                          active={isLiveActive}
-                          listening={isListening}
-                          speaking={isSpeaking}
-                          loading={isChatLoading}
-                          disabled={!selectedPersona}
-                          lang={lang}
-                          onToggle={() => { void startLiveConversation(); }}
-                        />
-                      </div>
-                    </div>
                   </div>
 
                   {/* A compact teaching control rail continues the stage; no transcript box. */}
