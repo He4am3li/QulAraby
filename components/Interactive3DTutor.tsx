@@ -5,6 +5,7 @@ import { OriginalPortraitAvatar } from './OriginalPortraitAvatar';
 import { SalmanLayeredAvatar } from './SalmanLayeredAvatar';
 import { SaraLayeredAvatar } from './SaraLayeredAvatar';
 import { AhmedLayeredAvatar } from './AhmedLayeredAvatar';
+import { FatimaLayeredAvatar } from './FatimaLayeredAvatar';
 
 interface TutorCharacter {
   nameAr: string;
@@ -54,6 +55,7 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
   const previousSuccessRef = React.useRef(successSignal);
   const isLayeredSalman = countryId === 'saudi' && gender === 'male';
   const isLayeredAhmed = countryId === 'egypt' && gender === 'male';
+  const isLayeredFatima = countryId === 'egypt' && gender === 'female';
   const isLayeredSara = countryId === 'saudi' && gender === 'female';
 
   React.useEffect(() => {
@@ -121,6 +123,16 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
             />
           ) : isLayeredAhmed ? (
             <AhmedLayeredAvatar
+              view="full"
+              isSpeaking={isSpeaking}
+              isListening={isListening}
+              isLoading={isLoading}
+              lipSync={lipSync}
+              reaction={celebrating ? 'correct' : 'idle'}
+              className="h-full w-full"
+            />
+          ) : isLayeredFatima ? (
+            <FatimaLayeredAvatar
               view="full"
               isSpeaking={isSpeaking}
               isListening={isListening}

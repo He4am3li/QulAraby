@@ -12,7 +12,7 @@ export function ReadingPopUpPilot({ text, lang = 'ar' }: { text: string; lang?: 
   const [selected, setSelected] = React.useState<number | null>(null);
   const [reveal, setReveal] = React.useState(false);
   const words = React.useMemo(() =>
-    Array.from(new Set((text.match(/[\u0621-\u064A]+(?:[\u064B-\u065F]*)/g) || [])
+    Array.from(new Set((text.match(/[\u0621-\u064A]+(?:[\u064B-\u065F]*)/g) || ([] as string[]))
       .filter(word => word.length >= 3))).slice(0, 4), [text]);
   if (words.length < 2) return null;
   const isArabic = lang === 'ar';

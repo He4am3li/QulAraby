@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "egypt_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/fatima-original.png",
+  "sourceSha256": "7df96c425276afb3bdad6b6c02c1b75496b17a1a0d5b1b5edf4244028be25d6d",
+  "layers": {
+    "Mouth_Closed": {
+      "x": 474,
+      "y": 175,
+      "w": 66,
+      "h": 48,
+      "visible": true,
+      "url": "/avatars/fatima-layers/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 474,
+      "y": 175,
+      "w": 66,
+      "h": 48,
+      "visible": false,
+      "url": "/avatars/fatima-layers/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 474,
+      "y": 175,
+      "w": 66,
+      "h": 48,
+      "visible": false,
+      "url": "/avatars/fatima-layers/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 474,
+      "y": 175,
+      "w": 66,
+      "h": 48,
+      "visible": false,
+      "url": "/avatars/fatima-layers/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 474,
+      "y": 175,
+      "w": 66,
+      "h": 48,
+      "visible": false,
+      "url": "/avatars/fatima-layers/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 474,
+      "y": 175,
+      "w": 66,
+      "h": 48,
+      "visible": false,
+      "url": "/avatars/fatima-layers/Mouth_Smile.png"
+    },
+    "Blink_R_Closed": {
+      "x": 439,
+      "y": 119,
+      "w": 61,
+      "h": 42,
+      "visible": false,
+      "url": "/avatars/fatima-layers/Blink_R_Closed.png"
+    },
+    "Blink_L_Closed": {
+      "x": 513,
+      "y": 119,
+      "w": 61,
+      "h": 42,
+      "visible": false,
+      "url": "/avatars/fatima-layers/Blink_L_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 439,
+      "y": 119,
+      "w": 135,
+      "h": 42,
+      "visible": false,
+      "url": "/avatars/fatima-layers/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 439,
+      "y": 119,
+      "w": 135,
+      "h": 42,
+      "visible": false,
+      "url": "/avatars/fatima-layers/Eyes_Right.png"
+    },
+    "Brows_Thinking": {
+      "x": 442,
+      "y": 102,
+      "w": 130,
+      "h": 23,
+      "visible": false,
+      "url": "/avatars/fatima-layers/Brows_Thinking.png"
+    }
+  }
+}
