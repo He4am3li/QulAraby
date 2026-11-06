@@ -2,65 +2,134 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#071513">
-<title>معاينة تحدي الأهداف | قُل</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#070f19">
+<title>تحدي الأهداف 3D | قُل</title>
 <style>
-:root{font-family:system-ui,'Segoe UI',Tahoma,sans-serif;color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#030b0d;color:#fff}
-.game{position:relative;height:100dvh;min-height:480px;overflow:hidden;display:flex;flex-direction:column;background:#05100b;isolation:isolate}
-.backdrop{position:absolute;inset:0;overflow:hidden;z-index:-1}
-.backdrop img,.backdrop video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center}
-.backdrop video{display:none}
-.backdrop:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#041211d9 0%,#05100a43 28%,transparent 54%,#031014b0 100%);pointer-events:none}
-header{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:clamp(12px,3vh,23px) clamp(13px,3vw,30px);position:relative}
-.brand{font-weight:950;font-size:clamp(20px,3vw,28px);color:#f7d08c}.brand span{font-size:12px;font-weight:500;color:#d3e3dd}
-.counter{font-size:clamp(11px,1.5vw,14px);font-weight:800;background:#051a1ded;border:1px solid #e7b76869;border-radius:15px;padding:10px 14px;backdrop-filter:blur(16px)}
-.question{width:min(750px,calc(100% - 32px));margin:0 auto auto;text-align:center;padding:clamp(14px,3vh,22px) 18px;background:linear-gradient(125deg,#061e24e8,#0c292ad9);border:1px solid #e6bd7c99;border-radius:17px;box-shadow:0 15px 50px #0007;backdrop-filter:blur(14px)}
-.eyebrow{display:block;font-size:11px;font-weight:850;color:#f6ce8b;margin-bottom:5px;letter-spacing:.7px}.question h1{font-size:clamp(18px,3vw,27px);line-height:1.35;margin:0}
-.choices{width:min(860px,calc(100% - 28px));display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:0 auto;padding-bottom:clamp(12px,3vh,26px)}
-.choices button,.result button{appearance:none;cursor:pointer;border:1px solid #e7b76a94;border-radius:16px;background:#041d22ee;box-shadow:0 8px 20px #0007;backdrop-filter:blur(14px);color:white;font-weight:850;padding:14px 10px;min-height:53px;font-size:clamp(12px,2vw,17px);transition:background .15s,transform .15s}
-.choices button:active,.result button:active{transform:scale(.97)}.choices button:disabled{opacity:.4;cursor:default}
-.choices button:hover:not(:disabled){background:#1c4144}.choices button:focus-visible,.result button:focus-visible{outline:3px solid #ffd58d}
-.result{position:absolute;z-index:3;left:50%;bottom:105px;transform:translateX(-50%);width:min(430px,calc(100% - 32px));padding:17px;text-align:center;background:#051e22f5;border:1px solid #e8bb78;border-radius:18px;box-shadow:0 20px 70px #000b;display:none}
-.result strong{font-size:clamp(20px,3vw,28px);display:block}.result p{font-size:13px;color:#d4e0de;margin:8px 0 12px}.result button{background:#dfad5d;color:#15150e;padding:12px 28px}
-#intro{position:absolute;bottom:28%;left:50%;transform:translateX(-50%);white-space:nowrap;text-align:center;background:#07191ebf;padding:7px 14px;border-radius:10px;color:#f6ddb2;font-size:11px}
-@media(max-width:650px){.game{min-height:0}.backdrop img,.backdrop video{object-fit:contain}.choices{gap:6px;padding-bottom:max(12px,env(safe-area-inset-bottom))}.choices button{padding:10px 5px;min-height:47px;font-size:12px;border-radius:11px}.question{padding:13px 11px}.question h1{font-size:18px}.result{bottom:83px}.brand span{display:none}#intro{bottom:24%}}
-@media(max-height:570px){.question{padding:9px 12px}.question h1{font-size:16px}.choices button{min-height:40px;padding:8px 4px}.result{bottom:70px;padding:10px}#intro{display:none}}
+:root{color-scheme:dark;font-family:system-ui,Tahoma,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#050e19;color:#fff}
+button{font:inherit;cursor:pointer}
+#game{height:100dvh;min-height:440px;position:relative;overflow:hidden;isolation:isolate;background:#051322;display:flex;flex-direction:column;justify-content:space-between}
+#arena{position:absolute;inset:0;z-index:-2}
+#shade{position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(3,10,22,.76) 0%,rgba(3,10,22,.21) 25%,transparent 52%,rgba(2,11,18,.55) 83%,rgba(2,11,18,.89) 100%)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;padding:clamp(12px,2vw,24px);gap:14px}
+.brand{color:#ffda8b;font-size:clamp(19px,2.4vw,26px);font-weight:950;letter-spacing:-.7px;text-shadow:0 3px 16px #000a}
+.brand small{display:block;font-size:11px;font-weight:650;color:#e2eef6;letter-spacing:0;padding-top:3px}
+.score{border:1px solid rgba(255,217,149,.5);background:rgba(2,17,31,.88);padding:10px 21px;border-radius:16px;text-align:center;font-weight:900;backdrop-filter:blur(12px)}
+.score strong{font-size:27px;color:#f4cb72;font-variant-numeric:tabular-nums;display:block}
+.hint{margin-top:7px;font-size:11px;color:#abc0cf}
+#question{position:relative;width:min(790px,calc(100% - 28px));margin:0 auto auto;padding:clamp(13px,2vw,20px) 18px;border:1px solid rgba(247,213,139,.45);background:linear-gradient(110deg,rgba(8,26,43,.94),rgba(13,43,53,.89));backdrop-filter:blur(14px);box-shadow:0 18px 44px #0009;border-radius:18px;text-align:center}
+#category{font-weight:900;color:#fbd78b;display:block;font-size:11px;letter-spacing:.4px;margin-bottom:5px}
+#prompt{font-size:clamp(17px,2.5vw,24px);line-height:1.45;font-weight:950;margin:0}
+#bottom{padding:14px 16px max(16px,env(safe-area-inset-bottom));margin-top:auto}
+.progress{color:#e6f3ee;font-size:11px;letter-spacing:.2px;text-align:center;opacity:.9;font-weight:700;margin-bottom:10px}
+#choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));max-width:960px;margin:auto;gap:11px}
+.choice{min-height:62px;color:#fff;font-weight:900;font-size:clamp(13px,1.7vw,17px);border:1px solid rgba(250,217,149,.48);background:linear-gradient(145deg,rgba(5,27,42,.96),rgba(10,39,48,.94));border-radius:17px;box-shadow:0 8px 28px #000a;backdrop-filter:blur(18px);transition:border-color .18s,transform .18s}
+.choice:hover:not(:disabled){border-color:#ffe6a2;transform:translateY(-3px)}
+.choice:disabled{opacity:.43;cursor:default}
+.choice:focus-visible,#next:focus-visible{outline:3px solid #ffe1a7;outline-offset:3px}
+#result{display:none;position:absolute;z-index:3;bottom:110px;left:50%;transform:translateX(-50%);width:min(430px,calc(100% - 32px));padding:19px 18px;text-align:center;background:rgba(2,18,27,.96);border:1px solid #f3d28c;border-radius:18px;box-shadow:0 26px 75px #000d;backdrop-filter:blur(18px)}
+#message{display:block;font-size:clamp(22px,3vw,32px);font-weight:950;margin-bottom:7px}
+#detail{font-size:14px;color:#d6e6ea;margin:6px 0 16px}
+#next{color:#182028;font-weight:950;background:#e9c17a;padding:13px 30px;border:0;border-radius:13px}
+#load{position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);pointer-events:none;background:#071b2bd6;border:1px solid #ffffff3d;border-radius:9px;color:#e4f4fa;font-size:11px;padding:8px 12px;max-width:80%;text-align:center}
+#three-status{position:absolute;bottom:8px;right:12px;color:#9dbab1;opacity:.6;font-size:9px}
+@media(max-width:650px){.top{padding:12px;align-items:center}.brand small{font-size:10px}.score{padding:7px 13px;border-radius:12px}.score strong{font-size:20px}.hint{font-size:10px}.choice{border-radius:12px;min-height:49px;padding:8px 4px;font-size:12px}#choices{gap:6px}#bottom{padding:9px 10px max(12px,env(safe-area-inset-bottom))}.progress{margin-bottom:6px}#question{padding:11px 10px}#prompt{font-size:17px}#result{bottom:75px;padding:12px}#load{top:58%}}
+@media(max-height:600px){#question{padding:9px 12px}#prompt{font-size:16px}.top{padding:10px}.choice{min-height:42px}.progress{display:none}#result{bottom:65px}}
+@media(prefers-reduced-motion:reduce){.choice{transition:none}}
 </style>
+<script type="importmap">
+{"imports":{
+"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+}}
+</script>
 </head>
 <body>
-<div class="game">
-  <div class="backdrop"><img id="poster" src="/penalty-cinematic/ready.webp" alt="لاعب وحارس مرمى من العرض الأصلي"><video id="scene" muted playsinline webkit-playsinline preload="auto" poster="/penalty-cinematic/ready.webp"></video></div>
-  <header><div class="brand">قُل <span> | معاينة تحدي الأهداف</span></div><div class="counter" id="counter" aria-live="polite">الأهداف 0 ، الركلة 1 / 5</div></header>
-  <section class="question" aria-label="سؤال الركلة"><span class="eyebrow" id="category">معاني المفردات</span><h1 id="prompt">أين يلعب الأطفال كرة القدم؟</h1></section>
-  <span id="intro">اختر الإجابة، وشاهد حركة اللاعب والحارس الأصليين</span>
-  <div class="choices" id="choices"></div>
-  <div class="result" id="result" role="status" aria-live="polite"><strong id="message"></strong><p id="detail"></p><button id="next">الركلة التالية</button></div>
+<div id="game">
+<div id="arena"></div><div id="shade"></div>
+<header class="top"><div class="brand">قُل | تحدي الأهداف <small>ملعب ثلاثي الأبعاد، دون صور ثابتة أو مقاطع فيديو</small></div><div class="score"><strong id="score">0 : 0</strong><div id="round">الركلة 1 من 5</div></div></header>
+<div id="load">يتم تجهيز الملعب الثلاثي الأبعاد...</div>
+<section id="question"><span id="category">المفردات</span><h1 id="prompt">أين يلعب الأطفال كرة القدم؟</h1></section>
+<div id="bottom"><div class="progress" id="progress">اختر الإجابة ثم شاهد تحرك اللاعب والكرة والحارس داخل الملعب</div><div id="choices"></div></div>
+<div id="result" role="status" aria-live="polite"><strong id="message"></strong><p id="detail"></p><button id="next">الركلة التالية</button></div>
+<div id="three-status">REAL-TIME WEBGL · THREE.JS</div>
 </div>
-<script>
-const questions=[
-{category:"المفردات",q:"أين يلعب الأطفال كرة القدم؟",a:["المكتبة","الملعب","المطعم"],correct:1},
-{category:"المفردات",q:"ماذا يرتدي اللاعب في قدمه؟",a:["الحذاء","القبعة","الساعة"],correct:0},
-{category:"فهم الجملة",q:"أكمل: حارس المرمى ____ الكرة.",a:["يقرأ","يأكل","يمسك"],correct:2},
-{category:"التراكيب",q:"اختر الجملة الصحيحة.",a:["اللاعب يسدد الكرة","اللاعب يسدد الكتاب","اللاعب يسدد الماء"],correct:0},
-{category:"المفردات",q:"ما معنى كلمة «هدف» في كرة القدم؟",a:["مكان النوم","دخول الكرة في المرمى","فتح النافذة"],correct:1}
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+import { createPenalty3D } from './penalty-3d-engine.js';
+
+const qs=[
+{cat:'المفردات',q:'أين يلعب الأطفال كرة القدم؟',ans:['المكتبة','الملعب','المطعم'],correct:1,why:'يلعب الأطفال كرة القدم في الملعب.'},
+{cat:'المفردات',q:'ماذا يرتدي اللاعب في قدمه؟',ans:['الحذاء','القبعة','الساعة'],correct:0,why:'يرتدي اللاعب الحذاء الرياضي.'},
+{cat:'فهم الجملة',q:'أكمل: حارس المرمى ____ الكرة.',ans:['يقرأ','يأكل','يمسك'],correct:2,why:'يمسك حارس المرمى الكرة بيديه.'},
+{cat:'التراكيب',q:'اختر الجملة الصحيحة.',ans:['اللاعب يسدد الكرة','اللاعب يسدد الكتاب','اللاعب يسدد الماء'],correct:0,why:'يسدد اللاعب الكرة نحو المرمى.'},
+{cat:'المفردات',q:'ما معنى كلمة «هدف» في كرة القدم؟',ans:['مكان النوم','دخول الكرة في المرمى','فتح النافذة'],correct:1,why:'الهدف هو دخول الكرة في المرمى.'}
 ];
-let score=0,round=0,playing=false;
-const poster=document.querySelector('#poster'),video=document.querySelector('#scene'),choices=document.querySelector('#choices'),counter=document.querySelector('#counter'),prompt=document.querySelector('#prompt'),category=document.querySelector('#category'),result=document.querySelector('#result'),message=document.querySelector('#message'),detail=document.querySelector('#detail'),next=document.querySelector('#next'),intro=document.querySelector('#intro');
+const el=(id)=>document.getElementById(id);
+let score=0,round=0,locked=false,rigged=false,arena=null,timers=[];
+const later=(fn,ms)=>timers.push(window.setTimeout(fn,ms));
+try{
+ arena=createPenalty3D({
+  host:el('arena'),THREE,GLTFLoader,SkeletonUtils,
+  onReady(info){rigged=info.rigged;el('load').textContent=info.rigged?'الشخصيات ثلاثية الأبعاد جاهزة':'تم تشغيل الشخصيات المجسمة البديلة';later(()=>el('load').style.display='none',950);},
+  onError(err){console.warn('[QUL 3D] Optional rig loading failed, procedural 3D characters continue',err);}
+ });
+ el('load').textContent='الملعب ثلاثي الأبعاد يعمل، جارٍ تحميل الشخصيات المتحركة...';
+}catch(err){
+ el('load').textContent='تعذر تشغيل WebGL على هذا المتصفح. يرجى تفعيل تسريع الرسوميات.';
+ el('choices').innerHTML='';
+ console.error(err);
+}
 function render(){
- const q=questions[round];playing=false;video.pause();video.removeAttribute('src');video.load();video.style.display='none';poster.style.display='block';result.style.display='none';intro.style.display='block';prompt.textContent=q.q;category.textContent=q.category;
- counter.textContent=`الأهداف ${score} ، الركلة ${round+1} / ${questions.length}`;
- choices.innerHTML='';q.a.forEach((a,i)=>{const b=document.createElement('button');b.textContent=a;b.addEventListener('click',()=>shoot(i===q.correct));choices.append(b)});
+ timers.forEach(clearTimeout);timers=[];locked=false;
+ arena?.setPhase('idle','left');
+ const q=qs[round];
+ el('result').style.display='none';
+ el('category').textContent=q.cat;
+ el('prompt').textContent=q.q;
+ el('round').textContent='الركلة '+(round+1)+' من '+qs.length;
+ el('score').textContent=score+' : '+(round-score);
+ el('progress').textContent='اختر الإجابة لتحرك اللاعب وتسديد الكرة في مشهد ثلاثي الأبعاد';
+ el('choices').replaceChildren();
+ q.ans.forEach((a,i)=>{
+  const b=document.createElement('button');b.className='choice';b.textContent=a;
+  b.addEventListener('click',()=>shoot(i===q.correct,q.why));
+  el('choices').appendChild(b);
+ });
 }
-function shoot(correct){
- if(playing)return;playing=true;intro.style.display='none';choices.querySelectorAll('button').forEach(b=>b.disabled=true);
- video.src=`/penalty-cinematic/${correct?'goal':'save'}.webm`;video.style.display='block';poster.style.display='none';video.currentTime=0;
- video.play().catch(()=>{video.style.display='none';poster.style.display='block'});
- if(correct)score++;
- counter.textContent=`الأهداف ${score} ، الركلة ${round+1} / ${questions.length}`;
- window.setTimeout(()=>{message.textContent=correct?'⚽ هدف رائع!':'🧤 تصدى لها الحارس!';detail.textContent=correct?'إجابة صحيحة، أحسنت!':'إجابة غير صحيحة، تابع إلى الركلة التالية.';next.textContent=round===questions.length-1?'العب مجددًا':'الركلة التالية';result.style.display='block'},2200);
+function shoot(correct,explanation){
+ if(locked || !arena)return;
+ locked=true;
+ const side=Math.random()>0.5?'right':'left';
+ el('choices').querySelectorAll('button').forEach(b=>b.disabled=true);
+ el('progress').textContent='اللاعب يستعد للتسديد...';
+ arena.setPhase('runup',side);
+ later(()=>{
+   arena.setPhase('kick',side);
+   el('progress').textContent='الكرة في الهواء، والحارس يتحرك!';
+ },850);
+ later(()=>{
+   arena.setPhase(correct?'goal':'miss',side);
+   if(correct)score++;
+   el('score').textContent=score+' : '+((round+1)-score);
+   el('progress').textContent=correct?'هدف!':'الحارس تصدى للكرة';
+ },1900);
+ later(()=>{
+   el('message').textContent=correct?'⚽ هدف رائع!':'🧤 تصدٍ رائع من الحارس';
+   el('detail').textContent=correct?'إجابة صحيحة، أحسنت!':explanation;
+   el('next').textContent=round===qs.length-1?'العب مجددًا':'الركلة التالية';
+   el('result').style.display='block';
+ },2600);
 }
-next.addEventListener('click',()=>{if(round===questions.length-1){round=0;score=0}else{round++}render()});
+el('next').addEventListener('click',()=>{
+ if(round===qs.length-1){round=0;score=0;}else round++;
+ render();
+});
+window.addEventListener('pagehide',()=>arena?.dispose(),{once:true});
 render();
 </script>
 </body>
