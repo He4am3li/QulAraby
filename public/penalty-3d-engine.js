@@ -247,8 +247,9 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   // CC0 humanoid model replaces the procedural rig when it is downloaded.
   // Never blocks the game or leaves an empty silhouette on network failure.
   const MODEL_URL='https://raw.githubusercontent.com/kendrekaran/striker-3d/main/assets/player.glb';
-  try {
-    new GLTFLoader().load(MODEL_URL, (gltf)=>{
+  const CDN_MODEL='https://cdn.jsdelivr.net/gh/kendrekaran/striker-3d@main/assets/player.glb';
+  function fetchAthlete(url,canRetry) {
+    new GLTFLoader().load(url, (gltf)=>{
       if(disposed)return;
       const base=gltf.scene,skinnedBox=new THREE.Box3(),tmp=new THREE.Box3();
       base.updateMatrixWorld(true);
@@ -281,6 +282,13 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
         a.root.remove(a.fallback.root);
         a.root.add(rig);
         a.mixer=new THREE.AnimationMixer(rig);
+        // Named thigh bone, after the animation mixer, receives the impact kick.
+        // The upstream CC0 clip collection has no authored football kick clip.
+        const legBones=[];
+        rig.traverse((bone)=>{
+          if(bone.isBone && /(up.?leg|thigh|upper.?leg|r.?upleg)/i.test(bone.name))legBones.push(bone);
+        });
+        a.kickBone=legBones.find(b=>/(right|\.r\b|_r\b|r_)/i.test(b.name))||legBones[0]||null;
         for(const clip of gltf.animations){
           const name=clip.name.replace(/^HumanArmature\|Man_/, '').toLowerCase();
           a.actions[name]=a.mixer.clipAction(clip);
@@ -289,17 +297,21 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       }
       onReady?.({rigged:true, animations:gltf.animations.length});
     },undefined,(err)=>{
+      if(canRetry){fetchAthlete(CDN_MODEL,false);return;}
       onReady?.({rigged:false,animations:0});
       onError?.(err);
     });
-  }catch(err){onReady?.({rigged:false,animations:0});onError?.(err);}
+  }
+  try{fetchAthlete(MODEL_URL,true);}catch(err){
+    try{fetchAthlete(CDN_MODEL,false);}catch(second){onReady?.({rigged:false,animations:0});onError?.(second);}
+  }
 
   function setAction(a, actionName) {
     if(a.active===actionName)return;
     const names=Object.keys(a.actions);
     let key=names.find(k=>k===actionName)
       || names.find(k=>k.includes(actionName))
-      || (actionName==='kick'?names.find(k=>k.includes('punch')):undefined)
+      || (actionName==='kick'?names.find(k=>k.includes('idle')):undefined)
       || names.find(k=>k.includes('idle'));
     if(!key)return;
     const next=a.actions[key];
@@ -379,8 +391,14 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       }
     }
     for(const a of actors){
-      if(a.mixer)a.mixer.update(dt);
-      else {
+      if(a.mixer){
+        a.mixer.update(dt);
+        if(!a.keeper && a.kickBone && shot.phase==='kick') {
+          const impact=Math.sin(Math.min(1,Math.max(0,time/0.38))*Math.PI);
+          a.kickBone.rotation.x-=impact*1.1;
+          a.kickBone.updateMatrix();
+        }
+      } else {
         const moving=shot.phase==='runup' && !a.keeper;
         const rhythm=Math.sin(elapsed*(moving?12:2.1))*(moving?0.5:0.04);
         if(a.fallback.legs){
