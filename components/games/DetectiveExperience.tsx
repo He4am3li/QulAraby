@@ -86,6 +86,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const [reason, setReason] = useState('');
   const [solved, setSolved] = useState(false);
   const [wordAnswers, setWordAnswers] = useState<Record<number, string>>({});
+  const [reportTab, setReportTab] = useState<'practice' | 'dossier'>('practice');
   const [isMuted, setIsMuted] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
@@ -133,7 +134,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
     setClueIndex(0); setEliminated([]); setCipherOpened(false);
     setFeedback(''); setErrors(0); setShowTranslation(false);
     setShowDossier(false); setAccusationOpen(false); setAccusedId(null);
-    setReason(''); setSolved(false); setWordAnswers({});
+    setReason(''); setSolved(false); setWordAnswers({}); setReportTab('practice');
   };
   const chooseLevel = (nextLevel: DifficultyLevel) => {
     const list = CASES_DATABASE.filter(item => item.level === nextLevel);
@@ -397,8 +398,12 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
       )}
       {screen === 'report' && (
         <section className={container + ' justify-center gap-3'}>
+          <div className="flex gap-2 lg:hidden">
+            <button type="button" onClick={() => setReportTab('practice')} className={secondaryButton + ' flex-1 ' + (reportTab === 'practice' ? 'border-amber-200' : '')}>{t('تدريب الكلمات', 'Word practice')}</button>
+            <button type="button" onClick={() => setReportTab('dossier')} className={secondaryButton + ' flex-1 ' + (reportTab === 'dossier' ? 'border-amber-200' : '')}>{t('التقرير', 'Case report')}</button>
+          </div>
           <div className="grid flex-1 items-center gap-4 lg:grid-cols-2">
-            <div ref={reportRef} className="flex flex-col gap-3 rounded-3xl border border-amber-400/60 bg-[#08141e] p-5 shadow-2xl sm:p-7">
+            <div ref={reportRef} className={'flex-col gap-3 rounded-3xl border border-amber-400/60 bg-[#08141e] p-5 shadow-2xl sm:p-7 ' + (reportTab === 'dossier' ? 'flex' : 'hidden lg:flex')}>
               <div className="flex items-center justify-between"><span className="text-xs font-bold text-amber-300">{t('تقرير إغلاق القضية', 'FINAL CASE REPORT')}</span><ShieldCheck size={22} className="text-amber-300"/></div>
               <h2 className="text-2xl font-black text-amber-200">{t(labelAr, labelEn)}</h2>
               <div className="flex items-center gap-4 rounded-2xl border border-red-400/30 bg-[#1c1317] p-3">
@@ -413,8 +418,12 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
                   {activeCase.evidenceTerms.map(term => <div key={term.ar} className="flex items-center justify-between gap-2 border-b border-white/10 py-1 text-sm"><span lang="ar">{term.ar}</span><span dir="ltr" className="text-xs text-slate-300">{term.en}</span></div>)}
                 </div>
               </div>
+              {reportIsReady && <div className="flex gap-2 lg:hidden">
+                <button type="button" className={secondaryButton + ' flex-1'} disabled={isPdfLoading} onClick={downloadPdf}><FileDown size={17}/>{t('تحميل PDF', 'Download PDF')}</button>
+                <button type="button" className={primaryButton + ' flex-1'} onClick={nextCase}><ChevronLeft size={17}/>{t('التالية','Next')}</button>
+              </div>}
             </div>
-            <div className="flex flex-col gap-4 rounded-3xl border border-amber-400/30 bg-[#08141e]/95 p-4 shadow-xl sm:p-6">
+            <div className={'flex-col gap-4 rounded-3xl border border-amber-400/30 bg-[#08141e]/95 p-4 shadow-xl sm:p-6 ' + (reportTab === 'practice' ? 'flex' : 'hidden lg:flex')}>
               <h3 className="text-xl font-black text-amber-200">{t('تدرب على كلمات القضية', 'Practice the case words')}</h3>
               {!wordsComplete ? (
                 <>
@@ -437,7 +446,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
               )}
               {notice}
               {reportIsReady && <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <button className={secondaryButton} type="button" disabled={isPdfLoading} onClick={downloadPdf}><FileDown size={18}/>{t('تحميل التقرير PDF', 'Download PDF')}</button>
+                <button className={secondaryButton + ' hidden lg:inline-flex'} type="button" disabled={isPdfLoading} onClick={downloadPdf}><FileDown size={18}/>{t('تحميل التقرير PDF', 'Download PDF')}</button>
                 <button className={primaryButton} type="button" onClick={nextCase}><ChevronLeft size={18}/>{t('القضية التالية', 'Next case')}</button>
               </div>}
               {!reportIsReady && <p className="text-center text-xs text-slate-300">{t('أكمل التدريب لفتح التقرير والقضية التالية.', 'Finish the vocabulary practice to unlock the report and next case.')}</p>}
