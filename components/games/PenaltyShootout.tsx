@@ -7,10 +7,7 @@ import {
 
 // The supplied PowerPoint's original footage (verified SHA-256) is rendered directly.
 // The striker, goalkeeper, ball, net and stadium are already inside each shot.
-import trophyCelebrationTeam from '/src/assets/images/trophy_celebration_team_1790692147994.jpg';
-const PPT_READY_SCENE = '/penalty-cinematic/ready.webp';
-const PPT_GOAL_VIDEO = '/penalty-cinematic/goal.webm';
-const PPT_SAVE_VIDEO = '/penalty-cinematic/save.webm';
+import { PenaltyLive3D } from './PenaltyLive3D';
 
 // ========================================================
 // 1. أسئلة لغوية دقيقة بثلاثة خيارات فقط (إجابة واحدة صحيحة واثنتان خاطئتان)
@@ -313,7 +310,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
 
   // Realistic match animation state
   const [shotPhase, setShotPhase] = useState<'idle' | 'runup' | 'kick' | 'goal' | 'miss'>('idle');
-  const [shotClip, setShotClip] = useState<'goal' | 'save' | null>(null);
+  const [diveSide, setDiveSide] = useState<'left' | 'right'>('left');
   const [lastShotResult, setLastShotResult] = useState<'goal' | 'miss' | null>(null);
   const [screenShake, setScreenShake] = useState<boolean>(false);
 
@@ -351,7 +348,6 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
     setScore(0);
     setRoundsResult([]);
     setShotPhase('idle');
-    setShotClip(null);
     setLastShotResult(null);
     setScreen('match');
     soundRef.current.playWhistle();
@@ -368,7 +364,7 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
 
     // 2. انطلاق اللاعب نحو الكرة
     setShotPhase('runup');
-    setShotClip(option.correct ? 'goal' : 'save');
+    setDiveSide(Math.random() > 0.5 ? 'left' : 'right');
 
     // 3. A visible run-up gives the player time to anticipate the shot
     setTimeout(() => {
@@ -408,7 +404,6 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
   // Retry same question on miss
   const handleRetrySameQuestion = () => {
     setShotPhase('idle');
-    setShotClip(null);
     setLastShotResult(null);
     setRoundsResult(prev => prev.slice(0, prev.length - 1));
   };
@@ -416,7 +411,6 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
   // Proceed to next question or victory
   const handleProceedNext = (wasGoal?: boolean) => {
     setShotPhase('idle');
-    setShotClip(null);
     setLastShotResult(null);
 
     const nextRoundIndex = currentRound + 1;
@@ -445,15 +439,9 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
   if (screen === 'start') {
     return (
       <div className="relative w-full h-full min-h-[580px] rounded-3xl overflow-hidden flex flex-col justify-between items-center text-center p-6 md:p-12 select-none" dir="rtl">
-        {/* Background Stadium Panorama */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src={PPT_READY_SCENE}
-            alt="Stadium Atmosphere"
-            className="w-full h-full object-cover filter brightness-[0.45]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/80" />
-        </div>
+        {/* The start screen is also live WebGL 3D, with no image backdrop. */}
+        <PenaltyLive3D phase="idle" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/35 to-slate-950/30 pointer-events-none" />
 
         {/* Top Controls: Sound & Exit */}
         <div className="relative z-10 w-full flex items-center justify-between">
@@ -518,24 +506,8 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
         {/* =====================================================
             A. THE REALISTIC FOOTBALL FIELD (خلفية الملعب والمرمى الواقعي)
         ===================================================== */}
-        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#04120a]" aria-label="ملعب ركلات الترجيح الأصلي">
-          <img src={PPT_READY_SCENE} alt="" draggable={false}
-            className="absolute inset-0 h-full w-full object-contain lg:object-cover object-center" />
-          {shotClip !== null && shotPhase !== 'idle' && (
-            <video
-              key={`${currentRound}-${shotClip}`}
-              src={shotClip === 'goal' ? PPT_GOAL_VIDEO : PPT_SAVE_VIDEO}
-              poster={PPT_READY_SCENE}
-              autoPlay
-              muted
-              playsInline
-              preload="auto"
-              aria-hidden="true"
-              className="absolute inset-0 h-full w-full object-contain lg:object-cover object-center"
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/45 via-transparent to-slate-950/65" />
-        </div>
+        <PenaltyLive3D phase={shotPhase} diveSide={diveSide} />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#030a16]/40 via-transparent to-[#020e13]/65" aria-hidden="true" />
 
         {/* =====================================================
             B. TOP HUD & THE ORANGE QUESTION CARD ABOVE THE GOAL
@@ -680,15 +652,9 @@ export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin 
   // ========================================================
   return (
     <div className="relative w-full h-full min-h-[580px] rounded-3xl overflow-hidden flex flex-col justify-center items-center text-center p-6 md:p-12 select-none animate-fade-in" dir="rtl">
-      {/* Background Celebration Image */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src={trophyCelebrationTeam}
-          alt="Podium Ceremony"
-          className="w-full h-full object-cover filter brightness-[0.4]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/80" />
-      </div>
+      {/* Full 3D scene remains active on the result screen. */}
+      <PenaltyLive3D phase="idle" />
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-slate-950/95 via-slate-950/65 to-slate-950/55" />
 
       <div className="relative z-10 max-w-lg w-full bg-slate-950/90 border-2 border-amber-400/80 rounded-3xl p-8 shadow-[0_0_80px_rgba(245,158,11,0.5)] backdrop-blur-2xl flex flex-col items-center">
 
