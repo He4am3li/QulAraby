@@ -14,7 +14,7 @@ export function resolveTutorAttention({ isSpeaking = false, isListening = false,
 
 /** Authored inward-facing pairs retain their physical order in both languages. */
 export function getTutorStageDirection(countryId, lang) {
-  return countryId === 'egypt' || countryId === 'saudi' || lang === 'ar' ? 'rtl' : 'ltr';
+  return countryId === 'egypt' || countryId === 'saudi' || countryId === 'uae' || lang === 'ar' ? 'rtl' : 'ltr';
 }
 
 export function getTutorPartnerDirection(countryId, gender, lang) {

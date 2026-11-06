@@ -2,6 +2,7 @@ import React from 'react';
 import type { SpeechLipSync } from '../services/speechLipSync.mjs';
 import { motion } from 'framer-motion';
 import { OriginalPortraitAvatar } from './OriginalPortraitAvatar';
+import { EmiratiLayeredAvatar } from './EmiratiLayeredAvatar';
 import { SalmanLayeredAvatar } from './SalmanLayeredAvatar';
 import { SaraLayeredAvatar } from './SaraLayeredAvatar';
 import { AhmedLayeredAvatar } from './AhmedLayeredAvatar';
@@ -103,7 +104,20 @@ export const Interactive3DTutor: React.FC<Interactive3DTutorProps> = ({
           <div className="absolute inset-x-[14%] top-[19%] bottom-[5%] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(73,187,163,.16),transparent_71%)] pointer-events-none" aria-hidden="true"/>
         )}
         <div className="absolute inset-0 overflow-visible">
-          {isLayeredSalman ? (
+          {countryId === 'uae' ? (
+            <EmiratiLayeredAvatar
+              actor={gender === 'male' ? 'zayed' : 'maitha'}
+              view="full"
+              isSpeaking={isSpeaking}
+              isListening={isListening || partnerState === 'listening'}
+              isLoading={isLoading}
+              partnerSpeaking={partnerState === 'speaking'}
+              partnerDirection={partnerDirection}
+              lipSync={lipSync}
+              reaction={celebrating ? 'correct' : 'idle'}
+              className="h-full w-full"
+            />
+          ) : isLayeredSalman ? (
             <SalmanLayeredAvatar
               view="full"
               isSpeaking={isSpeaking}

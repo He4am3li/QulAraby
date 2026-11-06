@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "uae_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/maitha-stance-v1.webp",
+  "sourceSha256": "3c62f569d1c3017a144814588a600ab349c5f648b92df0052aff927d85d3dacb",
+  "pose": {
+    "bodyFacing": "right",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "left"
+  },
+  "registration": {
+    "shift": 130,
+    "scale": 0.71,
+    "offset": [
+      325,
+      4
+    ],
+    "eyes": [
+      416,
+      119,
+      133,
+      42
+    ],
+    "brows": [
+      415,
+      106,
+      135,
+      23
+    ],
+    "mouth": [
+      447,
+      189,
+      70,
+      49
+    ],
+    "cover": [
+      402,
+      89,
+      157,
+      102
+    ]
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 416,
+      "y": 119,
+      "w": 133,
+      "h": 42,
+      "visible": true,
+      "url": "/avatars/maitha-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 416,
+      "y": 119,
+      "w": 133,
+      "h": 42,
+      "visible": true,
+      "url": "/avatars/maitha-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 416,
+      "y": 119,
+      "w": 133,
+      "h": 42,
+      "visible": true,
+      "url": "/avatars/maitha-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 415,
+      "y": 106,
+      "w": 135,
+      "h": 23,
+      "visible": true,
+      "url": "/avatars/maitha-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 415,
+      "y": 106,
+      "w": 135,
+      "h": 23,
+      "visible": true,
+      "url": "/avatars/maitha-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 447,
+      "y": 189,
+      "w": 70,
+      "h": 49,
+      "visible": true,
+      "url": "/avatars/maitha-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 447,
+      "y": 189,
+      "w": 70,
+      "h": 49,
+      "visible": true,
+      "url": "/avatars/maitha-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 447,
+      "y": 189,
+      "w": 70,
+      "h": 49,
+      "visible": true,
+      "url": "/avatars/maitha-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 447,
+      "y": 189,
+      "w": 70,
+      "h": 49,
+      "visible": true,
+      "url": "/avatars/maitha-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 447,
+      "y": 189,
+      "w": 70,
+      "h": 49,
+      "visible": true,
+      "url": "/avatars/maitha-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 447,
+      "y": 189,
+      "w": 70,
+      "h": 49,
+      "visible": true,
+      "url": "/avatars/maitha-stance-v1/Mouth_Smile.png"
+    },
+    "FaceCover": {
+      "x": 402,
+      "y": 89,
+      "w": 157,
+      "h": 102,
+      "visible": true,
+      "url": "/avatars/maitha-stance-v1/FaceCover.png"
+    }
+  },
+  "coverings": [
+    "FaceCover"
+  ]
+}
