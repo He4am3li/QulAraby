@@ -32,6 +32,16 @@ for (const c of cases) {
   }
 }
 for (let id = 1; id <= 6; id++) assert(narratives[id], 'Keep bilingual metadata for legacy case ' + id);
+for (let id of [201, 202]) assert(narratives[id], 'Missing advanced bilingual narrative ' + id);
+const gameModule = src('components/games/DetectiveMystery.tsx');
+const newAdvanced = src('components/games/advancedDetectiveCases.ts');
+assert(gameModule.includes('...createAdvancedDetectiveCases(ALL_24_SUSPECTS)'), 'Advanced mode must use separate dossiers');
+assert(newAdvanced.includes("level: 'advanced'"), 'Advanced dossiers must remain playable');
+for (const n of [5,6]) {
+  assert(gameModule.includes("level: 'intermediate',\n    caseNumber: " + n),
+    'Original case ' + n + ' must appear in intermediate only');
+}
+
 const view = src('components/games/DetectiveExperience.tsx');
 const games = src('pages/Games.tsx');
 assert(games.includes('DetectiveExperience as DetectiveMystery'), 'Game menu must render responsive experience');
