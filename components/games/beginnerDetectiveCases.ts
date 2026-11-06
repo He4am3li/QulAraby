@@ -145,17 +145,17 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
     "clues": [
       {
         "innocentIndices": [
+          4
+        ],
+        "speech": "رنا كانت تحمل حقيبة في الخارج مع الحارس، فهي بريئة."
+      },
+      {
+        "innocentIndices": [
           0,
           1,
           2
         ],
         "speech": "نوال ويزن ومريم كانوا عند النافذة مع المعلمة. هم أبرياء."
-      },
-      {
-        "innocentIndices": [
-          4
-        ],
-        "speech": "رنا كانت تحمل حقيبة في الخارج مع الحارس، فهي بريئة."
       },
       {
         "innocentIndices": [
@@ -214,18 +214,16 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
         "en": "Table"
       },
       {
-        "ar": "باب",
-        "en": "Door"
+        "ar": "درس القراءة",
+        "en": "Reading lesson"
       }
     ],
     "clues": [
       {
         "innocentIndices": [
-          0,
-          1,
-          2
+          4
         ],
-        "speech": "إبراهيم وسلمى وجابر كانوا في درس القراءة مع المعلم. هم أبرياء."
+        "speech": "يوسف كان يجلس عند الطاولة مع الحارس، فهو بريء."
       },
       {
         "innocentIndices": [
@@ -235,9 +233,11 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
       },
       {
         "innocentIndices": [
-          4
+          0,
+          1,
+          2
         ],
-        "speech": "يوسف كان يجلس عند الطاولة مع الحارس، فهو بريء."
+        "speech": "إبراهيم وسلمى وجابر كانوا في درس القراءة مع المعلم. هم أبرياء."
       }
     ]
   },
@@ -290,8 +290,8 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
         "en": "Clock"
       },
       {
-        "ar": "باب",
-        "en": "Door"
+        "ar": "مكتب المتجر",
+        "en": "Shop office"
       }
     ],
     "clues": [
@@ -366,11 +366,17 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
         "en": "Bag"
       },
       {
-        "ar": "باب",
-        "en": "Door"
+        "ar": "المدرب",
+        "en": "Coach"
       }
     ],
     "clues": [
+      {
+        "innocentIndices": [
+          4
+        ],
+        "speech": "رفيف كانت في الملعب مع الفريق، فهي بريئة."
+      },
       {
         "innocentIndices": [
           0,
@@ -378,12 +384,6 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
           3
         ],
         "speech": "مازن ورقية وخديجة كانوا عند الباب مع المدرب. هم أبرياء."
-      },
-      {
-        "innocentIndices": [
-          4
-        ],
-        "speech": "رفيف كانت في الملعب مع الفريق، فهي بريئة."
       },
       {
         "innocentIndices": [
@@ -449,11 +449,9 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
     "clues": [
       {
         "innocentIndices": [
-          0,
-          1,
-          2
+          5
         ],
-        "speech": "رامي ونوال وفهد كانوا في الممر مع الحارس. هم أبرياء."
+        "speech": "عبير كانت تقرأ كتابا مع المعلمة، فهي بريئة."
       },
       {
         "innocentIndices": [
@@ -463,9 +461,11 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
       },
       {
         "innocentIndices": [
-          5
+          0,
+          1,
+          2
         ],
-        "speech": "عبير كانت تقرأ كتابا مع المعلمة، فهي بريئة."
+        "speech": "رامي ونوال وفهد كانوا في الممر مع الحارس. هم أبرياء."
       }
     ]
   },
@@ -518,8 +518,8 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
         "en": "Room"
       },
       {
-        "ar": "مكتب",
-        "en": "Desk"
+        "ar": "الحارس",
+        "en": "Guard"
       }
     ],
     "clues": [
@@ -594,11 +594,17 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
         "en": "Train"
       },
       {
-        "ar": "باب",
-        "en": "Door"
+        "ar": "السائق",
+        "en": "Driver"
       }
     ],
     "clues": [
+      {
+        "innocentIndices": [
+          4
+        ],
+        "speech": "يوسف كان في القطار مع السائق، فهو بريء."
+      },
       {
         "innocentIndices": [
           0,
@@ -606,12 +612,6 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
           3
         ],
         "speech": "جنى وتامر وسلمى كانوا عند باب المحطة مع الشرطي. هم أبرياء."
-      },
-      {
-        "innocentIndices": [
-          4
-        ],
-        "speech": "يوسف كان في القطار مع السائق، فهو بريء."
       },
       {
         "innocentIndices": [
@@ -670,18 +670,16 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
         "en": "Bench"
       },
       {
-        "ar": "باب",
-        "en": "Gate"
+        "ar": "البستاني",
+        "en": "Gardener"
       }
     ],
     "clues": [
       {
         "innocentIndices": [
-          0,
-          2,
-          4
+          5
         ],
-        "speech": "ليلى وكارمن وشذى كانوا عند باب الحديقة مع الحارس. هم أبرياء."
+        "speech": "رفيف كانت تجلس على المقعد مع البستاني، فهي بريئة."
       },
       {
         "innocentIndices": [
@@ -691,9 +689,11 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
       },
       {
         "innocentIndices": [
-          5
+          0,
+          2,
+          4
         ],
-        "speech": "رفيف كانت تجلس على المقعد مع البستاني، فهي بريئة."
+        "speech": "ليلى وكارمن وشذى كانوا عند باب الحديقة مع الحارس. هم أبرياء."
       }
     ]
   },
@@ -746,8 +746,8 @@ export const BEGINNER_CASE_SEEDS: BeginnerSeed[] = [
         "en": "Table"
       },
       {
-        "ar": "باب",
-        "en": "Door"
+        "ar": "الشرطي",
+        "en": "Police officer"
       }
     ],
     "clues": [
