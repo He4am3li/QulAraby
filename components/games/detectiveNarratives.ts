@@ -90,8 +90,8 @@ export const DETECTIVE_NARRATIVES: Record<number, DetectiveNarrative> = {
     "finalEvidenceAr": "رأت الكاميرا شخصًا يرتدي سترة رمادية قرب القبعة.",
     "finalEvidenceEn": "The camera saw someone wearing a grey hoodie near the hat.",
     "cluesEn": [
-      "Nawal, Yazan and Maryam were by the window with the teacher. They are innocent.",
       "Rana carried a bag outside with the guard. She is innocent.",
+      "Nawal, Yazan and Maryam were by the window with the teacher. They are innocent.",
       "Kamal was by the door with the police officer. He is innocent."
     ]
   },
@@ -101,9 +101,9 @@ export const DETECTIVE_NARRATIVES: Record<number, DetectiveNarrative> = {
     "finalEvidenceAr": "رأت الكاميرا امرأةً بشعر فضي وقلادة حمراء قرب الرف.",
     "finalEvidenceEn": "The camera saw a woman with silver hair and a red necklace by the shelf.",
     "cluesEn": [
-      "Ibrahim, Salma and Jaber were in a reading lesson with the teacher. They are innocent.",
+      "Yousef was sitting at the table with the guard. He is innocent.",
       "Lina was by the door with the teacher. She is innocent.",
-      "Yousef was sitting at the table with the guard. He is innocent."
+      "Ibrahim, Salma and Jaber were in a reading lesson with the teacher. They are innocent."
     ]
   },
   "104": {
@@ -123,8 +123,8 @@ export const DETECTIVE_NARRATIVES: Record<number, DetectiveNarrative> = {
     "finalEvidenceAr": "رأى المدرب شخصًا يرتدي قبعة صوفية حمراء قرب الحقيبة.",
     "finalEvidenceEn": "The coach saw someone wearing a red wool hat near the bag.",
     "cluesEn": [
-      "Mazen, Ruqayya and Khadija were by the door with the coach. They are innocent.",
       "Rafeef was on the court with the team. She is innocent.",
+      "Mazen, Ruqayya and Khadija were by the door with the coach. They are innocent.",
       "Mansour had another bag with the guard. He is innocent."
     ]
   },
@@ -134,9 +134,9 @@ export const DETECTIVE_NARRATIVES: Record<number, DetectiveNarrative> = {
     "finalEvidenceAr": "رأت الكاميرا امرأةً ترتدي فستانًا أسود قرب المكتب.",
     "finalEvidenceEn": "The camera saw a woman wearing a black dress near the desk.",
     "cluesEn": [
-      "Rami, Nawal and Fahd were in the corridor with the guard. They are innocent.",
+      "Abeer was reading a book with the teacher. She is innocent.",
       "Mazen carried a bag with the teacher. He is innocent.",
-      "Abeer was reading a book with the teacher. She is innocent."
+      "Rami, Nawal and Fahd were in the corridor with the guard. They are innocent."
     ]
   },
   "107": {
@@ -156,8 +156,8 @@ export const DETECTIVE_NARRATIVES: Record<number, DetectiveNarrative> = {
     "finalEvidenceAr": "رأى الشرطي رجلًا مسنًا يرتدي نظارة وبدلة بنية قرب المقعد.",
     "finalEvidenceEn": "The officer saw an older man wearing glasses and a brown suit near the seat.",
     "cluesEn": [
-      "Jana, Tamer and Salma were at the station door with the police officer. They are innocent.",
       "Yousef was on the train with the driver. He is innocent.",
+      "Jana, Tamer and Salma were at the station door with the police officer. They are innocent.",
       "Khadija was on a seat with the teacher. She is innocent."
     ]
   },
@@ -167,9 +167,9 @@ export const DETECTIVE_NARRATIVES: Record<number, DetectiveNarrative> = {
     "finalEvidenceAr": "رأى البستاني رجلًا بلحية سوداء ومعطف بني قرب النافورة.",
     "finalEvidenceEn": "The gardener saw a man with a black beard and a brown coat by the fountain.",
     "cluesEn": [
-      "Layla, Carmen and Shatha were at the garden gate with the guard. They are innocent.",
+      "Rafeef was sitting on the bench with the gardener. She is innocent.",
       "Hani was taking pictures of the fountain with the photographer. He is innocent.",
-      "Rafeef was sitting on the bench with the gardener. She is innocent."
+      "Layla, Carmen and Shatha were at the garden gate with the guard. They are innocent."
     ]
   },
   "110": {
