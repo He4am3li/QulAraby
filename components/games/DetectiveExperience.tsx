@@ -33,10 +33,12 @@ const loadProgress = (): Progress => {
 const storeProgress = (progress: Progress) => {
   try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch {}
 };
-const wordOptions = (words: EvidenceTerm[], index: number): string[] => {
+const wordOptions = (words: EvidenceTerm[], index: number, caseId: number): string[] => {
   const others = words.filter((_, i) => i !== index).map(word => word.en);
-  const choices = [words[index].en, others[(index * 2) % others.length], others[(index * 2 + 1) % others.length]];
-  return choices.sort((a, b) => ((a.length + index * 11) % 7) - ((b.length + index * 11) % 7));
+  const distractors = [others[(index * 2) % others.length], others[(index * 2 + 1) % others.length]];
+  const correctPosition = (index + caseId) % 3;
+  distractors.splice(correctPosition, 0, words[index].en);
+  return distractors;
 };
 const levelLabel = (level: DifficultyLevel, language: UiLanguage) => ({
   beginner: language === 'ar' ? 'المبتدئ' : 'Beginner',
@@ -434,7 +436,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
                     <button type="button" className="mt-2 inline-flex items-center gap-1 text-xs font-bold" onClick={() => playSpeech(activeCase.evidenceTerms[answersCount].ar)}><Volume2 size={15}/>{t('استمع', 'Listen')}</button>
                   </div>
                   <div className="grid gap-2">
-                    {wordOptions(activeCase.evidenceTerms, answersCount).map(answer => <button key={answer} type="button" className={secondaryButton} onClick={() => answerWord(answer)} dir="ltr">{answer}</button>)}
+                    {wordOptions(activeCase.evidenceTerms, answersCount, activeCase.id).map(answer => <button key={answer} type="button" className={secondaryButton} onClick={() => answerWord(answer)} dir="ltr">{answer}</button>)}
                   </div>
                 </>
               ) : (
