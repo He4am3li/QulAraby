@@ -182,5 +182,27 @@ export const DETECTIVE_NARRATIVES: Record<number, DetectiveNarrative> = {
       "Khadija was sitting on a chair with the teacher. She is innocent.",
       "Mazen was by the table with the officer. He is innocent."
     ]
+  },
+  "201": {
+    "titleEn": "The Secret Archive Letter",
+    "descriptionEn": "A secret letter disappeared from the archive during a power outage. Investigators checked the corridor camera and reception log.",
+    "finalEvidenceAr": "أثبتت الأدلة براءة خمسة أشخاص، وبقي فريد محل التحقيق. يجب تبرير الاتهام بالأدلة.",
+    "finalEvidenceEn": "The evidence cleared five people. Farid remains under investigation. An accusation requires evidence.",
+    "cluesEn": [
+      "The corridor camera recorded Nada and Salma in the waiting hall. They are innocent.",
+      "Official stamps proved that Captain Rayan and Saber did not enter the archive. They are innocent.",
+      "The reception log confirms that Grandma Maryam remained at the information desk. She is innocent."
+    ]
+  },
+  "202": {
+    "titleEn": "The Golden Badge Mystery",
+    "descriptionEn": "A golden badge disappeared from the registration room during a school trip. Investigators reviewed a gate photograph and the ticket log.",
+    "finalEvidenceAr": "أكدت الصورة والسجلات براءة خمسة أشخاص. بقيت نور وحدها محل التحقيق.",
+    "finalEvidenceEn": "The photograph and records clear five suspects. Noor remains under investigation.",
+    "cluesEn": [
+      "The gate photo shows Sami and Omar outside the building when the badge disappeared. They are innocent.",
+      "The ticket log puts Henry and Fares on the bus. They are innocent.",
+      "Miho was in the registration room with a staff member throughout the event. She is innocent."
+    ]
   }
 };
