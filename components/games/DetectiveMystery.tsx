@@ -1,5 +1,6 @@
 import { BEGINNER_DETECTIVE_CASES } from './beginnerDetectiveCases';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createAdvancedDetectiveCases } from './advancedDetectiveCases';
 import { 
   Volume2, VolumeX, ShieldCheck, UserX, 
   ArrowRight, ArrowLeft, RotateCcw, Check, FileText,
@@ -667,7 +668,7 @@ class SpyAudioEngine {
   }
 }
 
-const spyAudio = new SpyAudioEngine();
+export const spyAudio = new SpyAudioEngine();
 
 // ============================================================================
 // FULL ROSTER OF 24 SUSPECTS - WITH ACCURATE VISUAL ATTRIBUTES
@@ -1094,6 +1095,7 @@ export interface DetectiveCase {
 
 export const CASES_DATABASE: DetectiveCase[] = [
   ...BEGINNER_DETECTIVE_CASES,
+  ...createAdvancedDetectiveCases(ALL_24_SUSPECTS),
   // ==========================================================================
   // EXISTING CASES MOVED FROM BEGINNER TO INTERMEDIATE (original assets retained)
   // ==========================================================================
@@ -1231,8 +1233,8 @@ export const CASES_DATABASE: DetectiveCase[] = [
   // ==========================================================================
   {
     id: 5,
-    level: 'advanced',
-    caseNumber: 1,
+    level: 'intermediate',
+    caseNumber: 5,
     caseIndex: 4,
     codeName: 'حقيبة محطة القطار',
     bgImage: 'url(/٦.webp), url(/6.webp)',
@@ -1280,8 +1282,8 @@ export const CASES_DATABASE: DetectiveCase[] = [
   },
   {
     id: 6,
-    level: 'advanced',
-    caseNumber: 2,
+    level: 'intermediate',
+    caseNumber: 6,
     caseIndex: 5,
     codeName: 'سر المخطوطة المفقودة',
     bgImage: 'url(/٧.webp), url(/7.webp)',

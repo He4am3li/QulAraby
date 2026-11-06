@@ -28,7 +28,7 @@ import stadiumPanorama from '../src/assets/images/champions_stadium_panorama_179
 import { MemoryMatch } from '../components/games/MemoryMatch';
 import { ArabicSpaceJourney } from '../components/games/ArabicSpaceJourney';
 import { KnowledgeSupermarket } from '../components/games/KnowledgeSupermarket';
-import { DetectiveMystery } from '../components/games/DetectiveMystery';
+import { DetectiveExperience as DetectiveMystery } from '../components/games/DetectiveExperience';
 import { ArcadeCorridor } from '../components/games/ArcadeCorridor';
 import supermarketParkingImg from '../src/assets/images/supermarket_parking_intro_1791186344934.jpg';
 import supermarketAisleImg from '../src/assets/images/supermarket_aisle_hall_1791186364722.jpg';
