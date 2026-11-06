@@ -27,7 +27,26 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   renderer.domElement.style.cssText = 'width:100%;height:100%;display:block;touch-action:pan-y';
   renderer.domElement.setAttribute('aria-label', 'ملعب كرة قدم ثلاثي الأبعاد تفاعلي');
   host.appendChild(renderer.domElement);
-  const maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
+  // Drag the actual WebGL camera to inspect the scene's 3D depth.
+  let cameraYaw = 0, dragging = false, dragX = 0;
+  renderer.domElement.style.cursor = 'grab';
+  function onPointerDown(event) {
+    dragging = true; dragX = event.clientX;
+    renderer.domElement.style.cursor = 'grabbing';
+    renderer.domElement.setPointerCapture?.(event.pointerId);
+  }
+  function onPointerMove(event) {
+    if (!dragging) return;
+    cameraYaw = Math.max(-0.65, Math.min(0.65, cameraYaw - (event.clientX - dragX) * 0.004));
+    dragX = event.clientX;
+  }
+  function onPointerUp() {
+    dragging = false; renderer.domElement.style.cursor = 'grab';
+  }
+  renderer.domElement.addEventListener('pointerdown', onPointerDown);
+  renderer.domElement.addEventListener('pointermove', onPointerMove);
+  renderer.domElement.addEventListener('pointerup', onPointerUp);
+  renderer.domElement.addEventListener('pointercancel', onPointerUp);
 
   const hemi = new THREE.HemisphereLight(0xc5e9ff, 0x193a24, 2.25);
   scene.add(hemi);
@@ -377,9 +396,9 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       }
     }
     // Always a true perspective camera, lightly tracking the foot-to-ball action.
-    camera.position.x=mix(camera.position.x, Math.sin(elapsed*0.27)*0.18,0.02);
+    camera.position.x=mix(camera.position.x,Math.sin(cameraYaw)*19.8,0.08);
     camera.position.y=mix(camera.position.y,3.6,0.03);
-    camera.position.z=mix(camera.position.z, shot.phase==='runup'?18.6:19.8,0.02);
+    camera.position.z=mix(camera.position.z,Math.cos(cameraYaw)*(shot.phase==='runup'?18.6:19.8),0.08);
     camera.lookAt(0,1.35,-0.4);
   }
   function resize(){
@@ -410,6 +429,10 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       if(disposed)return;
       disposed=true;cancelAnimationFrame(frame);
       observer?.disconnect();window.removeEventListener('resize',resize);
+      renderer.domElement.removeEventListener('pointerdown',onPointerDown);
+      renderer.domElement.removeEventListener('pointermove',onPointerMove);
+      renderer.domElement.removeEventListener('pointerup',onPointerUp);
+      renderer.domElement.removeEventListener('pointercancel',onPointerUp);
       actors.forEach(a=>a.mixer?.stopAllAction());
       scene.traverse(o=>{
         if(o.geometry && o.geometry.dispose)o.geometry.dispose();
