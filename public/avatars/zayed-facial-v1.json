@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "uae_male",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/zayed-stance-v1.webp",
+  "sourceSha256": "38f5ce37a2aed6a452d7cb4dd26ffe85fe996f38a73d8f6157ad1f7cb55bccaf",
+  "pose": {
+    "bodyFacing": "left",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "right"
+  },
+  "registration": {
+    "shift": 0,
+    "scale": 0.665,
+    "offset": [
+      375,
+      39
+    ],
+    "eyes": [
+      458,
+      121,
+      117,
+      37
+    ],
+    "brows": [
+      452,
+      102,
+      126,
+      27
+    ],
+    "mouth": [
+      476,
+      183,
+      81,
+      54
+    ]
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 458,
+      "y": 121,
+      "w": 117,
+      "h": 37,
+      "visible": true,
+      "url": "/avatars/zayed-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 458,
+      "y": 121,
+      "w": 117,
+      "h": 37,
+      "visible": true,
+      "url": "/avatars/zayed-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 458,
+      "y": 121,
+      "w": 117,
+      "h": 37,
+      "visible": true,
+      "url": "/avatars/zayed-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 452,
+      "y": 102,
+      "w": 126,
+      "h": 27,
+      "visible": true,
+      "url": "/avatars/zayed-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 452,
+      "y": 102,
+      "w": 126,
+      "h": 27,
+      "visible": true,
+      "url": "/avatars/zayed-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 476,
+      "y": 183,
+      "w": 81,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/zayed-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 476,
+      "y": 183,
+      "w": 81,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/zayed-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 476,
+      "y": 183,
+      "w": 81,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/zayed-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 476,
+      "y": 183,
+      "w": 81,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/zayed-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 476,
+      "y": 183,
+      "w": 81,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/zayed-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 476,
+      "y": 183,
+      "w": 81,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/zayed-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}

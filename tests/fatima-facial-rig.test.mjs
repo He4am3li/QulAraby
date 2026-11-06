@@ -27,9 +27,9 @@ test('Egyptian body poses face inward in both languages without reversing other 
   assert.equal(getTutorPartnerDirection('egypt','male',lang),'left');
   assert.equal(getTutorPartnerDirection('egypt','female',lang),'right');
  }
- assert.equal(getTutorStageDirection('uae','en'),'ltr');
- assert.equal(getTutorPartnerDirection('uae','male','en'),'right');
- assert.equal(getTutorPartnerDirection('uae','female','ar'),'right');
+ assert.equal(getTutorStageDirection('qatar','en'),'ltr');
+ assert.equal(getTutorPartnerDirection('qatar','male','en'),'right');
+ assert.equal(getTutorPartnerDirection('qatar','female','ar'),'right');
 });
 test('complete blinks suppress gaze, invalid inputs remain bounded, idle preserves source',()=>{
  assert.deepEqual(planFatimaFrame(manifest),[]);
