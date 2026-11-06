@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, BookOpen, Check, CheckCircle2, ChevronLeft, ChevronRight, FileDown, Fingerprint, Headphones, HelpCircle, Home, LockKeyhole, Music2, RotateCcw, Search, ShieldCheck, Sparkles, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowRight, BookOpen, Check, CheckCircle2, ChevronLeft, ChevronRight, FileDown, Fingerprint, Headphones, HelpCircle, Home, LockKeyhole, MailOpen, Music2, RotateCcw, Search, ShieldCheck, Sparkles, Volume2, VolumeX, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { CASES_DATABASE, spyAudio, type DetectiveCase, type DifficultyLevel, type EvidenceTerm, type SuspectPerson } from './DetectiveMystery';
 import { DETECTIVE_NARRATIVES } from './detectiveNarratives';
 
-type Screen = 'intro' | 'briefing' | 'investigation' | 'report' | 'complete';
+type Screen = 'intro' | 'briefing' | 'investigation' | 'envelope' | 'report' | 'complete';
 type UiLanguage = 'ar' | 'en';
 type LevelProgress = { completedIds: number[]; nextIndex: number; bestScores: Record<number, number> };
 type Progress = Record<DifficultyLevel, LevelProgress>;
@@ -193,7 +193,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
     setFeedback('');
     const base = Math.max(0, 85 - errors * 5);
     markCaseSolved(base);
-    setScreen('report');
+    setScreen('envelope');
     try { confetti({ particleCount: 65, spread: 60, origin: { y: 0.55 } }); } catch {}
   };
   const answerWord = (choice: string) => {
@@ -252,6 +252,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
 
   const background = screen === 'intro' ? 'url("/١.webp")'
     : screen === 'briefing' ? activeCase.bgImage
+    : screen === 'envelope' || screen === 'report' ? 'url("/٩.jpeg")'
     : 'url("/٨.jpeg")';
   const pageStyle: React.CSSProperties = {
     backgroundImage: 'linear-gradient(105deg,rgba(2,7,12,.91),rgba(2,9,15,.66) 52%,rgba(3,8,13,.78)), ' + background,
@@ -378,6 +379,20 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
             </div>
           </div>
           {notice}
+        </section>
+      )}
+      {screen === 'envelope' && (
+        <section className={container + ' justify-center'}>
+          <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-5 rounded-3xl border border-amber-400/60 bg-[#08141e]/95 p-6 text-center shadow-2xl backdrop-blur-xl sm:p-10">
+            <p className="text-sm font-bold tracking-wide text-amber-300">{t('ملف سري', 'CLASSIFIED CASE FILE')}</p>
+            <div className="relative flex h-44 w-64 items-center justify-center rounded-xl border-2 border-amber-500/50 bg-gradient-to-b from-[#d9bd8e] to-[#8e6a42] shadow-[0_20px_60px_rgba(0,0,0,.5)]">
+              <div className="absolute left-0 right-0 top-0 h-1/2 origin-top border-b border-[#735235] bg-[#ead2a7]" style={{clipPath:'polygon(0 0,100% 0,50% 100%)'}}/>
+              <div className="relative flex h-14 w-14 items-center justify-center rounded-full border-4 border-[#bd8b51] bg-red-800 text-amber-100 shadow-lg"><Fingerprint size={26}/></div>
+            </div>
+            <h2 className="text-2xl font-black text-amber-200">{t('أُغلقت القضية بنجاح', 'Case closed successfully')}</h2>
+            <p className="max-w-md text-sm text-slate-200">{t('افتح الملف للاطلاع على الجاني والأدلة، ثم اختبر كلمات القضية.', 'Open the file to review your suspect and evidence, then practice the case vocabulary.')}</p>
+            <button type="button" onClick={() => { spyAudio.playEnvelopeOpen(); setScreen('report'); }} className={primaryButton}><MailOpen size={19}/>{t('فتح ملف القضية', 'Open case file')}</button>
+          </div>
         </section>
       )}
       {screen === 'report' && (
