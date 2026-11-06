@@ -667,7 +667,7 @@ class SpyAudioEngine {
   }
 }
 
-const spyAudio = new SpyAudioEngine();
+export const spyAudio = new SpyAudioEngine();
 
 // ============================================================================
 // FULL ROSTER OF 24 SUSPECTS - WITH ACCURATE VISUAL ATTRIBUTES
