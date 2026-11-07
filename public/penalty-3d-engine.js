@@ -204,10 +204,13 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.24,depthWrite:false}));
   ballShadow.rotation.x=-Math.PI/2;ballShadow.position.set(0,0.047,8.3);scene.add(ballShadow);
 
+  let shooterUniform='#1366b2';
+  const shooterShirtMaterials=[];
   function createFallback(keeper) {
     // Fully articulated, rounded 3D athletes while the CC0 GLB rig loads.
     const root=new THREE.Group();
-    const jersey=material(keeper?0xb7f02f:0x1366b2,0.08,0.62);
+    const jersey=material(keeper?0xb7f02f:shooterUniform,0.08,0.62);
+    if(!keeper)shooterShirtMaterials.push(jersey);
     const shorts=material(keeper?0x25422c:0xeff4f5,0,0.85);
     const socks=material(keeper?0xa4dd28:0x1b6bc9,0,0.73);
     const skin=material(0xb77d55,0,0.9),hair=material(0x241b19,0,0.98);
@@ -270,12 +273,13 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
           if(!o.isMesh)return;
           o.castShadow=true;o.receiveShadow=true;
           const kit={
-            Shirt:material(a.keeper?0xc0ed30:0x1650a8,0.08,0.65),
-            Shirt2:material(a.keeper?0x9dbc23:0x123d88,0,0.72),
+            Shirt:material(a.keeper?0xc0ed30:shooterUniform,0.08,0.65),
+            Shirt2:material(a.keeper?0x9dbc23:shooterUniform,0,0.72),
             Pants:material(a.keeper?0x304531:0xf7fafb,0,0.77),
             Socks:material(a.keeper?0xc0ed30:0x164ca4,0,0.72),
             Shoes:material(0x171e24,0.06,0.47)
           };
+          if(!a.keeper)shooterShirtMaterials.push(kit.Shirt,kit.Shirt2);
           const replace=m=>kit[m.name]||m;
           o.material=Array.isArray(o.material)?o.material.map(replace):replace(o.material);
         });
@@ -353,6 +357,11 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   function update(elapsed,dt){
     const time=elapsed-shot.started;
     const sway=Math.sin(elapsed*2.2)*0.035;
+    if(shot.phase==='focus') {
+      strikerRoot.position.y=Math.sin(elapsed*2.8)*0.026;
+      strikerRoot.rotation.z=Math.sin(elapsed*0.85)*0.012;
+      keeperRoot.position.x=Math.sin(elapsed*1.5)*0.09;
+    }
     if(shot.phase==='idle') {
       strikerRoot.position.y=sway*0.45;
       keeperRoot.position.x=Math.sin(elapsed*1.4)*0.14;
@@ -415,9 +424,9 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     }
     // Always a true perspective camera, lightly tracking the foot-to-ball action.
     camera.position.x=mix(camera.position.x,Math.sin(cameraYaw)*19.8,0.08);
-    camera.position.y=mix(camera.position.y,3.6,0.03);
-    camera.position.z=mix(camera.position.z,Math.cos(cameraYaw)*(shot.phase==='runup'?18.6:19.8),0.08);
-    camera.lookAt(0,1.35,-0.4);
+    camera.position.y=mix(camera.position.y,shot.phase==='focus'?2.75:3.6,0.03);
+    camera.position.z=mix(camera.position.z,Math.cos(cameraYaw)*(shot.phase==='focus'?15.2:shot.phase==='runup'?18.6:19.8),0.08);
+    camera.lookAt(0,1.35,shot.phase==='focus'?5.1:-0.4);
   }
   function resize(){
     if(disposed)return;
@@ -442,6 +451,11 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   frame=requestAnimationFrame(animate);
   return {
     setPhase,
+    setKitColor(value){
+      if(typeof value!=='string'||!/^#[0-9a-fA-F]{6}$/.test(value))return;
+      shooterUniform=value;
+      for(const shirt of shooterShirtMaterials)shirt.color.set(value);
+    },
     reset,
     dispose(){
       if(disposed)return;

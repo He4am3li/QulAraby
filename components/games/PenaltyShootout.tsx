@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { 
-  Trophy, Star, Volume2, VolumeX, RotateCcw,
-  ArrowLeft, X, Play, ArrowRight
+  Trophy, Shirt, Volume2, VolumeX, RotateCcw,
+  ArrowLeft, X
 } from 'lucide-react';
 
-// The supplied PowerPoint's original footage (verified SHA-256) is rendered directly.
-// The striker, goalkeeper, ball, net and stadium are already inside each shot.
 import { PenaltyLive3D } from './PenaltyLive3D';
 
 // ========================================================
@@ -297,415 +295,208 @@ class PenaltySoundEngine {
 // ========================================================
 // 3. المكون الرئيسي: تحدي الأهداف (ركلات الترجيح)
 // ========================================================
+
+import {PenaltyEliteSetup} from './PenaltyEliteSetup';
+import {EliteClub, ElitePlayer, chooseNextShooter} from './PenaltyEliteData';
+import {shootoutResult} from './penalty-elite-rules.mjs';
+
 interface PenaltyShootoutProps {
   onBack?: () => void;
   onWin?: (xp: number) => void;
 }
+type ShotPhase = 'idle'|'focus'|'runup'|'kick'|'goal'|'miss';
+type TeamSide = 'home'|'away';
+type MatchState = {home:EliteClub;away:EliteClub;kickers:ElitePlayer[]};
+type TurnStatus = 'question'|'running'|'goal'|'miss'|'opponent';
+const outStyle='rounded-2xl border border-white/20 bg-[#071722]/90 backdrop-blur-xl shadow-2xl';
 
-export const PenaltyShootout: React.FC<PenaltyShootoutProps> = ({ onBack, onWin }) => {
-  const [screen, setScreen] = useState<'start' | 'match' | 'victory'>('start');
-  const [currentRound, setCurrentRound] = useState<number>(0);
-  const [score, setScore] = useState<number>(0);
-  const [roundsResult, setRoundsResult] = useState<('goal' | 'miss')[]>([]);
-
-  // Realistic match animation state
-  const [shotPhase, setShotPhase] = useState<'idle' | 'runup' | 'kick' | 'goal' | 'miss'>('idle');
-  const [diveSide, setDiveSide] = useState<'left' | 'right'>('left');
-  const [lastShotResult, setLastShotResult] = useState<'goal' | 'miss' | null>(null);
-  const [screenShake, setScreenShake] = useState<boolean>(false);
-
-  // Sound Engine
-  const soundRef = useRef<PenaltySoundEngine>(new PenaltySoundEngine());
-  const [isMuted, setIsMuted] = useState<boolean>(false);
-
-  const totalRounds = 5;
-  const currentQuestion = QUESTIONS[currentRound % QUESTIONS.length];
-
-  // Initialize and handle ambience on screen change
-  useEffect(() => {
-    soundRef.current.init();
-    if (screen === 'match') {
-      soundRef.current.startAmbience();
-    } else {
-      soundRef.current.stopAmbience();
-    }
-    return () => {
-      soundRef.current.stopAmbience();
-    };
-  }, [screen]);
-
-  // Handle Mute Toggle
-  const toggleMute = () => {
-    const nextMuted = !isMuted;
-    setIsMuted(nextMuted);
-    soundRef.current.setMuted(nextMuted);
+export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
+  const [screen,setScreen]=useState<'setup'|'match'|'victory'>('setup');
+  const [match,setMatch]=useState<MatchState|null>(null);
+  const [round,setRound]=useState(0);
+  const [homeShots,setHomeShots]=useState<boolean[]>([]);
+  const [awayShots,setAwayShots]=useState<boolean[]>([]);
+  const [side,setSide]=useState<TeamSide>('home');
+  const [phase,setPhase]=useState<ShotPhase>('idle');
+  const [status,setStatus]=useState<TurnStatus>('question');
+  const [winner,setWinner]=useState<'home'|'away'|null>(null);
+  const [rivalScored,setRivalScored]=useState<boolean|null>(null);
+  const [diveSide,setDiveSide]=useState<'left'|'right'>('left');
+  const [isMuted,setIsMuted]=useState(false);
+  const [screenShake,setScreenShake]=useState(false);
+  const soundRef=useRef<PenaltySoundEngine>(new PenaltySoundEngine());
+  const timersRef=useRef<ReturnType<typeof setTimeout>[]>([]);
+  const later=(fn:()=>void,delay:number)=>{
+    const timer=setTimeout(fn,delay);timersRef.current.push(timer);return timer;
   };
-
-  // Start the match
-  const handleStartGame = () => {
-    soundRef.current.init();
-    setCurrentRound(0);
-    setScore(0);
-    setRoundsResult([]);
-    setShotPhase('idle');
-    setLastShotResult(null);
-    setScreen('match');
-    soundRef.current.playWhistle();
-    soundRef.current.playCue('countdown');
+  const cancelTimeline=()=>{
+    for(const timer of timersRef.current)clearTimeout(timer);
+    timersRef.current=[];
   };
-
-  // User clicked an answer option - Instant reaction without delay!
-  const handleAnswerChoice = (option: { letter: string; text: string; correct: boolean }) => {
-    if (shotPhase !== 'idle' || lastShotResult !== null) return;
-
-    soundRef.current.playCue('select');
-    // Begin the run-up on selection; reserve the kick sound for ball contact.
-    // The whistle is played at match start / between rounds, not on every click.
-
-    // 2. انطلاق اللاعب نحو الكرة
-    setShotPhase('runup');
-    setDiveSide(Math.random() > 0.5 ? 'left' : 'right');
-
-    // 3. A visible run-up gives the player time to anticipate the shot
-    setTimeout(() => {
-      setShotPhase('kick');
-      soundRef.current.playPowerfulKick();
-
-      // 4. Allow the ball to travel before revealing the outcome
-      setTimeout(() => {
-        if (option.correct) {
-          // هدف في الشباك
-          setShotPhase('goal');
-          soundRef.current.playGoalCheer();
-          setScreenShake(true);
-          setTimeout(() => setScreenShake(false), 800);
-
-          setScore(s => s + 1);
-          setRoundsResult(prev => [...prev, 'goal']);
-          setLastShotResult('goal');
-
-          // الانتقال التلقائي للركلة التالية بعد ثانيتين
-          setTimeout(() => {
-            handleProceedNext(true);
-          }, 2500);
-        } else {
-          // تصدي الحارس أو العارضة
-          setShotPhase('miss');
-          soundRef.current.playWoodworkHit();
-          soundRef.current.playCue('save');
-
-          setRoundsResult(prev => [...prev, 'miss']);
-          setLastShotResult('miss');
-        }
-      }, 900);
-    }, 850);
+  useEffect(()=>{
+    if(screen==='match')soundRef.current.startAmbience();
+    else soundRef.current.stopAmbience();
+    return ()=>{soundRef.current.stopAmbience();};
+  },[screen]);
+  useEffect(()=>()=>{cancelTimeline();soundRef.current.stopAmbience();},[]);
+  const toggleSound=()=>{
+    setIsMuted(prev=>{soundRef.current.setMuted(!prev);return !prev;});
   };
-
-  // Retry same question on miss
-  const handleRetrySameQuestion = () => {
-    setShotPhase('idle');
-    setLastShotResult(null);
-    setRoundsResult(prev => prev.slice(0, prev.length - 1));
+  const start=(home:EliteClub,away:EliteClub,kickers:ElitePlayer[])=>{
+    cancelTimeline();soundRef.current.init();
+    setMatch({home,away,kickers});setHomeShots([]);setAwayShots([]);
+    setWinner(null);setRound(0);setSide('home');setRivalScored(null);
+    setPhase('focus');setStatus('question');setScreen('match');
+    soundRef.current.playWhistle();soundRef.current.playCue('countdown');
   };
-
-  // Proceed to next question or victory
-  const handleProceedNext = (wasGoal?: boolean) => {
-    setShotPhase('idle');
-    setLastShotResult(null);
-
-    const nextRoundIndex = currentRound + 1;
-    if (nextRoundIndex < totalRounds) {
-      setCurrentRound(nextRoundIndex);
-      soundRef.current.playWhistle();
-    } else {
-      // Finished all 5 rounds
-      setScreen('victory');
+  const finish=(outcome:'home'|'away',home:boolean[])=>{
+    cancelTimeline();setWinner(outcome);setScreen('victory');
+    soundRef.current.stopAmbience();
+    if(outcome==='home'){
       soundRef.current.playVictoryFanfare();
-      confetti({
-        particleCount: 250,
-        spread: 130,
-        origin: { y: 0.5 },
-        colors: ['#f59e0b', '#10b981', '#38bdf8', '#ffffff']
-      });
-      if (onWin) {
-        onWin(score * 200);
-      }
-    }
+      confetti({particleCount:200,spread:110,origin:{y:0.5},colors:['#e6be6b','#eaf0f2','#40d2a7']});
+      onWin?.(home.filter(Boolean).length*200);
+    } else soundRef.current.playDespairGasp();
   };
-
-  // ========================================================
-  // VIEW 1: شاشة البداية (Start Screen)
-  // ========================================================
-  if (screen === 'start') {
-    return (
-      <div className="relative w-full h-full min-h-[580px] rounded-3xl overflow-hidden flex flex-col justify-between items-center text-center p-6 md:p-12 select-none" dir="rtl">
-        {/* The start screen is also live WebGL 3D, with no image backdrop. */}
-        <PenaltyLive3D phase="idle" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/35 to-slate-950/30 pointer-events-none" />
-
-        {/* Top Controls: Sound & Exit */}
-        <div className="relative z-10 w-full flex items-center justify-between">
-          <button
-            onClick={toggleMute}
-            className="p-3 rounded-2xl bg-black/40 border border-white/20 text-amber-400 hover:text-white transition-all shadow-lg cursor-pointer flex items-center gap-2 text-xs font-bold backdrop-blur-md"
-          >
-            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-            <span>{isMuted ? "الصوت مكتوم" : "صوت الملعب"}</span>
-          </button>
-
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="p-3 rounded-2xl bg-black/40 border border-white/20 text-slate-300 hover:text-white transition-all shadow-lg cursor-pointer backdrop-blur-md"
-              title="خروج"
-            >
-              <X size={18} />
-            </button>
-          )}
-        </div>
-
-        {/* Center Title & Description */}
-        <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center gap-5 my-auto">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-slate-950 shadow-[0_0_50px_rgba(245,158,11,0.6)]">
-            <Trophy size={42} />
-          </div>
-
-          <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight drop-shadow-lg">
-            تحدي الأهداف
-          </h1>
-
-          <p className="text-base md:text-xl text-slate-200 font-medium leading-relaxed max-w-xl">
-            مسابقة ركلات الترجيح التفاعلية؛ أجب على الأسئلة اللغوية بدقة، وسدد الكرة في شباك الحارس لتحقيق الفوز بكأس البطولة!
-          </p>
-
-          {/* Start Button */}
-          <button
-            onClick={handleStartGame}
-            className="mt-4 px-12 py-5 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xl shadow-[0_0_40px_rgba(245,158,11,0.7)] hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-3"
-          >
-            <Play size={24} className="fill-slate-950" />
-            <span>اضغط هنا للبدء</span>
-          </button>
-        </div>
-
-        {/* Footer info */}
-        <div className="relative z-10 text-xs text-slate-400 font-semibold">
-          5 ركلات ترجيحية حاسمة • أجب بشكل صحيح لتسديد الكرة وهز الشباك ⚽
-        </div>
-      </div>
-    );
-  }
-
-  // ========================================================
-  // VIEW 2: شاشة السؤال والتسديد الواقعية (Realistic Match Screen)
-  // ========================================================
-  if (screen === 'match') {
-    return (
-      <div className={`relative w-full h-full min-h-[640px] rounded-3xl overflow-hidden flex flex-col justify-between bg-slate-950 select-none transition-transform duration-150 ${screenShake ? 'scale-[1.018] translate-y-[-4px]' : ''}`} dir="rtl">
-
-        {/* =====================================================
-            A. THE REALISTIC FOOTBALL FIELD (خلفية الملعب والمرمى الواقعي)
-        ===================================================== */}
-        <PenaltyLive3D phase={shotPhase} diveSide={diveSide} />
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#030a16]/40 via-transparent to-[#020e13]/65" aria-hidden="true" />
-
-        {/* =====================================================
-            B. TOP HUD & THE ORANGE QUESTION CARD ABOVE THE GOAL
-            (الأسئلة فوق الشباك مباشرة أسفل عداد الأهداف دون أن تغطي على اللاعب)
-        ===================================================== */}
-        <div className="relative z-30 p-3 md:p-5 flex flex-col items-center gap-2 pointer-events-auto">
-
-          {/* 1. Scoreboard Counter Bar */}
-          <div className="w-full max-w-3xl flex items-center justify-between gap-3">
-            {/* Sound Toggle */}
-            <button
-              onClick={toggleMute}
-              className="p-2.5 rounded-2xl bg-slate-950/85 border border-white/20 text-amber-400 hover:text-white transition-all shadow-xl cursor-pointer backdrop-blur-md"
-              title={isMuted ? "تشغيل الصوت" : "كتم الصوت"}
-            >
-              {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-            </button>
-
-            {/* Stadium scoreboard: interactive live match result, inspired by the supplied score-counter concept. */}
-            <div className="relative flex min-w-0 items-center gap-2 sm:gap-4 rounded-xl border border-amber-300/60 bg-[#071620]/95 px-3 sm:px-5 py-2 shadow-[0_10px_30px_rgba(0,0,0,.65),inset_0_1px_0_rgba(255,255,255,.15)] backdrop-blur-xl" aria-live="polite" aria-label={`لوحة النتيجة: ${score} أهداف، الركلة ${currentRound + 1} من ${totalRounds}`}>
-              <div className="flex flex-col items-center border-l border-white/15 pl-3 sm:pl-5">
-                <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-amber-300">النتيجة</span>
-                <div className="flex items-baseline gap-1.5 text-2xl sm:text-3xl font-black tabular-nums text-white drop-shadow-[0_0_12px_rgba(251,191,36,.45)]">
-                  <span className="text-amber-300">{score}</span><span className="text-sm text-white/40">:</span><span>{totalRounds - score}</span>
-                </div>
-                <span className="text-[9px] text-slate-300">أهداف : غير مسجلة</span>
-              </div>
-              <div className="flex min-w-0 flex-col items-center gap-1.5">
-                <span className="text-[10px] sm:text-xs font-black text-white">الركلة {currentRound + 1} / {totalRounds}</span>
-                <div className="flex gap-1 sm:gap-1.5" dir="ltr">
-                  {Array.from({ length: totalRounds }, (_, idx) => {
-                    const result = roundsResult[idx];
-                    return <span key={idx} className={`flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full border text-[10px] font-black ${result === 'goal' ? 'border-emerald-300 bg-emerald-600 text-white' : result === 'miss' ? 'border-rose-300 bg-rose-700 text-white' : idx === currentRound ? 'border-amber-300 bg-amber-300/20 text-amber-200 animate-pulse' : 'border-white/20 bg-slate-800 text-slate-400'}`}>{result === 'goal' ? '✓' : result === 'miss' ? '×' : idx + 1}</span>;
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Exit Button */}
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="p-2.5 rounded-2xl bg-slate-950/85 border border-white/20 text-slate-300 hover:text-white transition-all shadow-xl cursor-pointer backdrop-blur-md"
-                title="خروج"
-              >
-                <X size={18} />
-              </button>
-            )}
-          </div>
-
-          {/* 2. The Orange Question Card: Right below the counter, above the goal net! */}
-          <div className="w-full max-w-2xl bg-gradient-to-r from-[#152a32]/95 via-[#1d3640]/95 to-[#152a32]/95 border border-amber-300/60 rounded-2xl px-5 py-3 text-center shadow-[0_12px_35px_rgba(0,0,0,0.55)] backdrop-blur-md">
-            <div className="text-[10px] md:text-xs font-black text-amber-100 uppercase tracking-widest mb-0.5 opacity-90">
-              {currentQuestion.category}
-            </div>
-            <h2 className="text-base md:text-xl font-black text-white leading-snug drop-shadow">
-              {currentQuestion.prompt}
-            </h2>
-          </div>
-
-        </div>
-
-        {/* =====================================================
-            C. BOTTOM: GOAL/MISS NOTIFICATION OR 3 ANSWER BUTTONS
-        ===================================================== */}
-        <div className="relative z-30 p-4 md:p-6 flex flex-col items-center gap-3 max-w-3xl mx-auto w-full pointer-events-auto">
-
-          {/* Cinematic goal callout appears after the ball reaches the net. */}
-          {/* Goal Notification */}
-          {lastShotResult === 'goal' && (
-            <div className="w-full bg-emerald-600/95 border-2 border-emerald-300 rounded-2xl py-3 px-5 text-center shadow-[0_0_50px_rgba(16,185,129,0.7)] backdrop-blur-xl animate-bounce">
-              <div className="text-2xl md:text-3xl font-black text-white drop-shadow">
-                ⚽ هــــــــــــدف رائع!
-              </div>
-              <p className="text-xs text-emerald-100 font-bold">
-                تسديدة قوية لا تصد ولا ترد في شباك الحارس!
-              </p>
-            </div>
-          )}
-
-          {/* Miss Notification */}
-          {lastShotResult === 'miss' && (
-            <div className="w-full bg-slate-950/95 border-2 border-rose-500 rounded-2xl p-4 text-center shadow-[0_0_50px_rgba(244,63,94,0.6)] backdrop-blur-xl">
-              <div className="text-xl md:text-2xl font-black text-rose-400 mb-1">
-                🧤 تصدى لها الحارس! تسديدة ضائعة
-              </div>
-              <p className="text-xs text-slate-300 font-medium mb-3">
-                {currentQuestion.explanation}
-              </p>
-              <div className="flex gap-3 justify-center">
-                <button
-                  onClick={handleRetrySameQuestion}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs md:text-sm shadow-lg active:scale-95 transition-all cursor-pointer flex items-center gap-2"
-                >
-                  <RotateCcw size={15} />
-                  <span>المحاولة مجدداً</span>
-                </button>
-                <button
-                  onClick={() => handleProceedNext(false)}
-                  className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs md:text-sm border border-white/20 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
-                >
-                  <span>الركلة التالية</span>
-                  <ArrowLeft size={15} />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* 3 Interactive Answer Choice Buttons (Only when not showing miss dialog) */}
-          {lastShotResult === null && (
-            <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3">
-              {currentQuestion.answers.map((opt, idx) => (
-                <button
-                  key={idx}
-                  disabled={shotPhase !== 'idle'}
-                  onClick={() => handleAnswerChoice(opt)}
-                  className={`group relative py-3.5 px-4 rounded-2xl border-2 transition-all duration-150 text-right cursor-pointer flex items-center justify-between shadow-xl ${
-                    shotPhase !== 'idle'
-                      ? 'opacity-40 cursor-not-allowed border-white/10 bg-slate-900/80 text-slate-400'
-                      : 'bg-slate-950/90 border-white/20 hover:border-amber-400 hover:bg-slate-900 hover:scale-[1.02] active:scale-95 text-white hover:text-amber-200'
-                  }`}
-                >
-                  <span className="text-sm md:text-base font-black truncate">
-                    {opt.text}
-                  </span>
-                  <span className="w-7 h-7 rounded-xl bg-white/10 border border-white/20 text-xs font-black text-amber-400 flex items-center justify-center shrink-0 mr-2 group-hover:bg-amber-400 group-hover:text-slate-950 transition-colors">
-                    {opt.letter}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-
-        </div>
-
-      </div>
-    );
-  }
-
-  // ========================================================
-  // VIEW 3: شاشة الفوز والتكريم (Victory Screen)
-  // ========================================================
-  return (
-    <div className="relative w-full h-full min-h-[580px] rounded-3xl overflow-hidden flex flex-col justify-center items-center text-center p-6 md:p-12 select-none animate-fade-in" dir="rtl">
-      {/* Full 3D scene remains active on the result screen. */}
-      <PenaltyLive3D phase="idle" />
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-slate-950/95 via-slate-950/65 to-slate-950/55" />
-
-      <div className="relative z-10 max-w-lg w-full bg-slate-950/90 border-2 border-amber-400/80 rounded-3xl p-8 shadow-[0_0_80px_rgba(245,158,11,0.5)] backdrop-blur-2xl flex flex-col items-center">
-
-        {/* Giant Golden Trophy */}
-        <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-300 to-amber-500 flex items-center justify-center text-slate-950 shadow-[0_0_50px_#f59e0b] mb-3 animate-bounce">
-          <Trophy size={52} />
-        </div>
-
-        {/* 5 Golden Stars */}
-        <div className="flex items-center justify-center gap-2 mb-3">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <Star
-              key={s}
-              size={28}
-              className="text-amber-400 fill-amber-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.9)] animate-pulse"
-              style={{ animationDelay: `${s * 150}ms` }}
-            />
-          ))}
-        </div>
-
-        {/* The Exact Celebration Ribbon Requested by User */}
-        <div className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 text-slate-950 font-black text-2xl md:text-3xl shadow-[0_0_40px_rgba(245,158,11,0.8)] border-2 border-white mb-4">
-          أحسنت يا بطل! 🏆
-        </div>
-
-        {/* Score Summary */}
-        <p className="text-base text-slate-200 font-semibold mb-6">
-          نجحت في تسجيل <span className="text-emerald-400 font-black text-xl">{score}</span> أهداف من أصل <span className="text-white font-bold">{totalRounds}</span> ركلات ترجيحية!
-        </p>
-
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full">
-          <button
-            onClick={handleStartGame}
-            className="flex-1 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-base shadow-[0_0_25px_rgba(245,158,11,0.5)] active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
-          >
-            <RotateCcw size={18} />
-            <span>العب مجدداً</span>
-          </button>
-
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="px-6 py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-base border border-white/20 transition-all cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>العودة للمنصة</span>
-            </button>
-          )}
-        </div>
-
+  const rivalShot=(home:boolean[],away:boolean[])=>{
+    setSide('away');setStatus('opponent');setPhase('idle');setRivalScored(null);
+    const scored=Math.random()<0.66;
+    setDiveSide(Math.random()<0.5?'left':'right');
+    later(()=>setPhase('focus'),80);
+    later(()=>setPhase('runup'),850);
+    later(()=>{setPhase('kick');soundRef.current.playPowerfulKick();},1950);
+    later(()=>{
+      setPhase(scored?'goal':'miss');setRivalScored(scored);
+      setAwayShots([...away,scored]);
+      if(scored)soundRef.current.playGoalCheer();
+      else soundRef.current.playCue('save');
+    },2900);
+    later(()=>{
+      const nextAway=[...away,scored];
+      const outcome=shootoutResult(home,nextAway);
+      if(outcome){finish(outcome,home);return;}
+      setRound(home.length);setSide('home');setStatus('question');
+      setPhase('idle');
+      later(()=>setPhase('focus'),85);
+      soundRef.current.playWhistle();
+    },4900);
+  };
+  const answer=(choice:{letter:string;text:string;correct:boolean})=>{
+    if(screen!=='match'||side!=='home'||status!=='question'||phase!=='focus')return;
+    soundRef.current.playCue('select');
+    setStatus('running');setPhase('runup');
+    setDiveSide(Math.random()<0.5?'left':'right');
+    later(()=>{setPhase('kick');soundRef.current.playPowerfulKick();},1100);
+    later(()=>{
+      setPhase(choice.correct?'goal':'miss');setStatus(choice.correct?'goal':'miss');
+      setHomeShots([...homeShots,choice.correct]);
+      if(choice.correct){
+        soundRef.current.playGoalCheer();setScreenShake(true);
+        later(()=>setScreenShake(false),400);
+      }else{soundRef.current.playWoodworkHit();soundRef.current.playCue('save');}
+    },2100);
+    later(()=>{
+      const nextHome=[...homeShots,choice.correct];
+      const outcome=shootoutResult(nextHome,awayShots);
+      if(outcome){finish(outcome,nextHome);return;}
+      rivalShot(nextHome,awayShots);
+    },4100);
+  };
+  if(screen==='setup')return <PenaltyEliteSetup onBack={onBack} onStart={start}/>;
+  if(!match)return null;
+  const shooter=side==='home'
+    ?chooseNextShooter(match.home,match.kickers,round)
+    :[...match.away.players.filter(p=>p.role!=='GK'),...match.away.players.filter(p=>p.role==='GK')][awayShots.length%11];
+  const currentQuestion=QUESTIONS[round%QUESTIONS.length];
+  const homeScore=homeShots.filter(Boolean).length;
+  const awayScore=awayShots.filter(Boolean).length;
+  const suddenDeath=round>=5;
+  const progress=(shots:boolean[],label:string)=>(
+    <div className="flex flex-col items-center gap-1 min-w-0">
+      <span className="text-[10px] md:text-xs text-slate-300 font-black truncate max-w-full">{label}</span>
+      <div className="flex gap-1" dir="ltr">
+        {Array.from({length:5},(_,i)=><span key={i}
+          className={'w-4 h-4 md:w-5 md:h-5 rounded-full border flex items-center justify-center text-[9px] font-black '
+          +(shots[i]===true?'bg-emerald-500 border-emerald-300 text-emerald-950':shots[i]===false?'bg-rose-600 border-rose-400 text-white':'border-white/25 bg-white/10 text-slate-500')}>
+          {shots[i]===true?'✓':shots[i]===false?'×':i+1}
+        </span>)}
       </div>
     </div>
   );
+  if(screen==='victory'){
+    const isWinner=winner==='home';
+    return <div dir="rtl" className="relative w-full h-full min-h-[620px] rounded-3xl bg-slate-950 overflow-hidden flex flex-col justify-center items-center p-5">
+      <PenaltyLive3D phase="idle" kitColor={match.home.primary}/>
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#031220]/95 via-[#031220]/80 to-[#031220]/30"/>
+      <div className={'relative z-10 w-full max-w-lg text-center rounded-3xl border p-6 md:p-10 '+(isWinner?'border-amber-300/50 bg-[#122c31]/90':'border-slate-500/40 bg-[#0a1d2c]/90')}>
+        <Trophy size={54} className={'mx-auto '+(isWinner?'text-amber-300':'text-slate-300')}/>
+        <p className="mt-3 text-xs font-black tracking-widest text-amber-300" dir="ltr">QUL PENALTY ELITE</p>
+        <h2 className="mt-2 text-3xl md:text-4xl font-black text-white">{isWinner?'أبطال ركلات الترجيح!':'مباراة قوية، فرصة أخرى تنتظرك'}</h2>
+        <div className="mt-7 flex items-center justify-between gap-3">
+          <span className="text-white font-black text-sm">{match.home.name}</span>
+          <strong dir="ltr" className="text-3xl md:text-5xl text-amber-200 font-black tabular-nums">{homeScore} : {awayScore}</strong>
+          <span className="text-white font-black text-sm">{match.away.name}</span>
+        </div>
+        <p className="mt-5 text-slate-300 text-sm">أجبت عن {homeScore} أسئلة إجابة صحيحة من {homeShots.length} ركلات.</p>
+        <p className="mt-1 text-slate-400 text-xs">{suddenDeath?'حُسم اللقاء بعد ركلات إضافية':'حُسم اللقاء وفق نظام ركلات الترجيح'}</p>
+        <div className="mt-8 grid grid-cols-2 gap-3">
+          <button type="button" onClick={()=>start(match.home,match.away,match.kickers)} className="rounded-xl bg-amber-300 text-slate-950 font-black p-3 flex items-center justify-center gap-2"><RotateCcw size={17}/> إعادة المباراة</button>
+          <button type="button" onClick={()=>{cancelTimeline();setScreen('setup');}} className="rounded-xl bg-white/10 border border-white/20 text-white font-black p-3 flex items-center justify-center gap-2"><ArrowLeft size={17}/> تغيير الفريق</button>
+        </div>
+      </div>
+    </div>;
+  }
+  return <main dir="rtl" className={'relative w-full h-full min-h-[640px] rounded-3xl overflow-hidden flex flex-col justify-between bg-[#07131f] text-white '+(screenShake?'scale-[1.008]':'')}>
+    <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={side==='home'?match.home.primary:match.away.primary}/>
+    <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#01101e]/75 via-transparent to-[#010f1b]/90"/>
+    <header className="relative z-20 p-3 md:p-5 w-full flex flex-col gap-3 items-center">
+      <div className="flex items-center justify-between gap-2 w-full max-w-5xl">
+        <button type="button" onClick={toggleSound} title={isMuted?'تشغيل الصوت':'كتم الصوت'} className={'p-2.5 text-amber-300 '+outStyle}>
+          {isMuted?<VolumeX size={19}/>:<Volume2 size={19}/>}
+        </button>
+        <div className={'flex items-center gap-2 md:gap-5 px-3 py-2.5 '+outStyle} aria-label={'النتيجة '+homeScore+' مقابل '+awayScore}>
+          {progress(homeShots,match.home.name)}
+          <div className="flex flex-col items-center">
+            <strong className="text-2xl md:text-4xl font-black text-white tabular-nums" dir="ltr">{homeScore} : {awayScore}</strong>
+            <span className="text-[10px] text-amber-300 font-black">{suddenDeath?'الركلات الحاسمة':'ركلات الترجيح'}</span>
+          </div>
+          {progress(awayShots,match.away.name)}
+        </div>
+        <button type="button" onClick={()=>{cancelTimeline();setScreen('setup');}} title="إنهاء المباراة" className={'p-2.5 text-slate-300 '+outStyle}><X size={19}/></button>
+      </div>
+      <div className="flex items-center justify-between max-w-2xl w-full gap-3 rounded-xl border border-amber-300/30 bg-[#061b27]/90 px-3 py-2 shadow-lg">
+        <span className="text-xs text-amber-200 font-black">ركلة {round+1}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <Shirt size={17} style={{color:side==='home'?match.home.primary:match.away.primary}}/>
+          <strong dir="ltr" className="text-white text-sm truncate">{shooter?.name || 'Penalty kicker'}</strong>
+          <span className="bg-white/10 rounded-lg px-2 py-0.5 text-xs font-black">#{shooter?.number || 9}</span>
+        </div>
+        <span className="text-xs text-slate-300">{side==='home'?'فريقك':'الكمبيوتر'}</span>
+      </div>
+      {status==='question'&&<div className="max-w-2xl w-full rounded-2xl border border-amber-300/45 bg-[#092332]/95 px-4 py-3 md:py-4 text-center shadow-xl backdrop-blur-md">
+        <p className="text-[10px] font-black text-amber-300">{currentQuestion.category}</p>
+        <h2 className="mt-1 font-black text-base md:text-xl text-white leading-relaxed">{currentQuestion.prompt}</h2>
+      </div>}
+    </header>
+    <div className="relative z-20 w-full max-w-3xl mx-auto px-3 md:px-6 pb-4 md:pb-7 flex flex-col items-center gap-3">
+      {status==='question'&&<div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        {currentQuestion.answers.map((option,index)=><button type="button" key={index} onClick={()=>answer(option)}
+          className="flex justify-between items-center gap-2 py-3.5 px-4 rounded-xl bg-[#071f2c]/95 border border-white/30 text-white hover:border-amber-300 hover:bg-[#193947] shadow-xl text-sm font-black transition-colors">
+          <span className="text-right">{option.text}</span><span className="w-7 h-7 rounded-lg bg-amber-300/15 text-amber-300 border border-amber-300/30 grid place-items-center">{option.letter}</span>
+        </button>)}
+      </div>}
+      {status==='running'&&<div className={'p-4 md:px-8 text-center '+outStyle}>
+        <span className="text-amber-200 font-black text-base">لحظة الحسم... {shooter?.name} يتقدم نحو الكرة</span>
+      </div>}
+      {status==='opponent'&&<div className={'px-6 py-4 text-center '+outStyle}>
+        <p className="text-amber-200 font-black">دور {match.away.name}</p>
+        <p className="text-slate-300 text-xs mt-1">{rivalScored===null?'الحارس يستعد للركلة...':rivalScored?'سجل الخصم هدفًا':'أضاع الخصم الركلة!'}</p>
+      </div>}
+      {(status==='goal'||status==='miss')&&<div role="status" className={'w-full max-w-xl p-4 text-center border-2 '+outStyle} style={{borderColor:status==='goal'?'#3bc594':'#da6d79'}}>
+        <h3 className={'text-xl md:text-3xl font-black '+(status==='goal'?'text-emerald-300':'text-rose-300')}>{status==='goal'?'هدف رائع!':'الكرة لم تدخل المرمى'}</h3>
+        {status==='miss'&&<p className="text-sm text-slate-300 mt-2">{currentQuestion.explanation}</p>}
+        <p className="text-xs text-slate-400 mt-1">تستمر ركلات الترجيح تلقائيًا</p>
+      </div>}
+    </div>
+  </main>;
 };
