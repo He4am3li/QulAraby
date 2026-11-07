@@ -6,6 +6,12 @@ on:
       - 'assets/detective/**'
       - 'components/games/DetectiveMystery.tsx'
       - 'components/games/beginnerDetectiveCases.ts'
+      - 'components/games/advancedDetectiveCases.ts'
+      - 'components/games/detectiveNarratives.ts'
+      - 'components/games/DetectiveExperience.tsx'
+      - 'pages/Games.tsx'
+      - 'scripts/install-advanced-detective-assets.mjs'
+      - 'tests/detective-advanced-cases.test.mjs'
       - 'scripts/install-beginner-detective-assets.mjs'
       - 'tests/detective-beginner-cases.test.mjs'
       - 'package.json'
@@ -15,6 +21,12 @@ on:
       - 'assets/detective/**'
       - 'components/games/DetectiveMystery.tsx'
       - 'components/games/beginnerDetectiveCases.ts'
+      - 'components/games/advancedDetectiveCases.ts'
+      - 'components/games/detectiveNarratives.ts'
+      - 'components/games/DetectiveExperience.tsx'
+      - 'pages/Games.tsx'
+      - 'scripts/install-advanced-detective-assets.mjs'
+      - 'tests/detective-advanced-cases.test.mjs'
       - 'scripts/install-beginner-detective-assets.mjs'
       - 'tests/detective-beginner-cases.test.mjs'
       - 'package.json'
@@ -29,4 +41,5 @@ jobs:
         with:
           node-version: '22'
       - run: node scripts/install-beginner-detective-assets.mjs
-      - run: node tests/detective-beginner-cases.test.mjs
+      - run: node scripts/install-advanced-detective-assets.mjs
+      - run: npm run test:detective
