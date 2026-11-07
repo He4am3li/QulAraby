@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "iraq_male",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/sinan-stance-v1.webp",
+  "sourceSha256": "0b59423b71bde324fc268e7c5df0fe6d2f5ff40e7602f9e0918738f866b54a13",
+  "pose": {
+    "bodyFacing": "left",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "right"
+  },
+  "registration": {
+    "shift": 0,
+    "scale": 0.635,
+    "offset": [
+      386,
+      35
+    ],
+    "eyes": [
+      470,
+      126,
+      112,
+      34
+    ],
+    "brows": [
+      467,
+      114,
+      118,
+      25
+    ],
+    "mouth": [
+      487,
+      185,
+      78,
+      55
+    ]
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 470,
+      "y": 126,
+      "w": 112,
+      "h": 34,
+      "visible": true,
+      "url": "/avatars/sinan-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 470,
+      "y": 126,
+      "w": 112,
+      "h": 34,
+      "visible": true,
+      "url": "/avatars/sinan-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 470,
+      "y": 126,
+      "w": 112,
+      "h": 34,
+      "visible": true,
+      "url": "/avatars/sinan-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 467,
+      "y": 114,
+      "w": 118,
+      "h": 25,
+      "visible": true,
+      "url": "/avatars/sinan-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 467,
+      "y": 114,
+      "w": 118,
+      "h": 25,
+      "visible": true,
+      "url": "/avatars/sinan-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 487,
+      "y": 185,
+      "w": 78,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/sinan-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 487,
+      "y": 185,
+      "w": 78,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/sinan-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 487,
+      "y": 185,
+      "w": 78,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/sinan-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 487,
+      "y": 185,
+      "w": 78,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/sinan-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 487,
+      "y": 185,
+      "w": 78,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/sinan-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 487,
+      "y": 185,
+      "w": 78,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/sinan-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}
