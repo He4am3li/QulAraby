@@ -10,8 +10,8 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   const mobile = (host.clientWidth || innerWidth) < 720;
   const clock = new THREE.Clock();
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x050d1b);
-  scene.fog = new THREE.FogExp2(0x050d1b, 0.008);
+  scene.background = new THREE.Color(0x030b17);
+  scene.fog = new THREE.FogExp2(0x071e22, 0.0039);
   const camera = new THREE.PerspectiveCamera(mobile ? 61 : 52, 1, 0.1, 250);
   camera.position.set(0, 3.6, 19.8);
   camera.lookAt(0, 1.5, 0);
@@ -20,7 +20,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.65;
+  renderer.toneMappingExposure = 1.24;
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.15 : 1.5));
   renderer.shadowMap.enabled = !mobile;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -48,9 +48,9 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   renderer.domElement.addEventListener('pointerup', onPointerUp);
   renderer.domElement.addEventListener('pointercancel', onPointerUp);
 
-  const hemi = new THREE.HemisphereLight(0xc5e9ff, 0x193a24, 2.25);
+  const hemi = new THREE.HemisphereLight(0xdcefff, 0x206a3d, 1.68);
   scene.add(hemi);
-  const moon = new THREE.DirectionalLight(0xe7f1ff, 2.8);
+  const moon = new THREE.DirectionalLight(0xf7fbff, 3.35);
   moon.position.set(-13, 35, 21); moon.castShadow = !mobile;
   if (!mobile) {
     moon.shadow.mapSize.set(1024,1024);
@@ -60,12 +60,18 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     moon.shadow.bias = -0.0006;
   }
   scene.add(moon);
-  const lamp2 = new THREE.DirectionalLight(0x8ebedb, 1.6);
+  const lamp2 = new THREE.DirectionalLight(0x5bbefd, 2.25);
   lamp2.position.set(18, 25, -18); scene.add(lamp2);
+  // The rear amber key light contrasts with the cool broadcast floodlights.
+  const cinemaRim = new THREE.DirectionalLight(0xffd492,1.45);
+  cinemaRim.position.set(4,15,-16);scene.add(cinemaRim);
+  // Give dark, muted scenes a touch of warm stadium light without flattening skin tones.
+  const fieldFill = new THREE.DirectionalLight(0xe5ffdf,.62);
+  fieldFill.position.set(0,18,7);scene.add(fieldFill);
 
   const material = (hex, metalness=0, roughness=0.78) =>
     new THREE.MeshStandardMaterial({color:hex, metalness, roughness});
-  const turf = material(0x164d2b, 0, 0.96);
+  const turf = material(0x21753a, 0, 0.97);
   const white = material(0xeef4ef, 0.22, 0.34);
   const black = material(0x18232b, 0.1, 0.68);
   const steel = material(0x8195a6, 0.55, 0.38);
@@ -74,7 +80,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   // Actual individual 3D turf lanes, not an image/texture.
   for (let i = 0; i < 17; i++) {
     const lane = new THREE.Mesh(new THREE.PlaneGeometry(94, 3.8),
-      material(i % 2 ? 0x165328 : 0x206334, 0, 1));
+      material(i % 2 ? 0x277b3b : 0x1f7135, 0, .96));
     lane.rotation.x = -Math.PI/2; lane.position.set(0, 0.008 + i*0.0001, -30 + i*3.8);
     lane.receiveShadow=true; scene.add(lane);
   }
@@ -93,7 +99,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   const turfColor=new THREE.Color();
   let turfSeed=246813579;
   function turfRandom(){turfSeed^=turfSeed<<13;turfSeed^=turfSeed>>>17;turfSeed^=turfSeed<<5;return (turfSeed>>>0)/4294967296;}
-  const bladePalette=[0x1f6533,0x2d773a,0x326f38,0x215a33,0x3a8642,0x34783b,0x285c30,0x498d47];
+  const bladePalette=[0x338847,0x2b7a3c,0x358e47,0x24773b,0x4c9b52,0x3b8d43,0x2f803b,0x55a556];
   for(let i=0;i<turfBladeCount;i++){
     const x=(turfRandom()-.5)*51,z=(turfRandom()-.5)*76;
     grassDummy.position.set(x,0.015,z);
@@ -128,11 +134,11 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   scene.add(arc);
 
   // Stadium bowl with volumetric seating, structural tiers and thousands of 3D spectators.
-  const seatingMat=material(0x172a43,0.15,0.95);
+  const seatingMat=material(0x122237,0.15,0.88);
   for(let tier=0;tier<4;tier++) {
     const r=46+tier*3.5, y=4+tier*2.5;
     const ring=new THREE.Mesh(new THREE.CylinderGeometry(r+2,r,2.1,96,1,true),
-      material(tier%2?0x20334d:0x14273e,0.1,0.85));
+      material(tier%2?0x233a55:0x102439,0.1,0.8));
     ring.position.set(0,y,0); ring.material.side=THREE.DoubleSide;
     scene.add(ring);
     const rail=new THREE.Mesh(new THREE.TorusGeometry(r+0.9,0.11,6,96),steel);
@@ -197,7 +203,161 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   let lastSpectatorTick=-1;
   animateSupporters(0,0);
 
-  const roofMat=material(0x142132,0.48,0.42);
+  // The near stands reuse the locally bundled, rigged CC0 human model instead of
+  // capsules or head-and-box silhouettes. Two animations are baked to instanced
+  // *human geometry* once, leaving ordinary WebGL draw calls during gameplay.
+  let humanCrowd=null;
+  function installHumanCrowd(gltf){
+    const columns=mobile?25:40, rows=mobile?7:9;
+    const supporters=[];
+    let random=15262107;
+    const jitter=()=>{random^=random<<13;random^=random>>>17;random^=random<<5;return(random>>>0)/4294967296;};
+    for(let row=0;row<rows;row++){
+      for(let col=0;col<columns;col++){
+        supporters.push({
+          x:(col-(columns-1)/2)*1.19+(jitter()-.5)*.19,
+          y:3.25+row*.72+(jitter()-.5)*.08,
+          z:-8.8-row*.95+(jitter()-.5)*.19,
+          yaw:Math.PI+(jitter()-.5)*.22,
+          scale:.90+jitter()*.20,
+          phase:jitter()*Math.PI*2,
+          shirt:Math.floor(jitter()*10),skin:Math.floor(jitter()*6),
+          hair:Math.floor(jitter()*6)
+        });
+      }
+    }
+    const crowdShirts=[0x245b93,0xdbc29a,0xe6e6e2,0xa83b49,0x1a7d68,0x364c7e,0x756793,0xc99247,0x26364c,0x9d565d];
+    const crowdSkins=[0xe6bf98,0xc6976e,0xa66f4b,0x764e36,0xe8c7a9,0x5a3928];
+    const crowdHair=[0x241d1d,0x745036,0x332623,0xd4b882,0x13151a,0x916c51];
+    const stepMat=material(0x14283a,.04,.91);
+    const stepLights=new THREE.MeshBasicMaterial({color:0x33778c,toneMapped:false});
+    for(let row=0;row<rows;row++){
+      const baseZ=-8.8-row*.95;
+      const steps=new THREE.Mesh(new THREE.BoxGeometry(columns*1.23,.40,1.55),stepMat);
+      steps.position.set(0,2.72+row*.72,baseZ);scene.add(steps);
+      if(row%3===0){
+        const lightStrip=new THREE.Mesh(new THREE.BoxGeometry(columns*1.23,.065,.085),stepLights);
+        lightStrip.position.set(0,2.97+row*.72,baseZ+.74);scene.add(lightStrip);
+      }
+    }
+    const normalClip=gltf.animations.find(a=>/standing|idle/i.test(a.name))||gltf.animations[0];
+    const celebrateClip=gltf.animations.find(a=>/clapping|jump/i.test(a.name))||normalClip;
+    function bakeHuman(clip,seconds){
+      const human=SkeletonUtils.clone(gltf.scene);
+      const skinned=human.getObjectByName('BaseHuman');
+      if(!skinned?.isSkinnedMesh || !skinned.geometry?.groups?.length || !skinned.applyBoneTransform)return null;
+      const mixer=new THREE.AnimationMixer(human);
+      const action=mixer.clipAction(clip);
+      action.play();mixer.setTime(seconds);
+      human.updateMatrixWorld(true);
+      skinned.skeleton.update();
+      const original=skinned.geometry;
+      const pos=original.getAttribute('position');
+      const baked=new Float32Array(pos.count*3);
+      const tmp=new THREE.Vector3();
+      let minX=Infinity,minY=Infinity,minZ=Infinity,maxX=-Infinity,maxY=-Infinity,maxZ=-Infinity;
+      for(let i=0;i<pos.count;i++){
+        tmp.fromBufferAttribute(pos,i);
+        skinned.applyBoneTransform(i,tmp).applyMatrix4(skinned.matrixWorld);
+        baked[i*3]=tmp.x;baked[i*3+1]=tmp.y;baked[i*3+2]=tmp.z;
+        minX=Math.min(minX,tmp.x);maxX=Math.max(maxX,tmp.x);
+        minY=Math.min(minY,tmp.y);maxY=Math.max(maxY,tmp.y);
+        minZ=Math.min(minZ,tmp.z);maxZ=Math.max(maxZ,tmp.z);
+      }
+      if(!Number.isFinite(minY)||maxY-minY<.1)return null;
+      const scale=1.79/(maxY-minY);
+      const centerX=(minX+maxX)*.5,centerZ=(minZ+maxZ)*.5;
+      for(let i=0;i<pos.count;i++){
+        baked[i*3]=(baked[i*3]-centerX)*scale;
+        baked[i*3+1]=(baked[i*3+1]-minY)*scale;
+        baked[i*3+2]=(baked[i*3+2]-centerZ)*scale;
+      }
+      const bakedGeo=original.clone();
+      bakedGeo.setAttribute('position',new THREE.BufferAttribute(baked,3));
+      bakedGeo.deleteAttribute('skinIndex');bakedGeo.deleteAttribute('skinWeight');
+      bakedGeo.computeVertexNormals();
+      const instances=[];
+      const indices=bakedGeo.getIndex();
+      const mats=Array.isArray(skinned.material)?skinned.material:[skinned.material];
+      for(const group of original.groups){
+        const originalMat=mats[group.materialIndex];
+        const name=originalMat?.name||'Skin';
+        const g=bakedGeo.clone();
+        const subIndex=new Uint16Array(group.count);
+        for(let k=0;k<group.count;k++)subIndex[k]=indices.getX(group.start+k);
+        g.setIndex(new THREE.BufferAttribute(subIndex,1));
+        g.clearGroups();g.computeBoundingSphere();
+        const m=new THREE.MeshStandardMaterial({
+          color:0xffffff,roughness:.88,metalness:0,side:THREE.FrontSide
+        });
+        const inst=new THREE.InstancedMesh(g,m,supporters.length);
+        inst.frustumCulled=false;inst.castShadow=false;inst.receiveShadow=false;
+        inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        scene.add(inst);
+        instances.push({mesh:inst,name});
+      }
+      mixer.stopAllAction();
+      return instances;
+    }
+    const neutral=bakeHuman(normalClip,.23);
+    const celebrating=bakeHuman(celebrateClip,.68);
+    if(!neutral || !celebrating){
+      for(const group of [neutral,celebrating])for(const o of group||[]){
+        scene.remove(o.mesh);o.mesh.geometry.dispose();o.mesh.material.dispose();
+      }
+      return null;
+    }
+    const variants=[neutral,celebrating];
+    const scratch=new THREE.Object3D(),color=new THREE.Color();
+    let lastTick=-1,lastMode=-1;
+    const chooseColor=(name,p)=>{
+      if(name==='Shirt'||name==='Shirt2')return crowdShirts[p.shirt];
+      if(name==='Pants')return crowdShirts[(p.shirt+5)%crowdShirts.length];
+      if(name==='Skin')return crowdSkins[p.skin];
+      if(name==='Hair'||name==='Hair2')return crowdHair[p.hair];
+      if(name==='Eyes')return 0xf4f0e9;
+      if(name==='Socks')return 0x59677a;
+      return 0x1d2631;
+    };
+    for(const variant of variants)for(const item of variant){
+      for(let i=0;i<supporters.length;i++){
+        color.setHex(chooseColor(item.name,supporters[i]));
+        item.mesh.setColorAt(i,color);
+      }
+      item.mesh.instanceColor.needsUpdate=true;
+    }
+    function update(elapsed,reaction){
+      const cheering=reaction>.14;
+      const mode=cheering?1:0;
+      const tick=Math.floor(elapsed*(cheering?7:2));
+      if(tick===lastTick&&mode===lastMode)return;
+      lastTick=tick;lastMode=mode;
+      for(let v=0;v<variants.length;v++){
+        const visible=v===mode;
+        for(const entry of variants[v])entry.mesh.visible=visible;
+        if(!visible)continue;
+        for(let i=0;i<supporters.length;i++){
+          const p=supporters[i];
+          const bounce=cheering?(Math.sin(elapsed*9.4+p.phase)*.5+.5)*.15:(Math.sin(elapsed*1.3+p.phase)*.5+.5)*.014;
+          scratch.position.set(p.x,p.y+bounce,p.z);
+          scratch.rotation.set(0,p.yaw,cheering?Math.sin(elapsed*3+p.phase)*.03:0);
+          scratch.scale.setScalar(p.scale);
+          scratch.updateMatrix();
+          for(const entry of variants[v])entry.mesh.setMatrixAt(i,scratch.matrix);
+        }
+        for(const entry of variants[v])entry.mesh.instanceMatrix.needsUpdate=true;
+      }
+    }
+    update(0,0);
+    return {update,dispose(){
+      for(const variant of variants)for(const item of variant){
+        scene.remove(item.mesh);item.mesh.geometry.dispose();item.mesh.material.dispose();
+      }
+    }};
+  }
+
+
+  const roofMat=material(0x102339,0.48,0.42);
   const roof=new THREE.Mesh(new THREE.TorusGeometry(62.5,2.2,8,100),roofMat);
   roof.rotation.x=Math.PI/2;roof.position.y=17.5;scene.add(roof);
   const upperRoof = new THREE.Mesh(new THREE.TorusGeometry(55.5,0.45,6,100),steel);
@@ -225,6 +385,45 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   }
   makeFloodlights(-Math.PI/3);makeFloodlights(Math.PI/3);
   makeFloodlights(Math.PI+Math.PI/3);makeFloodlights(Math.PI-Math.PI/3);
+  // Broadcast-grade LED boards and floodlight halos: unlit emissive artwork,
+  // not additional real-time shadow-casting lights.
+  const ledPanels=[];
+  // Brand-specific editorial LED boards, built locally to avoid external ads or UI assets.
+  const ledCanvas=document.createElement('canvas');
+  ledCanvas.width=1024;ledCanvas.height=128;
+  const ledCtx=ledCanvas.getContext('2d');
+  if(ledCtx){
+    const grad=ledCtx.createLinearGradient(0,0,1024,128);
+    grad.addColorStop(0,'#062b3a');grad.addColorStop(.5,'#0d7891');grad.addColorStop(1,'#062b3a');
+    ledCtx.fillStyle=grad;ledCtx.fillRect(0,0,1024,128);
+    ledCtx.fillStyle='#f9e2ad';ledCtx.fillRect(18,12,6,103);ledCtx.fillRect(1000,12,6,103);
+    ledCtx.fillStyle='#f2f8fb';ledCtx.font='900 54px Arial,sans-serif';
+    ledCtx.textAlign='center';ledCtx.textBaseline='middle';
+    ledCtx.fillText('QUL  PENALTY  ELITE',512,67);
+  }
+  const ledTexture=new THREE.CanvasTexture(ledCanvas);
+  ledTexture.colorSpace=THREE.SRGBColorSpace;
+  const ledSurface=new THREE.MeshBasicMaterial({color:0x0b3444,toneMapped:false});
+  const ledBroadcast=new THREE.MeshBasicMaterial({
+    map:ledTexture,side:THREE.DoubleSide,toneMapped:false
+  });
+  const ledTrim=new THREE.MeshBasicMaterial({color:0xf4dd95,toneMapped:false});
+  for(const [x,z,w,rot] of [[0,-9.3,32,0],[-19,-4.5,15,Math.PI*.47],[19,-4.5,15,-Math.PI*.47]]){
+    const board=new THREE.Mesh(new THREE.BoxGeometry(w,1,.12),ledSurface);
+    board.position.set(x,1.05,z);board.rotation.y=rot;scene.add(board);ledPanels.push(board);
+    const trim=new THREE.Mesh(new THREE.BoxGeometry(w,.075,.15),ledTrim);
+    trim.position.set(x,1.56,z);trim.rotation.y=rot;scene.add(trim);
+  }
+  const ledTitle=new THREE.Mesh(new THREE.PlaneGeometry(31,.85),ledBroadcast);
+  ledTitle.position.set(0,1.05,-9.21);scene.add(ledTitle);
+  const lampGlowMaterial=new THREE.MeshBasicMaterial({
+    color:0xd0eeff,transparent:true,opacity:.11,depthWrite:false,
+    blending:THREE.AdditiveBlending,side:THREE.DoubleSide
+  });
+  for(const [x,z] of [[-43,25],[43,25],[-43,-38],[43,-38]]){
+    const halo=new THREE.Mesh(new THREE.SphereGeometry(3.8,12,8),lampGlowMaterial);
+    halo.position.set(x,28,z);scene.add(halo);
+  }
 
   // Full 3D goal, pipes, depth and a physical net composed of tensioned line segments.
   function post(a,b,r=0.065) {
@@ -339,7 +538,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
             float subtleLine=1.-smoothstep(.0001,.0007,abs(fract((qulGarmentPosition.x+qulGarmentPosition.z*.3)*140.)-.5)*.008);
             diffuseColor.rgb=mix(diffuseColor.rgb,qulAccent,subtleLine*.07);
           }
-          vec2 kitUV=vec2(.5+qulGarmentPosition.x*44.,.5+(qulGarmentPosition.z-.033)*70.);
+          vec2 kitUV=vec2(.5-qulGarmentPosition.x*44.,.5+(qulGarmentPosition.z-.033)*70.);
           float inBounds=step(0.,kitUV.x)*step(kitUV.x,1.)*step(0.,kitUV.y)*step(kitUV.y,1.);
           float onBack=smoothstep(.0003,.0028,qulGarmentPosition.y);
           vec4 printed=texture2D(qulClothLettering,clamp(kitUV,0.,1.));
@@ -535,6 +734,17 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
         setAction(a,'idle');
       }
       drawNumbers();
+      // Install high-detail humanoid supporters only after the real rig is loaded.
+      // A missing crowd pose must never block the goalkeeper or the match.
+      try{
+        humanCrowd=installHumanCrowd(gltf);
+        if(humanCrowd){
+          audience.visible=false;audienceHeads.visible=false;
+          audienceLeftArms.visible=false;audienceRightArms.visible=false;
+        }
+      }catch(crowdError){
+        console.warn('[QUL Arena] detailed crowd unavailable, using distant stands',crowdError);
+      }
       onReady?.({rigged:true, animations:gltf.animations.length});
     },undefined,(err)=>{
       if(canRetry){fetchAthlete(CDN_MODEL,false);return;}
@@ -672,7 +882,8 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     }
     const crowdEmotion=shot.phase==='goal'?Math.exp(-Math.max(0,time)*.22)
       :shot.phase==='miss'?.54*Math.exp(-Math.max(0,time)*.28):.035;
-    animateSupporters(elapsed,crowdEmotion);
+    if(humanCrowd)humanCrowd.update(elapsed,crowdEmotion);
+    else animateSupporters(elapsed,crowdEmotion);
     // Always a true perspective camera, lightly tracking the foot-to-ball action.
     camera.position.x=mix(camera.position.x,Math.sin(cameraYaw)*19.8,0.08);
     camera.position.y=mix(camera.position.y,shot.phase==='focus'?2.8:shot.phase==='kick'?2.2:3.45,0.065);
@@ -716,6 +927,8 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       renderer.domElement.removeEventListener('pointercancel',onPointerUp);
       actors.forEach(a=>a.mixer?.stopAllAction());
       shirtLettering.forEach(d=>d.texture.dispose());
+      ledTexture.dispose();
+      humanCrowd?.dispose();
       scene.traverse(o=>{
         if(o.geometry && o.geometry.dispose)o.geometry.dispose();
         if(o.material){

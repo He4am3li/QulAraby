@@ -478,7 +478,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
   }
   return <main dir="rtl" className={'relative w-full h-full min-h-[640px] rounded-3xl overflow-hidden flex flex-col justify-between bg-[#07131f] text-white '+(screenShake?'scale-[1.008]':'')}>
     <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={attackingClub.primary} kit={stadiumKit}/>
-    <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#01101e]/75 via-transparent to-[#010f1b]/90"/>
+    <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#020b18]/35 via-transparent to-[#051720]/60"/>
     <header className="relative z-20 p-3 md:p-5 w-full flex flex-col gap-3 items-center">
       <div className="flex items-center justify-between gap-2 w-full max-w-5xl">
         <button type="button" onClick={toggleSound} title={isMuted?'تشغيل الصوت':'كتم الصوت'} className={'p-2.5 text-amber-300 '+outStyle}>
