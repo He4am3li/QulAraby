@@ -1,0 +1,41 @@
+name: Speaking Experience Quality
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'pages/Speak.tsx'
+      - 'components/SpeakingCallBooth.tsx'
+      - 'components/SpeakingCallBooth.css'
+      - 'components/SpeakingModernPhone.css'
+      - 'components/SpeakingPhoneBook.tsx'
+      - 'components/SpeakingPhoneBook.css'
+      - 'services/speakingDial.mjs'
+      - 'services/speakingLearning.mjs'
+      - 'tests/speaking-experience.test.mjs'
+      - 'package.json'
+      - '.github/workflows/speaking-experience.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  speaking:
+    name: Verify phone book, manual dialing and application build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Verify speaking experience
+        run: npm run test:speaking
+      - name: Compile application
+        run: npx vite build
