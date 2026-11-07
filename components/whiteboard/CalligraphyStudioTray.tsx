@@ -1107,11 +1107,12 @@ export const CalligraphyStudioTray: React.FC<CalligraphyStudioTrayProps> = ({
                       key={swatch.id}
                       type="button"
                       onClick={() => {
+                        // Foil is a distinct finish, not a flat pigment.
+                        // Changing the pigment here would disable foil in the parent.
                         onToggleGoldFoil(true);
                         if (onSelectFoilStyle && swatch.foilStyleId) {
                           onSelectFoilStyle(swatch.foilStyleId);
                         }
-                        onSelectInk(swatch.value);
                       }}
                       className={`relative shrink-0 w-12 h-12 rounded-[10px] p-0.5 border-2 transition active:scale-95 cursor-pointer ${
                         isSelected
