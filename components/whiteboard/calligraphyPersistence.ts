@@ -35,6 +35,12 @@ const RECORD_KEY = 'cards';
 const LEGACY_KEY = 'qul_calligraphy_saved_cards_atelier';
 export const MAX_SAVED_CALLIGRAPHY_CARDS = 20;
 
+function scopeKey(scope: string): string {
+  const safeScope = scope === 'guest' ? 'guest' : scope.trim().slice(0, 128);
+  if (!safeScope) throw new Error('الحساب غير صالح لحفظ اللوحات.');
+  return `${RECORD_KEY}:${encodeURIComponent(safeScope)}`;
+}
+
 function openGalleryDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (typeof indexedDB === 'undefined') {
@@ -53,12 +59,26 @@ function openGalleryDB(): Promise<IDBDatabase> {
   });
 }
 
-export async function persistCalligraphyCards(cards: SavedCalligraphyCard[]): Promise<void> {
+async function readGalleryKey(key: string): Promise<SavedCalligraphyCard[]> {
+  const database = await openGalleryDB();
+  try {
+    return await new Promise<SavedCalligraphyCard[]>((resolve, reject) => {
+      const request = database.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).get(key);
+      request.onsuccess = () => resolve(Array.isArray(request.result) ? request.result : []);
+      request.onerror = () => reject(request.error ?? new Error('تعذرت قراءة أعمال الخط العربي.'));
+    });
+  } finally {
+    database.close();
+  }
+}
+
+/** Each signed-in account has its OWN device gallery. Guest works stay separate. */
+export async function persistCalligraphyCards(cards: SavedCalligraphyCard[], scope = 'guest'): Promise<void> {
   const database = await openGalleryDB();
   try {
     await new Promise<void>((resolve, reject) => {
       const transaction = database.transaction(STORE_NAME, 'readwrite');
-      transaction.objectStore(STORE_NAME).put(cards.slice(0, MAX_SAVED_CALLIGRAPHY_CARDS), RECORD_KEY);
+      transaction.objectStore(STORE_NAME).put(cards.slice(0, MAX_SAVED_CALLIGRAPHY_CARDS), scopeKey(scope));
       transaction.oncomplete = () => resolve();
       transaction.onerror = () => reject(transaction.error ?? new Error('تعذّر حفظ اللوحة في الجهاز.'));
       transaction.onabort = () => reject(transaction.error ?? new Error('أُلغي حفظ اللوحة في الجهاز.'));
@@ -68,37 +88,31 @@ export async function persistCalligraphyCards(cards: SavedCalligraphyCard[]): Pr
   }
 }
 
-export async function loadCalligraphyCards(): Promise<SavedCalligraphyCard[]> {
-  const database = await openGalleryDB();
-  let existing: SavedCalligraphyCard[] = [];
-  try {
-    existing = await new Promise<SavedCalligraphyCard[]>((resolve, reject) => {
-      const transaction = database.transaction(STORE_NAME, 'readonly');
-      const request = transaction.objectStore(STORE_NAME).get(RECORD_KEY);
-      request.onsuccess = () => resolve(Array.isArray(request.result) ? request.result : []);
-      request.onerror = () => reject(request.error ?? new Error('تعذرت قراءة أعمال الخط العربي.'));
-    });
-  } finally {
-    database.close();
-  }
-  if (existing.length > 0) return existing;
-
-  // Migrate existing artwork exactly once, deleting the old copy only after
-  // the new IndexedDB transaction successfully commits.
-  let legacy: SavedCalligraphyCard[] = [];
+/** The old shared gallery is never auto-assigned to a signed-in user's account. */
+export async function loadLegacyCalligraphyCards(): Promise<SavedCalligraphyCard[]> {
+  const legacy = await readGalleryKey(RECORD_KEY);
+  if (legacy.length > 0) return legacy.slice(0, MAX_SAVED_CALLIGRAPHY_CARDS);
   try {
     const raw = localStorage.getItem(LEGACY_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) legacy = parsed.slice(0, MAX_SAVED_CALLIGRAPHY_CARDS);
-    }
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.slice(0, MAX_SAVED_CALLIGRAPHY_CARDS) : [];
   } catch {
-    return existing;
+    return [];
   }
+}
+
+export async function loadCalligraphyCards(scope = 'guest'): Promise<SavedCalligraphyCard[]> {
+  const current = await readGalleryKey(scopeKey(scope));
+  if (current.length) return current.slice(0, MAX_SAVED_CALLIGRAPHY_CARDS);
+  if (scope !== 'guest') return [];
+
+  // Existing unsigned works are copied to the guest's scoped gallery, with
+  // their original key preserved for explicit import by the rightful account.
+  const legacy = await loadLegacyCalligraphyCards();
   if (legacy.length) {
-    await persistCalligraphyCards(legacy);
-    try { localStorage.removeItem(LEGACY_KEY); } catch { /* migrated safely */ }
+    await persistCalligraphyCards(legacy, 'guest');
     return legacy;
   }
-  return existing;
+  return [];
 }
