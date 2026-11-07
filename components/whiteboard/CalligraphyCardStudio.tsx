@@ -1,6 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import {
   RotateCcw,
   RotateCw,
@@ -861,6 +859,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
   const handleSaveCard = async () => {
     if (!cardCanvasRef.current) return;
     try {
+      const { default: html2canvas } = await import('html2canvas');
       const canvas = await html2canvas(cardCanvasRef.current, {
         scale: 2,
         useCORS: true,
@@ -928,6 +927,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
     const format = formatOverride || selectedExportFormat;
 
     try {
+      const { default: html2canvas } = await import('html2canvas');
       const isTransparent = format === 'transparent';
       const canvas = await html2canvas(cardCanvasRef.current, {
         scale: 3,
@@ -951,6 +951,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
       const fileName = `مِداد_${quoteText.slice(0, 15).replace(/[\\/:*?"<>|\s]+/g, '_')}`;
 
       if (format === 'pdf') {
+        const { default: jsPDF } = await import('jspdf');
         const a3 = selectedSize === 'A3';
         const ratio = canvas.width / canvas.height;
         const longEdge = a3 ? 420 : 297;
