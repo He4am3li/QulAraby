@@ -13,13 +13,18 @@ import {
   Check,
   FolderHeart,
   HelpCircle,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Grid3X3,
+  Ruler,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
 import { CalligraphyToolFigure } from './CalligraphyToolFigure';
 import { CalligraphyHeaderBanner } from './CalligraphyHeaderBanner';
 import { CalligraphyPenNibId, getCalligraphyPenDynamics } from './calligraphyStudioData';
 import { CalligraphyOrnaments, ORNAMENT_OPTIONS, OrnamentStyleId } from './CalligraphyOrnaments';
 import { CalligraphyStudioTray } from './CalligraphyStudioTray';
+import { SavedCalligraphyCard, loadCalligraphyCards, persistCalligraphyCards, MAX_SAVED_CALLIGRAPHY_CARDS } from './calligraphyPersistence';
 
 interface CalligraphyCardStudioProps {
   initialText?: string;
@@ -630,6 +635,8 @@ interface CanvasHistorySnapshot {
   size: string;
   background: string;
   isSpecialIlluminated?: boolean;
+  foilStyle?: string;
+  fontSize?: number;
 }
 
 export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
@@ -679,24 +686,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
   const [showSavedCardsModal, setShowSavedCardsModal] = useState(false);
   const [showExportFlyout, setShowExportFlyout] = useState(false);
   const [saveSuccessToast, setSaveSuccessToast] = useState(false);
-  const [savedCards, setSavedCards] = useState<Array<{
-    id: string;
-    title: string;
-    dataUrl: string;
-    text?: string;
-    font?: string;
-    pen?: CalligraphyPenNibId;
-    color?: string;
-    isGold?: boolean;
-    isSpecialIlluminated?: boolean;
-    ornament?: OrnamentStyleId;
-    size?: string;
-    background?: string;
-    customBgUrl?: string | null;
-    showSignature?: boolean;
-    signatureName?: string;
-    signaturePosition?: 'bottom-right' | 'bottom-center' | 'bottom-left';
-  }>>([]);
+  const [savedCards, setSavedCards] = useState<SavedCalligraphyCard[]>([]);
 
   // Undo / Redo Stack
   const [history, setHistory] = useState<CanvasHistorySnapshot[]>([
@@ -709,11 +699,16 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
       ornament: 'none',
       size: 'A3',
       background: 'ottoman_gold_fleck',
-      isSpecialIlluminated: false
+      isSpecialIlluminated: false,
+      foilStyle: 'leaf',
+      fontSize: 96
     }
   ]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
+  const tashkeelInputRef = useRef<HTMLInputElement>(null);
+  const [tashkeelNotice, setTashkeelNotice] = useState('');
+  const [studioAlert, setStudioAlert] = useState<string | null>(null);
   const cardCanvasRef = useRef<HTMLDivElement>(null);
   const stageContainerRef = useRef<HTMLDivElement>(null);
   const [stageDimensions, setStageDimensions] = useState({ width: 900, height: 600 });
@@ -782,7 +777,9 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
       ornament: selectedOrnament,
       size: selectedSize,
       background: selectedBackground,
-      isSpecialIlluminated: isSpecialIlluminated
+      isSpecialIlluminated: isSpecialIlluminated,
+      foilStyle: selectedFoilStyle,
+      fontSize
     };
     const nextSnapshot: CanvasHistorySnapshot = { ...current, ...partial };
     const nextHistory = history.slice(0, historyIndex + 1).concat(nextSnapshot);
@@ -803,6 +800,8 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
       setSelectedSize(prev.size);
       if (prev.background) setSelectedBackground(prev.background);
       if (prev.isSpecialIlluminated !== undefined) setIsSpecialIlluminated(prev.isSpecialIlluminated);
+      if (prev.foilStyle) setSelectedFoilStyle(prev.foilStyle);
+      if (prev.fontSize) setFontSize(prev.fontSize);
     }
   };
 
@@ -819,40 +818,65 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
       setSelectedSize(next.size);
       if (next.background) setSelectedBackground(next.background);
       if (next.isSpecialIlluminated !== undefined) setIsSpecialIlluminated(next.isSpecialIlluminated);
+      if (next.foilStyle) setSelectedFoilStyle(next.foilStyle);
+      if (next.fontSize) setFontSize(next.fontSize);
     }
   };
 
-  // Load saved cards on mount
+  // Keyboard shortcuts work outside editable inputs, preserving native typing undo.
   useEffect(() => {
-    try {
-      const local = localStorage.getItem('qul_calligraphy_saved_cards_atelier');
-      if (local) {
-        setSavedCards(JSON.parse(local));
+    const onKeyboardShortcut = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      const key = event.key.toLowerCase();
+      if (key === 'z' && !event.shiftKey && historyIndex > 0) {
+        event.preventDefault();
+        handleUndo();
+      } else if (((key === 'z' && event.shiftKey) || key === 'y') && historyIndex < history.length - 1) {
+        event.preventDefault();
+        handleRedo();
       }
-    } catch {
-      // ignore
-    }
+    };
+    window.addEventListener('keydown', onKeyboardShortcut);
+    return () => window.removeEventListener('keydown', onKeyboardShortcut);
+  }, [history, historyIndex]);
+
+  // The gallery uses IndexedDB. Existing localStorage cards are migrated safely
+  // and only removed from the old storage after the transaction commits.
+  useEffect(() => {
+    let mounted = true;
+    loadCalligraphyCards()
+      .then(cards => { if (mounted) setSavedCards(cards); })
+      .catch(error => {
+        if (mounted) setStudioAlert(error instanceof Error ? error.message : 'تعذر تحميل معرض اللوحات.');
+      });
+    return () => { mounted = false; };
   }, []);
 
-  // Save Card to Gallery (No scattered confetti)
+  // Save artwork only after IndexedDB confirms the complete transaction.
   const handleSaveCard = async () => {
     if (!cardCanvasRef.current) return;
     try {
       const canvas = await html2canvas(cardCanvasRef.current, {
-        scale: 2.5,
+        scale: 2,
         useCORS: true,
-        backgroundColor: null
+        backgroundColor: null,
+        onclone: (documentClone) => {
+          documentClone.querySelectorAll('[data-calligraphy-guide]').forEach(node => node.remove());
+        }
       });
-      const dataUrl = canvas.toDataURL('image/png');
-      const newCard = {
-        id: `card_${Date.now()}`,
+      const newCard: SavedCalligraphyCard = {
+        id: `card_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         title: quoteText.slice(0, 24) || 'لوحة خط عربي',
-        dataUrl,
+        dataUrl: canvas.toDataURL('image/png'),
         text: quoteText,
         font: selectedFont,
         pen: selectedPen,
         color: selectedInk,
         isGold: isGoldFoil,
+        foilStyle: selectedFoilStyle,
+        fontSize,
         isSpecialIlluminated,
         ornament: selectedOrnament,
         size: selectedSize,
@@ -862,13 +886,16 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
         signatureName,
         signaturePosition
       };
-      const updated = [newCard, ...savedCards.slice(0, 19)];
+      const updated = [newCard, ...savedCards].slice(0, MAX_SAVED_CALLIGRAPHY_CARDS);
+      await persistCalligraphyCards(updated);
       setSavedCards(updated);
-      localStorage.setItem('qul_calligraphy_saved_cards_atelier', JSON.stringify(updated));
+      setStudioAlert(null);
       setSaveSuccessToast(true);
       setTimeout(() => setSaveSuccessToast(false), 2600);
-    } catch (err) {
-      console.error('Error saving card:', err);
+    } catch (error) {
+      console.error('Error saving calligraphy artwork:', error);
+      setSaveSuccessToast(false);
+      setStudioAlert('لم تُحفظ اللوحة. تحقق من مساحة تخزين الجهاز ثم أعد المحاولة.');
     }
   };
 
@@ -879,6 +906,8 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
     if (card.pen) setSelectedPen(card.pen);
     if (card.color) setSelectedInk(card.color);
     if (card.isGold !== undefined) setIsGoldFoil(card.isGold);
+    if (card.foilStyle) setSelectedFoilStyle(card.foilStyle);
+    if (card.fontSize) setFontSize(card.fontSize);
     if (card.isSpecialIlluminated !== undefined) setIsSpecialIlluminated(card.isSpecialIlluminated);
     if (card.ornament) setSelectedOrnament(card.ornament);
     if (card.size) setSelectedSize(card.size);
@@ -890,7 +919,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
     setShowSavedCardsModal(false);
   };
 
-  // Export Card (Clean export, no scattered decorations)
+  // Export from the actual artwork, not its editor frame or guide overlays.
   const handleExport = async (formatOverride?: string) => {
     if (!cardCanvasRef.current) return;
     const format = formatOverride || selectedExportFormat;
@@ -900,53 +929,93 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
       const canvas = await html2canvas(cardCanvasRef.current, {
         scale: 3,
         useCORS: true,
-        backgroundColor: isTransparent ? null : undefined
+        backgroundColor: format === 'jpg' ? '#ffffff' : null,
+        onclone: (documentClone) => {
+          documentClone.querySelectorAll('[data-calligraphy-guide]').forEach(node => node.remove());
+          if (isTransparent) {
+            const card = documentClone.getElementById('calligraphy-export-card');
+            if (card) {
+              // Clear the parchment's inline gradient, paper color and image.
+              card.style.setProperty('background', 'transparent', 'important');
+              card.style.setProperty('background-color', 'transparent', 'important');
+              card.style.setProperty('background-image', 'none', 'important');
+              card.style.setProperty('box-shadow', 'none', 'important');
+            }
+          }
+        }
       });
 
-      const fileName = `مِداد_${quoteText.slice(0, 15).replace(/\s+/g, '_')}`;
+      const fileName = `مِداد_${quoteText.slice(0, 15).replace(/[\\/:*?"<>|\s]+/g, '_')}`;
 
       if (format === 'pdf') {
-        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        const a3 = selectedSize === 'A3';
+        const ratio = canvas.width / canvas.height;
+        const longEdge = a3 ? 420 : 297;
+        const shortEdge = a3 ? 297 : 210;
+        const widthMm = ratio >= 1 ? longEdge : shortEdge;
+        const heightMm = ratio >= 1 ? shortEdge : longEdge;
         const pdf = new jsPDF({
-          orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+          orientation: ratio >= 1 ? 'landscape' : 'portrait',
           unit: 'mm',
-          format: 'a4'
+          format: [widthMm, heightMm]
         });
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        pdf.addImage(imgData, 'JPEG', 10, 10, pageWidth - 20, pageHeight - 20);
+        // Fit into the chosen print paper without distorting the artwork ratio.
+        const availableWidth = widthMm - 20;
+        const availableHeight = heightMm - 20;
+        const imageWidth = Math.min(availableWidth, availableHeight * ratio);
+        const imageHeight = imageWidth / ratio;
+        pdf.addImage(
+          canvas.toDataURL('image/jpeg', 0.98),
+          'JPEG',
+          (widthMm - imageWidth) / 2,
+          (heightMm - imageHeight) / 2,
+          imageWidth,
+          imageHeight
+        );
         pdf.save(`${fileName}.pdf`);
-      } else if (format === 'jpg') {
-        const link = document.createElement('a');
-        link.download = `${fileName}.jpg`;
-        link.href = canvas.toDataURL('image/jpeg', 0.95);
-        link.click();
       } else {
         const link = document.createElement('a');
-        link.download = `${fileName}.png`;
-        link.href = canvas.toDataURL('image/png');
+        link.download = `${fileName}.${format === 'jpg' ? 'jpg' : 'png'}`;
+        link.href = format === 'jpg'
+          ? canvas.toDataURL('image/jpeg', 0.95)
+          : canvas.toDataURL('image/png');
+        document.body.appendChild(link);
         link.click();
+        link.remove();
       }
-    } catch (err) {
-      console.error('Export failed:', err);
+      setStudioAlert(null);
+    } catch (error) {
+      console.error('Calligraphy export failed:', error);
+      setStudioAlert('تعذّر التصدير. تأكد من صلاحية الصورة الخلفية وحاول مجددًا.');
     }
   };
 
-  // Tashkeel Helpers
-  const handleInsertTashkeel = (char: string) => {
-    const updated = quoteText + char;
+  // Insert vowel marks at the actual caret rather than after the entire phrase.
+  const handleInsertTashkeel = (mark: string) => {
+    const field = tashkeelInputRef.current;
+    const start = field?.selectionStart ?? quoteText.length;
+    const end = field?.selectionEnd ?? start;
+    const updated = quoteText.slice(0, start) + mark + quoteText.slice(end);
     setQuoteText(updated);
     pushHistory({ text: updated });
+    setTashkeelNotice('');
+    requestAnimationFrame(() => {
+      field?.focus();
+      field?.setSelectionRange(start + mark.length, start + mark.length);
+    });
   };
 
   const handleRemoveTashkeel = () => {
-    const stripped = quoteText.replace(/[\u064B-\u065F\u0670]/g, '');
+    const stripped = quoteText.replace(/[\\u064B-\\u065F\\u0670]/g, '');
     setQuoteText(stripped);
     pushHistory({ text: stripped });
+    setTashkeelNotice('');
   };
 
+  // Curated phrases are diacritized precisely. Unknown texts remain unchanged;
+  // guessing a vowel would teach the student an incorrect rule.
   const handleAutoTashkeel = () => {
-    const clean = quoteText.replace(/[\u064B-\u065F\u0670]/g, '').trim();
+    const clean = quoteText.replace(/[\\u064B-\\u065F\\u0670]/g, '').trim();
     const dictionary: Record<string, string> = {
       'الحمد لله': 'الحَمْدُ لِلَّهِ',
       'بسم الله الرحمن الرحيم': 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
@@ -962,12 +1031,13 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
       'محمد رسول الله': 'مُحَمَّدٌ رَّسُولُ اللَّهِ',
       'الصبر مفتاح الفرج': 'الصَّبْرُ مِفْتَاحُ الفَرَجِ'
     };
-
-    if (dictionary[clean]) {
-      setQuoteText(dictionary[clean]);
-      pushHistory({ text: dictionary[clean] });
+    const matched = dictionary[clean];
+    if (matched) {
+      setQuoteText(matched);
+      pushHistory({ text: matched });
+      setTashkeelNotice('');
     } else {
-      setQuoteText(prev => prev + 'َ');
+      setTashkeelNotice('هذه العبارة غير موجودة في قائمة التشكيل المعتمدة. يمكنك إضافة الحركات يدويًا دون تغيير النص.');
     }
   };
 
@@ -1013,7 +1083,15 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
 
   // Gold foil text style
   const goldFoilStyle: React.CSSProperties = {
-    backgroundImage: 'linear-gradient(135deg, #a47628 0%, #d8ad48 20%, #fff1a8 45%, #dbab42 65%, #9e6d1c 85%, #754b0e 100%)',
+    backgroundImage: ({
+      leaf: 'linear-gradient(135deg, #a47628, #ffd76d 28%, #fff4c3 48%, #dbab42 70%, #754b0e)',
+      antique: 'linear-gradient(135deg, #755019, #ad7925 28%, #eed080 45%, #ae7824 65%, #50330e)',
+      rose: 'linear-gradient(135deg, #743b48, #ce8794 28%, #fff0ed 48%, #b56c7f 70%, #67323b)',
+      silver: 'linear-gradient(135deg, #626b77, #c4cdd8 30%, #ffffff 48%, #a4acb9 72%, #4c5662)',
+      bronze: 'linear-gradient(135deg, #673310, #b96d30 30%, #ffd5a2 48%, #a75f29 72%, #57270b)',
+      marble: 'linear-gradient(135deg, #81621c, #d6b453 22%, #fff4cb 42%, #ad8840 54%, #f9d96e 78%, #805713)',
+      glitter: 'repeating-linear-gradient(125deg, #bd831c 0%, #fff5c7 7%, #d7a226 13%, #ffe5a0 20%)'
+    } as Record<string, string>)[selectedFoilStyle] || 'linear-gradient(135deg, #a47628, #fff1a8 45%, #754b0e)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     filter: 'drop-shadow(0 2px 4px rgba(40, 25, 5, 0.45)) drop-shadow(0 1px 1px rgba(255, 255, 255, 0.35))'
@@ -1103,13 +1181,13 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
         {/* RIGHT COLUMN: 7 AUTHENTIC CATEGORY TABS                               */}
         {/* ===================================================================== */}
         <aside 
-          className="w-20 shrink-0 bg-[#0d0f13] border-l border-[#24272f] flex flex-col items-center py-4 gap-2.5 select-none z-20 shadow-2xl overflow-y-auto no-scrollbar"
+          className="w-12 sm:w-16 md:w-20 shrink-0 bg-[#0d0f13] border-l border-[#24272f] flex flex-col items-center py-2 sm:py-4 gap-1.5 sm:gap-2.5 select-none z-20 shadow-2xl overflow-y-auto no-scrollbar"
         >
           {/* 1. النص (رمز النص الواضح Type) */}
           <button
             type="button"
             onClick={() => setActiveSidebarTab('text')}
-            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+            className={`w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
               activeSidebarTab === 'text'
                 ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
                 : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
@@ -1127,7 +1205,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
               setActiveSidebarTab('font');
               triggerStrokeAnimation(quoteText);
             }}
-            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+            className={`w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
               activeSidebarTab === 'font'
                 ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
                 : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
@@ -1145,7 +1223,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
               setActiveSidebarTab('pen');
               triggerStrokeAnimation(quoteText);
             }}
-            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+            className={`w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
               activeSidebarTab === 'pen'
                 ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
                 : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
@@ -1165,7 +1243,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
           <button
             type="button"
             onClick={() => setActiveSidebarTab('color')}
-            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+            className={`w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
               activeSidebarTab === 'color'
                 ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
                 : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
@@ -1186,7 +1264,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
           <button
             type="button"
             onClick={() => setActiveSidebarTab('ornament')}
-            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+            className={`w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
               activeSidebarTab === 'ornament'
                 ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
                 : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
@@ -1207,7 +1285,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
           <button
             type="button"
             onClick={() => setActiveSidebarTab('size')}
-            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+            className={`w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
               activeSidebarTab === 'size'
                 ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
                 : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
@@ -1228,7 +1306,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
           <button
             type="button"
             onClick={() => setActiveSidebarTab('background')}
-            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+            className={`w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
               activeSidebarTab === 'background'
                 ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
                 : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent'
@@ -1256,7 +1334,36 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
             ref={stageContainerRef}
             className="flex-1 flex flex-col items-center justify-center p-3 sm:p-5 overflow-hidden relative w-full h-full"
           >
-            {/* Toast notification when card is saved */}
+            {/* Compact editing aids, never included in exported artwork. */}
+            <div className="absolute top-2 left-2 z-30 flex items-center gap-1 rounded-xl bg-[#141820]/85 backdrop-blur-md border border-[#a68038]/30 p-1 shadow-lg">
+              <button type="button" title="إظهار أو إخفاء شبكة القياس" aria-label="شبكة القياس"
+                aria-pressed={showGrid} onClick={() => setShowGrid(value => !value)}
+                className={`p-1.5 rounded-lg ${showGrid ? 'text-[#f3cf7a] bg-white/15' : 'text-[#b8b0a2] hover:text-white'}`}>
+                <Grid3X3 size={15} />
+              </button>
+              <button type="button" title="إظهار أو إخفاء خطوط الإرشاد" aria-label="خطوط الإرشاد"
+                aria-pressed={showGuidelines} onClick={() => setShowGuidelines(value => !value)}
+                className={`p-1.5 rounded-lg ${showGuidelines ? 'text-[#f3cf7a] bg-white/15' : 'text-[#b8b0a2] hover:text-white'}`}>
+                <Ruler size={15} />
+              </button>
+              <button type="button" title="تصغير اللوحة" aria-label="تصغير اللوحة"
+                disabled={zoomLevel <= 0.65} onClick={() => setZoomLevel(value => Math.max(0.65, Math.round((value - 0.1) * 100) / 100))}
+                className="p-1.5 rounded-lg text-[#b8b0a2] hover:text-white disabled:opacity-30">
+                <ZoomOut size={15} />
+              </button>
+              <span className="text-[10px] tabular-nums text-[#f3cf7a] min-w-8 text-center">{Math.round(zoomLevel * 100)}%</span>
+              <button type="button" title="تكبير اللوحة" aria-label="تكبير اللوحة"
+                disabled={zoomLevel >= 1.3} onClick={() => setZoomLevel(value => Math.min(1.3, Math.round((value + 0.1) * 100) / 100))}
+                className="p-1.5 rounded-lg text-[#b8b0a2] hover:text-white disabled:opacity-30">
+                <ZoomIn size={15} />
+              </button>
+            </div>
+            {/* Save and export feedback, shown only after actual success or failure. */}
+            {studioAlert && (
+              <div role="alert" className="absolute top-2 right-2 z-50 max-w-[90%] bg-[#401920]/95 border border-[#e57b7b] text-white px-3 py-2 rounded-xl shadow-xl text-xs font-bold">
+                {studioAlert}
+              </div>
+            )}
             {saveSuccessToast && (
               <div className="absolute top-4 z-40 bg-[#161a22]/95 border border-[#c59b27] text-[#f3cf7a] px-4 py-2 rounded-xl shadow-2xl flex items-center gap-2 animate-fade-in backdrop-blur-md">
                 <Save size={16} className="text-[#ffd700]" />
@@ -1287,6 +1394,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
                 {/* Grid Overlay (if toggled) */}
                 {showGrid && (
                   <div 
+                    data-calligraphy-guide="true"
                     className="absolute inset-0 pointer-events-none z-10 opacity-30"
                     style={{
                       backgroundImage: `
@@ -1303,7 +1411,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
 
                 {/* 2. CALLIGRAPHY GUIDELINES (Optional, default OFF) */}
                 {showGuidelines && (
-                  <div className="absolute inset-0 pointer-events-none z-15 select-none" dir="rtl">
+                  <div data-calligraphy-guide="true" className="absolute inset-0 pointer-events-none z-15 select-none" dir="rtl">
                     <div className="absolute inset-x-8 inset-y-0 flex flex-col justify-center">
                       <div className="relative h-64 flex flex-col justify-between">
                         <div className="w-full border-b border-dashed border-[#8c6e39]/60" />
@@ -1417,6 +1525,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
             fontSize={fontSize}
             onFontSizeChange={(size) => {
               setFontSize(size);
+              pushHistory({ fontSize: size });
             }}
             selectedInk={selectedInk}
             onSelectInk={(ink) => {
@@ -1431,7 +1540,11 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
               pushHistory({ isGold: val });
             }}
             selectedFoilStyle={selectedFoilStyle}
-            onSelectFoilStyle={(style) => setSelectedFoilStyle(style)}
+            onSelectFoilStyle={(style) => {
+              setSelectedFoilStyle(style);
+              setIsGoldFoil(true);
+              pushHistory({ foilStyle: style, isGold: true });
+            }}
             selectedOrnament={selectedOrnament}
             onSelectOrnament={(orn) => {
               setSelectedOrnament(orn as OrnamentStyleId);
@@ -1472,13 +1585,13 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
         {/* (حفظ البطاقة - معاينة - تصدير - المعرض - دليل الخط - تراجع - إعادة)   */}
         {/* ===================================================================== */}
         <aside 
-          className="w-20 shrink-0 bg-[#0d0f13] border-r border-[#24272f] flex flex-col items-center py-4 gap-2.5 select-none z-20 shadow-2xl overflow-y-auto no-scrollbar"
+          className="w-12 sm:w-16 md:w-20 shrink-0 bg-[#0d0f13] border-r border-[#24272f] flex flex-col items-center py-2 sm:py-4 gap-1.5 sm:gap-2.5 select-none z-20 shadow-2xl overflow-y-auto no-scrollbar"
         >
           {/* 1. حفظ البطاقة */}
           <button
             type="button"
             onClick={handleSaveCard}
-            className="w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 shadow-sm relative group"
+            className="w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 shadow-sm relative group"
             title="حفظ البطاقة في المعرض"
           >
             <Save size={22} className="text-current group-hover:scale-110 transition" />
@@ -1489,7 +1602,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
           <button
             type="button"
             onClick={() => setIsPreviewMode(true)}
-            className="w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 group"
+            className="w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 group"
             title="معاينة اللوحة بكامل الشاشة"
           >
             <Eye size={22} className="text-current group-hover:scale-110 transition" />
@@ -1500,7 +1613,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
           <button
             type="button"
             onClick={() => setShowExportFlyout(true)}
-            className={`w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
+            className={`w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer ${
               showExportFlyout
                 ? 'bg-[#3b1419] border border-[#a37e38] text-[#f3cf7a] shadow-sm ring-1 ring-[#a37e38]/40'
                 : 'text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50'
@@ -1515,7 +1628,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
           <button
             type="button"
             onClick={() => setShowSavedCardsModal(true)}
-            className="w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 relative group"
+            className="w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 relative group"
             title="معرض اللوحات المحفوظة"
           >
             <FolderHeart size={22} className="text-current group-hover:scale-110 transition" />
@@ -1531,7 +1644,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
           <button
             type="button"
             onClick={() => setShowGuideModal(true)}
-            className="w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 group"
+            className="w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 group"
             title="دليل وقواعد الخط العربي الأصيل"
           >
             <BookOpen size={22} className="text-current group-hover:scale-110 transition" />
@@ -1543,7 +1656,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
             type="button"
             onClick={handleUndo}
             disabled={historyIndex <= 0}
-            className="w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#9aa0a6] disabled:hover:border-transparent group"
+            className="w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#9aa0a6] disabled:hover:border-transparent group"
             title="تراجع خطوة (Ctrl+Z)"
           >
             <RotateCcw size={22} className="text-current group-hover:scale-110 transition" />
@@ -1555,7 +1668,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
             type="button"
             onClick={handleRedo}
             disabled={historyIndex >= history.length - 1}
-            className="w-14 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#9aa0a6] disabled:hover:border-transparent group"
+            className="w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#9aa0a6] disabled:hover:border-transparent group"
             title="إعادة خطوة (Ctrl+Y)"
           >
             <RotateCw size={22} className="text-current group-hover:scale-110 transition" />
@@ -1590,9 +1703,20 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
 
             <div className="flex flex-col gap-2 p-3 bg-[#0a0c0f] border border-[#26241e] rounded-xl">
               <div className="text-xs text-[#9aa0a6] font-bold">النص الحالي:</div>
-              <div className="text-lg font-bold font-thuluth text-[#f3cf7a] text-center py-2 bg-[#121418] rounded-lg border border-[#26241e]/80">
-                {quoteText || 'لا يوجد نص'}
-              </div>
+              <input
+                ref={tashkeelInputRef}
+                dir="rtl"
+                aria-label="النص المراد تشكيله"
+                type="text"
+                value={quoteText}
+                onChange={(event) => {
+                  setQuoteText(event.target.value);
+                  pushHistory({ text: event.target.value });
+                  setTashkeelNotice('');
+                }}
+                placeholder="اكتب النص ثم اختر موضع الحركة..."
+                className="w-full text-lg font-bold font-thuluth text-[#f3cf7a] text-center py-2 px-3 bg-[#121418] rounded-lg border border-[#26241e]/80 focus:outline-none focus:border-[#a68038]"
+              />
               
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button
@@ -1601,7 +1725,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
                   className="py-2 px-3 bg-[#331116] hover:bg-[#4d161e] border border-[#a68038] text-[#f0e8dc] text-xs font-bold rounded-lg transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                 >
                   <Type size={14} className="text-[#f3cf7a]" />
-                  <span>تشكيل آلي فوري</span>
+                  <span>تشكيل العبارات الجاهزة</span>
                 </button>
 
                 <button
@@ -1612,6 +1736,9 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
                   <span>إزالة كل الحركات</span>
                 </button>
               </div>
+              {tashkeelNotice && (
+                <p role="status" className="text-xs text-[#f3cf7a] leading-relaxed">{tashkeelNotice}</p>
+              )}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -1772,7 +1899,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
                 <div>
                   <h3 className="text-sm font-bold text-[#f3cf7a] font-tajawal flex items-center gap-2">
                     <span>تصدير اللوحة الفنية</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1e222b] text-[#c59b27] border border-[#a37e38]/30">300 DPI</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1e222b] text-[#c59b27] border border-[#a37e38]/30">تكبير 3×</span>
                   </h3>
                   <p className="text-[11px] text-[#9aa0a6]">قسم الخط العربي الأصيل • استخراج فوري عالي الدقة</p>
                 </div>
@@ -1803,7 +1930,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
                 {
                   id: 'png',
                   label: 'صورة فائقة الدقة (PNG)',
-                  badge: '300 DPI كاملة',
+                  badge: 'تكبير 3×',
                   desc: 'كاملة بالورق المقهر والتذهيب والزخارف الإسلامية المختارة'
                 },
                 {
@@ -1815,8 +1942,8 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
                 {
                   id: 'pdf',
                   label: 'مستند طباعة فاخر (PDF)',
-                  badge: 'طباعة أوفست',
-                  desc: 'بأبعاد هندسية دقيقة جاهزة فوراً للمطابع والمعارض'
+                  badge: 'PDF للطباعة',
+                  desc: 'لوحة محفوظة في صفحة A3 أو A4 مع الحفاظ على نسب الأبعاد'
                 },
               ].map(opt => (
                 <button
@@ -1852,7 +1979,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
               <span className="flex items-center gap-1.5 text-[#a68038]">
                 <span>❖ قسم الخط العربي الأصيل</span>
               </span>
-              <span>دقة تصدير فائقة</span>
+              <span>خيارات تصدير صور وPDF</span>
             </div>
           </div>
         </div>
