@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { SpaceLaserGlass, SPACE_GLASS_PRIMARY_BUTTON, SPACE_GLASS_SECONDARY_BUTTON } from "./SpaceLaserGlass";
 import { 
   ArrowLeft, Rocket, Star, Volume2, VolumeX, Shield,
   Award, Play, Lock, ChevronRight, RotateCcw, Flame,
@@ -1695,7 +1696,7 @@ export interface ArabicSpaceJourneyProps {
 }
 
 export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, onWin }) => {
-  const [screen, setScreen] = useState<"cover" | "home" | "planet" | "planet_entry" | "flight" | "victory" | "gameover">("cover");
+  const [screen, setScreen] = useState<"home" | "planet" | "planet_entry" | "flight" | "victory" | "gameover">("home");
   const [save, setSave] = useState<Save>(loadSave);
   const [currentPlanetId, setCurrentPlanetId] = useState<string | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<string>("sentence-types");
@@ -3512,48 +3513,6 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
   return (
     <div className="w-full h-full min-h-screen bg-[#040510] text-[#eef7ff] relative overflow-hidden select-none font-sans" dir="rtl">
       
-      {/* The original Toward Space poster is restored as the entrance.
-          The original English lettering is part of this approved source artwork,
-          rather than a newly invented imitation. The 10-planet map remains intact. */}
-      {screen === "cover" && (
-        <section
-          data-space-screen="original-toward-space-cover"
-          aria-label="Toward Space"
-          className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-[#030817]"
-          dir="rtl"
-        >
-          <div
-            aria-hidden="true"
-            className="absolute inset-[-6%] scale-110 bg-cover bg-center opacity-40 blur-[38px]"
-            style={{ backgroundImage: `url(${towardSpaceOriginalCover})` }}
-          />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_45%,transparent_35%,rgba(2,6,18,.7)_100%)]" />
-          <img
-            src={towardSpaceOriginalCover}
-            alt="TOWARD SPACE, astronaut approaching an illuminated ringed planet amid colorful nebulae and glowing Arabic letters"
-            className="relative z-10 block h-auto max-h-[100dvh] w-full max-w-[1600px] object-contain object-center"
-            draggable={false}
-            fetchPriority="high"
-          />
-          <div className="absolute inset-x-0 bottom-[4%] z-20 flex items-center justify-center px-4 sm:bottom-[6%]">
-            <button
-              type="button"
-              onClick={() => { audio.select(); setScreen("home"); }}
-              className="group inline-flex min-h-[48px] items-center justify-center gap-3 rounded-full border border-[#dcbd83]/65 bg-[#071322]/85 px-7 py-3 text-sm font-bold text-[#f5e5c8] shadow-[0_9px_32px_rgba(0,5,20,.65),inset_0_1px_0_rgba(255,255,255,.12)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-[#f1d79d] hover:bg-[#102b39]/95 hover:shadow-[0_0_30px_rgba(88,196,225,.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#ffe0a3] sm:text-base"
-            >
-              <Rocket size={18} className="text-[#9ae8f6] transition-transform group-hover:-translate-y-0.5"/>
-              انطلق إلى الكواكب
-              <ArrowLeft size={17}/>
-            </button>
-          </div>
-          <button type="button" onClick={() => onBack?.()}
-            title="العودة إلى الألعاب"
-            aria-label="العودة إلى الألعاب"
-            className="absolute right-4 top-4 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-[#071320]/70 text-[#e2f8ff] backdrop-blur-lg hover:bg-[#12334a]/90"
-          ><ArrowLeft size={19}/></button>
-        </section>
-      )}
-
       {/* ============================================================== */}
       {/* 1. خريطة الكواكب الفضائية الواقعية والبهيجة (النسخة السينيمائية الحية) */}
       {/* ============================================================== */}
@@ -3563,14 +3522,32 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
             isRumbling ? "animate-[screenRumble_0.45s_ease-in-out]" : ""
           }`}
           onPointerMove={handleHomePointerMove}
-          style={{ backgroundColor: "#030714" }}
+          style={{ background: "radial-gradient(ellipse at 60% 38%, #18225d 0%, #0d1849 33%, #050b26 66%, #030714 100%)" }}
         >
+          {/* Apply the very color atmosphere of the approved TOWARD SPACE poster
+              behind the planetary map, without adding a second opening screen. */}
+          <div
+            aria-hidden="true"
+            data-space-map-poster-color-grade
+            className="absolute inset-[-13%] pointer-events-none bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${towardSpaceOriginalCover})`,
+              opacity: 0.57,
+              filter: "blur(32px) saturate(1.38) brightness(1.04)",
+              transform: "scale(1.08)"
+            }}
+          />
+          <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "radial-gradient(ellipse 42% 47% at 23% 30%,rgba(30,164,210,.20),transparent 80%),radial-gradient(ellipse 48% 50% at 77% 54%,rgba(116,72,208,.24),transparent 82%),radial-gradient(ellipse 34% 30% at 55% 15%,rgba(239,112,195,.13),transparent 86%)"
+            }}
+          />
           {/* Photorealistic High-Definition Deep Space Cosmos Background (Moving Cinematic Parallax Pan) */}
           <div 
-            className="absolute inset-[-8%] bg-cover bg-center pointer-events-none will-change-transform opacity-95"
+            className="absolute inset-[-8%] bg-cover bg-center pointer-events-none will-change-transform opacity-75"
             style={{ 
               backgroundImage: `url(${solarSystemCosmosBg})`,
-              filter: "saturate(.90) contrast(1.09) brightness(.88) hue-rotate(-5deg)",
+              filter: "saturate(1.18) contrast(1.10) brightness(1.02) hue-rotate(-3deg)",
               animation: "cosmicPanDrift 56s ease-in-out infinite alternate"
             }}
           />
@@ -3580,14 +3557,14 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 opacity-90"
             style={{
-              background: "radial-gradient(ellipse 48% 42% at 25% 37%, rgba(19,139,153,.13), transparent 75%), radial-gradient(ellipse 42% 36% at 77% 27%, rgba(100,68,175,.16), transparent 78%), radial-gradient(ellipse 24% 23% at 58% 12%, rgba(255,198,124,.10), transparent 75%), linear-gradient(180deg,rgba(2,7,19,.13) 0%,transparent 35%,rgba(2,6,17,.26) 100%)",
+              background: "radial-gradient(ellipse 48% 42% at 25% 37%, rgba(25,189,211,.21), transparent 75%), radial-gradient(ellipse 42% 36% at 77% 27%, rgba(131,78,226,.24), transparent 78%), radial-gradient(ellipse 24% 23% at 58% 12%, rgba(255,174,201,.17), transparent 75%), linear-gradient(180deg,rgba(3,7,33,.08) 0%,transparent 35%,rgba(3,5,23,.23) 100%)",
               animation: "cosmicColorBreath 36s ease-in-out infinite alternate"
             }}
           />
           <div 
             className="absolute inset-[-10%] pointer-events-none mix-blend-screen opacity-30 will-change-transform"
             style={{
-              background: "radial-gradient(ellipse at 30% 40%, rgba(57,185,199,0.22) 0%, transparent 62%), radial-gradient(ellipse at 70% 60%, rgba(125,111,200,0.16) 0%, transparent 60%)",
+              background: "radial-gradient(ellipse at 30% 40%, rgba(43,197,232,0.27) 0%, transparent 62%), radial-gradient(ellipse at 70% 60%, rgba(141,105,232,0.26) 0%, transparent 60%)",
               animation: "cosmicColorBreath 48s ease-in-out infinite alternate"
             }}
           />
@@ -4193,7 +4170,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
 
           {/* Top-Left Exit/Back Platform Button */}
           <button 
-            onClick={() => setScreen("cover")}
+            onClick={() => onBack?.()}
             className="fixed top-6 left-6 z-40 w-11 h-11 rounded-full bg-slate-950/80 border border-cyan-400/40 flex items-center justify-center text-cyan-200 hover:text-white hover:border-cyan-300 transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] backdrop-blur-md hover:scale-105 active:scale-95 cursor-pointer"
             title="خروج للمنصة"
           >
@@ -5183,91 +5160,65 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                 </div>
               )}
 
-              {/* HOLOGRAPHIC MISSION TRANSMISSION (Opens bottom-to-top, types character-by-character, closes top-to-bottom) */}
+              {/* Laser-blue hologram transmission. No AI-style badges, icons or emoji. */}
               {(descentPhase === "transmission_active" || descentPhase === "transmission_fading") && (
-                <div 
-                  className="absolute top-12 md:top-16 left-1/2 -translate-x-1/2 z-40 w-full max-w-lg px-4 pointer-events-auto"
+                <div
+                  data-space-screen="laser-hologram-mission"
+                  className="pointer-events-auto absolute left-1/2 top-[clamp(3rem,8vh,5rem)] z-40 w-[min(92vw,610px)] -translate-x-1/2"
                   style={{
                     animation: descentPhase === "transmission_fading"
-                      ? "hologramCloseToBottom 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards"
-                      : "hologramOpenFromBottom 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards"
+                      ? "hologramCloseToBottom 0.55s cubic-bezier(0.4,0,0.2,1) forwards"
+                      : "hologramOpenFromBottom 0.6s cubic-bezier(0.16,1,0.3,1) forwards"
                   }}
                 >
-                  <div 
-                    className="relative w-full rounded-2xl p-5 md:p-6 backdrop-blur-xl flex flex-col items-center text-center border-2 shadow-[0_0_50px_rgba(34,211,238,0.35)] overflow-hidden"
-                    style={{
-                      background: "linear-gradient(135deg, rgba(3, 15, 28, 0.96) 0%, rgba(6, 24, 40, 0.94) 100%)",
-                      borderColor: currentPlanetAtmosphere.accentBorder
-                    }}
-                  >
-                    {/* Futuristic Scanning Laser Bar (Rises on open, sinks on close) */}
-                    <div 
-                      className="absolute left-0 right-0 h-1 bg-cyan-300 shadow-[0_0_15px_#22d3ee,0_0_30px_#22d3ee] pointer-events-none z-20"
+                  <SpaceLaserGlass variant="mission" aria-label="شاشة المهمة الهولوغرامية"
+                    className="w-full px-5 py-5 sm:px-8 sm:py-7">
+                    <div aria-hidden="true"
+                      className="pointer-events-none absolute left-3 right-3 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#b1f4ff] to-transparent"
                       style={{
                         animation: descentPhase === "transmission_fading"
                           ? "scanlineBeamSink 0.55s ease-in forwards"
-                          : "scanlineBeamRise 0.6s ease-out forwards"
-                      }}
-                    />
-
-                    {/* Hologram Digital Grid Overlay */}
-                    <div 
-                      className="absolute inset-0 pointer-events-none opacity-15"
-                      style={{
-                        backgroundImage: "repeating-linear-gradient(0deg, rgba(34,211,238,0.25) 0px, transparent 2px, transparent 4px)"
-                      }}
-                    />
-
-                    {/* Sleek Cyber Hologram Header */}
-                    <div className="flex items-center justify-between w-full mb-3 px-3.5 py-1.5 rounded-xl bg-cyan-950/80 border border-cyan-400/50 text-cyan-200 text-xs font-bold">
-                      <div className="flex items-center gap-2">
-                        <Sparkles size={14} className="text-cyan-300 animate-spin" style={{ animationDuration: "8s" }} />
-                        <span className="font-black text-white text-sm">{currentPlanetAtmosphere.name}</span>
-                        <span className="text-[11px] text-cyan-300/80">• الهدف المداري</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-[10px] text-emerald-300 font-mono">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                        <span>LIVE HUD</span>
-                      </div>
-                    </div>
-
-                    {/* Punchy, Direct Mission Directive */}
-                    <div className="my-2.5 px-3 flex items-center justify-center min-h-[46px]">
-                      <h3 className="text-lg md:text-xl font-black text-white leading-relaxed drop-shadow-[0_0_20px_rgba(34,211,238,0.7)] flex items-center justify-center flex-wrap gap-1.5">
-                        <span className="bg-gradient-to-r from-white via-cyan-100 to-cyan-300 bg-clip-text text-transparent">
-                          {typedDistressText || currentPlanetAtmosphere.distressMessage}
+                          : "scanlineBeamRise 0.6s ease-out forwards",
+                        boxShadow:"0 0 16px rgba(73,202,255,.85)"
+                      }}/>
+                    <header className="relative mb-4 flex items-start justify-between gap-4 border-b border-[#9bdcff]/25 pb-3">
+                      <div className="text-right">
+                        <span className="block text-[10px] font-semibold tracking-[.12em] text-[#83d9fa]">
+                          إشارة المهمة
                         </span>
-                        {!isTypingComplete && (
-                          <span className="inline-block w-2 h-5 bg-cyan-400 shadow-[0_0_10px_#22d3ee] animate-pulse" />
-                        )}
-                      </h3>
+                        <h2 className="mt-1 text-base font-bold text-[#e5faff] sm:text-lg">
+                          {currentPlanetAtmosphere.name}
+                        </h2>
+                      </div>
+                      <div aria-hidden="true" className="mt-1 flex items-center gap-1.5">
+                        <span className="h-[2px] w-5 bg-[#5ccdf5]/60"/>
+                        <span className="h-[2px] w-8 bg-[#a0edff]/90"/>
+                        <span className="h-[2px] w-3 bg-[#5ccdf5]/45"/>
+                      </div>
+                    </header>
+                    <div className="flex min-h-[86px] items-center justify-center py-3 text-center sm:min-h-[104px]">
+                      <p className="max-w-[44ch] text-balance text-lg font-bold leading-[1.75] text-[#f0fbff] [text-shadow:0_0_18px_rgba(82,198,255,.38)] sm:text-xl">
+                        {typedDistressText || currentPlanetAtmosphere.distressMessage}
+                        {!isTypingComplete && <span aria-hidden="true"
+                          className="mr-1 inline-block h-4 w-[2px] animate-pulse align-middle bg-[#96edff]"/>}
+                      </p>
                     </div>
-
-                    <div className="w-full mt-2.5 pt-3 border-t border-cyan-500/25 flex items-center justify-between gap-3">
-                      <div className="flex-1 text-right">
-                        <div className="text-[11px] text-cyan-300 font-bold mb-1 flex items-center gap-1.5">
-                          <Zap size={13} className="text-cyan-400 animate-pulse" />
-                          <span>جاهزية الرائد: 100%</span>
+                    <div className="mt-4 flex flex-col gap-4 border-t border-[#9bdcff]/25 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0 flex-1 text-right">
+                        <div className="mb-2 flex items-center justify-between text-[11px] font-semibold text-[#b6e9fb]">
+                          <span>جاهزية رائد الفضاء</span><span dir="ltr">100%</span>
                         </div>
-                        <div className="w-full h-1.5 bg-slate-900/90 rounded-full overflow-hidden border border-cyan-500/40">
-                          <div 
-                            className="h-full bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 rounded-full"
-                            style={{
-                              animation: "transmissionTimerDrain 2.8s linear forwards"
-                            }}
-                          />
+                        <div aria-hidden="true" className="flex h-[5px] w-full overflow-hidden rounded-full bg-[#051d4b]/80">
+                          <span className="h-full w-full bg-gradient-to-l from-[#a8f2ff] via-[#37bbf1] to-[#3377ff] shadow-[0_0_12px_rgba(83,192,255,.6)]"
+                            style={{ animation:"transmissionTimerDrain 2.8s linear forwards" }}/>
                         </div>
                       </div>
-
-                      <button
-                        onClick={handleStartMissionFromHologram}
-                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-xs shadow-[0_0_20px_rgba(34,211,238,0.6)] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-                      >
-                        <span>انطلق الآن ⚡</span>
-                        <Flame size={14} />
+                      <button type="button" onClick={handleStartMissionFromHologram}
+                        className={SPACE_GLASS_PRIMARY_BUTTON+" min-w-[152px] shrink-0"}>
+                        بدء المهمة
                       </button>
                     </div>
-                  </div>
+                  </SpaceLaserGlass>
                 </div>
               )}
             </>
@@ -5296,44 +5247,37 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                 </button>
               </div>
 
-              {/* Center: Cyber Astronaut Visor Mission Guidance (Directs astronaut clearly on what to collect) */}
-              <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-slate-950/85 border border-cyan-400/50 backdrop-blur-xl shadow-[0_0_25px_rgba(34,211,238,0.25)]">
-                <div className="relative w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-xs shadow-[0_0_8px_#22d3ee] shrink-0">
-                  🎯
+              {/* Laser-glass mission guidance, no AI badges or emoji. */}
+              <SpaceLaserGlass variant="mission" aria-label="هدف الرحلة"
+                className="w-full max-w-[510px] px-4 py-2.5 md:w-auto md:min-w-[330px]">
+                <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2">
+                  <div className="min-w-0 flex-1 text-right">
+                    <span className="block text-[10px] font-semibold text-[#8fdffa]">المطلوب جمعه</span>
+                    <span className="mt-0.5 block text-xs font-bold leading-relaxed text-[#e6faff] md:text-sm">
+                      {currentChallenge?.prompt || currentPlanetAtmosphere.distressTarget}
+                    </span>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2 border-r border-[#86ddff]/25 pr-3">
+                    {[...Array(TARGET_CRYSTALS)].map((_,idx) => (
+                      <span key={idx} aria-hidden="true"
+                        className={"h-3.5 w-1.5 rounded-[2px] transition-colors " +
+                          (idx < crystalsCaught
+                            ? "bg-[#8ae8ff] shadow-[0_0_9px_rgba(63,199,252,.85)]"
+                            : "border border-[#82c9f0]/35 bg-[#092550]/70")}/>
+                    ))}
+                    <span className="text-[11px] font-semibold tabular-nums text-[#b6edff]" dir="ltr">
+                      {crystalsCaught}/{TARGET_CRYSTALS}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col text-right">
-                  <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                    المطلوب جمعه
-                  </span>
-                  <span className="text-white text-xs md:text-sm font-black tracking-wide drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
-                    {currentChallenge?.prompt || currentPlanetAtmosphere.distressTarget}
-                  </span>
-                </div>
-                {/* Segmented Cyber Data Capsule Cells */}
-                <div className="flex items-center gap-1 mr-2 px-2.5 py-1 rounded-xl bg-slate-900/90 border border-cyan-500/30">
-                  {[...Array(TARGET_CRYSTALS)].map((_, idx) => (
-                    <div 
-                      key={idx}
-                      className={`w-2.5 h-4 rounded-sm transition-all duration-300 ${
-                        idx < crystalsCaught 
-                          ? "bg-gradient-to-t from-cyan-400 to-emerald-300 shadow-[0_0_8px_#22d3ee] scale-105" 
-                          : "bg-slate-800/80 border border-white/10"
-                      }`}
-                    />
-                  ))}
-                  <span className="text-[11px] font-mono font-bold text-cyan-300 mr-1.5">
-                    {crystalsCaught}/{TARGET_CRYSTALS}
-                  </span>
-                </div>
-              </div>
+              </SpaceLaserGlass>
 
               {/* Left (in RTL): Cybernetic Spacesuit Life-Support, Shields & Flight Telemetry */}
               <div className="flex items-center gap-3">
                 {/* Plasma Shield Matrix Core */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/85 border border-cyan-400/40 backdrop-blur-md shadow-md">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#7ad9ff]/55 bg-[rgba(4,34,84,.38)] backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(220,248,255,.21),0_0_14px_rgba(47,146,245,.13)]">
                   <div className="flex items-center gap-1 text-[11px] font-bold text-slate-300">
-                    <Shield size={14} className={shields > 1 ? "text-cyan-400 fill-cyan-400" : "text-rose-400 fill-rose-400 animate-pulse"} />
+                    
                     <span>الدروع</span>
                   </div>
                   <div className="flex items-center gap-1">
@@ -5353,8 +5297,8 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                 </div>
 
                 {/* Orbit Trajectory & Altitude Distance Meter */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/85 border border-cyan-400/40 backdrop-blur-md shadow-md">
-                  <Navigation size={13} className="text-cyan-300 rotate-45" />
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#7ad9ff]/55 bg-[rgba(4,34,84,.38)] backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(220,248,255,.21),0_0_14px_rgba(47,146,245,.13)]">
+                  
                   <span className="text-xs font-mono font-black text-cyan-300">{distanceRemaining}م</span>
                   <div className="w-16 md:w-24 h-2 bg-slate-900 rounded-full overflow-hidden border border-cyan-500/30 p-0.5">
                     <div 
@@ -5365,8 +5309,8 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                 </div>
 
                 {/* Stellar Score Credits */}
-                <div className="px-3 py-1.5 rounded-xl bg-slate-950/85 border border-amber-400/40 text-amber-400 font-mono text-sm font-black flex items-center gap-1.5 backdrop-blur-md shadow-[0_0_15px_rgba(251,191,36,0.2)]">
-                  <Sparkles size={13} className="text-amber-300 animate-spin" style={{ animationDuration: '6s' }} />
+                <div className="px-3 py-1.5 rounded-xl border border-[#7ad9ff]/55 bg-[rgba(4,34,84,.38)] text-[#b7f2ff] font-mono text-sm font-black flex items-center gap-1.5 backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(220,248,255,.21),0_0_14px_rgba(47,146,245,.13)]">
+                  
                   <span>{score}</span>
                 </div>
               </div>
@@ -5388,92 +5332,56 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* 3. شاشة النصر والاحتفال (Victory Screen) */}
-      {/* ============================================================== */}
-      {screen === "victory" && (
-        <div className="relative w-full h-screen flex items-center justify-center bg-cover bg-center p-4"
-             style={{ backgroundImage: `url(${turquoiseCosmosBg})` }}>
-          <div className="absolute inset-0 bg-[#041a22]/85 backdrop-blur-md" />
-
-          <div className="relative z-20 w-full max-w-md bg-[#042630]/95 border-2 border-cyan-400/60 rounded-3xl p-8 shadow-[0_0_50px_rgba(34,211,238,0.4)] flex flex-col items-center text-center">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-cyan-500 to-emerald-400 flex items-center justify-center text-white shadow-[0_0_30px_#22d3ee] mb-4 animate-bounce">
-              <Award size={44} />
-            </div>
-
-            <h2 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-emerald-300 to-white mb-2">
-              اكتملت الرحلة بنجاح!
-            </h2>
-            <p className="text-sm text-slate-300 font-semibold mb-6">
-              وصلت بأمان إلى المدار وتم اصطياد جميع الكلمات الصحيحة بنجاح فائق!
-            </p>
-
-            <div className="w-full bg-[#031d24] rounded-2xl p-4 border border-cyan-500/20 flex items-center justify-around mb-6">
-              <div>
-                <div className="text-xs text-cyan-300/80 font-bold">النقاط المحرزة</div>
-                <div className="text-2xl font-black text-amber-400">{score + 800}</div>
+      {/* Identical icon-free laser-blue holographic styling for both outcomes. */}
+      {(screen === "victory" || screen === "gameover") && (
+        <div data-space-screen="laser-hologram-outcome"
+          className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-[#020c27] p-4 sm:p-6">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-[-10%] bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${towardSpaceOriginalCover})`,
+              filter: "blur(24px) saturate(1.14) brightness(.57)",
+              transform: "scale(1.06)"
+            }}/>
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0"
+            style={{background:"radial-gradient(ellipse 65% 60% at 50% 46%,rgba(28,95,173,.14),rgba(1,9,33,.76))"}}/>
+          <SpaceLaserGlass variant="outcome"
+            aria-label={screen === "victory" ? "نتيجة النجاح" : "نتيجة المحاولة"}
+            className="w-full max-w-[560px] px-6 py-7 sm:px-10 sm:py-9">
+            <div className="mx-auto flex max-w-[475px] flex-col items-center text-center">
+              <span className="text-[11px] font-semibold tracking-[.14em] text-[#89d9fa]">تقرير الرحلة</span>
+              <div aria-hidden="true" className="my-4 h-[2px] w-24 bg-gradient-to-r from-transparent via-[#b4f3ff] to-transparent shadow-[0_0_18px_#4fc9ff]"/>
+              <h2 className="max-w-[20ch] text-balance text-2xl font-black leading-relaxed text-[#f2fcff] [text-shadow:0_0_25px_rgba(76,197,255,.37)] sm:text-3xl">
+                {screen === "victory" ? "اكتملت الرحلة بنجاح" : "لم تكتمل المهمة"}
+              </h2>
+              <p className="mt-3 max-w-[43ch] text-sm font-medium leading-[1.9] text-[#c3e8f8]">
+                {screen === "victory"
+                  ? "تم جمع الكلمات المطلوبة، وتسجيل إنجازك على هذا الكوكب."
+                  : "انتهت الدروع قبل إكمال جمع الكلمات. يمكنك إعادة المحاولة مع الاحتفاظ بتقدمك السابق."}
+              </p>
+              <dl className="mt-7 grid w-full grid-cols-2 gap-3 border-y border-[#a2e7ff]/25 py-5">
+                <div className="border-l border-[#a2e7ff]/20 px-2">
+                  <dt className="text-xs font-medium text-[#9ad9f3]">النقاط</dt>
+                  <dd className="mt-1 text-2xl font-bold tabular-nums text-[#ecfbff]">{screen === "victory" ? score + 800 : score}</dd>
+                </div>
+                <div className="px-2">
+                  <dt className="text-xs font-medium text-[#9ad9f3]">الدروع المتبقية</dt>
+                  <dd className="mt-1 text-2xl font-bold tabular-nums text-[#ecfbff]">{shields} / 3</dd>
+                </div>
+              </dl>
+              <div className="mt-7 flex w-full flex-col gap-3 sm:flex-row">
+                <button type="button"
+                  onClick={() => screen === "victory" ? setScreen("home") : launchFlightGame(activeStage)}
+                  className={SPACE_GLASS_PRIMARY_BUTTON + " flex-1"}>
+                  {screen === "victory" ? "العودة إلى الكواكب" : "إعادة المحاولة"}
+                </button>
+                <button type="button"
+                  onClick={() => screen === "victory" ? launchFlightGame(activeStage) : setScreen("home")}
+                  className={SPACE_GLASS_SECONDARY_BUTTON + " flex-1"}>
+                  {screen === "victory" ? "إعادة الرحلة" : "العودة إلى الكواكب"}
+                </button>
               </div>
-              <div className="w-px h-10 bg-cyan-500/20" />
-              <div>
-                <div className="text-xs text-cyan-300/80 font-bold">دروع رائد الفضاء</div>
-                <div className="text-2xl font-black text-cyan-400">{shields} / 3</div>
-              </div>
             </div>
-
-            <div className="flex gap-3 w-full">
-              <button
-                onClick={() => setScreen("home")}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-white font-black shadow-[0_0_20px_rgba(34,211,238,0.4)] active:scale-95 transition-all"
-              >
-                العودة للخريطة 🌌
-              </button>
-              <button
-                onClick={() => launchFlightGame(activeStage)}
-                className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 font-bold border border-white/20 transition-all"
-                title="إعادة الرحلة"
-              >
-                <RotateCcw size={20} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================== */}
-      {/* 4. شاشة نفاد الدروع (Game Over Screen) */}
-      {/* ============================================================== */}
-      {screen === "gameover" && (
-        <div className="relative w-full h-screen flex items-center justify-center bg-cover bg-center p-4"
-             style={{ backgroundImage: `url(${turquoiseCosmosBg})` }}>
-          <div className="absolute inset-0 bg-[#041a22]/90 backdrop-blur-md" />
-
-          <div className="relative z-20 w-full max-w-md bg-[#090b20]/95 border-2 border-rose-500/60 rounded-3xl p-8 shadow-[0_0_50px_rgba(244,63,94,0.4)] flex flex-col items-center text-center">
-            <div className="w-20 h-20 rounded-full bg-rose-600/20 border-2 border-rose-500 flex items-center justify-center text-rose-400 shadow-[0_0_30px_#f43f5e] mb-4">
-              <Shield size={40} />
-            </div>
-
-            <h2 className="text-2xl md:text-3xl font-black text-rose-300 mb-2">
-              نفدت دروع رائد الفضاء!
-            </h2>
-            <p className="text-sm text-slate-300 font-semibold mb-6">
-              أصيبت بدلة رائد الفضاء بعدة اصطدامات فضائية، حاول مرة أخرى وركز على اصطياد الكلمات الصحيحة فقط وتدمير الصخور!
-            </p>
-
-            <div className="flex gap-3 w-full">
-              <button
-                onClick={() => launchFlightGame(activeStage)}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-amber-600 hover:from-rose-400 hover:to-amber-500 text-white font-black shadow-[0_0_20px_rgba(244,63,94,0.4)] active:scale-95 transition-all"
-              >
-                إعادة المحاولة 🚀
-              </button>
-              <button
-                onClick={() => setScreen("home")}
-                className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 font-bold border border-white/20 transition-all"
-              >
-                الخريطة
-              </button>
-            </div>
-          </div>
+          </SpaceLaserGlass>
         </div>
       )}
 
