@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Check, Phone, PhoneCall, PhoneOff, Mic, MicOff, RotateCcw, Headphones, Volume2, BookOpen, ArrowUpRight, Signal, CircleHelp, Disc3 } from 'lucide-react';
 import './SpeakingCallBooth.css';
 
@@ -73,6 +73,7 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
   lang, contact, level, isActive, loading, isAiSpeaking, micMuted, recoveryNotice,
   history, learnerText, tutorText, missionEvidence, assessmentStatus, onSelectContact, onShowDirectory, onStart, onStop, onResume, onToggleMic, meterRef,
 }) => {
+  const reducedMotion = useReducedMotion();
   const [dialed, setDialed] = React.useState('');
   const [dialError, setDialError] = React.useState('');
   const [showScript, setShowScript] = React.useState(false);
@@ -222,8 +223,16 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
             </div>
             <motion.div
               className={'qul-call-handset ' + (sessionLive ? 'lifted' : '')}
-              animate={sessionLive ? { y: -43, rotate: -6, x: -11 } : { y: 0, rotate: 0, x: 0 }}
-              transition={{ type: 'spring', mass: 0.9, stiffness: 170, damping: 16 }}
+              animate={sessionLive
+                ? reducedMotion
+                  ? { y: -43, rotate: -6, x: -11 }
+                  : { y: [0, -15, -61, -43], x: [0, -3, -19, -11], rotate: [0, 6, -13, -6], rotateY: [0, -6, -16, -8] }
+                : { y: 0, rotate: 0, x: 0, rotateY: 0 }}
+              transition={reducedMotion
+                ? { duration: 0 }
+                : sessionLive
+                  ? { duration: 1.04, times: [0, 0.18, 0.69, 1], ease: 'easeInOut' }
+                  : { type: 'spring', mass: 0.9, stiffness: 170, damping: 16 }}
               aria-hidden="true">
               <div className="qul-call-ear"><span>••••</span></div>
               <div className="qul-call-handle"><div className="qul-call-handle-band" /></div>
@@ -272,7 +281,10 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
         </div>
 
         <div className="qul-call-mission-area">
-          <section className="qul-call-mission-ticket" aria-label={isArabic ? 'مهمة المكالمة' : 'Call mission'}>
+          <motion.section key={contact.id} className="qul-call-mission-ticket" aria-label={isArabic ? 'مهمة المكالمة' : 'Call mission'}
+            initial={reducedMotion ? false : { y: -25, opacity: 0, clipPath: 'inset(0 0 100% 0)' }}
+            animate={{ y: 0, opacity: 1, clipPath: 'inset(0 0 0% 0)' }}
+            transition={{ duration: reducedMotion ? 0 : 0.62, ease: [0.22, 1, 0.36, 1] }}>
             <div className="qul-call-ticket-top"><span>CALL SHEET / {contact.extension}</span><span>QUL</span></div>
             <div className="qul-call-ticket-content">
               <span className="qul-call-ticket-kicker">{isArabic ? 'مهمتك اليوم' : 'TODAY’S MISSION'}</span>
@@ -302,7 +314,7 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
               </div>
             </div>
             <div className="qul-call-ticket-tear" aria-hidden="true" />
-          </section>
+          </motion.section>
 
           <section className="qul-call-transcript-shell" aria-label={isArabic ? 'سجل المكالمة' : 'Call log'}>
             <div className="qul-call-log-header">
