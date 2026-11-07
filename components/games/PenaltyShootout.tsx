@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { 
-  Trophy, Shirt, Star, Volume2, VolumeX, RotateCcw,
-  ArrowLeft, X, Play, ArrowRight
+  Trophy, Shirt, Volume2, VolumeX, RotateCcw,
+  ArrowLeft, X
 } from 'lucide-react';
 
 import { PenaltyLive3D } from './PenaltyLive3D';
@@ -406,7 +406,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
   if(!match)return null;
   const shooter=side==='home'
     ?chooseNextShooter(match.home,match.kickers,round)
-    :match.away.players.filter(p=>p.role!=='GK')[(awayShots.length)%10];
+    :[...match.away.players.filter(p=>p.role!=='GK'),...match.away.players.filter(p=>p.role==='GK')][awayShots.length%11];
   const currentQuestion=QUESTIONS[round%QUESTIONS.length];
   const homeScore=homeShots.filter(Boolean).length;
   const awayScore=awayShots.filter(Boolean).length;

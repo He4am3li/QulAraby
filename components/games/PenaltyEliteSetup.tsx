@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {ArrowLeft, Check, ChevronLeft, Crown, RotateCcw, Shirt, Shield, Trophy, X} from 'lucide-react';
+import {ArrowLeft, ChevronLeft, RotateCcw, Shirt, Trophy, X} from 'lucide-react';
 import {chooseOpponent,ELITE_CLUBS,EliteClub,ElitePlayer} from './PenaltyEliteData';
 
 interface Props {
@@ -17,10 +17,11 @@ export const PenaltyEliteSetup:React.FC<Props>=({onBack,onStart})=>{
   const [rival,setRival]=useState<EliteClub>(ELITE_CLUBS[1]);
   const [previousRival,setPreviousRival]=useState<string|undefined>();
   const [selectedKickers,setSelectedKickers]=useState<ElitePlayer[]>([]);
+  const [rosterPage,setRosterPage]=useState(0);
   const selectClub=(choice:EliteClub)=>{
     const next=chooseOpponent(choice.id,previousRival);
     setPreviousRival(next.id);setClub(choice);setRival(next);
-    setSelectedKickers([]);setStep('lineup');
+    setSelectedKickers([]);setRosterPage(0);setStep('lineup');
   };
   const toggle=(player:ElitePlayer)=>{
     setSelectedKickers(current=>current.some(x=>x.number===player.number)
@@ -35,7 +36,7 @@ export const PenaltyEliteSetup:React.FC<Props>=({onBack,onStart})=>{
     <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{
       background:'radial-gradient(ellipse at 53% -12%,rgba(37,116,123,.38),transparent 55%),radial-gradient(ellipse at 97% 93%,rgba(220,179,95,.14),transparent 48%)'
     }}/>
-    <div className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-8 py-5 md:py-8 flex flex-col gap-5">
+    <div className="relative z-10 w-full max-w-6xl mx-auto px-3 md:px-8 py-3 md:py-8 flex flex-col gap-3 md:gap-5">
       <header className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 md:w-14 md:h-14 rounded-2xl grid place-items-center border border-amber-300/40 bg-amber-300/10"><Trophy className="text-amber-300" size={26}/></div>
@@ -107,21 +108,28 @@ export const PenaltyEliteSetup:React.FC<Props>=({onBack,onStart})=>{
           </div>
           <span className="rounded-xl border border-amber-300/35 bg-amber-300/10 text-amber-200 px-3 py-2 font-black tabular-nums">{selectedKickers.length} / 5</span>
         </div>
+        <div className="flex lg:hidden items-center justify-between text-xs font-bold text-amber-200">
+          <span>لاعبو الفريق، المجموعة {rosterPage+1} من 2</span>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={()=>setRosterPage(0)} className={'rounded-lg border px-3 py-1.5 '+(rosterPage===0?'bg-amber-300 text-slate-900 border-amber-300':'bg-white/5 border-white/20 text-white')}>1 إلى 6</button>
+            <button type="button" onClick={()=>setRosterPage(1)} className={'rounded-lg border px-3 py-1.5 '+(rosterPage===1?'bg-amber-300 text-slate-900 border-amber-300':'bg-white/5 border-white/20 text-white')}>7 إلى 11</button>
+          </div>
+        </div>
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3">
-          {club.players.map(player=>{
+          {club.players.map((player,index)=>{
             const order=selectedKickers.findIndex(x=>x.number===player.number);
             const chosen=order>=0;
             return <button type="button" key={player.number} onClick={()=>toggle(player)}
               disabled={!chosen&&selectedKickers.length>=5}
               aria-pressed={chosen}
-              className="relative min-w-0 overflow-hidden rounded-2xl text-center p-3 border transition-colors disabled:opacity-45"
+              className={'relative min-w-0 overflow-hidden rounded-2xl text-center p-2 md:p-3 border transition-colors disabled:opacity-45 '+(index>=rosterPage*6 && index<(rosterPage+1)*6?'':'hidden lg:block')}
               style={{...panelStyle,borderColor:chosen?'#e4b75b':'rgba(255,255,255,.15)'}}>
               {chosen&&<span className="absolute top-2 right-2 flex items-center justify-center h-6 w-6 text-[11px] font-black rounded-full bg-amber-300 text-slate-950">{order+1}</span>}
-              <div className="h-16 md:h-20 flex flex-col items-center justify-center">
-                <Shirt size={34} style={{color:club.primary,filter:'drop-shadow(0 0 10px #ffffff24)'}} strokeWidth={1.8}/>
+              <div className="h-12 md:h-20 flex flex-col items-center justify-center">
+                <Shirt size={29} style={{color:club.primary,filter:'drop-shadow(0 0 10px #ffffff24)'}} strokeWidth={1.8}/>
                 <span className="font-black text-white text-lg mt-[-4px]">{player.number}</span>
               </div>
-              <div className="text-xs md:text-sm font-black truncate mt-1" dir="ltr">{player.name}</div>
+              <div className="text-[11px] md:text-sm font-black truncate mt-1" dir="ltr">{player.name}</div>
               <div className="text-[10px] text-slate-400 mt-1">{positionText[player.role]}</div>
               <div className={chosen?'text-amber-300 text-[10px] font-bold mt-2':'text-slate-500 text-[10px] mt-2'}>{chosen?'تم اختياره':'اضغط للاختيار'}</div>
             </button>;
