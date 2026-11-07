@@ -142,7 +142,7 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
   const [dialed, setDialed] = React.useState('');
   const [dialError, setDialError] = React.useState('');
   const [showScript, setShowScript] = React.useState(false);
-  const [mobilePane, setMobilePane] = React.useState<'book' | 'phone'>('book');
+  const [mobilePane, setMobilePane] = React.useState<'book' | 'phone'>('phone');
   const toneContextRef = React.useRef<AudioContext | null>(null);
   const transcriptRef = React.useRef<HTMLDivElement>(null);
 
