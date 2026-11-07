@@ -1098,7 +1098,13 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
   };
 
   // Distinct visible stroke thickness based strictly on pen nib width
-  const activeStrokeColor = isSpecialIlluminated ? '#ffd700' : isGoldFoil ? '#d4af37' : selectedInk;
+  const foilStrokeColor: Record<string, string> = {
+    leaf: '#a47628', antique: '#8a6018', rose: '#8f4a56',
+    silver: '#89929c', bronze: '#8b4a1d', marble: '#9c7d2b', glitter: '#c19132'
+  };
+  const activeStrokeColor = isSpecialIlluminated
+    ? '#ffd700'
+    : isGoldFoil ? (foilStrokeColor[selectedFoilStyle] || '#a47628') : selectedInk;
   const penStrokeCSS = (() => {
     switch (selectedPen) {
       case 'metal_pen':
