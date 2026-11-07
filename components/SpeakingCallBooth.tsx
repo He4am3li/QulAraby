@@ -5,7 +5,7 @@ import './SpeakingCallBooth.css';
 
 export const CALL_CONTACTS = [
   {
-    id: 'restaurant', extension: '101', ar: 'مطعم الياسمين', en: 'Jasmine Restaurant',
+    id: 'restaurant', extension: '101', voice: 'Achird', ar: 'مطعم الياسمين', en: 'Jasmine Restaurant',
     agentAr: 'موظف الاستقبال', agentEn: 'Restaurant receptionist', symbol: '✦',
     aimAr: 'احجز طاولة لشخصين، وحدد اليوم والوقت.', aimEn: 'Reserve a table for two and choose a date and time.',
     objectivesAr: ['اطلب طاولة', 'حدد عدد الأشخاص', 'حدد موعد الحجز'],
@@ -14,7 +14,7 @@ export const CALL_CONTACTS = [
     accent: '#d9ad74',
   },
   {
-    id: 'hotel', extension: '202', ar: 'فندق الواحة', en: 'Oasis Hotel',
+    id: 'hotel', extension: '202', voice: 'Charon', ar: 'فندق الواحة', en: 'Oasis Hotel',
     agentAr: 'موظف الاستقبال', agentEn: 'Hotel receptionist', symbol: '◈',
     aimAr: 'استفسر عن غرفة وحدد عدد الليالي.', aimEn: 'Ask about a room and specify the length of stay.',
     objectivesAr: ['اسأل عن غرفة', 'حدد عدد الليالي', 'استفسر عن السعر'],
@@ -23,7 +23,7 @@ export const CALL_CONTACTS = [
     accent: '#a6c5cb',
   },
   {
-    id: 'friend', extension: '303', ar: 'صديقك أحمد', en: 'Your friend Ahmed',
+    id: 'friend', extension: '303', voice: 'Puck', ar: 'صديقك أحمد', en: 'Your friend Ahmed',
     agentAr: 'أحمد', agentEn: 'Ahmed', symbol: '✳',
     aimAr: 'رتب نزهة مع صديقك في نهاية الأسبوع.', aimEn: 'Plan a weekend outing with a friend.',
     objectivesAr: ['سلّم على صديقك', 'اقترح نشاطًا', 'اتفق على موعد'],
@@ -32,7 +32,7 @@ export const CALL_CONTACTS = [
     accent: '#b9c69c',
   },
   {
-    id: 'support', extension: '404', ar: 'خدمة العملاء', en: 'Customer Service',
+    id: 'support', extension: '404', voice: 'Rasalgethi', ar: 'خدمة العملاء', en: 'Customer Service',
     agentAr: 'ممثل خدمة العملاء', agentEn: 'Customer service agent', symbol: '⌁',
     aimAr: 'اشرح مشكلة في طلبك واقترح حلًا مناسبًا.', aimEn: 'Explain a problem with an order and propose a solution.',
     objectivesAr: ['عرّف بالمشكلة', 'اذكر التفاصيل', 'اطلب حلًا'],
