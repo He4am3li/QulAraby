@@ -74,5 +74,6 @@ assert(view.includes("left: '6.9%'") && view.includes("top: '30.6%'") && view.in
 assert(view.includes('grid-cols-3 items-stretch'), 'Use three compact evidence tags, not full-width answer bars');
 assert(!view.includes('grid-rows-3 gap-[2px]'), 'Do not restore primitive full-width stacked answers');
 assert(view.includes('getAdvancedPosterPortraitStyle(activeCase.caseNumber, suspectIndex'), 'Use source poster crops, not misaligned thumbnail enlargements');
+assert(view.includes("portraitCrop={level === 'advanced'"), 'Accusation grid must share unique suspect photos too');
 assert(view.includes('Hide the six obsolete blank frames'), 'Old ghost portrait placeholders must be covered');
 console.log('Detective experience: case-specific buttons, centered parchment, accurate image crops and quiet ending verified.');
