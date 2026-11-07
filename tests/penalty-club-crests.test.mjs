@@ -18,11 +18,11 @@ for(const id of required){
 assert.equal((source.match(/id:'(?:madrid|liverpool|psg|chelsea|arsenal|juventus|city|bayern|barcelona|united)'/g)||[]).length,10,'Exactly 10 clubs required');
 assert.match(component,/<img src=\{club\.crestUrl\}/,'Render real vector files as images');
 assert.match(component,/object-contain/,'Preserve crest aspect ratio');
-assert.match(setup,/ELITE_CLUBS\.map\(\(team,index\)/,'Club chooser must include all ten');
-assert.match(setup,/setClubPage/,'Mobile pagination is required');
-assert.match(setup,/PenaltyClubCrest club=\{team\}/,'Selection page crest missing');
-assert.match(setup,/PenaltyClubCrest club=\{club\}/,'Lineup home crest missing');
-assert.match(setup,/PenaltyClubCrest club=\{rival\}/,'Lineup rival crest missing');
+assert.match(setup,/ELITE_CLUBS\.map\(\(team,i\)/,'Club chooser must include all ten');
+assert.match(setup,/setIndex/,'Interactive ten-club carousel must be keyboard/click accessible');
+assert.match(setup,/badge\(displayed,true\)/,'Cinematic club crest missing');
+assert.match(setup,/badge\(club\)/,'Home club crest missing');
+assert.match(setup,/badge\(rival\)/,'Rival club crest missing');
 assert.match(game,/PenaltyClubCrest club=\{match\.home\}/,'Winner screen home crest missing');
 assert.match(game,/PenaltyClubCrest club=\{match\.away\}/,'Winner screen away crest missing');
 assert.match(game,/progress\(homeShots,match\.home\)/,'Scoreboard home crest missing');

@@ -408,6 +408,24 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
   const shooter=side==='home'
     ?chooseNextShooter(match.home,match.kickers,round)
     :[...match.away.players.filter(p=>p.role!=='GK'),...match.away.players.filter(p=>p.role==='GK')][awayShots.length%11];
+  const attackingClub=side==='home'?match.home:match.away;
+  const defendingClub=side==='home'?match.away:match.home;
+  const goalkeeper=defendingClub.players.find(p=>p.role==='GK');
+  const goalieColors=defendingClub.id==='madrid'||defendingClub.id==='juventus'
+    ?{primary:'#86b34f',secondary:'#172b22'}
+    :defendingClub.id==='city'||defendingClub.id==='chelsea'
+      ?{primary:'#e9a448',secondary:'#253146'}
+      :{primary:'#a7d959',secondary:'#13232c'};
+  const stadiumKit={
+    shooterPrimary:attackingClub.primary,
+    shooterSecondary:attackingClub.secondary,
+    shooterNumber:shooter?.number||9,
+    shooterName:shooter?.name||'',
+    keeperPrimary:goalieColors.primary,
+    keeperSecondary:goalieColors.secondary,
+    keeperNumber:goalkeeper?.number||1,
+    keeperName:goalkeeper?.name||''
+  };
   const currentQuestion=QUESTIONS[round%QUESTIONS.length];
   const homeScore=homeShots.filter(Boolean).length;
   const awayScore=awayShots.filter(Boolean).length;
@@ -448,7 +466,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
     </div>;
   }
   return <main dir="rtl" className={'relative w-full h-full min-h-[640px] rounded-3xl overflow-hidden flex flex-col justify-between bg-[#07131f] text-white '+(screenShake?'scale-[1.008]':'')}>
-    <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={side==='home'?match.home.primary:match.away.primary}/>
+    <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={attackingClub.primary} kit={stadiumKit}/>
     <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#01101e]/75 via-transparent to-[#010f1b]/90"/>
     <header className="relative z-20 p-3 md:p-5 w-full flex flex-col gap-3 items-center">
       <div className="flex items-center justify-between gap-2 w-full max-w-5xl">
