@@ -1,0 +1,111 @@
+/* QUL Call Booth, luminous smartphone studio and paper address book. */
+.qul-call-world.qul-call-modern{isolation:isolate;color:#24415b;background:
+  radial-gradient(ellipse 70% 60% at 18% 12%,rgba(170,220,244,.60),transparent 80%),
+  radial-gradient(ellipse 52% 68% at 88% 75%,rgba(241,215,228,.46),transparent 80%),
+  radial-gradient(ellipse 42% 30% at 60% -15%,rgba(255,254,237,.87),transparent 80%),
+  linear-gradient(150deg,#f2faff 0%,#f8fcff 45%,#eef7fd 100%);
+  --glass-blue:#54718d;--phone-accent:#16bc83;min-height:0}
+.qul-call-modern:before{width:85%;height:65%;top:-35%;left:14%;transform:rotate(-18deg);opacity:.8;background:linear-gradient(100deg,transparent,#fff9,transparent)}
+.qul-call-modern .qul-call-atmosphere{opacity:.4;background:repeating-linear-gradient(90deg,#4184ac09 0 1px,transparent 1px 56px),repeating-linear-gradient(0deg,#4184ac09 0 1px,transparent 1px 56px)}
+.qul-call-modern .qul-call-heading{border-bottom:1px solid #bfd8e776}
+.qul-call-modern .qul-call-eyebrow{color:#8a9fb4}
+.qul-call-modern .qul-call-heading h2{color:#234562}
+.qul-call-modern .qul-call-heading p{color:#6886a2}
+.qul-call-modern .qul-call-online{color:#4c6680;background:#ffffffe3;border:1px solid #d2e3ee;box-shadow:inset 0 1px #fff,0 3px 12px #8fb9d220;font-size:10px;font-weight:900}
+.qul-call-modern .qul-call-online i{width:8px;height:8px;border-radius:50%;background:#c1b68a;box-shadow:0 0 0 3px #dfd7bb31}
+.qul-call-modern .qul-call-online.connected i{background:#1cb58b;box-shadow:0 0 0 3px #89dfbc35}
+.qul-call-modern .qul-call-stage{display:grid;grid-template-columns:minmax(288px,380px) minmax(0,1fr);gap:clamp(10px,1.6vw,21px);min-height:0;flex:1;padding-top:10px;overflow:hidden}
+.qul-call-modern .qul-call-device-area{min-width:0;min-height:0;padding:0 4px 3px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;perspective:none}
+.qul-call-modern .qul-call-floor-light{height:40%;width:95%;bottom:2%;filter:blur(33px);background:#77bce032}
+.qul-phone-device{position:relative;flex:0 1 auto;width:min(100%,302px);height:min(100%,584px);min-height:410px;aspect-ratio:302/584;border:2px solid #a9bacb;border-radius:51px;padding:6px;background:linear-gradient(115deg,#7c91a9,#dbe8ed 8%,#7b8da2 15%,#c1d4e0 32%,#72879e 63%,#f6f5f2 84%,#657e94 96%);box-shadow:
+  inset 2px 1px 2px #fff,inset -2px -1px 3px #60758b,0 0 0 1px #8da9ba,
+  0 16px 35px #6c8eac48,0 32px 44px #6b9cb529;
+  transform:perspective(1400px) rotateY(-3deg) rotateX(1deg);transition:transform .3s;isolation:isolate}
+.qul-phone-device:hover{transform:perspective(1400px) rotateY(0deg) rotateX(0deg)}
+.qul-phone-side-key{position:absolute;background:linear-gradient(90deg,#5e7591,#dde7e8,#8da3b4);border:1px solid #8194a4;z-index:-1;border-radius:3px}
+.qul-phone-side-key-left{left:-5px;top:19%;width:5px;height:53px;box-shadow:0 65px #849aa9}
+.qul-phone-side-key-right{right:-5px;top:27%;width:5px;height:70px}
+.qul-phone-glass{position:relative;isolation:isolate;height:100%;width:100%;border-radius:44px;background:
+  radial-gradient(circle at 15% 8%,#ffffffc2,transparent 40%),
+  linear-gradient(150deg,#f6fbff 0%,#e9f4ff 45%,#f7faff 100%);
+  border:2px solid #171d30;box-shadow:inset 0 0 0 1px #ffffffa1,inset 0 0 23px #bfd9e1c2;overflow:hidden}
+.qul-phone-glass:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 110%,#93d5e6a0,transparent 67%)}
+.qul-phone-status-bar{position:absolute;top:11px;left:14px;right:14px;z-index:8;height:30px;display:flex;align-items:flex-start;justify-content:space-between;direction:ltr;color:#182f40;font:900 12px ui-sans-serif,system-ui}
+.qul-phone-status-bar>strong{padding-top:5px;padding-left:7px}
+.qul-phone-status-bar>span{display:flex;align-items:center;gap:3px;padding-top:5px}
+.qul-phone-dynamic-island{position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:99px;height:27px;border-radius:40px;background:#10131a;box-shadow:inset 0 1px 2px #3f444f,0 1px 2px #fff6;display:flex;align-items:center;justify-content:flex-end;padding:0 11px;gap:9px}
+.qul-phone-dynamic-island i:first-child{width:31px;height:6px;border-radius:8px;background:#1b2330}
+.qul-phone-dynamic-island i:last-child{width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 40% 45%,#354f7b,#101420);border:1px solid #233248}
+.qul-phone-screen-dialer{position:absolute;inset:48px 13px 20px;display:flex;flex-direction:column;align-items:center;min-height:0;overflow:hidden}
+.qul-phone-app-label{font:900 9px ui-monospace,monospace;letter-spacing:.19em;color:#5596ad;margin:0 0 6px}
+.qul-phone-app-label b{color:#59758e}
+.qul-phone-screen-dialer h3{font-size:19px;font-weight:900;color:#22374d;margin:0}
+.qul-phone-dial-display{width:100%;height:83px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
+.qul-phone-digits{font:400 clamp(28px,3vw,39px)/1 ui-sans-serif,system-ui;letter-spacing:.11em;color:#162d43}
+.qul-phone-dial-help{font:700 9px/1.3 'Tajawal',sans-serif;color:#7390a4;max-width:100%;text-align:center;min-height:22px;display:flex;align-items:center;justify-content:center}
+.qul-phone-ios-keypad{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));justify-items:center;gap:6px 5px}
+.qul-phone-ios-keypad button{width:min(100%,57px);height:57px;border:1px solid #dceaf4;border-radius:50%;background:linear-gradient(150deg,#ffffffea,#d9e8f2f5);box-shadow:inset 0 2px 1px #fff,0 2px 5px #7794a226;color:#28425a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:transform .12s,background .12s}
+.qul-phone-ios-keypad button:hover{background:linear-gradient(160deg,#f5fbff,#c4deed);transform:scale(1.035)}
+.qul-phone-ios-keypad button:active{transform:scale(.94);background:#d6e6f0}
+.qul-phone-ios-keypad strong{font:400 26px/1 ui-sans-serif,system-ui}
+.qul-phone-ios-keypad small{font:800 7px/1.2 ui-sans-serif,system-ui;letter-spacing:.12em;color:#5b768e}
+.qul-phone-dial-footer{width:80%;margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;justify-items:center}
+.qul-phone-ios-clear,.qul-phone-ios-reset{border:0;background:transparent;color:#69849a;padding:6px;display:grid;place-items:center}
+.qul-phone-ios-clear:disabled,.qul-phone-ios-reset:disabled{opacity:.27}
+.qul-phone-ios-call{width:52px;height:52px;border-radius:50%;color:#fff;background:linear-gradient(145deg,#3bdd9e,#079b73);display:grid;place-items:center;box-shadow:inset 0 2px 2px #baffd49f,0 7px 12px #39bd9b53;transition:transform .1s}
+.qul-phone-ios-call:hover:not(:disabled){transform:scale(1.04)}
+.qul-phone-ios-call:active:not(:disabled){transform:scale(.94)}
+.qul-phone-ios-call:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.5)}
+.qul-phone-dial-footer-label{font-size:9px;font-weight:900;color:#6d91a2;margin-top:2px}
+.qul-phone-home-indicator{position:absolute;z-index:7;bottom:7px;left:50%;transform:translateX(-50%);width:36%;height:4px;background:#1f3546;border-radius:99px;opacity:.8}
+.qul-phone-screen-calling{position:absolute;inset:65px 15px 26px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px 0 10px;gap:8px;min-height:0}
+.qul-phone-screen-calling:before{position:absolute;z-index:-1;inset:-40px -25px;content:"";background:radial-gradient(ellipse at 50% 26%,#d0e9f9,#a9d6eabb 48%,transparent 85%)}
+.qul-phone-call-brow{font:800 9px ui-monospace,monospace;letter-spacing:.14em;color:#7190a3}
+.qul-phone-call-avatar{width:96px;height:96px;display:grid;place-items:center;border-radius:35px;font-size:54px;color:#e8f7ff;background:linear-gradient(135deg,#274c71,#649aba);box-shadow:inset 0 1px 4px #ffffff95,0 12px 22px #75a4bf6c}
+.qul-phone-screen-calling h3{font-size:19px;font-weight:900;color:#2b4867;margin:0;text-align:center}
+.qul-phone-screen-calling>p{font-size:11px;color:#68869f;margin:0}
+.qul-phone-live-wave{display:flex;align-items:center;justify-content:center;gap:3px;height:51px;min-width:110px}
+.qul-phone-live-wave i{display:block;width:4px;border-radius:99px;background:linear-gradient(#479fd6,#50d7b7);transition:transform .08s;transform-origin:center}
+.qul-phone-call-preview{width:100%;min-height:45px;max-height:66px;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;padding:9px;border:1px solid #a6cbdf;background:#f9fdffc9;border-radius:15px;font-size:11px;font-weight:800;color:#486984;line-height:1.5}
+.qul-phone-call-controls{margin-top:auto;width:100%;display:flex;align-items:center;justify-content:space-evenly;gap:10px}
+.qul-phone-call-controls button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-width:90px;min-height:90px;border:1px solid #cae0ed;border-radius:26px;background:#f5fbff;color:#3c637e;font-size:10px;font-weight:900}
+.qul-phone-call-controls button:disabled{opacity:.3}
+.qul-phone-call-controls button.muted{background:#d4edf7;border-color:#81bace}
+.qul-phone-call-controls button.end{background:linear-gradient(#f28288,#d93855);border:0;color:#fff;box-shadow:0 9px 12px #da607a3b}
+.qul-phone-reconnect{position:absolute;left:13px;right:13px;bottom:20px;z-index:9;border:1px solid #efcd8d;background:#fff6dfec;padding:9px;border-radius:12px;text-align:center;color:#9c6430;font-size:10px;font-weight:800}
+.qul-phone-reconnect p{margin:0 0 7px}
+.qul-phone-reconnect button{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border:1px solid #d6a85b;border-radius:9px}
+.qul-phone-caption{margin:9px auto 0;font-size:9px;line-height:1.5;text-align:center;color:#91aabd;font-weight:700;max-width:320px}
+.qul-call-modern .qul-call-experience-area{display:flex;flex-direction:column;min-height:0;overflow:hidden;gap:9px;padding:2px 3px 4px}
+.qul-call-modern .qul-call-mission-ticket{flex:0 0 auto;overflow:hidden;border:1px solid #c6dfeb;border-radius:14px;background:linear-gradient(135deg,#ffffffed,#edf9f9e0);box-shadow:inset 0 1px #fff,0 3px 15px #7bb4ca17;color:#344e63}
+.qul-call-modern .qul-call-ticket-content{padding:9px 12px}
+.qul-call-modern .qul-call-ticket-top{padding:0 0 6px;font-size:8px;color:#86a0af;border-color:#d3e6eb}
+.qul-call-modern .qul-call-ticket-content h3{font-size:14px;margin:5px 0 2px;color:#274d68}
+.qul-call-modern .qul-call-ticket-content>p{font-size:10px;margin-bottom:3px;color:#5e7c8e}
+.qul-call-modern .qul-call-ticket-rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:6px 0 2px}
+.qul-call-modern .qul-call-rule{border:0;gap:4px;padding:4px;align-items:flex-start;border-radius:7px;background:#ecf5f8}
+.qul-call-modern .qul-call-rule span{font:900 10px ui-monospace,monospace;color:#26809b}
+.qul-call-modern .qul-call-rule p{font-size:9px;line-height:1.3;color:#547184}
+.qul-call-modern .qul-call-rule.verified{background:#e2f7e8}
+.qul-call-modern .qul-call-rule.verified p,.qul-call-modern .qul-call-rule.verified span{color:#187f55}
+.qul-call-modern .qul-call-ticket-result{margin-top:6px;padding:5px 7px;background:#e8f5eb;border:1px solid #a3d9bc;color:#296e54}
+.qul-call-mission-empty{padding:15px;min-height:55px;display:flex;align-items:center;gap:10px;color:#6f8aa0;font-size:11px;font-weight:800}
+.qul-call-modern .qul-call-transcript-shell{flex:0 0 auto;min-height:41px;background:#ffffffe0;border:1px solid #d4e5ee;border-radius:14px;box-shadow:0 3px 13px #6b9ab319}
+.qul-call-modern .qul-call-log-header{padding:8px 11px;border-color:#d2e4ed}
+.qul-call-modern .qul-call-log-header strong{color:#4e6c83}
+.qul-call-modern .qul-call-led{background:#a6c5d2}
+.qul-call-modern .qul-call-led.is-on{background:#16b18a}
+.qul-call-modern .qul-call-log-toggle{color:#517995;background:#e4f1f6;border:1px solid #c2dfeb}
+.qul-call-modern .qul-call-log-list{padding:8px 11px;max-height:99px}
+.qul-call-modern .qul-call-log-entry>span{color:#6c8ea3}
+.qul-call-modern .qul-call-log-entry.agent>span{color:#a77e54}
+.qul-call-modern .qul-call-log-entry p{color:#334f67}
+.qul-call-modern .qul-call-log-empty{color:#8aa4b3}
+.qul-call-modern .qul-call-bottom-line{color:#8da9b8;margin-top:5px}
+.qul-call-mobile-switch{display:none}
+@media(max-width:1190px){.qul-call-modern .qul-call-stage{grid-template-columns:minmax(235px,325px) minmax(0,1fr)}.qul-phone-device{width:min(100%,274px);height:min(100%,548px)}.qul-phone-ios-keypad button{width:50px;height:50px}.qul-phone-ios-keypad strong{font-size:23px}.qul-phone-dial-display{height:75px}.qul-phone-screen-dialer h3{font-size:17px}.qul-phone-call-avatar{width:81px;height:81px}}
+@media(max-height:780px) and (min-width:901px){.qul-call-modern .qul-call-heading{padding-bottom:6px}.qul-call-modern .qul-call-stage{padding-top:6px}.qul-phone-device{max-height:510px;max-width:265px}.qul-phone-ios-keypad button{width:47px;height:47px}.qul-phone-ios-keypad{gap:3px}.qul-phone-dial-display{height:62px}.qul-phone-screen-dialer{inset:44px 12px 19px}.qul-phone-ios-call{height:44px;width:44px}.qul-phone-call-avatar{width:70px;height:70px}.qul-call-modern .qul-call-ticket-content h3{font-size:12px}.qul-call-modern .qul-call-experience-area{gap:6px}}
+@media(max-width:900px){.qul-call-modern .qul-call-stage{grid-template-columns:1fr;display:flex;flex-direction:column;gap:0;padding-top:8px;overflow:hidden;flex:1;min-height:0}.qul-call-mobile-switch{display:flex;justify-content:center;gap:5px;padding:5px;background:#ffffffcb;border:1px solid #d4e6ed;border-radius:15px;margin-top:8px;flex-shrink:0}.qul-call-mobile-switch button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;padding:10px;font-size:12px;font-weight:900;color:#6889a3}.qul-call-mobile-switch button.active{background:linear-gradient(135deg,#d6e9f5,#b5dff2);color:#1b536f;box-shadow:inset 0 1px #fff}.qul-call-show-book [data-pane="phone"],.qul-call-show-phone [data-pane="book"]{display:none!important}.qul-call-modern .qul-call-device-area{flex:1;min-height:0;justify-content:center;overflow:hidden}.qul-phone-device{width:min(100%,288px);height:min(100%,550px);min-height:400px}.qul-call-modern .qul-call-experience-area{min-height:0;flex:1;gap:8px;padding:3px 4px;overflow-y:auto;scrollbar-width:none}.qul-call-modern .qul-call-experience-area::-webkit-scrollbar{display:none}.qul-call-modern .qul-call-bottom-line{display:none}.qul-phone-caption{margin:5px}}
+@media(max-width:650px){.qul-call-world.qul-call-modern{padding:10px}.qul-call-modern .qul-call-heading{padding-bottom:8px}.qul-call-modern .qul-call-heading h2{font-size:20px}.qul-call-modern .qul-call-heading p{font-size:10px}.qul-call-modern .qul-call-online{font-size:9px;white-space:normal;max-width:120px;padding:7px}.qul-phone-device{width:min(100%,275px);height:min(100%,530px)}.qul-phone-ios-keypad button{width:52px;height:52px}.qul-phone-screen-dialer{inset:45px 12px 22px}.qul-phone-dial-display{height:78px}.qul-phone-ios-keypad{gap:4px}.qul-phone-ios-call{width:48px;height:48px}.qul-book-area{flex:0 0 auto;min-height:0}.qul-call-modern .qul-call-mission-ticket{flex:0 0 auto}.qul-call-modern .qul-call-transcript-shell{flex:0 0 auto}.qul-call-modern .qul-call-bottom-line{display:none}}
+@media(max-height:720px) and (max-width:900px){.qul-call-modern .qul-call-heading h2{font-size:17px}.qul-call-modern .qul-call-heading p{font-size:9px}.qul-call-modern .qul-call-heading{padding-bottom:5px}.qul-call-mobile-switch{padding:3px;margin-top:5px}.qul-call-mobile-switch button{padding:7px}.qul-phone-device{height:min(100%,473px);width:min(100%,253px);min-height:370px}.qul-phone-screen-dialer{inset:44px 10px 17px}.qul-phone-ios-keypad button{width:43px;height:43px}.qul-phone-ios-keypad{gap:3px}.qul-phone-ios-keypad strong{font-size:20px}.qul-phone-dial-display{height:52px}.qul-phone-ios-call{height:43px;width:43px}.qul-phone-screen-dialer h3{font-size:15px}.qul-phone-dial-footer{margin-top:5px}.qul-phone-call-avatar{width:67px;height:67px}.qul-phone-call-preview{min-height:30px}}
+@media(prefers-reduced-motion:reduce){.qul-phone-device,.qul-phone-ios-keypad button,.qul-phone-ios-call{transition:none}}
