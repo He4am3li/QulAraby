@@ -857,7 +857,11 @@ export const evaluateCallIn = async (audioBase64: string, transcript: string): P
   });
 };
 
-export const generateSessionInsights = async (history: any[], topic: string): Promise<any> => {
+export const generateSessionInsights = async (
+  history: any[],
+  topic: string,
+  mission?: { objectivesAr: readonly string[]; aimAr?: string }
+): Promise<any> => {
   const validTurns = (history || []).filter(turn =>
     (turn.role === 'user' || turn.role === 'ai') && typeof turn.text === 'string' && turn.text.trim());
   const historyText = validTurns.map(turn => `${turn.role === 'user' ? 'Learner' : 'Tutor'}: ${turn.text}`).join('\n');
@@ -872,6 +876,7 @@ export const generateSessionInsights = async (history: any[], topic: string): Pr
     tutor_tip_en: 'Choose one short sentence from your dialogue and use it in a new situation.',
     next_practice: { ar: 'تحدث بجملة قصيرة عن ' + (topic || 'موضوعك') + '.', en: 'Say one short Arabic sentence about the topic.' },
     assessmentStatus: 'limited',
+    missionEvidence: (mission?.objectivesAr || []).map(goal => ({ goal, evidence: '', achieved: false })),
   });
 
   if (!learnerText.trim()) return createFallbackInsights();
@@ -892,6 +897,9 @@ export const generateSessionInsights = async (history: any[], topic: string): Pr
         next_practice: { type: Type.OBJECT, properties: {
           ar: { type: Type.STRING }, en: { type: Type.STRING }
         }, required: ['ar', 'en'] },
+        mission_evidence: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: {
+          goal: { type: Type.STRING }, evidence: { type: Type.STRING }
+        }, required: ['goal', 'evidence'] } },
       },
       required: ['summary', 'key_vocabulary', 'corrections', 'tutor_tip_ar', 'tutor_tip_en', 'next_practice'],
     };
@@ -906,6 +914,12 @@ List at most 5 relevant Arabic vocabulary items occurring in the dialogue, with 
 For corrections, use up to 2 ACTUAL short phrases spoken by the learner, copying original verbatim and offering an appropriate correction; do not invent mistakes.
 Offer one practical next speaking task in Arabic and English based on the learner's needs.
 If the learner hardly speaks Arabic, say so neutrally and offer a simpler next task.
+${mission?.objectivesAr?.length ? `
+SIMULATED TELEPHONE MISSION: ${mission.aimAr || topic}
+Goals: ${mission.objectivesAr.join(' | ')}
+For mission_evidence, output one item for EACH given goal in exact order. Use goal exactly as given.
+Only include a SHORT VERBATIM ARABIC phrase from the LEARNER's actual spoken transcript as "evidence" when the learner demonstrated that specific goal.
+If not demonstrated, use an empty evidence string. NEVER use the tutor's text, English-only responses, or invented excerpts as evidence.` : 'Do not create mission evidence for an ordinary free conversation.'}
 Conversation:
 ${historyText.slice(0, 12000)}`,
       config: { responseMimeType: 'application/json', responseSchema: schema }
@@ -924,6 +938,14 @@ ${historyText.slice(0, 12000)}`,
         ).slice(0, 2),
         next_practice: parsed.next_practice?.ar && parsed.next_practice?.en
           ? parsed.next_practice : createFallbackInsights().next_practice,
+        missionEvidence: (mission?.objectivesAr || []).map((goal, index) => {
+          const claimed = Array.isArray(parsed.mission_evidence) ? parsed.mission_evidence[index] : null;
+          const evidence = typeof claimed?.evidence === 'string' ? claimed.evidence.trim() : '';
+          // An AI claim alone is insufficient: only an exact learner transcript quote can count.
+          const achieved = claimed?.goal === goal && evidence.length >= 4 &&
+            /[\u0621-\u064A]/u.test(evidence) && learnerText.includes(evidence);
+          return { goal, evidence: achieved ? evidence : '', achieved: Boolean(achieved) };
+        }),
         assessmentStatus: 'analyzed',
       };
     }
