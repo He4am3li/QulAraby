@@ -297,6 +297,7 @@ class PenaltySoundEngine {
 // ========================================================
 
 import {PenaltyEliteSetup} from './PenaltyEliteSetup';
+import {PenaltyClubCrest} from './PenaltyClubCrest';
 import {EliteClub, ElitePlayer, chooseNextShooter} from './PenaltyEliteData';
 import {shootoutResult} from './penalty-elite-rules.mjs';
 
@@ -411,9 +412,9 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
   const homeScore=homeShots.filter(Boolean).length;
   const awayScore=awayShots.filter(Boolean).length;
   const suddenDeath=round>=5;
-  const progress=(shots:boolean[],label:string)=>(
+  const progress=(shots:boolean[],club:EliteClub)=>(
     <div className="flex flex-col items-center gap-1 min-w-0">
-      <span className="text-[10px] md:text-xs text-slate-300 font-black truncate max-w-full">{label}</span>
+      <div className="flex items-center justify-center gap-1.5 min-w-0"><PenaltyClubCrest club={club} className="w-7 h-7 md:w-9 md:h-9 rounded-xl"/><span className="text-[9px] md:text-xs text-slate-200 font-black truncate max-w-[76px] md:max-w-[126px]">{club.name}</span></div>
       <div className="flex gap-1" dir="ltr">
         {Array.from({length:5},(_,i)=><span key={i}
           className={'w-4 h-4 md:w-5 md:h-5 rounded-full border flex items-center justify-center text-[9px] font-black '
@@ -433,9 +434,9 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
         <p className="mt-3 text-xs font-black tracking-widest text-amber-300" dir="ltr">QUL PENALTY ELITE</p>
         <h2 className="mt-2 text-3xl md:text-4xl font-black text-white">{isWinner?'أبطال ركلات الترجيح!':'مباراة قوية، فرصة أخرى تنتظرك'}</h2>
         <div className="mt-7 flex items-center justify-between gap-3">
-          <span className="text-white font-black text-sm">{match.home.name}</span>
+          <span className="flex flex-col items-center gap-2 text-white font-black text-xs md:text-sm"><PenaltyClubCrest club={match.home} className="w-12 h-12 md:w-16 md:h-16"/>{match.home.name}</span>
           <strong dir="ltr" className="text-3xl md:text-5xl text-amber-200 font-black tabular-nums">{homeScore} : {awayScore}</strong>
-          <span className="text-white font-black text-sm">{match.away.name}</span>
+          <span className="flex flex-col items-center gap-2 text-white font-black text-xs md:text-sm"><PenaltyClubCrest club={match.away} className="w-12 h-12 md:w-16 md:h-16"/>{match.away.name}</span>
         </div>
         <p className="mt-5 text-slate-300 text-sm">أجبت عن {homeScore} أسئلة إجابة صحيحة من {homeShots.length} ركلات.</p>
         <p className="mt-1 text-slate-400 text-xs">{suddenDeath?'حُسم اللقاء بعد ركلات إضافية':'حُسم اللقاء وفق نظام ركلات الترجيح'}</p>
@@ -455,19 +456,19 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
           {isMuted?<VolumeX size={19}/>:<Volume2 size={19}/>}
         </button>
         <div className={'flex items-center gap-2 md:gap-5 px-3 py-2.5 '+outStyle} aria-label={'النتيجة '+homeScore+' مقابل '+awayScore}>
-          {progress(homeShots,match.home.name)}
+          {progress(homeShots,match.home)}
           <div className="flex flex-col items-center">
             <strong className="text-2xl md:text-4xl font-black text-white tabular-nums" dir="ltr">{homeScore} : {awayScore}</strong>
             <span className="text-[10px] text-amber-300 font-black">{suddenDeath?'الركلات الحاسمة':'ركلات الترجيح'}</span>
           </div>
-          {progress(awayShots,match.away.name)}
+          {progress(awayShots,match.away)}
         </div>
         <button type="button" onClick={()=>{cancelTimeline();setScreen('setup');}} title="إنهاء المباراة" className={'p-2.5 text-slate-300 '+outStyle}><X size={19}/></button>
       </div>
       <div className="flex items-center justify-between max-w-2xl w-full gap-3 rounded-xl border border-amber-300/30 bg-[#061b27]/90 px-3 py-2 shadow-lg">
         <span className="text-xs text-amber-200 font-black">ركلة {round+1}</span>
         <div className="flex items-center gap-2 min-w-0">
-          <Shirt size={17} style={{color:side==='home'?match.home.primary:match.away.primary}}/>
+          <PenaltyClubCrest club={side==='home'?match.home:match.away} className="w-8 h-8 rounded-xl" />
           <strong dir="ltr" className="text-white text-sm truncate">{shooter?.name || 'Penalty kicker'}</strong>
           <span className="bg-white/10 rounded-lg px-2 py-0.5 text-xs font-black">#{shooter?.number || 9}</span>
         </div>
