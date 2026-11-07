@@ -10,14 +10,16 @@ type Screen = 'intro' | 'briefing' | 'investigation' | 'envelope' | 'report' | '
 type UiLanguage = 'ar' | 'en';
 type LevelProgress = { completedIds: number[]; nextIndex: number; bestScores: Record<number, number> };
 type Progress = Record<DifficultyLevel, LevelProgress>;
-const STORAGE_KEY = 'qul:detective:progress:v2';
+const STORAGE_KEY = 'qul:detective:progress:v3';
+const LEGACY_STORAGE_KEY = 'qul:detective:progress:v2';
 
 const emptyLevel = (): LevelProgress => ({ completedIds: [], nextIndex: 0, bestScores: {} });
 const emptyProgress = (): Progress => ({ beginner: emptyLevel(), intermediate: emptyLevel(), advanced: emptyLevel() });
 const loadProgress = (): Progress => {
   if (typeof window === 'undefined') return emptyProgress();
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '{}');
+    const current = window.localStorage.getItem(STORAGE_KEY);
+    const parsed = JSON.parse(current || window.localStorage.getItem(LEGACY_STORAGE_KEY) || '{}');
     const defaults = emptyProgress();
     (Object.keys(defaults) as DifficultyLevel[]).forEach(level => {
       const record = parsed?.[level];
@@ -27,6 +29,7 @@ const loadProgress = (): Progress => {
         bestScores: record.bestScores && typeof record.bestScores === 'object' ? record.bestScores : {},
       };
     });
+    if (!current) defaults.advanced = emptyLevel(); // Old advanced IDs 201/202 now refer to different mysteries.
     return defaults;
   } catch { return emptyProgress(); }
 };
