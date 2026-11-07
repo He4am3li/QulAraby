@@ -78,6 +78,38 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     lane.rotation.x = -Math.PI/2; lane.position.set(0, 0.008 + i*0.0001, -30 + i*3.8);
     lane.receiveShadow=true; scene.add(lane);
   }
+  // Real instanced 3D turf, not a flat green plane. Two intersecting blades per tuft.
+  // A single draw call keeps the detail usable on mobile GPUs.
+  const turfBladeGeometry=new THREE.BufferGeometry();
+  turfBladeGeometry.setAttribute('position',new THREE.Float32BufferAttribute([
+    -0.018,0,0, 0,0.15,0.014, 0.018,0,0,
+    0,0,-0.018, 0,0.15,0.014, 0,0,0.018
+  ],3));
+  turfBladeGeometry.computeVertexNormals();
+  const turfBladeMaterial=new THREE.MeshLambertMaterial({color:0xffffff,side:THREE.DoubleSide});
+  const turfBladeCount=mobile?9500:30000;
+  const turfBlades=new THREE.InstancedMesh(turfBladeGeometry,turfBladeMaterial,turfBladeCount);
+  const grassDummy=new THREE.Object3D();
+  const turfColor=new THREE.Color();
+  let turfSeed=246813579;
+  function turfRandom(){turfSeed^=turfSeed<<13;turfSeed^=turfSeed>>>17;turfSeed^=turfSeed<<5;return (turfSeed>>>0)/4294967296;}
+  const bladePalette=[0x1f6533,0x2d773a,0x326f38,0x215a33,0x3a8642,0x34783b,0x285c30,0x498d47];
+  for(let i=0;i<turfBladeCount;i++){
+    const x=(turfRandom()-.5)*51,z=(turfRandom()-.5)*76;
+    grassDummy.position.set(x,0.015,z);
+    grassDummy.rotation.set((turfRandom()-.5)*.22,turfRandom()*Math.PI*2,(turfRandom()-.5)*.24);
+    grassDummy.scale.set(.62+turfRandom()*.65,.4+turfRandom()*.64,.62+turfRandom()*.65);
+    grassDummy.updateMatrix();
+    turfBlades.setMatrixAt(i,grassDummy.matrix);
+    turfColor.setHex(bladePalette[Math.floor(turfRandom()*bladePalette.length)]);
+    turfBlades.setColorAt(i,turfColor);
+  }
+  turfBlades.instanceMatrix.needsUpdate=true;
+  turfBlades.frustumCulled=false;
+  turfBlades.castShadow=false;
+  turfBlades.receiveShadow=false;
+  scene.add(turfBlades);
+
   // Fine pitch lines with 3D geometry and depth testing.
   const stripeMat = new THREE.MeshBasicMaterial({color:0xc5eee1, transparent:true, opacity:0.89, depthWrite:false});
   function line(x1,z1,x2,z2,w=0.10) {
@@ -106,23 +138,65 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     const rail=new THREE.Mesh(new THREE.TorusGeometry(r+0.9,0.11,6,96),steel);
     rail.rotation.x=Math.PI/2;rail.position.y=y+1.1;scene.add(rail);
   }
-  // The spectator geometry is instanced so it remains affordable on phones.
-  const audienceCount=mobile?950:2600;
-  const seatGeo=new THREE.CapsuleGeometry(0.23,0.29,2,4);
-  const audience=new THREE.InstancedMesh(seatGeo,seatingMat,audienceCount);
-  const dummy=new THREE.Object3D();
-  const palette=[0x233d65,0xbfc8e1,0x2772b2,0xf4cbd1,0x24774c,0xf0a65c,0xd94444,0x91a9c7];
-  const col=new THREE.Color();
-  for(let i=0;i<audienceCount;i++){
-    const t=(i*2.399963229728653)% (Math.PI*2);
-    const tier=i%10;const radius=46+(tier/10)*17;
-    dummy.position.set(Math.sin(t)*radius, 4.8+(tier/10)*10.2, Math.cos(t)*radius);
-    dummy.rotation.y=t;dummy.scale.set(0.85+((i*7)%5)*0.05,0.85+((i*13)%5)*0.06,0.95);
-    dummy.updateMatrix();audience.setMatrixAt(i,dummy.matrix);
-    col.setHex(palette[(i*7+Math.floor(i/19))%palette.length]);
-    audience.setColorAt(i,col);
+  // Three-dimensional supporters, with separate bodies, heads and animated raised arms.
+  // Unlike generic pills, they change pose together after a save or a goal.
+  const spectatorCount=mobile?850:1950;
+  const seatGeo=new THREE.CapsuleGeometry(.20,.36,2,5);
+  const headGeo=new THREE.SphereGeometry(.17,7,5);
+  const armGeo=new THREE.CapsuleGeometry(.062,.27,2,5);
+  const audience=new THREE.InstancedMesh(seatGeo,material(0xffffff,0,.98),spectatorCount);
+  const audienceHeads=new THREE.InstancedMesh(headGeo,material(0xffffff,0,.96),spectatorCount);
+  const audienceLeftArms=new THREE.InstancedMesh(armGeo,material(0xffffff,0,.94),spectatorCount);
+  const audienceRightArms=new THREE.InstancedMesh(armGeo,material(0xffffff,0,.94),spectatorCount);
+  const spectatorDummy=new THREE.Object3D();
+  const spectatorPositions=new Float32Array(spectatorCount*3);
+  const palette=[0x254375,0xf0e4d0,0x2a86ba,0xc7344c,0x18734a,0xe9ad51,0x9873a5,0xdde6ed];
+  const skins=[0xe4bc8f,0xb98963,0x8d6047,0xe5c3a1,0x624432];
+  const spectatorColor=new THREE.Color();
+  for(const mesh of [audience,audienceHeads,audienceLeftArms,audienceRightArms]){
+    mesh.frustumCulled=false;mesh.castShadow=false;scene.add(mesh);
   }
-  audience.instanceMatrix.needsUpdate=true;audience.frustumCulled=false;scene.add(audience);
+  for(let i=0;i<spectatorCount;i++){
+    const a=(i*2.399963229728653)%(Math.PI*2), tier=i%10, radius=46+tier/10*17;
+    spectatorPositions[i*3]=Math.sin(a)*radius;
+    spectatorPositions[i*3+1]=4.8+tier/10*10.2;
+    spectatorPositions[i*3+2]=Math.cos(a)*radius;
+    spectatorColor.setHex(palette[(i*7+Math.floor(i/19))%palette.length]);
+    audience.setColorAt(i,spectatorColor);
+    audienceLeftArms.setColorAt(i,spectatorColor);
+    audienceRightArms.setColorAt(i,spectatorColor);
+    spectatorColor.setHex(skins[(i*13+Math.floor(i/11))%skins.length]);
+    audienceHeads.setColorAt(i,spectatorColor);
+  }
+  function animateSupporters(elapsed,reaction=0){
+    const cheering=reaction>0.01;
+    // Cheering animation is updated in batches, not 60 times per second.
+    if(!cheering && Math.floor(elapsed*9)===lastSpectatorTick)return;
+    if(cheering && Math.floor(elapsed*19)===lastSpectatorTick)return;
+    lastSpectatorTick=Math.floor(elapsed*(cheering?19:9));
+    const lift=Math.max(0,Math.min(1,reaction));
+    for(let i=0;i<spectatorCount;i++){
+      const x=spectatorPositions[i*3],y=spectatorPositions[i*3+1],z=spectatorPositions[i*3+2];
+      const wave=Math.sin(elapsed*(lift>.25?10.5:1.5)+i*.64);
+      const bounce=(.025+lift*.22)*(wave*.5+.5);
+      spectatorDummy.rotation.set(0,Math.atan2(x,z)+Math.PI,0);
+      spectatorDummy.position.set(x,y+bounce,z);
+      spectatorDummy.scale.set(1,1,1);spectatorDummy.updateMatrix();audience.setMatrixAt(i,spectatorDummy.matrix);
+      spectatorDummy.position.set(x,y+.58+bounce,z);
+      spectatorDummy.scale.set(1,1,1);spectatorDummy.updateMatrix();audienceHeads.setMatrixAt(i,spectatorDummy.matrix);
+      for(const sign of [-1,1]){
+        const raised=lift>0.1?(Math.sin(i*.21+elapsed*7)>.1?1:0):0;
+        spectatorDummy.position.set(x+sign*(.27+raised*.06),y+.17+raised*.32+bounce,z);
+        spectatorDummy.rotation.set(0,Math.atan2(x,z)+Math.PI,sign*(.20+raised*1.55));
+        spectatorDummy.scale.set(1,1,1);spectatorDummy.updateMatrix();
+        (sign<0?audienceLeftArms:audienceRightArms).setMatrixAt(i,spectatorDummy.matrix);
+      }
+    }
+    for(const mesh of [audience,audienceHeads,audienceLeftArms,audienceRightArms])mesh.instanceMatrix.needsUpdate=true;
+  }
+  let lastSpectatorTick=-1;
+  animateSupporters(0,0);
+
   const roofMat=material(0x142132,0.48,0.42);
   const roof=new THREE.Mesh(new THREE.TorusGeometry(62.5,2.2,8,100),roofMat);
   roof.rotation.x=Math.PI/2;roof.position.y=17.5;scene.add(roof);
@@ -207,47 +281,127 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   let shooterUniform='#1366b2', keeperUniform='#b7f02f';
   let shooterSecondary='#eff4f5',keeperSecondary='#202e30';
   let shooterNumber=9,keeperNumber=1;
-  let shooterName='',keeperName='';
+  let shooterName='',keeperName='',shooterClubId='',keeperClubId='';
+  let shooterAccent='#f5f5f5',keeperAccent='#f7f7f7';
   const shooterShirtMaterials=[],keeperShirtMaterials=[];
   const shooterShortsMaterials=[],keeperShortsMaterials=[];
   const shooterSocksMaterials=[],keeperSocksMaterials=[];
-  const numberDecals=[];
+  // Lettering is projected in the material shader using the garment's bind-pose
+  // coordinates. Since the shirt itself is skinned, the name follows every torso
+  // rotation and never floats as a separate rectangle in 3D space.
+  const shirtLettering=[];
+  const sportsShorts=[];
   const safeColor=(value,fallback)=>typeof value==='string'&&/^#[0-9a-fA-F]{6}$/.test(value)?value:fallback;
   const setColor=(mats,color)=>mats.forEach(m=>m?.color?.set(color));
+
+  const patternCode={barcelona:1,juventus:2,psg:3,arsenal:4,madrid:5,city:6,liverpool:7,chelsea:8,bayern:9,united:10};
   function addNumberPanels(actor){
-    // The number is part of the 3D actor scene, not a fixed 2D overlay.
-    for(const side of [-1,1]){
-      const canvas=document.createElement('canvas');
-      canvas.width=256;canvas.height=256;
-      const texture=new THREE.CanvasTexture(canvas);
-      texture.colorSpace=THREE.SRGBColorSpace;
-      const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
-      const panel=new THREE.Mesh(new THREE.PlaneGeometry(.57,.62),material);
-      panel.position.set(0,1.45,side*.315);
-      panel.rotation.y=side===1?0:Math.PI;
-      panel.renderOrder=5;
-      actor.root.add(panel);
-      numberDecals.push({keeper:actor.keeper,canvas,texture,panel});
+    const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
+    const tex=new THREE.CanvasTexture(canvas);
+    tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+    const entry={keeper:actor.keeper,canvas,texture:tex,
+      uniformPattern:{value:patternCode[actor.keeper?keeperClubId:shooterClubId]||0},
+      uniformStripe:{value:new THREE.Color(actor.keeper?keeperSecondary:shooterSecondary)},
+      uniformAccent:{value:new THREE.Color(actor.keeper?keeperAccent:shooterAccent)}
+    };
+    shirtLettering.push(entry);
+    const shirts=actor.keeper?keeperShirtMaterials:shooterShirtMaterials;
+    for(const mat of shirts){
+      mat.onBeforeCompile=(shader)=>{
+        shader.uniforms.qulClothLettering={value:tex};
+        shader.uniforms.qulPattern=entry.uniformPattern;
+        shader.uniforms.qulStripe=entry.uniformStripe;
+        shader.uniforms.qulAccent=entry.uniformAccent;
+        shader.vertexShader=shader.vertexShader
+          .replace('#include <common>','#include <common>\nvarying vec3 qulGarmentPosition;')
+          .replace('#include <begin_vertex>','#include <begin_vertex>\nqulGarmentPosition = position;');
+        shader.fragmentShader=shader.fragmentShader
+          .replace('#include <common>','#include <common>\nvarying vec3 qulGarmentPosition;\nuniform sampler2D qulClothLettering;\nuniform float qulPattern;\nuniform vec3 qulStripe;\nuniform vec3 qulAccent;')
+          .replace('#include <color_fragment>',String.raw`#include <color_fragment>
+          // Club-colour patterns stay attached to the animated shirt mesh.
+          float columnStripe=step(.48,fract((qulGarmentPosition.x+.012)*170.));
+          if(qulPattern<2.5 && qulPattern>.5){
+            diffuseColor.rgb=mix(diffuseColor.rgb,qulStripe,columnStripe*.90);
+          }
+          if(qulPattern>2.5 && qulPattern<3.5){
+            float center=1.-smoothstep(.0025,.0045,abs(qulGarmentPosition.x));
+            diffuseColor.rgb=mix(diffuseColor.rgb,qulStripe,center*.90);
+          }
+          if(qulPattern>3.5 && qulPattern<4.5){
+            float sleeves=smoothstep(.007,.0095,abs(qulGarmentPosition.x));
+            diffuseColor.rgb=mix(diffuseColor.rgb,qulStripe,sleeves*.9);
+          }
+          if(qulPattern>4.5 && qulPattern<5.5){
+            float piping=1.-smoothstep(.0005,.0013,abs(abs(qulGarmentPosition.x)-.0091));
+            diffuseColor.rgb=mix(diffuseColor.rgb,qulAccent,piping*.55);
+          }
+          if(qulPattern>5.5 && qulPattern<10.5){
+            float subtleLine=1.-smoothstep(.0001,.0007,abs(fract((qulGarmentPosition.x+qulGarmentPosition.z*.3)*140.)-.5)*.008);
+            diffuseColor.rgb=mix(diffuseColor.rgb,qulAccent,subtleLine*.07);
+          }
+          vec2 kitUV=vec2(.5+qulGarmentPosition.x*44.,.5+(qulGarmentPosition.z-.033)*70.);
+          float inBounds=step(0.,kitUV.x)*step(kitUV.x,1.)*step(0.,kitUV.y)*step(kitUV.y,1.);
+          float onBack=smoothstep(.0003,.0028,qulGarmentPosition.y);
+          vec4 printed=texture2D(qulClothLettering,clamp(kitUV,0.,1.));
+          diffuseColor.rgb=mix(diffuseColor.rgb,printed.rgb,printed.a*onBack*inBounds);`);
+      };
+      mat.customProgramCacheKey=()=> 'qul-skinned-jersey-lettering-v3';
+      mat.needsUpdate=true;
     }
   }
   function drawNumbers(){
-    for(const d of numberDecals){
+    for(const d of shirtLettering){
       const ctx=d.canvas.getContext('2d');if(!ctx)continue;
-      ctx.clearRect(0,0,256,256);
+      ctx.clearRect(0,0,512,512);
       const number=d.keeper?keeperNumber:shooterNumber;
       const name=d.keeper?keeperName:shooterName;
-      const background=d.keeper?keeperUniform:shooterUniform;
-      const r=parseInt(background.slice(1,3),16),g=parseInt(background.slice(3,5),16),b=parseInt(background.slice(5,7),16);
-      const ink=(.2126*r+.7152*g+.0722*b)>145?'#142034':'#f9faf4';
-      ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.font='bold 40px Arial';
-      ctx.fillStyle=ink;ctx.fillText(String(name).toUpperCase().slice(0,12),128,55,232);
-      ctx.font='900 145px Arial';
-      ctx.lineWidth=3;ctx.strokeStyle=ink==='#142034'?'rgba(255,255,255,.35)':'rgba(0,0,0,.25)';
-      ctx.strokeText(String(number),128,151,240);
-      ctx.fillStyle=ink;ctx.fillText(String(number),128,151,240);
+      const primary=d.keeper?keeperUniform:shooterUniform;
+      const r=parseInt(primary.slice(1,3),16),g=parseInt(primary.slice(3,5),16),b=parseInt(primary.slice(5,7),16);
+      const ink=(r*.2126+g*.7152+b*.0722)>145?'#15213a':'#fcfcf4';
+      ctx.fillStyle=ink;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font='900 52px Arial';
+      const label=String(name).toUpperCase().split(' ').slice(-1).join(' ').slice(0,14);
+      ctx.fillText(label,256,138,456);
+      ctx.font='900 253px Arial';ctx.fillText(String(number),256,334,456);
       d.texture.needsUpdate=true;
     }
+  }
+  function makeSportsShorts(keeper){
+    const mat=material(0xffffff,0,.91);
+    const uniforms={
+      colorShorts:{value:new THREE.Color(keeper?keeperSecondary:shooterSecondary)},
+      colorSocks:{value:new THREE.Color(keeper?keeperUniform:shooterUniform)},
+      colorSkin:{value:new THREE.Color(keeper?0xad805d:0xb88661)},
+      colorHem:{value:new THREE.Color(keeper?keeperUniform:shooterUniform)}
+    };
+    sportsShorts.push({keeper,uniforms,material:mat});
+    mat.onBeforeCompile=(shader)=>{
+      Object.assign(shader.uniforms,{
+        qulColorShorts:uniforms.colorShorts,
+        qulColorSocks:uniforms.colorSocks,
+        qulColorSkin:uniforms.colorSkin,
+        qulColorHem:uniforms.colorHem
+      });
+      shader.vertexShader=shader.vertexShader
+        .replace('#include <common>','#include <common>\nvarying float qulLegHeight;')
+        .replace('#include <begin_vertex>','#include <begin_vertex>\nqulLegHeight = position.z;');
+      shader.fragmentShader=shader.fragmentShader
+        .replace('#include <common>','#include <common>\nvarying float qulLegHeight;\nuniform vec3 qulColorShorts;\nuniform vec3 qulColorSocks;\nuniform vec3 qulColorSkin;\nuniform vec3 qulColorHem;')
+        .replace('#include <color_fragment>',String.raw`#include <color_fragment>
+        // Existing rig includes full trousers. Reveal skinned thighs and socks
+        // using stable garment-local height so athletic shorts follow the legs.
+        float shortsRegion=smoothstep(.0178,.0194,qulLegHeight);
+        float sockRegion=1.-smoothstep(.0088,.0104,qulLegHeight);
+        vec3 sportsKit=mix(qulColorSkin,qulColorShorts,shortsRegion);
+        sportsKit=mix(sportsKit,qulColorSocks,sockRegion);
+        float shortsHem=1.-smoothstep(.00008,.00048,abs(qulLegHeight-.0186));
+        sportsKit=mix(sportsKit,qulColorHem,shortsHem*.50);
+        float sockTrim=1.-smoothstep(.00006,.00042,abs(qulLegHeight-.0096));
+        sportsKit=mix(sportsKit,qulColorShorts,sockTrim*.6);
+        diffuseColor.rgb *= sportsKit;`);
+    };
+    mat.customProgramCacheKey=()=> 'qul-football-shorts-skin-socks-v3';
+    mat.needsUpdate=true;return mat;
   }
   function setKit(options={}){
     shooterUniform=safeColor(options.shooterPrimary,shooterUniform);
@@ -258,60 +412,38 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     keeperNumber=Number.isInteger(options.keeperNumber)?options.keeperNumber:keeperNumber;
     shooterName=String(options.shooterName??shooterName);
     keeperName=String(options.keeperName??keeperName);
+    shooterClubId=String(options.shooterClubId??shooterClubId);
+    keeperClubId=String(options.keeperClubId??keeperClubId);
+    shooterAccent=safeColor(options.shooterAccent,shooterAccent);
+    keeperAccent=safeColor(options.keeperAccent,keeperAccent);
     setColor(shooterShirtMaterials,shooterUniform);
     setColor(keeperShirtMaterials,keeperUniform);
     setColor(shooterShortsMaterials,shooterSecondary);
     setColor(keeperShortsMaterials,keeperSecondary);
-    setColor(shooterSocksMaterials,shooterSecondary);
-    setColor(keeperSocksMaterials,keeperSecondary);
+    setColor(shooterSocksMaterials,shooterUniform);
+    setColor(keeperSocksMaterials,keeperUniform);
+    for(const s of shirtLettering){
+      s.uniformPattern.value=patternCode[s.keeper?keeperClubId:shooterClubId]||0;
+      s.uniformStripe.value.set(s.keeper?keeperSecondary:shooterSecondary);
+      s.uniformAccent.value.set(s.keeper?keeperAccent:shooterAccent);
+    }
+    for(const s of sportsShorts){
+      s.uniforms.colorShorts.value.set(s.keeper?keeperSecondary:shooterSecondary);
+      s.uniforms.colorSocks.value.set(s.keeper?keeperUniform:shooterUniform);
+      s.uniforms.colorHem.value.set(s.keeper?keeperUniform:shooterUniform);
+    }
     drawNumbers();
-  }
-  function createFallback(keeper) {
-    // Fully articulated, rounded 3D athletes while the CC0 GLB rig loads.
-    const root=new THREE.Group();
-    const jersey=material(keeper?keeperUniform:shooterUniform,0.08,0.62);
-    (keeper?keeperShirtMaterials:shooterShirtMaterials).push(jersey);
-    const shorts=material(keeper?keeperSecondary:shooterSecondary,0,0.85);
-    (keeper?keeperShortsMaterials:shooterShortsMaterials).push(shorts);
-    const socks=material(keeper?keeperSecondary:shooterSecondary,0,0.73);
-    (keeper?keeperSocksMaterials:shooterSocksMaterials).push(socks);
-    const skin=material(0xb77d55,0,0.9),hair=material(0x241b19,0,0.98);
-    function mesh(geometry,mat,parent,x,y,z) {
-      const m=new THREE.Mesh(geometry,mat);m.position.set(x,y,z);
-      m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
-    }
-    mesh(new THREE.CapsuleGeometry(0.28,0.47,7,14),jersey,root,0,1.31,0);
-    mesh(new THREE.SphereGeometry(0.18,12,12),skin,root,0,2.0,0);
-    mesh(new THREE.SphereGeometry(0.185,12,12,0,Math.PI*2,0,Math.PI*0.48),hair,root,0,2.08,0);
-    mesh(new THREE.CapsuleGeometry(0.275,0.06,4,10),shorts,root,0,0.88,0);
-    const arms=[],legs=[];
-    for(const sign of [-1,1]){
-      const arm=new THREE.Group();arm.position.set(sign*0.32,1.65,0);root.add(arm);
-      mesh(new THREE.CapsuleGeometry(0.095,0.36,5,9),jersey,arm,sign*0.04,-0.26,0);
-      mesh(new THREE.CapsuleGeometry(0.07,0.21,5,9),skin,arm,sign*0.05,-0.65,0);
-      if(keeper)mesh(new THREE.SphereGeometry(0.135,10,10),material(0x2a3034),arm,sign*0.05,-0.89,0.02);
-      arms.push(arm);
-      const leg=new THREE.Group();leg.position.set(sign*0.18,0.81,0);root.add(leg);
-      mesh(new THREE.CapsuleGeometry(0.135,0.31,5,10),shorts,leg,0,-0.18,0);
-      mesh(new THREE.CapsuleGeometry(0.11,0.36,5,10),socks,leg,0,-0.55,0);
-      mesh(new THREE.CapsuleGeometry(0.12,0.12,5,10),black,leg,0,-0.74,0.12);
-      legs.push(leg);
-    }
-    return {root,arms,legs};
   }
   const strikerRoot=new THREE.Group();strikerRoot.position.set(-0.72,0,10.75);
   strikerRoot.rotation.y=Math.PI;scene.add(strikerRoot);
   const keeperRoot=new THREE.Group();keeperRoot.position.set(0,0,0.36);
   scene.add(keeperRoot);
   const actors = [
-    {root:strikerRoot, keeper:false, fallback:createFallback(false), mixer:null, actions:{}, active:''},
-    {root:keeperRoot, keeper:true, fallback:createFallback(true), mixer:null, actions:{}, active:''}
+    {root:strikerRoot, keeper:false, mixer:null, actions:{}, active:'',bones:null},
+    {root:keeperRoot, keeper:true, mixer:null, actions:{}, active:'',bones:null}
   ];
-  // Do not show primitive fallback geometry while the rigged GLB loads.
-  // The adapter retains a cinematic curtain until the actual actors are ready.
-
-  // CC0 humanoid model replaces the procedural rig when it is downloaded.
-  // Never blocks the game or leaves an empty silhouette on network failure.
+  // The cinematic curtain remains until both skinned GLB athletes are loaded.
+  // No primitive mannequins are constructed or drawn.
   const MODEL_URL='/penalty-models/player.glb';
   const CDN_MODEL='https://cdn.jsdelivr.net/gh/kendrekaran/striker-3d@main/assets/player.glb';
   function fetchAthlete(url,canRetry) {
@@ -331,14 +463,36 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       for(const a of actors){
         const rig=SkeletonUtils.clone(base);
         rig.scale.multiplyScalar(scale);
+        // Athletic but natural body proportions, with a slightly broader goalkeeper.
+        rig.scale.x*=a.keeper?1.045:1.015;
+        rig.scale.z*=a.keeper?1.015:1.005;
         rig.position.y=-skinnedBox.min.y*scale;
         rig.traverse((o)=>{
           if(!o.isMesh)return;
           o.castShadow=true;o.receiveShadow=true;
+          const originalMaterials=Array.isArray(o.material)?o.material:[o.material];
+          if(originalMaterials.some(m=>m?.name==='Pants') && o.geometry?.attributes?.position){
+            // Preserve glTF bone weights but tailor trouser-width calves into fitted,
+            // exposed athletic legs under the short hem.
+            o.geometry=o.geometry.clone();
+            const positions=o.geometry.attributes.position;
+            for(let i=0;i<positions.count;i++){
+              const z=positions.getZ(i);
+              if(z>.0025 && z<.0187){
+                const x=positions.getX(i),y=positions.getY(i);
+                const center=Math.sign(x)*.00255;
+                const taper=z<.011?.77:.85;
+                positions.setX(i,center+(x-center)*taper);
+                positions.setY(i,y*.87);
+              }
+            }
+            positions.needsUpdate=true;
+            o.geometry.computeVertexNormals();
+          }
           const kit={
             Shirt:material(a.keeper?keeperUniform:shooterUniform,0.08,0.65),
             Shirt2:material(a.keeper?keeperUniform:shooterUniform,0,0.72),
-            Pants:material(a.keeper?keeperSecondary:shooterSecondary,0,0.77),
+            Pants:makeSportsShorts(a.keeper),
             Socks:material(a.keeper?keeperSecondary:shooterSecondary,0,0.72),
             Shoes:material(0x171e24,0.06,0.47)
           };
@@ -346,20 +500,34 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
           const shorts=a.keeper?keeperShortsMaterials:shooterShortsMaterials;
           const socks=a.keeper?keeperSocksMaterials:shooterSocksMaterials;
           shirts.push(kit.Shirt,kit.Shirt2);
-          shorts.push(kit.Pants);socks.push(kit.Socks);
+          // The skinned pants shader handles shorts, bare knees and high socks.
+          socks.push(kit.Socks);
           const replace=m=>kit[m.name]||m;
           o.material=Array.isArray(o.material)?o.material.map(replace):replace(o.material);
         });
         a.root.add(rig);
+        if(a.keeper){
+          // Gloves follow the real hand bones through the existing skin animation.
+          const gloveMaterial=material(0xf5f0e4,0.04,.46);
+          for(const name of ['Palm.L','Palm.R']){
+            const hand=rig.getObjectByName(name);
+            if(!hand?.isBone)continue;
+            const glove=new THREE.Mesh(new THREE.BoxGeometry(.0033,.0031,.0032),gloveMaterial);
+            glove.position.set(0,.0014,0);
+            glove.castShadow=true;hand.add(glove);
+          }
+        }
         addNumberPanels(a);
         a.mixer=new THREE.AnimationMixer(rig);
         // Named thigh bone, after the animation mixer, receives the impact kick.
         // The upstream CC0 clip collection has no authored football kick clip.
-        const legBones=[];
-        rig.traverse((bone)=>{
-          if(bone.isBone && /(up.?leg|thigh|upper.?leg|r.?upleg)/i.test(bone.name))legBones.push(bone);
-        });
-        a.kickBone=legBones.find(b=>/(right|\.r\b|_r\b|r_)/i.test(b.name))||legBones[0]||null;
+        const bones={};
+        for(const name of ['Torso','UpperLeg.R','LowerLeg.R','UpperLeg.L','LowerLeg.L','UpperArm.R','UpperArm.L','LowerArm.R','LowerArm.L']){
+          const bone=rig.getObjectByName(name);
+          if(bone?.isBone)bones[name]={bone,x:bone.rotation.x,y:bone.rotation.y,z:bone.rotation.z};
+        }
+        a.bones=bones;
+        a.kickBone=bones['UpperLeg.R']?.bone||null;
         for(const clip of gltf.animations){
           const name=clip.name.replace(/^HumanArmature\|Man_/, '').toLowerCase();
           a.actions[name]=a.mixer.clipAction(clip);
@@ -370,7 +538,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       onReady?.({rigged:true, animations:gltf.animations.length});
     },undefined,(err)=>{
       if(canRetry){fetchAthlete(CDN_MODEL,false);return;}
-      // No temporary capsule player. Report the missing rig instead of flashing geometry.
+      // Do not show a primitive replacement when the licensed rig fails.
       onReady?.({rigged:false,animations:0});
       onError?.(err);
     });
@@ -382,9 +550,10 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   function setAction(a, actionName) {
     if(a.active===actionName)return;
     const names=Object.keys(a.actions);
-    let key=names.find(k=>k===actionName)
-      || names.find(k=>k.includes(actionName))
-      || (actionName==='kick'?names.find(k=>k.includes('idle')):undefined)
+    const aliases={kick:'standing',celebrate:'clapping',dive:'jump'};
+    const action=aliases[actionName]||actionName;
+    let key=names.find(k=>k===action)
+      || names.find(k=>k.includes(action))
       || names.find(k=>k.includes('idle'));
     if(!key)return;
     const next=a.actions[key];
@@ -415,7 +584,9 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       setAction(actors[0],'run');
     }
     if(phase==='kick'){
-      shot.started=clock.getElapsedTime();setAction(actors[0],'kick');
+      shot.started=clock.getElapsedTime();
+      setAction(actors[0],'kick');
+      setAction(actors[1],'dive');
     }
     if(phase==='goal'){shot.started=clock.getElapsedTime();setAction(actors[0],'celebrate');}
     if(phase==='miss'){shot.started=clock.getElapsedTime();setAction(actors[1],'celebrate');}
@@ -468,34 +639,46 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
         strikerRoot.rotation.y=Math.PI+Math.sin(time*3)*0.13;
       }
     }
+    // All poses are evaluated from each clip's rest pose every frame.
+    // The previous incremental rotation.x -= ... accumulated and broke limbs.
     for(const a of actors){
-      if(a.mixer){
-        a.mixer.update(dt);
-        if(!a.keeper && a.kickBone && shot.phase==='kick') {
-          const impact=Math.sin(Math.min(1,Math.max(0,time/0.38))*Math.PI);
-          a.kickBone.rotation.x-=impact*1.1;
-          a.kickBone.updateMatrix();
+      if(!a.mixer)continue;
+      a.mixer.update(dt);
+      const b=a.bones;
+      if(!b)continue;
+      const get=name=>b[name]?.bone;
+      const rest=name=>b[name];
+      const clipTime=shot.phase==='kick'?time:(shot.phase==='goal'||shot.phase==='miss'?time+0.94:0);
+      const power=Math.sin(Math.PI*clamp(clipTime/.68));
+      if(!a.keeper){
+        const thigh=get('UpperLeg.R'),shin=get('LowerLeg.R'),torso=get('Torso');
+        if(shot.phase==='kick'||shot.phase==='goal'||shot.phase==='miss'){
+          if(thigh)thigh.rotation.x=rest('UpperLeg.R').x-1.00*power;
+          if(shin)shin.rotation.x=rest('LowerLeg.R').x+.62*power;
+          if(torso)torso.rotation.z=rest('Torso').z-.12*power;
         }
-      } else {
-        const moving=shot.phase==='runup' && !a.keeper;
-        const rhythm=Math.sin(elapsed*(moving?12:2.1))*(moving?0.5:0.04);
-        if(a.fallback.legs){
-          a.fallback.legs[0].rotation.x=rhythm;
-          a.fallback.legs[1].rotation.x=-rhythm;
-          a.fallback.arms[0].rotation.x=-rhythm*0.65;
-          a.fallback.arms[1].rotation.x=rhythm*0.65;
-          if(a.keeper && shot.phase==='kick'){
-            a.fallback.arms[0].rotation.z=-0.9;
-            a.fallback.arms[1].rotation.z=0.9;
-          }
+      }else{
+        const diving=shot.phase==='kick'||shot.phase==='goal'||shot.phase==='miss';
+        const extension=diving?ease((clipTime-.1)/.47):0;
+        for(const sign of ['L','R']){
+          const arm=get('UpperArm.'+sign),forearm=get('LowerArm.'+sign);
+          if(arm)arm.rotation.z=rest('UpperArm.'+sign).z+(sign==='L'?-1:1)*.78*extension;
+          if(forearm)forearm.rotation.x=rest('LowerArm.'+sign).x-.18*extension;
         }
+        const legL=get('UpperLeg.L'),legR=get('UpperLeg.R');
+        if(legL)legL.rotation.x=rest('UpperLeg.L').x+.38*extension;
+        if(legR)legR.rotation.x=rest('UpperLeg.R').x-.26*extension;
       }
     }
+    const crowdEmotion=shot.phase==='goal'?Math.exp(-Math.max(0,time)*.22)
+      :shot.phase==='miss'?.54*Math.exp(-Math.max(0,time)*.28):.035;
+    animateSupporters(elapsed,crowdEmotion);
     // Always a true perspective camera, lightly tracking the foot-to-ball action.
     camera.position.x=mix(camera.position.x,Math.sin(cameraYaw)*19.8,0.08);
-    camera.position.y=mix(camera.position.y,shot.phase==='focus'?2.75:3.6,0.03);
-    camera.position.z=mix(camera.position.z,Math.cos(cameraYaw)*(shot.phase==='focus'?15.2:shot.phase==='runup'?18.6:19.8),0.08);
-    camera.lookAt(0,1.35,shot.phase==='focus'?5.1:-0.4);
+    camera.position.y=mix(camera.position.y,shot.phase==='focus'?2.8:shot.phase==='kick'?2.2:3.45,0.065);
+    const cinemaDistance=shot.phase==='focus'?15.0:shot.phase==='runup'?17.7:shot.phase==='kick'?14.8:19.1;
+    camera.position.z=mix(camera.position.z,Math.cos(cameraYaw)*cinemaDistance,0.07);
+    camera.lookAt(0,1.42,shot.phase==='focus'?4.3:shot.phase==='kick'?2.2:-0.3);
   }
   function resize(){
     if(disposed)return;
@@ -532,7 +715,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       renderer.domElement.removeEventListener('pointerup',onPointerUp);
       renderer.domElement.removeEventListener('pointercancel',onPointerUp);
       actors.forEach(a=>a.mixer?.stopAllAction());
-      numberDecals.forEach(d=>d.texture.dispose());
+      shirtLettering.forEach(d=>d.texture.dispose());
       scene.traverse(o=>{
         if(o.geometry && o.geometry.dispose)o.geometry.dispose();
         if(o.material){
