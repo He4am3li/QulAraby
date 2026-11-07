@@ -1,0 +1,67 @@
+/* 1960s bakelite rotary telephone, cinematic but interactive. */
+.qul-phone-shell{position:relative;width:368px;height:552px;flex:0 0 auto;isolation:isolate;transform-style:preserve-3d;transform:rotateX(3deg) rotateY(-5deg);filter:drop-shadow(0 25px 17px #0009)}
+.qul-phone-shell:before{content:"";position:absolute;z-index:-2;bottom:1px;left:3%;width:94%;height:19%;border-radius:50%;background:#031016;filter:blur(23px);opacity:.9}
+.qul-phone-crown{position:absolute;z-index:1;top:67px;left:9%;width:82%;height:125px;background:radial-gradient(ellipse at 50% 20%,#6a7274 0%,#253139 35%,#0b141b 74%);border:2px solid #7e8788;border-radius:48% 48% 21% 21% / 53% 53% 35% 35%;box-shadow:inset 0 5px 10px #ffffff44,0 4px 5px #0009}
+.qul-phone-rest{position:absolute;z-index:8;top:75px;left:16%;width:68%;height:31px;display:flex;align-items:flex-start;justify-content:space-between;padding:0 23px;pointer-events:none}
+.qul-phone-rest i{width:38px;height:28px;background:radial-gradient(ellipse at 50% 10%,#485761,#04090e 79%);border:2px solid #515a63;border-radius:6px 6px 19px 19px;box-shadow:inset 0 4px 10px #000b,0 3px 3px #0008}
+.qul-phone-receiver{position:absolute;z-index:13;top:0;left:-4%;width:108%;height:105px;display:flex;align-items:center;justify-content:space-between;background:none;border:0;cursor:pointer;padding:0;filter:drop-shadow(1px 10px 7px #000c);transform-origin:center 63%}
+.qul-phone-receiver:disabled{cursor:default}
+.qul-phone-receiver:focus-visible{border-radius:35px;outline:2px solid #d4ae77;outline-offset:7px}
+.qul-phone-earpiece{width:104px;height:88px;position:relative;flex:0 0 auto;border:2px solid #899499;background:radial-gradient(ellipse at 30% 11%,#62747b 3%,#1b2930 43%,#050d14 79%),linear-gradient(145deg,#4a5c65,#11171b);box-shadow:inset 7px 7px 12px #ffffff36,inset -8px -9px 13px #000d,0 4px 3px #0008}
+.qul-phone-earpiece-left{border-radius:68% 34% 45% 61% / 52% 29% 48% 57%;transform:rotate(-21deg)}
+.qul-phone-earpiece-right{border-radius:34% 68% 61% 45% / 29% 52% 57% 48%;transform:rotate(21deg)}
+.qul-phone-earpiece:after{content:"";position:absolute;inset:17px;border:2px solid #8c979a57;border-radius:50%;background:repeating-conic-gradient(from 8deg,#02080b 0deg 12deg,#52646c 13deg 16deg,#02080b 17deg 33deg);box-shadow:inset 0 2px 8px #000}
+.qul-phone-earpiece i{position:absolute;z-index:2;inset:26px;border-radius:50%;background:radial-gradient(circle,#111a1f 0 22%,#6c7776 24% 31%,#09151b 32%);box-shadow:inset 0 1px 4px #000}
+.qul-phone-grip{position:relative;flex:1;height:48px;margin:0 -12px;border-radius:50% 50% 38% 38% / 65% 65% 50% 50%;border:2px solid #58666c;border-bottom:5px solid #131e25;background:linear-gradient(180deg,#586b71 0%,#364951 22%,#101b23 49%,#101920 68%,#30434a 100%);box-shadow:inset 0 5px 7px #ffffff55,inset 0 -7px 7px #000b,0 6px 3px #0006}
+.qul-phone-grip i{position:absolute;width:16px;height:3px;border-radius:3px;background:#ffffff1f;top:14px}
+.qul-phone-grip i:nth-child(1){left:21%}.qul-phone-grip i:nth-child(2){left:48%}.qul-phone-grip i:nth-child(3){right:18%}
+.qul-phone-bakelite{position:absolute;z-index:3;top:92px;left:15px;width:338px;height:445px;border-radius:41% 41% 23% 23% / 17% 17% 12% 12%;border:2px solid #798b90;background:radial-gradient(ellipse 115% 32% at 50% 2%,#7d888b40,transparent 64%),linear-gradient(118deg,#54646b 0%,#22343e 10%,#0b151d 43%,#20323d 83%,#0a141b 100%);box-shadow:inset 0 4px 6px #ffffff59,inset -14px -16px 21px #000d,inset 12px 1px 18px #ffffff17,0 17px 4px #040b10,0 25px 28px #000a}
+.qul-phone-bakelite:before{content:"";position:absolute;pointer-events:none;inset:5px;border:1px solid #c3d0d02b;border-radius:inherit;box-shadow:inset 0 3px 4px #ffffff27}
+.qul-phone-bakelite:after{content:"";position:absolute;pointer-events:none;top:27px;left:24px;width:11px;height:185px;border-radius:45%;background:linear-gradient(90deg,#ffffff37,#ffffff05);transform:rotate(3deg);filter:blur(4px)}
+.qul-phone-maker-plate{position:absolute;top:24px;left:50%;transform:translateX(-50%);width:172px;height:40px;display:flex;justify-content:center;align-items:center;gap:4px;flex-direction:column;border-radius:6px;background:linear-gradient(130deg,#e6d7b0,#8e7652 47%,#e4d0a1);border:2px solid #534c39;box-shadow:inset 0 1px 2px #fff9,0 3px 4px #0008;color:#18232c;text-shadow:0 1px #fff7}
+.qul-phone-maker-plate span{font:900 13px/.85 'Tajawal',sans-serif;letter-spacing:.25em}
+.qul-phone-maker-plate strong{font:900 7px/1 ui-monospace,monospace;letter-spacing:.25em}
+.qul-phone-maker-plate small{font:700 5px/1 ui-monospace,monospace;letter-spacing:.08em}
+.qul-phone-number-plate{position:absolute;top:72px;left:50%;transform:translateX(-50%);width:220px;height:49px;border:2px solid #5e5949;border-radius:7px;background:linear-gradient(#dfd1b0,#b9a47c 45%,#e5d5ad);box-shadow:inset 0 2px 3px #fff9,0 3px 8px #0009;padding:5px 8px;color:#212c32;text-align:center;overflow:hidden}
+.qul-phone-contact-label{font:900 10px/1.1 'Tajawal',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qul-phone-number-line{display:flex;align-items:center;justify-content:center;gap:9px;font-family:ui-monospace,monospace}
+.qul-phone-number-line>span{font-size:7px;font-weight:800;letter-spacing:.17em}
+.qul-phone-number-line strong{font-size:16px;letter-spacing:.2em}
+.qul-phone-line-bulb{display:inline-block;width:7px;height:7px;border-radius:50%;border:1px solid #50605f;background:#97704b}
+.qul-phone-line-bulb.on{background:#6fe5b4;box-shadow:0 0 8px #6cf2b5}
+.qul-phone-line-bulb.ringing{animation:qul-call-blink .35s steps(2) infinite;background:#e6c379;box-shadow:0 0 9px #ffe19b}
+.qul-phone-rotary-pocket{position:absolute;top:132px;left:50%;width:242px;height:242px;transform:translateX(-50%);border:3px solid #52575a;border-radius:50%;background:radial-gradient(circle,#0a1116 42%,#3a4b50 64%,#0c161c 80%,#ced4ce 85%,#66737a 91%,#080e14 100%);box-shadow:inset 0 10px 18px #000b,inset 0 -3px 4px #ffffff43,0 9px 13px #000b}
+.qul-phone-dial-rim{pointer-events:none;position:absolute;inset:5px;border-radius:50%;border:2px solid #b7bcb19c;box-shadow:inset 0 3px 4px #0007,inset 0 -2px 3px #ffffff3b}
+.qul-phone-rotary-wheel{position:absolute;inset:12px;border-radius:50%;border:3px solid #8d9c9c;background:radial-gradient(circle at 33% 23%,#657174 0%,#1c2c35 42%,#111b21 77%,#50616a 95%);box-shadow:inset 0 4px 7px #ffffff36,inset 0 -7px 13px #000d,0 2px 2px #000c}
+.qul-phone-rotary-engraving{position:absolute;inset:10px;border-radius:50%;border:1px solid #c5c9b673;box-shadow:inset 0 1px 2px #ffffff3b}
+.qul-phone-dial-hole{position:absolute;width:43px;height:43px;z-index:4;border-radius:50%;padding:0;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;border:4px solid #b4bdbc;background:radial-gradient(circle at 50% 45%,#f1e7ca 0 51%,#c2b99d 64%,#080f15 66%);box-shadow:inset 0 2px 7px #0007,inset 0 -2px 2px #fff9,0 2px 2px #0009;cursor:pointer;color:#263039;transition:filter .13s}
+.qul-phone-dial-hole span{font:900 20px/1 ui-monospace,monospace;text-shadow:0 1px #fff}
+.qul-phone-dial-hole:hover:not(:disabled),.qul-phone-dial-hole:focus-visible:not(:disabled){filter:brightness(1.16)}
+.qul-phone-dial-hole:disabled{cursor:default;opacity:.7}
+.qul-phone-dial-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:94px;height:94px;border-radius:50%;border:6px double #c6b78e;background:radial-gradient(circle at 35% 22%,#fff3d4,#cfbc8f 56%,#a2906c);box-shadow:inset 0 1px 4px #fff,inset 0 -5px 8px #4f3e26,0 2px 4px #0008;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.qul-phone-dial-center-logo{font:900 34px/1 'Tajawal',sans-serif;color:#243544;text-shadow:0 1px 1px #fff6}
+.qul-phone-dial-center small{font:800 8px ui-monospace,monospace;color:#5d4e3d}
+.qul-phone-finger-stop{position:absolute;z-index:6;bottom:15px;right:4px;width:64px;height:30px;border-radius:60% 15% 34% 24%;border:2px solid #9ea39f;transform:rotate(-37deg);background:linear-gradient(#d0d4ca,#6e7777 35%,#afb4aa 70%,#3d4647);box-shadow:inset 0 3px 2px #fff7,0 4px 3px #000b;pointer-events:none}
+.qul-phone-finger-stop i{display:block;position:absolute;inset:5px 13px;border:1px solid #e2e3d3a0;border-radius:60%}
+.qul-phone-instructions{position:absolute;left:21px;right:21px;bottom:43px;height:36px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 8px;border-radius:9px;background:linear-gradient(90deg,#111d24,#223641,#101921);border:1px solid #7790956e}
+.qul-phone-small-status{font-size:10px;font-weight:800;color:#d3ded7;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.qul-phone-clear{flex-shrink:0;border:1px solid #ad9470ad;border-radius:7px;padding:5px 9px;font-size:9px;font-weight:900;color:#e8d7b0;background:linear-gradient(#5c5550,#272727);box-shadow:inset 0 1px 2px #fffa}
+.qul-phone-clear:disabled{opacity:.45}
+.qul-phone-action-row{position:absolute;display:flex;left:18px;right:18px;bottom:-22px;justify-content:space-between;gap:16px}
+.qul-phone-physical-call,.qul-phone-physical-stop{z-index:5;display:flex;align-items:center;justify-content:center;gap:7px;min-width:119px;height:41px;border:2px solid #252d2b;border-radius:15px;color:#f5f3e9;font-size:12px;font-weight:900;text-shadow:0 1px #0006;box-shadow:inset 0 2px 3px #fff6,inset 0 -3px 3px #0008,0 6px 7px #000b;transition:transform .12s,filter .15s}
+.qul-phone-physical-call{background:linear-gradient(#65a68c,#1b5a45 65%,#103928)}
+.qul-phone-physical-stop{background:linear-gradient(#b9786c,#743b34 65%,#4b2723)}
+.qul-phone-physical-call:hover:not(:disabled),.qul-phone-physical-stop:hover:not(:disabled){filter:brightness(1.1)}
+.qul-phone-physical-call:active:not(:disabled),.qul-phone-physical-stop:active:not(:disabled){transform:translateY(3px)}
+.qul-phone-physical-call:disabled,.qul-phone-physical-stop:disabled{opacity:.45;cursor:default}
+.qul-phone-footmark{position:absolute;bottom:7px;left:0;right:0;text-align:center;color:#c7c3b35e;font:800 6px ui-monospace,monospace;letter-spacing:.08em}
+.qul-phone-foot{position:absolute;z-index:-1;bottom:6px;width:66px;height:36px;border-radius:15px;background:#060c10;box-shadow:0 4px 5px #0008}
+.qul-phone-foot-left{left:39px}.qul-phone-foot-right{right:39px}
+.qul-call-cord{right:2%;bottom:8%;width:28%;height:23%;transform:rotate(-4deg)}
+.qul-call-cord path{stroke:#060d12;stroke-width:7;filter:drop-shadow(2px 2px 2px #000)}
+@media (max-width:1180px) and (min-width:901px){.qul-phone-shell{transform:scale(.89) rotateX(3deg) rotateY(-5deg)}}
+@media (max-height:790px) and (min-width:901px){.qul-phone-shell{transform:scale(.74) rotateX(3deg) rotateY(-5deg)}}
+@media(max-width:900px){.qul-phone-shell{transform:scale(.73) rotateX(3deg) rotateY(-5deg)}.qul-call-device-area{height:425px}}
+@media(max-width:630px){.qul-phone-shell{transform:scale(.70) rotateX(2deg)}.qul-call-device-area{height:410px}.qul-call-cord{bottom:3%;right:12%;width:20%;height:18%}}
+@media(max-height:690px) and (max-width:630px){.qul-phone-shell{transform:scale(.6) rotateX(2deg)}.qul-call-device-area{height:355px}}
+@media(prefers-reduced-motion:reduce){.qul-phone-line-bulb.ringing{animation:none}.qul-phone-dial-hole{transition:none}}
