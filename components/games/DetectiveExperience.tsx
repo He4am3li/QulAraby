@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, BookOpen, Check, CheckCircle2, ChevronLeft, ChevronRight, FileDown, Fingerprint, Headphones, HelpCircle, Home, LockKeyhole, MailOpen, Music2, RotateCcw, Search, ShieldCheck, Sparkles, Volume2, VolumeX, X } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { CASES_DATABASE, spyAudio, type DetectiveCase, type DifficultyLevel, type EvidenceTerm, type SuspectPerson } from './DetectiveMystery';
 import { DETECTIVE_NARRATIVES } from './detectiveNarratives';
+import { detectiveRectStyle, getDetectiveStartRect, getAdvancedPosterPortraitStyle } from './detectiveVisualGeometry';
 
 type Screen = 'intro' | 'briefing' | 'investigation' | 'envelope' | 'report' | 'complete';
 type UiLanguage = 'ar' | 'en';
@@ -204,7 +204,6 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
     const base = Math.max(0, 85 - errors * 5);
     markCaseSolved(base);
     setScreen('report');
-    try { confetti({ particleCount: 65, spread: 60, origin: { y: 0.55 } }); } catch {}
   };
   const answerWord = (choice: string) => {
     const index = answersCount;
@@ -321,7 +320,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
               aria-label={t('بدء التحقيق واستبعاد الأبرياء', 'Start investigation and clear innocents')}
               title={t('بدء التحقيق', 'Start investigation')}
               className="absolute z-20 cursor-pointer rounded-lg bg-transparent outline-offset-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300 hover:bg-white/5"
-              style={{ left: '1.8%', top: '65.6%', width: '29.0%', height: '7.3%' }}/>
+              style={detectiveRectStyle(getDetectiveStartRect(level, activeCase.caseNumber))}/>
             <div className="absolute bottom-[2%] left-[1%] z-20 flex gap-2">
               <button type="button" onClick={toggleMute} aria-label={t('الصوت', 'Sound')} className="rounded-full border border-amber-400/30 bg-black/50 p-1.5 text-amber-100 hover:bg-black/75">{isMuted ? <VolumeX size={15}/> : <Volume2 size={15}/>}</button>
               <button type="button" onClick={toggleMusic} aria-label={t('الموسيقى', 'Music')} className="rounded-full border border-amber-400/30 bg-black/50 p-1.5 text-amber-100 hover:bg-black/75"><Music2 size={15}/></button>
