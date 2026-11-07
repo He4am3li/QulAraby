@@ -1611,6 +1611,21 @@ export const Speak: React.FC = () => {
             </div>
           )}
 
+          {/* Call mission receipt, based on verified learner transcript evidence. */}
+          {speakingBranch === 'booth' && insights && Array.isArray(insights.missionEvidence) && (
+            <div className="mb-7 rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+              <h2 className="font-bold text-slate-800 mb-2">تذكرة إنجاز مكالمة: {selectedCallContact.ar}</h2>
+              <p className="text-xs text-slate-500 mb-3">يستند التحقق إلى الكلمات العربية الموجودة في سجل كلام الطالب، لا إلى تحليل النطق الصوتي.</p>
+              {insights.missionEvidence.map((item: any, index: number) => (
+                <div key={index} className="flex items-center gap-3 border-b border-amber-100 py-2 text-sm">
+                  <strong className="text-amber-900">{item.achieved ? '✓' : '○'}</strong>
+                  <span className="font-bold text-slate-700">{item.goal}</span>
+                  {item.achieved && <span className="text-xs text-emerald-800">«{item.evidence}»</span>}
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Section 1: Tutor Advice */}
           {insights && (
             <div className="mb-10">
@@ -1627,7 +1642,7 @@ export const Speak: React.FC = () => {
           {/* Section 2: Key Vocabulary */}
           {insights && (
             <div className="mb-10">
-              <h2 className="text-lg font-bold bg-slate-100 p-3 rounded-lg mb-4 border-r-4 border-emerald-600">الكلمات والمصطلحات الجديدة المكتسبة</h2>
+              <h2 className="text-lg font-bold bg-slate-100 p-3 rounded-lg mb-4 border-r-4 border-emerald-600">مفردات وردت في المحادثة</h2>
               <div className="grid grid-cols-2 gap-x-12 gap-y-3">
                 {insights.key_vocabulary.map((v: any, i: number) => (
                   <div key={i} className="flex justify-between items-center border-b border-slate-100 py-2.5">
