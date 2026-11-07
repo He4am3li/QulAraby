@@ -74,9 +74,12 @@ test('speaking sections mirror listening sidebar structure while keeping both fu
   assert.match(speak, /<aside/);
   assert.match(speak, /missionEvidence=/);
   assert.match(speak, /generateSessionInsights\(finalHistory, activeTopic\.ar/);
-  for (const place of ['restaurant', 'hotel', 'friend', 'support']) {
+  for (const place of ['restaurant', 'hotel', 'friend', 'support', 'taxi', 'clinic', 'library', 'bakery', 'school', 'museum']) {
     assert.match(booth, new RegExp("id: '" + place + "'"));
   }
+  const extensions = [...booth.matchAll(/extension: '(\\d{3})'/g)].map(x => x[1]);
+  assert.equal(extensions.length, 10, 'directory must contain ten contacts');
+  assert.equal(new Set(extensions).size, 10, 'each contact must have a unique extension');
   assert.match(booth, /sessionLive/);
   assert.match(booth, /onStart\(\)/);
   assert.match(booth, /onStop\(\)/);
@@ -86,5 +89,28 @@ test('speaking sections mirror listening sidebar structure while keeping both fu
   assert.match(booth, /missionEvidence/);
   assert.match(css, /qul-call-handset/);
   assert.match(css, /qul-call-keypad/);
+  assert.match(css, /prefers-reduced-motion/);
+});
+
+test('speaking branches use the exact vocabulary gallery navigation classes', () => {
+  const speak = readFileSync(new URL('../pages/Speak.tsx', import.meta.url), 'utf8');
+  assert.match(speak, /import '..\/components\/vocabulary-word-gallery.css'/);
+  assert.match(speak, /qul-word-gallery-item-active/);
+  assert.match(speak, /qul-word-gallery-tile/);
+  assert.match(speak, /aria-pressed=\{speakingBranch === branch.id\}/);
+});
+
+test('telephone has a functioning circular dial, handset and dedicated analog construction', () => {
+  const booth = readFileSync(new URL('../components/SpeakingCallBooth.tsx', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../components/SpeakingRotaryPhone.css', import.meta.url), 'utf8');
+  assert.match(booth, /const DIGITS = \['1','2','3','4','5','6','7','8','9','0'\]/);
+  assert.match(booth, /qul-phone-rotary-wheel/);
+  assert.match(booth, /qul-phone-dial-hole/);
+  assert.match(booth, /onClick=\{sessionLive \? endCall : beginCall\}/);
+  assert.match(booth, /dialKey\(digit\)/);
+  assert.match(booth, /onClick=\{\(\) => dialKey\('\*'\)\}/);
+  assert.match(css, /qul-phone-receiver/);
+  assert.match(css, /qul-phone-bakelite/);
+  assert.match(css, /qul-phone-finger-stop/);
   assert.match(css, /prefers-reduced-motion/);
 });
