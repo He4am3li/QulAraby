@@ -3,15 +3,18 @@ import { readFileSync } from 'node:fs';
 const main = readFileSync('components/whiteboard/CalligraphyCardStudio.tsx', 'utf8');
 const tray = readFileSync('components/whiteboard/CalligraphyStudioTray.tsx', 'utf8');
 const storage = readFileSync('components/whiteboard/calligraphyPersistence.ts', 'utf8');
+const cloud = readFileSync('components/whiteboard/calligraphyCloudSync.ts', 'utf8');
+const rules = readFileSync('firestore.rules', 'utf8');
 const practice = readFileSync('components/whiteboard/CalligraphyPracticeLab.tsx', 'utf8');
 
 const must = (condition, message) => assert.ok(condition, message);
 
-must(main.includes('loadCalligraphyCards()'), 'Loads saved artwork from IndexedDB');
-must(main.includes('await persistCalligraphyCards(updated)'), 'Save/delete await persistent transactions');
+must(main.includes('loadCalligraphyCards(scope)'), 'Loads only account-scoped or guest artwork');
+must(main.includes("await persistCalligraphyCards(updated, uid || 'guest')"), 'Save/delete use scoped persistent transactions');
 must(storage.includes("indexedDB.open(DB_NAME, 1)"), 'Uses IndexedDB instead of localStorage for image payload');
 must(storage.includes('transaction.oncomplete'), 'Resolves save after transaction commit');
-must(storage.includes('localStorage.removeItem(LEGACY_KEY)'), 'Migrates legacy cards after successful commit');
+must(storage.includes('loadLegacyCalligraphyCards()'), 'Preserves legacy artworks for explicit import');
+must(main.includes('handleImportDeviceGallery'), 'Imports older artwork only with user action');
 must(storage.includes('MAX_SAVED_CALLIGRAPHY_CARDS = 20'), 'Keeps bounded on-device gallery');
 must(!main.includes("localStorage.setItem('qul_calligraphy_saved_cards_atelier'"), 'No legacy quota-limited image save');
 must(!main.includes("setQuoteText(prev => prev + 'َ')"), 'Unsupported diacritics cannot invent a fatha');
@@ -36,4 +39,16 @@ must(main.includes('setShowPracticeLab(true)'), 'Handwriting lab accessible from
 must(practice.includes('onPointerDown={onPointerDown}') && practice.includes('onPointerMove={onPointerMove}'), 'Tracing uses real pointer drawing');
 must(practice.includes('const estimate = Math.max('), 'Stroke shape comparison produces feedback');
 must(practice.includes('التقييم يقارن مواضع الحبر'), 'Practice assessment does not claim expert verification');
+
+must(main.includes('onAuthStateChanged(auth,'), 'Switches gallery when logged-in account changes');
+must(main.includes('saveCloudCalligraphyCard(uid, newCard)'), 'Saved artwork syncs with authenticated account');
+must(main.includes('deleteCloudCalligraphyCard(uid, card.id)'), 'Deleting artwork also removes the account copy');
+must(main.includes('loadCloudCalligraphyCards(uid)'), 'Loads saved designs across devices');
+must(cloud.includes("doc(ownerCollection(uid), card.id)"), 'Cloud documents live in owner subcollections');
+must(cloud.includes("requireUser(uid)"), 'Cloud sync checks current authentication');
+must(cloud.includes("const settings = cloudSettings(card, customBackground)"), 'Cloud stores editable artwork settings');
+must(cloud.includes('compressDataUrl(card.dataUrl'), 'Cloud previews are compressed');
+must(cloud.includes('JSON.stringify(record).length > 780_000'), 'Cloud documents have a safe size bound');
+must(rules.includes('match /calligraphy/{cardId}'), 'Security rules explicitly protect calligraphy works');
+must(rules.includes('allow read, delete: if isOwner(userId);'), 'Owner-only reads and deletes are enforced');
 console.log('Calligraphy regressions OK: safe diacritics, metallic finishes, PDF/PNG exports, IndexedDB persistence, undo shortcuts and mobile controls.');
