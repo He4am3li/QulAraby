@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { Vocabulary, MasteryLevel, QuizQuestion, ChatMessage, IrabAnalysisResult } from "../types";
 import { getCachedAsset, setCachedAsset } from "./cache";
+import { validateSpeakingMissionEvidence } from './speakingLearning.mjs';
 import { auth } from '../firebase';
 import type { RadioCorpusText } from '../src/data/radioTextCorpus';
 
@@ -938,14 +939,9 @@ ${historyText.slice(0, 12000)}`,
         ).slice(0, 2),
         next_practice: parsed.next_practice?.ar && parsed.next_practice?.en
           ? parsed.next_practice : createFallbackInsights().next_practice,
-        missionEvidence: (mission?.objectivesAr || []).map((goal, index) => {
-          const claimed = Array.isArray(parsed.mission_evidence) ? parsed.mission_evidence[index] : null;
-          const evidence = typeof claimed?.evidence === 'string' ? claimed.evidence.trim() : '';
-          // An AI claim alone is insufficient: only an exact learner transcript quote can count.
-          const achieved = claimed?.goal === goal && evidence.length >= 4 &&
-            /[\u0621-\u064A]/u.test(evidence) && learnerText.includes(evidence);
-          return { goal, evidence: achieved ? evidence : '', achieved: Boolean(achieved) };
-        }),
+        missionEvidence: validateSpeakingMissionEvidence(
+          validTurns, mission?.objectivesAr || [], parsed.mission_evidence
+        ),
         assessmentStatus: 'analyzed',
       };
     }
