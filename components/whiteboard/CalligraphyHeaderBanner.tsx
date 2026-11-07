@@ -1,5 +1,5 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { FallingLetters } from '../Layout';
 
 interface CalligraphyHeaderBannerProps {
   onOpenHelp?: () => void;
@@ -12,15 +12,13 @@ interface CalligraphyHeaderBannerProps {
 /**
  * Match the shared QUL PageHeader's slate-to-emerald glass treatment while
  * preserving the two historic calligrapher-tool illustrations in their positions.
- * The photographs have dark backgrounds, so screen blending lets the new glass
- * gradient show through rather than leaving black blocks behind the title.
+ * The photographs have dark backgrounds, so screen blending lets the common QUL
+ * header gradient and its FallingLetters show through without black blocks.
  */
-export const CalligraphyHeaderBanner: React.FC<CalligraphyHeaderBannerProps> = ({
-  onCloseStudio
-}) => {
+export const CalligraphyHeaderBanner: React.FC<CalligraphyHeaderBannerProps> = () => {
   return (
     <header
-      className="relative isolate shrink-0 w-full h-24 sm:h-28 md:h-[110px] overflow-hidden z-30 select-none border-b border-white/20 shadow-lg bg-gradient-to-l from-[#0f172a] via-[#10454a] to-[#064e3b] backdrop-blur-lg"
+      className="relative isolate shrink-0 w-full h-[84px] overflow-hidden z-30 select-none border-b border-white/20 shadow-lg bg-gradient-to-l from-[#0f172a]/95 to-[#064e3b]/95 backdrop-blur-lg"
       dir="rtl"
     >
       {/* Same translucent, illuminated header language used across QUL. */}
@@ -51,18 +49,24 @@ export const CalligraphyHeaderBanner: React.FC<CalligraphyHeaderBannerProps> = (
         />
       </div>
 
-      {/* Left photo, original mirrored counterpart, unchanged artwork. */}
-      <div className="absolute left-0 inset-y-0 w-[47%] sm:w-[43%] lg:w-[39%] max-w-[660px] z-10 overflow-hidden pointer-events-none flex items-center justify-start">
+      {/* Left original photo now occupies the former close-button area without an X overlay. */}
+      <div className="absolute left-0 inset-y-0 w-[50%] sm:w-[43%] lg:w-[39%] max-w-[660px] z-10 overflow-hidden pointer-events-none flex items-center justify-start">
         <img
           src="/calligrapher_tools_header.jpg"
           alt="أدوات الخط العربي"
           referrerPolicy="no-referrer"
-          className="w-full h-full object-contain object-left -scale-x-100 mix-blend-screen opacity-90"
+          className="w-full h-full object-contain object-left -scale-x-100 mix-blend-screen opacity-95"
           style={{
             maskImage: 'linear-gradient(to right, #000 35%, rgba(0,0,0,.86) 52%, transparent 97%)',
             WebkitMaskImage: 'linear-gradient(to right, #000 35%, rgba(0,0,0,.86) 52%, transparent 97%)'
           }}
         />
+      </div>
+
+      {/* Exactly the same animated letter layer used by the shared QUL PageHeader.
+          It sits ABOVE the tool images, so the letters remain visible as they fall. */}
+      <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
+        <FallingLetters mode="compact" />
       </div>
 
       {/* Quiet transparent centre for reliable contrast, no solid black stripe. */}
@@ -93,17 +97,7 @@ export const CalligraphyHeaderBanner: React.FC<CalligraphyHeaderBannerProps> = (
         </div>
       </div>
 
-      {onCloseStudio && (
-        <button
-          type="button"
-          onClick={onCloseStudio}
-          className="absolute left-2 sm:left-4 top-3 sm:top-4 z-40 flex items-center justify-center w-8 h-8 rounded-xl bg-white/10 backdrop-blur-md border border-white/25 hover:bg-white/20 text-white transition-colors active:scale-95 pointer-events-auto"
-          title="العودة"
-          aria-label="العودة"
-        >
-          <X size={16} />
-        </button>
-      )}
+
     </header>
   );
 };
