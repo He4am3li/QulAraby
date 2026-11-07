@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "iraq_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/zeina-stance-v1.webp",
+  "sourceSha256": "d5831c0f6aeb032d79d106a1a4693473ac64fae7f2a294a6b2f148154e396e6d",
+  "pose": {
+    "bodyFacing": "right",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "left"
+  },
+  "registration": {
+    "shift": 30,
+    "scale": 0.73,
+    "offset": [
+      340,
+      10
+    ],
+    "eyes": [
+      437,
+      135,
+      123,
+      38
+    ],
+    "brows": [
+      436,
+      115,
+      125,
+      31
+    ],
+    "mouth": [
+      463,
+      193,
+      73,
+      51
+    ],
+    "mouthSampleDy": 5
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 437,
+      "y": 135,
+      "w": 123,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/zeina-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 437,
+      "y": 135,
+      "w": 123,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/zeina-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 437,
+      "y": 135,
+      "w": 123,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/zeina-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 436,
+      "y": 115,
+      "w": 125,
+      "h": 31,
+      "visible": true,
+      "url": "/avatars/zeina-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 436,
+      "y": 115,
+      "w": 125,
+      "h": 31,
+      "visible": true,
+      "url": "/avatars/zeina-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 463,
+      "y": 193,
+      "w": 73,
+      "h": 51,
+      "visible": true,
+      "url": "/avatars/zeina-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 463,
+      "y": 193,
+      "w": 73,
+      "h": 51,
+      "visible": true,
+      "url": "/avatars/zeina-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 463,
+      "y": 193,
+      "w": 73,
+      "h": 51,
+      "visible": true,
+      "url": "/avatars/zeina-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 463,
+      "y": 193,
+      "w": 73,
+      "h": 51,
+      "visible": true,
+      "url": "/avatars/zeina-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 463,
+      "y": 193,
+      "w": 73,
+      "h": 51,
+      "visible": true,
+      "url": "/avatars/zeina-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 463,
+      "y": 193,
+      "w": 73,
+      "h": 51,
+      "visible": true,
+      "url": "/avatars/zeina-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}
