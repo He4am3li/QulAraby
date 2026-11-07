@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, RotateCcw, X } from 'lucide-react';
+import { Check, RotateCcw, X, MoveDownRight, Eye, EyeOff } from 'lucide-react';
+import { auth } from '../../firebase';
 
 interface CalligraphyPracticeLabProps {
   onClose: () => void;
@@ -19,6 +20,19 @@ const LETTERS = [
 const W = 440;
 const H = 300;
 const STORAGE_KEY = 'qul_calligraphy_letter_practice_v1';
+
+// Guided first movements for this beginner's exercise, intentionally separate
+// from classical calligraphy instruction which needs a qualified teacher.
+const START_GUIDES: Record<string, { start: [number, number]; end: [number, number]; text: string }> = {
+  'ا': { start: [235, 75], end: [230, 213], text: 'ابدأ من أعلى وتحرك إلى الأسفل.' },
+  'ب': { start: [337, 183], end: [109, 198], text: 'ابدأ من يمين جسم الباء نحو اليسار، ثم أضف النقطة.' },
+  'ن': { start: [324, 165], end: [138, 186], text: 'ابدأ من اليمين متجهًا لليسار، ثم أضف النقطة.' },
+  'س': { start: [341, 171], end: [130, 199], text: 'ابدأ من جهة اليمين واتجه لليسار عبر الأسنان.' },
+  'م': { start: [285, 120], end: [189, 212], text: 'راقب رأس الميم واتجاه الانحناء.' },
+  'ع': { start: [297, 119], end: [158, 215], text: 'اتبع فتحة العين وانحناءها.' },
+  'و': { start: [275, 117], end: [162, 209], text: 'ارسم الرأس ثم الذيل نحو الأسفل.' },
+  'ي': { start: [337, 164], end: [126, 196], text: 'ابدأ من جهة اليمين لليسار، ثم أضف النقطتين.' }
+};
 
 const drawGlyph = (context: CanvasRenderingContext2D, letter: string, fill: string) => {
   context.save();
@@ -47,9 +61,11 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
   const [activeIndex, setActiveIndex] = useState(0);
   const [strokes, setStrokes] = useState(0);
   const [score, setScore] = useState<number | null>(null);
+  const [directionScore, setDirectionScore] = useState<number | null>(null);
+  const [showMovementGuide, setShowMovementGuide] = useState(true);
   const [best, setBest] = useState<Record<string, number>>(() => {
     try {
-      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      const data = JSON.parse(localStorage.getItem(`${STORAGE_KEY}:${auth.currentUser?.uid || 'guest'}`) || '{}');
       return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
     } catch {
       return {};
@@ -59,6 +75,7 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
   const inkRef = useRef<HTMLCanvasElement>(null);
   const activePointer = useRef<number | null>(null);
   const movedRef = useRef(false);
+  const recordedStrokes = useRef<Array<Array<{ x: number; y: number }>>>([]);
   const item = LETTERS[activeIndex];
 
   useEffect(() => {
@@ -87,8 +104,10 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
     inkRef.current?.getContext('2d')?.clearRect(0, 0, W, H);
     activePointer.current = null;
     movedRef.current = false;
+    recordedStrokes.current = [];
     setStrokes(0);
     setScore(null);
+    setDirectionScore(null);
   };
 
   const selectLetter = (index: number) => {
@@ -104,6 +123,7 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
     const ctx = event.currentTarget.getContext('2d');
     if (!ctx) return;
     const { x, y } = getPoint(event);
+    recordedStrokes.current.push([{ x, y }]);
     ctx.strokeStyle = '#633b19';
     ctx.fillStyle = '#633b19';
     ctx.lineWidth = 11;
@@ -116,6 +136,7 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
     ctx.moveTo(x, y);
     movedRef.current = false;
     setScore(null);
+    setDirectionScore(null);
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -124,6 +145,13 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
     const ctx = event.currentTarget.getContext('2d');
     if (!ctx) return;
     const { x, y } = getPoint(event);
+    const currentStroke = recordedStrokes.current[recordedStrokes.current.length - 1];
+    if (currentStroke) {
+      const previous = currentStroke[currentStroke.length - 1];
+      if (!previous || Math.hypot(x - previous.x, y - previous.y) > 2) {
+        currentStroke.push({ x, y });
+      }
+    }
     ctx.lineTo(x, y);
     ctx.stroke();
     movedRef.current = true;
@@ -183,10 +211,33 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
     const precision = inkTotal > 0 ? inkPrecise / inkTotal : 0;
     const estimate = Math.max(0, Math.min(100, Math.round((coverage * .7 + precision * .3) * 100)));
     setScore(estimate);
+    const firstStroke = recordedStrokes.current.find(points => points.length > 1);
+    const guide = START_GUIDES[item.letter];
+    if (firstStroke && guide) {
+      const first = firstStroke[0];
+      const last = firstStroke[firstStroke.length - 1];
+      const dx = last.x - first.x;
+      const dy = last.y - first.y;
+      const vx = guide.end[0] - guide.start[0];
+      const vy = guide.end[1] - guide.start[1];
+      const magnitude = Math.hypot(dx, dy);
+      const guideMagnitude = Math.hypot(vx, vy);
+      const cosine = magnitude > 10 && guideMagnitude > 0
+        ? (dx * vx + dy * vy) / (magnitude * guideMagnitude)
+        : -1;
+      const angleAlignment = Math.max(0, (cosine + 1) / 2);
+      // Starting region is forgiving so this remains basic directional guidance,
+      // not a false claim of verifying a master calligrapher's pen position.
+      const startDistance = Math.hypot(first.x - guide.start[0], first.y - guide.start[1]);
+      const startAlignment = Math.max(0, 1 - startDistance / 150);
+      setDirectionScore(Math.round(100 * (.76 * angleAlignment + .24 * startAlignment)));
+    } else {
+      setDirectionScore(null);
+    }
     if (estimate > (best[item.letter] || 0)) {
       const updated = { ...best, [item.letter]: estimate };
       setBest(updated);
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); } catch { /* practice can continue */ }
+      try { localStorage.setItem(`${STORAGE_KEY}:${auth.currentUser?.uid || 'guest'}`, JSON.stringify(updated)); } catch { /* practice can continue */ }
     }
   };
 
@@ -220,9 +271,33 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
         </div>
 
         <div className="w-full max-w-[440px] flex flex-col gap-1.5">
-          <p className="text-xs sm:text-sm text-center text-[#e9d4a6]">{item.tip}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs sm:text-sm text-[#e9d4a6]">{item.tip}</p>
+            <button type="button" onClick={() => setShowMovementGuide(value => !value)}
+              aria-pressed={showMovementGuide}
+              className="shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 border border-[#d8b873]/45 text-[11px] text-[#f1d18c] hover:bg-white/10">
+              {showMovementGuide ? <EyeOff size={13} /> : <Eye size={13} />}
+              {showMovementGuide ? 'إخفاء الاتجاه' : 'أظهر الاتجاه'}
+            </button>
+          </div>
           <div className="relative aspect-[22/15] rounded-2xl overflow-hidden border-2 border-[#c8ab7b]/60 bg-[#fcf6e8] shadow-inner select-none">
             <canvas ref={guideRef} width={W} height={H} aria-hidden="true" className="absolute inset-0 w-full h-full pointer-events-none" />
+            {showMovementGuide && (
+              <svg aria-hidden="true" className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 440 300">
+                <defs>
+                  <marker id="qul-stroke-arrow" viewBox="0 0 10 10" refX="8" refY="5"
+                    markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#087e83" />
+                  </marker>
+                </defs>
+                <circle cx={START_GUIDES[item.letter].start[0]} cy={START_GUIDES[item.letter].start[1]}
+                  r="10" fill="#087e83" fillOpacity=".16" stroke="#087e83" strokeWidth="2" />
+                <path
+                  d={`M ${START_GUIDES[item.letter].start.join(' ')} L ${START_GUIDES[item.letter].end.join(' ')}`}
+                  fill="none" stroke="#087e83" strokeWidth="3" strokeDasharray="7 8"
+                  strokeLinecap="round" markerEnd="url(#qul-stroke-arrow)" opacity=".75" />
+              </svg>
+            )}
             <canvas ref={inkRef} width={W} height={H}
               role="img" aria-label={`مساحة لتتبّع حرف ${item.letter} بالإصبع أو القلم`}
               onPointerDown={onPointerDown} onPointerMove={onPointerMove}
@@ -242,6 +317,12 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
             <p className="text-xs sm:text-sm flex-1">
               تطابق تقريبي <strong className="text-[#f1d18c]">{score}%</strong>،
               {score >= 75 ? ' اقتربت من الشكل النموذجي.' : ' حاول تتبّع جسم الحرف بشكل أهدأ.'}
+              {directionScore !== null && (
+                <span className="block text-[#d9c39b] mt-1">
+                  اتجاه الحركة الأولى: {directionScore}% تقريبًا.
+                  {directionScore < 60 ? ' جرّب البدء من العلامة الزرقاء واتّبع السهم.' : ' اتجاه البداية جيد، واصل تحسينه.'}
+                </span>
+              )}
             </p>
           </div>
         )}
@@ -260,7 +341,7 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
             الحرف التالي
           </button>
         </div>
-        <p className="text-[10px] text-center text-white/50">التقييم يقارن مواضع الحبر بالشكل النموذجي فقط، ولا يحكم على ترتيب الضربات أو زاوية القلم.</p>
+        <p className="text-[10px] text-center text-white/50">التقييم يقارن شكل الحبر واتجاه الحركة الأولى بصورة تقريبية. لا يقيس ترتيب جميع الضربات أو زاوية القلم التقليدية، ولا يحل محل تصحيح المعلم.</p>
       </section>
     </div>
   );
