@@ -63,7 +63,7 @@ export const CalligraphyInkIdentity: React.FC<CalligraphyInkIdentityProps> = ({
     <div
       aria-hidden="true"
       className="absolute inset-0 overflow-hidden pointer-events-none select-none"
-      style={{ opacity, zIndex: 0 }}
+      style={{ opacity, zIndex: isHeader ? 15 : 0 }}
     >
       {!isHeader && !isPanel && (
         <div
