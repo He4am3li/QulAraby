@@ -22,7 +22,7 @@ for(const [name,rx] of [
  ['resource cleanup',/renderer\.dispose/]
 ]) assert.match(scene,rx,name+' is missing');
 assert.doesNotMatch(platform,/<video|PPT_READY_SCENE|PPT_GOAL_VIDEO|PPT_SAVE_VIDEO|stadiumPanorama|goalkeeperReadyImg/, 'Legacy static footage in React match');
-assert.match(platform,/<PenaltyLive3D phase=\{shotPhase\}/, 'Match does not render WebGL scene');
+assert.match(platform,/<PenaltyLive3D phase=\{phase\}/, 'Match does not render WebGL scene');
 assert.match(adapter,/import \* as THREE from 'three'/,'App must bundle three locally');
 assert.match(scene,/MODEL_URL='\/penalty-models\/player\.glb'/,'Rigged athlete must be bundled locally to avoid network failure');
 assert.match(preview,/createPenalty3D/,'Preview must use the exact same simulation');

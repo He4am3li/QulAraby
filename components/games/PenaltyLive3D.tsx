@@ -3,12 +3,13 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
-type ShotPhase = 'idle' | 'runup' | 'kick' | 'goal' | 'miss';
+type ShotPhase = 'idle' | 'focus' | 'runup' | 'kick' | 'goal' | 'miss';
 
 interface Props {
   phase?: ShotPhase;
   diveSide?: 'left' | 'right';
   className?: string;
+  kitColor?: string;
 }
 
 /**
@@ -16,12 +17,12 @@ interface Props {
  * public preview. No static photos, posters, sprite sheets or video textures.
  */
 export const PenaltyLive3D: React.FC<Props> = ({
-  phase = 'idle', diveSide = 'left', className = ''
+  phase = 'idle', diveSide = 'left', className = '', kitColor='#1366b2'
 }) => {
   const hostRef = useRef<HTMLDivElement>(null);
-  const arenaRef = useRef<{ setPhase: (phase: ShotPhase, side: 'left'|'right') => void; dispose: () => void } | null>(null);
-  const latestRef = useRef({ phase, diveSide });
-  latestRef.current = { phase, diveSide };
+  const arenaRef = useRef<{ setPhase: (phase: ShotPhase, side: 'left'|'right') => void; setKitColor: (color: string) => void; dispose: () => void } | null>(null);
+  const latestRef = useRef({ phase, diveSide, kitColor });
+  latestRef.current = { phase, diveSide, kitColor };
 
   useEffect(() => {
     let canceled = false;
@@ -35,6 +36,7 @@ export const PenaltyLive3D: React.FC<Props> = ({
         onError: (reason: unknown) => console.warn('[Penalty3D] External CC0 athlete failed to load; 3D rig fallback active', reason)
       });
       arenaRef.current = engine;
+      engine.setKitColor(latestRef.current.kitColor);
       engine.setPhase(latestRef.current.phase, latestRef.current.diveSide);
     }).catch((reason: unknown) => {
       console.error('[Penalty3D] Scene initialization failed', reason);
@@ -49,6 +51,8 @@ export const PenaltyLive3D: React.FC<Props> = ({
   useEffect(() => {
     arenaRef.current?.setPhase(phase, diveSide);
   }, [phase, diveSide]);
+
+  useEffect(() => { arenaRef.current?.setKitColor(kitColor); },[kitColor]);
 
   return <div
     ref={hostRef}
