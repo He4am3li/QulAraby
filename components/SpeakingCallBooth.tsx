@@ -56,6 +56,8 @@ interface CallBoothProps {
   history: CallTurn[];
   learnerText: string;
   tutorText: string;
+  missionEvidence?: Array<{ goal: string; evidence: string; achieved: boolean }>;
+  assessmentStatus?: string;
   onSelectContact: (id: CallContact['id']) => void;
   onShowDirectory: () => void;
   onStart: () => void;
@@ -69,7 +71,7 @@ const DIGITS = ['1','2','3','4','5','6','7','8','9','*','0','#'];
 
 export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
   lang, contact, level, isActive, loading, isAiSpeaking, micMuted, recoveryNotice,
-  history, learnerText, tutorText, onSelectContact, onShowDirectory, onStart, onStop, onResume, onToggleMic, meterRef,
+  history, learnerText, tutorText, missionEvidence, assessmentStatus, onSelectContact, onShowDirectory, onStart, onStop, onResume, onToggleMic, meterRef,
 }) => {
   const [dialed, setDialed] = React.useState('');
   const [dialError, setDialError] = React.useState('');
@@ -78,6 +80,8 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
   const toneContextRef = React.useRef<AudioContext | null>(null);
   const tickerRef = React.useRef<HTMLDivElement | null>(null);
   const sessionLive = isActive || loading;
+  const completedGoals = missionEvidence?.filter(item => item.achieved).length || 0;
+  const missionIsVerified = assessmentStatus === 'analyzed' && completedGoals === contact.objectivesAr.length;
   const isArabic = lang === 'ar';
   const allTurns = [
     ...history.filter(item => item.text.trim()),
@@ -275,10 +279,23 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
               <h3>{isArabic ? contact.ar : contact.en}</h3>
               <p>{isArabic ? contact.aimAr : contact.aimEn}</p>
               <div className="qul-call-ticket-rules">
-                {(isArabic ? contact.objectivesAr : contact.objectivesEn).map((item, index) => (
-                  <div key={index} className="qul-call-rule"><span>0{index + 1}</span><p>{item}</p></div>
-                ))}
+                {(isArabic ? contact.objectivesAr : contact.objectivesEn).map((item, index) => {
+                  const achieved = assessmentStatus === 'analyzed' && Boolean(missionEvidence?.[index]?.achieved);
+                  return (
+                    <div key={index} className={'qul-call-rule ' + (achieved ? 'verified' : '')}
+                      title={achieved ? missionEvidence?.[index]?.evidence : undefined}>
+                      <span>{achieved ? <Check size={14} /> : '0' + (index + 1)}</span>
+                      <p>{item}</p>
+                    </div>
+                  );
+                })}
               </div>
+              {assessmentStatus === 'analyzed' && (
+                <div className={'qul-call-ticket-result ' + (missionIsVerified ? 'is-complete' : '')}>
+                  <span>{missionIsVerified ? (isArabic ? 'تم إنجاز المهمة' : 'MISSION COMPLETE') : (isArabic ? 'إنجاز مثبت من الحوار' : 'VERIFIED FROM DIALOGUE')}</span>
+                  <strong dir="ltr">{completedGoals} / {contact.objectivesAr.length}</strong>
+                </div>
+              )}
               <div className="qul-call-ticket-foot">
                 <CircleHelp size={14} />
                 <span>{isArabic ? 'يمكنك طلب المساعدة بالإنجليزية عند الحاجة.' : 'Ask for an English hint whenever needed.'}</span>
