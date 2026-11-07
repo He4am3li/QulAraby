@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { SpaceLaserGlass, SPACE_GLASS_PRIMARY_BUTTON, SPACE_GLASS_SECONDARY_BUTTON } from "./SpaceLaserGlass";
 import { 
   ArrowLeft, Rocket, Star, Volume2, VolumeX, Shield,
   Award, Play, Lock, ChevronRight, RotateCcw, Flame,
@@ -1695,7 +1696,7 @@ export interface ArabicSpaceJourneyProps {
 }
 
 export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, onWin }) => {
-  const [screen, setScreen] = useState<"cover" | "home" | "planet" | "planet_entry" | "flight" | "victory" | "gameover">("cover");
+  const [screen, setScreen] = useState<"home" | "planet" | "planet_entry" | "flight" | "victory" | "gameover">("home");
   const [save, setSave] = useState<Save>(loadSave);
   const [currentPlanetId, setCurrentPlanetId] = useState<string | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<string>("sentence-types");
@@ -3512,48 +3513,6 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
   return (
     <div className="w-full h-full min-h-screen bg-[#040510] text-[#eef7ff] relative overflow-hidden select-none font-sans" dir="rtl">
       
-      {/* The original Toward Space poster is restored as the entrance.
-          The original English lettering is part of this approved source artwork,
-          rather than a newly invented imitation. The 10-planet map remains intact. */}
-      {screen === "cover" && (
-        <section
-          data-space-screen="original-toward-space-cover"
-          aria-label="Toward Space"
-          className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-[#030817]"
-          dir="rtl"
-        >
-          <div
-            aria-hidden="true"
-            className="absolute inset-[-6%] scale-110 bg-cover bg-center opacity-40 blur-[38px]"
-            style={{ backgroundImage: `url(${towardSpaceOriginalCover})` }}
-          />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_45%,transparent_35%,rgba(2,6,18,.7)_100%)]" />
-          <img
-            src={towardSpaceOriginalCover}
-            alt="TOWARD SPACE, astronaut approaching an illuminated ringed planet amid colorful nebulae and glowing Arabic letters"
-            className="relative z-10 block h-auto max-h-[100dvh] w-full max-w-[1600px] object-contain object-center"
-            draggable={false}
-            fetchPriority="high"
-          />
-          <div className="absolute inset-x-0 bottom-[4%] z-20 flex items-center justify-center px-4 sm:bottom-[6%]">
-            <button
-              type="button"
-              onClick={() => { audio.select(); setScreen("home"); }}
-              className="group inline-flex min-h-[48px] items-center justify-center gap-3 rounded-full border border-[#dcbd83]/65 bg-[#071322]/85 px-7 py-3 text-sm font-bold text-[#f5e5c8] shadow-[0_9px_32px_rgba(0,5,20,.65),inset_0_1px_0_rgba(255,255,255,.12)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-[#f1d79d] hover:bg-[#102b39]/95 hover:shadow-[0_0_30px_rgba(88,196,225,.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#ffe0a3] sm:text-base"
-            >
-              <Rocket size={18} className="text-[#9ae8f6] transition-transform group-hover:-translate-y-0.5"/>
-              انطلق إلى الكواكب
-              <ArrowLeft size={17}/>
-            </button>
-          </div>
-          <button type="button" onClick={() => onBack?.()}
-            title="العودة إلى الألعاب"
-            aria-label="العودة إلى الألعاب"
-            className="absolute right-4 top-4 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-[#071320]/70 text-[#e2f8ff] backdrop-blur-lg hover:bg-[#12334a]/90"
-          ><ArrowLeft size={19}/></button>
-        </section>
-      )}
-
       {/* ============================================================== */}
       {/* 1. خريطة الكواكب الفضائية الواقعية والبهيجة (النسخة السينيمائية الحية) */}
       {/* ============================================================== */}
@@ -3563,14 +3522,32 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
             isRumbling ? "animate-[screenRumble_0.45s_ease-in-out]" : ""
           }`}
           onPointerMove={handleHomePointerMove}
-          style={{ backgroundColor: "#030714" }}
+          style={{ background: "radial-gradient(ellipse at 60% 38%, #18225d 0%, #0d1849 33%, #050b26 66%, #030714 100%)" }}
         >
+          {/* Apply the very color atmosphere of the approved TOWARD SPACE poster
+              behind the planetary map, without adding a second opening screen. */}
+          <div
+            aria-hidden="true"
+            data-space-map-poster-color-grade
+            className="absolute inset-[-13%] pointer-events-none bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${towardSpaceOriginalCover})`,
+              opacity: 0.57,
+              filter: "blur(32px) saturate(1.38) brightness(1.04)",
+              transform: "scale(1.08)"
+            }}
+          />
+          <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "radial-gradient(ellipse 42% 47% at 23% 30%,rgba(30,164,210,.20),transparent 80%),radial-gradient(ellipse 48% 50% at 77% 54%,rgba(116,72,208,.24),transparent 82%),radial-gradient(ellipse 34% 30% at 55% 15%,rgba(239,112,195,.13),transparent 86%)"
+            }}
+          />
           {/* Photorealistic High-Definition Deep Space Cosmos Background (Moving Cinematic Parallax Pan) */}
           <div 
-            className="absolute inset-[-8%] bg-cover bg-center pointer-events-none will-change-transform opacity-95"
+            className="absolute inset-[-8%] bg-cover bg-center pointer-events-none will-change-transform opacity-75"
             style={{ 
               backgroundImage: `url(${solarSystemCosmosBg})`,
-              filter: "saturate(.90) contrast(1.09) brightness(.88) hue-rotate(-5deg)",
+              filter: "saturate(1.18) contrast(1.10) brightness(1.02) hue-rotate(-3deg)",
               animation: "cosmicPanDrift 56s ease-in-out infinite alternate"
             }}
           />
@@ -3580,14 +3557,14 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 opacity-90"
             style={{
-              background: "radial-gradient(ellipse 48% 42% at 25% 37%, rgba(19,139,153,.13), transparent 75%), radial-gradient(ellipse 42% 36% at 77% 27%, rgba(100,68,175,.16), transparent 78%), radial-gradient(ellipse 24% 23% at 58% 12%, rgba(255,198,124,.10), transparent 75%), linear-gradient(180deg,rgba(2,7,19,.13) 0%,transparent 35%,rgba(2,6,17,.26) 100%)",
+              background: "radial-gradient(ellipse 48% 42% at 25% 37%, rgba(25,189,211,.21), transparent 75%), radial-gradient(ellipse 42% 36% at 77% 27%, rgba(131,78,226,.24), transparent 78%), radial-gradient(ellipse 24% 23% at 58% 12%, rgba(255,174,201,.17), transparent 75%), linear-gradient(180deg,rgba(3,7,33,.08) 0%,transparent 35%,rgba(3,5,23,.23) 100%)",
               animation: "cosmicColorBreath 36s ease-in-out infinite alternate"
             }}
           />
           <div 
             className="absolute inset-[-10%] pointer-events-none mix-blend-screen opacity-30 will-change-transform"
             style={{
-              background: "radial-gradient(ellipse at 30% 40%, rgba(57,185,199,0.22) 0%, transparent 62%), radial-gradient(ellipse at 70% 60%, rgba(125,111,200,0.16) 0%, transparent 60%)",
+              background: "radial-gradient(ellipse at 30% 40%, rgba(43,197,232,0.27) 0%, transparent 62%), radial-gradient(ellipse at 70% 60%, rgba(141,105,232,0.26) 0%, transparent 60%)",
               animation: "cosmicColorBreath 48s ease-in-out infinite alternate"
             }}
           />
@@ -4193,7 +4170,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
 
           {/* Top-Left Exit/Back Platform Button */}
           <button 
-            onClick={() => setScreen("cover")}
+            onClick={() => onBack?.()}
             className="fixed top-6 left-6 z-40 w-11 h-11 rounded-full bg-slate-950/80 border border-cyan-400/40 flex items-center justify-center text-cyan-200 hover:text-white hover:border-cyan-300 transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] backdrop-blur-md hover:scale-105 active:scale-95 cursor-pointer"
             title="خروج للمنصة"
           >
