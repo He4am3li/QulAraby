@@ -16,8 +16,8 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit } from 'firebase/firestore';
-import { summarizeSpeakingEvidence, createNextSpeakingTask } from '../services/speakingLearning.mjs';
+import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
+import { summarizeSpeakingEvidence, createNextSpeakingTask, mapPlacementLevel } from '../services/speakingLearning.mjs';
 
 const LEVELS = [
   {
@@ -123,6 +123,8 @@ export const Speak: React.FC = () => {
   const [generatingInsights, setGeneratingInsights] = React.useState(false);
   const [selectedLevel, setSelectedLevel] = React.useState<typeof LEVELS[0] | null>(null);
   const [selectedTopic, setSelectedTopic] = React.useState<typeof TOPICS[0] | null>(null);
+  const [placementHint, setPlacementHint] = React.useState<{ cefr: string; levelId: string } | null>(null);
+  const manualLevelRef = React.useRef(false);
   
   const [userTranscription, setUserTranscription] = React.useState('');
   const [aiTranscription, setAiTranscription] = React.useState('');
@@ -148,6 +150,27 @@ export const Speak: React.FC = () => {
     window.addEventListener('langChanged', handleLangChange);
     return () => window.removeEventListener('langChanged', handleLangChange);
   }, []);
+
+  React.useEffect(() => {
+    let active = true;
+    if (!user?.uid) { setPlacementHint(null); return; }
+    getDocs(query(collection(db, 'placement_results'), where('userId', '==', user.uid)))
+      .then(snapshot => {
+        if (!active) return;
+        const attempts = snapshot.docs.map(item => item.data() as any)
+          .sort((a, b) => (b.completedAt?.seconds || 0) - (a.completedAt?.seconds || 0));
+        const latestPlan = attempts.find(item => item.studyPlan?.cefrLevels?.speaking);
+        const cefr = String(latestPlan?.studyPlan?.cefrLevels?.speaking || '').trim().toUpperCase();
+        const levelId = mapPlacementLevel(cefr);
+        if (!levelId) return;
+        setPlacementHint({ cefr, levelId });
+        // The diagnostic result is only a suggestion, and never overrides a student's choice.
+        if (!manualLevelRef.current) {
+          setSelectedLevel(LEVELS.find(level => level.id === levelId) || null);
+        }
+      }).catch(error => console.warn('Speaking placement suggestion unavailable', error));
+    return () => { active = false; };
+  }, [user?.uid]);
 
   const audioContextRef = React.useRef<AudioContext | null>(null);
   const inputAudioContextRef = React.useRef<AudioContext | null>(null);
@@ -967,13 +990,20 @@ export const Speak: React.FC = () => {
                         <button
                             key={level.id}
                             disabled={isActive}
-                            onClick={() => setSelectedLevel(level)}
+                            onClick={() => { manualLevelRef.current = true; setSelectedLevel(level); }}
                             className={`w-full px-4 py-3 rounded-xl text-xs font-black transition-all flex items-center justify-between ${selectedLevel?.id === level.id ? 'bg-[#2563eb] text-white shadow-md' : 'bg-white text-slate-400 hover:text-slate-600 border border-slate-100'} ${isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             <span className="arabic-font leading-none">{level.ar}</span>
                             <span className="opacity-70 leading-none text-[10px]">{level.en}</span>
                         </button>
                     ))}
+                  {placementHint && (
+                    <p className="mt-3 text-[10px] leading-relaxed text-slate-500 arabic-font">
+                      {lang === 'ar'
+                        ? `مستوى مقترح من تقرير اختبار سابق: ${placementHint.cefr}، ويمكنك تغييره. هذا ليس حكمًا نهائيًا على مهارة التحدث.`
+                        : `Suggested by a previous placement report: ${placementHint.cefr}. You may change it. This is not a validated speaking grade.`}
+                    </p>
+                  )}
                 </div>
             </div>
         </aside>
@@ -1428,6 +1458,22 @@ export const Speak: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Transcript-based evidence is not a test of acoustic pronunciation. */}
+          <div className="mb-7 rounded-xl border border-blue-100 bg-blue-50/50 p-4 text-sm leading-relaxed">
+            <p className="font-bold text-slate-800">مؤشرات النشاط من النص المكتوب</p>
+            <p className="mt-2 text-slate-600">مداخلات الطالب: {speakingEvidence.learnerTurns} | الكلمات العربية: {speakingEvidence.arabicWords} | الكلمات المختلفة: {speakingEvidence.uniqueArabicWords}</p>
+            <p className="mt-2 text-xs text-slate-500">هذه مؤشرات تفريغ نصي ولا تقيس جودة النطق أو الطلاقة الصوتية.</p>
+            {insights?.assessmentStatus === 'limited' && <p className="text-amber-800 text-xs mt-2">تعذر تحليل لغوي موثوق لهذه الجلسة.</p>}
+          </div>
+
+          {insights && (
+            <div className="mb-7 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 text-sm leading-relaxed">
+              <p className="font-bold text-slate-800">المهمة المقترحة التالية</p>
+              <p className="mt-2 arabic-font">{nextPractice.promptAr}</p>
+              <p className="mt-1 text-xs text-slate-600" dir="ltr">{nextPractice.promptEn}</p>
+            </div>
+          )}
 
           {/* Section 1: Tutor Advice */}
           {insights && (

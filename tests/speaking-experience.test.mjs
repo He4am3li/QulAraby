@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { summarizeSpeakingEvidence, createNextSpeakingTask } from '../services/speakingLearning.mjs';
+import { summarizeSpeakingEvidence, createNextSpeakingTask, mapPlacementLevel } from '../services/speakingLearning.mjs';
 
 test('speaking evidence counts learner words only and never invents acoustic scores', () => {
   const result = summarizeSpeakingEvidence([
@@ -28,4 +28,12 @@ test('practice task responds to level, then correction evidence', () => {
   });
   assert.equal(basedOnError.source, 'correction');
   assert.match(basedOnError.promptAr, /أنا ذهبت/);
+});
+
+test('placement suggestions map known levels without validating unknown grades', () => {
+  assert.equal(mapPlacementLevel('a1'), 'beginner');
+  assert.equal(mapPlacementLevel('B1'), 'intermediate');
+  assert.equal(mapPlacementLevel('C2'), 'advanced');
+  assert.equal(mapPlacementLevel('speaking level pending'), null);
+  assert.equal(mapPlacementLevel(undefined), null);
 });

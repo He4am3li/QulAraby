@@ -45,3 +45,11 @@ export const createNextSpeakingTask = ({ level = 'beginner', topicAr = 'حيات
     promptEn: 'Make one short Arabic sentence on the topic, then repeat it.',
     objectiveAr: 'تكوين جملة عربية بسيطة', objectiveEn: 'Build a simple Arabic sentence', source: 'level' };
 };
+
+export const mapPlacementLevel = (cefr) => {
+  const level = String(cefr || '').trim().toUpperCase();
+  if (level === 'A1') return 'beginner';
+  if (level === 'A2' || level === 'B1') return 'intermediate';
+  if (level === 'B2' || level === 'C1' || level === 'C2') return 'advanced';
+  return null;
+};
