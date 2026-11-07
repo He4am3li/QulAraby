@@ -317,53 +317,50 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
     <main dir={language === 'ar' ? 'rtl' : 'ltr'} lang={language} className="relative flex min-h-[100dvh] w-full flex-col overflow-x-hidden bg-[#070d14] font-sans text-slate-100" style={pageStyle}>
       <Header/>
       {screen === 'intro' && (
-        <section className={container + ' justify-center gap-4'}>
-          <div className="mx-auto w-full max-w-3xl space-y-3 rounded-3xl border border-amber-400/35 bg-[#0a1622]/85 p-5 text-center shadow-2xl backdrop-blur-xl sm:p-8">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-amber-300/50 bg-amber-500/10"><Search className="text-amber-300" size={29}/></div>
-            <h1 className="text-3xl font-black text-amber-200 sm:text-5xl">{t('من الجاني؟', 'Who Did It?')}</h1>
-            <p className="text-sm leading-relaxed text-slate-200 sm:text-lg">{t('راقب، استمع، استبعد الأبرياء، ثم اتهم الشخص الذي تدينه الأدلة.', 'Observe, listen, clear the innocent suspects, then make an evidence-based accusation.')}</p>
-            <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-3">
-              {(['beginner', 'intermediate', 'advanced'] as DifficultyLevel[]).map(item => {
-                const list = CASES_DATABASE.filter(c => c.level === item);
-                const total = progress[item].completedIds.filter(id => list.some(c => c.id === id)).length;
-                return <button key={item} type="button" onClick={() => chooseLevel(item)} className="rounded-2xl border border-amber-300/45 bg-gradient-to-b from-[#23303b] to-[#101920] p-4 text-start transition hover:-translate-y-1 hover:border-amber-200 hover:shadow-xl">
-                  <span className="flex items-center gap-2 text-lg font-bold text-amber-200"><Fingerprint size={21}/>{levelLabel(item, language)}</span>
-                  <span className="mt-2 block text-xs text-slate-200">{t('قضايا مكتملة', 'Cases solved')} {total}/{list.length}</span>
-                  <span className="mt-3 block text-xs text-amber-100">{total ? t('تابع التحقيق', 'Continue') : t('ابدأ التحقيق', 'Begin investigation')}</span>
-                </button>;
-              })}
-            </div>
-            <p className="text-xs text-slate-400">{deviceNotice}</p>
+        <section className="relative flex w-full flex-1 items-center justify-center overflow-hidden bg-[#03080e]" aria-label={t('اختيار مستوى التحقيق', 'Select investigation level')}>
+          <div className="relative aspect-video w-full overflow-hidden shadow-2xl" style={{ maxHeight: '100dvh', maxWidth: 'calc(100dvh * (16 / 9))' }}>
+            <div className="pointer-events-none absolute inset-0 bg-center bg-no-repeat" style={{ backgroundImage: 'url("/١.webp"), url("/1.webp")', backgroundSize: '100% 100%' }}/>
+            {onBack && <button type="button" onClick={onBack} className="absolute right-[1%] top-[2%] z-20 rounded-full border border-amber-500/40 bg-black/55 px-3 py-1.5 text-xs font-bold text-amber-200" aria-label={t('العودة إلى الألعاب', 'Back to games')}><ArrowRight size={15}/></button>}
+            {([
+              { id: 'beginner' as DifficultyLevel, left: '23.2%' },
+              { id: 'intermediate' as DifficultyLevel, left: '41.6%' },
+              { id: 'advanced' as DifficultyLevel, left: '60.0%' },
+            ]).map(item => <button key={item.id} type="button" onClick={() => chooseLevel(item.id)}
+              aria-label={t('المستوى ', 'Level ') + levelLabel(item.id, language)}
+              className="absolute z-20 cursor-pointer rounded-xl bg-transparent outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300 hover:bg-white/5"
+              style={{ left: item.left, top: '50.5%', width: '16.8%', height: '35.5%' }}/>)}
+            <button type="button" onClick={toggleMute} title={t('كتم الصوت', 'Mute sound')}
+              aria-label={t('الصوت', 'Sound')} className="absolute z-20 flex items-center justify-center rounded-full bg-transparent hover:bg-white/10"
+              style={{ left: '2.7%', top: '86%', width: '4.5%', aspectRatio: '1' }}>
+              {isMuted && <VolumeX className="h-[65%] w-[65%] rounded-full bg-black/80 p-1 text-red-400" />}
+            </button>
+            <button type="button" onClick={toggleMusic} title={t('الموسيقى', 'Music')} aria-label={t('الموسيقى', 'Music')}
+              className="absolute z-20 flex items-center justify-center rounded-full bg-transparent hover:bg-white/10"
+              style={{ left: '8.9%', top: '86%', width: '4.5%', aspectRatio: '1' }}>
+              {!musicPlaying && <span className="rounded-full bg-black/70 px-1 text-xs text-slate-300">×</span>}
+            </button>
           </div>
         </section>
       )}
       {screen === 'briefing' && (
-        <section className={container + ' justify-center gap-3'}>
-          <div className="grid w-full flex-1 items-center gap-4 lg:grid-cols-[minmax(300px,.9fr)_minmax(0,1.2fr)]">
-            <div className="flex flex-col gap-3 rounded-3xl border border-amber-400/50 bg-[#07131e]/90 p-4 shadow-2xl backdrop-blur-xl sm:p-6">
-              <div className="flex items-center justify-between text-amber-300"><span className="text-xs font-bold tracking-wide">{t('بلاغ الواقعة', 'CASE BRIEFING')}</span><span className="text-xs">{caseIndex + 1}/{cases.length}</span></div>
-              <h2 className="text-2xl font-black text-amber-200 sm:text-3xl">{t(labelAr, labelEn)}</h2>
-              <p className="text-base leading-loose text-slate-100 sm:text-lg">{description}</p>
-              {language === 'en' && <p lang="ar" dir="rtl" className="rounded-xl bg-black/25 p-2 text-sm text-amber-100">{activeCase.crimeDescription}</p>}
-              <button type="button" className={secondaryButton} onClick={() => playSpeech(activeCase.crimeDescription)}><Headphones size={18}/>{t('استمع إلى البلاغ', 'Listen to Arabic briefing')}</button>
-              <div className="flex flex-wrap gap-2">
-                {activeCase.evidenceTerms.slice(0,3).map(term => <span key={term.ar} className="rounded-full border border-amber-500/20 bg-black/30 px-3 py-1 text-xs text-amber-100">{term.ar}</span>)}
-              </div>
-              <button type="button" onClick={() => {setFeedback(''); spyAudio.playClassifiedStamp(); setScreen('investigation');}} className={primaryButton}><Search size={19}/>{t('بدء التحقيق', 'Start investigating')}</button>
-            </div>
-            <div className="flex flex-col gap-2 rounded-3xl border border-amber-400/20 bg-[#06101a]/70 p-3 backdrop-blur-md">
-              <h3 className="text-center text-sm font-bold text-amber-200">{t('المشتبه بهم', 'Six suspects')}</h3>
-              {level === 'advanced' && <img
-                src={`/detective/advanced/scene-${String(activeCase.caseNumber).padStart(2, '0')}.webp`}
-                alt={t('مسرح الجريمة والمشتبه بهم', 'Cinematic crime scene and suspects')}
-                className="max-h-48 w-full rounded-xl border border-amber-400/30 object-cover object-center"
-              />}
-              <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6">
-                {activeCase.suspects.map(person => <Portrait key={person.id} person={person} compact disabled />)}
-              </div>
+        <section className="relative flex w-full flex-1 items-center justify-center overflow-hidden bg-[#03080e]" aria-label={t('بلاغ الواقعة', 'Crime briefing')}>
+          <div className="relative aspect-video w-full overflow-hidden shadow-2xl" style={{ maxHeight: '100dvh', maxWidth: 'calc(100dvh * (16 / 9))' }}>
+            <div className="pointer-events-none absolute inset-0 bg-center bg-no-repeat" style={{ backgroundImage: activeCase.bgImage, backgroundSize: '100% 100%' }}/>
+            <button type="button" onClick={() => setScreen('intro')}
+              aria-label={t('الرجوع لاختيار المستوى', 'Back to level selection')}
+              className="absolute right-[1%] top-[2%] z-20 rounded-full border border-amber-500/40 bg-black/50 p-2 text-amber-200 hover:bg-black/75">
+              <ArrowRight size={15}/>
+            </button>
+            <button type="button" onClick={() => { setFeedback(''); spyAudio.playClassifiedStamp(); setScreen('investigation'); }}
+              aria-label={t('بدء التحقيق واستبعاد الأبرياء', 'Start investigation and clear innocents')}
+              title={t('بدء التحقيق', 'Start investigation')}
+              className="absolute z-20 cursor-pointer rounded-lg bg-transparent outline-offset-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300 hover:bg-white/5"
+              style={{ left: '1.8%', top: '65.6%', width: '29.0%', height: '7.3%' }}/>
+            <div className="absolute bottom-[2%] left-[1%] z-20 flex gap-2">
+              <button type="button" onClick={toggleMute} aria-label={t('الصوت', 'Sound')} className="rounded-full border border-amber-400/30 bg-black/50 p-1.5 text-amber-100 hover:bg-black/75">{isMuted ? <VolumeX size={15}/> : <Volume2 size={15}/>}</button>
+              <button type="button" onClick={toggleMusic} aria-label={t('الموسيقى', 'Music')} className="rounded-full border border-amber-400/30 bg-black/50 p-1.5 text-amber-100 hover:bg-black/75"><Music2 size={15}/></button>
             </div>
           </div>
-          {notice}
         </section>
       )}
       {screen === 'investigation' && (
