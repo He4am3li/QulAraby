@@ -173,7 +173,11 @@ export const Speak: React.FC = () => {
     setIsAiSpeaking(false);
   }, []);
 
-  React.useEffect(() => () => closeTransport(), [closeTransport]);
+  React.useEffect(() => () => {
+    closeTransport();
+    void audioContextRef.current?.close().catch(() => {});
+    void inputAudioContextRef.current?.close().catch(() => {});
+  }, [closeTransport]);
   const reportRef = React.useRef<HTMLDivElement>(null);
   const summaryPrintRef = React.useRef<HTMLDivElement>(null);
   const transcriptPrintRef = React.useRef<HTMLDivElement>(null);
@@ -273,10 +277,19 @@ export const Speak: React.FC = () => {
     return buffer;
   };
 
-  const createBlob = (data: Float32Array) => {
-    const int16 = new Int16Array(data.length);
-    for (let i = 0; i < data.length; i++) {
-      int16[i] = data[i] * 32768;
+  const createBlob = (data: Float32Array, inputRate: number) => {
+    // Browsers may ignore the requested AudioContext sampleRate (notably on iOS).
+    // Always send genuine 16 kHz mono PCM, not mislabeled 44.1/48 kHz data.
+    const ratio = inputRate / 16000;
+    const sampleCount = Math.max(1, Math.floor(data.length / ratio));
+    const int16 = new Int16Array(sampleCount);
+    for (let i = 0; i < sampleCount; i++) {
+      const start = Math.min(data.length - 1, Math.floor(i * ratio));
+      const end = Math.min(data.length, Math.max(start + 1, Math.floor((i + 1) * ratio)));
+      let sum = 0;
+      for (let j = start; j < end; j++) sum += data[j];
+      const sample = Math.max(-1, Math.min(1, sum / (end - start)));
+      int16[i] = sample < 0 ? Math.round(sample * 32768) : Math.round(sample * 32767);
     }
     return {
       data: encode(new Uint8Array(int16.buffer)),
@@ -398,7 +411,7 @@ export const Speak: React.FC = () => {
             
             scriptProcessor.onaudioprocess = (e) => {
               const inputData = e.inputBuffer.getChannelData(0);
-              const pcmBlob = createBlob(inputData);
+              const pcmBlob = createBlob(inputData, input.sampleRate);
               sessionPromise.then(session => {
                 try {
                   session.sendRealtimeInput({ audio: pcmBlob });
@@ -452,8 +465,11 @@ export const Speak: React.FC = () => {
               setIsAiSpeaking(false);
             }
 
-            const audioData = message.serverContent?.modelTurn?.parts?.find(part => part.inlineData?.data)?.inlineData?.data;
-            if (audioData && !message.serverContent?.interrupted) {
+            // A Live response may contain more than one audio part.
+            for (const part of message.serverContent?.modelTurn?.parts || []) {
+              const audioData = part.inlineData?.data;
+              if (!audioData || !part.inlineData?.mimeType?.startsWith('audio/') ||
+                  message.serverContent?.interrupted) continue;
               const audioEpoch = audioEpochRef.current;
               const ctx = output;
               const audioBuffer = await decodeAudioData(decode(audioData), ctx);
@@ -495,7 +511,16 @@ export const Speak: React.FC = () => {
         transport.session = session;
         if (sessionRef.current !== transport) {
           try { session.close(); } catch {}
+          return;
         }
+        // System instructions alone do not trigger an initial Live voice turn.
+        // Begin with a short, audible question so learners are never left waiting.
+        session.sendClientContent({
+          turns: [{ role: 'user', parts: [{
+            text: 'Begin the tutoring session now with one short greeting and one easy question about the selected topic. This is a silent startup instruction, not something the learner said.'
+          }] }],
+          turnComplete: true,
+        });
       }).catch(err => {
         console.error('Live connection failed', err);
         if (sessionRef.current !== transport) return;
