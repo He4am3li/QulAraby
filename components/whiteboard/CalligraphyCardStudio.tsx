@@ -29,6 +29,17 @@ const CalligraphyPracticeLab = React.lazy(() => import('./CalligraphyPracticeLab
 import { SavedCalligraphyCard, loadCalligraphyCards, loadLegacyCalligraphyCards, persistCalligraphyCards, MAX_SAVED_CALLIGRAPHY_CARDS } from './calligraphyPersistence';
 import { loadCloudCalligraphyCards, saveCloudCalligraphyCard, deleteCloudCalligraphyCard } from './calligraphyCloudSync';
 
+// Offline-first loading must not keep the gallery waiting indefinitely for
+// Firestore long polling. On timeout the on-device originals remain available.
+const withGalleryTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> => new Promise((resolve, reject) => {
+  const timer = setTimeout(() => reject(new Error('انتهت مهلة المزامنة السحابية.')), ms);
+  promise.then(
+    value => { clearTimeout(timer); resolve(value); },
+    error => { clearTimeout(timer); reject(error); }
+  );
+});
+
+
 interface CalligraphyCardStudioProps {
   initialText?: string;
   studentName?: string;
@@ -878,7 +889,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
         }
 
         const [remote, legacy] = await Promise.allSettled([
-          loadCloudCalligraphyCards(uid),
+          withGalleryTimeout(loadCloudCalligraphyCards(uid), 6000),
           loadLegacyCalligraphyCards()
         ]);
         if (!mounted || request !== generation) return;
@@ -901,6 +912,28 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
         }
         if (!mounted || request !== generation) return;
         setSavedCards(ordered);
+
+        // Retry saved-on-device works that have not yet reached the account.
+        // Cloud failure never deletes the local original or blocks the editor.
+        if (remote.status === 'fulfilled') {
+          const remoteIds = new Set(cloud.map(card => card.id));
+          const pending = local.filter(card => !remoteIds.has(card.id));
+          if (pending.length) {
+            void (async () => {
+              let failed = 0;
+              for (const card of pending) {
+                if (!mounted || request !== generation || galleryUidRef.current !== uid) break;
+                try { await saveCloudCalligraphyCard(uid, card); }
+                catch (error) { failed++; console.warn('Calligraphy sync retry:', error); }
+              }
+              if (mounted && request === generation) {
+                setSyncStatus(failed
+                  ? `حُفظت أعمالك محليًا، وتعذرت مزامنة ${failed} لوحة.`
+                  : 'أصبحت لوحاتك المحلية متاحة أيضًا من حسابك.');
+              }
+            })();
+          }
+        }
         if (legacy.status === 'fulfilled') {
           const activeIds = new Set(ordered.map(card => card.id));
           setLegacyCount(legacy.value.filter(card => !activeIds.has(card.id)).length);
