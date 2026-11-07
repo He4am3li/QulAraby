@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "morocco_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/kenza-stance-v1.webp",
+  "sourceSha256": "4b2af1e43db2a8f50559b0561125ec336aacad06dd330a9e3ccd8dbc6734542e",
+  "pose": {
+    "bodyFacing": "right",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "left"
+  },
+  "registration": {
+    "shift": 180,
+    "shiftY": 24,
+    "scale": 0.69,
+    "offset": [
+      330,
+      34
+    ],
+    "eyes": [
+      417,
+      147,
+      126,
+      36
+    ],
+    "brows": [
+      415,
+      122,
+      132,
+      36
+    ],
+    "mouth": [
+      447,
+      207,
+      70,
+      49
+    ]
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 417,
+      "y": 147,
+      "w": 126,
+      "h": 36,
+      "visible": true,
+      "url": "/avatars/kenza-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 417,
+      "y": 147,
+      "w": 126,
+      "h": 36,
+      "visible": true,
+      "url": "/avatars/kenza-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 417,
+      "y": 147,
+      "w": 126,
+      "h": 36,
+      "visible": true,
+      "url": "/avatars/kenza-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 415,
+      "y": 122,
+      "w": 132,
+      "h": 36,
+      "visible": true,
+      "url": "/avatars/kenza-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 415,
+      "y": 122,
+      "w": 132,
+      "h": 36,
+      "visible": true,
+      "url": "/avatars/kenza-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 447,
+      "y": 207,
+      "w": 70,
+      "h": 49,
+      "visible": true,
+      "url": "/avatars/kenza-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 447,
+      "y": 207,
+      "w": 70,
+      "h": 49,
+      "visible": true,
+      "url": "/avatars/kenza-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 447,
+      "y": 207,
+      "w": 70,
+      "h": 49,
+      "visible": true,
+      "url": "/avatars/kenza-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 447,
+      "y": 207,
+      "w": 70,
+      "h": 49,
+      "visible": true,
+      "url": "/avatars/kenza-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 447,
+      "y": 207,
+      "w": 70,
+      "h": 49,
+      "visible": true,
+      "url": "/avatars/kenza-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 447,
+      "y": 207,
+      "w": 70,
+      "h": 49,
+      "visible": true,
+      "url": "/avatars/kenza-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}
