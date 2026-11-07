@@ -19,23 +19,29 @@ import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit } from 'firebase/firestore';
 
 const LEVELS = [
-  { 
-    id: 'beginner', 
-    ar: 'مبتدئ', 
-    en: 'Beginner', 
-    prompt: 'Speak primarily in English to guide the learner. Introduce very basic Arabic words slowly. The goal is for the learner to recognize common words and sentences in the chosen topic. Build their confidence using English as the bridge of communication.' 
+  {
+    id: 'beginner',
+    ar: 'مبتدئ',
+    en: 'Beginner',
+    descriptionAr: 'عبارات عربية قصيرة مع مساعدة إنجليزية عند الحاجة.',
+    descriptionEn: 'Short Arabic phrases, with English support when needed.',
+    prompt: 'Teach A0-A1 Modern Standard Arabic through tiny spoken turns. Start in Arabic with an easy greeting, then give a short English explanation when needed. If the learner answers in English, briefly understand them in English, model one simple Arabic sentence, and invite them to repeat it. Ask exactly one question at a time. Give them time to think and never overload them.'
   },
-  { 
-    id: 'intermediate', 
-    ar: 'متوسط', 
-    en: 'Intermediate', 
-    prompt: 'Speak exclusively in natural Arabic. Do NOT speak any English words or translations out loud. Your voice output must be 100% Arabic. However, in your text transcript output, you MUST provide the English translation in parentheses after each Arabic sentence. The goal is for the learner to use topic words in simple situations and short dialogues related to the topic. Correct the user when they make mistakes.' 
+  {
+    id: 'intermediate',
+    ar: 'متوسط',
+    en: 'Intermediate',
+    descriptionAr: 'محادثات عربية واضحة مع دعم تدريجي وتصحيح لطيف.',
+    descriptionEn: 'Clear Arabic conversations with gradual support and gentle corrections.',
+    prompt: 'Teach A2-B1 Modern Standard Arabic in mostly Arabic. Keep each reply to one or two short sentences. If the learner struggles or explicitly asks, provide a brief English explanation then return to Arabic. Correct one important recurring error at a time by modeling a natural alternative and inviting the learner to try again. Do not demand English text in an audio-only response.'
   },
-  { 
-    id: 'advanced', 
-    ar: 'متقدم', 
-    en: 'Advanced', 
-    prompt: 'Speak exclusively in Arabic. Use academic or professional vocabulary. Do not use English at all. The goal is for the learner to deepen into the topic and express it with longer sentences and more complex situations. Engage in complex and deep discussions.' 
+  {
+    id: 'advanced',
+    ar: 'متقدم',
+    en: 'Advanced',
+    descriptionAr: 'حوار عربي أعمق للتعبير عن الأفكار وتبرير الآراء.',
+    descriptionEn: 'Deeper Arabic discussions to express and justify opinions.',
+    prompt: 'Use fluent Modern Standard Arabic at B2-C1, adjusting complexity to the learner. Ask follow-up questions that develop reasoning, comparisons and opinions. Use natural everyday language for everyday subjects and professional terms only when relevant. Correct selectively without interrupting the learner. Give brief English clarification only when explicitly requested.'
   },
 ];
 
@@ -390,15 +396,15 @@ export const Speak: React.FC = () => {
           
           ${proactiveContext}
 
-          GOAL: You MUST start the conversation immediately. Do not wait for the user to speak first. 
-          Greet the user by name if known, and then use the personalized context (if any) or the chosen topic to ask an engaging opening question.
-          
-          Always be encouraging, speak clearly, and guide the conversation to help the user practice.
-          
-          CRITICAL AUDIO RULE: 
-          If you are in the Intermediate level, you MUST provide English translations in parentheses in your text output, BUT you MUST NOT speak them. 
-          Your audio stream MUST ONLY contain the Arabic words. 
-          Example: You write "أهلاً بك (Welcome)", but you ONLY say "أهلاً بك" in the audio.`,
+          SPEAKING COACH RULES:
+          Start with one short greeting and one easy question about the topic.
+          Your main purpose is to get the LEARNER to speak, not to deliver a lecture.
+          Listen patiently. Ask only one question per turn and gradually adapt difficulty to the learner's actual speech, not just the selected level.
+          Give one useful correction at a time after a learner turn, then model the improved phrase and invite a retry when appropriate.
+          Offer English scaffolding naturally when the learner needs it, especially beginners, but return to Arabic practice promptly.
+          Keep feedback encouraging but specific. Avoid falsely claiming a pronunciation score or fluency score.
+          Spoken audio transcripts should match what was actually spoken; do not insert silent translations into audio transcription.
+          If the learner becomes stuck, simplify the question and provide a tiny model answer rather than repeating it unchanged.`,
         },
         callbacks: {
           onopen: () => {
@@ -1077,7 +1083,7 @@ export const Speak: React.FC = () => {
                     </div>
                     <div>
                       <h2 className="text-3xl font-black text-slate-800 arabic-font leading-none">
-                        {selectedTopic.ar}
+                        {lang === 'ar' ? selectedTopic.ar : selectedTopic.en}
                       </h2>
                       <p className="text-slate-400 text-sm font-bold mt-2 uppercase tracking-widest">
                         {selectedTopic.en} • {selectedLevel.ar}
@@ -1089,7 +1095,7 @@ export const Speak: React.FC = () => {
                     <div className="space-y-2">
                       <p className="text-xs font-black text-slate-400 uppercase tracking-widest text-center">{t.setupTitle}</p>
                       <p className="text-sm text-slate-500 text-center arabic-font leading-relaxed">
-                        {selectedLevel.prompt}
+                        {lang === 'ar' ? selectedLevel.descriptionAr : selectedLevel.descriptionEn}
                       </p>
                     </div>
 
@@ -1097,7 +1103,7 @@ export const Speak: React.FC = () => {
                       <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-center gap-3 text-red-600 animate-in fade-in">
                         <AlertCircle size={16} />
                         <p className="text-xs font-bold">{error}</p>
-                        <button onClick={() => startSession()} className="mr-auto bg-red-600 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase"><RefreshCw size={10} className="inline mr-1" /> Retry</button>
+                        <button onClick={() => startSession()} className="mr-auto bg-red-600 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase"><RefreshCw size={10} className="inline mr-1" /> {lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}</button>
                       </div>
                     )}
 
@@ -1138,13 +1144,13 @@ export const Speak: React.FC = () => {
                 <div className="mt-8 space-y-3 w-full max-w-2xl overflow-y-auto custom-scroll px-2 max-h-[40%]">
                   {userTranscription && (
                     <div className="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-1">
-                      <p className="text-[9px] font-black text-slate-300 uppercase mb-1">You</p>
+                      <p className="text-[9px] font-black text-slate-300 uppercase mb-1">{t.userName}</p>
                       <p className="text-sm font-bold arabic-font text-slate-700">{userTranscription}</p>
                     </div>
                   )}
                   {aiTranscription && (
                     <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-1 relative group">
-                      <p className="text-[9px] font-black text-emerald-300 uppercase mb-1">AI Assistant</p>
+                      <p className="text-[9px] font-black text-emerald-300 uppercase mb-1">{t.tutorName}</p>
                       <p className="text-base font-black arabic-font text-emerald-700 leading-relaxed">{aiTranscription}</p>
                       
                       {!spellingChallenge && !isAiSpeaking && (
@@ -1167,7 +1173,7 @@ export const Speak: React.FC = () => {
                           <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
                             <PenTool size={18} />
                           </div>
-                          <h4 className="text-sm font-black text-slate-800 arabic-font">تحدي الإملاء</h4>
+                          <h4 className="text-sm font-black text-slate-800 arabic-font">{lang === 'ar' ? 'تحدي الإملاء' : 'Spelling challenge'}</h4>
                         </div>
                         <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                           {spellingChallenge.currentIdx + 1} / {spellingChallenge.words.length}
@@ -1176,7 +1182,7 @@ export const Speak: React.FC = () => {
                       
                       <div className="space-y-4">
                         <div className="text-center py-4">
-                          <p className="text-xs text-slate-400 mb-2 uppercase font-bold tracking-tighter">Type what you heard:</p>
+                          <p className="text-xs text-slate-400 mb-2 uppercase font-bold tracking-tighter">{lang === 'ar' ? 'اكتب ما سمعت:' : 'Type what you heard:'}</p>
                           <div className="flex items-center justify-center gap-2">
                             <button 
                               onClick={() => speakWord(spellingChallenge.words[spellingChallenge.currentIdx])}
@@ -1213,13 +1219,13 @@ export const Speak: React.FC = () => {
                             onClick={checkSpelling}
                             className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-black text-sm shadow-lg shadow-blue-200 active:scale-95 transition-all"
                           >
-                            تحقق
+                            {lang === 'ar' ? 'تحقق' : 'Check'}
                           </button>
                           <button 
                             onClick={() => setSpellingChallenge(null)}
                             className="px-6 py-3 bg-slate-100 text-slate-400 rounded-xl font-black text-sm hover:bg-slate-200 transition-all"
                           >
-                            إلغاء
+                            {lang === 'ar' ? 'إلغاء' : 'Cancel'}
                           </button>
                         </div>
                       </div>
