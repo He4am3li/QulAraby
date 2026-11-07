@@ -18,7 +18,7 @@ const beginnerButtons = extract(geometry,
   ';\n\nexport function getDetectiveStartRect');
 const portraitStrips = extract(geometry,
   'export const ADVANCED_PORTRAIT_STRIPS: Record<number, PosterPhotoStrip> = ',
-  ';\n\n/** Background-size');
+  ';\n\n// A few AI-generated source posters');
 const cases = extract(advancedSrc,
   'export const ADVANCED_CASE_SEEDS: AdvancedSeed[] = ',
   ';\n\nexport const createAdvancedDetectiveCases');
