@@ -144,6 +144,9 @@ export const Speak: React.FC = () => {
   const nextStartTimeRef = React.useRef<number>(0);
   const sourcesRef = React.useRef<Set<AudioBufferSourceNode>>(new Set());
   const audioEpochRef = React.useRef(0);
+  const historyRef = React.useRef<ChatEntry[]>([]);
+  const learnerTextRef = React.useRef('');
+  const tutorTextRef = React.useRef('');
   const closeTransport = React.useCallback(() => {
     const active = sessionRef.current;
     sessionRef.current = null;
@@ -301,6 +304,11 @@ export const Speak: React.FC = () => {
     setLoading(true);
     setError(null);
     setConversationHistory([]);
+    historyRef.current = [];
+    learnerTextRef.current = '';
+    tutorTextRef.current = '';
+    setUserTranscription('');
+    setAiTranscription('');
     setInsights(null);
     setSavedWords([]);
     
@@ -405,35 +413,50 @@ export const Speak: React.FC = () => {
             transport.scriptProcessor = scriptProcessor;
           },
           onmessage: async (message) => {
-            if (message.serverContent?.inputTranscription) {
-              setUserTranscription(prev => prev + message.serverContent.inputTranscription.text);
+            if (sessionRef.current !== transport) return;
+            const learnerChunk = message.serverContent?.inputTranscription?.text || '';
+            const tutorChunk = message.serverContent?.outputTranscription?.text || '';
+            if (learnerChunk) {
+              learnerTextRef.current += learnerChunk;
+              setUserTranscription(learnerTextRef.current);
             }
-            if (message.serverContent?.outputTranscription) {
-              setAiTranscription(prev => prev + message.serverContent.outputTranscription.text);
-            }
-            
-            if (message.serverContent?.turnComplete) {
-              setUserTranscription(currUser => {
-                setAiTranscription(currAi => {
-                  if (currUser || currAi) {
-                    setConversationHistory(prev => [
-                      ...prev,
-                      { role: 'user', text: currUser },
-                      { role: 'ai', text: currAi }
-                    ]);
-                  }
-                  return '';
-                });
-                return '';
-              });
+            if (tutorChunk) {
+              tutorTextRef.current += tutorChunk;
+              setAiTranscription(tutorTextRef.current);
             }
 
-            const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-            if (base64Audio) {
-              setIsAiSpeaking(true);
+            if (message.serverContent?.turnComplete) {
+              const completed: ChatEntry[] = [];
+              if (learnerTextRef.current.trim()) {
+                completed.push({ role: 'user', text: learnerTextRef.current.trim() });
+              }
+              if (tutorTextRef.current.trim()) {
+                completed.push({ role: 'ai', text: tutorTextRef.current.trim() });
+              }
+              if (completed.length) {
+                historyRef.current = [...historyRef.current, ...completed];
+                setConversationHistory(historyRef.current);
+              }
+              learnerTextRef.current = '';
+              tutorTextRef.current = '';
+              setUserTranscription('');
+              setAiTranscription('');
+            }
+
+            if (message.serverContent?.interrupted) {
+              audioEpochRef.current += 1;
+              sourcesRef.current.forEach(source => { try { source.stop(); } catch {} });
+              sourcesRef.current.clear();
+              nextStartTimeRef.current = 0;
+              setIsAiSpeaking(false);
+            }
+
+            const audioData = message.serverContent?.modelTurn?.parts?.find(part => part.inlineData?.data)?.inlineData?.data;
+            if (audioData && !message.serverContent?.interrupted) {
+              const audioEpoch = audioEpochRef.current;
               const ctx = output;
-              nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
-              const audioBuffer = await decodeAudioData(decode(base64Audio), ctx);
+              const audioBuffer = await decodeAudioData(decode(audioData), ctx);
+              if (sessionRef.current !== transport || audioEpoch !== audioEpochRef.current) return;
               const source = ctx.createBufferSource();
               source.buffer = audioBuffer;
               source.connect(ctx.destination);
@@ -441,16 +464,11 @@ export const Speak: React.FC = () => {
                 sourcesRef.current.delete(source);
                 if (sourcesRef.current.size === 0) setIsAiSpeaking(false);
               };
+              nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
               source.start(nextStartTimeRef.current);
               nextStartTimeRef.current += audioBuffer.duration;
               sourcesRef.current.add(source);
-            }
-
-            if (message.serverContent?.interrupted) {
-              sourcesRef.current.forEach(s => { try { s.stop(); } catch(e) {} });
-              sourcesRef.current.clear();
-              nextStartTimeRef.current = 0;
-              setIsAiSpeaking(false);
+              setIsAiSpeaking(true);
             }
           },
           onclose: () => {
@@ -498,17 +516,22 @@ export const Speak: React.FC = () => {
     closeTransport();
     setLoading(false);
 
-    const finalHistory = [...conversationHistory];
-    if (userTranscription || aiTranscription) {
-       finalHistory.push({ role: 'user', text: userTranscription });
-       finalHistory.push({ role: 'ai', text: aiTranscription });
-       setConversationHistory(finalHistory);
+    const finalHistory: ChatEntry[] = [...historyRef.current];
+    if (learnerTextRef.current.trim()) {
+      finalHistory.push({ role: 'user', text: learnerTextRef.current.trim() });
     }
-    
+    if (tutorTextRef.current.trim()) {
+      finalHistory.push({ role: 'ai', text: tutorTextRef.current.trim() });
+    }
+    historyRef.current = finalHistory;
+    setConversationHistory(finalHistory);
+    learnerTextRef.current = '';
+    tutorTextRef.current = '';
     setUserTranscription('');
     setAiTranscription('');
-    
-    if (finalHistory.length > 2) {
+
+    if (finalHistory.some(entry => entry.role === 'user' && entry.text.trim()) &&
+        finalHistory.some(entry => entry.role === 'ai' && entry.text.trim())) {
       setShowSummary(true);
       setGeneratingInsights(true);
       try {
