@@ -86,11 +86,8 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const [errors, setErrors] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const [showDossier, setShowDossier] = useState(false);
-  const [showClueDetail, setShowClueDetail] = useState(false);
   const [accusationOpen, setAccusationOpen] = useState(false);
   const [accusedId, setAccusedId] = useState<string | null>(null);
-  const [suspectPage, setSuspectPage] = useState(0);
-  const [accusationPage, setAccusationPage] = useState(0);
   const [advancedProofAnswers, setAdvancedProofAnswers] = useState<Record<number, number>>({});
   const [reason, setReason] = useState('');
   const [solved, setSolved] = useState(false);
@@ -114,9 +111,9 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const score = Math.max(0, Math.min(100,
     Math.round((eliminated.length / Math.max(1, activeCase.suspects.length - 1)) * 50)
     + (solved ? 35 : 0) + answersCount * 3 - errors * 5));
-  const suspectPageCount = Math.max(1, Math.ceil(activeCase.suspects.length / 6));
-  const mobileSuspects = activeCase.suspects.slice(suspectPage * 6, (suspectPage + 1) * 6);
-  const mobileAccusationSuspects = activeCase.suspects.slice(accusationPage * 6, (accusationPage + 1) * 6);
+  // All suspects are visible at once in the original cinematic scene.
+  const suspectColumns = activeCase.suspects.length > 10 ? 6 : activeCase.suspects.length > 6 ? 5 : 3;
+  const suspectRows = Math.ceil(activeCase.suspects.length / suspectColumns);
   const advancedProofs = level === 'advanced' ? (narrative?.accusationProofs || []) : [];
   const advancedProofsCorrect = advancedProofs.length === 2 &&
     advancedProofs.every((proof, index) => advancedProofAnswers[index] === proof.correctIndex);
@@ -138,9 +135,9 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const resetInvestigation = () => {
     setClueIndex(0); setEliminated([]); setCipherOpened(false);
     setFeedback(''); setErrors(0); setShowTranslation(false);
-    setShowDossier(false); setShowClueDetail(false); setAccusationOpen(false); setAccusedId(null);
+    setShowDossier(false); setAccusationOpen(false); setAccusedId(null);
     setReason(''); setSolved(false); setWordAnswers({}); setReportTab('practice');
-    setSuspectPage(0); setAccusationPage(0); setAdvancedProofAnswers({});
+    setAdvancedProofAnswers({});
   };
   const chooseLevel = (nextLevel: DifficultyLevel) => {
     const list = CASES_DATABASE.filter(item => item.level === nextLevel);
