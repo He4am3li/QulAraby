@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Mic, MicOff, Volume2, Globe, Sparkles, Loader2, Activity, AlertCircle, RefreshCw, 
+  Phone, Mic, MicOff, Volume2, Globe, Sparkles, Loader2, Activity, AlertCircle, RefreshCw, 
   ChevronRight, UserCircle2, MessageCircle, FileText, Download, X, Lightbulb, 
   BookmarkPlus, CheckCircle2, History, Brain, PenTool, Podcast
 } from 'lucide-react';
@@ -969,9 +969,52 @@ export const Speak: React.FC = () => {
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden bg-slate-50/30">
         
         {/* Sidebar - Topics & Levels */}
-        <aside className={`${setupMode && showMobileOptions ? 'flex' : 'hidden'} lg:flex w-full lg:w-[280px] flex-1 lg:flex-none min-h-0 bg-white border-b lg:border-b-0 lg:border-r rtl:lg:border-r-0 rtl:lg:border-l border-slate-100 flex-col shrink-0 no-print relative overflow-hidden shadow-sm`}>
+        <aside className={`${showMobileOptions && (speakingBranch === 'booth' || setupMode) ? 'flex' : 'hidden'} lg:flex w-full lg:w-[280px] flex-1 lg:flex-none min-h-0 bg-white border-b lg:border-b-0 lg:border-r rtl:lg:border-r-0 rtl:lg:border-l border-slate-100 flex-col shrink-0 no-print relative overflow-hidden shadow-sm`}>
             <div className="p-4 sm:p-6 border-b border-slate-50 overflow-y-auto custom-scroll flex-1 min-h-0">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">{t.topicLabel}</h3>
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{lang === 'ar' ? 'أقسام التحدث' : 'Speaking sections'}</h3>
+                <div className="space-y-2 mb-5">
+                  <button type="button" disabled={isActive || loading}
+                    onClick={() => { setSpeakingBranch('booth'); setShowSummary(false); setShowMobileOptions(false); }}
+                    className={`w-full flex gap-3 items-center rounded-2xl border-2 p-3 transition-all disabled:opacity-40 ${speakingBranch === 'booth' ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-white border-slate-100 text-slate-500 hover:border-amber-200'}`}>
+                    <span className="flex items-center justify-center h-11 w-11 rounded-xl bg-slate-900 text-amber-200"><Phone size={23} /></span>
+                    <span className="flex-1 text-right">
+                      <strong className="block text-sm arabic-font">{lang === 'ar' ? 'كابينة الاتصال' : 'The Call Booth'}</strong>
+                      <small className="block text-[10px] opacity-60">THE CALL BOOTH</small>
+                    </span>
+                    <ChevronRight size={16} className="opacity-40"/>
+                  </button>
+                  <button type="button" disabled={isActive || loading}
+                    onClick={() => { setSpeakingBranch('studio'); setSetupMode(true); setShowSummary(false); setShowMobileOptions(!selectedTopic); }}
+                    className={`w-full flex gap-3 items-center rounded-2xl border-2 p-3 transition-all disabled:opacity-40 ${speakingBranch === 'studio' ? 'bg-blue-50 border-blue-300 text-blue-900' : 'bg-white border-slate-100 text-slate-500 hover:border-blue-200'}`}>
+                    <span className="flex items-center justify-center h-11 w-11 rounded-xl bg-slate-100 text-blue-700"><StudioMicIcon size={24} /></span>
+                    <span className="flex-1 text-right">
+                      <strong className="block text-sm arabic-font">{lang === 'ar' ? 'المحادثة الحرة' : 'Free Conversation'}</strong>
+                      <small className="block text-[10px] opacity-60">FREE SPEAKING STUDIO</small>
+                    </span>
+                    <ChevronRight size={16} className="opacity-40"/>
+                  </button>
+                </div>
+
+                {speakingBranch === 'booth' && (
+                  <div className="space-y-2.5">
+                    <h4 className="text-[11px] font-black text-slate-400 mb-3">{lang === 'ar' ? 'دليل الاتصالات' : 'Call directory'}</h4>
+                    {CALL_CONTACTS.map(contact => (
+                      <button type="button" key={contact.id} disabled={isActive || loading}
+                        onClick={() => { setSelectedCallContact(contact); setShowMobileOptions(false); setRecoveryNotice(null); setShowSummary(false); }}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all disabled:opacity-40 ${contact.id === selectedCallContact.id ? 'border-amber-400 bg-amber-50 shadow-sm' : 'border-slate-100 bg-slate-50/50 hover:border-slate-200'}`}>
+                        <span className={`flex items-center justify-center h-11 w-11 text-xl rounded-xl ${contact.id === selectedCallContact.id ? 'bg-[#1a2733] text-amber-200' : 'bg-white text-slate-600'}`}>{contact.symbol}</span>
+                        <span className="flex-1 min-w-0 text-right">
+                          <strong className="block text-sm font-black arabic-font text-slate-800 truncate">{lang === 'ar' ? contact.ar : contact.en}</strong>
+                          <small className="text-[10px] text-slate-400 font-mono" dir="ltr">EXT. {contact.extension}</small>
+                        </span>
+                        <ChevronRight size={15} className="text-slate-400"/>
+                      </button>
+                    ))}
+                    <p className="text-[10px] text-slate-400 leading-relaxed">{lang === 'ar' ? 'هذه مكالمات افتراضية للتعلم وليست اتصالات فعلية.' : 'These are educational simulations, not real calls.'}</p>
+                  </div>
+                )}
+
+                {speakingBranch === 'studio' && (
                 <div className="space-y-3">
                     {TOPICS.map(topic => {
                         const color = TOPIC_COLORS[topic.color] || TOPIC_COLORS.blue;
@@ -1000,6 +1043,7 @@ export const Speak: React.FC = () => {
                         );
                     })}
                 </div>
+                )}
             </div>
 
             {/* Level Selection */}
@@ -1029,7 +1073,7 @@ export const Speak: React.FC = () => {
         </aside>
 
         {/* Main Content Area */}
-        <main className={`${setupMode && showMobileOptions ? 'hidden' : 'flex'} lg:flex flex-1 min-w-0 min-h-0 flex-col overflow-hidden relative`}>
+        <main className={`${showMobileOptions && (speakingBranch === 'booth' || setupMode) ? 'hidden' : 'flex'} lg:flex flex-1 min-w-0 min-h-0 flex-col overflow-hidden relative`}>
           {showSummary && (
             <div className="absolute inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm p-4 flex items-center justify-center animate-in fade-in duration-300">
               <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl flex flex-col max-h-[90%] overflow-hidden animate-in zoom-in-95 duration-500">
