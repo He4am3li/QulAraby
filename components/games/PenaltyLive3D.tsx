@@ -1,63 +1,82 @@
-import React, { useEffect, useRef } from 'react';
+import React,{useEffect,useRef,useState} from 'react';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
-type ShotPhase = 'idle' | 'focus' | 'runup' | 'kick' | 'goal' | 'miss';
-
-interface Props {
-  phase?: ShotPhase;
-  diveSide?: 'left' | 'right';
-  className?: string;
-  kitColor?: string;
+type ShotPhase='idle'|'focus'|'runup'|'kick'|'goal'|'miss';
+export interface Penalty3DKit {
+  shooterPrimary:string;
+  shooterSecondary?:string;
+  keeperPrimary:string;
+  keeperSecondary?:string;
+  shooterNumber:number;
+  keeperNumber:number;
+  shooterName?:string;
+  keeperName?:string;
 }
-
+interface Props {
+  phase?:ShotPhase;diveSide?:'left'|'right';className?:string;
+  kitColor?:string;
+  kit?:Penalty3DKit;
+}
+interface Arena {
+  setPhase:(p:ShotPhase,s:'left'|'right')=>void;
+  setKitColor:(color:string)=>void;
+  setKit:(kit:Partial<Penalty3DKit>)=>void;
+  dispose:()=>void;
+}
 /**
- * True real-time Three.js rendering, with shared live engine also used by the
- * public preview. No static photos, posters, sprite sheets or video textures.
+ * Live WebGL with a render-ready curtain. Procedural mannequin geometry is never
+ * visible while GLTFLoader prepares the rigged footballers.
  */
-export const PenaltyLive3D: React.FC<Props> = ({
-  phase = 'idle', diveSide = 'left', className = '', kitColor='#1366b2'
-}) => {
-  const hostRef = useRef<HTMLDivElement>(null);
-  const arenaRef = useRef<{ setPhase: (phase: ShotPhase, side: 'left'|'right') => void; setKitColor: (color: string) => void; dispose: () => void } | null>(null);
-  const latestRef = useRef({ phase, diveSide, kitColor });
-  latestRef.current = { phase, diveSide, kitColor };
-
-  useEffect(() => {
-    let canceled = false;
-    // Keep the live engine in /public so the standalone educational preview and
-    // the platform use exactly the same physical simulation and 3D geometry.
-    const enginePath: string = '/penalty-3d-engine.js';
-    void import(/* @vite-ignore */ enginePath).then((mod) => {
-      if (canceled || !hostRef.current) return;
-      const engine = mod.createPenalty3D({
-        host: hostRef.current, THREE, GLTFLoader, SkeletonUtils,
-        onError: (reason: unknown) => console.warn('[Penalty3D] External CC0 athlete failed to load; 3D rig fallback active', reason)
-      });
-      arenaRef.current = engine;
-      engine.setKitColor(latestRef.current.kitColor);
-      engine.setPhase(latestRef.current.phase, latestRef.current.diveSide);
-    }).catch((reason: unknown) => {
-      console.error('[Penalty3D] Scene initialization failed', reason);
-    });
-    return () => {
-      canceled = true;
-      arenaRef.current?.dispose();
-      arenaRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    arenaRef.current?.setPhase(phase, diveSide);
-  }, [phase, diveSide]);
-
-  useEffect(() => { arenaRef.current?.setKitColor(kitColor); },[kitColor]);
-
-  return <div
-    ref={hostRef}
-    className={'absolute inset-0 overflow-hidden bg-[#071a20] ' + className}
-    role="img"
-    aria-label="ملعب كرة قدم حقيقي ثلاثي الأبعاد، لاعب متحرك وحارس مرمى ومرمى وكرة تفاعلية"
-  />;
+export const PenaltyLive3D:React.FC<Props>=({
+ phase='idle',diveSide='left',className='',kitColor='#1366b2',kit
+})=>{
+ const hostRef=useRef<HTMLDivElement>(null);
+ const arenaRef=useRef<Arena|null>(null);
+ const [ready,setReady]=useState(false);
+ const [failed,setFailed]=useState(false);
+ const latest=useRef({phase,diveSide,kitColor,kit});
+ latest.current={phase,diveSide,kitColor,kit};
+ useEffect(()=>{
+   let cancelled=false;
+   const path='/penalty-3d-engine.js';
+   void import(/* @vite-ignore */ path).then(mod=>{
+     if(cancelled||!hostRef.current)return;
+     const arena:Arena=mod.createPenalty3D({
+       host:hostRef.current,THREE,GLTFLoader,SkeletonUtils,
+       onReady:(status:{rigged:boolean})=>{
+         if(cancelled)return;
+         if(status.rigged){setReady(true);setFailed(false);}
+         else{setFailed(true);setReady(false);}
+       },
+       onError:(reason:unknown)=>{
+         if(cancelled)return;
+         console.error('[PenaltyLive3D] 3D athlete model unavailable',reason);
+         setFailed(true);
+       }
+     });
+     arenaRef.current=arena;
+     if(latest.current.kit)arena.setKit(latest.current.kit);
+     else arena.setKitColor(latest.current.kitColor);
+     arena.setPhase(latest.current.phase,latest.current.diveSide);
+   }).catch(reason=>{if(!cancelled){console.error('[PenaltyLive3D] Scene failed',reason);setFailed(true);}});
+   return ()=>{cancelled=true;arenaRef.current?.dispose();arenaRef.current=null;};
+ },[]);
+ useEffect(()=>arenaRef.current?.setPhase(phase,diveSide),[phase,diveSide]);
+ useEffect(()=>{
+   if(kit)arenaRef.current?.setKit(kit);
+   else arenaRef.current?.setKitColor(kitColor);
+ },[kit,kitColor]);
+ return <div className={'absolute inset-0 overflow-hidden bg-[#071a20] '+className}>
+   <div ref={hostRef} className="absolute inset-0" role="img" aria-label="ملعب ركلات ترجيح ثلاثي الأبعاد مع لاعب وحارس بملابس وأرقام الفريق المختار"/>
+   <div aria-live="polite" className={'pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-[radial-gradient(ellipse_at_center,#1b3441_0%,#071520_65%,#020910_100%)] transition-opacity duration-700 '+(ready?'opacity-0':'opacity-100')}>
+     <div className="flex flex-col items-center gap-4 text-center px-5">
+       <div className={'h-14 w-14 rounded-full border border-[#eac982]/25 border-t-[#eac982] '+(!failed?'animate-spin':'')}/>
+       <span className="text-xs tracking-[.24em] font-black text-[#eac982]" dir="ltr">QUL PENALTY ELITE</span>
+       <span className="text-sm md:text-lg font-bold text-slate-100">{failed?'تعذّر تجهيز الشخصيات ثلاثية الأبعاد':'استعد، اللاعبون يدخلون الملعب...'}</span>
+       {failed&&<span className="text-[11px] text-slate-400">تحقق من الاتصال ثم أعد فتح اللعبة</span>}
+     </div>
+   </div>
+ </div>;
 };

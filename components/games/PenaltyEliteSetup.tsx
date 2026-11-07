@@ -1,163 +1,107 @@
-import React, {useState} from 'react';
-import {ArrowLeft, ChevronLeft, RotateCcw, Shirt, Trophy, X} from 'lucide-react';
+import React,{useEffect,useState} from 'react';
+import {AnimatePresence,motion,useReducedMotion} from 'framer-motion';
+import {ArrowLeft,ChevronLeft,ChevronRight,RotateCcw,Trophy} from 'lucide-react';
 import {chooseOpponent,ELITE_CLUBS,EliteClub,ElitePlayer} from './PenaltyEliteData';
 import {PenaltyClubCrest} from './PenaltyClubCrest';
+import {PenaltyJersey} from './PenaltyJersey';
 
-interface Props {
-  onBack?:()=>void;
-  onStart:(club:EliteClub,rival:EliteClub,kickers:ElitePlayer[])=>void;
-}
-const positionText:Record<ElitePlayer['role'],string>={GK:'حارس',DF:'دفاع',MF:'وسط',FW:'هجوم'};
-const panelStyle:React.CSSProperties={
-  background:'linear-gradient(135deg,rgba(7,23,39,.97),rgba(10,34,45,.96))',
-  boxShadow:'0 20px 70px rgba(0,0,0,.35)',
-};
+interface Props{onBack?:()=>void;onStart:(club:EliteClub,rival:EliteClub,kickers:ElitePlayer[])=>void}
+const roles:Record<ElitePlayer['role'],string>={GK:'حارس',DF:'دفاع',MF:'وسط',FW:'هجوم'};
+const css=[
+'@keyframes eliteSpotA{0%,100%{transform:translateX(-35%) rotate(-22deg)}50%{transform:translateX(20%) rotate(-10deg)}}',
+'@keyframes eliteSpotB{0%,100%{transform:translateX(20%) rotate(17deg)}50%{transform:translateX(-25%) rotate(11deg)}}',
+'.elite-stadium{background:radial-gradient(ellipse at 50% 84%,rgba(20,93,98,.49),transparent 53%),linear-gradient(180deg,#030914 0%,#09202b 58%,#020911 100%)}',
+'.elite-stadium:before{content:"";position:absolute;inset:24% 0 4%;pointer-events:none;background:radial-gradient(ellipse at 50% 86%,transparent 25%,rgba(4,13,21,.82) 74%),repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 3px,transparent 3px 11px);mask-image:linear-gradient(to bottom,transparent,#000 55%,#000 84%,transparent)}',
+'.elite-spot{position:absolute;width:39%;height:120%;top:-26%;pointer-events:none;background:linear-gradient(to bottom,rgba(213,242,255,.32),rgba(178,240,255,.025) 75%,transparent);filter:blur(21px);clip-path:polygon(46% 0,56% 0,100% 100%,0 100%)}',
+'.elite-spot-a{left:15%;animation:eliteSpotA 8s ease-in-out infinite}.elite-spot-b{right:15%;animation:eliteSpotB 9s ease-in-out infinite}',
+'.elite-stand{position:absolute;left:0;right:0;bottom:0;height:23%;background:linear-gradient(#132e37,#05121a);clip-path:polygon(0 20%,50% 0,100% 20%,100% 100%,0 100%)}',
+'.elite-stand:before{content:"";position:absolute;inset:25% 0 0;background:repeating-linear-gradient(90deg,#73818a 0 2px,#253544 2px 7px,#b8a28e 7px 9px,#132232 9px 16px);opacity:.36}',
+'.elite-raised{box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 20px 60px rgba(0,0,0,.35)}',
+'@media(prefers-reduced-motion:reduce){.elite-spot{animation:none!important}}'
+].join('\n');
+
 export const PenaltyEliteSetup:React.FC<Props>=({onBack,onStart})=>{
-  const [step,setStep]=useState<'clubs'|'lineup'>('clubs');
-  const [club,setClub]=useState<EliteClub>(ELITE_CLUBS[0]);
-  const [rival,setRival]=useState<EliteClub>(ELITE_CLUBS[1]);
-  const [previousRival,setPreviousRival]=useState<string|undefined>();
-  const [selectedKickers,setSelectedKickers]=useState<ElitePlayer[]>([]);
-  const [rosterPage,setRosterPage]=useState(0);
-  const [clubPage,setClubPage]=useState(0);
-  const selectClub=(choice:EliteClub)=>{
-    const next=chooseOpponent(choice.id,previousRival);
-    setPreviousRival(next.id);setClub(choice);setRival(next);
-    setSelectedKickers([]);setRosterPage(0);setStep('lineup');
-  };
-  const toggle=(player:ElitePlayer)=>{
-    setSelectedKickers(current=>current.some(x=>x.number===player.number)
-      ?current.filter(x=>x.number!==player.number)
-      :current.length>=5?current:[...current,player]);
-  };
-  const switchRival=()=>{
-    const next=chooseOpponent(club.id,rival.id);
-    setPreviousRival(next.id);setRival(next);
-  };
-  return <main dir="rtl" className="relative w-full h-full min-h-[580px] rounded-3xl overflow-hidden bg-[#06131e] text-white select-none">
-    <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{
-      background:'radial-gradient(ellipse at 53% -12%,rgba(37,116,123,.38),transparent 55%),radial-gradient(ellipse at 97% 93%,rgba(220,179,95,.14),transparent 48%)'
-    }}/>
-    <div className="relative z-10 w-full max-w-6xl mx-auto px-3 md:px-8 py-3 md:py-8 flex flex-col gap-3 md:gap-5">
-      <header className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 md:w-14 md:h-14 rounded-2xl grid place-items-center border border-amber-300/40 bg-amber-300/10"><Trophy className="text-amber-300" size={26}/></div>
-          <div>
-            <div className="text-[10px] md:text-xs tracking-[.28em] text-amber-300 font-black" dir="ltr">QUL PENALTY ELITE</div>
-            <h1 className="text-xl md:text-3xl font-black mt-0.5">تحدي الأهداف</h1>
-            <p className="text-xs text-slate-400 mt-1">اختر ناديك، ثم قُد فريقك في ركلات الترجيح</p>
-          </div>
-        </div>
-        <button type="button" onClick={step==='lineup'?()=>setStep('clubs'):onBack}
-          className="flex items-center gap-1.5 border border-white/20 bg-white/5 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 hover:bg-white/10">
-          {step==='lineup'?<><ArrowLeft size={15}/> الأندية</>:<><X size={16}/> خروج</>}
-        </button>
-      </header>
-      <div className="flex items-center gap-3 text-xs font-bold">
-        <span className={step==='clubs'?'text-amber-300':'text-emerald-300'}>01 <span className="mr-2">اختيار النادي</span></span>
-        <div className="h-px flex-1 max-w-14 bg-white/15"/>
-        <span className={step==='lineup'?'text-amber-300':'text-slate-500'}>02 <span className="mr-2">قائمة المسددين</span></span>
-        <div className="h-px flex-1 max-w-14 bg-white/15"/>
-        <span className="text-slate-500">03 <span className="mr-2">الملعب</span></span>
+ const [step,setStep]=useState<'clubs'|'lineup'>('clubs');
+ const [index,setIndex]=useState(0);
+ const [club,setClub]=useState<EliteClub>(ELITE_CLUBS[0]);
+ const [rival,setRival]=useState<EliteClub>(ELITE_CLUBS[1]);
+ const [selectedKickers,setSelectedKickers]=useState<ElitePlayer[]>([]);
+ const [rosterPage,setRosterPage]=useState(0);
+ const reduced=useReducedMotion();
+ const displayed=ELITE_CLUBS[index];
+ useEffect(()=>{
+   const link=document.createElement('link');
+   link.rel='prefetch';link.as='fetch';link.href='/penalty-models/player.glb';document.head.appendChild(link);
+   return ()=>link.remove();
+ },[]);
+ const browse=(delta:number)=>setIndex(i=>(i+delta+ELITE_CLUBS.length)%ELITE_CLUBS.length);
+ const choose=()=>{setClub(displayed);setRival(chooseOpponent(displayed.id));setSelectedKickers([]);setRosterPage(0);setStep('lineup')};
+ const toggle=(p:ElitePlayer)=>setSelectedKickers(old=>old.some(x=>x.number===p.number)?old.filter(x=>x.number!==p.number):old.length>=5?old:[...old,p]);
+ const badge=(team:EliteClub,large=false)=><PenaltyClubCrest club={team} className={large?'h-24 w-24 md:h-[150px] md:w-[150px] rounded-[28px]':'h-12 w-12 md:h-16 md:w-16'}/>;
+ return <main dir="rtl" className="relative isolate flex h-full min-h-[620px] w-full flex-col overflow-hidden rounded-[26px] bg-[#020914] text-white select-none">
+  <style>{css}</style>
+  <div className="elite-stadium pointer-events-none absolute inset-0"><div className="elite-spot elite-spot-a"/><div className="elite-spot elite-spot-b"/><div className="elite-stand"/><div className="absolute bottom-[14%] w-full h-[5px] bg-gradient-to-r from-[#9b8a70] via-[#e4cc91] to-[#5cabb1] opacity-65"/></div>
+  <header className="relative z-20 flex shrink-0 items-center justify-between gap-2 px-4 py-3 md:px-8 md:py-5">
+   <button type="button" aria-label="عودة" className="grid h-10 w-10 md:h-12 md:w-12 place-items-center rounded-full border border-white/20 bg-black/35 hover:bg-white/10" onClick={step==='clubs'?onBack:()=>setStep('clubs')}><ArrowLeft size={21}/></button>
+   <div className="text-center"><div dir="ltr" className="text-[10px] md:text-xs font-bold tracking-[.3em] text-[#ead6a3]">QUL PENALTY ELITE</div><h1 className="text-lg md:text-3xl font-black">{step==='clubs'?'اختر ناديك':'تشكيلة ركلات الترجيح'}</h1></div>
+   <span className="grid h-10 w-10 md:h-12 md:w-12 place-items-center rounded-full border border-[#e3c077]/35 bg-[#e3c077]/10"><Trophy size={21} className="text-[#e5c481]"/></span>
+  </header>
+  <AnimatePresence mode="wait" initial={false}>
+  {step==='clubs'?<motion.section key="clubs" initial={reduced?false:{opacity:0,x:70}} animate={{opacity:1,x:0}} exit={reduced?{}:{opacity:0,x:-70}} transition={{duration:.42}} className="relative z-10 flex flex-1 min-h-0 flex-col justify-between px-4 pb-3 md:px-8 md:pb-6">
+   <p className="text-center text-[11px] md:text-sm text-slate-400">اختر النادي الذي ستمثله في تحدي ركلات الترجيح</p>
+   <div className="relative flex flex-1 min-h-[305px] items-center justify-center">
+    <button type="button" aria-label="النادي السابق" onClick={()=>browse(-1)} className="absolute z-20 right-0 md:right-[6%] grid h-12 w-12 md:h-16 md:w-16 place-items-center rounded-full border border-white/25 bg-black/45 hover:border-[#e7c681]"><ChevronRight size={29}/></button>
+    <button type="button" aria-label="النادي التالي" onClick={()=>browse(1)} className="absolute z-20 left-0 md:left-[6%] grid h-12 w-12 md:h-16 md:w-16 place-items-center rounded-full border border-white/25 bg-black/45 hover:border-[#e7c681]"><ChevronLeft size={29}/></button>
+    <AnimatePresence mode="wait" initial={false}>
+     <motion.div key={displayed.id} initial={reduced?false:{opacity:0,scale:.83,rotateY:24,x:40}} animate={{opacity:1,scale:1,rotateY:0,x:0}} exit={reduced?{}:{opacity:0,scale:.91,rotateY:-24,x:-40}} transition={{type:'spring',stiffness:140,damping:21}} className="relative mx-auto flex w-full max-w-[900px] flex-col md:flex-row-reverse items-center justify-around gap-1 md:gap-5">
+      <div className="absolute inset-8 opacity-25 blur-[80px]" style={{background:displayed.primary}}/>
+      <div className="relative z-10 flex flex-col items-center gap-2 md:gap-3 text-center">
+       {badge(displayed,true)}
+       <span dir="ltr" className="text-xs tracking-[.35em] font-black text-[#e4c782]">THE CLUB</span>
+       <h2 className="text-3xl md:text-5xl leading-tight font-black drop-shadow-xl">{displayed.name}</h2>
+       <span dir="ltr" className="text-xs md:text-lg tracking-[.2em] text-slate-300 font-semibold">{displayed.english.toUpperCase()}</span>
+       <div className="flex gap-2 pt-1"><span className="h-1.5 w-14 rounded-full" style={{background:displayed.primary}}/><span className="h-1.5 w-14 rounded-full" style={{background:displayed.secondary}}/></div>
       </div>
-      {step==='clubs'?<>
-        <div>
-          <p className="text-amber-300 text-xs font-black tracking-wider mb-1">الاختيار الأول</p>
-          <h2 className="text-2xl md:text-4xl font-black">من هو ناديك المفضل؟</h2>
-          <p className="text-slate-400 text-sm mt-2">يختار الكمبيوتر منافسًا مختلفًا تلقائيًا. اختر أحد الأندية العشرة، وسيختار الكمبيوتر خصمك تلقائيًا.</p>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5 md:gap-4">
-          {ELITE_CLUBS.map((team,index)=><button key={team.id} onClick={()=>selectClub(team)} type="button"
-            className={'group relative min-h-[145px] sm:min-h-[180px] lg:min-h-[225px] rounded-3xl border border-white/15 hover:border-amber-300/70 overflow-hidden text-right transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-amber-300 '+(index>=clubPage*4&&index<(clubPage+1)*4?'flex':'hidden lg:flex')}
-            style={{...panelStyle}}>
-            <div className="absolute top-0 right-0 bottom-0 w-2" style={{background:team.primary}}/>
-            <div className="absolute -bottom-14 -left-10 w-44 h-44 rounded-full blur-3xl opacity-25" style={{background:team.primary}}/>
-            <div className="relative p-3 sm:p-4 lg:p-5 w-full h-full flex flex-col justify-between items-start">
-              <PenaltyClubCrest club={team} className="w-[66px] h-[66px] sm:w-[78px] sm:h-[78px] lg:w-[90px] lg:h-[90px] group-hover:scale-[1.06] transition-transform duration-300" />
-              <div className="w-full mt-5">
-                <div className="flex gap-1 mb-3"><span className="h-1 flex-1 rounded-full" style={{background:team.primary}}/><span className="h-1 flex-1 rounded-full" style={{background:team.secondary}}/></div>
-                <h3 className="text-sm sm:text-lg lg:text-xl font-black">{team.name}</h3>
-                <p dir="ltr" className="text-slate-400 text-[10px] lg:text-xs text-left mt-1 truncate">{team.english}</p>
-                <span className="flex items-center gap-1 text-amber-300 text-[11px] font-bold mt-2 lg:mt-4">اختيار النادي <ChevronLeft size={15}/></span>
-              </div>
-            </div>
-          </button>)}
-        </div>
-        <div className="lg:hidden flex items-center justify-center gap-2" aria-label="صفحات الأندية">
-          {Array.from({length:Math.ceil(ELITE_CLUBS.length/4)},(_,page)=><button
-            key={page} type="button" onClick={()=>setClubPage(page)}
-            aria-current={page===clubPage?'page':undefined}
-            className={'w-9 h-9 rounded-xl border text-sm font-black transition-colors '+(page===clubPage?'bg-amber-300 text-slate-950 border-amber-300':'bg-white/5 border-white/20 text-slate-200')}>
-            {page+1}
-          </button>)}
-        </div>
-        <p className="text-slate-500 text-[11px] leading-relaxed">الشعارات الأصلية مستخدمة للتعريف بالفرق فقط، وهي علامات تجارية لأصحابها، ولا تمثل هذه اللعبة اعتمادًا أو رعاية رسمية من الأندية.</p>
-      </>:<>
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 md:gap-4 p-3 md:p-5 rounded-3xl border border-white/15" style={panelStyle}>
-          <div className="flex flex-col items-center gap-1 min-w-0">
-            <span className="text-[10px] text-amber-300 font-bold">فريقك</span>
-            <PenaltyClubCrest club={club} className="w-12 h-12 md:w-16 md:h-16" />
-            <b className="text-xs md:text-lg text-center">{club.name}</b>
-          </div>
-          <div className="text-center flex flex-col items-center gap-2">
-            <strong className="text-2xl md:text-4xl font-black tracking-wider text-white/75">VS</strong>
-            <button type="button" onClick={switchRival} className="flex gap-1 items-center rounded-lg bg-white/10 px-2 py-1.5 text-[10px] md:text-xs text-amber-200 border border-white/15 hover:bg-white/15"><RotateCcw size={12}/> خصم آخر</button>
-          </div>
-          <div className="flex flex-col items-center gap-1 min-w-0">
-            <span className="text-[10px] text-slate-300 font-bold">الكمبيوتر</span>
-            <PenaltyClubCrest club={rival} className="w-12 h-12 md:w-16 md:h-16" />
-            <b className="text-xs md:text-lg text-center">{rival.name}</b>
-          </div>
-        </div>
-        <div className="flex justify-between items-end flex-wrap gap-2">
-          <div>
-            <p className="text-amber-300 font-black text-xs">اختر خمسة لاعبين، بالترتيب</p>
-            <h2 className="text-xl md:text-3xl font-black mt-1">قائمة مسددي ركلات الترجيح</h2>
-          </div>
-          <span className="rounded-xl border border-amber-300/35 bg-amber-300/10 text-amber-200 px-3 py-2 font-black tabular-nums">{selectedKickers.length} / 5</span>
-        </div>
-        <div className="flex lg:hidden items-center justify-between text-xs font-bold text-amber-200">
-          <span>لاعبو الفريق، المجموعة {rosterPage+1} من 2</span>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={()=>setRosterPage(0)} className={'rounded-lg border px-3 py-1.5 '+(rosterPage===0?'bg-amber-300 text-slate-900 border-amber-300':'bg-white/5 border-white/20 text-white')}>1 إلى 6</button>
-            <button type="button" onClick={()=>setRosterPage(1)} className={'rounded-lg border px-3 py-1.5 '+(rosterPage===1?'bg-amber-300 text-slate-900 border-amber-300':'bg-white/5 border-white/20 text-white')}>7 إلى 11</button>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3">
-          {club.players.map((player,index)=>{
-            const order=selectedKickers.findIndex(x=>x.number===player.number);
-            const chosen=order>=0;
-            return <button type="button" key={player.number} onClick={()=>toggle(player)}
-              disabled={!chosen&&selectedKickers.length>=5}
-              aria-pressed={chosen}
-              className={'relative min-w-0 overflow-hidden rounded-2xl text-center p-2 md:p-3 border transition-colors disabled:opacity-45 '+(index>=rosterPage*6 && index<(rosterPage+1)*6?'':'hidden lg:block')}
-              style={{...panelStyle,borderColor:chosen?'#e4b75b':'rgba(255,255,255,.15)'}}>
-              {chosen&&<span className="absolute top-2 right-2 flex items-center justify-center h-6 w-6 text-[11px] font-black rounded-full bg-amber-300 text-slate-950">{order+1}</span>}
-              <div className="h-12 md:h-20 flex flex-col items-center justify-center">
-                <Shirt size={29} style={{color:club.primary,filter:'drop-shadow(0 0 10px #ffffff24)'}} strokeWidth={1.8}/>
-                <span className="font-black text-white text-lg mt-[-4px]">{player.number}</span>
-              </div>
-              <div className="text-[11px] md:text-sm font-black truncate mt-1" dir="ltr">{player.name}</div>
-              <div className="text-[10px] text-slate-400 mt-1">{positionText[player.role]}</div>
-              <div className={chosen?'text-amber-300 text-[10px] font-bold mt-2':'text-slate-500 text-[10px] mt-2'}>{chosen?'تم اختياره':'اضغط للاختيار'}</div>
-            </button>;
-          })}
-        </div>
-        <div className="sticky bottom-1 flex gap-3 items-center p-3 md:p-4 rounded-2xl border border-amber-300/20 bg-[#091e2a]/95 backdrop-blur-xl">
-          <div className="flex-1 min-w-0">
-            <p className="font-black text-xs md:text-sm text-amber-200">ترتيب الركلات</p>
-            <div className="flex gap-1.5 mt-1 overflow-hidden">
-              {Array.from({length:5},(_,i)=><span key={i} className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[10px] md:text-xs truncate">
-                {selectedKickers[i]?String(i+1)+' '+selectedKickers[i].name:'ركلة '+String(i+1)}
-              </span>)}
-            </div>
-          </div>
-          <button type="button" disabled={selectedKickers.length!==5} onClick={()=>onStart(club,rival,selectedKickers)}
-            className="shrink-0 rounded-xl px-4 md:px-7 py-3 md:py-4 font-black text-xs md:text-base text-[#142332] bg-amber-300 hover:bg-amber-200 disabled:opacity-35 disabled:cursor-not-allowed flex items-center gap-2">
-            <span>ابدأ المباراة</span><ChevronLeft size={18}/>
-          </button>
-        </div>
-      </>}
+      <motion.div animate={reduced?{}:{y:[0,-6,0]}} transition={{duration:4,repeat:Infinity,ease:'easeInOut'}} className="relative z-10 flex h-[200px] md:h-[360px] w-[220px] md:w-[330px] items-center justify-center">
+       <PenaltyJersey club={displayed} showNumber={false} className="h-full w-full drop-shadow-[0_20px_28px_rgba(0,0,0,.8)]"/>
+      </motion.div>
+     </motion.div>
+    </AnimatePresence>
+   </div>
+   <div className="flex flex-col items-center gap-3">
+    <motion.button type="button" whileHover={reduced?{}:{scale:1.045}} whileTap={{scale:.975}} onClick={choose} className="elite-raised flex min-w-[220px] md:min-w-[310px] items-center justify-center gap-3 rounded-full bg-[#e7c681] px-8 py-3 md:py-4 text-sm md:text-lg font-black text-[#0d1b29] hover:bg-[#fff0c4]">اعتمد هذا النادي <ChevronLeft size={22}/></motion.button>
+    <div className="elite-raised flex w-full max-w-[1030px] items-center justify-center gap-0.5 md:gap-2 rounded-2xl border border-white/15 bg-black/45 p-1 md:p-2 backdrop-blur-xl">
+     {ELITE_CLUBS.map((team,i)=><button type="button" key={team.id} onClick={()=>setIndex(i)} aria-label={'عرض '+team.name} aria-pressed={index===i} title={team.name}
+      className={'relative flex min-w-0 flex-1 items-center justify-center rounded-xl py-1.5 md:py-2 transition-all duration-300 '+(index===i?'bg-white/15 ring-1 ring-[#e6bd73]/55':'hover:bg-white/10 opacity-55 hover:opacity-100')}>
+      <img src={team.crestUrl} alt="" loading="lazy" className="h-7 w-7 md:h-12 md:w-11 object-contain"/>
+      {index===i&&<span className="absolute bottom-0 h-0.5 w-3/5 rounded-full bg-[#e6bd73]"/>}
+     </button>)}
     </div>
-  </main>;
+    <p className="text-center text-[9px] md:text-[10px] text-slate-400">تنقل بين الأندية بواسطة الأسهم أو الشعارات. الشعارات للتعريف وليست رعاية رسمية.</p>
+   </div>
+  </motion.section>
+  :<motion.section key="lineup" initial={reduced?false:{opacity:0,x:-35}} animate={{opacity:1,x:0}} exit={{opacity:0}} transition={{duration:.34}} className="relative z-10 flex flex-1 min-h-0 flex-col gap-2 md:gap-3 px-3 md:px-7 pb-3 md:pb-5">
+   <div className="elite-raised flex shrink-0 items-center justify-between gap-2 rounded-2xl border border-white/15 bg-black/45 py-2 px-3 md:px-6">
+    <div className="flex items-center gap-2 md:gap-4">{badge(club)}<div><span className="text-[9px] text-[#e4c782]">فريقك</span><h2 className="font-black text-xs md:text-lg">{club.name}</h2></div></div>
+    <div className="text-center"><span dir="ltr" className="text-2xl font-black text-white/80">VS</span><button onClick={()=>setRival(chooseOpponent(club.id,rival.id))} type="button" className="flex items-center gap-1 text-[10px] text-[#e7c681] hover:underline"><RotateCcw size={11}/> خصم آخر</button></div>
+    <div className="flex items-center gap-2 md:gap-4"><div className="text-left"><span className="text-[9px] text-slate-400">الكمبيوتر</span><h2 className="font-black text-xs md:text-lg">{rival.name}</h2></div>{badge(rival)}</div>
+   </div>
+   <div className="flex shrink-0 items-center justify-between gap-2"><div><span className="text-[10px] font-black text-[#e7c681]">اختر خمسة لاعبين بالترتيب</span><h3 className="text-lg md:text-2xl font-black">المسددون</h3></div><span dir="ltr" className="rounded-xl border border-[#e6bf78]/45 bg-[#e6bf78]/10 px-3 py-2 text-base md:text-xl font-black text-[#f7dfae]">{selectedKickers.length} / 5</span></div>
+   <div className="flex lg:hidden shrink-0 items-center justify-between text-[10px] text-slate-300"><span>المجموعة {rosterPage+1} من 2</span><div className="flex gap-1">{[0,1].map(page=><button type="button" key={page} onClick={()=>setRosterPage(page)} className={'rounded-lg border px-3 py-1.5 '+(rosterPage===page?'border-[#e6bf78] text-[#e6bf78]':'border-white/20')}>{page===0?'1 إلى 6':'7 إلى 11'}</button>)}</div></div>
+   <div className="grid flex-1 min-h-0 grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-1.5 md:gap-2.5">
+    {club.players.map((player,i)=>{const place=selectedKickers.findIndex(p=>p.number===player.number),active=place>=0;return <button key={player.number} type="button" onClick={()=>toggle(player)} disabled={!active&&selectedKickers.length>=5} aria-pressed={active}
+      className={'group relative flex min-h-[130px] md:min-h-[178px] flex-col items-center justify-end overflow-hidden rounded-xl md:rounded-2xl border bg-gradient-to-b from-[#1d3039]/95 to-[#071421]/95 pb-2 pt-1 transition-all hover:-translate-y-1 disabled:opacity-40 '+(active?'border-[#f0c77a] shadow-[inset_0_0_0_1px_rgba(240,199,122,.6),0_0_25px_rgba(229,172,83,.18)]':'border-white/15 hover:border-white/60')+(i>=rosterPage*6&&i<(rosterPage+1)*6?'':' hidden lg:flex')}>
+      <div className="absolute inset-x-0 bottom-0 h-1/2 opacity-15" style={{background:'linear-gradient(to top,'+club.primary+',transparent)'}}/>
+      {active&&<span className="absolute z-10 top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#e6c47f] text-[#101922] text-xs font-black">{place+1}</span>}
+      <PenaltyJersey club={club} number={player.number} className="relative h-[88px] md:h-[124px] w-full drop-shadow-[0_8px_8px_rgba(0,0,0,.5)] group-hover:scale-[1.055] transition-transform duration-300"/>
+      <div className="relative w-full px-1 text-center mt-1"><strong dir="ltr" className="block text-[10px] md:text-sm font-black truncate">{player.name}</strong><span className="text-[9px] md:text-[10px] text-slate-400">{roles[player.role]}</span></div>
+    </button>})}
+   </div>
+   <div className="elite-raised flex shrink-0 items-center gap-2 rounded-xl border border-[#e5c17b]/20 bg-[#061724]/90 px-2.5 md:px-5 py-2">
+    <div className="flex flex-1 min-w-0 justify-end gap-1 md:gap-2 overflow-hidden">{Array.from({length:5},(_,i)=><div key={i} className="flex min-w-0 w-1/5 max-w-[130px] flex-col items-center rounded-lg border border-white/15 bg-black/25 px-1 py-1.5"><span className="text-[9px] text-[#e5c17b]">{i+1}</span><span dir="ltr" className="truncate max-w-full text-[9px] md:text-xs font-black">{selectedKickers[i]?.name||'...'}</span></div>)}</div>
+    <button type="button" disabled={selectedKickers.length!==5} onClick={()=>onStart(club,rival,selectedKickers)} className="flex shrink-0 items-center gap-1.5 rounded-xl bg-[#e5c17b] px-3 md:px-7 py-3 md:py-4 text-xs md:text-lg font-black text-[#101c29] hover:bg-[#ffdf9c] disabled:opacity-35">ابدأ الركلات <ChevronLeft size={19}/></button>
+   </div>
+  </motion.section>}
+  </AnimatePresence>
+ </main>;
 };

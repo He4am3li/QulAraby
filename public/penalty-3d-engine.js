@@ -21,7 +21,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.65;
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.25 : 1.75));
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.15 : 1.5));
   renderer.shadowMap.enabled = !mobile;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.style.cssText = 'width:100%;height:100%;display:block;touch-action:pan-y';
@@ -107,7 +107,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     rail.rotation.x=Math.PI/2;rail.position.y=y+1.1;scene.add(rail);
   }
   // The spectator geometry is instanced so it remains affordable on phones.
-  const audienceCount=mobile?1700:3800;
+  const audienceCount=mobile?950:2600;
   const seatGeo=new THREE.CapsuleGeometry(0.23,0.29,2,4);
   const audience=new THREE.InstancedMesh(seatGeo,seatingMat,audienceCount);
   const dummy=new THREE.Object3D();
@@ -204,15 +204,77 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.24,depthWrite:false}));
   ballShadow.rotation.x=-Math.PI/2;ballShadow.position.set(0,0.047,8.3);scene.add(ballShadow);
 
-  let shooterUniform='#1366b2';
-  const shooterShirtMaterials=[];
+  let shooterUniform='#1366b2', keeperUniform='#b7f02f';
+  let shooterSecondary='#eff4f5',keeperSecondary='#202e30';
+  let shooterNumber=9,keeperNumber=1;
+  let shooterName='',keeperName='';
+  const shooterShirtMaterials=[],keeperShirtMaterials=[];
+  const shooterShortsMaterials=[],keeperShortsMaterials=[];
+  const shooterSocksMaterials=[],keeperSocksMaterials=[];
+  const numberDecals=[];
+  const safeColor=(value,fallback)=>typeof value==='string'&&/^#[0-9a-fA-F]{6}$/.test(value)?value:fallback;
+  const setColor=(mats,color)=>mats.forEach(m=>m?.color?.set(color));
+  function addNumberPanels(actor){
+    // The number is part of the 3D actor scene, not a fixed 2D overlay.
+    for(const side of [-1,1]){
+      const canvas=document.createElement('canvas');
+      canvas.width=256;canvas.height=256;
+      const texture=new THREE.CanvasTexture(canvas);
+      texture.colorSpace=THREE.SRGBColorSpace;
+      const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
+      const panel=new THREE.Mesh(new THREE.PlaneGeometry(.57,.62),material);
+      panel.position.set(0,1.45,side*.315);
+      panel.rotation.y=side===1?0:Math.PI;
+      panel.renderOrder=5;
+      actor.root.add(panel);
+      numberDecals.push({keeper:actor.keeper,canvas,texture,panel});
+    }
+  }
+  function drawNumbers(){
+    for(const d of numberDecals){
+      const ctx=d.canvas.getContext('2d');if(!ctx)continue;
+      ctx.clearRect(0,0,256,256);
+      const number=d.keeper?keeperNumber:shooterNumber;
+      const name=d.keeper?keeperName:shooterName;
+      const background=d.keeper?keeperUniform:shooterUniform;
+      const r=parseInt(background.slice(1,3),16),g=parseInt(background.slice(3,5),16),b=parseInt(background.slice(5,7),16);
+      const ink=(.2126*r+.7152*g+.0722*b)>145?'#142034':'#f9faf4';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font='bold 40px Arial';
+      ctx.fillStyle=ink;ctx.fillText(String(name).toUpperCase().slice(0,12),128,55,232);
+      ctx.font='900 145px Arial';
+      ctx.lineWidth=3;ctx.strokeStyle=ink==='#142034'?'rgba(255,255,255,.35)':'rgba(0,0,0,.25)';
+      ctx.strokeText(String(number),128,151,240);
+      ctx.fillStyle=ink;ctx.fillText(String(number),128,151,240);
+      d.texture.needsUpdate=true;
+    }
+  }
+  function setKit(options={}){
+    shooterUniform=safeColor(options.shooterPrimary,shooterUniform);
+    shooterSecondary=safeColor(options.shooterSecondary,shooterSecondary);
+    keeperUniform=safeColor(options.keeperPrimary,keeperUniform);
+    keeperSecondary=safeColor(options.keeperSecondary,keeperSecondary);
+    shooterNumber=Number.isInteger(options.shooterNumber)?options.shooterNumber:shooterNumber;
+    keeperNumber=Number.isInteger(options.keeperNumber)?options.keeperNumber:keeperNumber;
+    shooterName=String(options.shooterName??shooterName);
+    keeperName=String(options.keeperName??keeperName);
+    setColor(shooterShirtMaterials,shooterUniform);
+    setColor(keeperShirtMaterials,keeperUniform);
+    setColor(shooterShortsMaterials,shooterSecondary);
+    setColor(keeperShortsMaterials,keeperSecondary);
+    setColor(shooterSocksMaterials,shooterSecondary);
+    setColor(keeperSocksMaterials,keeperSecondary);
+    drawNumbers();
+  }
   function createFallback(keeper) {
     // Fully articulated, rounded 3D athletes while the CC0 GLB rig loads.
     const root=new THREE.Group();
-    const jersey=material(keeper?0xb7f02f:shooterUniform,0.08,0.62);
-    if(!keeper)shooterShirtMaterials.push(jersey);
-    const shorts=material(keeper?0x25422c:0xeff4f5,0,0.85);
-    const socks=material(keeper?0xa4dd28:0x1b6bc9,0,0.73);
+    const jersey=material(keeper?keeperUniform:shooterUniform,0.08,0.62);
+    (keeper?keeperShirtMaterials:shooterShirtMaterials).push(jersey);
+    const shorts=material(keeper?keeperSecondary:shooterSecondary,0,0.85);
+    (keeper?keeperShortsMaterials:shooterShortsMaterials).push(shorts);
+    const socks=material(keeper?keeperSecondary:shooterSecondary,0,0.73);
+    (keeper?keeperSocksMaterials:shooterSocksMaterials).push(socks);
     const skin=material(0xb77d55,0,0.9),hair=material(0x241b19,0,0.98);
     function mesh(geometry,mat,parent,x,y,z) {
       const m=new THREE.Mesh(geometry,mat);m.position.set(x,y,z);
@@ -245,7 +307,8 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     {root:strikerRoot, keeper:false, fallback:createFallback(false), mixer:null, actions:{}, active:''},
     {root:keeperRoot, keeper:true, fallback:createFallback(true), mixer:null, actions:{}, active:''}
   ];
-  for(const a of actors)a.root.add(a.fallback.root);
+  // Do not show primitive fallback geometry while the rigged GLB loads.
+  // The adapter retains a cinematic curtain until the actual actors are ready.
 
   // CC0 humanoid model replaces the procedural rig when it is downloaded.
   // Never blocks the game or leaves an empty silhouette on network failure.
@@ -273,18 +336,22 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
           if(!o.isMesh)return;
           o.castShadow=true;o.receiveShadow=true;
           const kit={
-            Shirt:material(a.keeper?0xc0ed30:shooterUniform,0.08,0.65),
-            Shirt2:material(a.keeper?0x9dbc23:shooterUniform,0,0.72),
-            Pants:material(a.keeper?0x304531:0xf7fafb,0,0.77),
-            Socks:material(a.keeper?0xc0ed30:0x164ca4,0,0.72),
+            Shirt:material(a.keeper?keeperUniform:shooterUniform,0.08,0.65),
+            Shirt2:material(a.keeper?keeperUniform:shooterUniform,0,0.72),
+            Pants:material(a.keeper?keeperSecondary:shooterSecondary,0,0.77),
+            Socks:material(a.keeper?keeperSecondary:shooterSecondary,0,0.72),
             Shoes:material(0x171e24,0.06,0.47)
           };
-          if(!a.keeper)shooterShirtMaterials.push(kit.Shirt,kit.Shirt2);
+          const shirts=a.keeper?keeperShirtMaterials:shooterShirtMaterials;
+          const shorts=a.keeper?keeperShortsMaterials:shooterShortsMaterials;
+          const socks=a.keeper?keeperSocksMaterials:shooterSocksMaterials;
+          shirts.push(kit.Shirt,kit.Shirt2);
+          shorts.push(kit.Pants);socks.push(kit.Socks);
           const replace=m=>kit[m.name]||m;
           o.material=Array.isArray(o.material)?o.material.map(replace):replace(o.material);
         });
-        a.root.remove(a.fallback.root);
         a.root.add(rig);
+        addNumberPanels(a);
         a.mixer=new THREE.AnimationMixer(rig);
         // Named thigh bone, after the animation mixer, receives the impact kick.
         // The upstream CC0 clip collection has no authored football kick clip.
@@ -299,9 +366,11 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
         }
         setAction(a,'idle');
       }
+      drawNumbers();
       onReady?.({rigged:true, animations:gltf.animations.length});
     },undefined,(err)=>{
       if(canRetry){fetchAthlete(CDN_MODEL,false);return;}
+      // No temporary capsule player. Report the missing rig instead of flashing geometry.
       onReady?.({rigged:false,animations:0});
       onError?.(err);
     });
@@ -451,11 +520,8 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   frame=requestAnimationFrame(animate);
   return {
     setPhase,
-    setKitColor(value){
-      if(typeof value!=='string'||!/^#[0-9a-fA-F]{6}$/.test(value))return;
-      shooterUniform=value;
-      for(const shirt of shooterShirtMaterials)shirt.color.set(value);
-    },
+    setKitColor(value){setKit({shooterPrimary:value});},
+    setKit,
     reset,
     dispose(){
       if(disposed)return;
@@ -466,6 +532,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       renderer.domElement.removeEventListener('pointerup',onPointerUp);
       renderer.domElement.removeEventListener('pointercancel',onPointerUp);
       actors.forEach(a=>a.mixer?.stopAllAction());
+      numberDecals.forEach(d=>d.texture.dispose());
       scene.traverse(o=>{
         if(o.geometry && o.geometry.dispose)o.geometry.dispose();
         if(o.material){
