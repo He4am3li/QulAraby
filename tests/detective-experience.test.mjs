@@ -61,7 +61,7 @@ assert(!view.includes('speechSynthesis.speak'), 'The game must use only cinemati
 assert(!view.includes('showClueDetail'), 'Separate cipher window must be removed');
 assert(!view.includes('suspectPage'), 'Suspect paging must not return');
 assert(!view.includes('mobileAccusationSuspects'), 'Accusation must show everyone at once');
-assert(view.includes('activeCase.suspects.map(person => {'), 'Every suspect must appear directly in the scene');
+assert(view.includes('activeCase.suspects.map((person, suspectIndex) => {'), 'Every suspect must appear directly in the scene');
 assert((view.match(/activeCase\.suspects\.map/g) || []).length >= 2, 'Accusation must also show the full roster');
 assert(view.includes('activeClue.cipherOptions'), 'Cipher choices must be rendered directly in the scene');
 assert(view.includes('setCipherOpened(true)'), 'Inline cipher must unlock original clue');
