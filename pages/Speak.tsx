@@ -189,6 +189,22 @@ export const Speak: React.FC = () => {
   const learnerTextRef = React.useRef('');
   const tutorTextRef = React.useRef('');
 
+  const chooseCallContact = (contact: (typeof CALL_CONTACTS)[number]) => {
+    if (isActive || loading) return;
+    // Never show one fictional agent's previous transcript under another contact.
+    setSelectedCallContact(contact);
+    historyRef.current = [];
+    learnerTextRef.current = '';
+    tutorTextRef.current = '';
+    setConversationHistory([]);
+    setUserTranscription('');
+    setAiTranscription('');
+    setInsights(null);
+    setRecoveryNotice(null);
+    setError(null);
+    setShowSummary(false);
+  };
+
   const flushPendingTranscript = React.useCallback((): ChatEntry[] => {
     const completed = [...historyRef.current];
     if (learnerTextRef.current.trim()) completed.push({ role: 'user', text: learnerTextRef.current.trim() });
@@ -979,7 +995,12 @@ export const Speak: React.FC = () => {
                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{lang === 'ar' ? 'أقسام التحدث' : 'Speaking sections'}</h3>
                 <div className="space-y-2 mb-5">
                   <button type="button" disabled={isActive || loading}
-                    onClick={() => { setSpeakingBranch('booth'); setShowSummary(false); setShowMobileOptions(false); }}
+                    onClick={() => {
+                      if (speakingBranch !== 'booth') chooseCallContact(selectedCallContact);
+                      setSpeakingBranch('booth');
+                      setShowSummary(false);
+                      setShowMobileOptions(false);
+                    }}
                     className={`w-full flex gap-3 items-center rounded-2xl border-2 p-3 transition-all disabled:opacity-40 ${speakingBranch === 'booth' ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-white border-slate-100 text-slate-500 hover:border-amber-200'}`}>
                     <span className="flex items-center justify-center h-11 w-11 rounded-xl bg-slate-900 text-amber-200"><Phone size={23} /></span>
                     <span className="flex-1 text-right">
@@ -1005,7 +1026,7 @@ export const Speak: React.FC = () => {
                     <h4 className="text-[11px] font-black text-slate-400 mb-3">{lang === 'ar' ? 'دليل الاتصالات' : 'Call directory'}</h4>
                     {CALL_CONTACTS.map(contact => (
                       <button type="button" key={contact.id} disabled={isActive || loading}
-                        onClick={() => { setSelectedCallContact(contact); setShowMobileOptions(false); setRecoveryNotice(null); setShowSummary(false); }}
+                        onClick={() => { chooseCallContact(contact); setShowMobileOptions(false); }}
                         className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all disabled:opacity-40 ${contact.id === selectedCallContact.id ? 'border-amber-400 bg-amber-50 shadow-sm' : 'border-slate-100 bg-slate-50/50 hover:border-slate-200'}`}>
                         <span className={`flex items-center justify-center h-11 w-11 text-xl rounded-xl ${contact.id === selectedCallContact.id ? 'bg-[#1a2733] text-amber-200' : 'bg-white text-slate-600'}`}>{contact.symbol}</span>
                         <span className="flex-1 min-w-0 text-right">
@@ -1058,7 +1079,7 @@ export const Speak: React.FC = () => {
                     {LEVELS.map(level => (
                         <button
                             key={level.id}
-                            disabled={isActive}
+                            disabled={isActive || loading}
                             onClick={() => { manualLevelRef.current = true; setSelectedLevel(level); }}
                             className={`w-full px-4 py-3 rounded-xl text-xs font-black transition-all flex items-center justify-between ${selectedLevel?.id === level.id ? 'bg-[#2563eb] text-white shadow-md' : 'bg-white text-slate-400 hover:text-slate-600 border border-slate-100'} ${isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
@@ -1270,7 +1291,7 @@ export const Speak: React.FC = () => {
               onSelectContact={(id) => {
                 if (isActive || loading) return;
                 const contact = CALL_CONTACTS.find(item => item.id === id);
-                if (contact) { setSelectedCallContact(contact); setRecoveryNotice(null); setError(null); }
+                if (contact) chooseCallContact(contact);
               }}
               onShowDirectory={() => setShowMobileOptions(true)}
               onStart={() => startSession()}
