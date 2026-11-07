@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Check, Phone, PhoneCall, PhoneOff, Mic, MicOff, RotateCcw, BookOpen, ChevronLeft, Signal, Wifi, BatteryFull, Delete, AudioLines, X, Volume2 } from 'lucide-react';
 import { SpeakingPhoneBook } from './SpeakingPhoneBook';
+import { validateSimulatedDial } from '../services/speakingDial.mjs';
 import './SpeakingCallBooth.css';
 import './SpeakingModernPhone.css';
 
@@ -149,7 +150,6 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
   const completedGoals = missionEvidence?.filter(item => item.achieved).length || 0;
   const verified = assessmentStatus === 'analyzed' && completedGoals === contact.objectivesAr.length;
   const selected = CALL_CONTACTS.find(item => item.id === bookSelection) || null;
-  const dialMatch = CALL_CONTACTS.find(item => item.extension === dialed);
   const allTurns = [
     ...history.filter(item => item.text.trim()),
     ...(learnerText.trim() ? [{ role: 'user' as const, text: learnerText }] : []),
@@ -217,19 +217,19 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
 
   const startCall = () => {
     if (busy) return;
-    if (!selected) {
-      setDialError(ar ? 'افتح الأجندة واختر جهة الاتصال أولًا.' : 'Open the book and choose a contact first.');
-      tone(230, .16);
-      return;
-    }
-    if (dialed.length !== 3) {
-      setDialError(ar ? 'أدخل الرقم المكوّن من ثلاثة أرقام.' : 'Enter the complete three-digit number.');
-      tone(230, .16);
-      return;
-    }
-    if (!dialMatch || dialMatch.id !== selected.id) {
-      setDialError(ar ? 'الرقم غير مطابق. تحقق من الأجندة وحاول مجددًا.' : 'Wrong number. Check the book and try again.');
-      tone(230, .16);
+    const result = validateSimulatedDial({
+      selectedId: bookSelection,
+      dialed,
+      contacts: CALL_CONTACTS,
+    });
+    if (result !== 'ready') {
+      const messages = {
+        select_contact: ar ? 'افتح الأجندة واختر جهة الاتصال أولًا.' : 'Open the book and choose a contact first.',
+        incomplete: ar ? 'أدخل الرقم المكوّن من ثلاثة أرقام.' : 'Enter the complete three-digit number.',
+        wrong_number: ar ? 'الرقم غير مطابق. تحقق من الأجندة وحاول مجددًا.' : 'Wrong number. Check the book and try again.',
+      };
+      setDialError(messages[result as keyof typeof messages]);
+      tone(230,.16);
       return;
     }
     setDialError('');
