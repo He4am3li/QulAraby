@@ -389,38 +389,46 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
                 </div>
               )}
             </div>
-            {/* Only the portrait slots from the original investigation artwork receive dynamic images. */}
-            {mobileSuspects.map((person, slot) => {
-              const pos = [
-                { left: '69.7%', top: '16.1%' }, { left: '54.6%', top: '16.1%' }, { left: '39.4%', top: '16.1%' },
-                { left: '69.7%', top: '49.2%' }, { left: '54.6%', top: '49.2%' }, { left: '39.4%', top: '49.2%' },
-              ][slot];
-              const clear = eliminated.includes(person.id);
-              const selected = accusedId === person.id;
-              return <button type="button" key={person.id} aria-label={person.name + (clear ? '، بريء' : '')}
-                disabled={clear || clueCleared || accusationOpen}
-                onClick={() => onEliminate(person)}
-                className={'absolute z-20 flex flex-col overflow-hidden rounded-sm border bg-[#0a1016] focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200 ' +
-                  (clear ? 'border-emerald-400/70 ' : selected ? 'border-red-400/80 ' : 'border-amber-400/35 hover:border-amber-100')}
-                style={{ left: pos.left, top: pos.top, width: '12.2%', height: '23%' }}>
-                <span className="relative block min-h-0 w-full flex-1 overflow-hidden">
-                  <img src={person.image} alt="" loading="eager" className={'h-full w-full object-cover object-top ' + (clear ? 'grayscale brightness-50' : '')}/>
-                  {clear && <span className="absolute inset-0 flex items-center justify-center bg-emerald-950/25"><Check className="h-[30%] w-[30%] rounded-full bg-emerald-600 p-1 text-white"/></span>}
-                </span>
-                <span className="flex h-[17%] min-h-0 w-full flex-none items-center justify-center border-t border-amber-500/50 bg-[#070c11] px-0.5 text-center font-bold text-amber-100"
-                  style={{ fontSize: 'clamp(7px, .8vw, 15px)' }}>{person.name}</span>
-              </button>;
-            })}
-            {/* This compact pager only appears for the 10–12-suspect advanced cases. */}
-            {suspectPageCount > 1 && <div className="absolute left-[48%] top-[76%] z-30 flex w-[33%] items-center justify-center gap-1 text-amber-100">
-              <button type="button" onClick={() => setSuspectPage(v => Math.max(0, v - 1))} disabled={suspectPage === 0}
-                aria-label={t('المجموعة السابقة', 'Previous suspects')}
-                className="rounded-md border border-amber-500/30 bg-black/65 p-1 disabled:opacity-35"><ChevronRight className="h-3 w-3 sm:h-4 sm:w-4"/></button>
-              <span className="rounded-md bg-black/60 px-1 text-[8px] font-bold sm:px-2 sm:text-xs">{suspectPage + 1}/{suspectPageCount}</span>
-              <button type="button" onClick={() => setSuspectPage(v => Math.min(suspectPageCount - 1, v + 1))} disabled={suspectPage >= suspectPageCount - 1}
-                aria-label={t('المجموعة التالية', 'Next suspects')}
-                className="rounded-md border border-amber-500/30 bg-black/65 p-1 disabled:opacity-35"><ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4"/></button>
-            </div>}
+            {/* One uninterrupted investigation roster. Portraits fill their photo frames
+                and separate gold-bordered nameplates match the approved briefing art. */}
+            <div dir="rtl"
+              className="absolute z-20 flex flex-wrap content-center items-center justify-center overflow-hidden"
+              style={{
+                left: activeCase.suspects.length <= 6 ? '39.4%' : '38.6%',
+                top: activeCase.suspects.length <= 6 ? '16.1%' : '17.8%',
+                width: activeCase.suspects.length <= 6 ? '43.2%' : '60.5%',
+                height: activeCase.suspects.length <= 6 ? '57%' : '59.7%',
+                columnGap: '0.72%', rowGap: '3.2%',
+              }}>
+              {activeCase.suspects.map(person => {
+                const cleared = eliminated.includes(person.id);
+                return <button type="button" key={person.id}
+                  aria-label={person.name + (cleared ? '، بريء' : '')}
+                  disabled={cleared || clueCleared || accusationOpen}
+                  onClick={() => onEliminate(person)}
+                  className={'group flex min-h-0 flex-col overflow-hidden rounded-[3px] bg-transparent transition-transform duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-100 ' +
+                    (cleared ? 'opacity-70 ' : 'hover:-translate-y-0.5')}
+                  style={{
+                    flex: '0 0 ' + ((100 - (suspectColumns - 1) * 0.72) / suspectColumns) + '%',
+                    height: ((100 - (suspectRows - 1) * 3.2) / suspectRows) + '%',
+                  }}>
+                  <span className={'relative block min-h-0 w-full flex-1 overflow-hidden rounded-t-[3px] border border-b-0 bg-[#101820] shadow-md ' +
+                    (cleared ? 'border-emerald-400/70 ' : 'border-[#bb9251]/80 group-hover:border-amber-200')}>
+                    <img src={person.image} alt="" draggable={false} loading="eager"
+                      className={'absolute inset-0 block h-full w-full object-cover object-top transition-[filter] ' +
+                        (cleared ? 'grayscale brightness-[.55]' : '')}/>
+                    {cleared && <span className="absolute inset-0 flex items-center justify-center bg-emerald-950/25">
+                      <Check className="h-[25%] w-auto rounded-full bg-emerald-700 p-1 text-white"/>
+                    </span>}
+                  </span>
+                  <span className={'flex h-[17%] min-h-0 w-full flex-none items-center justify-center overflow-hidden rounded-b-[3px] border border-[#bb9251]/80 bg-[#080f18]/95 px-0.5 text-center font-bold leading-none text-[#f4d497] ' +
+                    (cleared ? 'text-slate-400 line-through' : '')}
+                    style={{ fontSize: suspectColumns === 6 ? 'clamp(7px, .89vw, 15px)' : 'clamp(8px, 1.01vw, 17px)' }}>
+                    {person.name}
+                  </span>
+                </button>;
+              })}
+            </div>
             <div className="absolute left-[7.5%] top-[56%] z-30 flex w-[28%] flex-col gap-1">
               {clueCleared && !readyToAccuse && <button type="button" onClick={nextClue}
                 className="rounded-md border border-amber-500/70 bg-[#0c1822]/85 px-1 py-1 font-bold text-amber-200"
@@ -432,8 +440,6 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
                 style={{ fontSize: 'clamp(8px, .85vw, 13px)' }}>{feedback}</div>}
             </div>
             <div className="absolute bottom-[2%] left-[2%] z-30 flex items-center gap-1">
-              <button type="button" onClick={() => setShowClueDetail(true)} aria-label={t('تفاصيل الإفادة', 'Statement details')}
-                className="rounded-md border border-amber-500/35 bg-black/60 p-1.5 text-amber-200"><Search className="h-3.5 w-3.5"/></button>
               <button type="button" onClick={() => setShowDossier(true)} aria-label={t('سجل الأدلة', 'Evidence log')}
                 className="rounded-md border border-amber-500/35 bg-black/60 p-1.5 text-amber-200"><Fingerprint className="h-3.5 w-3.5"/></button>
               <button type="button" onClick={toggleMute} aria-label={t('الصوت', 'Sound')}
