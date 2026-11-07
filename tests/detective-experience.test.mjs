@@ -52,7 +52,7 @@ for (const feature of ['localStorage.setItem', 'submitAccusation', 'activeCase.c
 }
 assert(view.includes('reason !== ' + "'evidence'"), 'Accusation must require an evidence-based reason');
 assert(view.includes('left: \'23.2%\''), 'Original cinematic level-selection click area must be preserved');
-assert(view.includes('left: \'1.8%\''), 'Original case brief start hotspot must be preserved');
+assert(view.includes('detectiveRectStyle(getDetectiveStartRect(level, activeCase.caseNumber))'), 'Case-specific poster start-button alignment missing');
 assert(view.includes('url("/٨.jpeg")'), 'Investigation must use original artwork');
 assert(view.includes('url("/٩.jpeg")'), 'Report must use original artwork');
 assert(view.includes("left:'65.5%'"), 'Vocabulary must fill original preprinted slots');
@@ -61,11 +61,16 @@ assert(!view.includes('speechSynthesis.speak'), 'The game must use only cinemati
 assert(!view.includes('showClueDetail'), 'Separate cipher window must be removed');
 assert(!view.includes('suspectPage'), 'Suspect paging must not return');
 assert(!view.includes('mobileAccusationSuspects'), 'Accusation must show everyone at once');
-assert(view.includes('activeCase.suspects.map(person => {'), 'Every suspect must appear directly in the scene');
+assert(view.includes('activeCase.suspects.map((person, suspectIndex) => {'), 'Every suspect must appear directly in the scene');
 assert((view.match(/activeCase\.suspects\.map/g) || []).length >= 2, 'Accusation must also show the full roster');
 assert(view.includes('activeClue.cipherOptions'), 'Cipher choices must be rendered directly in the scene');
 assert(view.includes('setCipherOpened(true)'), 'Inline cipher must unlock original clue');
 assert(view.includes('object-cover object-top'), 'Portraits must fill image frames');
 assert(view.includes('rounded-b-[3px]'), 'Each portrait must have a separate gold nameplate');
 assert(view.includes('suspectRows'), '10 to 12 suspects must fit into two rows');
-console.log('Detective experience: approved cinematic UI, inline ciphers, single-page roster, image-fit portraits and progress verified.');
+assert(!view.includes("import confetti"), 'Celebration particle library should not be used');
+assert(!view.includes('confetti('), 'No particles should be fired after solving');
+assert(view.includes("top: '31.1%'") && view.includes("height: '21.9%'"), 'Cipher must stay inside the original yellow parchment');
+assert(view.includes('getAdvancedPosterPortraitStyle(activeCase.caseNumber, suspectIndex'), 'Use source poster crops, not misaligned thumbnail enlargements');
+assert(view.includes('Hide the six obsolete blank frames'), 'Old ghost portrait placeholders must be covered');
+console.log('Detective experience: case-specific buttons, centered parchment, accurate image crops and quiet ending verified.');
