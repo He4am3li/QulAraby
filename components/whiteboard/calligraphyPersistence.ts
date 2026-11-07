@@ -90,16 +90,21 @@ export async function persistCalligraphyCards(cards: SavedCalligraphyCard[], sco
 
 /** The old shared gallery is never auto-assigned to a signed-in user's account. */
 export async function loadLegacyCalligraphyCards(): Promise<SavedCalligraphyCard[]> {
-  const legacy = await readGalleryKey(RECORD_KEY);
-  if (legacy.length > 0) return legacy.slice(0, MAX_SAVED_CALLIGRAPHY_CARDS);
+  const [guestCards, previousCards] = await Promise.all([
+    readGalleryKey(scopeKey('guest')),
+    readGalleryKey(RECORD_KEY)
+  ]);
+  let oldLocalStorage: SavedCalligraphyCard[] = [];
   try {
     const raw = localStorage.getItem(LEGACY_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.slice(0, MAX_SAVED_CALLIGRAPHY_CARDS) : [];
-  } catch {
-    return [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(parsed)) oldLocalStorage = parsed;
+  } catch { /* invalid old data must never affect current works */ }
+  const merged = new Map<string, SavedCalligraphyCard>();
+  for (const card of [...oldLocalStorage, ...previousCards, ...guestCards]) {
+    if (card?.id && card?.dataUrl) merged.set(card.id, card);
   }
+  return Array.from(merged.values()).slice(0, MAX_SAVED_CALLIGRAPHY_CARDS);
 }
 
 export async function loadCalligraphyCards(scope = 'guest'): Promise<SavedCalligraphyCard[]> {
