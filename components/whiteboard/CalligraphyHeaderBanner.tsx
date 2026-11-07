@@ -1,6 +1,5 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { CalligraphyInkIdentity } from './CalligraphyInkIdentity';
 
 interface CalligraphyHeaderBannerProps {
   onOpenHelp?: () => void;
@@ -64,14 +63,43 @@ export const CalligraphyHeaderBanner: React.FC<CalligraphyHeaderBannerProps> = (
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0c0a08]/20 to-[#0c0a08]" />
       </div>
 
-      {/* Hand-drawn ink traces and delicate tashkeel forms, shared with the studio. */}
-      <CalligraphyInkIdentity variant="header" />
+      {/* 4. BACKGROUND DIWANI LETTERS (Clearly visible artistic calligraphy identity) */}
+      <div className="absolute inset-0 pointer-events-none z-15 overflow-hidden opacity-75">
+        <svg
+          viewBox="0 0 1440 120"
+          preserveAspectRatio="xMidYMid meet"
+          className="w-full h-full select-none"
+        >
+          <defs>
+            <linearGradient id="headerDiwaniGold" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="30%" stopColor="#ffebb5" />
+              <stop offset="65%" stopColor="#e5be53" />
+              <stop offset="100%" stopColor="#b8861e" />
+            </linearGradient>
+          </defs>
+          <g>
+            <text x="180" y="74" fontSize="48" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.6">ك</text>
+            <text x="260" y="68" fontSize="42" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.75">ط</text>
+            <text x="340" y="72" fontSize="50" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.9">قُ</text>
+            <text x="430" y="62" fontSize="56" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.95">لْ</text>
+            <text x="520" y="78" fontSize="48" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.9">مِ</text>
+            <text x="610" y="66" fontSize="52" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.95">دَ</text>
+            <text x="700" y="72" fontSize="46" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.95">ادْ</text>
+            <text x="800" y="66" fontSize="50" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.95">ن</text>
+            <text x="890" y="75" fontSize="46" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.9">و</text>
+            <text x="980" y="65" fontSize="52" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.85">ص</text>
+            <text x="1070" y="74" fontSize="48" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.75">ع</text>
+            <text x="1160" y="66" fontSize="44" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.6">ف</text>
+          </g>
+        </svg>
+      </div>
 
       {/* 5. CENTER TITLE: ───❖ ديوان الخط العربي ❖─── (Brilliant Solid Pure White) */}
-      <div className="relative z-25 w-full h-full px-4 sm:px-6 flex items-center justify-center pointer-events-none">
-        <div className="flex items-center gap-2.5 sm:gap-4 text-[#e6dfd5] pointer-events-auto">
+      <div className="relative z-[50] isolate w-full h-full px-4 sm:px-6 flex items-center justify-center pointer-events-none" style={{ isolation: "isolate" }}>
+        <div className="flex items-center justify-center gap-2.5 sm:gap-4 text-[#ffffff] pointer-events-auto min-w-0 max-w-full">
 
-          <div className="flex items-center gap-2 text-[#c59b27]">
+          <div className="hidden sm:flex items-center gap-2 text-[#c59b27] shrink-0">
             <span className="w-8 sm:w-16 md:w-24 h-[1.5px] bg-gradient-to-r from-transparent via-[#c59b27] to-[#c59b27]" />
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-[#c59b27] drop-shadow-[0_0_8px_rgba(197,155,39,0.7)]">
               <polygon points="12,2 14.5,8.5 21,9.5 16,14.5 17.5,21 12,17.5 6.5,21 8,14.5 3,9.5 9.5,8.5" />
@@ -80,11 +108,20 @@ export const CalligraphyHeaderBanner: React.FC<CalligraphyHeaderBannerProps> = (
             <span className="w-3 sm:w-5 h-[1.5px] bg-[#c59b27]" />
           </div>
 
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-black font-tajawal text-[#ffffff] tracking-wide px-3 whitespace-nowrap drop-shadow-[0_2px_8px_rgba(0,0,0,1)] drop-shadow-[0_0_16px_rgba(255,255,255,0.75)]">
+          <h1 className="relative z-[60] shrink-0 max-w-full font-black font-tajawal tracking-normal text-center whitespace-nowrap px-1 sm:px-3"
+            style={{
+              color: '#ffffff',
+              WebkitTextFillColor: '#ffffff',
+              opacity: 1,
+              fontSize: 'clamp(16px, 3.8vw, 30px)',
+              lineHeight: 1.5,
+              textShadow: '0 2px 8px rgba(0,0,0,1), 0 0 14px rgba(0,0,0,.9)',
+              isolation: 'isolate'
+            }}>
             ديوان الخط العربي
           </h1>
 
-          <div className="flex items-center gap-2 text-[#c59b27]">
+          <div className="hidden sm:flex items-center gap-2 text-[#c59b27] shrink-0">
             <span className="w-3 sm:w-5 h-[1.5px] bg-[#c59b27]" />
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-[#c59b27] drop-shadow-[0_0_8px_rgba(197,155,39,0.7)]">
               <polygon points="12,2 14.5,8.5 21,9.5 16,14.5 17.5,21 12,17.5 6.5,21 8,14.5 3,9.5 9.5,8.5" />
