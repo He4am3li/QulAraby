@@ -86,6 +86,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const [errors, setErrors] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const [showDossier, setShowDossier] = useState(false);
+  const [showClueDetail, setShowClueDetail] = useState(false);
   const [accusationOpen, setAccusationOpen] = useState(false);
   const [accusedId, setAccusedId] = useState<string | null>(null);
   const [suspectPage, setSuspectPage] = useState(0);
@@ -120,19 +121,8 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const advancedProofsCorrect = advancedProofs.length === 2 &&
     advancedProofs.every((proof, index) => advancedProofAnswers[index] === proof.correctIndex);
 
-  const playSpeech = (arabicText: string) => {
-    if (isMuted || typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      setFeedback(t('النطق غير متاح أو الصوت مكتوم.', 'Speech is unavailable or muted.'));
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(arabicText);
-    utterance.lang = 'ar-SA';
-    utterance.rate = level === 'beginner' ? 0.78 : 0.9;
-    const voice = window.speechSynthesis.getVoices().find(v => v.lang.toLowerCase().startsWith('ar'));
-    if (voice) utterance.voice = voice;
-    window.speechSynthesis.speak(utterance);
-  };
+  // The cinematic soundscape uses authored music and effects only.
+  // Never synthesize Arabic speech for dossiers, witness statements or words.
   useEffect(() => () => {
     spyAudio.stopBgm();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -144,12 +134,11 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const toggleMute = () => {
     spyAudio.setMuted(!isMuted);
     setIsMuted(!isMuted);
-    if (!isMuted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
   };
   const resetInvestigation = () => {
     setClueIndex(0); setEliminated([]); setCipherOpened(false);
     setFeedback(''); setErrors(0); setShowTranslation(false);
-    setShowDossier(false); setAccusationOpen(false); setAccusedId(null);
+    setShowDossier(false); setShowClueDetail(false); setAccusationOpen(false); setAccusedId(null);
     setReason(''); setSolved(false); setWordAnswers({}); setReportTab('practice');
     setSuspectPage(0); setAccusationPage(0); setAdvancedProofAnswers({});
   };
@@ -217,7 +206,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
     setFeedback('');
     const base = Math.max(0, 85 - errors * 5);
     markCaseSolved(base);
-    setScreen('envelope');
+    setScreen('report');
     try { confetti({ particleCount: 65, spread: 60, origin: { y: 0.55 } }); } catch {}
   };
   const answerWord = (choice: string) => {
@@ -288,25 +277,6 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const evidenceAr = narrative?.finalEvidenceAr || 'بقية المشتبه بهم لديهم دليل براءة.';
   const evidenceEn = narrative?.finalEvidenceEn || 'Other suspects have alibis.';
   const reportIsReady = solved && wordsComplete;
-  const Header = () => (
-    <header className="relative z-20 flex h-14 w-full flex-none items-center justify-between gap-2 border-b border-amber-400/20 bg-[#07111b]/80 px-3 sm:px-5 backdrop-blur-xl">
-      <div className="flex min-w-0 items-center gap-2">
-        <button type="button" aria-label={t('العودة', 'Back')} onClick={() => {
-          setFeedback('');
-          setScreen(screen === 'investigation' ? 'briefing' : screen === 'intro' ? 'intro' : 'intro');
-          if (screen === 'intro') onBack?.();
-        }} className="rounded-lg border border-amber-500/30 p-2 text-amber-200 hover:bg-amber-400/10"><ArrowRight size={17}/></button>
-        <ShieldCheck size={18} className="shrink-0 text-amber-300"/>
-        <span className="truncate font-bold text-amber-100">{screen === 'intro' ? t('من الجاني؟', 'Who Did It?') : t(labelAr, labelEn)}</span>
-      </div>
-      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-        {screen !== 'intro' && <span className="hidden rounded-full border border-amber-400/30 px-2 py-1 text-[11px] text-amber-200 sm:inline">{levelLabel(level, language)} {caseIndex + 1}/{cases.length}</span>}
-        <button type="button" onClick={() => setLanguage(l => l === 'ar' ? 'en' : 'ar')} className="min-w-[42px] rounded-lg border border-amber-400/30 px-2 py-1.5 text-xs font-bold text-amber-200" aria-label="Toggle language">{language === 'ar' ? 'EN' : 'عربي'}</button>
-        <button type="button" aria-label={t('الصوت', 'Sound')} onClick={toggleMute} className="rounded-lg border border-amber-400/30 p-2 text-amber-200">{isMuted ? <VolumeX size={17}/> : <Volume2 size={17}/>}</button>
-        <button type="button" aria-label={t('الموسيقى', 'Music')} onClick={toggleMusic} className={'rounded-lg border p-2 ' + (musicPlaying ? 'border-amber-200 bg-amber-500/20 text-amber-100' : 'border-amber-400/30 text-amber-200')}><Music2 size={17}/></button>
-      </div>
-    </header>
-  );
   const notice = feedback && <div role="status" aria-live="polite" className="mx-auto w-full max-w-4xl rounded-xl border border-amber-300/35 bg-[#0c1822]/95 px-3 py-2 text-center text-xs text-amber-100 shadow-lg sm:text-sm">{feedback}</div>;
   const primaryButton = 'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-amber-200/70 bg-gradient-to-b from-amber-500 to-amber-700 px-5 py-2.5 font-bold text-slate-950 shadow-[0_10px_30px_rgba(217,119,6,.25)] transition hover:brightness-110 focus-visible:outline focus-visible:outline-amber-200';
   const secondaryButton = 'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-[#101e29]/90 px-4 py-2.5 font-semibold text-amber-100 transition hover:bg-amber-400/15';
@@ -314,179 +284,162 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const deviceNotice = t('يُحفظ تقدمك على هذا الجهاز.', 'Progress is saved on this device.');
 
   return (
-    <main dir={language === 'ar' ? 'rtl' : 'ltr'} lang={language} className="relative flex min-h-[100dvh] w-full flex-col overflow-x-hidden bg-[#070d14] font-sans text-slate-100" style={pageStyle}>
-      <Header/>
+    <main dir={language === 'ar' ? 'rtl' : 'ltr'} lang={language} className="relative flex min-h-[100dvh] w-full flex-col overflow-hidden bg-[#070d14] font-sans text-slate-100">
       {screen === 'intro' && (
-        <section className={container + ' justify-center gap-4'}>
-          <div className="mx-auto w-full max-w-3xl space-y-3 rounded-3xl border border-amber-400/35 bg-[#0a1622]/85 p-5 text-center shadow-2xl backdrop-blur-xl sm:p-8">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-amber-300/50 bg-amber-500/10"><Search className="text-amber-300" size={29}/></div>
-            <h1 className="text-3xl font-black text-amber-200 sm:text-5xl">{t('من الجاني؟', 'Who Did It?')}</h1>
-            <p className="text-sm leading-relaxed text-slate-200 sm:text-lg">{t('راقب، استمع، استبعد الأبرياء، ثم اتهم الشخص الذي تدينه الأدلة.', 'Observe, listen, clear the innocent suspects, then make an evidence-based accusation.')}</p>
-            <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-3">
-              {(['beginner', 'intermediate', 'advanced'] as DifficultyLevel[]).map(item => {
-                const list = CASES_DATABASE.filter(c => c.level === item);
-                const total = progress[item].completedIds.filter(id => list.some(c => c.id === id)).length;
-                return <button key={item} type="button" onClick={() => chooseLevel(item)} className="rounded-2xl border border-amber-300/45 bg-gradient-to-b from-[#23303b] to-[#101920] p-4 text-start transition hover:-translate-y-1 hover:border-amber-200 hover:shadow-xl">
-                  <span className="flex items-center gap-2 text-lg font-bold text-amber-200"><Fingerprint size={21}/>{levelLabel(item, language)}</span>
-                  <span className="mt-2 block text-xs text-slate-200">{t('قضايا مكتملة', 'Cases solved')} {total}/{list.length}</span>
-                  <span className="mt-3 block text-xs text-amber-100">{total ? t('تابع التحقيق', 'Continue') : t('ابدأ التحقيق', 'Begin investigation')}</span>
-                </button>;
-              })}
-            </div>
-            <p className="text-xs text-slate-400">{deviceNotice}</p>
+        <section className="relative flex w-full flex-1 items-center justify-center overflow-hidden bg-[#03080e]" aria-label={t('اختيار مستوى التحقيق', 'Select investigation level')}>
+          <div className="relative aspect-video w-full overflow-hidden shadow-2xl" style={{ maxHeight: '100dvh', maxWidth: 'calc(100dvh * (16 / 9))' }}>
+            <div className="pointer-events-none absolute inset-0 bg-center bg-no-repeat" style={{ backgroundImage: 'url("/١.webp"), url("/1.webp")', backgroundSize: '100% 100%' }}/>
+            {onBack && <button type="button" onClick={onBack} className="absolute right-[1%] top-[2%] z-20 rounded-full border border-amber-500/40 bg-black/55 px-3 py-1.5 text-xs font-bold text-amber-200" aria-label={t('العودة إلى الألعاب', 'Back to games')}><ArrowRight size={15}/></button>}
+            {([
+              { id: 'beginner' as DifficultyLevel, left: '23.2%' },
+              { id: 'intermediate' as DifficultyLevel, left: '41.6%' },
+              { id: 'advanced' as DifficultyLevel, left: '60.0%' },
+            ]).map(item => <button key={item.id} type="button" onClick={() => chooseLevel(item.id)}
+              aria-label={t('المستوى ', 'Level ') + levelLabel(item.id, language)}
+              className="absolute z-20 cursor-pointer rounded-xl bg-transparent outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300 hover:bg-white/5"
+              style={{ left: item.left, top: '50.5%', width: '16.8%', height: '35.5%' }}/>)}
+            <button type="button" onClick={toggleMute} title={t('كتم الصوت', 'Mute sound')}
+              aria-label={t('الصوت', 'Sound')} className="absolute z-20 flex items-center justify-center rounded-full bg-transparent hover:bg-white/10"
+              style={{ left: '2.7%', top: '86%', width: '4.5%', aspectRatio: '1' }}>
+              {isMuted && <VolumeX className="h-[65%] w-[65%] rounded-full bg-black/80 p-1 text-red-400" />}
+            </button>
+            <button type="button" onClick={toggleMusic} title={t('الموسيقى', 'Music')} aria-label={t('الموسيقى', 'Music')}
+              className="absolute z-20 flex items-center justify-center rounded-full bg-transparent hover:bg-white/10"
+              style={{ left: '8.9%', top: '86%', width: '4.5%', aspectRatio: '1' }}>
+              {!musicPlaying && <span className="rounded-full bg-black/70 px-1 text-xs text-slate-300">×</span>}
+            </button>
           </div>
         </section>
       )}
       {screen === 'briefing' && (
-        <section className={container + ' justify-center gap-3'}>
-          <div className="grid w-full flex-1 items-center gap-4 lg:grid-cols-[minmax(300px,.9fr)_minmax(0,1.2fr)]">
-            <div className="flex flex-col gap-3 rounded-3xl border border-amber-400/50 bg-[#07131e]/90 p-4 shadow-2xl backdrop-blur-xl sm:p-6">
-              <div className="flex items-center justify-between text-amber-300"><span className="text-xs font-bold tracking-wide">{t('بلاغ الواقعة', 'CASE BRIEFING')}</span><span className="text-xs">{caseIndex + 1}/{cases.length}</span></div>
-              <h2 className="text-2xl font-black text-amber-200 sm:text-3xl">{t(labelAr, labelEn)}</h2>
-              <p className="text-base leading-loose text-slate-100 sm:text-lg">{description}</p>
-              {language === 'en' && <p lang="ar" dir="rtl" className="rounded-xl bg-black/25 p-2 text-sm text-amber-100">{activeCase.crimeDescription}</p>}
-              <button type="button" className={secondaryButton} onClick={() => playSpeech(activeCase.crimeDescription)}><Headphones size={18}/>{t('استمع إلى البلاغ', 'Listen to Arabic briefing')}</button>
-              <div className="flex flex-wrap gap-2">
-                {activeCase.evidenceTerms.slice(0,3).map(term => <span key={term.ar} className="rounded-full border border-amber-500/20 bg-black/30 px-3 py-1 text-xs text-amber-100">{term.ar}</span>)}
-              </div>
-              <button type="button" onClick={() => {setFeedback(''); spyAudio.playClassifiedStamp(); setScreen('investigation');}} className={primaryButton}><Search size={19}/>{t('بدء التحقيق', 'Start investigating')}</button>
-            </div>
-            <div className="flex flex-col gap-2 rounded-3xl border border-amber-400/20 bg-[#06101a]/70 p-3 backdrop-blur-md">
-              <h3 className="text-center text-sm font-bold text-amber-200">{t('المشتبه بهم', 'Six suspects')}</h3>
-              {level === 'advanced' && <img
-                src={`/detective/advanced/scene-${String(activeCase.caseNumber).padStart(2, '0')}.webp`}
-                alt={t('مسرح الجريمة والمشتبه بهم', 'Cinematic crime scene and suspects')}
-                className="max-h-48 w-full rounded-xl border border-amber-400/30 object-cover object-center"
-              />}
-              <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6">
-                {activeCase.suspects.map(person => <Portrait key={person.id} person={person} compact disabled />)}
-              </div>
+        <section className="relative flex w-full flex-1 items-center justify-center overflow-hidden bg-[#03080e]" aria-label={t('بلاغ الواقعة', 'Crime briefing')}>
+          <div className="relative aspect-video w-full overflow-hidden shadow-2xl" style={{ maxHeight: '100dvh', maxWidth: 'calc(100dvh * (16 / 9))' }}>
+            <div className="pointer-events-none absolute inset-0 bg-center bg-no-repeat" style={{ backgroundImage: activeCase.bgImage, backgroundSize: '100% 100%' }}/>
+            <button type="button" onClick={() => setScreen('intro')}
+              aria-label={t('الرجوع لاختيار المستوى', 'Back to level selection')}
+              className="absolute right-[1%] top-[2%] z-20 rounded-full border border-amber-500/40 bg-black/50 p-2 text-amber-200 hover:bg-black/75">
+              <ArrowRight size={15}/>
+            </button>
+            <button type="button" onClick={() => { setFeedback(''); spyAudio.playClassifiedStamp(); setScreen('investigation'); }}
+              aria-label={t('بدء التحقيق واستبعاد الأبرياء', 'Start investigation and clear innocents')}
+              title={t('بدء التحقيق', 'Start investigation')}
+              className="absolute z-20 cursor-pointer rounded-lg bg-transparent outline-offset-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300 hover:bg-white/5"
+              style={{ left: '1.8%', top: '65.6%', width: '29.0%', height: '7.3%' }}/>
+            <div className="absolute bottom-[2%] left-[1%] z-20 flex gap-2">
+              <button type="button" onClick={toggleMute} aria-label={t('الصوت', 'Sound')} className="rounded-full border border-amber-400/30 bg-black/50 p-1.5 text-amber-100 hover:bg-black/75">{isMuted ? <VolumeX size={15}/> : <Volume2 size={15}/>}</button>
+              <button type="button" onClick={toggleMusic} aria-label={t('الموسيقى', 'Music')} className="rounded-full border border-amber-400/30 bg-black/50 p-1.5 text-amber-100 hover:bg-black/75"><Music2 size={15}/></button>
             </div>
           </div>
-          {notice}
         </section>
       )}
       {screen === 'investigation' && (
-        <section className={container + ' gap-3'}>
-          <div className="grid flex-1 items-stretch gap-3 lg:grid-cols-[minmax(260px,.85fr)_minmax(0,1.4fr)]">
-            <div className="flex flex-col justify-between gap-3 rounded-2xl border border-amber-500/45 bg-[#091823]/95 p-3 shadow-2xl backdrop-blur-xl sm:p-5">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-2 text-sm font-bold text-amber-300"><Fingerprint size={17}/>{t('الإفادة', 'Statement')} {clueIndex + 1}/{activeCase.clues.length}</span>
-                  <span className="rounded-full border border-amber-500/25 px-2 py-1 text-[11px] text-amber-100">{t('الأبرياء', 'Cleared')} {eliminated.length}/{activeCase.suspects.length - 1}</span>
-                </div>
-                {level === 'advanced' && activeClue.cipherKey && !cipherOpened ? (
-                  <div className="space-y-3">
-                    <p className="text-sm font-semibold text-amber-100">{activeClue.cipherHint}</p>
-                    <div className="flex flex-wrap gap-2">{(activeClue.cipherOptions || []).map(option => <button key={option} type="button" onClick={() => {
-                      if (option === activeClue.cipherKey) { setCipherOpened(true); spyAudio.playCipherDecode(); setFeedback(''); }
-                      else { setErrors(value => value + 1); setFeedback(t('مفتاح خاطئ، أعد المحاولة.', 'Wrong key. Try again.')); spyAudio.playWrongBuzzer(); }
-                    }} className={secondaryButton + ' text-xs'}>{option}</button>)}</div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p lang="ar" dir="rtl" className="rounded-xl bg-[#e6d0a6] p-3 text-center text-base font-bold leading-loose text-[#382815] sm:p-4 sm:text-lg">{activeClue.speech}</p>
-                    {language === 'en' && <p className="text-sm leading-relaxed text-slate-100">{narrative?.cluesEn[clueIndex] || activeClue.speech}</p>}
-                    {language === 'ar' && showTranslation && <p dir="ltr" className="text-sm leading-relaxed text-slate-200">{narrative?.cluesEn[clueIndex] || ''}</p>}
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button type="button" className={secondaryButton + ' flex-1 text-xs sm:text-sm'} onClick={() => playSpeech(activeClue.speech)}><Volume2 size={16}/>{t('استمع', 'Listen')}</button>
-                <button type="button" className={secondaryButton + ' flex-1 text-xs sm:text-sm'} onClick={() => setShowTranslation(!showTranslation)}><BookOpen size={16}/>{t('الترجمة', 'Translation')}</button>
-                <button type="button" className={secondaryButton + ' flex-1 text-xs sm:text-sm'} onClick={() => setShowDossier(true)}><Fingerprint size={16}/>{t('المفردات', 'Words')}</button>
-              </div>
-              {clueCleared && !readyToAccuse && <button type="button" className={primaryButton} onClick={nextClue}><ChevronLeft size={17}/>{t('الدليل التالي', 'Next clue')}</button>}
-              {readyToAccuse && <button type="button" className={primaryButton} onClick={() => { setAccusationOpen(true); setFeedback(''); }}><ShieldCheck size={17}/>{t('وجّه الاتهام', 'Make an accusation')}</button>}
-              <p className="text-xs leading-relaxed text-slate-300">{t('اقرأ الإفادة واضغط على الأشخاص الذين ثبتت براءتهم فقط.', 'Read the statement and tap only the suspects it clears.')}</p>
+        <section className="relative flex w-full flex-1 items-center justify-center overflow-hidden bg-[#03080e]" aria-label={t('غرفة التحقيق', 'Investigation room')}>
+          <div className="relative aspect-video w-full overflow-hidden shadow-2xl" style={{ maxHeight: '100dvh', maxWidth: 'calc(100dvh * (16 / 9))' }}>
+            {/* Original ٨.jpeg: full-resolution picture with its built-in evidence and portrait frames. */}
+            <div className="pointer-events-none absolute inset-0 bg-center bg-no-repeat" style={{ backgroundImage: 'url("/٨.jpeg"), url("/8.jpeg"), url("/٨.webp")', backgroundSize: '100% 100%' }}/>
+            <button type="button" aria-label={t('العودة إلى مسرح الجريمة', 'Back to scene')}
+              onClick={() => { setFeedback(''); setScreen('briefing'); }}
+              className="absolute right-[1%] top-[2%] z-30 rounded-full border border-amber-500/40 bg-black/55 p-1.5 text-amber-200 hover:bg-black/75">
+              <ArrowRight size={15}/>
+            </button>
+            <div className="absolute z-20 flex flex-col items-center justify-center overflow-hidden text-center"
+              style={{ left: '7.5%', top: '22%', width: '28%', height: '32%' }} dir="rtl">
+              {level === 'advanced' && activeClue.cipherKey && !cipherOpened ? (
+                <button type="button" onClick={() => setShowClueDetail(true)} className="flex h-full w-full flex-col items-center justify-center gap-1 text-[#423016]"
+                  aria-label={t('فتح الدليل المشفر', 'Open cipher clue')}>
+                  <LockKeyhole className="h-[12%] w-auto"/>
+                  <span className="font-black" style={{ fontSize: 'clamp(9px, .92vw, 16px)' }}>{t('الإفادة المشفرة', 'Cipher clue')} {clueIndex + 1}/{activeCase.clues.length}</span>
+                  <span style={{ fontSize: 'clamp(8px, .8vw, 13px)' }}>{t('اضغط لفك الشفرة', 'Tap to decode')}</span>
+                </button>
+              ) : (
+                <button type="button" onClick={() => setShowClueDetail(true)}
+                  aria-label={t('تكبير الإفادة', 'Read full statement')} className="flex h-full w-full flex-col items-center justify-center text-[#352715]">
+                  <p className="w-full px-1 text-center font-bold leading-snug" style={{ fontSize: 'clamp(9px, .95vw, 17px)' }}>{activeClue.speech}</p>
+                </button>
+              )}
             </div>
-            <div className="flex min-h-0 flex-col justify-between gap-2 rounded-2xl border border-amber-400/30 bg-black/50 p-3 backdrop-blur-md">
-              <div className="flex items-center justify-between gap-2 text-sm font-bold text-amber-200"><span>{t('ملفات المشتبه بهم', 'Suspect files')}</span><span className="text-xs text-slate-200">{t('الأخطاء', 'Mistakes')} {errors}</span></div>
-              <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:hidden">
-                {mobileSuspects.map(person => <Portrait key={person.id} person={person} eliminated={eliminated.includes(person.id)} disabled={eliminated.includes(person.id) || clueCleared || accusationOpen} onClick={() => onEliminate(person)}/>)}
-              </div>
-              {suspectPageCount > 1 && <div className="flex items-center justify-between gap-2 lg:hidden">
-                <button type="button" aria-label={t('المجموعة السابقة', 'Previous group')} disabled={suspectPage === 0} onClick={() => setSuspectPage(p => Math.max(0, p-1))} className={secondaryButton + ' disabled:opacity-40'}><ChevronRight size={18}/></button>
-                <span className="text-xs font-bold text-amber-200">{t('المشتبه بهم', 'Suspects')} {suspectPage + 1}/{suspectPageCount}</span>
-                <button type="button" aria-label={t('المجموعة التالية', 'Next group')} disabled={suspectPage >= suspectPageCount - 1} onClick={() => setSuspectPage(p => Math.min(suspectPageCount - 1,p+1))} className={secondaryButton + ' disabled:opacity-40'}><ChevronLeft size={18}/></button>
-              </div>}
-              <div className="hidden gap-2 lg:grid lg:grid-cols-5 xl:grid-cols-6">
-                {activeCase.suspects.map(person => <Portrait key={person.id} person={person} eliminated={eliminated.includes(person.id)} disabled={eliminated.includes(person.id) || clueCleared || accusationOpen} onClick={() => onEliminate(person)}/>)}
-              </div>
+            {/* Only the portrait slots from the original investigation artwork receive dynamic images. */}
+            {mobileSuspects.map((person, slot) => {
+              const pos = [
+                { left: '69.7%', top: '16.1%' }, { left: '54.6%', top: '16.1%' }, { left: '39.4%', top: '16.1%' },
+                { left: '69.7%', top: '49.2%' }, { left: '54.6%', top: '49.2%' }, { left: '39.4%', top: '49.2%' },
+              ][slot];
+              const clear = eliminated.includes(person.id);
+              const selected = accusedId === person.id;
+              return <button type="button" key={person.id} aria-label={person.name + (clear ? '، بريء' : '')}
+                disabled={clear || clueCleared || accusationOpen}
+                onClick={() => onEliminate(person)}
+                className={'absolute z-20 flex flex-col overflow-hidden rounded-sm border bg-[#0a1016] focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200 ' +
+                  (clear ? 'border-emerald-400/70 ' : selected ? 'border-red-400/80 ' : 'border-amber-400/35 hover:border-amber-100')}
+                style={{ left: pos.left, top: pos.top, width: '12.2%', height: '23%' }}>
+                <span className="relative block min-h-0 w-full flex-1 overflow-hidden">
+                  <img src={person.image} alt="" loading="eager" className={'h-full w-full object-cover object-top ' + (clear ? 'grayscale brightness-50' : '')}/>
+                  {clear && <span className="absolute inset-0 flex items-center justify-center bg-emerald-950/25"><Check className="h-[30%] w-[30%] rounded-full bg-emerald-600 p-1 text-white"/></span>}
+                </span>
+                <span className="flex h-[17%] min-h-0 w-full flex-none items-center justify-center border-t border-amber-500/50 bg-[#070c11] px-0.5 text-center font-bold text-amber-100"
+                  style={{ fontSize: 'clamp(7px, .8vw, 15px)' }}>{person.name}</span>
+              </button>;
+            })}
+            {/* This compact pager only appears for the 10–12-suspect advanced cases. */}
+            {suspectPageCount > 1 && <div className="absolute left-[48%] top-[76%] z-30 flex w-[33%] items-center justify-center gap-1 text-amber-100">
+              <button type="button" onClick={() => setSuspectPage(v => Math.max(0, v - 1))} disabled={suspectPage === 0}
+                aria-label={t('المجموعة السابقة', 'Previous suspects')}
+                className="rounded-md border border-amber-500/30 bg-black/65 p-1 disabled:opacity-35"><ChevronRight className="h-3 w-3 sm:h-4 sm:w-4"/></button>
+              <span className="rounded-md bg-black/60 px-1 text-[8px] font-bold sm:px-2 sm:text-xs">{suspectPage + 1}/{suspectPageCount}</span>
+              <button type="button" onClick={() => setSuspectPage(v => Math.min(suspectPageCount - 1, v + 1))} disabled={suspectPage >= suspectPageCount - 1}
+                aria-label={t('المجموعة التالية', 'Next suspects')}
+                className="rounded-md border border-amber-500/30 bg-black/65 p-1 disabled:opacity-35"><ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4"/></button>
+            </div>}
+            <div className="absolute left-[7.5%] top-[56%] z-30 flex w-[28%] flex-col gap-1">
+              {clueCleared && !readyToAccuse && <button type="button" onClick={nextClue}
+                className="rounded-md border border-amber-500/70 bg-[#0c1822]/85 px-1 py-1 font-bold text-amber-200"
+                style={{ fontSize: 'clamp(8px, .95vw, 15px)' }}>{t('الإفادة التالية', 'Next statement')}</button>}
+              {readyToAccuse && <button type="button" onClick={() => { setAccusationOpen(true); setFeedback(''); }}
+                className="rounded-md border border-red-400/70 bg-red-950/85 px-1 py-1 font-bold text-amber-100"
+                style={{ fontSize: 'clamp(8px, .95vw, 15px)' }}>{t('وجّه الاتهام', 'Accuse suspect')}</button>}
+              {feedback && <div role="status" aria-live="polite" className="rounded-md bg-black/80 px-1 py-1 text-center text-amber-100"
+                style={{ fontSize: 'clamp(8px, .85vw, 13px)' }}>{feedback}</div>}
             </div>
-          </div>
-          {notice}
-        </section>
-      )}
-      {screen === 'envelope' && (
-        <section className={container + ' justify-center'}>
-          <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-5 rounded-3xl border border-amber-400/60 bg-[#08141e]/95 p-6 text-center shadow-2xl backdrop-blur-xl sm:p-10">
-            <p className="text-sm font-bold tracking-wide text-amber-300">{t('ملف سري', 'CLASSIFIED CASE FILE')}</p>
-            <div className="relative flex h-44 w-64 items-center justify-center rounded-xl border-2 border-amber-500/50 bg-gradient-to-b from-[#d9bd8e] to-[#8e6a42] shadow-[0_20px_60px_rgba(0,0,0,.5)]">
-              <div className="absolute left-0 right-0 top-0 h-1/2 origin-top border-b border-[#735235] bg-[#ead2a7]" style={{clipPath:'polygon(0 0,100% 0,50% 100%)'}}/>
-              <div className="relative flex h-14 w-14 items-center justify-center rounded-full border-4 border-[#bd8b51] bg-red-800 text-amber-100 shadow-lg"><Fingerprint size={26}/></div>
+            <div className="absolute bottom-[2%] left-[2%] z-30 flex items-center gap-1">
+              <button type="button" onClick={() => setShowClueDetail(true)} aria-label={t('تفاصيل الإفادة', 'Statement details')}
+                className="rounded-md border border-amber-500/35 bg-black/60 p-1.5 text-amber-200"><Search className="h-3.5 w-3.5"/></button>
+              <button type="button" onClick={() => setShowDossier(true)} aria-label={t('سجل الأدلة', 'Evidence log')}
+                className="rounded-md border border-amber-500/35 bg-black/60 p-1.5 text-amber-200"><Fingerprint className="h-3.5 w-3.5"/></button>
+              <button type="button" onClick={toggleMute} aria-label={t('الصوت', 'Sound')}
+                className="rounded-md border border-amber-500/35 bg-black/60 p-1.5 text-amber-200">{isMuted ? <VolumeX className="h-3.5 w-3.5"/> : <Volume2 className="h-3.5 w-3.5"/>}</button>
             </div>
-            <h2 className="text-2xl font-black text-amber-200">{t('أُغلقت القضية بنجاح', 'Case closed successfully')}</h2>
-            <p className="max-w-md text-sm text-slate-200">{t('افتح الملف للاطلاع على الجاني والأدلة، ثم اختبر كلمات القضية.', 'Open the file to review your suspect and evidence, then practice the case vocabulary.')}</p>
-            <button type="button" onClick={() => { spyAudio.playEnvelopeOpen(); setScreen('report'); }} className={primaryButton}><MailOpen size={19}/>{t('فتح ملف القضية', 'Open case file')}</button>
           </div>
         </section>
       )}
       {screen === 'report' && (
-        <section className={container + ' justify-center gap-3'}>
-          <div className="flex gap-2 lg:hidden">
-            <button type="button" onClick={() => setReportTab('practice')} className={secondaryButton + ' flex-1 ' + (reportTab === 'practice' ? 'border-amber-200' : '')}>{t('تدريب الكلمات', 'Word practice')}</button>
-            <button type="button" onClick={() => setReportTab('dossier')} className={secondaryButton + ' flex-1 ' + (reportTab === 'dossier' ? 'border-amber-200' : '')}>{t('التقرير', 'Case report')}</button>
-          </div>
-          <div className="grid flex-1 items-center gap-4 lg:grid-cols-2">
-            <div ref={reportRef} className={'flex-col gap-3 rounded-3xl border border-amber-400/60 bg-[#08141e] p-5 shadow-2xl sm:p-7 ' + (reportTab === 'dossier' ? 'flex' : 'hidden lg:flex')}>
-              <div className="flex items-center justify-between"><span className="text-xs font-bold text-amber-300">{t('تقرير إغلاق القضية', 'FINAL CASE REPORT')}</span><ShieldCheck size={22} className="text-amber-300"/></div>
-              <h2 className="text-2xl font-black text-amber-200">{t(labelAr, labelEn)}</h2>
-              <div className="flex items-center gap-4 rounded-2xl border border-red-400/30 bg-[#1c1317] p-3">
-                <img className="h-20 w-16 rounded-lg object-cover object-top" src={activeCase.suspects.find(s => s.id === activeCase.culpritId)?.image} alt=""/>
-                <div><span className="text-xs text-slate-300">{t('الجاني الذي حددته', 'Identified suspect')}</span><p className="text-xl font-black text-amber-100">{activeCase.suspects.find(s => s.id === activeCase.culpritId)?.name}</p><p className="mt-1 text-xs text-emerald-300">{t('تم التحقق من الأدلة', 'Evidence verified')}</p></div>
-              </div>
-              <p lang="ar" dir="rtl" className="rounded-xl bg-white/5 p-3 text-sm leading-loose text-slate-100">{evidenceAr}</p>
-              <div className="flex items-center justify-between"><span className="font-semibold text-amber-200">{t('النتيجة', 'Score')}</span><strong className="text-2xl text-amber-200">{score}/100</strong></div>
-              <div className="rounded-xl border border-amber-500/30 p-3">
-                <h3 className="mb-2 font-bold text-amber-200">{t('كلمات من القضية', 'Words from the case')}</h3>
-                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                  {activeCase.evidenceTerms.map(term => <div key={term.ar} className="flex items-center justify-between gap-2 border-b border-white/10 py-1 text-sm"><span lang="ar">{term.ar}</span><span dir="ltr" className="text-xs text-slate-300">{term.en}</span></div>)}
-                </div>
-              </div>
-              {reportIsReady && <div className="flex gap-2 lg:hidden">
-                <button type="button" className={secondaryButton + ' flex-1'} disabled={isPdfLoading} onClick={downloadPdf}><FileDown size={17}/>{t('تحميل PDF', 'Download PDF')}</button>
-                <button type="button" className={primaryButton + ' flex-1'} onClick={nextCase}><ChevronLeft size={17}/>{t('التالية','Next')}</button>
-              </div>}
-            </div>
-            <div className={'flex-col gap-4 rounded-3xl border border-amber-400/30 bg-[#08141e]/95 p-4 shadow-xl sm:p-6 ' + (reportTab === 'practice' ? 'flex' : 'hidden lg:flex')}>
-              <h3 className="text-xl font-black text-amber-200">{t('تدرب على كلمات القضية', 'Practice the case words')}</h3>
-              {!wordsComplete ? (
-                <>
-                  <p className="text-xs text-slate-300">{t('اختر المعنى الصحيح لكل كلمة. يمكن إعادة المحاولة.', 'Choose the correct meaning for each Arabic word. You can retry.')}</p>
-                  <p className="text-xs text-amber-200">{answersCount + 1}/{activeCase.evidenceTerms.length}</p>
-                  <div className="rounded-xl bg-[#e6d0a6] p-4 text-center text-[#362516]">
-                    <p className="text-2xl font-black">{activeCase.evidenceTerms[answersCount].ar}</p>
-                    <button type="button" className="mt-2 inline-flex items-center gap-1 text-xs font-bold" onClick={() => playSpeech(activeCase.evidenceTerms[answersCount].ar)}><Volume2 size={15}/>{t('استمع', 'Listen')}</button>
-                  </div>
-                  <div className="grid gap-2">
-                    {wordOptions(activeCase.evidenceTerms, answersCount, activeCase.id).map(answer => <button key={answer} type="button" className={secondaryButton} onClick={() => answerWord(answer)} dir="ltr">{answer}</button>)}
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-3 rounded-2xl border border-emerald-400/40 bg-emerald-950/20 p-5 text-center">
-                  <CheckCircle2 size={40} className="mx-auto text-emerald-400"/>
-                  <h4 className="text-lg font-bold text-emerald-200">{t('أتقنت كلمات القضية!', 'You mastered the case words!')}</h4>
-                  <p className="text-sm text-slate-200">{t('أحسنت، أصبح تقرير القضية جاهزًا.', 'Your case report is ready.')}</p>
-                </div>
-              )}
-              {notice}
-              {reportIsReady && <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <button className={secondaryButton + ' hidden lg:inline-flex'} type="button" disabled={isPdfLoading} onClick={downloadPdf}><FileDown size={18}/>{t('تحميل التقرير PDF', 'Download PDF')}</button>
-                <button className={primaryButton} type="button" onClick={nextCase}><ChevronLeft size={18}/>{t('القضية التالية', 'Next case')}</button>
-              </div>}
-              {!reportIsReady && <p className="text-center text-xs text-slate-300">{t('أكمل التدريب لفتح التقرير والقضية التالية.', 'Finish the vocabulary practice to unlock the report and next case.')}</p>}
-            </div>
+        <section className="relative flex w-full flex-1 items-center justify-center overflow-hidden bg-[#03080e]" aria-label={t('التقرير النهائي', 'Case report')}>
+          <div ref={reportRef} className="relative aspect-video w-full overflow-hidden shadow-2xl"
+            style={{ maxHeight: '100dvh', maxWidth: 'calc(100dvh * (16 / 9))' }}>
+            <div className="pointer-events-none absolute inset-0 bg-center bg-no-repeat"
+              style={{ backgroundImage: 'url("/٩.jpeg"), url("/9.jpeg"), url("/٩.webp")', backgroundSize: '100% 100%' }}/>
+            <button type="button" onClick={() => setScreen('intro')} aria-label={t('العودة للرئيسية', 'Back to levels')}
+              className="absolute right-[1%] top-[2%] z-30 rounded-full border border-amber-500/40 bg-black/55 p-1.5 text-amber-200">
+              <ArrowRight size={15}/>
+            </button>
+            {/* No new boxes: only fill the five existing printed vocabulary cells. */}
+            {[
+              {top:'38.2%',height:'6.4%'},{top:'44.6%',height:'6.4%'},{top:'51.0%',height:'6.4%'},
+              {top:'57.5%',height:'6.5%'},{top:'64.1%',height:'6.8%'},
+            ].map((pos, idx) => {
+              const word=activeCase.evidenceTerms[idx]; if(!word)return null;
+              return <React.Fragment key={idx}>
+                <span lang="ar" dir="rtl" className="pointer-events-none absolute z-20 flex items-center justify-center px-1 text-center font-bold text-white"
+                  style={{left:'65.5%',width:'19%',top:pos.top,height:pos.height,fontSize:'clamp(7px,.94vw,17px)',textShadow:'0 1px 5px #000'}}>{word.ar}</span>
+                <span dir="ltr" className="pointer-events-none absolute z-20 flex items-center justify-center px-1 text-center font-bold text-white"
+                  style={{left:'46.5%',width:'18.5%',top:pos.top,height:pos.height,fontSize:'clamp(7px,.85vw,16px)',textShadow:'0 1px 5px #000'}}>{word.en}</span>
+              </React.Fragment>;
+            })}
+            <button type="button" onClick={downloadPdf} disabled={isPdfLoading} aria-label={t('تحميل تقرير PDF', 'Download PDF')}
+              className="absolute z-30 cursor-pointer rounded-lg bg-transparent outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200 hover:bg-white/5"
+              style={{ left:'45.9%',width:'18.5%',top:'74.5%',height:'8.2%' }}/>
+            <button type="button" onClick={nextCase} aria-label={t('القضية التالية', 'Next case')}
+              className="absolute z-30 cursor-pointer rounded-lg bg-transparent outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200 hover:bg-white/5"
+              style={{ left:'66%',width:'18.6%',top:'74.5%',height:'8.2%' }}/>
           </div>
         </section>
       )}
@@ -503,11 +456,60 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
           </div>
         </section>
       )}
+      {showClueDetail && screen === 'investigation' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-sm" onClick={() => setShowClueDetail(false)}>
+          <div role="dialog" aria-modal="true" aria-label={t('تفاصيل الإفادة', 'Statement details')}
+            onClick={e => e.stopPropagation()}
+            className="w-full max-w-lg space-y-4 rounded-xl border border-[#bc934e] bg-[#e4cc9f] p-4 text-[#2d2418] shadow-2xl sm:p-6">
+            <div className="flex items-center justify-between border-b border-[#73542c]/30 pb-2">
+              <h3 className="font-black">{t('ملف الإفادة', 'Witness statement')} {clueIndex + 1}/{activeCase.clues.length}</h3>
+              <button type="button" onClick={() => {setShowClueDetail(false);setFeedback('');}} aria-label={t('إغلاق', 'Close')}
+                className="rounded-full p-1 hover:bg-[#a18557]/25"><X size={19}/></button>
+            </div>
+            {level === 'advanced' && activeClue.cipherKey && !cipherOpened ? (
+              <div className="space-y-3">
+                <p dir="rtl" lang="ar" className="text-center text-base font-bold leading-loose">{activeClue.cipherHint}</p>
+                <div className="grid gap-2">
+                  {(activeClue.cipherOptions || []).map(option => <button type="button" key={option}
+                    onClick={() => {
+                      if (option === activeClue.cipherKey) {
+                        spyAudio.playCipherDecode(); setCipherOpened(true); setFeedback(''); setShowClueDetail(false);
+                      } else {
+                        spyAudio.playWrongBuzzer(); setErrors(v=>v+1);
+                        setFeedback(t('مفتاح غير صحيح. راجع الشفرة.', 'Incorrect key. Review the cipher.'));
+                      }
+                    }}
+                    className="min-h-[44px] rounded-lg border border-[#a27a42] bg-[#f3e4c8] px-4 py-2 text-center font-bold hover:bg-white">
+                    {option}</button>)}
+                </div>
+              </div>
+            ) : (
+              <>
+                <p dir="rtl" lang="ar" className="text-center text-lg font-bold leading-loose">{activeClue.speech}</p>
+                {(showTranslation || language === 'en') && <p dir="ltr" className="rounded-md border border-[#ad8955]/30 px-2 py-2 text-center text-sm leading-relaxed">
+                  {narrative?.cluesEn[clueIndex] || ''}
+                </p>}
+                <div className="flex items-center justify-between gap-2">
+                  <button type="button" onClick={() => setShowTranslation(v=>!v)}
+                    className="min-h-[42px] rounded-md border border-[#ad8955] px-3 text-xs font-bold">
+                    {showTranslation ? t('إخفاء الترجمة', 'Hide translation') : t('عرض الترجمة', 'Show translation')}
+                  </button>
+                  <button type="button" onClick={() => setShowClueDetail(false)}
+                    className="min-h-[42px] rounded-md bg-[#49341d] px-4 text-sm font-bold text-amber-50">
+                    {t('متابعة التحقيق', 'Continue investigation')}
+                  </button>
+                </div>
+              </>
+            )}
+            {feedback && <p role="status" className="text-center text-sm font-bold text-red-700">{feedback}</p>}
+          </div>
+        </div>
+      )}
       {showDossier && screen === 'investigation' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm">
           <div role="dialog" aria-modal="true" aria-label={t('سجل الأدلة', 'Evidence file')} className="w-full max-w-md space-y-3 rounded-2xl border border-amber-400/60 bg-[#081823] p-5 shadow-2xl">
             <div className="flex items-center justify-between"><h3 className="text-lg font-bold text-amber-200">{t('كلمات وأدلة القضية', 'Case words and evidence')}</h3><button type="button" aria-label={t('إغلاق','Close')} onClick={() => setShowDossier(false)}><X size={19}/></button></div>
-            {activeCase.evidenceTerms.map(word => <button type="button" key={word.ar} onClick={() => playSpeech(word.ar)} className="flex min-h-[40px] w-full items-center justify-between gap-2 rounded-xl border border-amber-400/20 px-3 py-2 text-sm hover:bg-amber-400/10"><span lang="ar" className="font-bold text-amber-200">{word.ar}</span><span className="flex items-center gap-2 text-slate-300" dir="ltr"><Volume2 size={14}/>{word.en}</span></button>)}
+            {activeCase.evidenceTerms.map(word => <div key={word.ar} className="flex min-h-[40px] w-full items-center justify-between gap-2 rounded-xl border border-amber-400/20 px-3 py-2 text-sm"><span lang="ar" className="font-bold text-amber-200">{word.ar}</span><span dir="ltr" className="text-slate-300">{word.en}</span></div>)}
             <button type="button" className={primaryButton + ' w-full'} onClick={() => setShowDossier(false)}>{t('تابع التحقيق', 'Continue investigation')}</button>
           </div>
         </div>
