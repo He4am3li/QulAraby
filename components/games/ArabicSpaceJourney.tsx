@@ -8,6 +8,7 @@ import { CONTENT, PLANETS, Q, LegacyGameStage as Stage, Planet, STAGES_LIST } fr
 
 // Breathtaking Living Turquoise Cosmos, Photorealistic Planets & 3D Sci-Fi Spacecraft
 import solarSystemCosmosBg from "/src/assets/images/solar_system_cosmos_bg_1790238722241.jpg";
+import towardSpaceOriginalCover from "/src/assets/images/toward_space_hero_1790510722610.jpg";
 import turquoiseCosmosBg from "/src/assets/images/turquoise_cosmos_sky_1790183779372.jpg";
 import vibrantCinematicSpaceNebula from "/src/assets/images/vibrant_cinematic_space_nebula_1790179537071.jpg";
 import realisticSunStar from "/src/assets/images/realistic_sun_star_1790259897845.jpg";
@@ -1680,7 +1681,7 @@ export interface ArabicSpaceJourneyProps {
 }
 
 export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, onWin }) => {
-  const [screen, setScreen] = useState<"home" | "planet" | "planet_entry" | "flight" | "victory" | "gameover">("home");
+  const [screen, setScreen] = useState<"cover" | "home" | "planet" | "planet_entry" | "flight" | "victory" | "gameover">("cover");
   const [save, setSave] = useState<Save>(loadSave);
   const [currentPlanetId, setCurrentPlanetId] = useState<string | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<string>("sentence-types");
@@ -3497,6 +3498,48 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
   return (
     <div className="w-full h-full min-h-screen bg-[#040510] text-[#eef7ff] relative overflow-hidden select-none font-sans" dir="rtl">
       
+      {/* The original Toward Space poster is restored as the entrance.
+          The original English lettering is part of this approved source artwork,
+          rather than a newly invented imitation. The 10-planet map remains intact. */}
+      {screen === "cover" && (
+        <section
+          data-space-screen="original-toward-space-cover"
+          aria-label="Toward Space"
+          className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-[#030817]"
+          dir="rtl"
+        >
+          <div
+            aria-hidden="true"
+            className="absolute inset-[-6%] scale-110 bg-cover bg-center opacity-40 blur-[38px]"
+            style={{ backgroundImage: `url(${towardSpaceOriginalCover})` }}
+          />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_45%,transparent_35%,rgba(2,6,18,.7)_100%)]" />
+          <img
+            src={towardSpaceOriginalCover}
+            alt="TOWARD SPACE, astronaut approaching an illuminated ringed planet amid colorful nebulae and glowing Arabic letters"
+            className="relative z-10 block h-auto max-h-[100dvh] w-full max-w-[1600px] object-contain object-center"
+            draggable={false}
+            fetchPriority="high"
+          />
+          <div className="absolute inset-x-0 bottom-[4%] z-20 flex items-center justify-center px-4 sm:bottom-[6%]">
+            <button
+              type="button"
+              onClick={() => { audio.click(); setScreen("home"); }}
+              className="group inline-flex min-h-[48px] items-center justify-center gap-3 rounded-full border border-[#dcbd83]/65 bg-[#071322]/85 px-7 py-3 text-sm font-bold text-[#f5e5c8] shadow-[0_9px_32px_rgba(0,5,20,.65),inset_0_1px_0_rgba(255,255,255,.12)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-[#f1d79d] hover:bg-[#102b39]/95 hover:shadow-[0_0_30px_rgba(88,196,225,.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#ffe0a3] sm:text-base"
+            >
+              <Rocket size={18} className="text-[#9ae8f6] transition-transform group-hover:-translate-y-0.5"/>
+              انطلق إلى الكواكب
+              <ArrowLeft size={17}/>
+            </button>
+          </div>
+          <button type="button" onClick={() => onBack?.()}
+            title="العودة إلى الألعاب"
+            aria-label="العودة إلى الألعاب"
+            className="absolute right-4 top-4 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-[#071320]/70 text-[#e2f8ff] backdrop-blur-lg hover:bg-[#12334a]/90"
+          ><ArrowLeft size={19}/></button>
+        </section>
+      )}
+
       {/* ============================================================== */}
       {/* 1. خريطة الكواكب الفضائية الواقعية والبهيجة (النسخة السينيمائية الحية) */}
       {/* ============================================================== */}
