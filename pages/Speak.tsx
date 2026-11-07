@@ -470,7 +470,7 @@ export const Speak: React.FC = () => {
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: speakingBranch === 'booth' ? selectedCallContact.voice : 'Kore' } },
           },
           inputAudioTranscription: {},
           outputAudioTranscription: {},
