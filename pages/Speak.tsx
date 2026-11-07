@@ -17,6 +17,7 @@ import jsPDF from 'jspdf';
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { summarizeSpeakingEvidence, createNextSpeakingTask } from '../services/speakingLearning.mjs';
 
 const LEVELS = [
   {
@@ -132,6 +133,8 @@ export const Speak: React.FC = () => {
   const [isAiSpeaking, setIsAiSpeaking] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [recoveryNotice, setRecoveryNotice] = React.useState<string | null>(null);
+  const [practiceGoal, setPracticeGoal] = React.useState('');
+  const [micMuted, setMicMuted] = React.useState(false);
 
   // Spelling Challenge States
   const [spellingChallenge, setSpellingChallenge] = React.useState<{ words: string[], currentIdx: number, input: string, result: 'correct' | 'incorrect' | null } | null>(null);
@@ -154,6 +157,8 @@ export const Speak: React.FC = () => {
   const audioEpochRef = React.useRef(0);
   const mountedRef = React.useRef(false);
   const startAttemptRef = React.useRef(0);
+  const micMeterRef = React.useRef<HTMLDivElement>(null);
+  const micMeterUpdatedRef = React.useRef(0);
   const historyRef = React.useRef<ChatEntry[]>([]);
   const learnerTextRef = React.useRef('');
   const tutorTextRef = React.useRef('');
@@ -193,6 +198,7 @@ export const Speak: React.FC = () => {
     sourcesRef.current.forEach(source => { try { source.stop(); } catch {} });
     sourcesRef.current.clear();
     nextStartTimeRef.current = 0;
+    micMeterRef.current?.style.setProperty('--mic-scale', '0.12');
     setIsActive(false);
     setIsAiSpeaking(false);
   }, []);
@@ -230,7 +236,7 @@ export const Speak: React.FC = () => {
       noHistory: 'لا يوجد سجل للمحادثة حالياً.',
       tutorName: 'المعلم الذكي',
       userName: 'المتعلم',
-      vocabTitle: 'كلمات جديدة مكتسبة',
+      vocabTitle: 'مفردات من الحوار',
       correctionsTitle: 'تصحيحات لغوية',
       tipTitle: 'نصيحة المعلم الذكي',
       saveVocab: 'حفظ للبنك',
@@ -261,7 +267,7 @@ export const Speak: React.FC = () => {
       noHistory: 'No conversation history available.',
       tutorName: 'AI Tutor',
       userName: 'Learner',
-      vocabTitle: 'New Vocabulary',
+      vocabTitle: 'Vocabulary from the dialogue',
       correctionsTitle: 'Corrections',
       tipTitle: 'AI Tutor Tip',
       saveVocab: 'Save to Bank',
@@ -276,6 +282,23 @@ export const Speak: React.FC = () => {
   };
 
   const t = STRINGS[lang];
+  const speakingEvidence = summarizeSpeakingEvidence(conversationHistory);
+  const taskFallback = createNextSpeakingTask({
+    level: selectedLevel?.id || 'beginner',
+    topicAr: selectedTopic?.ar || 'الموضوع',
+    corrections: insights?.assessmentStatus === 'analyzed' ? insights.corrections : [],
+  });
+  const nextPractice = insights?.assessmentStatus === 'analyzed' && insights?.next_practice?.ar
+    ? { promptAr: insights.next_practice.ar, promptEn: insights.next_practice.en }
+    : taskFallback;
+  const toggleMicrophone = () => {
+    const nextMuted = !micMuted;
+    sessionRef.current?.stream?.getAudioTracks().forEach((track: MediaStreamTrack) => {
+      track.enabled = !nextMuted;
+    });
+    setMicMuted(nextMuted);
+    micMeterRef.current?.style.setProperty('--mic-scale', '0.12');
+  };
 
   const decode = (base64: string) => {
     const binaryString = atob(base64);
@@ -348,6 +371,7 @@ export const Speak: React.FC = () => {
     setLoading(true);
     setError(null);
     setRecoveryNotice(null);
+    setMicMuted(false);
     if (!preserveHistory) {
       setConversationHistory([]);
       historyRef.current = [];
@@ -425,7 +449,8 @@ export const Speak: React.FC = () => {
           systemInstruction: `You are a professional Arabic tutor named "QUL AI". 
           User Name: ${user?.displayName || 'Learner'}
           User Level: ${selectedLevel?.en} (${selectedLevel?.ar}). ${selectedLevel?.prompt}
-          Topic: ${selectedTopic?.en} (${selectedTopic?.ar}). 
+          Topic: ${selectedTopic?.en} (${selectedTopic?.ar}).
+          ${practiceGoal ? 'Current practice target: ' + practiceGoal.slice(0, 240) : ''} 
           
           ${proactiveContext}
 
@@ -449,15 +474,20 @@ export const Speak: React.FC = () => {
             const scriptProcessor = input.createScriptProcessor(4096, 1, 1);
             
             scriptProcessor.onaudioprocess = (e) => {
+              if (sessionRef.current !== transport || !transport.session) return;
               const inputData = e.inputBuffer.getChannelData(0);
+              const now = performance.now();
+              if (now - micMeterUpdatedRef.current > 75) {
+                let energy = 0;
+                for (let i = 0; i < inputData.length; i += 32) energy += inputData[i] * inputData[i];
+                const level = Math.sqrt(energy / Math.ceil(inputData.length / 32));
+                const scaled = Math.max(0.12, Math.min(1, 0.12 + level * 7));
+                micMeterRef.current?.style.setProperty('--mic-scale', String(scaled));
+                micMeterUpdatedRef.current = now;
+              }
               const pcmBlob = createBlob(inputData, input.sampleRate);
-              sessionPromise.then(session => {
-                try {
-                  session.sendRealtimeInput({ audio: pcmBlob });
-                } catch(err) {
-                  console.debug("Error sending input", err);
-                }
-              });
+              try { transport.session.sendRealtimeInput({ audio: pcmBlob }); }
+              catch (err) { console.debug('Voice input unavailable', err); }
             };
             
             source.connect(scriptProcessor);
@@ -979,6 +1009,31 @@ export const Speak: React.FC = () => {
                         </div>
                       ) : insights && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5">
+                          <div className="rounded-3xl border border-blue-100 bg-blue-50/60 p-5 space-y-3">
+                            <p className="font-black text-sm text-slate-800">{lang === 'ar' ? 'دليل التحدث من النص' : 'Speaking evidence from transcript'}</p>
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              {[
+                                [speakingEvidence.learnerTurns, lang === 'ar' ? 'مداخلات الطالب' : 'Learner turns'],
+                                [speakingEvidence.arabicWords, lang === 'ar' ? 'كلمات عربية' : 'Arabic words'],
+                                [speakingEvidence.uniqueArabicWords, lang === 'ar' ? 'كلمات مختلفة' : 'Distinct words'],
+                              ].map(([value, label]) => (
+                                <div key={String(label)} className="rounded-2xl bg-white/90 p-3">
+                                  <div className="text-xl font-black text-blue-800" dir="ltr">{value}</div>
+                                  <div className="text-[10px] font-bold text-slate-500">{label}</div>
+                                </div>
+                              ))}
+                            </div>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              {lang === 'ar' ? 'مؤشرات من النص المكتوب، وليست قياسًا للنطق أو الطلاقة الصوتية. قد يخطئ تحويل الصوت إلى نص.'
+                                : 'These figures come from the transcript, not an audio pronunciation or fluency assessment. Speech recognition may make errors.'}
+                            </p>
+                            {insights.assessmentStatus === 'limited' && (
+                              <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-bold text-amber-900">
+                                {lang === 'ar' ? 'تعذر إجراء تحليل تربوي موثوق، لذا لا نعرض درجة غير مستندة إلى دليل.'
+                                  : 'A reliable assessment was unavailable. No unsupported score is shown.'}
+                              </p>
+                            )}
+                          </div>
                           {/* Bilingual Tutor Tip UI */}
                           <div className="bg-gradient-to-br from-[#2563eb] to-[#059669] p-6 rounded-[2rem] text-white shadow-xl shadow-blue-200 relative overflow-hidden group">
                              <Lightbulb className="absolute top-4 left-4 opacity-20 group-hover:scale-110 transition-transform" size={80} />
@@ -1010,6 +1065,19 @@ export const Speak: React.FC = () => {
                              </div>
                           </div>
 
+                          <div className="rounded-3xl border border-emerald-100 bg-emerald-50/60 p-5 space-y-3">
+                            <p className="font-black text-sm text-emerald-900">{lang === 'ar' ? 'مهمتك التالية' : 'Your next speaking task'}</p>
+                            <p className="text-base font-bold arabic-font text-slate-800" dir="rtl">{nextPractice.promptAr}</p>
+                            <p className="text-xs text-slate-600" dir="ltr">{nextPractice.promptEn}</p>
+                            <button type="button" onClick={() => {
+                              setPracticeGoal(nextPractice.promptAr);
+                              setShowSummary(false);
+                              setSetupMode(true);
+                              setShowMobileOptions(false);
+                            }} className="rounded-xl bg-emerald-700 px-4 py-3 text-sm font-bold text-white">
+                              {lang === 'ar' ? 'تدرب على هذه المهمة' : 'Practice this task'}
+                            </button>
+                          </div>
                           {insights.corrections && insights.corrections.length > 0 && (
                             <div className="bg-white border border-slate-100 p-6 rounded-[2rem] shadow-sm">
                               <h4 className="text-xs font-black text-slate-400 uppercase mb-4">{t.correctionsTitle}</h4>
@@ -1133,6 +1201,11 @@ export const Speak: React.FC = () => {
                       </p>
                     </div>
 
+                    {practiceGoal && (
+                      <p className="rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-900 p-3 text-sm arabic-font" dir="rtl">
+                        {lang === 'ar' ? 'هدف المحادثة: ' : 'Practice goal: '}{practiceGoal}
+                      </p>
+                    )}
                     {error && (
                       <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-center gap-3 text-red-600 animate-in fade-in">
                         <AlertCircle size={16} />
@@ -1175,16 +1248,25 @@ export const Speak: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex-1 w-full flex flex-col items-center justify-center overflow-hidden">
-                <div className={`w-44 h-44 sm:w-56 sm:h-56 rounded-full flex items-center justify-center transition-all duration-500 relative shrink-0 ${isActive ? 'bg-blue-50 shadow-2xl shadow-blue-500/10' : 'bg-slate-100'}`}>
-                  {isActive && (
-                    <div className={`absolute inset-0 rounded-full border-2 border-blue-200 opacity-20 ${isAiSpeaking ? 'animate-ping' : ''}`} />
-                  )}
-                  <div className={`w-36 h-36 sm:w-44 sm:h-44 rounded-full flex items-center justify-center border-2 border-white shadow-inner transition-transform ${isAiSpeaking ? 'scale-110 shadow-blue-200' : 'scale-100'}`}>
-                    <Activity size={80} className={`${isAiSpeaking ? 'text-[#2563eb]' : 'text-slate-400'} transition-colors duration-300`} />
+              <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-center overflow-hidden">
+                <div className="relative w-52 h-52 sm:w-64 sm:h-64 shrink-0 flex items-center justify-center rounded-[3rem] border border-white/80 bg-gradient-to-br from-white via-blue-50/80 to-cyan-100/70 shadow-[0_18px_80px_rgba(37,99,235,0.17)]" aria-label={lang === 'ar' ? 'استوديو المحادثة' : 'Conversation studio'}>
+                  <div className={`absolute inset-4 rounded-[2.3rem] border border-blue-200/50 bg-white/25 backdrop-blur-xl ${isAiSpeaking ? 'animate-pulse' : ''}`}></div>
+                  <div className="relative z-10 flex flex-col items-center gap-3">
+                    <StudioMicIcon size={48} strokeWidth={1.6} className={isAiSpeaking ? 'text-blue-600' : 'text-slate-700'} />
+                    <div ref={micMeterRef} className={`flex h-12 items-center justify-center gap-1 ${isAiSpeaking ? 'opacity-40' : ''}`} style={{ '--mic-scale': 0.12 } as React.CSSProperties} aria-hidden="true">
+                      {Array.from({ length: 19 }, (_, i) => (
+                        <span key={i} className="w-[3px] rounded-full bg-gradient-to-t from-blue-600 to-cyan-400 transition-transform duration-75"
+                          style={{ height: 12 + Math.round(30 * Math.abs(Math.sin((i + 1) * 0.43))) + 'px',
+                            transform: 'scaleY(var(--mic-scale, 0.12))' }} />
+                      ))}
+                    </div>
+                    <span className="text-[11px] font-bold tracking-widest text-blue-700 uppercase">
+                      {micMuted ? (lang === 'ar' ? 'الميكروفون مغلق' : 'Mic muted') : isAiSpeaking
+                        ? (lang === 'ar' ? 'المعلم يتحدث' : 'Tutor speaking')
+                        : (lang === 'ar' ? 'أسمعك' : 'Listening')}
+                    </span>
                   </div>
                 </div>
-
                 <div className="mt-4 sm:mt-8 space-y-3 w-full max-w-2xl overflow-y-auto custom-scroll px-2 max-h-[40%]" aria-live="polite">
                   {conversationHistory.slice(-6).map((entry, idx) => (
                     <div key={conversationHistory.length - 6 + idx}
@@ -1285,13 +1367,18 @@ export const Speak: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                onClick={stopSession}
-                className="mt-6 px-12 py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-xl shadow-xl transition-all active:scale-95 flex items-center gap-3 shrink-0"
-              >
-                <MicOff size={24} />
-                <span className="arabic-font">{t.stop}</span>
-              </button>
+              <div className="mt-4 sm:mt-6 flex items-center gap-2 sm:gap-4 shrink-0">
+                <button onClick={toggleMicrophone} disabled={!isActive}
+                  className={`rounded-2xl border px-4 py-4 font-bold text-sm flex items-center gap-2 disabled:opacity-40 ${micMuted ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-slate-200 bg-white text-slate-700'}`}>
+                  {micMuted ? <MicOff size={22} /> : <Mic size={22} />}
+                  <span>{micMuted ? (lang === 'ar' ? 'تشغيل الميكروفون' : 'Unmute') : (lang === 'ar' ? 'كتم' : 'Mute')}</span>
+                </button>
+                <button onClick={stopSession}
+                  className="rounded-2xl bg-slate-900 hover:bg-black text-white px-4 sm:px-8 py-4 font-black text-sm sm:text-base shadow-xl transition-all active:scale-95 flex items-center gap-2">
+                  <CheckCircle2 size={22} />
+                  <span className="arabic-font">{t.stop}</span>
+                </button>
+              </div>
             </div>
           )}
         </main>
