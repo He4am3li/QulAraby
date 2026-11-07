@@ -338,20 +338,29 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
               className="absolute right-[1%] top-[2%] z-30 rounded-full border border-amber-500/40 bg-black/55 p-1.5 text-amber-200 hover:bg-black/75">
               <ArrowRight size={15}/>
             </button>
-            {/* Solve the cipher in the existing evidence frame. No secondary window. */}
-            <div className="absolute z-20 flex flex-col items-center justify-center overflow-hidden text-center"
-              style={{ left: '6.1%', top: '18.4%', width: '30.6%', height: '48.2%' }} dir="rtl">
+            {/* Printed yellow dossier: its text and all 3 options share ONE constrained
+                box. The wording and answer buttons may never paint outside the paper. */}
+            <div dir="rtl" lang="ar" className="absolute z-20 overflow-hidden text-center text-[#352715]"
+              style={{ left: '7.22%', top: '31.1%', width: '28.9%', height: '21.9%' }}>
               {level === 'advanced' && activeClue.cipherKey && !cipherOpened ? (
-                <div className="flex h-full w-full flex-col items-stretch justify-center gap-[2%] px-[3%] text-[#352816]"
-                  aria-label={t('فك شفرة الإفادة', 'Decode the witness statement')}>
-                  <div className="flex items-center justify-center gap-1 font-black"
-                    style={{ fontSize: 'clamp(8px, 1.04vw, 17px)' }}>
+                <div className="grid h-full w-full min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden px-[3%] py-[2%]"
+                  style={{ rowGap: '1.7%' }} aria-label={t('فك شفرة الإفادة', 'Decode witness statement')}>
+                  <div className="flex min-w-0 items-center justify-center gap-1 font-black leading-tight"
+                    style={{ fontSize: 'clamp(7px, .87vw, 15px)' }}>
                     <LockKeyhole className="h-[1em] w-[1em] shrink-0"/>
                     {t('الإفادة المشفرة', 'Cipher clue')} {clueIndex + 1}/{activeCase.clues.length}
                   </div>
-                  <p lang="ar" className="font-semibold leading-snug"
-                    style={{ fontSize: 'clamp(8px, 1vw, 16px)' }}>{activeClue.cipherHint}</p>
-                  <div className="grid w-full grid-cols-1 gap-[3px] sm:gap-1.5">
+                  <div className="min-w-0 self-center px-1 text-center font-semibold leading-tight"
+                    style={{ fontSize: 'clamp(6px, .78vw, 14px)', overflowWrap: 'anywhere' }}>
+                    <span className="block font-bold">
+                      {t('شفرة المصدر:', 'Cipher source:')}{' '}
+                      {activeClue.cipherHint?.match(/شفرة المصدر:\s*([^.]*)/)?.[1]?.trim() || activeClue.cipherKey}
+                    </span>
+                    <span className="block text-[#63503a]">
+                      {feedback || t('اقرأ بالعكس، ثم اختر المصدر الصحيح.', 'Read backwards and choose the source.')}
+                    </span>
+                  </div>
+                  <div className="grid min-h-0 min-w-0 w-full grid-rows-3 gap-[2px] overflow-hidden">
                     {(activeClue.cipherOptions || []).map(option =>
                       <button type="button" key={option}
                         onClick={() => {
@@ -362,27 +371,27 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
                             setFeedback(t('شفرة غير صحيحة، أعد المحاولة.', 'Incorrect code. Try again.'));
                           }
                         }}
-                        className="flex min-h-0 items-center justify-center rounded border border-[#8e6a35]/45 bg-[#e7d4ad]/85 px-1 py-[2px] font-bold text-[#392b1e] transition-colors hover:bg-[#fff1cd] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#4d361e]"
-                        style={{ fontSize: 'clamp(8px, .91vw, 15px)', minHeight: 'clamp(15px, 2vw, 31px)' }}>
+                        className="flex h-full min-h-0 min-w-0 w-full items-center justify-center overflow-hidden rounded-[3px] border border-[#8e6a35]/45 bg-[#f0dfb7]/80 px-[2%] text-center font-bold leading-tight text-[#352817] transition-colors hover:bg-[#fff1ce] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#4d361e]"
+                        style={{ fontSize: 'clamp(7px, .82vw, 14px)', overflowWrap: 'anywhere' }}>
                         {option}
                       </button>)}
                   </div>
-                  {feedback && <p role="status" aria-live="polite" className="font-bold text-red-800"
-                    style={{ fontSize: 'clamp(8px, .85vw, 13px)' }}>{feedback}</p>}
                 </div>
               ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-[3%] px-[3%] text-[#352715]">
-                  <div className="font-black" style={{ fontSize: 'clamp(8px, .95vw, 16px)' }}>
+                <div className="flex h-full w-full min-h-0 min-w-0 flex-col items-center justify-center gap-[2%] overflow-hidden px-[3%] py-[2%]">
+                  <div className="shrink-0 font-black" style={{ fontSize: 'clamp(7px, .86vw, 15px)' }}>
                     {t('الإفادة', 'Statement')} {clueIndex + 1}/{activeCase.clues.length}
                   </div>
-                  <p lang="ar" className="w-full text-center font-semibold leading-normal"
-                    style={{ fontSize: 'clamp(9px, 1.04vw, 17px)' }}>{activeClue.speech}</p>
-                  {(showTranslation || language === 'en') && <p lang="en" dir="ltr"
-                    className="w-full text-center leading-snug text-[#55402a]"
-                    style={{ fontSize: 'clamp(8px, .84vw, 14px)' }}>{narrative?.cluesEn[clueIndex] || ''}</p>}
+                  <div className="min-h-0 w-full overflow-y-auto text-center font-semibold leading-snug"
+                    style={{ fontSize: 'clamp(7px, .88vw, 15px)', overflowWrap: 'anywhere', scrollbarWidth: 'none' }}>
+                    <p>{activeClue.speech}</p>
+                    {(showTranslation || language === 'en') && <p lang="en" dir="ltr" className="mt-1 text-[#55402a]">
+                      {narrative?.cluesEn[clueIndex] || ''}
+                    </p>}
+                  </div>
                   <button type="button" onClick={() => setShowTranslation(v => !v)}
-                    className="rounded border border-[#80623b]/45 bg-[#e5cc9f]/60 px-2 py-0.5 font-bold hover:bg-[#f5e1b9]"
-                    style={{ fontSize: 'clamp(8px, .82vw, 13px)' }}>
+                    className="shrink-0 rounded border border-[#80623b]/35 bg-[#e5cc9f]/60 px-2 font-bold"
+                    style={{ fontSize: 'clamp(7px, .75vw, 13px)' }}>
                     {showTranslation ? t('إخفاء الترجمة', 'Hide English') : t('الترجمة', 'Translation')}
                   </button>
                 </div>
