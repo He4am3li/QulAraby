@@ -45,11 +45,18 @@ for (const n of [5,6]) {
 const view = src('components/games/DetectiveExperience.tsx');
 const games = src('pages/Games.tsx');
 assert(games.includes('DetectiveExperience as DetectiveMystery'), 'Game menu must render responsive experience');
-for (const feature of ['speechSynthesis.speak', 'localStorage.setItem', 'submitAccusation', 'activeCase.culpritId',
+for (const feature of ['localStorage.setItem', 'submitAccusation', 'activeCase.culpritId',
   'markCaseSolved', 'wordOptions', 'answerWord', 'nextCase', 'downloadPdf', 'aria-live',
   'grid-cols-3', 'setLanguage', 'setShowTranslation']) {
   assert(view.includes(feature), 'Missing detective functionality: ' + feature);
 }
 assert(view.includes('reason !== ' + "'evidence'"), 'Accusation must require an evidence-based reason');
-assert(!view.includes("left: '23.2%'"), 'No static image hotspots in responsive UI');
+assert(view.includes('left: \'23.2%\''), 'Original cinematic level-selection click area must be preserved');
+assert(view.includes('left: \'1.8%\''), 'Original case brief start hotspot must be preserved');
+assert(view.includes('url("/٨.jpeg")'), 'Investigation must use original artwork');
+assert(view.includes('url("/٩.jpeg")'), 'Report must use original artwork');
+assert(view.includes("left:'65.5%'"), 'Vocabulary must fill original preprinted slots');
+assert(!view.includes('SpeechSynthesisUtterance'), 'Robotic Arabic speech must not return');
+assert(!view.includes('speechSynthesis.speak'), 'The game must use only cinematic sound effects');
+assert(view.includes("showClueDetail"), 'Cipher and clue zoom must be available on request');
 console.log('Detective experience: bilingual support, accusation gate, practice, mobile grid and progress verified.');
