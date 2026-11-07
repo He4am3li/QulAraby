@@ -120,19 +120,8 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const advancedProofsCorrect = advancedProofs.length === 2 &&
     advancedProofs.every((proof, index) => advancedProofAnswers[index] === proof.correctIndex);
 
-  const playSpeech = (arabicText: string) => {
-    if (isMuted || typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      setFeedback(t('النطق غير متاح أو الصوت مكتوم.', 'Speech is unavailable or muted.'));
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(arabicText);
-    utterance.lang = 'ar-SA';
-    utterance.rate = level === 'beginner' ? 0.78 : 0.9;
-    const voice = window.speechSynthesis.getVoices().find(v => v.lang.toLowerCase().startsWith('ar'));
-    if (voice) utterance.voice = voice;
-    window.speechSynthesis.speak(utterance);
-  };
+  // The cinematic soundscape uses authored music and effects only.
+  // Never synthesize Arabic speech for dossiers, witness statements or words.
   useEffect(() => () => {
     spyAudio.stopBgm();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -144,7 +133,6 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const toggleMute = () => {
     spyAudio.setMuted(!isMuted);
     setIsMuted(!isMuted);
-    if (!isMuted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
   };
   const resetInvestigation = () => {
     setClueIndex(0); setEliminated([]); setCipherOpened(false);
@@ -389,7 +377,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                <button type="button" className={secondaryButton + ' flex-1 text-xs sm:text-sm'} onClick={() => playSpeech(activeClue.speech)}><Volume2 size={16}/>{t('استمع', 'Listen')}</button>
+                
                 <button type="button" className={secondaryButton + ' flex-1 text-xs sm:text-sm'} onClick={() => setShowTranslation(!showTranslation)}><BookOpen size={16}/>{t('الترجمة', 'Translation')}</button>
                 <button type="button" className={secondaryButton + ' flex-1 text-xs sm:text-sm'} onClick={() => setShowDossier(true)}><Fingerprint size={16}/>{t('المفردات', 'Words')}</button>
               </div>
@@ -464,7 +452,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
                   <p className="text-xs text-amber-200">{answersCount + 1}/{activeCase.evidenceTerms.length}</p>
                   <div className="rounded-xl bg-[#e6d0a6] p-4 text-center text-[#362516]">
                     <p className="text-2xl font-black">{activeCase.evidenceTerms[answersCount].ar}</p>
-                    <button type="button" className="mt-2 inline-flex items-center gap-1 text-xs font-bold" onClick={() => playSpeech(activeCase.evidenceTerms[answersCount].ar)}><Volume2 size={15}/>{t('استمع', 'Listen')}</button>
+                    
                   </div>
                   <div className="grid gap-2">
                     {wordOptions(activeCase.evidenceTerms, answersCount, activeCase.id).map(answer => <button key={answer} type="button" className={secondaryButton} onClick={() => answerWord(answer)} dir="ltr">{answer}</button>)}
@@ -504,7 +492,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm">
           <div role="dialog" aria-modal="true" aria-label={t('سجل الأدلة', 'Evidence file')} className="w-full max-w-md space-y-3 rounded-2xl border border-amber-400/60 bg-[#081823] p-5 shadow-2xl">
             <div className="flex items-center justify-between"><h3 className="text-lg font-bold text-amber-200">{t('كلمات وأدلة القضية', 'Case words and evidence')}</h3><button type="button" aria-label={t('إغلاق','Close')} onClick={() => setShowDossier(false)}><X size={19}/></button></div>
-            {activeCase.evidenceTerms.map(word => <button type="button" key={word.ar} onClick={() => playSpeech(word.ar)} className="flex min-h-[40px] w-full items-center justify-between gap-2 rounded-xl border border-amber-400/20 px-3 py-2 text-sm hover:bg-amber-400/10"><span lang="ar" className="font-bold text-amber-200">{word.ar}</span><span className="flex items-center gap-2 text-slate-300" dir="ltr"><Volume2 size={14}/>{word.en}</span></button>)}
+            {activeCase.evidenceTerms.map(word => <div key={word.ar} className="flex min-h-[40px] w-full items-center justify-between gap-2 rounded-xl border border-amber-400/20 px-3 py-2 text-sm"><span lang="ar" className="font-bold text-amber-200">{word.ar}</span><span dir="ltr" className="text-slate-300">{word.en}</span></div>)}
             <button type="button" className={primaryButton + ' w-full'} onClick={() => setShowDossier(false)}>{t('تابع التحقيق', 'Continue investigation')}</button>
           </div>
         </div>
