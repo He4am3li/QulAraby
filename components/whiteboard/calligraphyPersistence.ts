@@ -1,3 +1,6 @@
+import type { CalligraphyPenNibId } from './calligraphyStudioData';
+import type { OrnamentStyleId } from './CalligraphyOrnaments';
+
 /**
  * Durable on-device calligraphy gallery.
  *
@@ -11,12 +14,12 @@ export interface SavedCalligraphyCard {
   dataUrl: string;
   text?: string;
   font?: string;
-  pen?: string;
+  pen?: CalligraphyPenNibId;
   color?: string;
   isGold?: boolean;
   foilStyle?: string;
   isSpecialIlluminated?: boolean;
-  ornament?: string;
+  ornament?: OrnamentStyleId;
   size?: string;
   fontSize?: number;
   background?: string;
