@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../../firebase';
 import {
   RotateCcw,
   RotateCw,
@@ -24,7 +26,8 @@ import { CalligraphyPenNibId, getCalligraphyPenDynamics } from './calligraphyStu
 import { CalligraphyOrnaments, ORNAMENT_OPTIONS, OrnamentStyleId } from './CalligraphyOrnaments';
 import { CalligraphyStudioTray } from './CalligraphyStudioTray';
 const CalligraphyPracticeLab = React.lazy(() => import('./CalligraphyPracticeLab'));
-import { SavedCalligraphyCard, loadCalligraphyCards, persistCalligraphyCards, MAX_SAVED_CALLIGRAPHY_CARDS } from './calligraphyPersistence';
+import { SavedCalligraphyCard, loadCalligraphyCards, loadLegacyCalligraphyCards, persistCalligraphyCards, MAX_SAVED_CALLIGRAPHY_CARDS } from './calligraphyPersistence';
+import { loadCloudCalligraphyCards, saveCloudCalligraphyCard, deleteCloudCalligraphyCard } from './calligraphyCloudSync';
 
 interface CalligraphyCardStudioProps {
   initialText?: string;
@@ -688,6 +691,12 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
   const [showPracticeLab, setShowPracticeLab] = useState(false);
   const [saveSuccessToast, setSaveSuccessToast] = useState(false);
   const [savedCards, setSavedCards] = useState<SavedCalligraphyCard[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(true);
+  const [galleryUid, setGalleryUid] = useState<string | null>(null);
+  const galleryUidRef = useRef<string | null>(null);
+  const [legacyCount, setLegacyCount] = useState(0);
+  const [saveStatus, setSaveStatus] = useState('تم حفظ اللوحة على هذا الجهاز.');
+  const [syncStatus, setSyncStatus] = useState('');
 
   // Undo / Redo Stack
   const [history, setHistory] = useState<CanvasHistorySnapshot[]>([
@@ -843,17 +852,95 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
     return () => window.removeEventListener('keydown', onKeyboardShortcut);
   }, [history, historyIndex]);
 
-  // The gallery uses IndexedDB. Existing localStorage cards are migrated safely
-  // and only removed from the old storage after the transaction commits.
+  // Keep signed-in galleries isolated by uid, with a guest-only on-device gallery.
+  // Load local originals before merging remote compressed previews; local originals
+  // take priority when the same saved design exists in both places.
   useEffect(() => {
     let mounted = true;
-    loadCalligraphyCards()
-      .then(cards => { if (mounted) setSavedCards(cards); })
-      .catch(error => {
-        if (mounted) setStudioAlert(error instanceof Error ? error.message : 'تعذر تحميل معرض اللوحات.');
-      });
-    return () => { mounted = false; };
+    let generation = 0;
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      const request = ++generation;
+      const uid = user?.uid || null;
+      galleryUidRef.current = uid;
+      setGalleryUid(uid);
+      setSavedCards([]);
+      setGalleryLoading(true);
+      setLegacyCount(0);
+      setSyncStatus(uid ? 'جاري تحميل لوحات حسابك...' : 'المعرض المحلي على هذا الجهاز');
+      try {
+        const scope = uid || 'guest';
+        const local = await loadCalligraphyCards(scope);
+        if (!mounted || request !== generation) return;
+        if (!uid) {
+          setSavedCards(local);
+          setSyncStatus('الأعمال محفوظة على هذا الجهاز فقط. سجّل الدخول للمزامنة.');
+          return;
+        }
+
+        const [remote, legacy] = await Promise.allSettled([
+          loadCloudCalligraphyCards(uid),
+          loadLegacyCalligraphyCards()
+        ]);
+        if (!mounted || request !== generation) return;
+        const cloud = remote.status === 'fulfilled' ? remote.value : [];
+        if (remote.status === 'rejected') {
+          setSyncStatus('تعذّر الاتصال بمزامنة الحساب. أعمالك المحلية محفوظة.');
+        } else {
+          setSyncStatus('المعرض مرتبط بحسابك على قُل.');
+        }
+        const merged = new Map<string, SavedCalligraphyCard>();
+        for (const card of [...cloud, ...local]) {
+          if (card?.id && card?.dataUrl) merged.set(card.id, card);
+        }
+        const ordered = Array.from(merged.values())
+          .sort((a, b) => Number(b.id.match(/^card_(\d{11,})/)?.[1] || 0) -
+            Number(a.id.match(/^card_(\d{11,})/)?.[1] || 0))
+          .slice(0, MAX_SAVED_CALLIGRAPHY_CARDS);
+        if (ordered.length > local.length) await persistCalligraphyCards(ordered, uid);
+        if (!mounted || request !== generation) return;
+        setSavedCards(ordered);
+        if (legacy.status === 'fulfilled') {
+          const activeIds = new Set(ordered.map(card => card.id));
+          setLegacyCount(legacy.value.filter(card => !activeIds.has(card.id)).length);
+        }
+      } catch (error) {
+        if (mounted && request === generation) {
+          setStudioAlert(error instanceof Error ? error.message : 'تعذر تحميل معرض اللوحات.');
+        }
+      } finally {
+        if (mounted && request === generation) setGalleryLoading(false);
+      }
+    });
+    return () => { mounted = false; generation++; unsubscribe(); };
   }, []);
+
+  const handleImportDeviceGallery = async () => {
+    if (!galleryUidRef.current) return;
+    const uid = galleryUidRef.current;
+    try {
+      const legacy = await loadLegacyCalligraphyCards();
+      const currentIds = new Set(savedCards.map(card => card.id));
+      const additions = legacy.filter(card => !currentIds.has(card.id));
+      const merged = [...savedCards, ...additions]
+        .sort((a, b) => Number(b.id.match(/^card_(\d{11,})/)?.[1] || 0) -
+          Number(a.id.match(/^card_(\d{11,})/)?.[1] || 0))
+        .slice(0, MAX_SAVED_CALLIGRAPHY_CARDS);
+      await persistCalligraphyCards(merged, uid);
+      setSavedCards(merged);
+      setLegacyCount(0);
+      let failed = 0;
+      for (const card of additions) {
+        if (!merged.some(item => item.id === card.id)) continue;
+        try { await saveCloudCalligraphyCard(uid, card); }
+        catch (error) { failed++; console.warn('Calligraphy import cloud sync:', error); }
+      }
+      setSyncStatus(failed
+        ? `استُوردت الأعمال إلى حسابك على الجهاز، وتعذّرت مزامنة ${failed} منها.`
+        : 'استُوردت أعمال هذا الجهاز إلى حسابك بنجاح.');
+    } catch (error) {
+      setStudioAlert(error instanceof Error ? error.message : 'تعذّر استيراد اللوحات القديمة.');
+    }
+  };
 
   // Save artwork only after IndexedDB confirms the complete transaction.
   const handleSaveCard = async () => {
@@ -889,10 +976,22 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
         signaturePosition
       };
       const updated = [newCard, ...savedCards].slice(0, MAX_SAVED_CALLIGRAPHY_CARDS);
-      await persistCalligraphyCards(updated);
+      const uid = galleryUidRef.current;
+      await persistCalligraphyCards(updated, uid || 'guest');
       setSavedCards(updated);
+      setSaveStatus('تم حفظ اللوحة على هذا الجهاز.');
       setStudioAlert(null);
       setSaveSuccessToast(true);
+      if (uid) {
+        try {
+          await saveCloudCalligraphyCard(uid, newCard);
+          setSaveStatus('تم حفظ اللوحة ومزامنتها مع حسابك.');
+          setSyncStatus('تمت مزامنة اللوحة مع الحساب.');
+        } catch (error) {
+          console.warn('Calligraphy cloud save:', error);
+          setSyncStatus('حُفظت اللوحة على الجهاز، وتعذّرت مزامنتها مع حسابك.');
+        }
+      }
       setTimeout(() => setSaveSuccessToast(false), 2600);
     } catch (error) {
       console.error('Error saving calligraphy artwork:', error);
@@ -914,7 +1013,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
     if (card.ornament) setSelectedOrnament(card.ornament);
     if (card.size) setSelectedSize(card.size);
     if (card.background) setSelectedBackground(card.background);
-    if (card.customBgUrl) setCustomBgUrl(card.customBgUrl);
+    setCustomBgUrl(card.customBgUrl || null);
     if (card.showSignature !== undefined) setShowSignature(card.showSignature);
     if (card.signatureName) setSignatureName(card.signatureName);
     if (card.signaturePosition) setSignaturePosition(card.signaturePosition);
@@ -1382,7 +1481,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
             {saveSuccessToast && (
               <div className="absolute top-4 z-40 bg-[#161a22]/95 border border-[#c59b27] text-[#f3cf7a] px-4 py-2 rounded-xl shadow-2xl flex items-center gap-2 animate-fade-in backdrop-blur-md">
                 <Save size={16} className="text-[#ffd700]" />
-                <span className="text-xs font-bold font-tajawal">تم حفظ اللوحة في المعرض بنجاح! ✨</span>
+                <span className="text-xs font-bold font-tajawal">{saveStatus}</span>
               </div>
             )}
 
@@ -1643,6 +1742,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
           <button
             type="button"
             onClick={() => setShowSavedCardsModal(true)}
+            disabled={galleryLoading}
             className="w-10 sm:w-12 md:w-14 py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer text-[#9aa0a6] hover:bg-[#181b21] hover:text-[#f0e8dc] border border-transparent hover:border-[#a37e38]/50 relative group"
             title="معرض اللوحات المحفوظة"
           >
@@ -2241,6 +2341,15 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
               </button>
             </div>
 
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#6c5938]/50 bg-[#11161c] px-3 py-2 text-[11px] text-[#c3b8a6]">
+              <span role="status">{galleryLoading ? 'جاري استعادة اللوحات...' : syncStatus}</span>
+              {galleryUid && legacyCount > 0 && (
+                <button type="button" onClick={handleImportDeviceGallery}
+                  className="rounded-lg border border-[#bd9d65]/60 bg-[#362719] text-[#f3cf7a] font-bold px-3 py-1.5 hover:bg-[#46331f]">
+                  استيراد {legacyCount} من أعمال هذا الجهاز إلى حسابي
+                </button>
+              )}
+            </div>
             {/* Gallery Content */}
             <div className="flex-1 overflow-y-auto no-scrollbar py-2 space-y-6">
 
@@ -2299,8 +2408,18 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
                                 e.stopPropagation();
                                 const updated = savedCards.filter(c => c.id !== card.id);
                                 try {
-                                  await persistCalligraphyCards(updated);
+                                  const uid = galleryUidRef.current;
+                                  await persistCalligraphyCards(updated, uid || 'guest');
                                   setSavedCards(updated);
+                                  if (uid) {
+                                    try {
+                                      await deleteCloudCalligraphyCard(uid, card.id);
+                                      setSyncStatus('حُذفت اللوحة من حسابك وأجهزتك.');
+                                    } catch (error) {
+                                      console.warn('Could not delete cloud card:', error);
+                                      setSyncStatus('حُذفت محليًا، لكن تعذّر حذف النسخة السحابية.');
+                                    }
+                                  }
                                 } catch (error) {
                                   console.error('Could not delete calligraphy card:', error);
                                   setStudioAlert('تعذّر حذف اللوحة من التخزين. حاول مرة أخرى.');
