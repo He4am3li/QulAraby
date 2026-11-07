@@ -388,8 +388,17 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
                 </div>
               )}
             </div>
-            {/* One uninterrupted investigation roster. Portraits fill their photo frames
-                and separate gold-bordered nameplates match the approved briefing art. */}
+            {/* Hide the six obsolete blank frames printed in the original investigation art.
+                The dark matte belongs behind the portraits, not in front of the scene. */}
+            <div aria-hidden="true" className="pointer-events-none absolute z-10"
+              style={{
+                left: '37.5%', top: '11.8%', width: '62.5%', height: '69.3%',
+                background: 'linear-gradient(110deg, #0a1721 0%, #101e2b 56%, #0b1722 100%)',
+                boxShadow: 'inset 0 0 45px rgba(0,0,0,.45)',
+                maskImage: 'linear-gradient(90deg, transparent 0%, black 1.5%, black 99%, transparent 100%)',
+              }}/>
+            {/* One uninterrupted investigation roster. Original case portraits are cropped
+                from the correct scene instead of using the old misaligned thumbnail cuts. */}
             <div dir="rtl"
               className="absolute z-20 flex flex-wrap content-center items-center justify-center overflow-hidden"
               style={{
@@ -399,7 +408,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
                 height: activeCase.suspects.length <= 6 ? '57%' : '59.7%',
                 columnGap: '0.72%', rowGap: '3.2%',
               }}>
-              {activeCase.suspects.map(person => {
+              {activeCase.suspects.map((person, suspectIndex) => {
                 const cleared = eliminated.includes(person.id);
                 return <button type="button" key={person.id}
                   aria-label={person.name + (cleared ? '، بريء' : '')}
@@ -413,9 +422,15 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
                   }}>
                   <span className={'relative block min-h-0 w-full flex-1 overflow-hidden rounded-t-[3px] border border-b-0 bg-[#101820] shadow-md ' +
                     (cleared ? 'border-emerald-400/70 ' : 'border-[#bb9251]/80 group-hover:border-amber-200')}>
-                    <img src={person.image} alt="" draggable={false} loading="eager"
-                      className={'absolute inset-0 block h-full w-full object-cover object-top transition-[filter] ' +
-                        (cleared ? 'grayscale brightness-[.55]' : '')}/>
+                    {level === 'advanced' && getAdvancedPosterPortraitStyle(activeCase.caseNumber, suspectIndex, activeCase.bgImage) ? (
+                      <span aria-hidden="true"
+                        className={'absolute inset-0 block h-full w-full transition-[filter] ' + (cleared ? 'grayscale brightness-[.55]' : '')}
+                        style={getAdvancedPosterPortraitStyle(activeCase.caseNumber, suspectIndex, activeCase.bgImage) || undefined}/>
+                    ) : (
+                      <img src={person.image} alt="" draggable={false} loading="eager"
+                        className={'absolute inset-0 block h-full w-full object-contain object-center transition-[filter] ' +
+                          (cleared ? 'grayscale brightness-[.55]' : '')}/>
+                    )}
                     {cleared && <span className="absolute inset-0 flex items-center justify-center bg-emerald-950/25">
                       <Check className="h-[25%] w-auto rounded-full bg-emerald-700 p-1 text-white"/>
                     </span>}
