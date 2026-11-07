@@ -339,20 +339,54 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
               className="absolute right-[1%] top-[2%] z-30 rounded-full border border-amber-500/40 bg-black/55 p-1.5 text-amber-200 hover:bg-black/75">
               <ArrowRight size={15}/>
             </button>
+            {/* Solve the cipher in the existing evidence frame. No secondary window. */}
             <div className="absolute z-20 flex flex-col items-center justify-center overflow-hidden text-center"
-              style={{ left: '7.5%', top: '22%', width: '28%', height: '32%' }} dir="rtl">
+              style={{ left: '6.1%', top: '18.4%', width: '30.6%', height: '48.2%' }} dir="rtl">
               {level === 'advanced' && activeClue.cipherKey && !cipherOpened ? (
-                <button type="button" onClick={() => setShowClueDetail(true)} className="flex h-full w-full flex-col items-center justify-center gap-1 text-[#423016]"
-                  aria-label={t('فتح الدليل المشفر', 'Open cipher clue')}>
-                  <LockKeyhole className="h-[12%] w-auto"/>
-                  <span className="font-black" style={{ fontSize: 'clamp(9px, .92vw, 16px)' }}>{t('الإفادة المشفرة', 'Cipher clue')} {clueIndex + 1}/{activeCase.clues.length}</span>
-                  <span style={{ fontSize: 'clamp(8px, .8vw, 13px)' }}>{t('اضغط لفك الشفرة', 'Tap to decode')}</span>
-                </button>
+                <div className="flex h-full w-full flex-col items-stretch justify-center gap-[2%] px-[3%] text-[#352816]"
+                  aria-label={t('فك شفرة الإفادة', 'Decode the witness statement')}>
+                  <div className="flex items-center justify-center gap-1 font-black"
+                    style={{ fontSize: 'clamp(8px, 1.04vw, 17px)' }}>
+                    <LockKeyhole className="h-[1em] w-[1em] shrink-0"/>
+                    {t('الإفادة المشفرة', 'Cipher clue')} {clueIndex + 1}/{activeCase.clues.length}
+                  </div>
+                  <p lang="ar" className="font-semibold leading-snug"
+                    style={{ fontSize: 'clamp(8px, 1vw, 16px)' }}>{activeClue.cipherHint}</p>
+                  <div className="grid w-full grid-cols-1 gap-[3px] sm:gap-1.5">
+                    {(activeClue.cipherOptions || []).map(option =>
+                      <button type="button" key={option}
+                        onClick={() => {
+                          if (option === activeClue.cipherKey) {
+                            spyAudio.playCipherDecode(); setCipherOpened(true); setFeedback('');
+                          } else {
+                            spyAudio.playWrongBuzzer(); setErrors(value => value + 1);
+                            setFeedback(t('شفرة غير صحيحة، أعد المحاولة.', 'Incorrect code. Try again.'));
+                          }
+                        }}
+                        className="flex min-h-0 items-center justify-center rounded border border-[#8e6a35]/45 bg-[#e7d4ad]/85 px-1 py-[2px] font-bold text-[#392b1e] transition-colors hover:bg-[#fff1cd] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#4d361e]"
+                        style={{ fontSize: 'clamp(8px, .91vw, 15px)', minHeight: 'clamp(15px, 2vw, 31px)' }}>
+                        {option}
+                      </button>)}
+                  </div>
+                  {feedback && <p role="status" aria-live="polite" className="font-bold text-red-800"
+                    style={{ fontSize: 'clamp(8px, .85vw, 13px)' }}>{feedback}</p>}
+                </div>
               ) : (
-                <button type="button" onClick={() => setShowClueDetail(true)}
-                  aria-label={t('تكبير الإفادة', 'Read full statement')} className="flex h-full w-full flex-col items-center justify-center text-[#352715]">
-                  <p className="w-full px-1 text-center font-bold leading-snug" style={{ fontSize: 'clamp(9px, .95vw, 17px)' }}>{activeClue.speech}</p>
-                </button>
+                <div className="flex h-full w-full flex-col items-center justify-center gap-[3%] px-[3%] text-[#352715]">
+                  <div className="font-black" style={{ fontSize: 'clamp(8px, .95vw, 16px)' }}>
+                    {t('الإفادة', 'Statement')} {clueIndex + 1}/{activeCase.clues.length}
+                  </div>
+                  <p lang="ar" className="w-full text-center font-semibold leading-normal"
+                    style={{ fontSize: 'clamp(9px, 1.04vw, 17px)' }}>{activeClue.speech}</p>
+                  {(showTranslation || language === 'en') && <p lang="en" dir="ltr"
+                    className="w-full text-center leading-snug text-[#55402a]"
+                    style={{ fontSize: 'clamp(8px, .84vw, 14px)' }}>{narrative?.cluesEn[clueIndex] || ''}</p>}
+                  <button type="button" onClick={() => setShowTranslation(v => !v)}
+                    className="rounded border border-[#80623b]/45 bg-[#e5cc9f]/60 px-2 py-0.5 font-bold hover:bg-[#f5e1b9]"
+                    style={{ fontSize: 'clamp(8px, .82vw, 13px)' }}>
+                    {showTranslation ? t('إخفاء الترجمة', 'Hide English') : t('الترجمة', 'Translation')}
+                  </button>
+                </div>
               )}
             </div>
             {/* Only the portrait slots from the original investigation artwork receive dynamic images. */}
@@ -452,55 +486,6 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
             </div>
           </div>
         </section>
-      )}
-      {showClueDetail && screen === 'investigation' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-sm" onClick={() => setShowClueDetail(false)}>
-          <div role="dialog" aria-modal="true" aria-label={t('تفاصيل الإفادة', 'Statement details')}
-            onClick={e => e.stopPropagation()}
-            className="w-full max-w-lg space-y-4 rounded-xl border border-[#bc934e] bg-[#e4cc9f] p-4 text-[#2d2418] shadow-2xl sm:p-6">
-            <div className="flex items-center justify-between border-b border-[#73542c]/30 pb-2">
-              <h3 className="font-black">{t('ملف الإفادة', 'Witness statement')} {clueIndex + 1}/{activeCase.clues.length}</h3>
-              <button type="button" onClick={() => {setShowClueDetail(false);setFeedback('');}} aria-label={t('إغلاق', 'Close')}
-                className="rounded-full p-1 hover:bg-[#a18557]/25"><X size={19}/></button>
-            </div>
-            {level === 'advanced' && activeClue.cipherKey && !cipherOpened ? (
-              <div className="space-y-3">
-                <p dir="rtl" lang="ar" className="text-center text-base font-bold leading-loose">{activeClue.cipherHint}</p>
-                <div className="grid gap-2">
-                  {(activeClue.cipherOptions || []).map(option => <button type="button" key={option}
-                    onClick={() => {
-                      if (option === activeClue.cipherKey) {
-                        spyAudio.playCipherDecode(); setCipherOpened(true); setFeedback(''); setShowClueDetail(false);
-                      } else {
-                        spyAudio.playWrongBuzzer(); setErrors(v=>v+1);
-                        setFeedback(t('مفتاح غير صحيح. راجع الشفرة.', 'Incorrect key. Review the cipher.'));
-                      }
-                    }}
-                    className="min-h-[44px] rounded-lg border border-[#a27a42] bg-[#f3e4c8] px-4 py-2 text-center font-bold hover:bg-white">
-                    {option}</button>)}
-                </div>
-              </div>
-            ) : (
-              <>
-                <p dir="rtl" lang="ar" className="text-center text-lg font-bold leading-loose">{activeClue.speech}</p>
-                {(showTranslation || language === 'en') && <p dir="ltr" className="rounded-md border border-[#ad8955]/30 px-2 py-2 text-center text-sm leading-relaxed">
-                  {narrative?.cluesEn[clueIndex] || ''}
-                </p>}
-                <div className="flex items-center justify-between gap-2">
-                  <button type="button" onClick={() => setShowTranslation(v=>!v)}
-                    className="min-h-[42px] rounded-md border border-[#ad8955] px-3 text-xs font-bold">
-                    {showTranslation ? t('إخفاء الترجمة', 'Hide translation') : t('عرض الترجمة', 'Show translation')}
-                  </button>
-                  <button type="button" onClick={() => setShowClueDetail(false)}
-                    className="min-h-[42px] rounded-md bg-[#49341d] px-4 text-sm font-bold text-amber-50">
-                    {t('متابعة التحقيق', 'Continue investigation')}
-                  </button>
-                </div>
-              </>
-            )}
-            {feedback && <p role="status" className="text-center text-sm font-bold text-red-700">{feedback}</p>}
-          </div>
-        </div>
       )}
       {showDossier && screen === 'investigation' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm">
