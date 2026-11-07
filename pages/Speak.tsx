@@ -9,6 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { PageHeader } from '../components/PageHeader';
 import { StudioMicIcon } from '../components/StudioMicIcon';
+import { SpeakingCallBooth, CALL_CONTACTS } from '../components/SpeakingCallBooth';
 import { FallingLetters } from '../components/Layout';
 import { Modality, Type } from '@google/genai';
 import { getAI, getLiveAI, generateSessionInsights, translateAndExpand, generateSpeech, decodeAudioData, speak as globalSpeak } from '../services/gemini';
@@ -119,8 +120,11 @@ export const Speak: React.FC = () => {
   const [showSummary, setShowSummary] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [generatingInsights, setGeneratingInsights] = React.useState(false);
-  const [selectedLevel, setSelectedLevel] = React.useState<typeof LEVELS[0] | null>(null);
+  const [selectedLevel, setSelectedLevel] = React.useState<typeof LEVELS[0] | null>(LEVELS[0]);
   const [selectedTopic, setSelectedTopic] = React.useState<typeof TOPICS[0] | null>(null);
+  const [speakingBranch, setSpeakingBranch] = React.useState<'booth' | 'studio'>('booth');
+  const [selectedCallContact, setSelectedCallContact] = React.useState<(typeof CALL_CONTACTS)[number]>(CALL_CONTACTS[0]);
+  const activeTopic = speakingBranch === 'booth' ? selectedCallContact : selectedTopic;
   const [placementHint, setPlacementHint] = React.useState<{ cefr: string; levelId: string } | null>(null);
   const manualLevelRef = React.useRef(false);
   
@@ -179,6 +183,7 @@ export const Speak: React.FC = () => {
   const mountedRef = React.useRef(false);
   const startAttemptRef = React.useRef(0);
   const micMeterRef = React.useRef<HTMLDivElement>(null);
+  const phoneMeterRef = React.useRef<HTMLDivElement>(null);
   const micMeterUpdatedRef = React.useRef(0);
   const historyRef = React.useRef<ChatEntry[]>([]);
   const learnerTextRef = React.useRef('');
@@ -220,6 +225,7 @@ export const Speak: React.FC = () => {
     sourcesRef.current.clear();
     nextStartTimeRef.current = 0;
     micMeterRef.current?.style.setProperty('--mic-scale', '0.12');
+    phoneMeterRef.current?.style.setProperty('--phone-mic', '0.12');
     setIsActive(false);
     setIsAiSpeaking(false);
   }, []);
@@ -306,7 +312,7 @@ export const Speak: React.FC = () => {
   const speakingEvidence = summarizeSpeakingEvidence(conversationHistory);
   const taskFallback = createNextSpeakingTask({
     level: selectedLevel?.id || 'beginner',
-    topicAr: selectedTopic?.ar || 'الموضوع',
+    topicAr: activeTopic?.ar || 'الموضوع',
     corrections: insights?.assessmentStatus === 'analyzed' ? insights.corrections : [],
   });
   const nextPractice = insights?.assessmentStatus === 'analyzed' && insights?.next_practice?.ar
@@ -319,6 +325,7 @@ export const Speak: React.FC = () => {
     });
     setMicMuted(nextMuted);
     micMeterRef.current?.style.setProperty('--mic-scale', '0.12');
+    phoneMeterRef.current?.style.setProperty('--phone-mic', '0.12');
   };
 
   const decode = (base64: string) => {
@@ -385,7 +392,7 @@ export const Speak: React.FC = () => {
   };
 
   const startSession = async (preserveHistory = false) => {
-    if (!selectedLevel || !selectedTopic) return;
+    if (!selectedLevel || !activeTopic) return;
     closeTransport();
     const attempt = startAttemptRef.current;
     const previousTurns = preserveHistory ? [...historyRef.current].slice(-8) : [];
@@ -470,10 +477,12 @@ export const Speak: React.FC = () => {
           systemInstruction: `You are a professional Arabic tutor named "QUL AI". 
           User Name: ${user?.displayName || 'Learner'}
           User Level: ${selectedLevel?.en} (${selectedLevel?.ar}). ${selectedLevel?.prompt}
-          Topic: ${selectedTopic?.en} (${selectedTopic?.ar}).
+          Topic: ${activeTopic?.en} (${activeTopic?.ar}).
           ${practiceGoal ? 'Current practice target: ' + practiceGoal.slice(0, 240) : ''} 
           
           ${proactiveContext}
+
+          ${speakingBranch === 'booth' ? `TELEPHONE ROLEPLAY. You are the fictional agent ${selectedCallContact.agentEn} at ${selectedCallContact.en}. This is a simulated educational call, not a real transaction. Student's mission: ${selectedCallContact.aimEn}. Objectives: ${selectedCallContact.objectivesEn.join('; ')}. Situation twist only after learner begins the request: ${selectedCallContact.complication}. Answer as a natural person on a telephone, with one short greeting and one simple question. Remain in character. Allow English hints for A1 and when a learner struggles, then model a tiny Arabic phrase. Ask no real identifiers, phone numbers, addresses, or payment details. Never claim a real booking was created. Don't assess pronunciation from transcripts.` : ''}
 
           SPEAKING COACH RULES:
           Start with one short greeting and one easy question about the topic.
@@ -504,6 +513,7 @@ export const Speak: React.FC = () => {
                 const level = Math.sqrt(energy / Math.ceil(inputData.length / 32));
                 const scaled = Math.max(0.12, Math.min(1, 0.12 + level * 7));
                 micMeterRef.current?.style.setProperty('--mic-scale', String(scaled));
+                phoneMeterRef.current?.style.setProperty('--phone-mic', String(scaled));
                 micMeterUpdatedRef.current = now;
               }
               const pcmBlob = createBlob(inputData, input.sampleRate);
@@ -613,7 +623,7 @@ export const Speak: React.FC = () => {
           : '';
         session.sendClientContent({
           turns: [{ role: 'user', parts: [{
-            text: 'Begin the tutoring session with one short greeting and an easy question about the selected topic. This is an internal startup instruction, not a learner utterance.' + context
+            text: (speakingBranch === 'booth' ? 'Answer the simulated telephone NOW in your role as the selected agent. Give one short natural greeting and one easy question. Do not introduce yourself as AI.' : 'Begin the tutoring session with one short greeting and an easy question about the selected topic. This is an internal startup instruction, not a learner utterance.') + context
           }] }],
           turnComplete: true,
         });
@@ -652,7 +662,7 @@ export const Speak: React.FC = () => {
       setShowSummary(true);
       setGeneratingInsights(true);
       try {
-        const data = await generateSessionInsights(finalHistory, selectedTopic.ar);
+        const data = await generateSessionInsights(finalHistory, activeTopic.ar);
         setInsights(data);
 
         // Sync to Knowledge Graph (Mistakes & Interests)
@@ -676,7 +686,7 @@ export const Speak: React.FC = () => {
           // 2. Sync Interest
           const interestsRef = collection(db, 'users', user.uid, 'interests');
           addDoc(interestsRef, {
-            topic: selectedTopic.ar,
+            topic: activeTopic.ar,
             userId: user.uid,
             frequency: 1,
             lastSeen: serverTimestamp(),
@@ -872,7 +882,7 @@ export const Speak: React.FC = () => {
         currentY += msgHeight + 8;
       }
 
-      pdf.save(`Qul_Conversation_Report_${selectedTopic?.en}_${new Date().toISOString().slice(0, 10)}.pdf`);
+      pdf.save(`Qul_Conversation_Report_${activeTopic?.en}_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (err) {
       console.error("PDF Generation failed", err);
       window.print();
@@ -889,7 +899,7 @@ export const Speak: React.FC = () => {
         <div className="border-b-4 border-[#2563eb] pb-4 mb-6 flex justify-between items-end">
           <div className="text-right">
             <h1 className="text-2xl font-black text-slate-900 arabic-font">{t.summaryTitle}</h1>
-            <p className="text-xs text-slate-500 font-bold mt-1">الموضوع: {selectedTopic?.ar} | المستوى: {selectedLevel?.ar}</p>
+            <p className="text-xs text-slate-500 font-bold mt-1">الموضوع: {activeTopic?.ar} | المستوى: {selectedLevel?.ar}</p>
           </div>
           <div className="text-left font-black text-[#2563eb] text-lg">قُل - Qul</div>
         </div>
@@ -1030,7 +1040,7 @@ export const Speak: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-xl font-black text-slate-800 arabic-font">{t.summaryTitle}</h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{selectedTopic?.ar} • {selectedLevel?.ar}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeTopic?.ar} • {selectedLevel?.ar}</p>
                     </div>
                   </div>
                   <button onClick={() => { setShowSummary(false); setSetupMode(true); }} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-all">
@@ -1284,7 +1294,7 @@ export const Speak: React.FC = () => {
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block leading-none mb-1">
                     {isActive ? (isAiSpeaking ? t.speaking : t.listening) : 'Offline'}
                   </span>
-                  <span className="text-[11px] text-[#2563eb] font-bold arabic-font">{selectedTopic?.ar} • {selectedLevel?.ar}</span>
+                  <span className="text-[11px] text-[#2563eb] font-bold arabic-font">{activeTopic?.ar} • {selectedLevel?.ar}</span>
                 </div>
               </div>
 
@@ -1434,7 +1444,7 @@ export const Speak: React.FC = () => {
           {/* Header */}
           <div className="border-b-2 border-slate-900 pb-4 mb-6 flex justify-between items-center">
             <div className="w-1/3">
-              <h1 className="text-base font-bold max-w-[200px] leading-[2] pb-2">{selectedTopic?.ar || 'محادثة عامة'}</h1>
+              <h1 className="text-base font-bold max-w-[200px] leading-[2] pb-2">{activeTopic?.ar || 'محادثة عامة'}</h1>
               <p className="text-slate-400 text-[10px] uppercase font-bold">{selectedLevel?.ar || 'مستوى عام'}</p>
             </div>
             <div className="w-1/3 text-center">
