@@ -1,0 +1,110 @@
+
+/* QUL Telephone Exchange, a dedicated instrument, not a conventional chat layout. */
+.qul-call-world{--metal:#c6a876;--ink:#d9e8ef;--brass:#d4ae77;position:relative;isolation:isolate;width:100%;height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:clamp(12px,1.45vw,22px);color:#e2e9f2;background:radial-gradient(ellipse at 45% -12%,#31648054,transparent 52%),radial-gradient(ellipse at 5% 65%,#193c5160,transparent 54%),linear-gradient(145deg,#0f1b27,#101d2a 55%,#08121d);font-family:'Tajawal','Cairo',sans-serif}
+.qul-call-world *{box-sizing:border-box}
+.qul-call-world button:focus-visible{outline:2px solid #f7d28e;outline-offset:3px}
+.qul-call-atmosphere{position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.65;background:repeating-linear-gradient(90deg,#d5e0ff04 0 1px,transparent 1px 52px),repeating-linear-gradient(0deg,#c6d9f004 0 1px,transparent 1px 52px);mask-image:linear-gradient(to bottom,#000,transparent 90%)}
+.qul-call-world:before{content:"";position:absolute;left:-15%;top:-70%;width:90%;height:150%;transform:rotate(-20deg);background:linear-gradient(90deg,transparent,#d4dff014,transparent);pointer-events:none}
+.qul-call-heading{z-index:1;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-shrink:0;padding:0 5px clamp(7px,1vw,14px);border-bottom:1px solid #b9d2e01c}
+.qul-call-eyebrow{display:block;font:800 9px/1.3 ui-monospace,monospace;letter-spacing:.18em;color:#d2b88f;direction:ltr;text-align:start}
+.qul-call-heading h2{margin:5px 0 0;font-size:clamp(19px,2vw,27px);line-height:1.25;font-weight:900;color:#fff}
+.qul-call-heading p{margin:3px 0 0;color:#a6bbca;font-size:clamp(10px,1vw,12px)}
+.qul-call-online{display:flex;align-items:center;gap:9px;white-space:nowrap;border:1px solid #4d6981;padding:9px 12px;border-radius:999px;background:#ffffff0b;box-shadow:inset 0 1px #fff1}
+.qul-call-online>span{height:8px;width:8px;border-radius:50%;background:#bfb69a;box-shadow:0 0 9px #e2c99f70}
+.qul-call-online.connected>span{background:#77edb2;box-shadow:0 0 14px #63efbba8}
+.qul-call-online strong{font:800 10px/1.2 'Tajawal',sans-serif;color:#e0edf4}
+.qul-call-stage{z-index:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(285px,390px);align-items:stretch;gap:clamp(14px,2vw,25px);flex:1;min-height:0;overflow:hidden;padding-top:14px}
+.qul-call-device-area{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;padding:0 8px 10px;perspective:1200px}
+.qul-call-floor-light{position:absolute;width:80%;height:50%;bottom:0;border-radius:50%;background:#3384a228;filter:blur(48px);pointer-events:none}
+.qul-call-cabinet{position:relative;flex-shrink:0;width:min(100%,360px);height:min(100%,560px);min-height:460px;padding:16px 14px 13px;border:2px solid #73818a;border-radius:33px 33px 27px 27px;background:radial-gradient(ellipse at 20% 1%,#546877,#233541 27%,transparent 58%),linear-gradient(125deg,#1d2934,#0b121b 46%,#2a3640 86%,#111820);box-shadow:inset 0 2px 3px #fff6,inset 7px 0 14px #fff1,inset -9px -8px 17px #0009,0 1px 0 #a7bdc5,10px 16px 0 -6px #040b10,0 35px 65px #000b;transform:rotateX(2deg);transform-style:preserve-3d}
+.qul-call-cabinet:after{content:"";position:absolute;inset:5px;border-radius:29px;border:1px solid #ffffff1b;pointer-events:none}
+.qul-call-cabinet-rails{position:absolute;inset:-6px 9px 10px;border-radius:35px;border:1px solid #9b7e563e;pointer-events:none;box-shadow:inset 0 0 0 3px #121b2290}
+.qul-call-plate-top{height:20px;display:flex;justify-content:space-between;align-items:center;gap:5px;color:#c3b597;font:700 7px/1 ui-monospace,monospace;letter-spacing:.12em}
+.qul-call-metal-dot{width:5px;height:5px;border-radius:50%;background:#e2cda6;box-shadow:inset -1px -1px #4e3724,0 1px 2px #000}
+.qul-call-rest{position:relative;margin-top:45px;display:flex;justify-content:space-between;padding:0 37px;height:28px}
+.qul-call-rest i{display:block;width:36px;height:15px;border-radius:12px;background:linear-gradient(#04090b,#1b2832);border:2px solid #333f48;box-shadow:inset 0 3px 5px #000}
+.qul-call-handset{z-index:5;position:absolute;top:47px;left:-6%;width:112%;height:72px;display:flex;align-items:center;justify-content:space-between;transform-origin:51% 60%;filter:drop-shadow(0 12px 7px #000b)}
+.qul-call-ear{height:73px;width:78px;border-radius:25px 20px 35px 27px;border:2px solid #7b8792;background:radial-gradient(circle at 28% 25%,#626f79,#142431 44%,#080f17 80%);box-shadow:inset 4px 3px 8px #ffffff30,inset -5px -6px 10px #000b}
+.qul-call-ear>span{display:block;margin-top:27px;text-align:center;letter-spacing:4px;font:900 14px/1 ui-monospace;color:#71818a;transform:rotate(90deg)}
+.qul-call-handle{height:36px;flex:1;margin:0 -9px;border:2px solid #52616d;border-radius:15px 15px 22px 22px;background:linear-gradient(#64717d,#1e2c37 38%,#0b131c 73%,#28343f);box-shadow:inset 0 4px 2px #ffffff32,inset 0 -5px 8px #000a}
+.qul-call-handle-band{height:4px;margin:12px 13%;background:#71808b70;border-radius:2px}
+.qul-call-console{position:relative;z-index:2;border-radius:15px;border:1px solid #6676829c;background:linear-gradient(135deg,#303943,#171e26 52%,#252c35);box-shadow:inset 0 1px #fff4,0 8px 12px #0006;padding:10px 13px 13px;margin-top:0}
+.qul-call-console-led{display:flex;justify-content:space-between;align-items:center;color:#c8bfab;font:800 8px ui-monospace,monospace;letter-spacing:.1em;margin-bottom:7px;direction:ltr}
+.qul-call-led{display:inline-block;width:7px;height:7px;border-radius:50%;background:#d5ac71;box-shadow:0 0 8px #d5ac716c}
+.qul-call-led.is-on{background:#86f4b1;box-shadow:0 0 9px #68e9a5}
+.qul-call-led.is-ringing{animation:qul-call-blink .6s steps(2) infinite}
+.qul-call-screen{border:5px solid #090e15;border-radius:11px;background:radial-gradient(ellipse at 50% 0%,#214f4b,#061b1d 80%);height:118px;box-shadow:inset 0 0 17px #000c,0 1px #ffffff26;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px;position:relative;overflow:hidden}
+.qul-call-screen:after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,#a6efbd09 0 1px,transparent 1px 3px),linear-gradient(105deg,#ffffff06,transparent 48%)}
+.qul-call-screen-label{font:800 8px 'Tajawal',sans-serif;letter-spacing:.07em;color:#a7dfbb}
+.qul-call-screen-name{font-size:clamp(15px,1.7vw,20px);font-weight:900;color:#dcffdd;line-height:1.5;text-shadow:0 0 9px #70ffb245;position:relative;z-index:1}
+.qul-call-screen-extension{display:flex;align-items:center;gap:10px;color:#b8e2bb;font-family:ui-monospace,monospace}
+.qul-call-screen-extension>span:first-child{font-size:8px}
+.qul-call-screen-extension strong{font-size:20px;letter-spacing:.12em;color:#f6ffd9}
+.qul-call-screen-signal{color:#68978b;opacity:.45}
+.qul-call-screen-signal.live{color:#a1ffd7;opacity:1}
+.qul-call-screen-status{font-size:9px;color:#b3d8b5;max-width:100%;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1}
+.qul-call-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px 11px;padding:11px 12px}
+.qul-call-key{display:flex;flex-direction:column;align-items:center;justify-content:center;height:33px;border:1px solid #8f9698;border-radius:8px;color:#f6f0df;background:linear-gradient(150deg,#78838b,#343e48 45%,#1b2933);box-shadow:inset 0 1px 1px #fffb,0 3px 0 #111820,0 5px 6px #0008;cursor:pointer;transition:transform .12s,box-shadow .12s}
+.qul-call-key>span{font:800 16px/1.1 ui-monospace,monospace}
+.qul-call-key small{font:700 6px/1.2 ui-monospace,monospace;letter-spacing:.05em;color:#d5d0bd}
+.qul-call-key:hover:not(:disabled){background:linear-gradient(#8e9c9e,#425b65)}
+.qul-call-key:active:not(:disabled){transform:translateY(3px);box-shadow:inset 0 2px 4px #0008}
+.qul-call-key:disabled{opacity:.42;cursor:default}
+.qul-call-device-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:4px 12px 1px;direction:ltr}
+.qul-call-connect,.qul-call-end{height:41px;border:1px solid #ffffff35;border-radius:11px;display:flex;align-items:center;justify-content:center;gap:7px;color:#fff;font-size:12px;font-weight:900;box-shadow:inset 0 2px #fff4,0 5px 0 #040a0e,0 8px 12px #0008;transition:transform .13s,filter .13s}
+.qul-call-connect{background:linear-gradient(#4cab7a,#246c50 74%,#124b36)}
+.qul-call-end{background:linear-gradient(#b8564e,#81372e 74%,#51241e)}
+.qul-call-connect:hover:not(:disabled),.qul-call-end:hover:not(:disabled){filter:brightness(1.12)}
+.qul-call-connect:active:not(:disabled),.qul-call-end:active:not(:disabled){transform:translateY(3px)}
+.qul-call-connect:disabled,.qul-call-end:disabled{opacity:.38;cursor:not-allowed}
+.qul-call-device-bottom{display:flex;align-items:center;justify-content:space-between;margin:12px 6px 0;color:#c4aa7d;font:700 7px ui-monospace,monospace;letter-spacing:.16em;direction:ltr}
+.qul-call-cord{position:absolute;bottom:0;right:4%;width:25%;height:15%;opacity:.75;pointer-events:none}
+.qul-call-cord svg{width:100%;height:100%;overflow:visible}
+.qul-call-cord path{fill:none;stroke:#03080c;stroke-width:8;stroke-linecap:round;filter:drop-shadow(2px 4px 2px #0008)}
+.qul-call-mission-area{display:flex;flex-direction:column;min-height:0;gap:12px;overflow:hidden;padding:1px 0 5px}
+.qul-call-mission-ticket{position:relative;flex:0 0 auto;color:#292b2b;border:1px solid #d4c7a6;border-radius:7px 7px 2px 2px;background:repeating-linear-gradient(0deg,#a8997613 0 1px,transparent 1px 5px),linear-gradient(135deg,#fbf8ed,#e8dfc8);box-shadow:0 7px 17px #0007,inset 0 1px #fff;overflow:hidden}
+.qul-call-ticket-top{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 7px;border-bottom:1px dashed #ab9878;color:#6c6250;font:800 9px ui-monospace,monospace;letter-spacing:.12em;direction:ltr}
+.qul-call-ticket-content{padding:12px 17px 17px}
+.qul-call-ticket-kicker{font-size:10px;font-weight:900;color:#927d53}
+.qul-call-ticket-content h3{font-size:21px;font-weight:900;line-height:1.3;margin:3px 0 4px;color:#2b3136}
+.qul-call-ticket-content>p{font-size:12px;line-height:1.55;margin:0 0 9px;color:#4b4a44;font-weight:700}
+.qul-call-ticket-rules{display:flex;flex-direction:column;gap:5px;margin:5px 0 9px}
+.qul-call-rule{display:flex;align-items:center;gap:9px;border-bottom:1px solid #92897122;padding:4px 0}
+.qul-call-rule span{font:800 11px ui-monospace,monospace;color:#997649}
+.qul-call-rule p{font-size:11px;margin:0;color:#424547;font-weight:700}
+.qul-call-ticket-foot{display:flex;align-items:center;gap:7px;color:#817454;font-size:10px;line-height:1.4}
+.qul-call-ticket-tear{height:8px;background:radial-gradient(circle at 6px 9px,transparent 6px,#e5ddca 6.4px) 0 0/12px 12px repeat-x}
+.qul-call-transcript-shell{flex:1;min-height:105px;display:flex;flex-direction:column;border:1px solid #7b9ba24f;border-radius:18px;background:linear-gradient(140deg,#34495480,#1b2e36d9 36%,#0b1b26);box-shadow:inset 0 1px 0 #ffffff28,inset 0 0 30px #7fcac508,0 8px 18px #0004;backdrop-filter:blur(14px);overflow:hidden}
+.qul-call-log-header{display:flex;justify-content:space-between;align-items:center;padding:11px 13px 9px;border-bottom:1px solid #91c0c126;flex-shrink:0}
+.qul-call-log-header>div{display:flex;align-items:center;gap:8px}
+.qul-call-log-header strong{font-size:11px;color:#e8f1ec;font-weight:900}
+.qul-call-log-toggle{display:flex;align-items:center;gap:5px;color:#9edbd6;font-size:11px;font-weight:800;background:#a6e3df10;border:1px solid #a6e3df29;border-radius:7px;padding:5px 9px}
+.qul-call-log-expand{min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.qul-call-log-list{min-height:45px;max-height:150px;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;padding:10px 11px;display:flex;flex-direction:column;gap:9px}
+.qul-call-log-list::-webkit-scrollbar{display:none}
+.qul-call-log-entry{display:flex;flex-direction:column;gap:3px;max-width:100%;padding-inline-start:10px;border-inline-start:2px solid #639db8}
+.qul-call-log-entry.agent{border-color:#c0ad77}
+.qul-call-log-entry>span{font-size:9px;color:#9abcc0;font-weight:800}
+.qul-call-log-entry.agent>span{color:#d2c18d}
+.qul-call-log-entry p{margin:0;font-size:12px;line-height:1.55;color:#f6fbfa;overflow-wrap:anywhere}
+.qul-call-log-empty{font-size:11px;color:#91a9b0;margin:0;text-align:center}
+.qul-call-audio-strip{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #ffffff0d;padding:7px 12px;margin-top:auto}
+.qul-call-audio-strip>span{font-size:10px;color:#a8cfd0;white-space:nowrap}
+.qul-call-audio-meter{display:flex;align-items:center;justify-content:center;gap:3px;height:30px;min-width:90px}
+.qul-call-audio-meter i{display:block;width:3px;border-radius:8px;background:linear-gradient(#84e0c3,#c4e6de);transition:transform .08s;transform-origin:center}
+.qul-call-controls{display:flex;gap:7px;flex-wrap:wrap;padding:0 12px 11px}
+.qul-call-controls button{display:flex;align-items:center;justify-content:center;gap:6px;background:#ffffff12;border:1px solid #ffffff25;border-radius:9px;color:#c7e2dc;padding:8px 11px;font-size:10px;font-weight:800}
+.qul-call-controls button.qul-call-muted{color:#ffcba5;border-color:#e5af8945}
+.qul-call-controls button.qul-call-retry{background:#295c65;color:white}
+.qul-call-controls button:disabled{opacity:.35;cursor:not-allowed}
+.qul-call-warning{color:#ffe8ac;font-size:11px;padding:0 12px 10px;margin:0}
+.qul-call-bottom-line{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:5px;color:#8195a3;font:700 8px/1.4 ui-monospace,monospace;letter-spacing:.07em;direction:ltr}
+.qul-call-bottom-line span:last-child{font-family:'Tajawal',sans-serif;letter-spacing:0;text-align:end}
+@keyframes qul-call-blink{50%{opacity:.2}}
+@media (min-width:1460px){.qul-call-cabinet{height:590px}.qul-call-key{height:36px}.qul-call-screen{height:130px}}
+@media (max-width:1180px){.qul-call-stage{grid-template-columns:minmax(0,1fr) minmax(250px,315px);gap:12px}.qul-call-mission-area{gap:9px}.qul-call-ticket-content{padding:9px 11px}.qul-call-cabinet{transform:scale(.9);height:550px}.qul-call-device-area{overflow:hidden}.qul-call-world{padding:11px}.qul-call-ticket-content h3{font-size:17px}.qul-call-ticket-rules{gap:2px}}
+@media (max-height:790px) and (min-width:901px){.qul-call-cabinet{transform:scale(.77);margin:-35px 0;height:548px}.qul-call-heading{padding-bottom:6px}.qul-call-ticket-content{padding:7px 10px}.qul-call-ticket-content h3{font-size:18px}.qul-call-ticket-foot{display:none}.qul-call-log-list{max-height:90px}}
+@media (max-width:900px){.qul-call-world{overflow-y:auto;scrollbar-width:none}.qul-call-world::-webkit-scrollbar{display:none}.qul-call-stage{grid-template-columns:1fr;overflow:visible;display:flex;flex-direction:column;align-items:stretch;flex:none;gap:8px}.qul-call-device-area{height:430px;overflow:hidden}.qul-call-cabinet{transform:scale(.77);height:552px;margin:-52px 0}.qul-call-mission-area{overflow:visible;display:grid;grid-template-columns:1fr 1fr;gap:8px}.qul-call-transcript-shell{min-height:0}.qul-call-ticket-content h3{font-size:18px}.qul-call-ticket-content>p{font-size:11px}.qul-call-heading{padding-bottom:9px}.qul-call-bottom-line{margin-top:12px}}
+@media (max-width:630px){.qul-call-world{padding:10px}.qul-call-heading h2{font-size:19px}.qul-call-heading p{font-size:10px}.qul-call-online{padding:7px}.qul-call-online strong{font-size:9px}.qul-call-stage{gap:5px}.qul-call-device-area{height:405px}.qul-call-cabinet{transform:scale(.72);margin:-60px 0}.qul-call-mission-area{grid-template-columns:1fr}.qul-call-ticket-content{padding:10px 13px}.qul-call-ticket-rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.qul-call-rule{border:0;align-items:flex-start;font-size:9px}.qul-call-rule p{font-size:10px}.qul-call-ticket-foot{display:none}.qul-call-log-list{max-height:130px}.qul-call-bottom-line span:first-child{display:none}}
+@media (max-height:690px) and (max-width:630px){.qul-call-device-area{height:350px}.qul-call-cabinet{transform:scale(.63);margin:-80px 0}.qul-call-ticket-content>p{margin-bottom:3px}.qul-call-ticket-rules{display:none}}
+@media (prefers-reduced-motion:reduce){.qul-call-led.is-ringing{animation:none}.qul-call-world *, .qul-call-world *:before, .qul-call-world *:after{scroll-behavior:auto!important;transition-duration:0.01ms!important;animation-duration:0.01ms!important}}
