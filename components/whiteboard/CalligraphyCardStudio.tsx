@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { CalligraphyToolFigure } from './CalligraphyToolFigure';
 import { CalligraphyHeaderBanner } from './CalligraphyHeaderBanner';
+import { CalligraphyInkIdentity } from './CalligraphyInkIdentity';
 import { CalligraphyPenNibId, getCalligraphyPenDynamics } from './calligraphyStudioData';
 import { CalligraphyOrnaments, ORNAMENT_OPTIONS, OrnamentStyleId } from './CalligraphyOrnaments';
 import { CalligraphyStudioTray } from './CalligraphyStudioTray';
@@ -1046,46 +1047,8 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
       className="relative w-full h-full flex flex-col bg-[#0b0d10] text-[#e6dfd5] overflow-hidden select-none font-tajawal"
       dir="rtl"
     >
-      {/* Background Calligraphy Watermark (هوية بصرية فنية غنية ومتنوعة للحروف) */}
-      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none">
-        <svg className="w-full h-full opacity-[0.13] text-[#d4af37]" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="calligraphyLettersPattern" width="620" height="460" patternUnits="userSpaceOnUse">
-              {/* Row 1 - Diwani Script Letters (Unified with Header Identity) */}
-              <text x="35" y="55" fontSize="62" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-18 35 55)">ن</text>
-              <text x="120" y="70" fontSize="38" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(22 120 70)">و</text>
-              <text x="210" y="45" fontSize="48" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-8 210 45)">ق</text>
-              <text x="310" y="80" fontSize="72" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(14 310 80)">ل</text>
-              <text x="420" y="50" fontSize="34" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-25 420 50)">ح</text>
-              <text x="520" y="75" fontSize="56" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(10 520 75)">م</text>
-
-              {/* Row 2 */}
-              <text x="75" y="170" fontSize="44" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(28 75 170)">ع</text>
-              <text x="165" y="160" fontSize="68" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-15 165 160)">ك</text>
-              <text x="270" y="185" fontSize="32" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(8 270 185)">ر</text>
-              <text x="370" y="150" fontSize="58" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-22 370 150)">س</text>
-              <text x="480" y="180" fontSize="46" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(18 480 180)">ط</text>
-              <text x="575" y="160" fontSize="36" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-12 575 160)">د</text>
-
-              {/* Row 3 */}
-              <text x="40" y="290" fontSize="54" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-16 40 290)">ف</text>
-              <text x="135" y="310" fontSize="30" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(24 135 310)">ز</text>
-              <text x="225" y="275" fontSize="76" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(12 225 275)">ص</text>
-              <text x="345" y="300" fontSize="42" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-28 345 300)">ي</text>
-              <text x="445" y="270" fontSize="60" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(6 445 270)">هـ</text>
-              <text x="545" y="305" fontSize="38" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-14 545 305)">ج</text>
-
-              {/* Row 4 */}
-              <text x="80" y="415" fontSize="64" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(16 80 415)">ض</text>
-              <text x="190" y="390" fontSize="40" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-20 190 390)">ظ</text>
-              <text x="295" y="425" fontSize="52" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(10 295 425)">غ</text>
-              <text x="405" y="395" fontSize="70" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(-12 405 395)">أ</text>
-              <text x="515" y="420" fontSize="36" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor" transform="rotate(26 515 420)">ش</text>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#calligraphyLettersPattern)" />
-        </svg>
-      </div>
+      {/* Ink-trace identity from classical Arabic letter and diacritic forms. */}
+      <CalligraphyInkIdentity variant="studio" />
 
       {/* TOP BANNER */}
       <CalligraphyHeaderBanner
@@ -1865,18 +1828,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
 
             {/* Calligraphy Department Identity Top Banner */}
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#17110a] via-[#2a170d] to-[#17110a] border border-[#a68038]/70 p-3.5 sm:p-4 shadow-lg shrink-0">
-              <div className="absolute inset-0 opacity-20 pointer-events-none">
-                <svg className="w-full h-full text-[#c59b27]" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <pattern id="guideIdentityPattern" width="280" height="50" patternUnits="userSpaceOnUse">
-                      <text x="25" y="32" fontSize="22" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor">قلم</text>
-                      <text x="100" y="32" fontSize="24" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor">ميزان</text>
-                      <text x="190" y="32" fontSize="24" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor">خط</text>
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill="url(#guideIdentityPattern)" />
-                </svg>
-              </div>
+              <CalligraphyInkIdentity variant="panel" />
               <div className="relative z-10 flex flex-col items-center justify-center text-center py-1">
                 <div className="flex items-center gap-2.5 sm:gap-3 text-[#c59b27]">
                   <span className="w-8 sm:w-16 h-[1.5px] bg-gradient-to-r from-transparent via-[#c59b27] to-[#c59b27]" />
@@ -2052,18 +2004,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
           <div className="w-full max-w-4xl bg-[#14161a] border border-[#a68038]/60 rounded-2xl p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-4 max-h-[88vh] overflow-hidden">
             {/* Calligraphy Department Identity Top Banner */}
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#17110a] via-[#2a170d] to-[#17110a] border border-[#a68038]/70 p-3.5 sm:p-4 shadow-lg shrink-0">
-              <div className="absolute inset-0 opacity-20 pointer-events-none">
-                <svg className="w-full h-full text-[#c59b27]" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <pattern id="galleryIdentityPattern" width="280" height="50" patternUnits="userSpaceOnUse">
-                      <text x="25" y="32" fontSize="22" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor">معرض</text>
-                      <text x="110" y="32" fontSize="24" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor">لوحة</text>
-                      <text x="195" y="32" fontSize="22" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="currentColor">تذهيب</text>
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill="url(#galleryIdentityPattern)" />
-                </svg>
-              </div>
+              <CalligraphyInkIdentity variant="panel" />
               <div className="relative z-10 flex flex-col items-center justify-center text-center py-1">
                 <div className="flex items-center gap-2.5 sm:gap-3 text-[#c59b27]">
                   <span className="w-8 sm:w-16 h-[1.5px] bg-gradient-to-r from-transparent via-[#c59b27] to-[#c59b27]" />
