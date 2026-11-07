@@ -49,14 +49,29 @@ for (const caseSeed of cases) {
     }
   }
 }
+// Every source poster slot must remain visually distinct within the same case.
+// Explicit overrides redirect known AI-generated duplicate faces to uniquely
+// sourced approved portraits; no two slots may reference the same source slot.
+const duplicateOverrides = {};
+for (const [, key, sourceCase, sourceSlot] of geometry.matchAll(/'([0-9]+:[0-9]+)': \[([0-9]+), ([0-9]+)\]/g)) {
+  duplicateOverrides[key] = sourceCase + ':' + sourceSlot;
+}
+assert(Object.keys(duplicateOverrides).length >= 7, 'Known repeated faces must receive separate portrait sources');
+for (const item of cases) {
+  const sources = item.suspects.map((_, slot) => duplicateOverrides[item.caseNumber + ':' + slot] || item.caseNumber + ':' + slot);
+  assert.equal(new Set(sources).size, sources.length, 'Repeated portrait source in case ' + item.caseNumber);
+}
+for (const pair of ['3:6','7:4','8:4','10:5','10:6']) assert(duplicateOverrides[pair], 'Original duplicate not corrected: ' + pair);
 const view = read('components/games/DetectiveExperience.tsx');
 assert(view.includes('getDetectiveStartRect(level, activeCase.caseNumber)'));
 assert(view.includes('getAdvancedPosterPortraitStyle(activeCase.caseNumber, suspectIndex'));
 assert(!view.includes('confetti('));
 assert(!view.includes('canvas-confetti'));
-assert(view.includes("top: '31.1%'"));
-assert(view.includes("height: '21.9%'"));
-assert(view.includes('grid-rows-3'));
-assert(view.includes('min-h-0 min-w-0 w-full'));
+assert(view.includes("left: '6.9%'"));
+assert(view.includes("top: '30.6%'"));
+assert(view.includes("width: '27.9%'"));
+assert(view.includes("height: '22.1%'"));
+assert(view.includes('grid-cols-3 items-stretch'));
+assert(view.includes('min-h-0 min-w-0'));
 assert(view.includes('Hide the six obsolete blank frames'));
 console.log('Detective visuals: 26 case hotspots, 106 source-aligned portraits, contained cipher UI, no confetti.');
