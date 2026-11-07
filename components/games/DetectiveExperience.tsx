@@ -85,6 +85,9 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const [showDossier, setShowDossier] = useState(false);
   const [accusationOpen, setAccusationOpen] = useState(false);
   const [accusedId, setAccusedId] = useState<string | null>(null);
+  const [suspectPage, setSuspectPage] = useState(0);
+  const [accusationPage, setAccusationPage] = useState(0);
+  const [advancedProofAnswers, setAdvancedProofAnswers] = useState<Record<number, number>>({});
   const [reason, setReason] = useState('');
   const [solved, setSolved] = useState(false);
   const [wordAnswers, setWordAnswers] = useState<Record<number, string>>({});
@@ -104,7 +107,15 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const readyToAccuse = clueCleared && clueIndex === activeCase.clues.length - 1 && allInnocentsEliminated;
   const answersCount = Object.keys(wordAnswers).length;
   const wordsComplete = answersCount === activeCase.evidenceTerms.length;
-  const score = Math.max(0, Math.min(100, eliminated.length * 10 + (solved ? 35 : 0) + answersCount * 3 - errors * 5));
+  const score = Math.max(0, Math.min(100,
+    Math.round((eliminated.length / Math.max(1, activeCase.suspects.length - 1)) * 50)
+    + (solved ? 35 : 0) + answersCount * 3 - errors * 5));
+  const suspectPageCount = Math.max(1, Math.ceil(activeCase.suspects.length / 6));
+  const mobileSuspects = activeCase.suspects.slice(suspectPage * 6, (suspectPage + 1) * 6);
+  const mobileAccusationSuspects = activeCase.suspects.slice(accusationPage * 6, (accusationPage + 1) * 6);
+  const advancedProofs = level === 'advanced' ? (narrative?.accusationProofs || []) : [];
+  const advancedProofsCorrect = advancedProofs.length === 2 &&
+    advancedProofs.every((proof, index) => advancedProofAnswers[index] === proof.correctIndex);
 
   const playSpeech = (arabicText: string) => {
     if (isMuted || typeof window === 'undefined' || !('speechSynthesis' in window)) {
@@ -137,6 +148,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
     setFeedback(''); setErrors(0); setShowTranslation(false);
     setShowDossier(false); setAccusationOpen(false); setAccusedId(null);
     setReason(''); setSolved(false); setWordAnswers({}); setReportTab('practice');
+    setSuspectPage(0); setAccusationPage(0); setAdvancedProofAnswers({});
   };
   const chooseLevel = (nextLevel: DifficultyLevel) => {
     const list = CASES_DATABASE.filter(item => item.level === nextLevel);
@@ -182,14 +194,20 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
     });
   };
   const submitAccusation = () => {
-    if (!accusedId || !reason) {
-      setFeedback(t('اختر مشتبهًا به وحدد الدليل أولًا.', 'Choose a suspect and an evidence reason first.'));
+    if (!accusedId || (level === 'advanced' && Object.keys(advancedProofAnswers).length < advancedProofs.length) ||
+      (level !== 'advanced' && !reason)) {
+      setFeedback(t('اختر مشتبهًا به وأكمل تبرير الاتهام أولًا.', 'Choose a suspect and complete the evidence questions first.'));
       return;
     }
-    if (accusedId !== activeCase.culpritId || reason !== 'evidence') {
+    if (accusedId !== activeCase.culpritId || (level === 'advanced' ? !advancedProofsCorrect : reason !== 'evidence')) {
       spyAudio.playWrongBuzzer();
       setErrors(value => value + 1);
-      setFeedback(t('الاتهام غير مكتمل. قارن الوصف الأخير بصور الأشخاص واستبعد من ثبتت براءته.', 'Not quite. Compare the final clue with the portraits and check the alibis.'));
+      setFeedback(t(level === 'advanced'
+        ? 'الاتهام غير صحيح: تحقق من الشخص ومن كل دليل مستقل قبل الاعتماد.'
+        : 'الاتهام غير مكتمل. قارن الوصف الأخير بصور الأشخاص واستبعد من ثبتت براءته.',
+        level === 'advanced'
+          ? 'Review both independent evidence records and the accused suspect.'
+          : 'Not quite. Compare the final clue with the portraits and check the alibis.'));
       return;
     }
     spyAudio.playVictoryFanfare(); setSolved(true); setAccusationOpen(false);
@@ -332,7 +350,12 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
             </div>
             <div className="flex flex-col gap-2 rounded-3xl border border-amber-400/20 bg-[#06101a]/70 p-3 backdrop-blur-md">
               <h3 className="text-center text-sm font-bold text-amber-200">{t('المشتبه بهم', 'Six suspects')}</h3>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6 lg:grid-cols-3 xl:grid-cols-6">
+              {level === 'advanced' && <img
+                src={`/detective/advanced/scene-${String(activeCase.caseNumber).padStart(2, '0')}.webp`}
+                alt={t('مسرح الجريمة والمشتبه بهم', 'Cinematic crime scene and suspects')}
+                className="max-h-48 w-full rounded-xl border border-amber-400/30 object-cover object-center"
+              />}
+              <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6">
                 {activeCase.suspects.map(person => <Portrait key={person.id} person={person} compact disabled />)}
               </div>
             </div>
@@ -347,7 +370,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="inline-flex items-center gap-2 text-sm font-bold text-amber-300"><Fingerprint size={17}/>{t('الإفادة', 'Statement')} {clueIndex + 1}/{activeCase.clues.length}</span>
-                  <span className="rounded-full border border-amber-500/25 px-2 py-1 text-[11px] text-amber-100">{t('الأبرياء', 'Cleared')} {eliminated.length}/5</span>
+                  <span className="rounded-full border border-amber-500/25 px-2 py-1 text-[11px] text-amber-100">{t('الأبرياء', 'Cleared')} {eliminated.length}/{activeCase.suspects.length - 1}</span>
                 </div>
                 {level === 'advanced' && activeClue.cipherKey && !cipherOpened ? (
                   <div className="space-y-3">
@@ -376,7 +399,15 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
             </div>
             <div className="flex min-h-0 flex-col justify-between gap-2 rounded-2xl border border-amber-400/30 bg-black/50 p-3 backdrop-blur-md">
               <div className="flex items-center justify-between gap-2 text-sm font-bold text-amber-200"><span>{t('ملفات المشتبه بهم', 'Suspect files')}</span><span className="text-xs text-slate-200">{t('الأخطاء', 'Mistakes')} {errors}</span></div>
-              <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-3 lg:gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:hidden">
+                {mobileSuspects.map(person => <Portrait key={person.id} person={person} eliminated={eliminated.includes(person.id)} disabled={eliminated.includes(person.id) || clueCleared || accusationOpen} onClick={() => onEliminate(person)}/>)}
+              </div>
+              {suspectPageCount > 1 && <div className="flex items-center justify-between gap-2 lg:hidden">
+                <button type="button" aria-label={t('المجموعة السابقة', 'Previous group')} disabled={suspectPage === 0} onClick={() => setSuspectPage(p => Math.max(0, p-1))} className={secondaryButton + ' disabled:opacity-40'}><ChevronRight size={18}/></button>
+                <span className="text-xs font-bold text-amber-200">{t('المشتبه بهم', 'Suspects')} {suspectPage + 1}/{suspectPageCount}</span>
+                <button type="button" aria-label={t('المجموعة التالية', 'Next group')} disabled={suspectPage >= suspectPageCount - 1} onClick={() => setSuspectPage(p => Math.min(suspectPageCount - 1,p+1))} className={secondaryButton + ' disabled:opacity-40'}><ChevronLeft size={18}/></button>
+              </div>}
+              <div className="hidden gap-2 lg:grid lg:grid-cols-5 xl:grid-cols-6">
                 {activeCase.suspects.map(person => <Portrait key={person.id} person={person} eliminated={eliminated.includes(person.id)} disabled={eliminated.includes(person.id) || clueCleared || accusationOpen} onClick={() => onEliminate(person)}/>)}
               </div>
             </div>
@@ -484,17 +515,31 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
             <div className="flex items-center justify-between"><h3 className="text-lg font-black text-amber-200">{t('من الجاني؟ قدم الدليل.', 'Who did it? Show the evidence.')}</h3><button type="button" aria-label={t('إغلاق','Close')} onClick={() => {setAccusationOpen(false);setFeedback('');}}><X size={20}/></button></div>
             <p className="rounded-xl border border-amber-300/30 bg-[#e6d0a6] p-3 text-center text-sm font-bold leading-relaxed text-[#2b1d0c]" lang="ar" dir="rtl">{evidenceAr}</p>
             {language === 'en' && <p className="text-sm text-amber-100">{evidenceEn}</p>}
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">{activeCase.suspects.map(person => <Portrait key={person.id} person={person} compact selected={accusedId === person.id} onClick={() => {setAccusedId(person.id);setFeedback('');}}/>)}</div>
+            <div className="grid grid-cols-3 gap-2 lg:hidden">{mobileAccusationSuspects.map(person => <Portrait key={person.id} person={person} compact selected={accusedId === person.id} onClick={() => {setAccusedId(person.id);setFeedback('');}}/>)}</div>
+            {suspectPageCount > 1 && <div className="flex items-center justify-between gap-2 lg:hidden">
+              <button type="button" disabled={accusationPage === 0} onClick={() => setAccusationPage(p => Math.max(0,p-1))} className={secondaryButton + ' disabled:opacity-40'}><ChevronRight size={18}/></button>
+              <span className="text-xs text-amber-100">{t('مجموعة المتهمين', 'Suspect group')} {accusationPage+1}/{suspectPageCount}</span>
+              <button type="button" disabled={accusationPage >= suspectPageCount-1} onClick={() => setAccusationPage(p => Math.min(suspectPageCount-1,p+1))} className={secondaryButton + ' disabled:opacity-40'}><ChevronLeft size={18}/></button>
+            </div>}
+            <div className="hidden gap-2 lg:grid lg:grid-cols-5 xl:grid-cols-6">{activeCase.suspects.map(person => <Portrait key={person.id} person={person} compact selected={accusedId === person.id} onClick={() => {setAccusedId(person.id);setFeedback('');}}/>)}</div>
             <p className="text-sm font-bold text-amber-100">{t('ما سبب اتهامك لهذا الشخص؟', 'Why do you accuse this person?')}</p>
-            <div className="grid gap-2">
+            {level === 'advanced' ? <div className="grid gap-3 sm:grid-cols-2">
+              {advancedProofs.map((proof, index) => <div key={index} className="space-y-2 rounded-xl border border-amber-400/25 bg-black/30 p-3">
+                <p className="text-sm font-bold text-amber-100">{index+1}. {t(proof.questionAr, proof.questionEn)}</p>
+                {(language === 'ar' ? proof.choicesAr : proof.choicesEn).map((label, idx) =>
+                  <button key={idx} type="button" aria-pressed={advancedProofAnswers[index] === idx} onClick={() => setAdvancedProofAnswers(v => ({...v,[index]:idx}))}
+                    className={secondaryButton + ' w-full text-start text-xs ' + (advancedProofAnswers[index] === idx ? 'border-amber-200 bg-amber-500/20' : '')}>{label}</button>
+                )}
+              </div>)}
+            </div> : <div className="grid gap-2">
               {[
                 ['random',t('لأنه في أول صورة.', 'Because they are in the first photo.')],
                 ['evidence',t(level === 'beginner' ? 'لأن وصف الدليل الأخير يطابق شكله.' : 'لأن الأدلة أثبتت براءة الآخرين.',level === 'beginner' ? 'The final visual clue matches their appearance.' : 'The other suspects have verified alibis.')],
                 ['looks',t('لأن وجهه يبدو غاضبًا.', 'Because their face looks angry.')],
               ].map(([id,label]) => <button key={id} type="button" aria-pressed={reason === id} onClick={() => setReason(id)} className={secondaryButton + ' w-full text-start text-sm ' + (reason === id ? 'border-amber-200 bg-amber-500/20' : '')}>{label}</button>)}
-            </div>
+            </div>}
             {notice}
-            <button type="button" disabled={!accusedId || !reason} className={primaryButton + ' w-full disabled:cursor-not-allowed disabled:opacity-50'} onClick={submitAccusation}><ShieldCheck size={18}/>{t('اعتماد الاتهام', 'Submit accusation')}</button>
+            <button type="button" disabled={!accusedId || (level === 'advanced' ? Object.keys(advancedProofAnswers).length !== 2 : !reason)} className={primaryButton + ' w-full disabled:cursor-not-allowed disabled:opacity-50'} onClick={submitAccusation}><ShieldCheck size={18}/>{t('اعتماد الاتهام', 'Submit accusation')}</button>
           </div>
         </div>
       )}
