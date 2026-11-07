@@ -1,0 +1,59 @@
+/* QUL two-page telephone address book, paper and leather, never a standard contact list. */
+.qul-book-area{min-width:0;display:flex;flex-direction:column;gap:11px;flex:1;min-height:0;position:relative;perspective:1100px}
+.qul-book-intro{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:0 4px}
+.qul-book-overline{font:800 9px/1.3 ui-monospace,monospace;letter-spacing:.18em;color:#a58555;direction:ltr;display:block;text-align:start}
+.qul-book-intro h3{font-size:clamp(16px,1.6vw,22px);font-weight:900;color:#263c58;margin:3px 0}
+.qul-book-intro p{font-size:11px;font-weight:600;color:#6c8197;margin:0;line-height:1.45}
+.qul-book-close{border:1px solid #c5d5df;background:#fff9;border-radius:10px;padding:7px 9px;display:flex;align-items:center;gap:5px;color:#3e5770;font-size:10px;font-weight:900;flex-shrink:0}
+.qul-book-closed{position:relative;isolation:isolate;width:min(92%,480px);margin:8px auto 0;min-height:263px;max-height:340px;flex:1;border:3px solid #d5a875;border-radius:12px 32px 32px 12px;box-shadow:inset 0 0 0 2px #ffffff24,inset 14px 0 15px #120f2c80,inset -5px -2px 12px #f8d6aa23,5px 14px 0 -8px #f6ebd8,9px 16px 0 -8px #a9a89b,16px 24px 42px #3a577b43;background:radial-gradient(ellipse at 72% 14%,#6b87a5ad,transparent 48%),linear-gradient(135deg,#253f65,#162d4b 52%,#172640 92%);color:#fff5e0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;cursor:pointer;transform-origin:8% center;overflow:visible}
+.qul-book-closed:before{content:"";position:absolute;inset:12px;border:1px solid #d1ac734b;border-radius:4px 22px 22px 4px;pointer-events:none}
+.qul-book-binding{position:absolute;inset:0 auto 0 10px;width:17px;border-inline:1px solid #b7935c;background:repeating-linear-gradient(90deg,#152942,#375273 3px,#203753 6px);box-shadow:7px 0 10px #070e238e}
+.qul-book-cover-emboss{display:flex;align-items:center;justify-content:center;width:66px;height:66px;border:2px solid #bda16d;border-radius:50%;color:#f3dfae;font:900 36px/1 Georgia,serif;background:#f6d8a00b;box-shadow:inset 0 0 0 5px #deb77b19;opacity:.96}
+.qul-book-cover-heading{font:900 10px ui-monospace,monospace;letter-spacing:.4em;color:#e2c28b}
+.qul-book-closed strong{font-size:clamp(20px,2.3vw,28px);font-weight:900;line-height:1.3;text-align:center}
+.qul-book-cover-detail{font-size:10px;max-width:85%;text-align:center;color:#d0dbe2}
+.qul-book-open-action{margin-top:7px;display:flex;align-items:center;gap:8px;padding:9px 19px;border-radius:100px;border:1px solid #ecd8af9c;color:#fff9e9;background:#f2dbac1a;font-weight:900;font-size:12px}
+.qul-book-closed:hover .qul-book-open-action{background:#e1bf8f4a}
+.qul-book-open{width:100%;min-height:0;flex:1;display:flex;flex-direction:column;gap:9px;perspective:1100px;transform-style:preserve-3d}
+.qul-book-toolbar{display:flex;flex-direction:column;gap:7px}
+.qul-book-search{width:100%;height:37px;display:flex;align-items:center;gap:8px;border:1px solid #b5cddd;background:#fffffff0;border-radius:13px;color:#7b93a8;padding:0 11px;box-shadow:inset 0 1px 2px #fff,0 2px 8px #7ba0b41a}
+.qul-book-search input{background:transparent!important;border:0!important;box-shadow:none!important;outline:none!important;width:100%;min-width:0;flex:1;font-size:12px;color:#29415b;font-weight:700}
+.qul-book-search input::placeholder{color:#8b9daf}
+.qul-book-search button{border:0;background:#f0f4f7;border-radius:50%;width:23px;height:23px;display:grid;place-items:center;color:#6d8294}
+.qul-book-filters{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.qul-book-filters button{padding:6px 8px;border:1px solid #c9d9e4;border-radius:100px;background:#ffffffa9;font-size:10px;color:#6c7f93;font-weight:800;white-space:nowrap;transition:background .15s,color .15s}
+.qul-book-filters button.active{border-color:#91b1c4;background:#254e70;color:#fff}
+.qul-book-pages-shell{position:relative;min-height:202px;flex:1;padding:6px;border:1px solid #b6a88a;border-radius:13px 17px 17px 13px;background:linear-gradient(110deg,#765e4c,#bd9b73 2.5%,#e9dcc1 4%,#f9efdc 50%,#e9d9b7 96%,#8f765b 100%);box-shadow:1px 5px 0 -2px #d6c4a2,3px 9px 0 -2px #fff1dd,6px 14px 26px #33506b35;overflow:hidden;transform-style:preserve-3d}
+.qul-book-page-stack{position:absolute;inset:7px 9px 0 8px;pointer-events:none;border-radius:9px;background:repeating-linear-gradient(0deg,#d3c5a5 0 1px,#f4ebd9 1px 3px);opacity:.4;box-shadow:0 3px 0 #ccb998}
+.qul-book-page-spine{position:absolute;z-index:2;top:5px;bottom:5px;left:50%;width:21px;transform:translateX(-50%);pointer-events:none;background:linear-gradient(90deg,#372e253b,transparent 40%,#ffffff91 50%,transparent 70%,#3d302f38);box-shadow:inset 1px 0 #6b584229,inset -1px 0 #6b584229}
+.qul-book-page-pair{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;width:100%;height:100%;min-height:199px;border-radius:6px;transform-origin:center center;overflow:hidden}
+.qul-book-page{position:relative;display:flex;flex-direction:column;gap:9px;padding:11px 13px 15px;min-width:0;background:linear-gradient(105deg,#f7f0df,#fffaf1 48%,#f3ead6);box-shadow:inset 0 1px 2px #fff,inset -5px 0 7px #5b46351b}
+.qul-book-page:nth-child(2){background:linear-gradient(97deg,#f3ead6,#fffaf1 25%,#f8f1e3);box-shadow:inset 5px 0 7px #5b46351b}
+.qul-book-page-label{display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1px solid #aa987d5c;color:#8d765a;font:900 9px 'Tajawal',sans-serif;min-height:17px}
+.qul-book-page-label span{font:700 7px ui-monospace,monospace}
+.qul-book-entry{display:flex;align-items:center;gap:6px;width:100%;padding:8px 5px;min-height:58px;text-align:start;color:#293c4f;background:#ffffffa8;border:1px solid #dacbb7;border-radius:10px;box-shadow:inset 0 1px 0 #fff8;transition:border-color .12s,background .12s,transform .12s}
+.qul-book-entry:hover:not(:disabled){border-color:#9daeba;background:#fff;transform:translateY(-1px)}
+.qul-book-entry.selected{background:#dceeea;border-color:#8bbaae;box-shadow:inset 0 0 0 1px #d8f1e3}
+.qul-book-entry:disabled{opacity:.5;cursor:default}
+.qul-book-entry-icon{flex-shrink:0;width:25px;height:25px;display:grid;place-items:center;font-size:17px;border-radius:8px;color:#97764c;background:#f5ead2}
+.qul-book-entry.selected .qul-book-entry-icon{background:#b6d9c9;color:#2c7660}
+.qul-book-entry-copy{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.qul-book-entry-copy strong{font:900 11px/1.4 'Tajawal',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qul-book-entry-copy small{font:700 8px/1.35 'Tajawal',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#8c8b87}
+.qul-book-entry-number{font:900 14px ui-monospace,monospace;letter-spacing:.03em;flex-shrink:0;color:#335f78;background:#e8ecdf;border-radius:7px;padding:4px 5px}
+.qul-book-entry.selected .qul-book-entry-number{background:#bdded1;color:#296c5d}
+.qul-book-page-watermark{position:absolute;pointer-events:none;bottom:10px;left:12px;opacity:.07;font:900 75px 'Tajawal',sans-serif;color:#97764c}
+.qul-book-page-number{position:absolute;bottom:5px;left:10px;color:#a99372;font:800 8px ui-monospace,monospace}
+.qul-book-no-results{margin:auto;text-align:center;display:flex;align-items:center;flex-direction:column;gap:8px;color:#927a5d;font-size:11px}
+.qul-book-navigation{display:flex;align-items:center;justify-content:space-between;gap:6px;color:#50647a;font-size:10px;font-weight:900;padding:0 5px}
+.qul-book-navigation button{display:flex;gap:5px;align-items:center;justify-content:center;padding:5px 8px;border:1px solid #c4d2dc;background:#fff;border-radius:8px;color:#42637c;font-size:11px;font-weight:900}
+.qul-book-navigation button:disabled{opacity:.3;cursor:default}
+.qul-book-navigation span{display:flex;align-items:center;gap:6px}
+.qul-book-navigation b{color:#976f41;font-family:ui-monospace,monospace}
+.qul-book-tip{display:flex;align-items:flex-start;gap:7px;border-radius:11px;padding:9px 11px;background:#e8f4f9b0;border:1px solid #d1e3ed;color:#53728b}
+.qul-book-tip svg{flex-shrink:0;margin-top:1px}
+.qul-book-tip p{font-size:10px;line-height:1.4;font-weight:800;margin:0}
+@media(max-width:1200px){.qul-book-page{padding:8px}.qul-book-page-pair{min-height:185px}.qul-book-entry{padding:6px 4px}.qul-book-entry-copy strong{font-size:10px}.qul-book-entry-number{font-size:12px}.qul-book-intro p{font-size:10px}.qul-book-filters button{padding:5px 6px;font-size:9px}}
+@media(max-width:650px){.qul-book-area{gap:9px}.qul-book-closed{min-height:290px;width:min(90%,440px)}.qul-book-pages-shell{min-height:226px}.qul-book-page-pair{min-height:219px}.qul-book-entry-copy strong{font-size:10px}.qul-book-entry-copy small{font-size:8px}.qul-book-page{gap:9px}.qul-book-intro h3{font-size:19px}.qul-book-tip{padding:7px}}
+@media(max-width:390px){.qul-book-entry-icon{display:none}.qul-book-entry-number{font-size:11px}.qul-book-entry{min-height:54px}.qul-book-page{padding:7px}.qul-book-page-label{font-size:8px}.qul-book-filters button{font-size:8px;padding:5px}}
+@media(prefers-reduced-motion:reduce){.qul-book-entry,.qul-book-filters button{transition:none}}
