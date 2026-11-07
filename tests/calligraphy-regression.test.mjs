@@ -38,7 +38,11 @@ must(main.includes("React.lazy(() => import('./CalligraphyPracticeLab'))"), 'Han
 must(main.includes('setShowPracticeLab(true)'), 'Handwriting lab accessible from the editor');
 must(practice.includes('onPointerDown={onPointerDown}') && practice.includes('onPointerMove={onPointerMove}'), 'Tracing uses real pointer drawing');
 must(practice.includes('const estimate = Math.max('), 'Stroke shape comparison produces feedback');
-must(practice.includes('التقييم يقارن مواضع الحبر'), 'Practice assessment does not claim expert verification');
+must(practice.includes('التقييم يقارن شكل الحبر'), 'Practice assessment does not claim expert verification');
+must(practice.includes('START_GUIDES'), 'Training includes an ordered first-stroke direction guide');
+must(practice.includes('recordedStrokes.current.push'), 'Pointer trajectories recorded for direction feedback');
+must(practice.includes('setDirectionScore('), 'The first-stroke direction has separate feedback');
+must(practice.includes("${STORAGE_KEY}:${auth.currentUser?.uid || 'guest'}"), 'Local training scores scoped to current account');
 
 must(main.includes('onAuthStateChanged(auth,'), 'Switches gallery when logged-in account changes');
 must(main.includes('saveCloudCalligraphyCard(uid, newCard)'), 'Saved artwork syncs with authenticated account');
