@@ -57,6 +57,7 @@ interface CallBoothProps {
   learnerText: string;
   tutorText: string;
   onSelectContact: (id: CallContact['id']) => void;
+  onShowDirectory: () => void;
   onStart: () => void;
   onStop: () => void;
   onResume: () => void;
@@ -68,7 +69,7 @@ const DIGITS = ['1','2','3','4','5','6','7','8','9','*','0','#'];
 
 export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
   lang, contact, level, isActive, loading, isAiSpeaking, micMuted, recoveryNotice,
-  history, learnerText, tutorText, onSelectContact, onStart, onStop, onResume, onToggleMic, meterRef,
+  history, learnerText, tutorText, onSelectContact, onShowDirectory, onStart, onStop, onResume, onToggleMic, meterRef,
 }) => {
   const [dialed, setDialed] = React.useState('');
   const [dialError, setDialError] = React.useState('');
@@ -196,9 +197,14 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
           <h2>{isArabic ? 'كابينة الاتصال' : 'The Call Booth'}</h2>
           <p>{isArabic ? 'ارفع السماعة وتحدث بالعربية لإنجاز مهمتك.' : 'Pick up the handset and complete a real speaking mission.'}</p>
         </div>
-        <div className={'qul-call-online ' + (isActive ? 'connected' : '')}>
+        <div className="qul-call-heading-actions">
+          <button type="button" className="qul-call-directory-mobile" onClick={onShowDirectory} disabled={sessionLive}>
+            <BookOpen size={14} />{isArabic ? 'الدليل' : 'Directory'}
+          </button>
+          <div className={'qul-call-online ' + (isActive ? 'connected' : '')}>
           <span aria-hidden="true" />
           <strong>{stateText}</strong>
+          </div>
         </div>
       </div>
 
