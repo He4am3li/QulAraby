@@ -5,6 +5,8 @@ import { join } from 'node:path';
 const root = process.cwd();
 const game = readFileSync(join(root,'components/games/ArabicSpaceJourney.tsx'),'utf8');
 const hero = 'src/assets/images/toward_space_hero_1790510722610.jpg';
+const gameMenu = readFileSync(join(root,'pages/Games.tsx'),'utf8');
+assert(gameMenu.includes('cover: towardSpaceOriginalCover') && gameMenu.includes('hero: towardSpaceOriginalCover'), 'The Games catalog must show the same original Toward Space poster');
 assert(existsSync(join(root,hero)), 'Restore the original TOWARD SPACE artwork, not a replacement');
 assert(game.includes('from "/'+hero+'"'), 'The approved TOWARD SPACE artwork must be imported');
 assert(game.includes('data-space-screen="original-toward-space-cover"'), 'The original cover screen is missing');
