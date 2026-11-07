@@ -86,11 +86,8 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const [errors, setErrors] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const [showDossier, setShowDossier] = useState(false);
-  const [showClueDetail, setShowClueDetail] = useState(false);
   const [accusationOpen, setAccusationOpen] = useState(false);
   const [accusedId, setAccusedId] = useState<string | null>(null);
-  const [suspectPage, setSuspectPage] = useState(0);
-  const [accusationPage, setAccusationPage] = useState(0);
   const [advancedProofAnswers, setAdvancedProofAnswers] = useState<Record<number, number>>({});
   const [reason, setReason] = useState('');
   const [solved, setSolved] = useState(false);
@@ -114,9 +111,9 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const score = Math.max(0, Math.min(100,
     Math.round((eliminated.length / Math.max(1, activeCase.suspects.length - 1)) * 50)
     + (solved ? 35 : 0) + answersCount * 3 - errors * 5));
-  const suspectPageCount = Math.max(1, Math.ceil(activeCase.suspects.length / 6));
-  const mobileSuspects = activeCase.suspects.slice(suspectPage * 6, (suspectPage + 1) * 6);
-  const mobileAccusationSuspects = activeCase.suspects.slice(accusationPage * 6, (accusationPage + 1) * 6);
+  // All suspects are visible at once in the original cinematic scene.
+  const suspectColumns = activeCase.suspects.length > 10 ? 6 : activeCase.suspects.length > 6 ? 5 : 3;
+  const suspectRows = Math.ceil(activeCase.suspects.length / suspectColumns);
   const advancedProofs = level === 'advanced' ? (narrative?.accusationProofs || []) : [];
   const advancedProofsCorrect = advancedProofs.length === 2 &&
     advancedProofs.every((proof, index) => advancedProofAnswers[index] === proof.correctIndex);
@@ -138,9 +135,9 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const resetInvestigation = () => {
     setClueIndex(0); setEliminated([]); setCipherOpened(false);
     setFeedback(''); setErrors(0); setShowTranslation(false);
-    setShowDossier(false); setShowClueDetail(false); setAccusationOpen(false); setAccusedId(null);
+    setShowDossier(false); setAccusationOpen(false); setAccusedId(null);
     setReason(''); setSolved(false); setWordAnswers({}); setReportTab('practice');
-    setSuspectPage(0); setAccusationPage(0); setAdvancedProofAnswers({});
+    setAdvancedProofAnswers({});
   };
   const chooseLevel = (nextLevel: DifficultyLevel) => {
     const list = CASES_DATABASE.filter(item => item.level === nextLevel);
@@ -342,55 +339,97 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
               className="absolute right-[1%] top-[2%] z-30 rounded-full border border-amber-500/40 bg-black/55 p-1.5 text-amber-200 hover:bg-black/75">
               <ArrowRight size={15}/>
             </button>
+            {/* Solve the cipher in the existing evidence frame. No secondary window. */}
             <div className="absolute z-20 flex flex-col items-center justify-center overflow-hidden text-center"
-              style={{ left: '7.5%', top: '22%', width: '28%', height: '32%' }} dir="rtl">
+              style={{ left: '6.1%', top: '18.4%', width: '30.6%', height: '48.2%' }} dir="rtl">
               {level === 'advanced' && activeClue.cipherKey && !cipherOpened ? (
-                <button type="button" onClick={() => setShowClueDetail(true)} className="flex h-full w-full flex-col items-center justify-center gap-1 text-[#423016]"
-                  aria-label={t('فتح الدليل المشفر', 'Open cipher clue')}>
-                  <LockKeyhole className="h-[12%] w-auto"/>
-                  <span className="font-black" style={{ fontSize: 'clamp(9px, .92vw, 16px)' }}>{t('الإفادة المشفرة', 'Cipher clue')} {clueIndex + 1}/{activeCase.clues.length}</span>
-                  <span style={{ fontSize: 'clamp(8px, .8vw, 13px)' }}>{t('اضغط لفك الشفرة', 'Tap to decode')}</span>
-                </button>
+                <div className="flex h-full w-full flex-col items-stretch justify-center gap-[2%] px-[3%] text-[#352816]"
+                  aria-label={t('فك شفرة الإفادة', 'Decode the witness statement')}>
+                  <div className="flex items-center justify-center gap-1 font-black"
+                    style={{ fontSize: 'clamp(8px, 1.04vw, 17px)' }}>
+                    <LockKeyhole className="h-[1em] w-[1em] shrink-0"/>
+                    {t('الإفادة المشفرة', 'Cipher clue')} {clueIndex + 1}/{activeCase.clues.length}
+                  </div>
+                  <p lang="ar" className="font-semibold leading-snug"
+                    style={{ fontSize: 'clamp(8px, 1vw, 16px)' }}>{activeClue.cipherHint}</p>
+                  <div className="grid w-full grid-cols-1 gap-[3px] sm:gap-1.5">
+                    {(activeClue.cipherOptions || []).map(option =>
+                      <button type="button" key={option}
+                        onClick={() => {
+                          if (option === activeClue.cipherKey) {
+                            spyAudio.playCipherDecode(); setCipherOpened(true); setFeedback('');
+                          } else {
+                            spyAudio.playWrongBuzzer(); setErrors(value => value + 1);
+                            setFeedback(t('شفرة غير صحيحة، أعد المحاولة.', 'Incorrect code. Try again.'));
+                          }
+                        }}
+                        className="flex min-h-0 items-center justify-center rounded border border-[#8e6a35]/45 bg-[#e7d4ad]/85 px-1 py-[2px] font-bold text-[#392b1e] transition-colors hover:bg-[#fff1cd] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#4d361e]"
+                        style={{ fontSize: 'clamp(8px, .91vw, 15px)', minHeight: 'clamp(15px, 2vw, 31px)' }}>
+                        {option}
+                      </button>)}
+                  </div>
+                  {feedback && <p role="status" aria-live="polite" className="font-bold text-red-800"
+                    style={{ fontSize: 'clamp(8px, .85vw, 13px)' }}>{feedback}</p>}
+                </div>
               ) : (
-                <button type="button" onClick={() => setShowClueDetail(true)}
-                  aria-label={t('تكبير الإفادة', 'Read full statement')} className="flex h-full w-full flex-col items-center justify-center text-[#352715]">
-                  <p className="w-full px-1 text-center font-bold leading-snug" style={{ fontSize: 'clamp(9px, .95vw, 17px)' }}>{activeClue.speech}</p>
-                </button>
+                <div className="flex h-full w-full flex-col items-center justify-center gap-[3%] px-[3%] text-[#352715]">
+                  <div className="font-black" style={{ fontSize: 'clamp(8px, .95vw, 16px)' }}>
+                    {t('الإفادة', 'Statement')} {clueIndex + 1}/{activeCase.clues.length}
+                  </div>
+                  <p lang="ar" className="w-full text-center font-semibold leading-normal"
+                    style={{ fontSize: 'clamp(9px, 1.04vw, 17px)' }}>{activeClue.speech}</p>
+                  {(showTranslation || language === 'en') && <p lang="en" dir="ltr"
+                    className="w-full text-center leading-snug text-[#55402a]"
+                    style={{ fontSize: 'clamp(8px, .84vw, 14px)' }}>{narrative?.cluesEn[clueIndex] || ''}</p>}
+                  <button type="button" onClick={() => setShowTranslation(v => !v)}
+                    className="rounded border border-[#80623b]/45 bg-[#e5cc9f]/60 px-2 py-0.5 font-bold hover:bg-[#f5e1b9]"
+                    style={{ fontSize: 'clamp(8px, .82vw, 13px)' }}>
+                    {showTranslation ? t('إخفاء الترجمة', 'Hide English') : t('الترجمة', 'Translation')}
+                  </button>
+                </div>
               )}
             </div>
-            {/* Only the portrait slots from the original investigation artwork receive dynamic images. */}
-            {mobileSuspects.map((person, slot) => {
-              const pos = [
-                { left: '69.7%', top: '16.1%' }, { left: '54.6%', top: '16.1%' }, { left: '39.4%', top: '16.1%' },
-                { left: '69.7%', top: '49.2%' }, { left: '54.6%', top: '49.2%' }, { left: '39.4%', top: '49.2%' },
-              ][slot];
-              const clear = eliminated.includes(person.id);
-              const selected = accusedId === person.id;
-              return <button type="button" key={person.id} aria-label={person.name + (clear ? '، بريء' : '')}
-                disabled={clear || clueCleared || accusationOpen}
-                onClick={() => onEliminate(person)}
-                className={'absolute z-20 flex flex-col overflow-hidden rounded-sm border bg-[#0a1016] focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200 ' +
-                  (clear ? 'border-emerald-400/70 ' : selected ? 'border-red-400/80 ' : 'border-amber-400/35 hover:border-amber-100')}
-                style={{ left: pos.left, top: pos.top, width: '12.2%', height: '23%' }}>
-                <span className="relative block min-h-0 w-full flex-1 overflow-hidden">
-                  <img src={person.image} alt="" loading="eager" className={'h-full w-full object-cover object-top ' + (clear ? 'grayscale brightness-50' : '')}/>
-                  {clear && <span className="absolute inset-0 flex items-center justify-center bg-emerald-950/25"><Check className="h-[30%] w-[30%] rounded-full bg-emerald-600 p-1 text-white"/></span>}
-                </span>
-                <span className="flex h-[17%] min-h-0 w-full flex-none items-center justify-center border-t border-amber-500/50 bg-[#070c11] px-0.5 text-center font-bold text-amber-100"
-                  style={{ fontSize: 'clamp(7px, .8vw, 15px)' }}>{person.name}</span>
-              </button>;
-            })}
-            {/* This compact pager only appears for the 10–12-suspect advanced cases. */}
-            {suspectPageCount > 1 && <div className="absolute left-[48%] top-[76%] z-30 flex w-[33%] items-center justify-center gap-1 text-amber-100">
-              <button type="button" onClick={() => setSuspectPage(v => Math.max(0, v - 1))} disabled={suspectPage === 0}
-                aria-label={t('المجموعة السابقة', 'Previous suspects')}
-                className="rounded-md border border-amber-500/30 bg-black/65 p-1 disabled:opacity-35"><ChevronRight className="h-3 w-3 sm:h-4 sm:w-4"/></button>
-              <span className="rounded-md bg-black/60 px-1 text-[8px] font-bold sm:px-2 sm:text-xs">{suspectPage + 1}/{suspectPageCount}</span>
-              <button type="button" onClick={() => setSuspectPage(v => Math.min(suspectPageCount - 1, v + 1))} disabled={suspectPage >= suspectPageCount - 1}
-                aria-label={t('المجموعة التالية', 'Next suspects')}
-                className="rounded-md border border-amber-500/30 bg-black/65 p-1 disabled:opacity-35"><ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4"/></button>
-            </div>}
-            <div className="absolute left-[7.5%] top-[56%] z-30 flex w-[28%] flex-col gap-1">
+            {/* One uninterrupted investigation roster. Portraits fill their photo frames
+                and separate gold-bordered nameplates match the approved briefing art. */}
+            <div dir="rtl"
+              className="absolute z-20 flex flex-wrap content-center items-center justify-center overflow-hidden"
+              style={{
+                left: activeCase.suspects.length <= 6 ? '39.4%' : '38.6%',
+                top: activeCase.suspects.length <= 6 ? '16.1%' : '17.8%',
+                width: activeCase.suspects.length <= 6 ? '43.2%' : '60.5%',
+                height: activeCase.suspects.length <= 6 ? '57%' : '59.7%',
+                columnGap: '0.72%', rowGap: '3.2%',
+              }}>
+              {activeCase.suspects.map(person => {
+                const cleared = eliminated.includes(person.id);
+                return <button type="button" key={person.id}
+                  aria-label={person.name + (cleared ? '، بريء' : '')}
+                  disabled={cleared || clueCleared || accusationOpen}
+                  onClick={() => onEliminate(person)}
+                  className={'group flex min-h-0 flex-col overflow-hidden rounded-[3px] bg-transparent transition-transform duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-100 ' +
+                    (cleared ? 'opacity-70 ' : 'hover:-translate-y-0.5')}
+                  style={{
+                    flex: '0 0 ' + ((99.3 - (suspectColumns - 1) * 0.72) / suspectColumns) + '%',
+                    height: ((99.3 - (suspectRows - 1) * 3.2) / suspectRows) + '%',
+                  }}>
+                  <span className={'relative block min-h-0 w-full flex-1 overflow-hidden rounded-t-[3px] border border-b-0 bg-[#101820] shadow-md ' +
+                    (cleared ? 'border-emerald-400/70 ' : 'border-[#bb9251]/80 group-hover:border-amber-200')}>
+                    <img src={person.image} alt="" draggable={false} loading="eager"
+                      className={'absolute inset-0 block h-full w-full object-cover object-top transition-[filter] ' +
+                        (cleared ? 'grayscale brightness-[.55]' : '')}/>
+                    {cleared && <span className="absolute inset-0 flex items-center justify-center bg-emerald-950/25">
+                      <Check className="h-[25%] w-auto rounded-full bg-emerald-700 p-1 text-white"/>
+                    </span>}
+                  </span>
+                  <span className={'flex h-[17%] min-h-0 w-full flex-none items-center justify-center overflow-hidden rounded-b-[3px] border border-[#bb9251]/80 bg-[#080f18]/95 px-0.5 text-center font-bold leading-none text-[#f4d497] ' +
+                    (cleared ? 'text-slate-400 line-through' : '')}
+                    style={{ fontSize: suspectColumns === 6 ? 'clamp(7px, .89vw, 15px)' : 'clamp(8px, 1.01vw, 17px)' }}>
+                    {person.name}
+                  </span>
+                </button>;
+              })}
+            </div>
+            <div className="absolute left-[7.5%] top-[68.2%] z-30 flex w-[28%] flex-col gap-1">
               {clueCleared && !readyToAccuse && <button type="button" onClick={nextClue}
                 className="rounded-md border border-amber-500/70 bg-[#0c1822]/85 px-1 py-1 font-bold text-amber-200"
                 style={{ fontSize: 'clamp(8px, .95vw, 15px)' }}>{t('الإفادة التالية', 'Next statement')}</button>}
@@ -401,8 +440,6 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
                 style={{ fontSize: 'clamp(8px, .85vw, 13px)' }}>{feedback}</div>}
             </div>
             <div className="absolute bottom-[2%] left-[2%] z-30 flex items-center gap-1">
-              <button type="button" onClick={() => setShowClueDetail(true)} aria-label={t('تفاصيل الإفادة', 'Statement details')}
-                className="rounded-md border border-amber-500/35 bg-black/60 p-1.5 text-amber-200"><Search className="h-3.5 w-3.5"/></button>
               <button type="button" onClick={() => setShowDossier(true)} aria-label={t('سجل الأدلة', 'Evidence log')}
                 className="rounded-md border border-amber-500/35 bg-black/60 p-1.5 text-amber-200"><Fingerprint className="h-3.5 w-3.5"/></button>
               <button type="button" onClick={toggleMute} aria-label={t('الصوت', 'Sound')}
@@ -456,55 +493,6 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
           </div>
         </section>
       )}
-      {showClueDetail && screen === 'investigation' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-sm" onClick={() => setShowClueDetail(false)}>
-          <div role="dialog" aria-modal="true" aria-label={t('تفاصيل الإفادة', 'Statement details')}
-            onClick={e => e.stopPropagation()}
-            className="w-full max-w-lg space-y-4 rounded-xl border border-[#bc934e] bg-[#e4cc9f] p-4 text-[#2d2418] shadow-2xl sm:p-6">
-            <div className="flex items-center justify-between border-b border-[#73542c]/30 pb-2">
-              <h3 className="font-black">{t('ملف الإفادة', 'Witness statement')} {clueIndex + 1}/{activeCase.clues.length}</h3>
-              <button type="button" onClick={() => {setShowClueDetail(false);setFeedback('');}} aria-label={t('إغلاق', 'Close')}
-                className="rounded-full p-1 hover:bg-[#a18557]/25"><X size={19}/></button>
-            </div>
-            {level === 'advanced' && activeClue.cipherKey && !cipherOpened ? (
-              <div className="space-y-3">
-                <p dir="rtl" lang="ar" className="text-center text-base font-bold leading-loose">{activeClue.cipherHint}</p>
-                <div className="grid gap-2">
-                  {(activeClue.cipherOptions || []).map(option => <button type="button" key={option}
-                    onClick={() => {
-                      if (option === activeClue.cipherKey) {
-                        spyAudio.playCipherDecode(); setCipherOpened(true); setFeedback(''); setShowClueDetail(false);
-                      } else {
-                        spyAudio.playWrongBuzzer(); setErrors(v=>v+1);
-                        setFeedback(t('مفتاح غير صحيح. راجع الشفرة.', 'Incorrect key. Review the cipher.'));
-                      }
-                    }}
-                    className="min-h-[44px] rounded-lg border border-[#a27a42] bg-[#f3e4c8] px-4 py-2 text-center font-bold hover:bg-white">
-                    {option}</button>)}
-                </div>
-              </div>
-            ) : (
-              <>
-                <p dir="rtl" lang="ar" className="text-center text-lg font-bold leading-loose">{activeClue.speech}</p>
-                {(showTranslation || language === 'en') && <p dir="ltr" className="rounded-md border border-[#ad8955]/30 px-2 py-2 text-center text-sm leading-relaxed">
-                  {narrative?.cluesEn[clueIndex] || ''}
-                </p>}
-                <div className="flex items-center justify-between gap-2">
-                  <button type="button" onClick={() => setShowTranslation(v=>!v)}
-                    className="min-h-[42px] rounded-md border border-[#ad8955] px-3 text-xs font-bold">
-                    {showTranslation ? t('إخفاء الترجمة', 'Hide translation') : t('عرض الترجمة', 'Show translation')}
-                  </button>
-                  <button type="button" onClick={() => setShowClueDetail(false)}
-                    className="min-h-[42px] rounded-md bg-[#49341d] px-4 text-sm font-bold text-amber-50">
-                    {t('متابعة التحقيق', 'Continue investigation')}
-                  </button>
-                </div>
-              </>
-            )}
-            {feedback && <p role="status" className="text-center text-sm font-bold text-red-700">{feedback}</p>}
-          </div>
-        </div>
-      )}
       {showDossier && screen === 'investigation' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm">
           <div role="dialog" aria-modal="true" aria-label={t('سجل الأدلة', 'Evidence file')} className="w-full max-w-md space-y-3 rounded-2xl border border-amber-400/60 bg-[#081823] p-5 shadow-2xl">
@@ -520,13 +508,14 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
             <div className="flex items-center justify-between"><h3 className="text-lg font-black text-amber-200">{t('من الجاني؟ قدم الدليل.', 'Who did it? Show the evidence.')}</h3><button type="button" aria-label={t('إغلاق','Close')} onClick={() => {setAccusationOpen(false);setFeedback('');}}><X size={20}/></button></div>
             <p className="rounded-xl border border-amber-300/30 bg-[#e6d0a6] p-3 text-center text-sm font-bold leading-relaxed text-[#2b1d0c]" lang="ar" dir="rtl">{evidenceAr}</p>
             {language === 'en' && <p className="text-sm text-amber-100">{evidenceEn}</p>}
-            <div className="grid grid-cols-3 gap-2 lg:hidden">{mobileAccusationSuspects.map(person => <Portrait key={person.id} person={person} compact selected={accusedId === person.id} onClick={() => {setAccusedId(person.id);setFeedback('');}}/>)}</div>
-            {suspectPageCount > 1 && <div className="flex items-center justify-between gap-2 lg:hidden">
-              <button type="button" disabled={accusationPage === 0} onClick={() => setAccusationPage(p => Math.max(0,p-1))} className={secondaryButton + ' disabled:opacity-40'}><ChevronRight size={18}/></button>
-              <span className="text-xs text-amber-100">{t('مجموعة المتهمين', 'Suspect group')} {accusationPage+1}/{suspectPageCount}</span>
-              <button type="button" disabled={accusationPage >= suspectPageCount-1} onClick={() => setAccusationPage(p => Math.min(suspectPageCount-1,p+1))} className={secondaryButton + ' disabled:opacity-40'}><ChevronLeft size={18}/></button>
-            </div>}
-            <div className="hidden gap-2 lg:grid lg:grid-cols-5 xl:grid-cols-6">{activeCase.suspects.map(person => <Portrait key={person.id} person={person} compact selected={accusedId === person.id} onClick={() => {setAccusedId(person.id);setFeedback('');}}/>)}</div>
+            {/* Every suspect remains selectable in a single, balanced two-row grid. */}
+            <div className="grid gap-1.5 sm:gap-2" dir="rtl"
+              style={{gridTemplateColumns: 'repeat(' + suspectColumns + ', minmax(0, 1fr))'}}>
+              {activeCase.suspects.map(person =>
+                <Portrait key={person.id} person={person} compact
+                  selected={accusedId === person.id}
+                  onClick={() => {setAccusedId(person.id);setFeedback('');}}/>)}
+            </div>
             <p className="text-sm font-bold text-amber-100">{t('ما سبب اتهامك لهذا الشخص؟', 'Why do you accuse this person?')}</p>
             {level === 'advanced' ? <div className="grid gap-3 sm:grid-cols-2">
               {advancedProofs.map((proof, index) => <div key={index} className="space-y-2 rounded-xl border border-amber-400/25 bg-black/30 p-3">

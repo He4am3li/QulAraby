@@ -47,7 +47,7 @@ const games = src('pages/Games.tsx');
 assert(games.includes('DetectiveExperience as DetectiveMystery'), 'Game menu must render responsive experience');
 for (const feature of ['localStorage.setItem', 'submitAccusation', 'activeCase.culpritId',
   'markCaseSolved', 'wordOptions', 'answerWord', 'nextCase', 'downloadPdf', 'aria-live',
-  'grid-cols-3', 'setLanguage', 'setShowTranslation']) {
+  'suspectColumns', 'setLanguage', 'setShowTranslation']) {
   assert(view.includes(feature), 'Missing detective functionality: ' + feature);
 }
 assert(view.includes('reason !== ' + "'evidence'"), 'Accusation must require an evidence-based reason');
@@ -58,5 +58,14 @@ assert(view.includes('url("/٩.jpeg")'), 'Report must use original artwork');
 assert(view.includes("left:'65.5%'"), 'Vocabulary must fill original preprinted slots');
 assert(!view.includes('SpeechSynthesisUtterance'), 'Robotic Arabic speech must not return');
 assert(!view.includes('speechSynthesis.speak'), 'The game must use only cinematic sound effects');
-assert(view.includes("showClueDetail"), 'Cipher and clue zoom must be available on request');
-console.log('Detective experience: bilingual support, accusation gate, practice, mobile grid and progress verified.');
+assert(!view.includes('showClueDetail'), 'Separate cipher window must be removed');
+assert(!view.includes('suspectPage'), 'Suspect paging must not return');
+assert(!view.includes('mobileAccusationSuspects'), 'Accusation must show everyone at once');
+assert(view.includes('activeCase.suspects.map(person => {'), 'Every suspect must appear directly in the scene');
+assert((view.match(/activeCase\.suspects\.map/g) || []).length >= 2, 'Accusation must also show the full roster');
+assert(view.includes('activeClue.cipherOptions'), 'Cipher choices must be rendered directly in the scene');
+assert(view.includes('setCipherOpened(true)'), 'Inline cipher must unlock original clue');
+assert(view.includes('object-cover object-top'), 'Portraits must fill image frames');
+assert(view.includes('rounded-b-[3px]'), 'Each portrait must have a separate gold nameplate');
+assert(view.includes('suspectRows'), '10 to 12 suspects must fit into two rows');
+console.log('Detective experience: approved cinematic UI, inline ciphers, single-page roster, image-fit portraits and progress verified.');
