@@ -143,6 +143,33 @@ export const Speak: React.FC = () => {
   const sessionRef = React.useRef<any>(null);
   const nextStartTimeRef = React.useRef<number>(0);
   const sourcesRef = React.useRef<Set<AudioBufferSourceNode>>(new Set());
+  const audioEpochRef = React.useRef(0);
+  const closeTransport = React.useCallback(() => {
+    const active = sessionRef.current;
+    sessionRef.current = null;
+
+    active?.stream?.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+    try { active?.scriptProcessor?.disconnect(); } catch {}
+    try { active?.source?.disconnect(); } catch {}
+    try { active?.session?.close(); } catch {}
+    // A connection may resolve after the user has already left the page.
+    if (active?.sessionPromise) {
+      void active.sessionPromise.then((session: any) => {
+        if (session !== active.session) {
+          try { session.close(); } catch {}
+        }
+      }).catch(() => {});
+    }
+
+    audioEpochRef.current += 1;
+    sourcesRef.current.forEach(source => { try { source.stop(); } catch {} });
+    sourcesRef.current.clear();
+    nextStartTimeRef.current = 0;
+    setIsActive(false);
+    setIsAiSpeaking(false);
+  }, []);
+
+  React.useEffect(() => () => closeTransport(), [closeTransport]);
   const reportRef = React.useRef<HTMLDivElement>(null);
   const summaryPrintRef = React.useRef<HTMLDivElement>(null);
   const transcriptPrintRef = React.useRef<HTMLDivElement>(null);
@@ -268,8 +295,9 @@ export const Speak: React.FC = () => {
     return { output: audioContextRef.current, input: inputAudioContextRef.current };
   };
 
-  const startSession = async (retryCount = 0) => {
+  const startSession = async () => {
     if (!selectedLevel || !selectedTopic) return;
+    closeTransport();
     setLoading(true);
     setError(null);
     setConversationHistory([]);
@@ -315,6 +343,15 @@ export const Speak: React.FC = () => {
         return;
       }
       
+      const transport: {
+        stream: MediaStream;
+        source?: MediaStreamAudioSourceNode;
+        scriptProcessor?: ScriptProcessorNode;
+        sessionPromise?: Promise<any>;
+        session?: any;
+      } = { stream };
+      sessionRef.current = transport;
+
       const sessionPromise = ai.live.connect({
         model: 'gemini-3.8-live',
         config: {
@@ -343,6 +380,7 @@ export const Speak: React.FC = () => {
         },
         callbacks: {
           onopen: () => {
+            if (sessionRef.current !== transport) return;
             setIsActive(true);
             setSetupMode(false);
             setLoading(false);
@@ -363,7 +401,8 @@ export const Speak: React.FC = () => {
             
             source.connect(scriptProcessor);
             scriptProcessor.connect(input.destination);
-            sessionRef.current = { stream, scriptProcessor, source };
+            transport.source = source;
+            transport.scriptProcessor = scriptProcessor;
           },
           onmessage: async (message) => {
             if (message.serverContent?.inputTranscription) {
@@ -415,43 +454,48 @@ export const Speak: React.FC = () => {
             }
           },
           onclose: () => {
-            console.debug("Live Session Closed");
-            setIsActive(false);
+            if (sessionRef.current !== transport) return;
+            closeTransport();
+            setSetupMode(true);
+            setError(t.genError);
+            setLoading(false);
           },
           onerror: (e) => {
             console.error("Live Error", e);
-            if (retryCount < 2) {
-              console.warn("Live Session failed, retrying...");
-              setTimeout(() => startSession(retryCount + 1), 2000);
-            } else {
-              setError(t.genError);
-              setLoading(false);
-              stopSession();
-            }
+            if (sessionRef.current !== transport) return;
+            // Never launch another session while the old microphone is open.
+            closeTransport();
+            setSetupMode(true);
+            setError(t.genError);
+            setLoading(false);
           },
         },
       });
-    } catch (err: any) {
-      console.error("Start Error", err);
-      if (retryCount < 2) {
-        setTimeout(() => startSession(retryCount + 1), 2000);
-      } else {
+      transport.sessionPromise = sessionPromise;
+      void sessionPromise.then(session => {
+        transport.session = session;
+        if (sessionRef.current !== transport) {
+          try { session.close(); } catch {}
+        }
+      }).catch(err => {
+        console.error('Live connection failed', err);
+        if (sessionRef.current !== transport) return;
+        closeTransport();
+        setSetupMode(true);
         setError(t.genError);
         setLoading(false);
-      }
+      });
+    } catch (err: any) {
+      console.error("Start Error", err);
+      closeTransport();
+      setSetupMode(true);
+      setError(t.genError);
+      setLoading(false);
     }
   };
 
   const stopSession = async () => {
-    if (sessionRef.current) {
-      if (sessionRef.current.stream) sessionRef.current.stream.getTracks().forEach((t: any) => t.stop());
-      if (sessionRef.current.scriptProcessor) sessionRef.current.scriptProcessor.disconnect();
-      if (sessionRef.current.source) sessionRef.current.source.disconnect();
-    }
-    sourcesRef.current.forEach(s => { try { s.stop(); } catch(e) {} });
-    sourcesRef.current.clear();
-    setIsActive(false);
-    setIsAiSpeaking(false);
+    closeTransport();
     setLoading(false);
 
     const finalHistory = [...conversationHistory];
