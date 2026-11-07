@@ -2280,11 +2280,16 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
                             </a>
                             <button
                               type="button"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.stopPropagation();
                                 const updated = savedCards.filter(c => c.id !== card.id);
-                                setSavedCards(updated);
-                                localStorage.setItem('qul_calligraphy_saved_cards_atelier', JSON.stringify(updated));
+                                try {
+                                  await persistCalligraphyCards(updated);
+                                  setSavedCards(updated);
+                                } catch (error) {
+                                  console.error('Could not delete calligraphy card:', error);
+                                  setStudioAlert('تعذّر حذف اللوحة من التخزين. حاول مرة أخرى.');
+                                }
                               }}
                               className="text-[#8c949e] hover:text-[#e05252] p-1 rounded hover:bg-[#1a1d24]"
                               title="حذف من المعرض"
