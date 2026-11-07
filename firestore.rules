@@ -479,6 +479,34 @@ service cloud.firestore {
         allow update: if isOwner(userId) && isValidProgress(request.resource.data);
         allow delete: if isOwner(userId);
       }
+
+      // Per-account Calligraphy Gallery: every record is readable and writable
+      // ONLY by the authenticated owner. Cloud copies contain compressed artwork,
+      // never arbitrary full-resolution data URLs that exceed Firestore limits.
+      match /calligraphy/{cardId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) &&
+          request.resource.data.keys().hasAll(['title', 'preview', 'settings', 'updatedAt']) &&
+          request.resource.data.keys().hasOnly(['title', 'preview', 'settings', 'updatedAt']) &&
+          request.resource.data.title is string &&
+          request.resource.data.title.size() <= 100 &&
+          request.resource.data.preview is string &&
+          request.resource.data.preview.size() > 16 &&
+          request.resource.data.preview.size() <= 390000 &&
+          request.resource.data.preview.matches('^data:image/jpeg;base64,.*') &&
+          request.resource.data.settings is map &&
+          request.resource.data.settings.keys().hasOnly([
+            'text', 'font', 'pen', 'color', 'isGold', 'foilStyle',
+            'isSpecialIlluminated', 'ornament', 'size', 'fontSize',
+            'background', 'customBgUrl', 'showSignature',
+            'signatureName', 'signaturePosition'
+          ]) &&
+          request.resource.data.settings.text is string &&
+          request.resource.data.settings.text.size() <= 1000 &&
+          request.resource.data.settings.customBgUrl is string &&
+          request.resource.data.settings.customBgUrl.size() <= 290000 &&
+          request.resource.data.updatedAt is number;
+      }
     }
 
     // Worksheets Collection
