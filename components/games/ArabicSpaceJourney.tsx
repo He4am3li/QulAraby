@@ -893,6 +893,20 @@ const MAP_NODES: MapPlanetNode[] = [
 ];
 
 // ==============================================================
+// Photographic retouch: ten distinct mineral palettes with controlled exposure.
+const PLANET_DISPLAY_GRADES: Record<string, string> = {
+  sentence: "saturate(.94) contrast(1.14) brightness(1.07)",
+  letters: "saturate(.89) contrast(1.12) brightness(1.06)",
+  hamza: "saturate(.97) contrast(1.12) brightness(1.01)",
+  styles: "saturate(.91) contrast(1.11) brightness(1.05)",
+  meanings: "saturate(.94) contrast(1.12) brightness(1.05)",
+  morphology: "saturate(.91) contrast(1.13) brightness(1.08)",
+  word: "saturate(.97) contrast(1.11) brightness(1.07)",
+  syntax: "saturate(.90) contrast(1.13) brightness(1.05)",
+  structures: "saturate(.88) contrast(1.13) brightness(1.07)",
+  spelling: "saturate(.80) contrast(1.17) brightness(1.07)",
+};
+
 // UNIQUE LIVING ATMOSPHERES & HOLOGRAPHIC MISSIONS FOR ALL 10 PLANETS
 // ==============================================================
 export interface FloatingSpaceRock {
@@ -3968,7 +3982,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
           >
             {/* High-Definition Living Cosmic Nebula Canvas */}
             <div 
-              className="absolute inset-[-12%] w-[124%] h-[124%] pointer-events-none opacity-30 mix-blend-screen"
+              className="absolute inset-[-12%] w-[124%] h-[124%] pointer-events-none opacity-20 mix-blend-screen"
               style={{
                 backgroundImage: `url(${vibrantCinematicSpaceNebula})`,
                 backgroundSize: 'cover',
@@ -4198,7 +4212,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                   transform: "translate(-50%, -50%) rotate(22deg)",
                   width: "320px",
                   height: "180px",
-                  background: "radial-gradient(ellipse at center, rgba(168,85,247,0.35) 0%, rgba(34,211,238,0.2) 35%, rgba(6,78,59,0.12) 65%, transparent 80%)",
+                  background: "radial-gradient(ellipse at center, rgba(156,117,204,0.22) 0%, rgba(67,176,190,0.12) 35%, rgba(18,63,76,0.08) 65%, transparent 80%)",
                   filter: "blur(18px)"
                 }}
               />
@@ -4497,7 +4511,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                             : isHovered 
                             ? `0 0 24px ${node.glowColor}, inset 0 0 12px rgba(255,255,255,0.3)` 
                             : `0 0 14px ${node.glowColor}99`,
-                          filter: isHovered || isSelected ? "brightness(1.18) contrast(1.08)" : "none"
+                          filter: isHovered || isSelected ? "brightness(1.10) contrast(1.07)" : "none"
                         }}
                       >
                         {/* Inner Rotating Planetary Surface (Continuous Smooth Spin) */}
@@ -4512,7 +4526,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                             src={node.img} 
                             alt={node.name}
                             className="w-full h-full object-cover scale-125"
-                            style={{ filter: "contrast(1.1) brightness(1.04)" }}
+                            style={{ filter: PLANET_DISPLAY_GRADES[node.id] || "contrast(1.12) saturate(.96) brightness(1.04)" }}
                           />
                         </div>
 
