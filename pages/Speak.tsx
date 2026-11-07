@@ -1035,25 +1035,6 @@ export const Speak: React.FC = () => {
                   ))}
                 </nav>
 
-                {speakingBranch === 'booth' && (
-                  <div className="space-y-2.5">
-                    <h4 className="text-[11px] font-black text-slate-400 mb-3">{lang === 'ar' ? 'دليل الاتصالات' : 'Call directory'}</h4>
-                    {CALL_CONTACTS.map(contact => (
-                      <button type="button" key={contact.id} disabled={isActive || loading}
-                        onClick={() => { chooseCallContact(contact); setShowMobileOptions(false); }}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all disabled:opacity-40 ${contact.id === selectedCallContact.id ? 'border-amber-400 bg-amber-50 shadow-sm' : 'border-slate-100 bg-slate-50/50 hover:border-slate-200'}`}>
-                        <span className={`flex items-center justify-center h-11 w-11 text-xl rounded-xl ${contact.id === selectedCallContact.id ? 'bg-[#1a2733] text-amber-200' : 'bg-white text-slate-600'}`}>{contact.symbol}</span>
-                        <span className="flex-1 min-w-0 text-right">
-                          <strong className="block text-sm font-black arabic-font text-slate-800 truncate">{lang === 'ar' ? contact.ar : contact.en}</strong>
-                          <small className="text-[10px] text-slate-400 font-mono" dir="ltr">EXT. {contact.extension}</small>
-                        </span>
-                        <ChevronRight size={15} className="text-slate-400"/>
-                      </button>
-                    ))}
-                    <p className="text-[10px] text-slate-400 leading-relaxed">{lang === 'ar' ? 'هذه مكالمات افتراضية للتعلم وليست اتصالات فعلية.' : 'These are educational simulations, not real calls.'}</p>
-                  </div>
-                )}
-
                 {speakingBranch === 'studio' && (
                 <div className="space-y-3">
                     {TOPICS.map(topic => {
@@ -1307,7 +1288,6 @@ export const Speak: React.FC = () => {
                 const contact = CALL_CONTACTS.find(item => item.id === id);
                 if (contact) chooseCallContact(contact);
               }}
-              onShowDirectory={() => setShowMobileOptions(true)}
               onStart={() => startSession()}
               onStop={() => stopSession()}
               onResume={() => startSession(true)}
