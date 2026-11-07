@@ -27,10 +27,10 @@ export const CalligraphyInkIdentity: React.FC<CalligraphyInkIdentityProps> = ({
     <div
       aria-hidden="true"
       className="absolute inset-0 pointer-events-none select-none overflow-hidden"
-      style={{ zIndex: narrow ? 15 : 0, opacity: narrow ? 0.24 : 0.18 }}
+      style={{ zIndex: variant === 'header' ? 15 : 0, opacity: narrow ? 0.24 : 0.18 }}
     >
       <svg
-        className="absolute inset-0 h-full w-full"
+        className={`absolute inset-0 h-full w-full ${narrow ? "" : "hidden md:block"}`}
         viewBox={narrow ? '0 0 1440 120' : '0 0 1440 900'}
         preserveAspectRatio={narrow ? 'xMidYMid meet' : 'xMidYMid slice'}
         xmlns="http://www.w3.org/2000/svg"
@@ -67,6 +67,24 @@ export const CalligraphyInkIdentity: React.FC<CalligraphyInkIdentityProps> = ({
           )}
         </g>
       </svg>
+      {!narrow && (
+        <svg
+          className="absolute inset-0 w-full h-full md:hidden"
+          viewBox="0 0 420 820"
+          preserveAspectRatio="xMidYMid slice"
+          xmlns="http://www.w3.org/2000/svg"
+          focusable="false"
+          aria-hidden="true"
+          fill="#c8bbaa"
+        >
+          {/* Mobile arrangement keeps the traced shapes near the margins instead
+              of cropping all decorative content out of a wide desktop SVG. */}
+          <path d={TRACES.upperLeft} transform="translate(-128 17) scale(.65)" opacity=".86" />
+          <path d={TRACES.upperRight} transform="translate(252 88) scale(.54)" opacity=".8" />
+          <path d={TRACES.left} transform="translate(-45 274) scale(.48)" opacity=".65" />
+          <path d={TRACES.right} transform="translate(379 292) scale(.43)" opacity=".68" />
+        </svg>
+      )}
     </div>
   );
 };
