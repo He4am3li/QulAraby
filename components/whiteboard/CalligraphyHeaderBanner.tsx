@@ -49,16 +49,16 @@ export const CalligraphyHeaderBanner: React.FC<CalligraphyHeaderBannerProps> = (
         />
       </div>
 
-      {/* Left original photo now occupies the former close-button area without an X overlay. */}
+      {/* Left original is mirrored and visually anchored to the very left edge, with its fade toward the title. */}
       <div className="absolute left-0 inset-y-0 w-[50%] sm:w-[43%] lg:w-[39%] max-w-[660px] z-10 overflow-hidden pointer-events-none flex items-center justify-start">
         <img
           src="/calligrapher_tools_header.jpg"
           alt="أدوات الخط العربي"
           referrerPolicy="no-referrer"
-          className="w-full h-full object-contain object-left -scale-x-100 mix-blend-screen opacity-95"
+          className="w-full h-full object-contain object-right -scale-x-100 mix-blend-screen opacity-95"
           style={{
-            maskImage: 'linear-gradient(to right, #000 35%, rgba(0,0,0,.86) 52%, transparent 97%)',
-            WebkitMaskImage: 'linear-gradient(to right, #000 35%, rgba(0,0,0,.86) 52%, transparent 97%)'
+            maskImage: 'linear-gradient(to left, #000 35%, rgba(0,0,0,.86) 52%, transparent 97%)',
+            WebkitMaskImage: 'linear-gradient(to left, #000 35%, rgba(0,0,0,.86) 52%, transparent 97%)'
           }}
         />
       </div>
