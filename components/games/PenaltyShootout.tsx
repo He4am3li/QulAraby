@@ -416,13 +416,24 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
     :defendingClub.id==='city'||defendingClub.id==='chelsea'
       ?{primary:'#e9a448',secondary:'#253146'}
       :{primary:'#a7d959',secondary:'#13232c'};
+  // The shirt's secondary colour is not necessarily the shorts colour.
+  // Classic football strip combinations are modelled separately from the logo palette.
+  const shortsByClub:Record<string,string>={
+    madrid:'#f1f1ee',barcelona:'#1b3164',city:'#f4f4f0',liverpool:'#bd1f34',
+    psg:'#182b58',chelsea:'#1851bd',arsenal:'#f1f1ed',juventus:'#f7f6f4',
+    bayern:'#ce2231',united:'#f4f4f0'
+  };
   const stadiumKit={
+    shooterClubId:attackingClub.id,
+    keeperClubId:defendingClub.id,
     shooterPrimary:attackingClub.primary,
-    shooterSecondary:attackingClub.secondary,
+    shooterSecondary:shortsByClub[attackingClub.id]||attackingClub.secondary,
+    shooterAccent:attackingClub.accent,
     shooterNumber:shooter?.number||9,
     shooterName:shooter?.name||'',
     keeperPrimary:goalieColors.primary,
     keeperSecondary:goalieColors.secondary,
+    keeperAccent:'#f5f4ec',
     keeperNumber:goalkeeper?.number||1,
     keeperName:goalkeeper?.name||''
   };

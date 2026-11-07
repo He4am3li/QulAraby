@@ -5,6 +5,10 @@ import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 type ShotPhase='idle'|'focus'|'runup'|'kick'|'goal'|'miss';
 export interface Penalty3DKit {
+  shooterClubId?:string;
+  keeperClubId?:string;
+  shooterAccent?:string;
+  keeperAccent?:string;
   shooterPrimary:string;
   shooterSecondary?:string;
   keeperPrimary:string;
