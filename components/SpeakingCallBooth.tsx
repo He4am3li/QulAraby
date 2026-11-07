@@ -368,7 +368,7 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
             <div className="qul-phone-foot qul-phone-foot-left" aria-hidden="true"/>
             <div className="qul-phone-foot qul-phone-foot-right" aria-hidden="true"/>
           </div>
-          <div className="qul-call-cord" aria-hidden="true"><svg viewBox="0 0 160 100" preserveAspectRatio="none"><path d="M5 4 C5 30 45 24 45 49 S81 78 86 41 S137 14 155 86" /></svg></div>
+          <div className="qul-call-cord" aria-hidden="true"><svg viewBox="0 0 160 100" preserveAspectRatio="none"><path d="M5 3 C13 20 19 25 24 48 C30 72 40 70 43 49 C46 29 56 29 59 49 C62 70 72 70 75 49 C78 29 88 29 91 49 C94 71 104 71 107 49 C110 29 120 29 123 49 C126 69 138 70 142 48 C147 32 153 49 159 90" /><path className="qul-call-cord-highlight" d="M5 3 C13 20 19 25 24 48 C30 72 40 70 43 49 C46 29 56 29 59 49 C62 70 72 70 75 49 C78 29 88 29 91 49 C94 71 104 71 107 49 C110 29 120 29 123 49 C126 69 138 70 142 48 C147 32 153 49 159 90" /></svg></div>
         </div>
 
         <div className="qul-call-mission-area">
