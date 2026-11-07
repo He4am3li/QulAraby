@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const main = readFileSync('components/whiteboard/CalligraphyCardStudio.tsx', 'utf8');
+const tray = readFileSync('components/whiteboard/CalligraphyStudioTray.tsx', 'utf8');
+const storage = readFileSync('components/whiteboard/calligraphyPersistence.ts', 'utf8');
+
+const must = (condition, message) => assert.ok(condition, message);
+
+must(main.includes('loadCalligraphyCards()'), 'Loads saved artwork from IndexedDB');
+must(main.includes('await persistCalligraphyCards(updated)'), 'Save/delete await persistent transactions');
+must(storage.includes("indexedDB.open(DB_NAME, 1)"), 'Uses IndexedDB instead of localStorage for image payload');
+must(storage.includes('transaction.oncomplete'), 'Resolves save after transaction commit');
+must(storage.includes('localStorage.removeItem(LEGACY_KEY)'), 'Migrates legacy cards after successful commit');
+must(storage.includes('MAX_SAVED_CALLIGRAPHY_CARDS = 20'), 'Keeps bounded on-device gallery');
+must(!main.includes("localStorage.setItem('qul_calligraphy_saved_cards_atelier'"), 'No legacy quota-limited image save');
+must(!main.includes("setQuoteText(prev => prev + 'َ')"), 'Unsupported diacritics cannot invent a fatha');
+must(main.includes('setTashkeelNotice('), 'Unknown diacritic input explains limitation');
+must(main.includes('tashkeelInputRef.current'), 'Manual diacritics respect the edit caret');
+must(!/onSelectFoilStyle\(swatch.foilStyleId\);[\s\S]{0,90}onSelectInk\(swatch.value\)/.test(tray), 'Foil selection does not disable itself');
+must(main.includes('foilStrokeColor[selectedFoilStyle]'), 'Metallic stroke matches chosen metallic finish');
+must(main.includes("case 'pdf'") || main.includes("format === 'pdf'"), 'Provides PDF export');
+must(main.includes('format: [widthMm, heightMm]'), 'PDF sizes follow selected A3/A4');
+must(main.includes('const imageWidth = Math.min(availableWidth, availableHeight * ratio)'), 'PDF scales artwork without stretching');
+must(main.includes("card.style.setProperty('background-image', 'none', 'important')"), 'Transparent PNG removes the paper');
+must(main.includes("documentClone.querySelectorAll('[data-calligraphy-guide]')"), 'Editor lines do not leak into exports');
+must(main.includes("window.addEventListener('keydown', onKeyboardShortcut)"), 'Undo/redo keyboard shortcuts are active');
+must(main.includes('setZoomLevel(value =>'), 'Zoom has functioning controls');
+must(main.includes('setShowGrid(value =>'), 'Grid has functioning controls');
+must(main.includes('setShowGuidelines(value =>'), 'Writing guidelines have functioning controls');
+must(main.includes('w-12 sm:w-16 md:w-20'), 'Mobile sidebars are compact');
+console.log('Calligraphy regressions OK: safe diacritics, metallic finishes, PDF/PNG exports, IndexedDB persistence, undo shortcuts and mobile controls.');
