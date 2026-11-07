@@ -86,6 +86,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const [errors, setErrors] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const [showDossier, setShowDossier] = useState(false);
+  const [showClueDetail, setShowClueDetail] = useState(false);
   const [accusationOpen, setAccusationOpen] = useState(false);
   const [accusedId, setAccusedId] = useState<string | null>(null);
   const [suspectPage, setSuspectPage] = useState(0);
@@ -137,7 +138,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const resetInvestigation = () => {
     setClueIndex(0); setEliminated([]); setCipherOpened(false);
     setFeedback(''); setErrors(0); setShowTranslation(false);
-    setShowDossier(false); setAccusationOpen(false); setAccusedId(null);
+    setShowDossier(false); setShowClueDetail(false); setAccusationOpen(false); setAccusedId(null);
     setReason(''); setSolved(false); setWordAnswers({}); setReportTab('practice');
     setSuspectPage(0); setAccusationPage(0); setAdvancedProofAnswers({});
   };
@@ -205,7 +206,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
     setFeedback('');
     const base = Math.max(0, 85 - errors * 5);
     markCaseSolved(base);
-    setScreen('envelope');
+    setScreen('report');
     try { confetti({ particleCount: 65, spread: 60, origin: { y: 0.55 } }); } catch {}
   };
   const answerWord = (choice: string) => {
@@ -276,25 +277,6 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const evidenceAr = narrative?.finalEvidenceAr || 'بقية المشتبه بهم لديهم دليل براءة.';
   const evidenceEn = narrative?.finalEvidenceEn || 'Other suspects have alibis.';
   const reportIsReady = solved && wordsComplete;
-  const Header = () => (
-    <header className="relative z-20 flex h-14 w-full flex-none items-center justify-between gap-2 border-b border-amber-400/20 bg-[#07111b]/80 px-3 sm:px-5 backdrop-blur-xl">
-      <div className="flex min-w-0 items-center gap-2">
-        <button type="button" aria-label={t('العودة', 'Back')} onClick={() => {
-          setFeedback('');
-          setScreen(screen === 'investigation' ? 'briefing' : screen === 'intro' ? 'intro' : 'intro');
-          if (screen === 'intro') onBack?.();
-        }} className="rounded-lg border border-amber-500/30 p-2 text-amber-200 hover:bg-amber-400/10"><ArrowRight size={17}/></button>
-        <ShieldCheck size={18} className="shrink-0 text-amber-300"/>
-        <span className="truncate font-bold text-amber-100">{screen === 'intro' ? t('من الجاني؟', 'Who Did It?') : t(labelAr, labelEn)}</span>
-      </div>
-      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-        {screen !== 'intro' && <span className="hidden rounded-full border border-amber-400/30 px-2 py-1 text-[11px] text-amber-200 sm:inline">{levelLabel(level, language)} {caseIndex + 1}/{cases.length}</span>}
-        <button type="button" onClick={() => setLanguage(l => l === 'ar' ? 'en' : 'ar')} className="min-w-[42px] rounded-lg border border-amber-400/30 px-2 py-1.5 text-xs font-bold text-amber-200" aria-label="Toggle language">{language === 'ar' ? 'EN' : 'عربي'}</button>
-        <button type="button" aria-label={t('الصوت', 'Sound')} onClick={toggleMute} className="rounded-lg border border-amber-400/30 p-2 text-amber-200">{isMuted ? <VolumeX size={17}/> : <Volume2 size={17}/>}</button>
-        <button type="button" aria-label={t('الموسيقى', 'Music')} onClick={toggleMusic} className={'rounded-lg border p-2 ' + (musicPlaying ? 'border-amber-200 bg-amber-500/20 text-amber-100' : 'border-amber-400/30 text-amber-200')}><Music2 size={17}/></button>
-      </div>
-    </header>
-  );
   const notice = feedback && <div role="status" aria-live="polite" className="mx-auto w-full max-w-4xl rounded-xl border border-amber-300/35 bg-[#0c1822]/95 px-3 py-2 text-center text-xs text-amber-100 shadow-lg sm:text-sm">{feedback}</div>;
   const primaryButton = 'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-amber-200/70 bg-gradient-to-b from-amber-500 to-amber-700 px-5 py-2.5 font-bold text-slate-950 shadow-[0_10px_30px_rgba(217,119,6,.25)] transition hover:brightness-110 focus-visible:outline focus-visible:outline-amber-200';
   const secondaryButton = 'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-[#101e29]/90 px-4 py-2.5 font-semibold text-amber-100 transition hover:bg-amber-400/15';
@@ -302,8 +284,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
   const deviceNotice = t('يُحفظ تقدمك على هذا الجهاز.', 'Progress is saved on this device.');
 
   return (
-    <main dir={language === 'ar' ? 'rtl' : 'ltr'} lang={language} className="relative flex min-h-[100dvh] w-full flex-col overflow-x-hidden bg-[#070d14] font-sans text-slate-100" style={pageStyle}>
-      <Header/>
+    <main dir={language === 'ar' ? 'rtl' : 'ltr'} lang={language} className="relative flex min-h-[100dvh] w-full flex-col overflow-hidden bg-[#070d14] font-sans text-slate-100">
       {screen === 'intro' && (
         <section className="relative flex w-full flex-1 items-center justify-center overflow-hidden bg-[#03080e]" aria-label={t('اختيار مستوى التحقيق', 'Select investigation level')}>
           <div className="relative aspect-video w-full overflow-hidden shadow-2xl" style={{ maxHeight: '100dvh', maxWidth: 'calc(100dvh * (16 / 9))' }}>
