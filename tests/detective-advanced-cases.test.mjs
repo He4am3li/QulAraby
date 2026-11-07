@@ -55,7 +55,8 @@ for (const c of cases) {
 assert.equal(portraits,106,'Exactly 106 distinct advanced portraits');
 const ui=readFileSync(join(root,'components/games/DetectiveExperience.tsx'),'utf8');
 assert(ui.includes('advancedProofsCorrect'), 'Advanced evidence proof gate missing');
-assert(ui.includes('mobileAccusationSuspects'), 'Mobile accused portraits paging missing');
-assert(ui.includes('suspectPageCount'), 'Dynamic roster support missing');
+assert(!ui.includes('mobileAccusationSuspects'), 'Do not paginate the accusation roster');
+assert(ui.includes('suspectColumns') && ui.includes('suspectRows'), 'All advanced suspects must fit into one responsive scene');
 assert(ui.includes('activeCase.suspects.length - 1'), 'Hardcoded five-innocent counter remains');
+assert(!ui.includes('suspectPage'), 'No more suspect pages or navigation arrows');
 console.log('Advanced detective: 10 scenes, 106 portraits, 40 cipher clues and 20 proof questions verified.');
