@@ -53,3 +53,23 @@ export const mapPlacementLevel = (cefr) => {
   if (level === 'B2' || level === 'C1' || level === 'C2') return 'advanced';
   return null;
 };
+
+/**
+ * Check AI-suggested mission evidence against learner speech, never tutor speech.
+ * A validated quote is evidence of a transcript phrase, not an acoustic score.
+ */
+export const validateSpeakingMissionEvidence = (history = [], objectives = [], claimed = []) => {
+  const learnerText = (Array.isArray(history) ? history : [])
+    .filter(turn => turn?.role === 'user' && typeof turn.text === 'string')
+    .map(turn => turn.text.trim())
+    .join(' ');
+  return (Array.isArray(objectives) ? objectives : []).map((goal, index) => {
+    const entry = Array.isArray(claimed) ? claimed[index] : null;
+    const evidence = typeof entry?.evidence === 'string' ? entry.evidence.trim() : '';
+    const achieved = entry?.goal === goal &&
+      evidence.length >= 4 &&
+      /[\u0621-\u064A]/u.test(evidence) &&
+      learnerText.includes(evidence);
+    return { goal, evidence: achieved ? evidence : '', achieved: Boolean(achieved) };
+  });
+};
