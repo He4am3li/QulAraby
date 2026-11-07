@@ -62,6 +62,8 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
   const [strokes, setStrokes] = useState(0);
   const [score, setScore] = useState<number | null>(null);
   const [directionScore, setDirectionScore] = useState<number | null>(null);
+  const [orderFeedback, setOrderFeedback] = useState('');
+  const [stylusTilt, setStylusTilt] = useState<number | null>(null);
   const [showMovementGuide, setShowMovementGuide] = useState(true);
   const [best, setBest] = useState<Record<string, number>>(() => {
     try {
@@ -76,6 +78,7 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
   const activePointer = useRef<number | null>(null);
   const movedRef = useRef(false);
   const recordedStrokes = useRef<Array<Array<{ x: number; y: number }>>>([]);
+  const tiltMeasurements = useRef<number[]>([]);
   const item = LETTERS[activeIndex];
 
   useEffect(() => {
@@ -105,6 +108,9 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
     activePointer.current = null;
     movedRef.current = false;
     recordedStrokes.current = [];
+    tiltMeasurements.current = [];
+    setOrderFeedback('');
+    setStylusTilt(null);
     setStrokes(0);
     setScore(null);
     setDirectionScore(null);
@@ -124,6 +130,9 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
     if (!ctx) return;
     const { x, y } = getPoint(event);
     recordedStrokes.current.push([{ x, y }]);
+    if (event.pointerType === 'pen' && (Math.abs(event.tiltX) > 1 || Math.abs(event.tiltY) > 1)) {
+      tiltMeasurements.current.push(Math.hypot(event.tiltX, event.tiltY));
+    }
     ctx.strokeStyle = '#633b19';
     ctx.fillStyle = '#633b19';
     ctx.lineWidth = 11;
@@ -145,6 +154,9 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
     const ctx = event.currentTarget.getContext('2d');
     if (!ctx) return;
     const { x, y } = getPoint(event);
+    if (event.pointerType === 'pen' && (Math.abs(event.tiltX) > 1 || Math.abs(event.tiltY) > 1)) {
+      tiltMeasurements.current.push(Math.hypot(event.tiltX, event.tiltY));
+    }
     const currentStroke = recordedStrokes.current[recordedStrokes.current.length - 1];
     if (currentStroke) {
       const previous = currentStroke[currentStroke.length - 1];
@@ -234,6 +246,32 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
     } else {
       setDirectionScore(null);
     }
+    // A beginner's ordered-stroke hint for dotted letters: first trace the
+    // large body, then add the one/two separate short dot strokes.
+    const expectedDots: Record<string, number> = { 'ب': 1, 'ن': 1, 'ي': 2 };
+    const pathLength = (points: Array<{ x: number; y: number }>) =>
+      points.reduce((sum, point, index) => index === 0
+        ? sum
+        : sum + Math.hypot(point.x - points[index - 1].x, point.y - points[index - 1].y), 0);
+    if (expectedDots[item.letter]) {
+      const lengths = recordedStrokes.current.map(pathLength);
+      const firstBody = lengths.findIndex(length => length > 50);
+      const dotsAfter = firstBody >= 0
+        ? lengths.slice(firstBody + 1).filter(length => length <= 38).length
+        : 0;
+      if (firstBody > 0) setOrderFeedback('ترتيب أولي: ابدأ بجسم الحرف قبل رسم النقاط.');
+      else if (firstBody < 0) setOrderFeedback('ارسم جسم الحرف كاملًا أولًا، ثم أضف النقاط.');
+      else if (dotsAfter < expectedDots[item.letter]) setOrderFeedback('بعد رسم جسم الحرف، جرّب إضافة النقاط بضربات قصيرة منفصلة.');
+      else setOrderFeedback('ترتيب أولي جيد: جسم الحرف ثم النقاط.');
+    } else {
+      setOrderFeedback('استمر في تتبّع حركة الحرف دون رفع القلم أكثر مما يلزم.');
+    }
+    if (tiltMeasurements.current.length > 2) {
+      const values = [...tiltMeasurements.current].sort((a, b) => a - b);
+      setStylusTilt(Math.round(values[Math.floor(values.length / 2)]));
+    } else {
+      setStylusTilt(null);
+    }
     if (estimate > (best[item.letter] || 0)) {
       const updated = { ...best, [item.letter]: estimate };
       setBest(updated);
@@ -317,6 +355,12 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
             <p className="text-xs sm:text-sm flex-1">
               تطابق تقريبي <strong className="text-[#f1d18c]">{score}%</strong>،
               {score >= 75 ? ' اقتربت من الشكل النموذجي.' : ' حاول تتبّع جسم الحرف بشكل أهدأ.'}
+              {orderFeedback && <span className="block text-[#d9c39b] mt-1">{orderFeedback}</span>}
+              {stylusTilt !== null && (
+                <span className="block text-[#d9c39b] mt-1">
+                  ميل القلم الرقمي الملتقط: {stylusTilt}°، وهو لا يساوي زاوية سنّ قلم القصب.
+                </span>
+              )}
               {directionScore !== null && (
                 <span className="block text-[#d9c39b] mt-1">
                   اتجاه الحركة الأولى: {directionScore}% تقريبًا.
@@ -341,7 +385,7 @@ const CalligraphyPracticeLab: React.FC<CalligraphyPracticeLabProps> = ({ onClose
             الحرف التالي
           </button>
         </div>
-        <p className="text-[10px] text-center text-white/50">التقييم يقارن شكل الحبر واتجاه الحركة الأولى بصورة تقريبية. لا يقيس ترتيب جميع الضربات أو زاوية القلم التقليدية، ولا يحل محل تصحيح المعلم.</p>
+        <p className="text-[10px] text-center text-white/50">التقييم يقارن شكل الحبر واتجاه الحركة الأولى، ويقدّم إرشادًا أوليًا لترتيب الجسم والنقاط. لا يقيس جميع قواعد الخط أو زاوية سنّ القصب، ولا يحل محل تصحيح المعلم.</p>
       </section>
     </div>
   );
