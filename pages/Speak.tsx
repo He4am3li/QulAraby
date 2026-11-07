@@ -131,6 +131,7 @@ export const Speak: React.FC = () => {
   
   const [isAiSpeaking, setIsAiSpeaking] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [recoveryNotice, setRecoveryNotice] = React.useState<string | null>(null);
 
   // Spelling Challenge States
   const [spellingChallenge, setSpellingChallenge] = React.useState<{ words: string[], currentIdx: number, input: string, result: 'correct' | 'incorrect' | null } | null>(null);
@@ -152,10 +153,26 @@ export const Speak: React.FC = () => {
   const sourcesRef = React.useRef<Set<AudioBufferSourceNode>>(new Set());
   const audioEpochRef = React.useRef(0);
   const mountedRef = React.useRef(false);
+  const startAttemptRef = React.useRef(0);
   const historyRef = React.useRef<ChatEntry[]>([]);
   const learnerTextRef = React.useRef('');
   const tutorTextRef = React.useRef('');
+
+  const flushPendingTranscript = React.useCallback((): ChatEntry[] => {
+    const completed = [...historyRef.current];
+    if (learnerTextRef.current.trim()) completed.push({ role: 'user', text: learnerTextRef.current.trim() });
+    if (tutorTextRef.current.trim()) completed.push({ role: 'ai', text: tutorTextRef.current.trim() });
+    historyRef.current = completed;
+    learnerTextRef.current = '';
+    tutorTextRef.current = '';
+    setConversationHistory(completed);
+    setUserTranscription('');
+    setAiTranscription('');
+    return completed;
+  }, []);
+
   const closeTransport = React.useCallback(() => {
+    startAttemptRef.current += 1;
     const active = sessionRef.current;
     sessionRef.current = null;
 
@@ -323,19 +340,24 @@ export const Speak: React.FC = () => {
     return { output: audioContextRef.current, input: inputAudioContextRef.current };
   };
 
-  const startSession = async () => {
+  const startSession = async (preserveHistory = false) => {
     if (!selectedLevel || !selectedTopic) return;
     closeTransport();
+    const attempt = startAttemptRef.current;
+    const previousTurns = preserveHistory ? [...historyRef.current].slice(-8) : [];
     setLoading(true);
     setError(null);
-    setConversationHistory([]);
-    historyRef.current = [];
-    learnerTextRef.current = '';
-    tutorTextRef.current = '';
-    setUserTranscription('');
-    setAiTranscription('');
-    setInsights(null);
-    setSavedWords([]);
+    setRecoveryNotice(null);
+    if (!preserveHistory) {
+      setConversationHistory([]);
+      historyRef.current = [];
+      learnerTextRef.current = '';
+      tutorTextRef.current = '';
+      setUserTranscription('');
+      setAiTranscription('');
+      setInsights(null);
+      setSavedWords([]);
+    }
     
     try {
       // Fetch Proactive Context
@@ -362,16 +384,17 @@ export const Speak: React.FC = () => {
       }
 
       const contexts = await initAudioContexts();
+      if (!mountedRef.current || attempt !== startAttemptRef.current) return;
       const output = contexts.output;
       const input = contexts.input;
 
       const ai = await getLiveAI();
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || attempt !== startAttemptRef.current) return;
 
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        if (!mountedRef.current) {
+        if (!mountedRef.current || attempt !== startAttemptRef.current) {
           stream.getTracks().forEach(track => track.stop());
           return;
         }
@@ -418,7 +441,7 @@ export const Speak: React.FC = () => {
         },
         callbacks: {
           onopen: () => {
-            if (sessionRef.current !== transport) return;
+            if (sessionRef.current !== transport || attempt !== startAttemptRef.current) return;
             setIsActive(true);
             setSetupMode(false);
             setLoading(false);
@@ -506,18 +529,19 @@ export const Speak: React.FC = () => {
           },
           onclose: () => {
             if (sessionRef.current !== transport) return;
+            flushPendingTranscript();
             closeTransport();
-            setSetupMode(true);
-            setError(t.genError);
+            setSetupMode(false);
+            setRecoveryNotice(lang === 'ar' ? 'انقطع الاتصال، لكن الحوار محفوظ داخل هذه الصفحة.' : 'Connection lost. Your dialogue is still available on this page.');
             setLoading(false);
           },
           onerror: (e) => {
             console.error("Live Error", e);
             if (sessionRef.current !== transport) return;
-            // Never launch another session while the old microphone is open.
+            flushPendingTranscript();
             closeTransport();
-            setSetupMode(true);
-            setError(t.genError);
+            setSetupMode(false);
+            setRecoveryNotice(lang === 'ar' ? 'تعذر استمرار الاتصال الصوتي. يمكنك استئناف الحوار أو إنهاء الجلسة.' : 'Voice connection interrupted. Reconnect or finish the session.');
             setLoading(false);
           },
         },
@@ -529,11 +553,16 @@ export const Speak: React.FC = () => {
           try { session.close(); } catch {}
           return;
         }
-        // System instructions alone do not trigger an initial Live voice turn.
-        // Begin with a short, audible question so learners are never left waiting.
+        // A new Live connection resumes the *learning context*, not the old audio stream.
+        // Only the most recent eight turns are included, and no old microphone remains active.
+        const context = previousTurns.length
+          ? '\nPrevious dialogue (context only):\n' + previousTurns
+              .map(turn => (turn.role === 'user' ? 'Learner: ' : 'Tutor: ') + turn.text.slice(0, 250))
+              .join('\n') + '\nContinue naturally without repeating the opening.'
+          : '';
         session.sendClientContent({
           turns: [{ role: 'user', parts: [{
-            text: 'Begin the tutoring session now with one short greeting and one easy question about the selected topic. This is a silent startup instruction, not something the learner said.'
+            text: 'Begin the tutoring session with one short greeting and an easy question about the selected topic. This is an internal startup instruction, not a learner utterance.' + context
           }] }],
           turnComplete: true,
         });
@@ -547,9 +576,15 @@ export const Speak: React.FC = () => {
       });
     } catch (err: any) {
       console.error("Start Error", err);
+      if (attempt !== startAttemptRef.current) return;
       closeTransport();
-      setSetupMode(true);
-      setError(t.genError);
+      if (preserveHistory) {
+        setSetupMode(false);
+        setRecoveryNotice(lang === 'ar' ? 'تعذرت إعادة الاتصال، وما زال الحوار محفوظًا.' : 'Reconnection failed. Your dialogue is still available.');
+      } else {
+        setSetupMode(true);
+        setError(t.genError);
+      }
       setLoading(false);
     }
   };
@@ -558,19 +593,8 @@ export const Speak: React.FC = () => {
     closeTransport();
     setLoading(false);
 
-    const finalHistory: ChatEntry[] = [...historyRef.current];
-    if (learnerTextRef.current.trim()) {
-      finalHistory.push({ role: 'user', text: learnerTextRef.current.trim() });
-    }
-    if (tutorTextRef.current.trim()) {
-      finalHistory.push({ role: 'ai', text: tutorTextRef.current.trim() });
-    }
-    historyRef.current = finalHistory;
-    setConversationHistory(finalHistory);
-    learnerTextRef.current = '';
-    tutorTextRef.current = '';
-    setUserTranscription('');
-    setAiTranscription('');
+    const finalHistory = flushPendingTranscript();
+    setRecoveryNotice(null);
 
     if (finalHistory.some(entry => entry.role === 'user' && entry.text.trim()) &&
         finalHistory.some(entry => entry.role === 'ai' && entry.text.trim())) {
@@ -1130,8 +1154,18 @@ export const Speak: React.FC = () => {
               )}
             </AnimatePresence>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center p-6 relative">
-              <div className="absolute top-6 flex items-center gap-2">
+            <div className="h-full min-h-0 flex flex-col items-center justify-center p-4 sm:p-6 relative">
+              {!isActive && recoveryNotice && (
+                <div className="relative z-20 w-full max-w-xl rounded-2xl border border-amber-200 bg-amber-50/95 p-4 text-center shadow-lg" role="alert">
+                  <p className="text-sm font-bold text-amber-900 arabic-font mb-3">{recoveryNotice}</p>
+                  <button onClick={() => startSession(true)} disabled={loading}
+                    className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-50">
+                    {loading ? (lang === 'ar' ? 'جارٍ الاتصال...' : 'Connecting...') : (lang === 'ar' ? 'استئناف الحوار' : 'Resume conversation')}
+                  </button>
+                  <p className="text-xs text-amber-700 mt-2">{lang === 'ar' ? 'أو أنهِ الجلسة للحصول على التقرير.' : 'Or end the session to see your report.'}</p>
+                </div>
+              )}
+              <div className="absolute top-2 sm:top-6 flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
                 <div className="text-center">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block leading-none mb-1">
