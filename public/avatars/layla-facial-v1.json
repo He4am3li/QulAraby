@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "lebanon_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/layla-stance-v1.webp",
+  "sourceSha256": "52c3d88710ded8c20f73bdb1e80013c6900926c2289de1a11c731821d082345b",
+  "pose": {
+    "bodyFacing": "right",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "left"
+  },
+  "registration": {
+    "shift": -25,
+    "shiftY": -6,
+    "scale": 0.79,
+    "offset": [
+      310,
+      0
+    ],
+    "eyes": [
+      418,
+      119,
+      120,
+      38
+    ],
+    "brows": [
+      416,
+      99,
+      124,
+      30
+    ],
+    "mouth": [
+      437,
+      176,
+      77,
+      60
+    ],
+    "mouthSampleDy": 14
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 418,
+      "y": 119,
+      "w": 120,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/layla-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 418,
+      "y": 119,
+      "w": 120,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/layla-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 418,
+      "y": 119,
+      "w": 120,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/layla-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 416,
+      "y": 99,
+      "w": 124,
+      "h": 30,
+      "visible": true,
+      "url": "/avatars/layla-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 416,
+      "y": 99,
+      "w": 124,
+      "h": 30,
+      "visible": true,
+      "url": "/avatars/layla-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 437,
+      "y": 176,
+      "w": 77,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/layla-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 437,
+      "y": 176,
+      "w": 77,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/layla-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 437,
+      "y": 176,
+      "w": 77,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/layla-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 437,
+      "y": 176,
+      "w": 77,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/layla-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 437,
+      "y": 176,
+      "w": 77,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/layla-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 437,
+      "y": 176,
+      "w": 77,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/layla-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}
