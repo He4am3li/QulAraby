@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Check, Phone, PhoneCall, PhoneOff, Mic, MicOff, RotateCcw, Headphones, Volume2, BookOpen, ArrowUpRight, Signal, CircleHelp, Disc3 } from 'lucide-react';
 import './SpeakingCallBooth.css';
+import './SpeakingRotaryPhone.css';
 
 export const CALL_CONTACTS = [
   {
