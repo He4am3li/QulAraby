@@ -17,13 +17,15 @@ import {
   Grid3X3,
   Ruler,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  GraduationCap
 } from 'lucide-react';
 import { CalligraphyToolFigure } from './CalligraphyToolFigure';
 import { CalligraphyHeaderBanner } from './CalligraphyHeaderBanner';
 import { CalligraphyPenNibId, getCalligraphyPenDynamics } from './calligraphyStudioData';
 import { CalligraphyOrnaments, ORNAMENT_OPTIONS, OrnamentStyleId } from './CalligraphyOrnaments';
 import { CalligraphyStudioTray } from './CalligraphyStudioTray';
+const CalligraphyPracticeLab = React.lazy(() => import('./CalligraphyPracticeLab'));
 import { SavedCalligraphyCard, loadCalligraphyCards, persistCalligraphyCards, MAX_SAVED_CALLIGRAPHY_CARDS } from './calligraphyPersistence';
 
 interface CalligraphyCardStudioProps {
@@ -685,6 +687,7 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [showSavedCardsModal, setShowSavedCardsModal] = useState(false);
   const [showExportFlyout, setShowExportFlyout] = useState(false);
+  const [showPracticeLab, setShowPracticeLab] = useState(false);
   const [saveSuccessToast, setSaveSuccessToast] = useState(false);
   const [savedCards, setSavedCards] = useState<SavedCalligraphyCard[]>([]);
 
@@ -1342,6 +1345,11 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
           >
             {/* Compact editing aids, never included in exported artwork. */}
             <div className="absolute top-2 left-2 z-30 flex items-center gap-1 rounded-xl bg-[#141820]/85 backdrop-blur-md border border-[#a68038]/30 p-1 shadow-lg">
+              <button type="button" title="تدرّب على رسم الحروف بالإصبع أو القلم" aria-label="بدء تدريب الخط العربي"
+                onClick={() => setShowPracticeLab(true)}
+                className="flex items-center gap-1 px-1.5 py-1.5 rounded-lg bg-[#c7a76d]/20 text-[#f3cf7a] hover:bg-[#c7a76d]/30 text-[10px] font-bold">
+                <GraduationCap size={15} /><span>تدرّب</span>
+              </button>
               <button type="button" title="إظهار أو إخفاء شبكة القياس" aria-label="شبكة القياس"
                 aria-pressed={showGrid} onClick={() => setShowGrid(value => !value)}
                 className={`p-1.5 rounded-lg ${showGrid ? 'text-[#f3cf7a] bg-white/15' : 'text-[#b8b0a2] hover:text-white'}`}>
@@ -2371,6 +2379,13 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
         </div>
       )}
 
+
+      {/* Standalone guided pen practice, loaded only when opened. */}
+      {showPracticeLab && (
+        <React.Suspense fallback={<div className="fixed inset-0 z-[100] bg-[#111820] flex items-center justify-center text-white">جاري فتح التدريب...</div>}>
+          <CalligraphyPracticeLab onClose={() => setShowPracticeLab(false)} />
+        </React.Suspense>
+      )}
 
       {/* 5. FULLSCREEN PREVIEW MODAL */}
       {isPreviewMode && (
