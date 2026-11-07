@@ -122,7 +122,7 @@ interface CallBoothProps {
   meterRef: React.RefObject<HTMLDivElement | null>;
 }
 
-const DIGITS = ['1','2','3','4','5','6','7','8','9','*','0','#'];
+const DIGITS = ['1','2','3','4','5','6','7','8','9','0'];
 
 export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
   lang, contact, level, isActive, loading, isAiSpeaking, micMuted, recoveryNotice,
@@ -130,6 +130,9 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
 }) => {
   const reducedMotion = useReducedMotion();
   const [dialed, setDialed] = React.useState('');
+  const [rotaryTick, setRotaryTick] = React.useState(0);
+  const [rotaryNumber, setRotaryNumber] = React.useState('1');
+  const presetNumberRef = React.useRef(true);
   const [dialError, setDialError] = React.useState('');
   const [showScript, setShowScript] = React.useState(false);
   const [hasInteracted, setHasInteracted] = React.useState(false);
@@ -146,6 +149,7 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
   ];
   React.useEffect(() => {
     setDialed(contact.extension);
+    presetNumberRef.current = true;
     setDialError('');
     setHasInteracted(false);
     setShowScript(false);
@@ -206,14 +210,19 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
     if (sessionLive) return;
     setDialError('');
     beep(key === '*' ? 350 : key === '#' ? 670 : 370 + Number(key) * 55);
-    if (key === '*') { setDialed(''); return; }
+    if (key === '*') { presetNumberRef.current = false; setDialed(''); return; }
     if (key === '#') {
       const match = CALL_CONTACTS.find(entry => entry.extension === dialed);
       if (match) { onSelectContact(match.id); setDialed(match.extension); }
       else setDialError(isArabic ? 'هذا الرقم غير موجود في الدليل.' : 'This extension is not in the directory.');
       return;
     }
-    setDialed(current => (current + key).slice(-3));
+    if (presetNumberRef.current) {
+      presetNumberRef.current = false;
+      setDialed(key);
+    } else {
+      setDialed(current => (current + key).slice(-3));
+    }
   };
   const beginCall = () => {
     if (sessionLive) return;
@@ -271,66 +280,92 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
       <div className="qul-call-stage">
         <div className="qul-call-device-area">
           <div className="qul-call-floor-light" aria-hidden="true" />
-          <div className="qul-call-cabinet">
-            <div className="qul-call-cabinet-rails" aria-hidden="true" />
-            <div className="qul-call-plate-top">
-              <span>QUL · 1968</span><span className="qul-call-metal-dot" /><span>PRIVATE LANGUAGE EXCHANGE</span>
-            </div>
-            <motion.div
-              className={'qul-call-handset ' + (sessionLive ? 'lifted' : '')}
+          <div className="qul-phone-shell">
+            <div className="qul-phone-crown" aria-hidden="true"/>
+            <div className="qul-phone-rest" aria-hidden="true"><i/><i/></div>
+            <motion.button type="button"
+              className="qul-phone-receiver" aria-label={sessionLive ? (isArabic ? 'إغلاق السماعة وإنهاء المكالمة' : 'Hang up the receiver') : (isArabic ? 'رفع السماعة للاتصال' : 'Pick up the receiver to call')}
+              title={sessionLive ? (isArabic ? 'إنهاء المكالمة' : 'Hang up') : (isArabic ? 'ارفع السماعة' : 'Pick up')}
+              disabled={loading}
+              onClick={sessionLive ? endCall : beginCall}
               animate={sessionLive
-                ? reducedMotion
-                  ? { y: -43, rotate: -6, x: -11 }
-                  : { y: [0, -15, -61, -43], x: [0, -3, -19, -11], rotate: [0, 6, -13, -6], rotateY: [0, -6, -16, -8] }
-                : { y: 0, rotate: 0, x: 0, rotateY: 0 }}
-              transition={reducedMotion
-                ? { duration: 0 }
-                : sessionLive
-                  ? { duration: 1.04, times: [0, 0.18, 0.69, 1], ease: 'easeInOut' }
-                  : { type: 'spring', mass: 0.9, stiffness: 170, damping: 16 }}
-              aria-hidden="true">
-              <div className="qul-call-ear"><span>••••</span></div>
-              <div className="qul-call-handle"><div className="qul-call-handle-band" /></div>
-              <div className="qul-call-ear"><span>••••</span></div>
-            </motion.div>
-            <div className="qul-call-rest" aria-hidden="true"><i /><i /></div>
-
-            <div className="qul-call-console">
-              <div className="qul-call-console-led">
-                <span className={'qul-call-led ' + (isActive ? 'is-on' : loading ? 'is-ringing' : '')} />
-                <span>LIVE LINE</span>
-                <span>{level.toUpperCase()}</span>
+                ? reducedMotion ? { y: -56, x: -17, rotate: -8 }
+                  : { y: [0, -18, -69, -56], x: [0, -5, -24, -17], rotate: [0, 5, -12, -8] }
+                : { y: 0, x: 0, rotate: 0 }}
+              transition={reducedMotion ? { duration: 0 } : { duration: 0.95, ease: 'easeInOut' }}>
+              <span className="qul-phone-earpiece qul-phone-earpiece-left"><i/></span>
+              <span className="qul-phone-grip"><i/><i/><i/></span>
+              <span className="qul-phone-earpiece qul-phone-earpiece-right"><i/></span>
+            </motion.button>
+            <div className="qul-phone-bakelite">
+              <div className="qul-phone-maker-plate" dir="ltr">
+                <span>QUL</span>
+                <strong>TELEPHONE</strong>
+                <small>NO. 01 / ARABIC EXCHANGE</small>
               </div>
-              <div className="qul-call-screen">
-                <span className="qul-call-screen-label">{isArabic ? 'الجهة المحددة' : 'SELECTED CONTACT'}</span>
-                <strong className="qul-call-screen-name">{isArabic ? contact.ar : contact.en}</strong>
-                <div className="qul-call-screen-extension" dir="ltr">
-                  <span>EXT</span>
+              <div className="qul-phone-number-plate" dir="ltr">
+                <div className="qul-phone-contact-label">{isArabic ? contact.ar : contact.en}</div>
+                <div className="qul-phone-number-line">
+                  <span>EXT.</span>
                   <strong>{dialed || '···'}</strong>
-                  <span className={isActive ? 'qul-call-screen-signal live' : 'qul-call-screen-signal'}><Signal size={17}/></span>
+                  <i className={isActive ? 'qul-phone-line-bulb on' : loading ? 'qul-phone-line-bulb ringing' : 'qul-phone-line-bulb'} />
                 </div>
-                <div className="qul-call-screen-status" aria-live="polite">{dialError || stateText}</div>
               </div>
 
-              <div className="qul-call-keypad" dir="ltr">
-                {DIGITS.map(key => (
-                  <button type="button" key={key} className="qul-call-key" disabled={sessionLive}
-                    onClick={() => dialKey(key)} aria-label={key === '*' ? (isArabic ? 'مسح الرقم' : 'Clear') : key === '#' ? (isArabic ? 'اختيار الرقم' : 'Select extension') : key}>
-                    <span>{key}</span>
-                    <small>{key === '*' ? 'CLEAR' : key === '#' ? 'ENTER' : key === '0' ? 'OPER' : ''}</small>
-                  </button>
-                ))}
+              <div className="qul-phone-rotary-pocket">
+                <div className="qul-phone-dial-rim" />
+                <motion.div className="qul-phone-rotary-wheel" key={rotaryTick}
+                  initial={{ rotate: 0 }}
+                  animate={rotaryTick === 0 || reducedMotion ? { rotate: 0 } : {
+                    rotate: [0, (rotaryNumber === '0' ? 10 : Number(rotaryNumber)) * 16, 0]
+                  }}
+                  transition={{ duration: reducedMotion ? 0 : 0.64, ease: ['easeOut', 'easeIn'] }}>
+                  <div className="qul-phone-rotary-engraving" aria-hidden="true"/>
+                  <div className="qul-phone-dial-center" aria-hidden="true">
+                    <span className="qul-phone-dial-center-logo">قُل</span>
+                    <small>QUL • 1968</small>
+                  </div>
+                  {DIGITS.map((digit, index) => {
+                    const radians = (-64 + index * 36) * Math.PI / 180;
+                    const left = 50 + 36.2 * Math.cos(radians);
+                    const top = 50 + 36.2 * Math.sin(radians);
+                    return (
+                      <button key={digit} type="button" className="qul-phone-dial-hole"
+                        style={{ left: left + '%', top: top + '%' }}
+                        disabled={sessionLive}
+                        aria-label={(isArabic ? 'الرقم ' : 'Digit ') + digit}
+                        onClick={() => {
+                          setRotaryNumber(digit);
+                          setRotaryTick(value => value + 1);
+                          dialKey(digit);
+                        }}>
+                        <span>{digit}</span>
+                      </button>
+                    );
+                  })}
+                </motion.div>
+                <div className="qul-phone-finger-stop" aria-hidden="true"><i/></div>
               </div>
-              <div className="qul-call-device-controls">
-                <button type="button" className="qul-call-connect" onClick={beginCall} disabled={sessionLive} aria-label={isArabic ? 'إجراء الاتصال' : 'Place call'}>
-                  <PhoneCall size={21} /> <span>{isArabic ? 'اتصال' : 'CALL'}</span>
-                </button>
-                <button type="button" className="qul-call-end" onClick={endCall} disabled={!isActive && !loading && !recoveryNotice} aria-label={isArabic ? 'إنهاء المكالمة' : 'End call'}>
-                  <PhoneOff size={21} /> <span>{isArabic ? 'إنهاء' : 'END'}</span>
+              <div className="qul-phone-instructions" aria-live="polite">
+                <span className="qul-phone-small-status">{dialError || stateText}</span>
+                <button type="button" onClick={() => dialKey('*')} disabled={sessionLive}
+                  className="qul-phone-clear" aria-label={isArabic ? 'مسح الرقم' : 'Clear number'}>
+                  {isArabic ? 'مسح الرقم' : 'CLEAR'}
                 </button>
               </div>
+              <div className="qul-phone-action-row">
+                <button type="button" className="qul-phone-physical-call" onClick={beginCall} disabled={sessionLive}>
+                  <PhoneCall size={19}/>{isArabic ? 'رفع السماعة' : 'CALL'}
+                </button>
+                <button type="button" className="qul-phone-physical-stop" onClick={endCall}
+                  disabled={!isActive && !loading && !recoveryNotice}>
+                  <PhoneOff size={18}/>{isArabic ? 'إنهاء' : 'END'}
+                </button>
+              </div>
+              <div className="qul-phone-footmark" dir="ltr">BAKELITE • MECHANICAL DIAL • VOICE LINE</div>
             </div>
-            <div className="qul-call-device-bottom"><span>VOICE STUDIO</span><span>MADE FOR SPEAKING</span></div>
+            <div className="qul-phone-foot qul-phone-foot-left" aria-hidden="true"/>
+            <div className="qul-phone-foot qul-phone-foot-right" aria-hidden="true"/>
           </div>
           <div className="qul-call-cord" aria-hidden="true"><svg viewBox="0 0 160 100" preserveAspectRatio="none"><path d="M5 4 C5 30 45 24 45 49 S81 78 86 41 S137 14 155 86" /></svg></div>
         </div>
