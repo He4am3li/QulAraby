@@ -662,7 +662,12 @@ export const Speak: React.FC = () => {
       setShowSummary(true);
       setGeneratingInsights(true);
       try {
-        const data = await generateSessionInsights(finalHistory, activeTopic.ar);
+        const data = await generateSessionInsights(finalHistory, activeTopic.ar,
+          speakingBranch === 'booth' ? {
+            objectivesAr: selectedCallContact.objectivesAr,
+            aimAr: selectedCallContact.aimAr,
+          } : undefined
+        );
         setInsights(data);
 
         // Sync to Knowledge Graph (Mistakes & Interests)
@@ -1128,6 +1133,25 @@ export const Speak: React.FC = () => {
                               </p>
                             )}
                           </div>
+                          {speakingBranch === 'booth' && Array.isArray(insights.missionEvidence) && (
+                            <div className="rounded-3xl border border-amber-200 bg-amber-50/60 p-5 space-y-3">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="font-black text-sm text-amber-950">{lang === 'ar' ? 'تذكرة إنجاز المكالمة' : 'Call mission receipt'}</p>
+                                <strong className="font-mono text-amber-900" dir="ltr">{insights.missionEvidence.filter((goal: any) => goal.achieved).length} / {selectedCallContact.objectivesAr.length}</strong>
+                              </div>
+                              <p className="text-xs text-amber-900">{lang === 'ar'
+                                ? 'يُحتسب الهدف إذا ظهرت عبارة عربية داعمة له في كلام الطالب المسجل، وقد يخطئ التفريغ الصوتي.'
+                                : 'Goals count only with supporting Arabic words from the learner transcript. Recognition may be imperfect.'}</p>
+                              <div className="space-y-2">
+                                {insights.missionEvidence.map((goal: any, index: number) => (
+                                  <div className="flex items-center gap-2 text-sm" key={index}>
+                                    {goal.achieved ? <CheckCircle2 size={17} className="text-emerald-600"/> : <span className="w-4 h-4 rounded-full border border-amber-500 shrink-0" />}
+                                    <span className="font-bold text-slate-800 arabic-font">{lang === 'ar' ? goal.goal : selectedCallContact.objectivesEn[index]}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                           {/* Bilingual Tutor Tip UI */}
                           <div className="bg-gradient-to-br from-[#2563eb] to-[#059669] p-6 rounded-[2rem] text-white shadow-xl shadow-blue-200 relative overflow-hidden group">
                              <Lightbulb className="absolute top-4 left-4 opacity-20 group-hover:scale-110 transition-transform" size={80} />
@@ -1241,6 +1265,8 @@ export const Speak: React.FC = () => {
               history={conversationHistory}
               learnerText={userTranscription}
               tutorText={aiTranscription}
+              missionEvidence={insights?.missionEvidence}
+              assessmentStatus={insights?.assessmentStatus}
               onSelectContact={(id) => {
                 if (isActive || loading) return;
                 const contact = CALL_CONTACTS.find(item => item.id === id);
