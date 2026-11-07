@@ -1228,7 +1228,32 @@ export const Speak: React.FC = () => {
             </div>
           )}
 
-          {setupMode ? (
+          {speakingBranch === 'booth' ? (
+            <SpeakingCallBooth
+              lang={lang}
+              contact={selectedCallContact}
+              level={selectedLevel?.en || 'Beginner'}
+              isActive={isActive}
+              loading={loading}
+              isAiSpeaking={isAiSpeaking}
+              micMuted={micMuted}
+              recoveryNotice={recoveryNotice || error}
+              history={conversationHistory}
+              learnerText={userTranscription}
+              tutorText={aiTranscription}
+              onSelectContact={(id) => {
+                if (isActive || loading) return;
+                const contact = CALL_CONTACTS.find(item => item.id === id);
+                if (contact) { setSelectedCallContact(contact); setRecoveryNotice(null); setError(null); }
+              }}
+              onShowDirectory={() => setShowMobileOptions(true)}
+              onStart={() => startSession()}
+              onStop={() => stopSession()}
+              onResume={() => startSession(true)}
+              onToggleMic={toggleMicrophone}
+              meterRef={phoneMeterRef}
+            />
+          ) : setupMode ? (
             <AnimatePresence mode="wait">
               {!selectedLevel ? (
                 <motion.div 
