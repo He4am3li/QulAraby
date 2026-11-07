@@ -108,3 +108,14 @@
 @media (max-width:630px){.qul-call-world{padding:10px}.qul-call-heading h2{font-size:19px}.qul-call-heading p{font-size:10px}.qul-call-online{padding:7px}.qul-call-online strong{font-size:9px}.qul-call-stage{gap:5px}.qul-call-device-area{height:405px}.qul-call-cabinet{transform:scale(.72);margin:-60px 0}.qul-call-mission-area{grid-template-columns:1fr}.qul-call-ticket-content{padding:10px 13px}.qul-call-ticket-rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.qul-call-rule{border:0;align-items:flex-start;font-size:9px}.qul-call-rule p{font-size:10px}.qul-call-ticket-foot{display:none}.qul-call-log-list{max-height:130px}.qul-call-bottom-line span:first-child{display:none}}
 @media (max-height:690px) and (max-width:630px){.qul-call-device-area{height:350px}.qul-call-cabinet{transform:scale(.63);margin:-80px 0}.qul-call-ticket-content>p{margin-bottom:3px}.qul-call-ticket-rules{display:none}}
 @media (prefers-reduced-motion:reduce){.qul-call-led.is-ringing{animation:none}.qul-call-world *, .qul-call-world *:before, .qul-call-world *:after{scroll-behavior:auto!important;transition-duration:0.01ms!important;animation-duration:0.01ms!important}}
+
+.qul-call-heading-actions{display:flex;align-items:center;gap:8px}
+.qul-call-directory-mobile{display:none;align-items:center;gap:5px;border:1px solid #e1c69a60;border-radius:9px;padding:7px 9px;background:#1c3544;color:#f8ddb4;font-size:10px;font-weight:800}
+.qul-call-directory-mobile:disabled{opacity:.4}
+.qul-call-rule.verified span{color:#247656}
+.qul-call-rule.verified p{color:#1a704f}
+.qul-call-ticket-result{margin-top:7px;border:1px solid #a6a08860;border-radius:9px;background:#ffffff5e;display:flex;align-items:center;justify-content:space-between;padding:7px 9px;font-size:10px;font-weight:800;color:#5e604e;gap:6px}
+.qul-call-ticket-result strong{font:900 15px ui-monospace,monospace}
+.qul-call-ticket-result.is-complete{border-color:#72ad8c;background:#e0f0e3;color:#1c6741}
+@media(max-width:1023px){.qul-call-directory-mobile{display:flex}}
+@media(max-width:600px){.qul-call-heading-actions{gap:4px}.qul-call-directory-mobile{padding:6px;font-size:9px}.qul-call-online{padding:6px}.qul-call-online strong{font-size:8px}.qul-call-ticket-result{font-size:9px}}
