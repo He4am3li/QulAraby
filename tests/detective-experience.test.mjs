@@ -70,7 +70,10 @@ assert(view.includes('rounded-b-[3px]'), 'Each portrait must have a separate gol
 assert(view.includes('suspectRows'), '10 to 12 suspects must fit into two rows');
 assert(!view.includes("import confetti"), 'Celebration particle library should not be used');
 assert(!view.includes('confetti('), 'No particles should be fired after solving');
-assert(view.includes("top: '31.1%'") && view.includes("height: '21.9%'"), 'Cipher must stay inside the original yellow parchment');
+assert(view.includes("left: '6.9%'") && view.includes("top: '30.6%'") && view.includes("width: '27.9%'") && view.includes("height: '22.1%'"), 'Cipher must be centered on the actual printed parchment');
+assert(view.includes('grid-cols-3 items-stretch'), 'Use three compact evidence tags, not full-width answer bars');
+assert(!view.includes('grid-rows-3 gap-[2px]'), 'Do not restore primitive full-width stacked answers');
 assert(view.includes('getAdvancedPosterPortraitStyle(activeCase.caseNumber, suspectIndex'), 'Use source poster crops, not misaligned thumbnail enlargements');
+assert(view.includes("portraitCrop={level === 'advanced'"), 'Accusation grid must share unique suspect photos too');
 assert(view.includes('Hide the six obsolete blank frames'), 'Old ghost portrait placeholders must be covered');
 console.log('Detective experience: case-specific buttons, centered parchment, accurate image crops and quiet ending verified.');

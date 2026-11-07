@@ -397,18 +397,39 @@ export const ADVANCED_PORTRAIT_STRIPS: Record<number, PosterPhotoStrip> = {
   }
 };
 
+// A few AI-generated source posters reuse the same face in two different
+// suspect slots. Use a distinct, already approved matching-person portrait
+// from another case instead of displaying the same person twice in a dossier.
+// Keys = target case/slot, values = unique source case/slot.
+export const DISTINCT_ADVANCED_PORTRAIT_OVERRIDES: Record<string, [number, number]> = {
+  '3:6': [5, 9],   // هاني, repeated Asian portrait in original case 3
+  '3:10': [9, 3],  // منصور, too similar to the adjacent senior suspect
+  '6:9': [9, 8],   // هارون, correct a reused female face with a male portrait
+  '7:4': [2, 3],   // سليم, original duplicates كمال
+  '7:10': [2, 8],  // منى, distinguish from the first suspect
+  '8:4': [2, 8],   // منى, original repeats the same man as راهول
+  '9:6': [5, 6],   // ليلى, distinguish two nearly identical dark-haired photos
+  '10:5': [2, 3],  // إبراهيم, original repeats the beanie-clad man
+  '10:6': [2, 4],  // سلمى, distinguish from رقية
+};
+
 /** Background-size/position crop the exact person's original photo without cropping another person. */
 export function getAdvancedPosterPortraitStyle(caseNumber: number, suspectIndex: number, sceneImage: string): CSSProperties | null {
- const strip = ADVANCED_PORTRAIT_STRIPS[caseNumber];
+ const alternative = DISTINCT_ADVANCED_PORTRAIT_OVERRIDES[`${caseNumber}:${suspectIndex}`];
+ const sourceCase = alternative ? alternative[0] : caseNumber;
+ const sourceSlot = alternative ? alternative[1] : suspectIndex;
+ const strip = ADVANCED_PORTRAIT_STRIPS[sourceCase];
  if (!strip) return null;
- const row = suspectIndex < strip.rows[0].length ? 0 : 1;
- const column = row === 0 ? suspectIndex : suspectIndex - strip.rows[0].length;
+ const row = sourceSlot < strip.rows[0].length ? 0 : 1;
+ const column = row === 0 ? sourceSlot : sourceSlot - strip.rows[0].length;
  const x0 = strip.rows[row]?.[column];
  if (x0 === undefined) return null;
  const x = x0 + 4, y = strip.y[row] + 5, w = strip.w - 6, h = strip.h - 5;
  const fullWidth = 2048, fullHeight = 1152;
  return {
-   backgroundImage: sceneImage,
+   backgroundImage: alternative
+     ? `url("/detective/advanced/scene-${String(sourceCase).padStart(2, '0')}.webp")`
+     : sceneImage,
    backgroundRepeat: 'no-repeat',
    backgroundSize: (fullWidth / w * 100) + '% ' + (fullHeight / h * 100) + '%',
    backgroundPosition: (x / (fullWidth - w) * 100) + '% ' + (y / (fullHeight - h) * 100) + '%',
