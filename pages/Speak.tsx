@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PageHeader } from '../components/PageHeader';
 import { StudioMicIcon } from '../components/StudioMicIcon';
 import { SpeakingCallBooth, CALL_CONTACTS } from '../components/SpeakingCallBooth';
+import '../components/vocabulary-word-gallery.css';
 import { FallingLetters } from '../components/Layout';
 import { Modality, Type } from '@google/genai';
 import { getAI, getLiveAI, generateSessionInsights, translateAndExpand, generateSpeech, decodeAudioData, speak as globalSpeak } from '../services/gemini';
@@ -993,33 +994,46 @@ export const Speak: React.FC = () => {
         <aside className={`${showMobileOptions && (speakingBranch === 'booth' || setupMode) ? 'flex' : 'hidden'} lg:flex w-full lg:w-[280px] flex-1 lg:flex-none min-h-0 bg-white border-b lg:border-b-0 lg:border-r rtl:lg:border-r-0 rtl:lg:border-l border-slate-100 flex-col shrink-0 no-print relative overflow-hidden shadow-sm`}>
             <div className="p-4 sm:p-6 border-b border-slate-50 overflow-y-auto custom-scroll flex-1 min-h-0">
                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{lang === 'ar' ? 'أقسام التحدث' : 'Speaking sections'}</h3>
-                <div className="space-y-2 mb-5">
-                  <button type="button" disabled={isActive || loading}
-                    onClick={() => {
-                      if (speakingBranch !== 'booth') chooseCallContact(selectedCallContact);
-                      setSpeakingBranch('booth');
-                      setShowSummary(false);
-                      setShowMobileOptions(false);
-                    }}
-                    className={`w-full flex gap-3 items-center rounded-2xl border-2 p-3 transition-all disabled:opacity-40 ${speakingBranch === 'booth' ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-white border-slate-100 text-slate-500 hover:border-amber-200'}`}>
-                    <span className="flex items-center justify-center h-11 w-11 rounded-xl bg-slate-900 text-amber-200"><Phone size={23} /></span>
-                    <span className="flex-1 text-right">
-                      <strong className="block text-sm arabic-font">{lang === 'ar' ? 'كابينة الاتصال' : 'The Call Booth'}</strong>
-                      <small className="block text-[10px] opacity-60">THE CALL BOOTH</small>
-                    </span>
-                    <ChevronRight size={16} className="opacity-40"/>
-                  </button>
-                  <button type="button" disabled={isActive || loading}
-                    onClick={() => { setSpeakingBranch('studio'); setSetupMode(true); setShowSummary(false); setShowMobileOptions(!selectedTopic); }}
-                    className={`w-full flex gap-3 items-center rounded-2xl border-2 p-3 transition-all disabled:opacity-40 ${speakingBranch === 'studio' ? 'bg-blue-50 border-blue-300 text-blue-900' : 'bg-white border-slate-100 text-slate-500 hover:border-blue-200'}`}>
-                    <span className="flex items-center justify-center h-11 w-11 rounded-xl bg-slate-100 text-blue-700"><StudioMicIcon size={24} /></span>
-                    <span className="flex-1 text-right">
-                      <strong className="block text-sm arabic-font">{lang === 'ar' ? 'المحادثة الحرة' : 'Free Conversation'}</strong>
-                      <small className="block text-[10px] opacity-60">FREE SPEAKING STUDIO</small>
-                    </span>
-                    <ChevronRight size={16} className="opacity-40"/>
-                  </button>
-                </div>
+                <nav className="space-y-2 mb-5" aria-label={lang === 'ar' ? 'فروع التحدث' : 'Speaking sections'}>
+                  {([
+                    { id: 'booth' as const, icon: <Phone size={20} />, title: lang === 'ar' ? 'كابينة الاتصال' : 'The Call Booth',
+                      sub: lang === 'ar' ? '١٠ جهات اتصال' : '10 CONTACTS' },
+                    { id: 'studio' as const, icon: <StudioMicIcon size={22} />, title: lang === 'ar' ? 'المحادثة الحرة' : 'Free Conversation',
+                      sub: lang === 'ar' ? 'تحدث بحرية' : 'FREE SPEAKING' },
+                  ]).map(branch => (
+                    <button
+                      type="button"
+                      key={branch.id}
+                      disabled={isActive || loading}
+                      onClick={() => {
+                        if (branch.id === 'booth') {
+                          if (speakingBranch !== 'booth') chooseCallContact(selectedCallContact);
+                          setSpeakingBranch('booth');
+                          setShowSummary(false);
+                          setShowMobileOptions(false);
+                        } else {
+                          setSpeakingBranch('studio');
+                          setSetupMode(true);
+                          setShowSummary(false);
+                          setShowMobileOptions(!selectedTopic);
+                        }
+                      }}
+                      aria-current={speakingBranch === branch.id ? 'page' : undefined}
+                      aria-pressed={speakingBranch === branch.id}
+                      aria-label={branch.title}
+                      className={`qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all disabled:opacity-40 disabled:cursor-not-allowed ${speakingBranch === branch.id ? 'qul-word-gallery-item-active' : ''}`}
+                    >
+                      <div className="qul-word-gallery-tile h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600">
+                        {branch.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-black arabic-font text-slate-800 truncate">{branch.title}</div>
+                        <div className="text-[10px] text-slate-500 truncate" dir={lang === 'ar' ? 'rtl' : 'ltr'}>{branch.sub}</div>
+                      </div>
+                      <span className={`h-2 w-2 rounded-full shrink-0 ${speakingBranch === branch.id ? 'bg-emerald-500' : 'bg-slate-300'}`} aria-hidden="true" />
+                    </button>
+                  ))}
+                </nav>
 
                 {speakingBranch === 'booth' && (
                   <div className="space-y-2.5">
