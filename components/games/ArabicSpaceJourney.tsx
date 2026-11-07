@@ -5160,91 +5160,65 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                 </div>
               )}
 
-              {/* HOLOGRAPHIC MISSION TRANSMISSION (Opens bottom-to-top, types character-by-character, closes top-to-bottom) */}
+              {/* Laser-blue hologram transmission. No AI-style badges, icons or emoji. */}
               {(descentPhase === "transmission_active" || descentPhase === "transmission_fading") && (
-                <div 
-                  className="absolute top-12 md:top-16 left-1/2 -translate-x-1/2 z-40 w-full max-w-lg px-4 pointer-events-auto"
+                <div
+                  data-space-screen="laser-hologram-mission"
+                  className="pointer-events-auto absolute left-1/2 top-[clamp(3rem,8vh,5rem)] z-40 w-[min(92vw,610px)] -translate-x-1/2"
                   style={{
                     animation: descentPhase === "transmission_fading"
-                      ? "hologramCloseToBottom 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards"
-                      : "hologramOpenFromBottom 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards"
+                      ? "hologramCloseToBottom 0.55s cubic-bezier(0.4,0,0.2,1) forwards"
+                      : "hologramOpenFromBottom 0.6s cubic-bezier(0.16,1,0.3,1) forwards"
                   }}
                 >
-                  <div 
-                    className="relative w-full rounded-2xl p-5 md:p-6 backdrop-blur-xl flex flex-col items-center text-center border-2 shadow-[0_0_50px_rgba(34,211,238,0.35)] overflow-hidden"
-                    style={{
-                      background: "linear-gradient(135deg, rgba(3, 15, 28, 0.96) 0%, rgba(6, 24, 40, 0.94) 100%)",
-                      borderColor: currentPlanetAtmosphere.accentBorder
-                    }}
-                  >
-                    {/* Futuristic Scanning Laser Bar (Rises on open, sinks on close) */}
-                    <div 
-                      className="absolute left-0 right-0 h-1 bg-cyan-300 shadow-[0_0_15px_#22d3ee,0_0_30px_#22d3ee] pointer-events-none z-20"
+                  <SpaceLaserGlass variant="mission" aria-label="شاشة المهمة الهولوغرامية"
+                    className="w-full px-5 py-5 sm:px-8 sm:py-7">
+                    <div aria-hidden="true"
+                      className="pointer-events-none absolute left-3 right-3 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#b1f4ff] to-transparent"
                       style={{
                         animation: descentPhase === "transmission_fading"
                           ? "scanlineBeamSink 0.55s ease-in forwards"
-                          : "scanlineBeamRise 0.6s ease-out forwards"
-                      }}
-                    />
-
-                    {/* Hologram Digital Grid Overlay */}
-                    <div 
-                      className="absolute inset-0 pointer-events-none opacity-15"
-                      style={{
-                        backgroundImage: "repeating-linear-gradient(0deg, rgba(34,211,238,0.25) 0px, transparent 2px, transparent 4px)"
-                      }}
-                    />
-
-                    {/* Sleek Cyber Hologram Header */}
-                    <div className="flex items-center justify-between w-full mb-3 px-3.5 py-1.5 rounded-xl bg-cyan-950/80 border border-cyan-400/50 text-cyan-200 text-xs font-bold">
-                      <div className="flex items-center gap-2">
-                        <Sparkles size={14} className="text-cyan-300 animate-spin" style={{ animationDuration: "8s" }} />
-                        <span className="font-black text-white text-sm">{currentPlanetAtmosphere.name}</span>
-                        <span className="text-[11px] text-cyan-300/80">• الهدف المداري</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-[10px] text-emerald-300 font-mono">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                        <span>LIVE HUD</span>
-                      </div>
-                    </div>
-
-                    {/* Punchy, Direct Mission Directive */}
-                    <div className="my-2.5 px-3 flex items-center justify-center min-h-[46px]">
-                      <h3 className="text-lg md:text-xl font-black text-white leading-relaxed drop-shadow-[0_0_20px_rgba(34,211,238,0.7)] flex items-center justify-center flex-wrap gap-1.5">
-                        <span className="bg-gradient-to-r from-white via-cyan-100 to-cyan-300 bg-clip-text text-transparent">
-                          {typedDistressText || currentPlanetAtmosphere.distressMessage}
+                          : "scanlineBeamRise 0.6s ease-out forwards",
+                        boxShadow:"0 0 16px rgba(73,202,255,.85)"
+                      }}/>
+                    <header className="relative mb-4 flex items-start justify-between gap-4 border-b border-[#9bdcff]/25 pb-3">
+                      <div className="text-right">
+                        <span className="block text-[10px] font-semibold tracking-[.12em] text-[#83d9fa]">
+                          إشارة المهمة
                         </span>
-                        {!isTypingComplete && (
-                          <span className="inline-block w-2 h-5 bg-cyan-400 shadow-[0_0_10px_#22d3ee] animate-pulse" />
-                        )}
-                      </h3>
+                        <h2 className="mt-1 text-base font-bold text-[#e5faff] sm:text-lg">
+                          {currentPlanetAtmosphere.name}
+                        </h2>
+                      </div>
+                      <div aria-hidden="true" className="mt-1 flex items-center gap-1.5">
+                        <span className="h-[2px] w-5 bg-[#5ccdf5]/60"/>
+                        <span className="h-[2px] w-8 bg-[#a0edff]/90"/>
+                        <span className="h-[2px] w-3 bg-[#5ccdf5]/45"/>
+                      </div>
+                    </header>
+                    <div className="flex min-h-[86px] items-center justify-center py-3 text-center sm:min-h-[104px]">
+                      <p className="max-w-[44ch] text-balance text-lg font-bold leading-[1.75] text-[#f0fbff] [text-shadow:0_0_18px_rgba(82,198,255,.38)] sm:text-xl">
+                        {typedDistressText || currentPlanetAtmosphere.distressMessage}
+                        {!isTypingComplete && <span aria-hidden="true"
+                          className="mr-1 inline-block h-4 w-[2px] animate-pulse align-middle bg-[#96edff]"/>}
+                      </p>
                     </div>
-
-                    <div className="w-full mt-2.5 pt-3 border-t border-cyan-500/25 flex items-center justify-between gap-3">
-                      <div className="flex-1 text-right">
-                        <div className="text-[11px] text-cyan-300 font-bold mb-1 flex items-center gap-1.5">
-                          <Zap size={13} className="text-cyan-400 animate-pulse" />
-                          <span>جاهزية الرائد: 100%</span>
+                    <div className="mt-4 flex flex-col gap-4 border-t border-[#9bdcff]/25 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0 flex-1 text-right">
+                        <div className="mb-2 flex items-center justify-between text-[11px] font-semibold text-[#b6e9fb]">
+                          <span>جاهزية رائد الفضاء</span><span dir="ltr">100%</span>
                         </div>
-                        <div className="w-full h-1.5 bg-slate-900/90 rounded-full overflow-hidden border border-cyan-500/40">
-                          <div 
-                            className="h-full bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 rounded-full"
-                            style={{
-                              animation: "transmissionTimerDrain 2.8s linear forwards"
-                            }}
-                          />
+                        <div aria-hidden="true" className="flex h-[5px] w-full overflow-hidden rounded-full bg-[#051d4b]/80">
+                          <span className="h-full w-full bg-gradient-to-l from-[#a8f2ff] via-[#37bbf1] to-[#3377ff] shadow-[0_0_12px_rgba(83,192,255,.6)]"
+                            style={{ animation:"transmissionTimerDrain 2.8s linear forwards" }}/>
                         </div>
                       </div>
-
-                      <button
-                        onClick={handleStartMissionFromHologram}
-                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-xs shadow-[0_0_20px_rgba(34,211,238,0.6)] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-                      >
-                        <span>انطلق الآن ⚡</span>
-                        <Flame size={14} />
+                      <button type="button" onClick={handleStartMissionFromHologram}
+                        className={SPACE_GLASS_PRIMARY_BUTTON+" min-w-[152px] shrink-0"}>
+                        بدء المهمة
                       </button>
                     </div>
-                  </div>
+                  </SpaceLaserGlass>
                 </div>
               )}
             </>
