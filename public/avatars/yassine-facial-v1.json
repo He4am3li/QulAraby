@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "morocco_male",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/yassine-stance-v1.webp",
+  "sourceSha256": "5c8ef969189aefb143da2025e24c94eddc24c07a5c1a91e6136cd86873d3b123",
+  "pose": {
+    "bodyFacing": "left",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "right"
+  },
+  "registration": {
+    "shift": 0,
+    "scale": 0.635,
+    "offset": [
+      378,
+      61
+    ],
+    "eyes": [
+      458,
+      143,
+      117,
+      32
+    ],
+    "brows": [
+      452,
+      126,
+      126,
+      25
+    ],
+    "mouth": [
+      476,
+      204,
+      81,
+      54
+    ]
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 458,
+      "y": 143,
+      "w": 117,
+      "h": 32,
+      "visible": true,
+      "url": "/avatars/yassine-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 458,
+      "y": 143,
+      "w": 117,
+      "h": 32,
+      "visible": true,
+      "url": "/avatars/yassine-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 458,
+      "y": 143,
+      "w": 117,
+      "h": 32,
+      "visible": true,
+      "url": "/avatars/yassine-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 452,
+      "y": 126,
+      "w": 126,
+      "h": 25,
+      "visible": true,
+      "url": "/avatars/yassine-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 452,
+      "y": 126,
+      "w": 126,
+      "h": 25,
+      "visible": true,
+      "url": "/avatars/yassine-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 476,
+      "y": 204,
+      "w": 81,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/yassine-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 476,
+      "y": 204,
+      "w": 81,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/yassine-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 476,
+      "y": 204,
+      "w": 81,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/yassine-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 476,
+      "y": 204,
+      "w": 81,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/yassine-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 476,
+      "y": 204,
+      "w": 81,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/yassine-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 476,
+      "y": 204,
+      "w": 81,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/yassine-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}
