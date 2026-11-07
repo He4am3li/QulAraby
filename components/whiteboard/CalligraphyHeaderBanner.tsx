@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { CalligraphyInkIdentity } from './CalligraphyInkIdentity';
 
 interface CalligraphyHeaderBannerProps {
   onOpenHelp?: () => void;
@@ -63,37 +64,8 @@ export const CalligraphyHeaderBanner: React.FC<CalligraphyHeaderBannerProps> = (
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0c0a08]/20 to-[#0c0a08]" />
       </div>
 
-      {/* 4. BACKGROUND DIWANI LETTERS (Clearly visible artistic calligraphy identity) */}
-      <div className="absolute inset-0 pointer-events-none z-15 overflow-hidden opacity-75">
-        <svg
-          viewBox="0 0 1440 120"
-          preserveAspectRatio="xMidYMid meet"
-          className="w-full h-full select-none"
-        >
-          <defs>
-            <linearGradient id="headerDiwaniGold" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="30%" stopColor="#ffebb5" />
-              <stop offset="65%" stopColor="#e5be53" />
-              <stop offset="100%" stopColor="#b8861e" />
-            </linearGradient>
-          </defs>
-          <g>
-            <text x="180" y="74" fontSize="48" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.6">ك</text>
-            <text x="260" y="68" fontSize="42" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.75">ط</text>
-            <text x="340" y="72" fontSize="50" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.9">قُ</text>
-            <text x="430" y="62" fontSize="56" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.95">لْ</text>
-            <text x="520" y="78" fontSize="48" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.9">مِ</text>
-            <text x="610" y="66" fontSize="52" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.95">دَ</text>
-            <text x="700" y="72" fontSize="46" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.95">ادْ</text>
-            <text x="800" y="66" fontSize="50" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.95">ن</text>
-            <text x="890" y="75" fontSize="46" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.9">و</text>
-            <text x="980" y="65" fontSize="52" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.85">ص</text>
-            <text x="1070" y="74" fontSize="48" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.75">ع</text>
-            <text x="1160" y="66" fontSize="44" fontFamily="diwani, 'Al-Wissam', 'Amiri', serif" fill="url(#headerDiwaniGold)" opacity="0.6">ف</text>
-          </g>
-        </svg>
-      </div>
+      {/* Hand-drawn ink traces and delicate tashkeel forms, shared with the studio. */}
+      <CalligraphyInkIdentity variant="header" />
 
       {/* 5. CENTER TITLE: ───❖ ديوان الخط العربي ❖─── (Brilliant Solid Pure White) */}
       <div className="relative z-25 w-full h-full px-4 sm:px-6 flex items-center justify-center pointer-events-none">
