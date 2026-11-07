@@ -52,9 +52,9 @@ const levelLabel = (level: DifficultyLevel, language: UiLanguage) => ({
 interface ExperienceProps { onBack?: () => void; lang?: UiLanguage }
 interface PortraitProps {
   person: SuspectPerson; disabled?: boolean; eliminated?: boolean; culprit?: boolean;
-  selected?: boolean; onClick?: () => void; compact?: boolean; badge?: string;
+  selected?: boolean; onClick?: () => void; compact?: boolean; badge?: string; portraitCrop?: React.CSSProperties;
 }
-const Portrait: React.FC<PortraitProps> = ({ person, disabled, eliminated, culprit, selected, onClick, compact, badge }) => (
+const Portrait: React.FC<PortraitProps> = ({ person, disabled, eliminated, culprit, selected, onClick, compact, badge, portraitCrop }) => (
   <button type="button" disabled={disabled} onClick={onClick}
     aria-label={person.name + (eliminated ? '، بريء' : '')}
     aria-pressed={selected}
@@ -63,7 +63,10 @@ const Portrait: React.FC<PortraitProps> = ({ person, disabled, eliminated, culpr
       (disabled ? 'cursor-default ' : 'cursor-pointer hover:border-amber-200 hover:-translate-y-0.5 ') +
       (compact ? 'w-full ' : 'w-full h-full ')}>
     <div className="relative w-full flex-1 min-h-0 overflow-hidden bg-gradient-to-b from-stone-700 to-slate-950" style={{ aspectRatio: '4 / 4.2' }}>
-      <img src={person.image} alt="" loading="eager" className={'w-full h-full object-cover object-top transition-[filter] ' + (eliminated ? 'grayscale brightness-50' : '')} />
+      {portraitCrop
+        ? <span aria-hidden="true" className={'absolute inset-0 block h-full w-full ' + (eliminated ? 'grayscale brightness-50' : '')} style={portraitCrop}/>
+        : <img src={person.image} alt="" loading="eager" className={'w-full h-full object-cover object-top transition-[filter] ' + (eliminated ? 'grayscale brightness-50' : '')} />
+      }
       {eliminated && <div className="absolute inset-0 flex items-center justify-center bg-emerald-950/30"><span className="rounded-full bg-emerald-600 p-2 shadow-lg"><Check className="h-5 w-5 text-white" /></span></div>}
       {culprit && <span className="absolute top-1 right-1 rounded-lg bg-red-700 px-1.5 py-0.5 text-[10px] font-bold text-white">الجاني</span>}
       {badge && !eliminated && <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-amber-200">{badge}</span>}
@@ -549,8 +552,9 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
             {/* Every suspect remains selectable in a single, balanced two-row grid. */}
             <div className="grid gap-1.5 sm:gap-2" dir="rtl"
               style={{gridTemplateColumns: 'repeat(' + suspectColumns + ', minmax(0, 1fr))'}}>
-              {activeCase.suspects.map(person =>
+              {activeCase.suspects.map((person, suspectIndex) =>
                 <Portrait key={person.id} person={person} compact
+                  portraitCrop={level === 'advanced' ? getAdvancedPosterPortraitStyle(activeCase.caseNumber, suspectIndex, activeCase.bgImage) || undefined : undefined}
                   selected={accusedId === person.id}
                   onClick={() => {setAccusedId(person.id);setFeedback('');}}/>)}
             </div>
