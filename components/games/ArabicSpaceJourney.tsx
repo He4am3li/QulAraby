@@ -8,6 +8,7 @@ import { CONTENT, PLANETS, Q, LegacyGameStage as Stage, Planet, STAGES_LIST } fr
 
 // Breathtaking Living Turquoise Cosmos, Photorealistic Planets & 3D Sci-Fi Spacecraft
 import solarSystemCosmosBg from "/src/assets/images/solar_system_cosmos_bg_1790238722241.jpg";
+import towardSpaceOriginalCover from "/src/assets/images/toward_space_hero_1790510722610.jpg";
 import turquoiseCosmosBg from "/src/assets/images/turquoise_cosmos_sky_1790183779372.jpg";
 import vibrantCinematicSpaceNebula from "/src/assets/images/vibrant_cinematic_space_nebula_1790179537071.jpg";
 import realisticSunStar from "/src/assets/images/realistic_sun_star_1790259897845.jpg";
@@ -892,6 +893,20 @@ const MAP_NODES: MapPlanetNode[] = [
 ];
 
 // ==============================================================
+// Photographic retouch: ten distinct mineral palettes with controlled exposure.
+const PLANET_DISPLAY_GRADES: Record<string, string> = {
+  sentence: "saturate(.94) contrast(1.14) brightness(1.07)",
+  letters: "saturate(.89) contrast(1.12) brightness(1.06)",
+  hamza: "saturate(.97) contrast(1.12) brightness(1.01)",
+  styles: "saturate(.91) contrast(1.11) brightness(1.05)",
+  meanings: "saturate(.94) contrast(1.12) brightness(1.05)",
+  morphology: "saturate(.91) contrast(1.13) brightness(1.08)",
+  word: "saturate(.97) contrast(1.11) brightness(1.07)",
+  syntax: "saturate(.90) contrast(1.13) brightness(1.05)",
+  structures: "saturate(.88) contrast(1.13) brightness(1.07)",
+  spelling: "saturate(.80) contrast(1.17) brightness(1.07)",
+};
+
 // UNIQUE LIVING ATMOSPHERES & HOLOGRAPHIC MISSIONS FOR ALL 10 PLANETS
 // ==============================================================
 export interface FloatingSpaceRock {
@@ -1680,7 +1695,7 @@ export interface ArabicSpaceJourneyProps {
 }
 
 export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, onWin }) => {
-  const [screen, setScreen] = useState<"home" | "planet" | "planet_entry" | "flight" | "victory" | "gameover">("home");
+  const [screen, setScreen] = useState<"cover" | "home" | "planet" | "planet_entry" | "flight" | "victory" | "gameover">("cover");
   const [save, setSave] = useState<Save>(loadSave);
   const [currentPlanetId, setCurrentPlanetId] = useState<string | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<string>("sentence-types");
@@ -3497,6 +3512,48 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
   return (
     <div className="w-full h-full min-h-screen bg-[#040510] text-[#eef7ff] relative overflow-hidden select-none font-sans" dir="rtl">
       
+      {/* The original Toward Space poster is restored as the entrance.
+          The original English lettering is part of this approved source artwork,
+          rather than a newly invented imitation. The 10-planet map remains intact. */}
+      {screen === "cover" && (
+        <section
+          data-space-screen="original-toward-space-cover"
+          aria-label="Toward Space"
+          className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-[#030817]"
+          dir="rtl"
+        >
+          <div
+            aria-hidden="true"
+            className="absolute inset-[-6%] scale-110 bg-cover bg-center opacity-40 blur-[38px]"
+            style={{ backgroundImage: `url(${towardSpaceOriginalCover})` }}
+          />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_45%,transparent_35%,rgba(2,6,18,.7)_100%)]" />
+          <img
+            src={towardSpaceOriginalCover}
+            alt="TOWARD SPACE, astronaut approaching an illuminated ringed planet amid colorful nebulae and glowing Arabic letters"
+            className="relative z-10 block h-auto max-h-[100dvh] w-full max-w-[1600px] object-contain object-center"
+            draggable={false}
+            fetchPriority="high"
+          />
+          <div className="absolute inset-x-0 bottom-[4%] z-20 flex items-center justify-center px-4 sm:bottom-[6%]">
+            <button
+              type="button"
+              onClick={() => { audio.select(); setScreen("home"); }}
+              className="group inline-flex min-h-[48px] items-center justify-center gap-3 rounded-full border border-[#dcbd83]/65 bg-[#071322]/85 px-7 py-3 text-sm font-bold text-[#f5e5c8] shadow-[0_9px_32px_rgba(0,5,20,.65),inset_0_1px_0_rgba(255,255,255,.12)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-[#f1d79d] hover:bg-[#102b39]/95 hover:shadow-[0_0_30px_rgba(88,196,225,.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#ffe0a3] sm:text-base"
+            >
+              <Rocket size={18} className="text-[#9ae8f6] transition-transform group-hover:-translate-y-0.5"/>
+              انطلق إلى الكواكب
+              <ArrowLeft size={17}/>
+            </button>
+          </div>
+          <button type="button" onClick={() => onBack?.()}
+            title="العودة إلى الألعاب"
+            aria-label="العودة إلى الألعاب"
+            className="absolute right-4 top-4 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-[#071320]/70 text-[#e2f8ff] backdrop-blur-lg hover:bg-[#12334a]/90"
+          ><ArrowLeft size={19}/></button>
+        </section>
+      )}
+
       {/* ============================================================== */}
       {/* 1. خريطة الكواكب الفضائية الواقعية والبهيجة (النسخة السينيمائية الحية) */}
       {/* ============================================================== */}
@@ -3506,38 +3563,51 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
             isRumbling ? "animate-[screenRumble_0.45s_ease-in-out]" : ""
           }`}
           onPointerMove={handleHomePointerMove}
-          style={{ backgroundColor: "#020617" }}
+          style={{ backgroundColor: "#030714" }}
         >
           {/* Photorealistic High-Definition Deep Space Cosmos Background (Moving Cinematic Parallax Pan) */}
           <div 
             className="absolute inset-[-8%] bg-cover bg-center pointer-events-none will-change-transform opacity-95"
             style={{ 
               backgroundImage: `url(${solarSystemCosmosBg})`,
-              animation: "cosmicPanDrift 45s ease-in-out infinite alternate"
+              filter: "saturate(.90) contrast(1.09) brightness(.88) hue-rotate(-5deg)",
+              animation: "cosmicPanDrift 56s ease-in-out infinite alternate"
             }}
           />
-          {/* Moving Atmospheric Nebula & Stardust Stream Overlay */}
-          <div 
-            className="absolute inset-[-10%] pointer-events-none mix-blend-screen opacity-35 will-change-transform"
+          {/* Art-directed color grade: deep midnight, restrained turquoise, velvet violet
+              and a little warm starlight, without flattening the planetary details. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-90"
             style={{
-              background: "radial-gradient(ellipse at 30% 40%, rgba(34,211,238,0.25) 0%, transparent 60%), radial-gradient(ellipse at 70% 60%, rgba(129,140,248,0.2) 0%, transparent 60%)",
-              animation: "livingNebulaSwirl1 55s linear infinite"
+              background: "radial-gradient(ellipse 48% 42% at 25% 37%, rgba(19,139,153,.13), transparent 75%), radial-gradient(ellipse 42% 36% at 77% 27%, rgba(100,68,175,.16), transparent 78%), radial-gradient(ellipse 24% 23% at 58% 12%, rgba(255,198,124,.10), transparent 75%), linear-gradient(180deg,rgba(2,7,19,.13) 0%,transparent 35%,rgba(2,6,17,.26) 100%)",
+              animation: "cosmicColorBreath 36s ease-in-out infinite alternate"
             }}
           />
-          {/* Atmospheric Depth Vignette */}
-          <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#020617]/25 via-transparent to-[#020617]/35" />
+          <div 
+            className="absolute inset-[-10%] pointer-events-none mix-blend-screen opacity-30 will-change-transform"
+            style={{
+              background: "radial-gradient(ellipse at 30% 40%, rgba(57,185,199,0.22) 0%, transparent 62%), radial-gradient(ellipse at 70% 60%, rgba(125,111,200,0.16) 0%, transparent 60%)",
+              animation: "cosmicColorBreath 48s ease-in-out infinite alternate"
+            }}
+          />
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#020617]/10 via-transparent to-[#020617]/30" />
 
           {/* Atmospheric Rim Glow on Bottom-Left Giant Celestial Body */}
           <div 
             className="absolute -bottom-[16%] -left-[12%] w-[42vw] h-[42vw] max-w-[520px] max-h-[520px] rounded-full pointer-events-none"
             style={{
-              background: "radial-gradient(circle at 45% 45%, transparent 66%, rgba(34, 211, 238, 0.35) 86%, rgba(103, 232, 249, 0.75) 100%)",
+              background: "radial-gradient(circle at 45% 45%, transparent 65%, rgba(49, 150, 172, 0.17) 84%, rgba(110, 208, 219, 0.42) 100%)",
               filter: "blur(5px)"
             }}
           />
 
           {/* Keyframe Styles for Living Space Background, Multi-Layer Parallax, Distant Bodies, and Realistic Meteors */}
           <style>{`
+            @keyframes cosmicColorBreath {
+              0%, 100% { opacity: .66; transform: translate3d(0,0,0) scale(1); }
+              50% { opacity: .93; transform: translate3d(0,-1%,0) scale(1.02); }
+            }
             @keyframes cosmicPanDrift {
               0% { transform: scale(1.04) translate3d(-1%, -1%, 0); }
               50% { transform: scale(1.09) translate3d(2%, -2%, 0); }
@@ -3912,7 +3982,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
           >
             {/* High-Definition Living Cosmic Nebula Canvas */}
             <div 
-              className="absolute inset-[-12%] w-[124%] h-[124%] pointer-events-none opacity-30 mix-blend-screen"
+              className="absolute inset-[-12%] w-[124%] h-[124%] pointer-events-none opacity-20 mix-blend-screen"
               style={{
                 backgroundImage: `url(${vibrantCinematicSpaceNebula})`,
                 backgroundSize: 'cover',
@@ -4123,9 +4193,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
 
           {/* Top-Left Exit/Back Platform Button */}
           <button 
-            onClick={() => {
-              if (onBack) onBack();
-            }}
+            onClick={() => setScreen("cover")}
             className="fixed top-6 left-6 z-40 w-11 h-11 rounded-full bg-slate-950/80 border border-cyan-400/40 flex items-center justify-center text-cyan-200 hover:text-white hover:border-cyan-300 transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] backdrop-blur-md hover:scale-105 active:scale-95 cursor-pointer"
             title="خروج للمنصة"
           >
@@ -4144,7 +4212,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                   transform: "translate(-50%, -50%) rotate(22deg)",
                   width: "320px",
                   height: "180px",
-                  background: "radial-gradient(ellipse at center, rgba(168,85,247,0.35) 0%, rgba(34,211,238,0.2) 35%, rgba(6,78,59,0.12) 65%, transparent 80%)",
+                  background: "radial-gradient(ellipse at center, rgba(156,117,204,0.22) 0%, rgba(67,176,190,0.12) 35%, rgba(18,63,76,0.08) 65%, transparent 80%)",
                   filter: "blur(18px)"
                 }}
               />
@@ -4419,8 +4487,8 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                         <div 
                           className="absolute -inset-3.5 rounded-full pointer-events-none transition-all duration-500"
                           style={{
-                            background: "radial-gradient(circle, rgba(34,211,238,0.45) 0%, rgba(6,182,212,0.18) 60%, transparent 80%)",
-                            boxShadow: "0 0 24px rgba(34,211,238,0.6)"
+                            background: `radial-gradient(circle, ${node.glowColor.replace(/0\.9\)/, "0.28)")} 0%, rgba(93,153,173,0.10) 60%, transparent 80%)`,
+                            boxShadow: "0 0 20px rgba(120,180,197,0.35)"
                           }}
                         />
                       )}
@@ -4430,7 +4498,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                         className="absolute -inset-2.5 rounded-full pointer-events-none transition-opacity duration-300"
                         style={{
                           background: `radial-gradient(circle, ${node.glowColor} 0%, transparent 72%)`,
-                          opacity: isSelected ? 0.95 : isHovered ? 0.8 : 0.45
+                          opacity: isSelected ? 0.84 : isHovered ? 0.66 : 0.32
                         }}
                       />
 
@@ -4443,7 +4511,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                             : isHovered 
                             ? `0 0 24px ${node.glowColor}, inset 0 0 12px rgba(255,255,255,0.3)` 
                             : `0 0 14px ${node.glowColor}99`,
-                          filter: isHovered || isSelected ? "brightness(1.18) contrast(1.08)" : "none"
+                          filter: isHovered || isSelected ? "brightness(1.10) contrast(1.07)" : "none"
                         }}
                       >
                         {/* Inner Rotating Planetary Surface (Continuous Smooth Spin) */}
@@ -4458,7 +4526,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                             src={node.img} 
                             alt={node.name}
                             className="w-full h-full object-cover scale-125"
-                            style={{ filter: "contrast(1.1) brightness(1.04)" }}
+                            style={{ filter: PLANET_DISPLAY_GRADES[node.id] || "contrast(1.12) saturate(.96) brightness(1.04)" }}
                           />
                         </div>
 
@@ -4484,10 +4552,10 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                     <div className="mt-1.5 flex flex-col items-center pointer-events-none">
                       <span className={`font-bold text-xs md:text-sm tracking-wide transition-all duration-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] ${
                         isSelected
-                          ? "text-cyan-200 scale-110 drop-shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+                          ? "text-[#fff0ce] scale-110 drop-shadow-[0_0_11px_rgba(241,193,130,.55)]"
                           : isHovered
-                          ? "text-white scale-105"
-                          : "text-cyan-100/90"
+                          ? "text-[#fff9e8] scale-105"
+                          : "text-[#e2edf4]/95"
                       }`}>
                         {node.name}
                       </span>

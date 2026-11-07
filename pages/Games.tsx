@@ -32,7 +32,7 @@ import { DetectiveExperience as DetectiveMystery } from '../components/games/Det
 import { ArcadeCorridor } from '../components/games/ArcadeCorridor';
 import supermarketParkingImg from '../src/assets/images/supermarket_parking_intro_1791186344934.jpg';
 import supermarketAisleImg from '../src/assets/images/supermarket_aisle_hall_1791186364722.jpg';
-import vibrantSpaceNebula from '../src/assets/images/vibrant_cinematic_space_nebula_1790179537071.jpg';
+import towardSpaceOriginalCover from '../src/assets/images/toward_space_hero_1790510722610.jpg';
 import { useAuth } from '../components/AuthProvider';
 import { db } from '../firebase';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
@@ -129,8 +129,8 @@ const CONSOLE_GAMES: GameDef[] = [
     detailsAr: 'انطلق بمركبتك الفضائية: استكشف كواكب الكلمة والهمزات والجملة والإعراب والأساليب والتراكيب والتصريف والكتابة والحروف والمعاني. استخدم الدروع، واجمع نجوم الإنجاز!',
     detailsEn: 'Launch your spacecraft: explore 10 orbital planets covering grammar, spelling, morphology, and vocabulary with shields and star rewards!',
     samples: [],
-    cover: vibrantSpaceNebula,
-    hero: vibrantSpaceNebula,
+    cover: towardSpaceOriginalCover,
+    hero: towardSpaceOriginalCover,
     color: 'from-cyan-600 via-blue-900 to-indigo-950',
     icon: <Rocket size={32} />
   },
