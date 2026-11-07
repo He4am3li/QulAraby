@@ -29,6 +29,8 @@ must(main.includes('setZoomLevel(value =>'), 'Zoom has functioning controls');
 must(main.includes('setShowGrid(value =>'), 'Grid has functioning controls');
 must(main.includes('setShowGuidelines(value =>'), 'Writing guidelines have functioning controls');
 must(main.includes('w-12 sm:w-16 md:w-20'), 'Mobile sidebars are compact');
+must(main.includes("await import('html2canvas')"), 'Canvas capture only loads when needed');
+must(main.includes("await import('jspdf')"), 'PDF editor library only loads when needed');
 must(main.includes("React.lazy(() => import('./CalligraphyPracticeLab'))"), 'Handwriting lab loads on demand');
 must(main.includes('setShowPracticeLab(true)'), 'Handwriting lab accessible from the editor');
 must(practice.includes('onPointerDown={onPointerDown}') && practice.includes('onPointerMove={onPointerMove}'), 'Tracing uses real pointer drawing');
