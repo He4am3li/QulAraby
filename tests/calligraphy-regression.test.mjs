@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 const main = readFileSync('components/whiteboard/CalligraphyCardStudio.tsx', 'utf8');
 const tray = readFileSync('components/whiteboard/CalligraphyStudioTray.tsx', 'utf8');
 const storage = readFileSync('components/whiteboard/calligraphyPersistence.ts', 'utf8');
+const practice = readFileSync('components/whiteboard/CalligraphyPracticeLab.tsx', 'utf8');
 
 const must = (condition, message) => assert.ok(condition, message);
 
@@ -28,4 +29,9 @@ must(main.includes('setZoomLevel(value =>'), 'Zoom has functioning controls');
 must(main.includes('setShowGrid(value =>'), 'Grid has functioning controls');
 must(main.includes('setShowGuidelines(value =>'), 'Writing guidelines have functioning controls');
 must(main.includes('w-12 sm:w-16 md:w-20'), 'Mobile sidebars are compact');
+must(main.includes("React.lazy(() => import('./CalligraphyPracticeLab'))"), 'Handwriting lab loads on demand');
+must(main.includes('setShowPracticeLab(true)'), 'Handwriting lab accessible from the editor');
+must(practice.includes('onPointerDown={onPointerDown}') && practice.includes('onPointerMove={onPointerMove}'), 'Tracing uses real pointer drawing');
+must(practice.includes('const estimate = Math.max('), 'Stroke shape comparison produces feedback');
+must(practice.includes('التقييم يقارن مواضع الحبر'), 'Practice assessment does not claim expert verification');
 console.log('Calligraphy regressions OK: safe diacritics, metallic finishes, PDF/PNG exports, IndexedDB persistence, undo shortcuts and mobile controls.');
