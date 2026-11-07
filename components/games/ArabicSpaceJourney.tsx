@@ -5247,44 +5247,37 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                 </button>
               </div>
 
-              {/* Center: Cyber Astronaut Visor Mission Guidance (Directs astronaut clearly on what to collect) */}
-              <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-slate-950/85 border border-cyan-400/50 backdrop-blur-xl shadow-[0_0_25px_rgba(34,211,238,0.25)]">
-                <div className="relative w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-xs shadow-[0_0_8px_#22d3ee] shrink-0">
-                  🎯
+              {/* Laser-glass mission guidance, no AI badges or emoji. */}
+              <SpaceLaserGlass variant="mission" aria-label="هدف الرحلة"
+                className="w-full max-w-[510px] px-4 py-2.5 md:w-auto md:min-w-[330px]">
+                <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2">
+                  <div className="min-w-0 flex-1 text-right">
+                    <span className="block text-[10px] font-semibold text-[#8fdffa]">المطلوب جمعه</span>
+                    <span className="mt-0.5 block text-xs font-bold leading-relaxed text-[#e6faff] md:text-sm">
+                      {currentChallenge?.prompt || currentPlanetAtmosphere.distressTarget}
+                    </span>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2 border-r border-[#86ddff]/25 pr-3">
+                    {[...Array(TARGET_CRYSTALS)].map((_,idx) => (
+                      <span key={idx} aria-hidden="true"
+                        className={"h-3.5 w-1.5 rounded-[2px] transition-colors " +
+                          (idx < crystalsCaught
+                            ? "bg-[#8ae8ff] shadow-[0_0_9px_rgba(63,199,252,.85)]"
+                            : "border border-[#82c9f0]/35 bg-[#092550]/70")}/>
+                    ))}
+                    <span className="text-[11px] font-semibold tabular-nums text-[#b6edff]" dir="ltr">
+                      {crystalsCaught}/{TARGET_CRYSTALS}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col text-right">
-                  <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                    المطلوب جمعه
-                  </span>
-                  <span className="text-white text-xs md:text-sm font-black tracking-wide drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
-                    {currentChallenge?.prompt || currentPlanetAtmosphere.distressTarget}
-                  </span>
-                </div>
-                {/* Segmented Cyber Data Capsule Cells */}
-                <div className="flex items-center gap-1 mr-2 px-2.5 py-1 rounded-xl bg-slate-900/90 border border-cyan-500/30">
-                  {[...Array(TARGET_CRYSTALS)].map((_, idx) => (
-                    <div 
-                      key={idx}
-                      className={`w-2.5 h-4 rounded-sm transition-all duration-300 ${
-                        idx < crystalsCaught 
-                          ? "bg-gradient-to-t from-cyan-400 to-emerald-300 shadow-[0_0_8px_#22d3ee] scale-105" 
-                          : "bg-slate-800/80 border border-white/10"
-                      }`}
-                    />
-                  ))}
-                  <span className="text-[11px] font-mono font-bold text-cyan-300 mr-1.5">
-                    {crystalsCaught}/{TARGET_CRYSTALS}
-                  </span>
-                </div>
-              </div>
+              </SpaceLaserGlass>
 
               {/* Left (in RTL): Cybernetic Spacesuit Life-Support, Shields & Flight Telemetry */}
               <div className="flex items-center gap-3">
                 {/* Plasma Shield Matrix Core */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/85 border border-cyan-400/40 backdrop-blur-md shadow-md">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#7ad9ff]/55 bg-[rgba(4,34,84,.38)] backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(220,248,255,.21),0_0_14px_rgba(47,146,245,.13)]">
                   <div className="flex items-center gap-1 text-[11px] font-bold text-slate-300">
-                    <Shield size={14} className={shields > 1 ? "text-cyan-400 fill-cyan-400" : "text-rose-400 fill-rose-400 animate-pulse"} />
+                    
                     <span>الدروع</span>
                   </div>
                   <div className="flex items-center gap-1">
@@ -5304,8 +5297,8 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                 </div>
 
                 {/* Orbit Trajectory & Altitude Distance Meter */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/85 border border-cyan-400/40 backdrop-blur-md shadow-md">
-                  <Navigation size={13} className="text-cyan-300 rotate-45" />
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#7ad9ff]/55 bg-[rgba(4,34,84,.38)] backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(220,248,255,.21),0_0_14px_rgba(47,146,245,.13)]">
+                  
                   <span className="text-xs font-mono font-black text-cyan-300">{distanceRemaining}م</span>
                   <div className="w-16 md:w-24 h-2 bg-slate-900 rounded-full overflow-hidden border border-cyan-500/30 p-0.5">
                     <div 
@@ -5316,8 +5309,8 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                 </div>
 
                 {/* Stellar Score Credits */}
-                <div className="px-3 py-1.5 rounded-xl bg-slate-950/85 border border-amber-400/40 text-amber-400 font-mono text-sm font-black flex items-center gap-1.5 backdrop-blur-md shadow-[0_0_15px_rgba(251,191,36,0.2)]">
-                  <Sparkles size={13} className="text-amber-300 animate-spin" style={{ animationDuration: '6s' }} />
+                <div className="px-3 py-1.5 rounded-xl border border-[#7ad9ff]/55 bg-[rgba(4,34,84,.38)] text-[#b7f2ff] font-mono text-sm font-black flex items-center gap-1.5 backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(220,248,255,.21),0_0_14px_rgba(47,146,245,.13)]">
+                  
                   <span>{score}</span>
                 </div>
               </div>
