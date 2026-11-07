@@ -77,7 +77,7 @@ test('speaking sections mirror listening sidebar structure while keeping both fu
   for (const place of ['restaurant', 'hotel', 'friend', 'support', 'taxi', 'clinic', 'library', 'bakery', 'school', 'museum']) {
     assert.match(booth, new RegExp("id: '" + place + "'"));
   }
-  const extensions = [...booth.matchAll(/extension: '(\\d{3})'/g)].map(x => x[1]);
+  const extensions = [...booth.matchAll(/extension: '(\d{3})'/g)].map(x => x[1]);
   assert.equal(extensions.length, 10, 'directory must contain ten contacts');
   assert.equal(new Set(extensions).size, 10, 'each contact must have a unique extension');
   assert.match(booth, /sessionLive/);
