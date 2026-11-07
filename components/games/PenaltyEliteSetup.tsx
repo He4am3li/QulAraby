@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {ArrowLeft, ChevronLeft, RotateCcw, Shirt, Trophy, X} from 'lucide-react';
 import {chooseOpponent,ELITE_CLUBS,EliteClub,ElitePlayer} from './PenaltyEliteData';
+import {PenaltyClubCrest} from './PenaltyClubCrest';
 
 interface Props {
   onBack?:()=>void;
@@ -18,6 +19,7 @@ export const PenaltyEliteSetup:React.FC<Props>=({onBack,onStart})=>{
   const [previousRival,setPreviousRival]=useState<string|undefined>();
   const [selectedKickers,setSelectedKickers]=useState<ElitePlayer[]>([]);
   const [rosterPage,setRosterPage]=useState(0);
+  const [clubPage,setClubPage]=useState(0);
   const selectClub=(choice:EliteClub)=>{
     const next=chooseOpponent(choice.id,previousRival);
     setPreviousRival(next.id);setClub(choice);setRival(next);
@@ -62,33 +64,39 @@ export const PenaltyEliteSetup:React.FC<Props>=({onBack,onStart})=>{
         <div>
           <p className="text-amber-300 text-xs font-black tracking-wider mb-1">الاختيار الأول</p>
           <h2 className="text-2xl md:text-4xl font-black">من هو ناديك المفضل؟</h2>
-          <p className="text-slate-400 text-sm mt-2">يختار الكمبيوتر منافسًا مختلفًا تلقائيًا. هذه قائمة أندية أولية من موسم 2026/27.</p>
+          <p className="text-slate-400 text-sm mt-2">يختار الكمبيوتر منافسًا مختلفًا تلقائيًا. اختر أحد الأندية العشرة، وسيختار الكمبيوتر خصمك تلقائيًا.</p>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          {ELITE_CLUBS.map(team=><button key={team.id} onClick={()=>selectClub(team)} type="button"
-            className="group relative min-h-[200px] md:min-h-[260px] rounded-3xl border border-white/15 hover:border-amber-300/70 overflow-hidden text-right transition-colors duration-200"
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5 md:gap-4">
+          {ELITE_CLUBS.map((team,index)=><button key={team.id} onClick={()=>selectClub(team)} type="button"
+            className={'group relative min-h-[145px] sm:min-h-[180px] lg:min-h-[225px] rounded-3xl border border-white/15 hover:border-amber-300/70 overflow-hidden text-right transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-amber-300 '+(index>=clubPage*4&&index<(clubPage+1)*4?'flex':'hidden lg:flex')}
             style={{...panelStyle}}>
             <div className="absolute top-0 right-0 bottom-0 w-2" style={{background:team.primary}}/>
             <div className="absolute -bottom-14 -left-10 w-44 h-44 rounded-full blur-3xl opacity-25" style={{background:team.primary}}/>
-            <div className="relative p-4 md:p-6 h-full flex flex-col justify-between items-start">
-              <div className="h-14 w-14 md:h-20 md:w-20 rounded-2xl flex items-center justify-center border border-white/20 text-lg md:text-2xl font-black shadow-xl" style={{background:'linear-gradient(145deg,'+team.primary+','+team.secondary+')',color:team.secondary,textShadow:'0 1px 3px #fff8'}}>
-                {team.crest}
-              </div>
+            <div className="relative p-3 sm:p-4 lg:p-5 w-full h-full flex flex-col justify-between items-start">
+              <PenaltyClubCrest club={team} className="w-[66px] h-[66px] sm:w-[78px] sm:h-[78px] lg:w-[90px] lg:h-[90px] group-hover:scale-[1.06] transition-transform duration-300" />
               <div className="w-full mt-5">
                 <div className="flex gap-1 mb-3"><span className="h-1 flex-1 rounded-full" style={{background:team.primary}}/><span className="h-1 flex-1 rounded-full" style={{background:team.secondary}}/></div>
-                <h3 className="text-lg md:text-2xl font-black">{team.name}</h3>
-                <p dir="ltr" className="text-slate-400 text-xs text-left mt-1">{team.english}</p>
-                <span className="flex items-center gap-1 text-amber-300 text-xs font-bold mt-4">اختيار النادي <ChevronLeft size={15}/></span>
+                <h3 className="text-sm sm:text-lg lg:text-xl font-black">{team.name}</h3>
+                <p dir="ltr" className="text-slate-400 text-[10px] lg:text-xs text-left mt-1 truncate">{team.english}</p>
+                <span className="flex items-center gap-1 text-amber-300 text-[11px] font-bold mt-2 lg:mt-4">اختيار النادي <ChevronLeft size={15}/></span>
               </div>
             </div>
           </button>)}
         </div>
-        <p className="text-slate-500 text-[11px] leading-relaxed">الأسماء وأرقام القمصان مستندة إلى قوائم منشورة، لكن رسومات الأندية والأطقم هنا تصور بصري مستقل وليست شعارات أو ملابس رسمية مرخصة.</p>
+        <div className="lg:hidden flex items-center justify-center gap-2" aria-label="صفحات الأندية">
+          {Array.from({length:Math.ceil(ELITE_CLUBS.length/4)},(_,page)=><button
+            key={page} type="button" onClick={()=>setClubPage(page)}
+            aria-current={page===clubPage?'page':undefined}
+            className={'w-9 h-9 rounded-xl border text-sm font-black transition-colors '+(page===clubPage?'bg-amber-300 text-slate-950 border-amber-300':'bg-white/5 border-white/20 text-slate-200')}>
+            {page+1}
+          </button>)}
+        </div>
+        <p className="text-slate-500 text-[11px] leading-relaxed">الشعارات الأصلية مستخدمة للتعريف بالفرق فقط، وهي علامات تجارية لأصحابها، ولا تمثل هذه اللعبة اعتمادًا أو رعاية رسمية من الأندية.</p>
       </>:<>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 md:gap-4 p-3 md:p-5 rounded-3xl border border-white/15" style={panelStyle}>
           <div className="flex flex-col items-center gap-1 min-w-0">
             <span className="text-[10px] text-amber-300 font-bold">فريقك</span>
-            <span className="h-12 w-12 md:h-16 md:w-16 rounded-2xl flex items-center justify-center font-black text-lg" style={{background:club.primary,color:club.secondary}}>{club.crest}</span>
+            <PenaltyClubCrest club={club} className="w-12 h-12 md:w-16 md:h-16" />
             <b className="text-xs md:text-lg text-center">{club.name}</b>
           </div>
           <div className="text-center flex flex-col items-center gap-2">
@@ -97,7 +105,7 @@ export const PenaltyEliteSetup:React.FC<Props>=({onBack,onStart})=>{
           </div>
           <div className="flex flex-col items-center gap-1 min-w-0">
             <span className="text-[10px] text-slate-300 font-bold">الكمبيوتر</span>
-            <span className="h-12 w-12 md:h-16 md:w-16 rounded-2xl flex items-center justify-center font-black text-lg" style={{background:rival.primary,color:rival.secondary}}>{rival.crest}</span>
+            <PenaltyClubCrest club={rival} className="w-12 h-12 md:w-16 md:h-16" />
             <b className="text-xs md:text-lg text-center">{rival.name}</b>
           </div>
         </div>

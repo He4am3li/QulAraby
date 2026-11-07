@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {readFileSync,existsSync} from 'node:fs';
+const required=['madrid','liverpool','psg','chelsea','arsenal','juventus','city','bayern','barcelona','united'];
+const source=readFileSync('components/games/PenaltyEliteData.ts','utf8');
+const setup=readFileSync('components/games/PenaltyEliteSetup.tsx','utf8');
+const game=readFileSync('components/games/PenaltyShootout.tsx','utf8');
+const component=readFileSync('components/games/PenaltyClubCrest.tsx','utf8');
+for(const id of required){
+  assert.ok(source.includes("id:'"+id+"'"),'Missing selectable club: '+id);
+  assert.ok(source.includes("crestUrl:'/assets/clubs/"+id+".svg'"),'Missing club crest URL: '+id);
+  const path='public/assets/clubs/'+id+'.svg';
+  assert.ok(existsSync(path),'Missing locally bundled real crest: '+id);
+  const svg=readFileSync(path,'utf8');
+  assert.match(svg,/<svg\b[^>]*viewBox=/i,'Invalid SVG crest: '+id);
+  assert.doesNotMatch(svg,/<script\b|onload\s*=|javascript:|<foreignObject\b|<image\b/i,'Unsafe SVG markup: '+id);
+  assert.ok(svg.length>350,'Blank or placeholder crest: '+id);
+}
+assert.equal((source.match(/id:'(?:madrid|liverpool|psg|chelsea|arsenal|juventus|city|bayern|barcelona|united)'/g)||[]).length,10,'Exactly 10 clubs required');
+assert.match(component,/<img src=\{club\.crestUrl\}/,'Render real vector files as images');
+assert.match(component,/object-contain/,'Preserve crest aspect ratio');
+assert.match(setup,/ELITE_CLUBS\.map\(\(team,index\)/,'Club chooser must include all ten');
+assert.match(setup,/setClubPage/,'Mobile pagination is required');
+assert.match(setup,/PenaltyClubCrest club=\{team\}/,'Selection page crest missing');
+assert.match(setup,/PenaltyClubCrest club=\{club\}/,'Lineup home crest missing');
+assert.match(setup,/PenaltyClubCrest club=\{rival\}/,'Lineup rival crest missing');
+assert.match(game,/PenaltyClubCrest club=\{match\.home\}/,'Winner screen home crest missing');
+assert.match(game,/PenaltyClubCrest club=\{match\.away\}/,'Winner screen away crest missing');
+assert.match(game,/progress\(homeShots,match\.home\)/,'Scoreboard home crest missing');
+assert.match(game,/progress\(awayShots,match\.away\)/,'Scoreboard away crest missing');
+console.log('Penalty Elite ten real local club crests, mobile selector, lineup and match result: PASS');

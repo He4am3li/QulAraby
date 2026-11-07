@@ -12,7 +12,7 @@
     "test:radio": "node scripts/test-radio.mjs && node tests/radio-ui.test.mjs",
     "test:vocabulary": "node tests/vocabulary-contexts.test.mjs && node tests/vocabulary-srs.test.mjs && node tests/vocabulary-editorial.test.mjs",
     "test:gateway": "node tests/gemini-gateway.test.mjs",
-    "prebuild": "npm run test:penalty-3d && npm run test:penalty-elite && npm run test:space-ui && npm run test:operation-x && npm run test:secret-mission && npm run assets:detective && npm run test:detective && npm run test:vocabulary && npm run test:gateway && npm run test:letter-audio && npm run test:letter-canvas && npm run test:letter-glass && npm run test:lip-sync && npm run test:letter-content && npm run test:voice-lab && npm run test:letter-listening && npm run test:letter-mastery",
+    "prebuild": "npm run test:penalty-3d && npm run test:penalty-elite && npm run test:penalty-crests && npm run test:space-ui && npm run test:operation-x && npm run test:secret-mission && npm run assets:detective && npm run test:detective && npm run test:vocabulary && npm run test:gateway && npm run test:letter-audio && npm run test:letter-canvas && npm run test:letter-glass && npm run test:lip-sync && npm run test:letter-content && npm run test:voice-lab && npm run test:letter-listening && npm run test:letter-mastery",
     "test:letter-audio": "node tests/letters-audio.test.mjs",
     "test:letter-canvas": "node tests/letters-canvas.test.mjs",
     "test:lip-sync": "node --test tests/speech-lip-sync.test.mjs tests/sara-facial-rig.test.mjs tests/ahmed-facial-rig.test.mjs tests/fatima-facial-rig.test.mjs tests/saudi-facial-rig.test.mjs tests/emirati-facial-rig.test.mjs tests/moroccan-facial-rig.test.mjs tests/iraqi-facial-rig.test.mjs",
@@ -28,7 +28,8 @@
     "test:operation-x": "node tests/operation-x-regression.test.mjs",
     "test:space-ui": "node tests/space-visual-restoration.test.mjs && node tests/space-hologram-ui.test.mjs",
     "test:penalty-3d": "node tests/penalty-3d.test.mjs",
-    "test:penalty-elite": "node tests/penalty-elite.test.mjs"
+    "test:penalty-elite": "node tests/penalty-elite.test.mjs",
+    "test:penalty-crests": "node tests/penalty-club-crests.test.mjs"
   },
   "dependencies": {
     "@google/genai": "2.31.0",
