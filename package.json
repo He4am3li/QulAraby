@@ -26,7 +26,7 @@
     "predev": "npm run assets:detective",
     "test:secret-mission": "node tests/secret-mission-challenges.test.mjs",
     "test:operation-x": "node tests/operation-x-regression.test.mjs",
-    "test:space-ui": "node tests/space-visual-restoration.test.mjs"
+    "test:space-ui": "node tests/space-visual-restoration.test.mjs && node tests/space-hologram-ui.test.mjs"
   },
   "dependencies": {
     "@google/genai": "2.31.0",
