@@ -33,7 +33,7 @@
 .qul-phone-status-bar{position:absolute;top:11px;left:14px;right:14px;z-index:8;height:30px;display:flex;align-items:flex-start;justify-content:space-between;direction:ltr;color:#182f40;font:900 12px ui-sans-serif,system-ui}
 .qul-phone-status-bar>strong{padding-top:5px;padding-left:7px}
 .qul-phone-status-bar>span{display:flex;align-items:center;gap:3px;padding-top:5px}
-.qul-phone-dynamic-island{position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:99px;height:27px;border-radius:40px;background:#10131a;box-shadow:inset 0 1px 2px #3f444f,0 1px 2px #fff6;display:flex;align-items:center;justify-content:flex-end;padding:0 11px;gap:9px}
+.qul-phone-dynamic-island{position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:84px;height:27px;border-radius:40px;background:#10131a;box-shadow:inset 0 1px 2px #3f444f,0 1px 2px #fff6;display:flex;align-items:center;justify-content:flex-end;padding:0 11px;gap:9px}
 .qul-phone-dynamic-island i:first-child{width:31px;height:6px;border-radius:8px;background:#1b2330}
 .qul-phone-dynamic-island i:last-child{width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 40% 45%,#354f7b,#101420);border:1px solid #233248}
 .qul-phone-screen-dialer{position:absolute;inset:48px 13px 20px;display:flex;flex-direction:column;align-items:center;min-height:0;overflow:hidden}
