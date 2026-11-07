@@ -429,7 +429,7 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
                 </button>;
               })}
             </div>
-            <div className="absolute left-[7.5%] top-[56%] z-30 flex w-[28%] flex-col gap-1">
+            <div className="absolute left-[7.5%] top-[68.2%] z-30 flex w-[28%] flex-col gap-1">
               {clueCleared && !readyToAccuse && <button type="button" onClick={nextClue}
                 className="rounded-md border border-amber-500/70 bg-[#0c1822]/85 px-1 py-1 font-bold text-amber-200"
                 style={{ fontSize: 'clamp(8px, .95vw, 15px)' }}>{t('الإفادة التالية', 'Next statement')}</button>}
@@ -508,13 +508,14 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
             <div className="flex items-center justify-between"><h3 className="text-lg font-black text-amber-200">{t('من الجاني؟ قدم الدليل.', 'Who did it? Show the evidence.')}</h3><button type="button" aria-label={t('إغلاق','Close')} onClick={() => {setAccusationOpen(false);setFeedback('');}}><X size={20}/></button></div>
             <p className="rounded-xl border border-amber-300/30 bg-[#e6d0a6] p-3 text-center text-sm font-bold leading-relaxed text-[#2b1d0c]" lang="ar" dir="rtl">{evidenceAr}</p>
             {language === 'en' && <p className="text-sm text-amber-100">{evidenceEn}</p>}
-            <div className="grid grid-cols-3 gap-2 lg:hidden">{mobileAccusationSuspects.map(person => <Portrait key={person.id} person={person} compact selected={accusedId === person.id} onClick={() => {setAccusedId(person.id);setFeedback('');}}/>)}</div>
-            {suspectPageCount > 1 && <div className="flex items-center justify-between gap-2 lg:hidden">
-              <button type="button" disabled={accusationPage === 0} onClick={() => setAccusationPage(p => Math.max(0,p-1))} className={secondaryButton + ' disabled:opacity-40'}><ChevronRight size={18}/></button>
-              <span className="text-xs text-amber-100">{t('مجموعة المتهمين', 'Suspect group')} {accusationPage+1}/{suspectPageCount}</span>
-              <button type="button" disabled={accusationPage >= suspectPageCount-1} onClick={() => setAccusationPage(p => Math.min(suspectPageCount-1,p+1))} className={secondaryButton + ' disabled:opacity-40'}><ChevronLeft size={18}/></button>
-            </div>}
-            <div className="hidden gap-2 lg:grid lg:grid-cols-5 xl:grid-cols-6">{activeCase.suspects.map(person => <Portrait key={person.id} person={person} compact selected={accusedId === person.id} onClick={() => {setAccusedId(person.id);setFeedback('');}}/>)}</div>
+            {/* Every suspect remains selectable in a single, balanced two-row grid. */}
+            <div className="grid gap-1.5 sm:gap-2" dir="rtl"
+              style={{gridTemplateColumns: 'repeat(' + suspectColumns + ', minmax(0, 1fr))'}}>
+              {activeCase.suspects.map(person =>
+                <Portrait key={person.id} person={person} compact
+                  selected={accusedId === person.id}
+                  onClick={() => {setAccusedId(person.id);setFeedback('');}}/>)}
+            </div>
             <p className="text-sm font-bold text-amber-100">{t('ما سبب اتهامك لهذا الشخص؟', 'Why do you accuse this person?')}</p>
             {level === 'advanced' ? <div className="grid gap-3 sm:grid-cols-2">
               {advancedProofs.map((proof, index) => <div key={index} className="space-y-2 rounded-xl border border-amber-400/25 bg-black/30 p-3">
