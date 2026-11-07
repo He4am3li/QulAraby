@@ -3597,7 +3597,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
           <div 
             className="absolute -bottom-[16%] -left-[12%] w-[42vw] h-[42vw] max-w-[520px] max-h-[520px] rounded-full pointer-events-none"
             style={{
-              background: "radial-gradient(circle at 45% 45%, transparent 66%, rgba(34, 211, 238, 0.35) 86%, rgba(103, 232, 249, 0.75) 100%)",
+              background: "radial-gradient(circle at 45% 45%, transparent 65%, rgba(49, 150, 172, 0.17) 84%, rgba(110, 208, 219, 0.42) 100%)",
               filter: "blur(5px)"
             }}
           />
@@ -4487,8 +4487,8 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                         <div 
                           className="absolute -inset-3.5 rounded-full pointer-events-none transition-all duration-500"
                           style={{
-                            background: "radial-gradient(circle, rgba(34,211,238,0.45) 0%, rgba(6,182,212,0.18) 60%, transparent 80%)",
-                            boxShadow: "0 0 24px rgba(34,211,238,0.6)"
+                            background: `radial-gradient(circle, ${node.glowColor.replace(/0\.9\)/, "0.28)")} 0%, rgba(93,153,173,0.10) 60%, transparent 80%)`,
+                            boxShadow: "0 0 20px rgba(120,180,197,0.35)"
                           }}
                         />
                       )}
@@ -4498,7 +4498,7 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                         className="absolute -inset-2.5 rounded-full pointer-events-none transition-opacity duration-300"
                         style={{
                           background: `radial-gradient(circle, ${node.glowColor} 0%, transparent 72%)`,
-                          opacity: isSelected ? 0.95 : isHovered ? 0.8 : 0.45
+                          opacity: isSelected ? 0.84 : isHovered ? 0.66 : 0.32
                         }}
                       />
 
@@ -4552,10 +4552,10 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
                     <div className="mt-1.5 flex flex-col items-center pointer-events-none">
                       <span className={`font-bold text-xs md:text-sm tracking-wide transition-all duration-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] ${
                         isSelected
-                          ? "text-cyan-200 scale-110 drop-shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+                          ? "text-[#fff0ce] scale-110 drop-shadow-[0_0_11px_rgba(241,193,130,.55)]"
                           : isHovered
-                          ? "text-white scale-105"
-                          : "text-cyan-100/90"
+                          ? "text-[#fff9e8] scale-105"
+                          : "text-[#e2edf4]/95"
                       }`}>
                         {node.name}
                       </span>
