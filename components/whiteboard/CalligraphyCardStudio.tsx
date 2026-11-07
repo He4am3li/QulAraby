@@ -896,7 +896,9 @@ export const CalligraphyCardStudio: React.FC<CalligraphyCardStudioProps> = ({
           .sort((a, b) => Number(b.id.match(/^card_(\d{11,})/)?.[1] || 0) -
             Number(a.id.match(/^card_(\d{11,})/)?.[1] || 0))
           .slice(0, MAX_SAVED_CALLIGRAPHY_CARDS);
-        if (ordered.length > local.length) await persistCalligraphyCards(ordered, uid);
+        if (ordered.some(card => !local.some(existing => existing.id === card.id))) {
+          await persistCalligraphyCards(ordered, uid);
+        }
         if (!mounted || request !== generation) return;
         setSavedCards(ordered);
         if (legacy.status === 'fulfilled') {
