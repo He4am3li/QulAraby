@@ -12,8 +12,6 @@ import { StudioMicIcon } from '../components/StudioMicIcon';
 import { FallingLetters } from '../components/Layout';
 import { Modality, Type } from '@google/genai';
 import { getAI, getLiveAI, generateSessionInsights, translateAndExpand, generateSpeech, decodeAudioData, speak as globalSpeak } from '../services/gemini';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
@@ -786,6 +784,11 @@ export const Speak: React.FC = () => {
     if (!summaryPrintRef.current || !transcriptPrintRef.current) return;
     setLoading(true);
     try {
+      // Heavy PDF modules are loaded only when a learner requests a report.
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
       const allImgs = [
         ...Array.from(summaryPrintRef.current.querySelectorAll('img')),
         ...Array.from(transcriptPrintRef.current.querySelectorAll('img'))
@@ -817,8 +820,15 @@ export const Speak: React.FC = () => {
       const summaryImgData = summaryCanvas.toDataURL('image/png');
       const summaryPdfHeight = (summaryCanvas.height * pdfWidth) / summaryCanvas.width;
       pdf.addImage(summaryImgData, 'PNG', 0, 0, pdfWidth, summaryPdfHeight);
+      // A long summary must continue onto another page, not get clipped at A4.
+      let summaryOffset = 0;
+      while (summaryPdfHeight + summaryOffset > pdfHeight + 0.5) {
+        summaryOffset -= pdfHeight;
+        pdf.addPage();
+        pdf.addImage(summaryImgData, 'PNG', 0, summaryOffset, pdfWidth, summaryPdfHeight);
+      }
 
-      // Page 2+: Transcript
+      // Following pages: Transcript
       pdf.addPage();
       const transcriptEl = transcriptPrintRef.current;
       const messages = transcriptEl.querySelectorAll('.transcript-message');
@@ -862,7 +872,7 @@ export const Speak: React.FC = () => {
         currentY += msgHeight + 8;
       }
 
-      pdf.save(`Qul_Conversation_Report_${selectedTopic?.en}_${new Date().toLocaleDateString()}.pdf`);
+      pdf.save(`Qul_Conversation_Report_${selectedTopic?.en}_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (err) {
       console.error("PDF Generation failed", err);
       window.print();
