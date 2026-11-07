@@ -5339,92 +5339,56 @@ export const ArabicSpaceJourney: React.FC<ArabicSpaceJourneyProps> = ({ onBack, 
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* 3. شاشة النصر والاحتفال (Victory Screen) */}
-      {/* ============================================================== */}
-      {screen === "victory" && (
-        <div className="relative w-full h-screen flex items-center justify-center bg-cover bg-center p-4"
-             style={{ backgroundImage: `url(${turquoiseCosmosBg})` }}>
-          <div className="absolute inset-0 bg-[#041a22]/85 backdrop-blur-md" />
-
-          <div className="relative z-20 w-full max-w-md bg-[#042630]/95 border-2 border-cyan-400/60 rounded-3xl p-8 shadow-[0_0_50px_rgba(34,211,238,0.4)] flex flex-col items-center text-center">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-cyan-500 to-emerald-400 flex items-center justify-center text-white shadow-[0_0_30px_#22d3ee] mb-4 animate-bounce">
-              <Award size={44} />
-            </div>
-
-            <h2 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-emerald-300 to-white mb-2">
-              اكتملت الرحلة بنجاح!
-            </h2>
-            <p className="text-sm text-slate-300 font-semibold mb-6">
-              وصلت بأمان إلى المدار وتم اصطياد جميع الكلمات الصحيحة بنجاح فائق!
-            </p>
-
-            <div className="w-full bg-[#031d24] rounded-2xl p-4 border border-cyan-500/20 flex items-center justify-around mb-6">
-              <div>
-                <div className="text-xs text-cyan-300/80 font-bold">النقاط المحرزة</div>
-                <div className="text-2xl font-black text-amber-400">{score + 800}</div>
+      {/* Identical icon-free laser-blue holographic styling for both outcomes. */}
+      {(screen === "victory" || screen === "gameover") && (
+        <div data-space-screen="laser-hologram-outcome"
+          className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-[#020c27] p-4 sm:p-6">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-[-10%] bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${towardSpaceOriginalCover})`,
+              filter: "blur(24px) saturate(1.14) brightness(.57)",
+              transform: "scale(1.06)"
+            }}/>
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0"
+            style={{background:"radial-gradient(ellipse 65% 60% at 50% 46%,rgba(28,95,173,.14),rgba(1,9,33,.76))"}}/>
+          <SpaceLaserGlass variant="outcome"
+            aria-label={screen === "victory" ? "نتيجة النجاح" : "نتيجة المحاولة"}
+            className="w-full max-w-[560px] px-6 py-7 sm:px-10 sm:py-9">
+            <div className="mx-auto flex max-w-[475px] flex-col items-center text-center">
+              <span className="text-[11px] font-semibold tracking-[.14em] text-[#89d9fa]">تقرير الرحلة</span>
+              <div aria-hidden="true" className="my-4 h-[2px] w-24 bg-gradient-to-r from-transparent via-[#b4f3ff] to-transparent shadow-[0_0_18px_#4fc9ff]"/>
+              <h2 className="max-w-[20ch] text-balance text-2xl font-black leading-relaxed text-[#f2fcff] [text-shadow:0_0_25px_rgba(76,197,255,.37)] sm:text-3xl">
+                {screen === "victory" ? "اكتملت الرحلة بنجاح" : "لم تكتمل المهمة"}
+              </h2>
+              <p className="mt-3 max-w-[43ch] text-sm font-medium leading-[1.9] text-[#c3e8f8]">
+                {screen === "victory"
+                  ? "تم جمع الكلمات المطلوبة، وتسجيل إنجازك على هذا الكوكب."
+                  : "انتهت الدروع قبل إكمال جمع الكلمات. يمكنك إعادة المحاولة مع الاحتفاظ بتقدمك السابق."}
+              </p>
+              <dl className="mt-7 grid w-full grid-cols-2 gap-3 border-y border-[#a2e7ff]/25 py-5">
+                <div className="border-l border-[#a2e7ff]/20 px-2">
+                  <dt className="text-xs font-medium text-[#9ad9f3]">النقاط</dt>
+                  <dd className="mt-1 text-2xl font-bold tabular-nums text-[#ecfbff]">{screen === "victory" ? score + 800 : score}</dd>
+                </div>
+                <div className="px-2">
+                  <dt className="text-xs font-medium text-[#9ad9f3]">الدروع المتبقية</dt>
+                  <dd className="mt-1 text-2xl font-bold tabular-nums text-[#ecfbff]">{shields} / 3</dd>
+                </div>
+              </dl>
+              <div className="mt-7 flex w-full flex-col gap-3 sm:flex-row">
+                <button type="button"
+                  onClick={() => screen === "victory" ? setScreen("home") : launchFlightGame(activeStage)}
+                  className={SPACE_GLASS_PRIMARY_BUTTON + " flex-1"}>
+                  {screen === "victory" ? "العودة إلى الكواكب" : "إعادة المحاولة"}
+                </button>
+                <button type="button"
+                  onClick={() => screen === "victory" ? launchFlightGame(activeStage) : setScreen("home")}
+                  className={SPACE_GLASS_SECONDARY_BUTTON + " flex-1"}>
+                  {screen === "victory" ? "إعادة الرحلة" : "العودة إلى الكواكب"}
+                </button>
               </div>
-              <div className="w-px h-10 bg-cyan-500/20" />
-              <div>
-                <div className="text-xs text-cyan-300/80 font-bold">دروع رائد الفضاء</div>
-                <div className="text-2xl font-black text-cyan-400">{shields} / 3</div>
-              </div>
             </div>
-
-            <div className="flex gap-3 w-full">
-              <button
-                onClick={() => setScreen("home")}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-white font-black shadow-[0_0_20px_rgba(34,211,238,0.4)] active:scale-95 transition-all"
-              >
-                العودة للخريطة 🌌
-              </button>
-              <button
-                onClick={() => launchFlightGame(activeStage)}
-                className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 font-bold border border-white/20 transition-all"
-                title="إعادة الرحلة"
-              >
-                <RotateCcw size={20} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================== */}
-      {/* 4. شاشة نفاد الدروع (Game Over Screen) */}
-      {/* ============================================================== */}
-      {screen === "gameover" && (
-        <div className="relative w-full h-screen flex items-center justify-center bg-cover bg-center p-4"
-             style={{ backgroundImage: `url(${turquoiseCosmosBg})` }}>
-          <div className="absolute inset-0 bg-[#041a22]/90 backdrop-blur-md" />
-
-          <div className="relative z-20 w-full max-w-md bg-[#090b20]/95 border-2 border-rose-500/60 rounded-3xl p-8 shadow-[0_0_50px_rgba(244,63,94,0.4)] flex flex-col items-center text-center">
-            <div className="w-20 h-20 rounded-full bg-rose-600/20 border-2 border-rose-500 flex items-center justify-center text-rose-400 shadow-[0_0_30px_#f43f5e] mb-4">
-              <Shield size={40} />
-            </div>
-
-            <h2 className="text-2xl md:text-3xl font-black text-rose-300 mb-2">
-              نفدت دروع رائد الفضاء!
-            </h2>
-            <p className="text-sm text-slate-300 font-semibold mb-6">
-              أصيبت بدلة رائد الفضاء بعدة اصطدامات فضائية، حاول مرة أخرى وركز على اصطياد الكلمات الصحيحة فقط وتدمير الصخور!
-            </p>
-
-            <div className="flex gap-3 w-full">
-              <button
-                onClick={() => launchFlightGame(activeStage)}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-amber-600 hover:from-rose-400 hover:to-amber-500 text-white font-black shadow-[0_0_20px_rgba(244,63,94,0.4)] active:scale-95 transition-all"
-              >
-                إعادة المحاولة 🚀
-              </button>
-              <button
-                onClick={() => setScreen("home")}
-                className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 font-bold border border-white/20 transition-all"
-              >
-                الخريطة
-              </button>
-            </div>
-          </div>
+          </SpaceLaserGlass>
         </div>
       )}
 
