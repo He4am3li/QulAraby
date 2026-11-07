@@ -42,8 +42,7 @@ export const ELITE_CLUBS: EliteClub[] = [
       ['Gravenberch',38,'MF'],['Wirtz',7,'MF'],['Szoboszlai',8,'MF'],
       ['Mac Allister',10,'MF'],['Isak',9,'FW'],['Gakpo',18,'FW'],['Ekitike',22,'FW']
     ])
-  }
-
+  },
   {
     id:'psg',name:'باريس سان جيرمان',english:'Paris Saint-Germain',crest:'PSG',crestUrl:'/assets/clubs/psg.svg',
     primary:'#172E67',secondary:'#CF1737',accent:'#E8C47C',
