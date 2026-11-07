@@ -110,6 +110,7 @@ export const Speak: React.FC = () => {
 
   const [isActive, setIsActive] = React.useState(false);
   const [setupMode, setSetupMode] = React.useState(true);
+  const [showMobileOptions, setShowMobileOptions] = React.useState(true);
   const [showSummary, setShowSummary] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [generatingInsights, setGeneratingInsights] = React.useState(false);
@@ -827,11 +828,11 @@ export const Speak: React.FC = () => {
         onToggle={toggleLang}
       />
 
-      <div className="flex-1 flex overflow-hidden bg-slate-50/30">
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden bg-slate-50/30">
         
         {/* Sidebar - Topics & Levels */}
-        <aside className="w-[280px] bg-white border-r rtl:border-r-0 rtl:border-l border-slate-100 flex flex-col shrink-0 no-print relative overflow-hidden shadow-sm">
-            <div className="p-6 border-b border-slate-50 overflow-y-auto custom-scroll flex-1">
+        <aside className={`${setupMode && showMobileOptions ? 'flex' : 'hidden'} lg:flex w-full lg:w-[280px] flex-1 lg:flex-none min-h-0 bg-white border-b lg:border-b-0 lg:border-r rtl:lg:border-r-0 rtl:lg:border-l border-slate-100 flex-col shrink-0 no-print relative overflow-hidden shadow-sm`}>
+            <div className="p-4 sm:p-6 border-b border-slate-50 overflow-y-auto custom-scroll flex-1 min-h-0">
                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">{t.topicLabel}</h3>
                 <div className="space-y-3">
                     {TOPICS.map(topic => {
@@ -845,6 +846,7 @@ export const Speak: React.FC = () => {
                                   setSelectedTopic(topic);
                                   setSetupMode(true);
                                   setShowSummary(false);
+                                  setShowMobileOptions(false);
                               }}
                               className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-4 text-right group ${selectedTopic?.id === topic.id ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-md' : 'border-slate-50 bg-slate-50/50 hover:border-slate-200 text-slate-500'} ${isActive || !selectedLevel ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
                           >
@@ -882,7 +884,7 @@ export const Speak: React.FC = () => {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col overflow-hidden relative">
+        <main className={`${setupMode && showMobileOptions ? 'hidden' : 'flex'} lg:flex flex-1 min-w-0 min-h-0 flex-col overflow-hidden relative`}>
           {showSummary && (
             <div className="absolute inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm p-4 flex items-center justify-center animate-in fade-in duration-300">
               <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl flex flex-col max-h-[90%] overflow-hidden animate-in zoom-in-95 duration-500">
@@ -1038,8 +1040,12 @@ export const Speak: React.FC = () => {
                   key="setup"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="h-full flex flex-col items-center justify-center p-6 space-y-8"
+                  className="h-full min-h-0 overflow-y-auto flex flex-col items-center justify-center px-4 py-6 sm:p-6 gap-4 sm:gap-8"
                 >
+                  <button type="button" onClick={() => setShowMobileOptions(true)}
+                    className="lg:hidden text-sm font-bold text-blue-700 border border-blue-200 rounded-xl px-4 py-2 bg-blue-50">
+                    {lang === 'ar' ? 'تغيير المستوى أو الموضوع' : 'Change level or topic'}
+                  </button>
                   <div className="text-center space-y-4">
                     <div className="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center text-[#2563eb] shadow-sm mx-auto">
                       <span className="text-5xl">{selectedTopic.icon}</span>
@@ -1054,7 +1060,7 @@ export const Speak: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="max-w-md w-full bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl space-y-6">
+                  <div className="max-w-md w-full bg-white p-5 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 shadow-xl space-y-5 sm:space-y-6">
                     <div className="space-y-2">
                       <p className="text-xs font-black text-slate-400 uppercase tracking-widest text-center">{t.setupTitle}</p>
                       <p className="text-sm text-slate-500 text-center arabic-font leading-relaxed">
@@ -1095,11 +1101,11 @@ export const Speak: React.FC = () => {
               </div>
 
               <div className="flex-1 w-full flex flex-col items-center justify-center overflow-hidden">
-                <div className={`w-56 h-56 rounded-full flex items-center justify-center transition-all duration-500 relative shrink-0 ${isActive ? 'bg-blue-50 shadow-2xl shadow-blue-500/10' : 'bg-slate-100'}`}>
+                <div className={`w-44 h-44 sm:w-56 sm:h-56 rounded-full flex items-center justify-center transition-all duration-500 relative shrink-0 ${isActive ? 'bg-blue-50 shadow-2xl shadow-blue-500/10' : 'bg-slate-100'}`}>
                   {isActive && (
                     <div className={`absolute inset-0 rounded-full border-2 border-blue-200 opacity-20 ${isAiSpeaking ? 'animate-ping' : ''}`} />
                   )}
-                  <div className={`w-44 h-44 rounded-full flex items-center justify-center border-2 border-white shadow-inner transition-transform ${isAiSpeaking ? 'scale-110 shadow-blue-200' : 'scale-100'}`}>
+                  <div className={`w-36 h-36 sm:w-44 sm:h-44 rounded-full flex items-center justify-center border-2 border-white shadow-inner transition-transform ${isAiSpeaking ? 'scale-110 shadow-blue-200' : 'scale-100'}`}>
                     <Activity size={80} className={`${isAiSpeaking ? 'text-[#2563eb]' : 'text-slate-400'} transition-colors duration-300`} />
                   </div>
                 </div>
