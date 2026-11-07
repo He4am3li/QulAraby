@@ -151,6 +151,7 @@ export const Speak: React.FC = () => {
   const nextStartTimeRef = React.useRef<number>(0);
   const sourcesRef = React.useRef<Set<AudioBufferSourceNode>>(new Set());
   const audioEpochRef = React.useRef(0);
+  const mountedRef = React.useRef(false);
   const historyRef = React.useRef<ChatEntry[]>([]);
   const learnerTextRef = React.useRef('');
   const tutorTextRef = React.useRef('');
@@ -179,10 +180,14 @@ export const Speak: React.FC = () => {
     setIsAiSpeaking(false);
   }, []);
 
-  React.useEffect(() => () => {
-    closeTransport();
-    void audioContextRef.current?.close().catch(() => {});
-    void inputAudioContextRef.current?.close().catch(() => {});
+  React.useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      closeTransport();
+      void audioContextRef.current?.close().catch(() => {});
+      void inputAudioContextRef.current?.close().catch(() => {});
+    };
   }, [closeTransport]);
   const reportRef = React.useRef<HTMLDivElement>(null);
   const summaryPrintRef = React.useRef<HTMLDivElement>(null);
@@ -361,10 +366,15 @@ export const Speak: React.FC = () => {
       const input = contexts.input;
 
       const ai = await getLiveAI();
-      
+      if (!mountedRef.current) return;
+
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (!mountedRef.current) {
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
       } catch (e: any) {
         setError(t.permError);
         setLoading(false);
@@ -1141,7 +1151,14 @@ export const Speak: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-8 space-y-3 w-full max-w-2xl overflow-y-auto custom-scroll px-2 max-h-[40%]">
+                <div className="mt-4 sm:mt-8 space-y-3 w-full max-w-2xl overflow-y-auto custom-scroll px-2 max-h-[40%]" aria-live="polite">
+                  {conversationHistory.slice(-6).map((entry, idx) => (
+                    <div key={conversationHistory.length - 6 + idx}
+                      className={`p-3 border rounded-2xl ${entry.role === 'ai' ? 'bg-emerald-50/70 border-emerald-100' : 'bg-white border-slate-100'}`}>
+                      <p className="text-[10px] font-bold text-slate-500 mb-1">{entry.role === 'ai' ? t.tutorName : t.userName}</p>
+                      <p className="text-sm arabic-font text-slate-700 leading-relaxed" dir="auto">{entry.text}</p>
+                    </div>
+                  ))}
                   {userTranscription && (
                     <div className="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-1">
                       <p className="text-[9px] font-black text-slate-300 uppercase mb-1">{t.userName}</p>
