@@ -11,7 +11,9 @@ must(main.includes('loadCalligraphyCards()'), 'Loads saved artwork from IndexedD
 must(main.includes('await persistCalligraphyCards(updated)'), 'Save/delete await persistent transactions');
 must(storage.includes("indexedDB.open(DB_NAME, 1)"), 'Uses IndexedDB instead of localStorage for image payload');
 must(storage.includes('transaction.oncomplete'), 'Resolves save after transaction commit');
-must(storage.includes('localStorage.removeItem(LEGACY_KEY)'), 'Migrates legacy cards after successful commit');
+must(storage.includes('await persistCalligraphyCards(legacy, \'guest\')'), 'Copies legacy calligraphy cards to scoped guest storage after IndexedDB commit');
+must(storage.includes('loadLegacyCalligraphyCards()'), 'Retains explicit legacy recovery without leaking guest cards into signed-in accounts');
+must(!storage.includes('localStorage.removeItem(LEGACY_KEY)'), 'Does not delete legacy source before an authorized account import');
 must(storage.includes('MAX_SAVED_CALLIGRAPHY_CARDS = 20'), 'Keeps bounded on-device gallery');
 must(!main.includes("localStorage.setItem('qul_calligraphy_saved_cards_atelier'"), 'No legacy quota-limited image save');
 must(!main.includes("setQuoteText(prev => prev + 'َ')"), 'Unsupported diacritics cannot invent a fatha');
