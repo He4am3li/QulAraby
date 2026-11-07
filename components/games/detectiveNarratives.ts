@@ -6,6 +6,10 @@ export interface DetectiveNarrative {
   finalEvidenceAr: string;
   finalEvidenceEn: string;
   cluesEn: string[];
+  accusationProofs?: Array<{
+    questionAr: string; questionEn: string; choicesAr: string[];
+    choicesEn: string[]; correctIndex: number;
+  }>;
 }
 export const DETECTIVE_NARRATIVES: Record<number, DetectiveNarrative> = {
   "1": {
