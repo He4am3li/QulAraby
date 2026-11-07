@@ -409,8 +409,8 @@ export const DetectiveExperience: React.FC<ExperienceProps> = ({ onBack, lang = 
                   className={'group flex min-h-0 flex-col overflow-hidden rounded-[3px] bg-transparent transition-transform duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-100 ' +
                     (cleared ? 'opacity-70 ' : 'hover:-translate-y-0.5')}
                   style={{
-                    flex: '0 0 ' + ((100 - (suspectColumns - 1) * 0.72) / suspectColumns) + '%',
-                    height: ((100 - (suspectRows - 1) * 3.2) / suspectRows) + '%',
+                    flex: '0 0 ' + ((99.3 - (suspectColumns - 1) * 0.72) / suspectColumns) + '%',
+                    height: ((99.3 - (suspectRows - 1) * 3.2) / suspectRows) + '%',
                   }}>
                   <span className={'relative block min-h-0 w-full flex-1 overflow-hidden rounded-t-[3px] border border-b-0 bg-[#101820] shadow-md ' +
                     (cleared ? 'border-emerald-400/70 ' : 'border-[#bb9251]/80 group-hover:border-amber-200')}>
