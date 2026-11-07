@@ -21,8 +21,8 @@
     "test:voice-lab": "node --test tests/dialect-voice-lab.test.mjs",
     "test:letter-listening": "node tests/letters-listening.test.mjs",
     "test:letter-mastery": "node tests/letters-mastery.test.mjs",
-    "assets:detective": "node scripts/install-beginner-detective-assets.mjs",
-    "test:detective": "node tests/detective-beginner-cases.test.mjs && node tests/detective-experience.test.mjs",
+    "assets:detective": "node scripts/install-beginner-detective-assets.mjs && node scripts/install-advanced-detective-assets.mjs",
+    "test:detective": "node tests/detective-beginner-cases.test.mjs && node tests/detective-experience.test.mjs && node tests/detective-advanced-cases.test.mjs",
     "predev": "npm run assets:detective",
     "test:secret-mission": "node tests/secret-mission-challenges.test.mjs",
     "test:operation-x": "node tests/operation-x-regression.test.mjs"
