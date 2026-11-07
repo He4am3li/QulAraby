@@ -858,61 +858,78 @@ export const evaluateCallIn = async (audioBase64: string, transcript: string): P
 };
 
 export const generateSessionInsights = async (history: any[], topic: string): Promise<any> => {
-  const historyText = (history || []).map(h => `${h.role === 'user' ? 'Learner' : 'Tutor'}: ${h.text || ''}`).join('\n');
-  
-  const createFallbackInsights = () => {
-    const rawWords = historyText
-      .replace(/[^\u0600-\u06FF\s]/g, ' ')
-      .split(/\s+/)
-      .map(w => w.trim())
-      .filter(w => w.length >= 3 && !['هذا', 'هذه', 'ذلك', 'تلك', 'التي', 'الذي', 'على', 'إلى', 'نعم', 'شكرا', 'أنا', 'أنت', 'كان', 'يكون'].includes(w));
-    
-    const uniqueWords = Array.from(new Set(rawWords)).slice(0, 5);
-    const key_vocabulary = uniqueWords.length > 0
-      ? uniqueWords.map(w => ({ word: w, translation: `مفردة من الحوار: ${w}` }))
-      : [{ word: topic || 'محادثة', translation: 'Conversation' }];
+  const validTurns = (history || []).filter(turn =>
+    (turn.role === 'user' || turn.role === 'ai') && typeof turn.text === 'string' && turn.text.trim());
+  const historyText = validTurns.map(turn => `${turn.role === 'user' ? 'Learner' : 'Tutor'}: ${turn.text}`).join('\n');
+  const learnerText = validTurns.filter(turn => turn.role === 'user').map(turn => turn.text).join(' ');
 
-    return {
-      summary: `جلسة محادثة تفاعلية تركزت حول موضوع "${topic || 'محادثة عامة'}". تم خلالها ممارسة مهارات التحدث والتعبير باللغة العربية.`,
-      key_vocabulary,
-      corrections: [],
-      tutor_tip_ar: "أحسنت في خوض التجربة والتحدث باللغة العربية! الاستمرار في الممارسة اليومية هو المفتاح لاكتساب الطلاقة والجرأة في الحوار.",
-      tutor_tip_en: "Great job speaking in Arabic! Consistent daily practice will boost your vocabulary and conversational ease."
-    };
-  };
+  // Be explicit about unavailable assessment, rather than making up praise or translations.
+  const createFallbackInsights = () => ({
+    summary: 'تعذر إصدار تحليل تعليمي موثوق لهذه المحادثة. يمكنك مراجعة سجل الحوار وإعادة محاولة التحليل لاحقًا.',
+    key_vocabulary: [],
+    corrections: [],
+    tutor_tip_ar: 'احتفظ بجملة قصيرة من حوارك وحاول استخدامها في موقف جديد.',
+    tutor_tip_en: 'Choose one short sentence from your dialogue and use it in a new situation.',
+    next_practice: { ar: 'تحدث بجملة قصيرة عن ' + (topic || 'موضوعك') + '.', en: 'Say one short Arabic sentence about the topic.' },
+    assessmentStatus: 'limited',
+  });
 
+  if (!learnerText.trim()) return createFallbackInsights();
   try {
     const ai = getAI();
     const schema = {
       type: Type.OBJECT,
       properties: {
         summary: { type: Type.STRING },
-        key_vocabulary: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { word: { type: Type.STRING }, translation: { type: Type.STRING } }, required: ["word", "translation"] } },
-        corrections: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { original: { type: Type.STRING }, correction: { type: Type.STRING }, explanation: { type: Type.STRING } }, required: ["original", "correction", "explanation"] } },
+        key_vocabulary: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: {
+          word: { type: Type.STRING }, translation: { type: Type.STRING }
+        }, required: ['word', 'translation'] } },
+        corrections: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: {
+          original: { type: Type.STRING }, correction: { type: Type.STRING }, explanation: { type: Type.STRING }
+        }, required: ['original', 'correction', 'explanation'] } },
         tutor_tip_ar: { type: Type.STRING },
-        tutor_tip_en: { type: Type.STRING }
+        tutor_tip_en: { type: Type.STRING },
+        next_practice: { type: Type.OBJECT, properties: {
+          ar: { type: Type.STRING }, en: { type: Type.STRING }
+        }, required: ['ar', 'en'] },
       },
-      required: ["summary", "key_vocabulary", "tutor_tip_ar", "tutor_tip_en"]
+      required: ['summary', 'key_vocabulary', 'corrections', 'tutor_tip_ar', 'tutor_tip_en', 'next_practice'],
     };
 
     const response = await ai.models.generateContent({
       model: DEFAULT_TEXT_MODEL,
-      contents: `Analyze this conversation session about ${topic}.
-      
-      Conversation History:
-      ${historyText}
-      
-      Provide a summary, extract key vocabulary (with translations), and identify any corrections needed for the learner's Arabic.`,
-      config: { responseMimeType: "application/json", responseSchema: schema }
+      contents: `Analyze the learner's Arabic language use in the following TRANSCRIBED conversation about ${topic}.
+Only assess observed learner text. The tutor's words are not the learner's achievements.
+Transcription is imperfect. Do not claim to judge audio, pronunciation, speaking rate, pauses, or fluency.
+Write a brief factual learner-focused summary in Arabic, without a numerical proficiency score.
+List at most 5 relevant Arabic vocabulary items occurring in the dialogue, with accurate English translations. Do not claim they have been mastered.
+For corrections, use up to 2 ACTUAL short phrases spoken by the learner, copying original verbatim and offering an appropriate correction; do not invent mistakes.
+Offer one practical next speaking task in Arabic and English based on the learner's needs.
+If the learner hardly speaks Arabic, say so neutrally and offer a simpler next task.
+Conversation:
+${historyText.slice(0, 12000)}`,
+      config: { responseMimeType: 'application/json', responseSchema: schema }
     });
-    
+
     const parsed = safeJSONParse(response.text, null);
-    if (parsed && parsed.summary && parsed.key_vocabulary) {
-      return parsed;
+    if (parsed && typeof parsed.summary === 'string' && Array.isArray(parsed.key_vocabulary)) {
+      const corrections = Array.isArray(parsed.corrections) ? parsed.corrections : [];
+      return {
+        ...parsed,
+        key_vocabulary: parsed.key_vocabulary.slice(0, 5),
+        // Prevent invented corrections from being written to the learner's persistent memory.
+        corrections: corrections.filter((item: any) =>
+          typeof item?.original === 'string' && item.original.trim() &&
+          learnerText.includes(item.original.trim()) && typeof item?.correction === 'string'
+        ).slice(0, 2),
+        next_practice: parsed.next_practice?.ar && parsed.next_practice?.en
+          ? parsed.next_practice : createFallbackInsights().next_practice,
+        assessmentStatus: 'analyzed',
+      };
     }
     return createFallbackInsights();
   } catch (err) {
-    console.warn("Could not generate AI insights from API, providing session-based fallback summary:", err);
+    console.warn('Speaking transcript assessment unavailable:', err);
     return createFallbackInsights();
   }
 };
