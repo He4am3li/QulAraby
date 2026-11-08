@@ -153,7 +153,7 @@ export const Translator: React.FC = () => {
   };
 
   return (
-    <div className={`w-full flex flex-col h-full bg-white overflow-hidden animate-in fade-in duration-700 ${lang === 'ar' ? 'text-right' : 'text-left'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={`w-full flex flex-col h-full bg-[radial-gradient(ellipse_at_75%_12%,rgba(99,184,164,.18),transparent_43%),linear-gradient(140deg,#f2f8f7,#f2f5fb_60%,#f9fafc)] overflow-hidden animate-in fade-in duration-700 ${lang === 'ar' ? 'text-right' : 'text-left'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       
       {/* Header Bar */}
       <PageHeader
@@ -164,10 +164,10 @@ export const Translator: React.FC = () => {
       />
 
       {/* Split Layout: Right sidebar (smaller) + Left main view */}
-      <div className="flex-1 flex overflow-hidden bg-slate-50/30">
+      <div className="flex-1 flex overflow-hidden bg-transparent">
         
         {/* Right Sidebar (aside) */}
-        <aside className="hidden md:flex w-[280px] bg-white border-r rtl:border-r-0 rtl:border-l border-slate-100 flex flex-col shrink-0 no-print relative shadow-sm">
+        <aside className="hidden md:flex w-[280px] bg-white/65 backdrop-blur-2xl border-r rtl:border-r-0 rtl:border-l border-slate-100 flex flex-col shrink-0 no-print relative shadow-sm">
           <div className="flex-1 overflow-y-auto p-5 scrollbar-hide">
             <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">
               {lang === 'ar' ? 'أقسام المترجم' : 'Translator Sections'}
@@ -178,12 +178,12 @@ export const Translator: React.FC = () => {
                 onClick={() => setActiveTab('translator')}
                 className={`w-full p-3.5 rounded-2xl border transition-all flex items-center gap-3 text-right group ${
                   activeTab === 'translator' 
-                    ? 'border-blue-500 bg-blue-50/70 text-blue-700 shadow-xs' 
+                    ? 'border-teal-400 bg-white/75 backdrop-blur-xl text-teal-800 shadow-xs' 
                     : 'border-slate-100 bg-slate-50/50 hover:border-slate-200 text-slate-600'
                 }`}
               >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105 shrink-0 ${
-                  activeTab === 'translator' ? 'bg-blue-600 text-white' : 'bg-white text-slate-500 border border-slate-100'
+                  activeTab === 'translator' ? 'bg-teal-700 text-white' : 'bg-white text-slate-500 border border-slate-100'
                 }`}>
                   <Languages size={20} />
                 </div>
@@ -203,7 +203,7 @@ export const Translator: React.FC = () => {
                 onClick={() => setActiveTab('academy')}
                 className={`w-full p-3.5 rounded-2xl border transition-all flex items-center gap-3 text-right group ${
                   activeTab === 'academy' 
-                    ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 shadow-xs' 
+                    ? 'border-teal-400 bg-white/75 backdrop-blur-xl text-teal-800 shadow-xs' 
                     : 'border-slate-100 bg-slate-50/50 hover:border-slate-200 text-slate-600'
                 }`}
               >
