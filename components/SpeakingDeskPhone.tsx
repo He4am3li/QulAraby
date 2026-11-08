@@ -32,34 +32,20 @@ export const SpeakingDeskPhone: React.FC<DeskPhoneProps> = ({
   return (
     <div className={'qul-source-telephone qul-photo-phone '+(offHook?'is-lifted':'is-cradled')}
       role="group" aria-label={ar?'هاتف برونزي تفاعلي':'Interactive bronze telephone'}>
-      {/* The body has one unchanging coordinate system in both states. */}
-      <motion.img className="qul-phone-static-body" src="/assets/speaking/phone-body-fixed.avif"
-        alt="" draggable={false} aria-hidden="true" initial={false}
-        animate={{opacity:offHook?1:0}}
-        transition={reducedMotion?{duration:0}:{duration:offHook?.08:.18,delay:offHook?0:.55}}/>
-      {/* The original, complete ON-HOOK photograph gives a perfectly seated receiver.
-          It is aligned to the fixed body's cradle instead of rotating the lifted photo. */}
-      <motion.img className="qul-phone-cradled-photo" src="/assets/speaking/phone-closed.avif"
-        alt="" draggable={false} aria-hidden="true" initial={false}
+      {/* Keep the original complete telephone photographs intact.
+          Both states are registered to the SAME stationary base. No clipped
+          receiver masks or extra cord layers are allowed. */}
+      <div className="qul-phone-intrinsic-size" aria-hidden="true"/>
+      <motion.img className="qul-phone-cradled-photo"
+        src="/assets/speaking/phone-closed.avif" alt="" draggable={false}
+        aria-hidden="true" initial={false}
         animate={{opacity:offHook?0:1}}
-        transition={reducedMotion?{duration:0}:{duration:offHook?.2:.22,delay:offHook?0:.53,ease:'easeInOut'}}/>
-      {/* The fully raised endpoint also uses the untouched reference photograph.
-          A short handoff from the moving receiver hides the seam in the supplied mask. */}
-      <motion.img className="qul-phone-raised-photo" src="/assets/speaking/phone-lifted.avif"
-        alt="" draggable={false} aria-hidden="true" initial={false}
+        transition={reducedMotion?{duration:0}:{duration:.3,ease:'easeInOut'}}/>
+      <motion.img className="qul-phone-lifted-photo"
+        src="/assets/speaking/phone-lifted.avif" alt="" draggable={false}
+        aria-hidden="true" initial={false}
         animate={{opacity:offHook?1:0}}
-        transition={reducedMotion?{duration:0}:{duration:.2,delay:offHook?.64:0,ease:'easeInOut'}}/>
-      {/* Only the receiver animates. Raised endpoint matches the source photograph exactly,
-          preventing the detached straight-edge fragment seen in earlier builds. */}
-      <motion.div className="qul-phone-independent-handset"
-        style={{transformOrigin:'57% 23.4%'}} initial={false}
-        animate={offHook
-          ? {x:0,y:0,rotate:0,opacity:1}
-          : {x:0,y:'10%',rotate:23,opacity:0}}
-        transition={reducedMotion?{duration:0}:{duration:.84,ease:[.25,.65,.25,1]}}
-        aria-hidden="true">
-        <img src="/assets/speaking/phone-handset-layer.avif" draggable={false} alt=""/>
-      </motion.div>
+        transition={reducedMotion?{duration:0}:{duration:.42,ease:'easeInOut'}}/>
       <button type="button" className="qul-phone-receiver-hit" disabled={loading}
         onClick={offHook?onHangup:onLift}
         aria-label={offHook?(ar?'إعادة السماعة إلى مكانها':'Return the receiver'):(ar?'رفع السماعة':'Lift the receiver')}/>
