@@ -61,85 +61,82 @@ test('mismatched goal and English-only evidence are not credited',()=>{
     {goal:'غير مطابق',evidence:'أريد طاولة'}])[0].achieved,false);
 });
 
-test('speaking keeps just two sections without the old directory in the sidebar',()=>{
+
+test('speaking retains booth and free speaking with no sidebar directory',()=>{
   const speak=source('pages/Speak.tsx');
   const booth=source('components/SpeakingCallBooth.tsx');
-  assert.match(speak,/speakingBranch === 'booth'/);
-  assert.match(speak,/speakingBranch === 'studio'/);
-  assert.doesNotMatch(speak,/CALL_CONTACTS\.map/);
-  assert.match(speak,/qul-word-gallery-item-active/);
-  assert.match(booth,/<SpeakingPhoneBook/);
-  assert.match(booth,/<SpeakingDeskPhone/);
-  assert.match(booth,/EVERYDAY_CALL_CONTACTS/);
+  assert.ok(speak.includes("speakingBranch === 'booth'"));
+  assert.ok(speak.includes("speakingBranch === 'studio'"));
+  assert.equal(speak.includes('CALL_CONTACTS.map'),false);
+  assert.ok(booth.includes('ADDITIONAL_EVERYDAY_CONTACTS'));
+  assert.ok(booth.includes('callAttemptRef.current = dialed'));
 });
 
-test('28 Arabic alphabetical tabs remain, without invented difficult names in the data source',()=>{
-  const dir=source('data/speakingDirectory.ts');
-  const letters=(dir.match(/export const ARABIC_DIRECTORY_LETTERS = \[([\s\S]*?)\] as const;/)||[])[1];
-  assert.ok(letters,'Arabic alphabet exists');
-  const matches=letters.match(/'[^']+'/g)||[];
-  assert.equal(matches.length,28);
-  assert.equal(new Set(matches).size,28);
-  assert.doesNotMatch(dir,/ADDITIONAL_SPEAKING_CONTACTS|ARABIC_DIRECTORY_RECORDS/);
-});
-
-test('realistic everyday directory has short Arabic names and muted English translations',()=>{
-  const daily=source('data/speakingEverydayContacts.ts');
-  for(const word of ['مطعم','صيدلية','بقالة','مخبز','تاكسي','مغسلة','سوبر ماركت','عيادة','توصيل','مدرسة','مكتبة','مقهى','حلاق','خياط','كهربائي','صالون'])
-    assert.ok(daily.includes("'"+word+"'"),'daily contact '+word);
-  const entries=[...daily.matchAll(/\['([^']+)','([^']+)','([^']+)','([^']+)','([^']+)'\]/g)];
-  assert.ok(entries.length>=35);
-  for(const match of entries){
-    assert.ok(match[1].length<=15,match[1]);
-    assert.ok(match[2].length<30,match[2]);
+test('remove all requested instructional UI and call-control strip',()=>{
+  const booth=source('components/SpeakingCallBooth.tsx');
+  const book=source('components/SpeakingPhoneBook.tsx');
+  for(const banned of ['استخدم دليل الهاتف لإجراء مكالمة هاتفية','qul-reference-instruction','qul-reference-controls']){
+    assert.equal(booth.includes(banned),false,banned);
   }
-  assert.match(daily,/extension: String\(101 \+ index\)/);
-  const css=source('components/SpeakingSourceAssets.css');
-  assert.match(css,/qul-index-entry-name span/);
-  assert.match(css,/color: #a4a5a7/);
-  assert.match(css,/font-family: 'Tajawal','Cairo',sans-serif/);
-  assert.doesNotMatch(css,/Ruqaa|Ruqaa|رقعة/);
+  for(const banned of ['TELEPHONE ADDRESS BOOK','qul-alphabet-heading','qul-alphabet-close','اختر حرفًا، ثم اسم الجهة','qul-alphabet-instruction']){
+    assert.equal(book.includes(banned),false,banned);
+  }
 });
 
-test('original user-uploaded source photos are used without cropping',()=>{
+test('phone body remains still and its original receiver and disc move independently',()=>{
   const phone=source('components/SpeakingDeskPhone.tsx');
-  const css=source('components/SpeakingSourceAssets.css');
-  for(const name of ['phone-closed','phone-lifted','phone-dial','phonebook-cover','phonebook-open']){
+  const css=source('components/SpeakingMinimalPolish.css');
+  assert.ok(phone.includes('qul-phone-static-body'));
+  assert.ok(phone.includes('qul-phone-independent-handset'));
+  assert.ok(phone.includes('animate={offHook?'));
+  assert.ok(phone.includes('qul-phone-native-dial'));
+  assert.ok(phone.includes('qul-phone-native-key'));
+  assert.ok(phone.includes('onDial(digit)'));
+  assert.equal(phone.includes('phone-dial.avif'),false);
+  assert.equal(phone.includes('phone-lifted.avif'),false);
+  assert.ok(css.includes('qul-phone-native-key:hover'));
+  assert.ok(css.includes('background:transparent!important'));
+  for(const name of ['phone-body-fixed','phone-handset-layer','phone-wheel-native']){
     const asset=readFileSync(new URL('../public/assets/speaking/'+name+'.avif',import.meta.url));
-    assert.ok(asset.length>6000,name);
+    assert.ok(asset.length>4000,name);
     assert.equal(asset.toString('ascii',4,12),'ftypavif');
   }
-  assert.match(phone,/phone-closed\.avif/);
-  assert.match(phone,/phone-lifted\.avif/);
-  assert.match(phone,/phone-dial\.avif/);
-  assert.match(css,/object-fit: contain/);
-  assert.match(css,/phonebook-cover.avif/);
-  assert.match(css,/phonebook-open.avif/);
-  assert.match(css,/qul-alphabet-cover-monogram/);
 });
 
-test('receiver rests on hook initially, lifts on click and returns on hangup',()=>{
-  const phone=source('components/SpeakingDeskPhone.tsx');
-  const booth=source('components/SpeakingCallBooth.tsx');
-  assert.match(phone,/offHook \? 'is-lifted' : 'is-cradled'/);
-  assert.match(phone,/onClick=\{offHook \? onHangup : onLift\}/);
-  assert.match(booth,/const \[offHook,setOffHook\] = React.useState\(false\)/);
-  assert.match(booth,/setOffHook\(true\)/);
-  assert.match(booth,/setOffHook\(false\)/);
-  assert.match(booth,/onLift=\{liftReceiver\}/);
-  assert.match(booth,/onHangup=\{endCall\}/);
+test('real leather cover is shown alone before opening and every contact is clickable',()=>{
+  const book=source('components/SpeakingPhoneBook.tsx');
+  const css=source('components/SpeakingMinimalPolish.css');
+  assert.ok(book.includes('useState(false)'));
+  assert.ok(book.includes('phonebook-cover.avif'));
+  assert.ok(book.includes('phonebook-open.avif'));
+  assert.ok(book.includes('onClick={()=>setOpen(true)}'));
+  assert.ok(book.includes('ARABIC_DIRECTORY_LETTERS.map'));
+  assert.ok(book.includes('directoryLetterOf(c.ar)===letter'));
+  assert.ok(book.includes('qul-clean-book-entry'));
+  assert.ok(book.includes('qul-clean-book-corner'));
+  assert.ok(css.includes('qul-clean-book-cover'));
+  assert.ok(css.includes('qul-clean-book-page'));
+  assert.ok(css.includes('qul-clean-book-en'));
 });
 
-test('rotary dial physically rotates with each real selected digit',()=>{
-  const phone=source('components/SpeakingDeskPhone.tsx');
-  assert.match(phone,/DIAL_HOLES\.map/);
-  assert.match(phone,/rotate: \[0, \(rotation\.digit/);
-  assert.match(phone,/setRotation\(prev =>/);
-  assert.match(phone,/onDial\(digit\)/);
-  assert.match(phone,/const canDial = offHook && !loading && !active/);
+test('all 28 alphabet letters have practical callable examples',()=>{
+  const extra=source('data/speakingExtraEverydayContacts.ts');
+  const dir=source('data/speakingDirectory.ts');
+  const match=dir.match(/export const ARABIC_DIRECTORY_LETTERS = (\[[^\n]+\]) as const;/);
+  assert.ok(match,'alphabet definition exists');
+  const letters=JSON.parse(match[1]);
+  assert.equal(letters.length,28);
+  const rowsMatch=extra.match(/const ROWS: readonly \[string,string,Scene\]\[\] = (\[[\s\S]+?\]);/);
+  assert.ok(rowsMatch,'extra everyday directory exists');
+  const rows=JSON.parse(rowsMatch[1]);
+  assert.equal(rows.length,84);
+  const initials=new Set(rows.map(row=>row[0].slice(0,1)));
+  for(const letter of letters)assert.ok(initials.has(letter),'missing: '+letter);
+  assert.equal(new Set(rows.map(row=>row[0])).size,rows.length);
+  assert.ok(201+rows.length<1000);
 });
 
-test('student enters selected extension manually and it auto-connects only when right',()=>{
+test('student must dial exact three-digit extension of chosen entry',()=>{
   const sample=[{id:'restaurant',extension:'101'},{id:'pharmacy',extension:'102'}];
   assert.equal(validateSimulatedDial({selectedId:null,dialed:'101',contacts:sample}),'select_contact');
   assert.equal(validateSimulatedDial({selectedId:'restaurant',dialed:'10',contacts:sample}),'incomplete');
@@ -147,22 +144,6 @@ test('student enters selected extension manually and it auto-connects only when 
   assert.equal(validateSimulatedDial({selectedId:'restaurant',dialed:'101',contacts:sample}),'ready');
   const booth=source('components/SpeakingCallBooth.tsx');
   assert.match(booth,/setBookSelection\(entry\.id\);\s*setDialed\(''\)/);
-  assert.match(booth,/dialed\.length !== 3/);
-  assert.match(booth,/callAttemptRef\.current = dialed/);
-  assert.doesNotMatch(booth,/setDialed\(entry\.extension\)/);
-});
-
-test('book starts closed, opens from bottom-left and preserves photo until browsing',()=>{
-  const book=source('components/SpeakingPhoneBook.tsx');
-  const css=source('components/SpeakingSourceAssets.css');
-  assert.match(book,/React\.useState\(false\)/);
-  assert.match(book,/React\.useState\(true\)/);
-  assert.match(book,/qul-book-pristine/);
-  assert.match(book,/ARABIC_DIRECTORY_LETTERS\.map/);
-  assert.match(book,/setPristine\(false\)/);
-  assert.match(book,/rotateY: 175/);
-  assert.match(book,/qul-alphabet-flipping-leaf/);
-  assert.match(css,/qul-alphabet-cover-opener/);
-  assert.match(css,/bottom: 3%/);
-  assert.match(css,/qul-alphabet-book\.qul-book-pristine/);
+  assert.ok(booth.includes("dialed.length !== 3"));
+  assert.equal(booth.includes('setDialed(entry.extension)'),false);
 });
