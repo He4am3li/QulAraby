@@ -1,6 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Check, Phone, PhoneCall, PhoneOff, Mic, MicOff, RotateCcw, BookOpen, ChevronLeft, Signal, Wifi, BatteryFull, Delete, AudioLines, X, Volume2 } from 'lucide-react';
+import { Check, Phone, RotateCcw, BookOpen } from 'lucide-react';
 import { SpeakingPhoneBook } from './SpeakingPhoneBook';
 import { validateSimulatedDial } from '../services/speakingDial.mjs';
 import './SpeakingCallBooth.css';
@@ -140,7 +139,6 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
   onSelectContact, onStart, onStop, onResume, onToggleMic, meterRef,
 }) => {
   const ar = lang === 'ar';
-  const reducedMotion = useReducedMotion();
   const [bookSelection, setBookSelection] = React.useState<string | null>(null);
   const [dialed, setDialed] = React.useState('');
   const [dialError, setDialError] = React.useState('');
@@ -250,187 +248,103 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
     : (ar ? 'جاهز للاتصال' : 'Ready to dial');
 
   return (
-    <div className="qul-call-world qul-call-modern" dir={ar ? 'rtl' : 'ltr'}>
+    <div className="qul-call-world qul-call-scene" dir={ar?'rtl':'ltr'}>
       <div className="qul-call-atmosphere" aria-hidden="true"/>
       <header className="qul-call-heading">
-        <div className="qul-call-heading-title">
-          <span className="qul-call-eyebrow">QUL · SPEAKING EXPERIENCES</span>
-          <h2>{ar ? 'كابينة الاتصال' : 'The Call Booth'}</h2>
-          <p>{ar ? 'ابحث في الأجندة عن رقم الجهة، ثم اطلبه على هاتفك.' : 'Find a number in the address book, then dial it yourself.'}</p>
+        <div>
+          <span className="qul-call-eyebrow">QUL · REAL-LIFE SPEAKING</span>
+          <h2>{ar?'كابينة الاتصال':'The Call Booth'}</h2>
+          <p>{ar?'افتح دليل الهاتف، اختر الجهة، ثم اطلب رقمها بنفسك.':'Open the directory, find the contact and dial its number.'}</p>
         </div>
-        <span className={'qul-call-online ' + (isActive ? 'connected' : '')}>
+        <span className={'qul-call-online '+(isActive?'connected':'')}>
           <i aria-hidden="true"/>{statusText}
         </span>
       </header>
-      <div className="qul-call-mobile-switch" role="group" aria-label={ar ? 'عرض الهاتف أو الأجندة' : 'Phone and address book'}>
-        <button type="button" onClick={() => setMobilePane('book')} className={mobilePane === 'book' ? 'active' : ''} aria-pressed={mobilePane === 'book'}>
-          <BookOpen size={17}/>{ar ? 'الأجندة' : 'Address book'}
+      <div className="qul-call-mobile-switch" role="group" aria-label={ar?'عرض الهاتف والدليل':'Phone and book views'}>
+        <button type="button" className={mobilePane==='phone'?'active':''}
+          onClick={()=>setMobilePane('phone')} aria-pressed={mobilePane==='phone'}>
+          <Phone size={17}/>{ar?'الهاتف':'Telephone'}
         </button>
-        <button type="button" onClick={() => setMobilePane('phone')} className={mobilePane === 'phone' ? 'active' : ''} aria-pressed={mobilePane === 'phone'}>
-          <Phone size={17}/>{ar ? 'الهاتف' : 'Phone'}
+        <button type="button" className={mobilePane==='book'?'active':''}
+          onClick={()=>setMobilePane('book')} aria-pressed={mobilePane==='book'}>
+          <BookOpen size={17}/>{ar?'دليل الهاتف':'Address book'}
         </button>
       </div>
-      <div className={'qul-call-stage qul-call-studio-grid qul-call-show-' + mobilePane}>
-        <div className="qul-call-device-area qul-call-smartphone-area" data-pane="phone">
-          <div className="qul-call-floor-light" aria-hidden="true"/>
-          <div className="qul-phone-device" role="group" aria-label={ar ? 'هاتف قُل الحديث' : 'QUL modern smartphone'}>
-            <span className="qul-phone-side-key qul-phone-side-key-left" aria-hidden="true"/>
-            <span className="qul-phone-side-key qul-phone-side-key-right" aria-hidden="true"/>
-            <div className="qul-phone-glass">
-              <div className="qul-phone-status-bar" dir="ltr">
-                <strong>9:41</strong><div className="qul-phone-dynamic-island"><i/><i/></div>
-                <span><Signal size={12}/><Wifi size={13}/><BatteryFull size={16}/></span>
-              </div>
-              <AnimatePresence mode="wait" initial={false}>
-                {!isActive && !loading ? (
-                  <motion.div key="dialer" className="qul-phone-screen-dialer"
-                    initial={reducedMotion ? false : { opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: reducedMotion ? 0 : .22 }}>
-                    <span className="qul-phone-app-label">QUL <b>PHONE</b></span>
-                    <h3>{ar ? 'لوحة الاتصال' : 'Keypad'}</h3>
-                    <div className="qul-phone-dial-display">
-                      <span className="qul-phone-digits" dir="ltr" aria-live="polite">{dialed || '· · ·'}</span>
-                      <span className="qul-phone-dial-help">{dialError ||
-                        (selected ? (ar ? 'اقرأ الرقم من الأجندة وأدخله هنا' : 'Enter the number you found in the book')
-                          : (ar ? 'ابحث عن الجهة في الأجندة أولًا' : 'Find a contact in the address book first'))}</span>
-                    </div>
-                    <div className="qul-phone-ios-keypad" dir="ltr">
-                      {DIAL_KEYS.map(([digit, letters]) => (
-                        <button key={digit} type="button" onClick={() => dialKey(digit)} aria-label={digit === '*' ? (ar ? 'مسح الرقم' : 'Clear number') : digit === '#' ? (ar ? 'حذف آخر رقم' : 'Delete last digit') : digit}>
-                          <strong>{digit}</strong>
-                          <small>{digit === '*' ? (ar ? 'مسح' : 'CLEAR') : digit === '#' ? (ar ? 'حذف' : 'DELETE') : letters}</small>
-                        </button>
-                      ))}
-                    </div>
-                    <div className="qul-phone-dial-footer">
-                      <button type="button" className="qul-phone-ios-clear" onClick={() => dialKey('#')}
-                        aria-label={ar ? 'حذف آخر رقم' : 'Delete last digit'} disabled={!dialed}>
-                        <Delete size={22}/>
-                      </button>
-                      <button type="button" className="qul-phone-ios-call" onClick={startCall}
-                        aria-label={ar ? 'بدء المكالمة' : 'Start call'} disabled={!selected}>
-                        <PhoneCall size={26} fill="currentColor"/>
-                      </button>
-                      <button type="button" className="qul-phone-ios-reset" onClick={() => dialKey('*')}
-                        aria-label={ar ? 'مسح كل الأرقام' : 'Clear all digits'} disabled={!dialed}><X size={20}/></button>
-                    </div>
-                    <span className="qul-phone-dial-footer-label">{ar ? 'الاتصال' : 'Call'}</span>
-                  </motion.div>
-                ) : (
-                  <motion.div key="calling" className="qul-phone-screen-calling"
-                    initial={reducedMotion ? false : { opacity: 0, scale: .94 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}>
-                    <span className="qul-phone-call-brow">QUL LIVE · {selected?.extension || contact.extension}</span>
-                    <div className="qul-phone-call-avatar">{contact.symbol}</div>
-                    <h3>{ar ? contact.ar : contact.en}</h3>
-                    <p>{loading ? (ar ? 'يُطلب الرقم...' : 'Dialling...')
-                      : isAiSpeaking ? (ar ? 'الطرف الآخر يتحدث' : 'Contact speaking')
-                      : micMuted ? (ar ? 'الميكروفون مكتوم' : 'Microphone muted')
-                      : (ar ? 'المكالمة متصلة' : 'Call connected')}</p>
-                    <div className="qul-phone-live-wave" ref={meterRef} style={{ '--phone-mic': .12 } as React.CSSProperties} aria-hidden="true">
-                      {Array.from({ length: 21 }, (_, i) => <i key={i} style={{
-                        height: (10 + Math.abs(Math.sin(i * .42)) * 25) + 'px',
-                        transform: 'scaleY(var(--phone-mic, .12))'
-                      }}/>)}
-                    </div>
-                    <div className="qul-phone-call-preview" dir="auto">
-                      {tutorText || learnerText || (ar ? 'تحدث بالعربية لإنجاز مهمتك' : 'Speak in Arabic to complete your mission')}
-                    </div>
-                    <div className="qul-phone-call-controls">
-                      <button type="button" onClick={onToggleMic} disabled={!isActive} className={micMuted ? 'muted' : ''}>
-                        {micMuted ? <MicOff size={22}/> : <Mic size={22}/>}
-                        <span>{micMuted ? (ar ? 'تشغيل' : 'Unmute') : (ar ? 'كتم' : 'Mute')}</span>
-                      </button>
-                      <button type="button" onClick={endCall} className="end">
-                        <PhoneOff size={24} fill="currentColor"/>
-                        <span>{ar ? 'إنهاء' : 'End'}</span>
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              {recoveryNotice && !busy && (
-                <div className="qul-phone-reconnect">
-                  <p>{recoveryNotice}</p>
-                  <button type="button" onClick={() => { setShowScript(true); onResume(); }}>
-                    <RotateCcw size={14}/>{ar ? 'استئناف' : 'Resume'}
-                  </button>
-                </div>
-              )}
-              <div className="qul-phone-home-indicator" aria-hidden="true"/>
-            </div>
+
+      <div className={'qul-scene-layout qul-scene-show-'+mobilePane}>
+        <div className="qul-scene-phone-pane" data-pane="phone">
+          <SpeakingDeskPhone lang={lang} dialed={dialed} active={isActive} loading={loading}
+            micMuted={micMuted} isAiSpeaking={isAiSpeaking} selected={selected}
+            onDial={dialKey} onCall={startCall} onEnd={endCall}
+            onToggleMic={onToggleMic} meterRef={meterRef}/>
+          <div className={'qul-scene-dial-feedback '+(dialError?'error':'')} aria-live="polite">
+            <span>{dialError || (selected
+              ? (ar?'أدخل رقم '+selected.ar+' من الأجندة.':'Dial the number you found for '+selected.en+'.')
+              : (ar?'افتح دليل الهاتف واختر الجهة قبل الاتصال.':'Open the phone book and choose a contact first.'))}</span>
           </div>
-          <div className="qul-phone-caption">{ar ? 'الاتصالات محاكاة تعليمية وليست مكالمات هاتفية فعلية.' : 'Simulated educational calls, not real telephone connections.'}</div>
+          {recoveryNotice && !isActive && (
+            <div className="qul-scene-recovery">
+              <span>{recoveryNotice}</span>
+              <button type="button" disabled={loading} onClick={onResume}>
+                <RotateCcw size={14}/>{ar?'إعادة الاتصال':'Reconnect'}
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="qul-call-experience-area" data-pane="book">
-          <SpeakingPhoneBook
-            lang={lang}
-            contacts={CALL_CONTACTS}
-            selectedId={bookSelection}
-            disabled={busy}
-            onSelect={selectBookEntry}
-          />
-          <section className="qul-call-mission-ticket" aria-label={ar ? 'مهمة المكالمة' : 'Call mission'}>
+        <div className="qul-scene-book-pane" data-pane="book">
+          <SpeakingPhoneBook lang={lang} contacts={CALL_CONTACTS}
+            selectedId={bookSelection} disabled={busy} onSelect={selectBookEntry}/>
+          <section className="qul-scene-mission" aria-label={ar?'مهمة المكالمة':'Call mission'}>
             {selected ? (
-              <div className="qul-call-ticket-content">
-                <div className="qul-call-ticket-top"><span>QUL · MISSION CARD</span><span>{level.toUpperCase()}</span></div>
-                <h3>{ar ? selected.ar : selected.en}</h3>
-                <p>{ar ? selected.aimAr : selected.aimEn}</p>
-                <div className="qul-call-ticket-rules">
-                  {(ar ? selected.objectivesAr : selected.objectivesEn).map((goal, index) => {
-                    const achieved = assessmentStatus === 'analyzed' && Boolean(missionEvidence?.[index]?.achieved);
-                    return <div className={'qul-call-rule ' + (achieved ? 'verified' : '')} key={index}>
-                      <span>{achieved ? <Check size={14}/> : index + 1}</span><p>{goal}</p>
-                    </div>;
-                  })}
+              <>
+                <div className="qul-scene-mission-header">
+                  <div><small>QUL · MISSION</small><strong>{ar?selected.ar:selected.en}</strong></div>
+                  {assessmentStatus==='analyzed' &&
+                    <span className={'qul-scene-mission-progress '+(verified?'verified':'')}>
+                      {completedGoals} / {selected.objectivesAr.length}
+                    </span>}
                 </div>
-                {assessmentStatus === 'analyzed' && (
-                  <div className={'qul-call-ticket-result ' + (verified ? 'is-complete' : '')}>
-                    <span>{verified ? (ar ? 'المهمة مكتملة' : 'Mission complete') : (ar ? 'الأهداف التي تحققت' : 'Verified objectives')}</span>
-                    <strong>{completedGoals}/{selected.objectivesAr.length}</strong>
-                  </div>
-                )}
-              </div>
+                <p>{ar?selected.aimAr:selected.aimEn}</p>
+                <div className="qul-scene-mission-steps">
+                  {(ar?selected.objectivesAr:selected.objectivesEn).map((objective,index)=>
+                    <span key={index} className={assessmentStatus==='analyzed' && missionEvidence?.[index]?.achieved ? 'achieved' : ''}>
+                      {assessmentStatus==='analyzed' && missionEvidence?.[index]?.achieved?<Check size={12}/>:index+1}
+                      {objective}
+                    </span>
+                  )}
+                </div>
+              </>
             ) : (
-              <div className="qul-call-mission-empty">
-                <BookOpen size={22}/>
-                <span>{ar ? 'اختر جهة من الأجندة لتظهر مهمتك هنا.' : 'Choose a contact in the book to reveal your mission.'}</span>
+              <div className="qul-scene-mission-empty">
+                <BookOpen size={20}/><span>{ar?'اختر اسم الجهة من صفحات الدليل لتظهر المهمة.':'Select an entry in the book to discover your mission.'}</span>
               </div>
             )}
           </section>
-          <section className="qul-call-transcript-shell" aria-label={ar ? 'سجل المحادثة' : 'Conversation transcript'}>
-            <div className="qul-call-log-header">
-              <div><span className={'qul-call-led ' + (isActive ? 'is-on' : '')}/><strong>{ar ? 'سجل المكالمة' : 'Conversation log'}</strong></div>
-              <button type="button" onClick={() => setShowScript(value => !value)} aria-expanded={showScript} className="qul-call-log-toggle">
-                <BookOpen size={15}/>{showScript ? (ar ? 'إخفاء' : 'Hide') : (ar ? 'عرض' : 'Show')}
-              </button>
-            </div>
-            <AnimatePresence initial={false}>
-              {showScript && (
-                <motion.div className="qul-call-log-expand" key="conversation"
-                  initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }} transition={{ duration: reducedMotion ? 0 : .2 }}>
-                  <div className="qul-call-log-list" ref={transcriptRef}>
-                    {allTurns.length ? allTurns.slice(-12).map((turn,index) => (
-                      <div key={index} className={'qul-call-log-entry ' + (turn.role === 'ai' ? 'agent' : 'learner')}>
-                        <span>{turn.role === 'ai' ? (ar ? contact.agentAr : contact.agentEn) : (ar ? 'أنت' : 'You')}</span>
-                        <p dir="auto">{turn.text}</p>
-                      </div>
-                    )) : <p className="qul-call-log-empty">{ar ? 'يظهر الحوار هنا بعد إجراء المكالمة.' : 'Your conversation appears here after calling.'}</p>}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          <section className="qul-scene-transcript" aria-label={ar?'سجل المكالمة':'Call transcript'}>
+            <button type="button" onClick={()=>setShowScript(value=>!value)} aria-expanded={showScript}
+              className="qul-scene-transcript-toggle">
+              <BookOpen size={17}/>{ar?'سجل المحادثة':'Conversation log'}
+              <span>{showScript?(ar?'إخفاء':'Hide'):(ar?'عرض':'Show')}</span>
+            </button>
+            {showScript && (
+              <div ref={transcriptRef} className="qul-scene-transcript-lines">
+                {allTurns.length
+                  ? allTurns.slice(-8).map((turn,index)=>(
+                    <div key={index} className={'qul-scene-transcript-line '+turn.role}>
+                      <strong>{turn.role==='ai'?(ar?contact.agentAr:contact.agentEn):(ar?'أنت':'You')}</strong>
+                      <p dir="auto">{turn.text}</p>
+                    </div>
+                  ))
+                  : <p>{ar?'سيظهر نص الحوار هنا عند بدء المكالمة.':'The transcript will appear after the call starts.'}</p>}
+              </div>
+            )}
           </section>
         </div>
       </div>
       <footer className="qul-call-bottom-line">
-        <span>QUL / SPEAK WITH PURPOSE</span>
-        <span>{ar ? '1. افتح الأجندة  2. ابحث عن الرقم  3. اطلبه على الهاتف' : '1. Open the book  2. Find the number  3. Dial it'}</span>
+        <span>QUL · SPEAK WITH PURPOSE</span>
+        <span>{ar?'الدليل والأرقام جهات افتراضية للتدريب، وليست اتصالات حقيقية.':'All directory numbers are fictional learning simulations.'}</span>
       </footer>
     </div>
   );
