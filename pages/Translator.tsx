@@ -82,7 +82,8 @@ export const Translator: React.FC = () => {
     setResult(null);
     setPracticeMode(false);
     try {
-      const data = await translateAndExpand(word, isEngToAr);
+      setResult(null);
+      const data = await translateAndExpand(word, !isEngToAr);
       setResult(data);
     } catch (error) { alert('Failed to translate.'); }
     finally { setLoading(false); }
@@ -93,6 +94,7 @@ export const Translator: React.FC = () => {
     setLoading(true);
     try {
       const qs = await generatePracticeQuestions(result as Vocabulary);
+      if (!Array.isArray(qs) || qs.length === 0) throw new Error('No practice questions');
       setQuestions(qs);
       setPracticeMode(true);
       setCurrentStep(0);
@@ -163,7 +165,7 @@ export const Translator: React.FC = () => {
       <div className="flex-1 flex overflow-hidden bg-slate-50/30">
         
         {/* Right Sidebar (aside) */}
-        <aside className="w-[280px] bg-white border-r rtl:border-r-0 rtl:border-l border-slate-100 flex flex-col shrink-0 no-print relative shadow-sm">
+        <aside className="hidden md:flex w-[280px] bg-white border-r rtl:border-r-0 rtl:border-l border-slate-100 flex flex-col shrink-0 no-print relative shadow-sm">
           <div className="flex-1 overflow-y-auto p-5 scrollbar-hide">
             <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">
               {lang === 'ar' ? 'أقسام المترجم' : 'Translator Sections'}
@@ -260,7 +262,7 @@ export const Translator: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex-1 flex flex-col p-6 space-y-6 overflow-hidden">
+              <div className="flex-1 flex flex-col p-3 sm:p-6 space-y-4 sm:space-y-6 overflow-hidden">
                 
                 {/* Input Section */}
                 <div className="shrink-0 space-y-4">
@@ -272,7 +274,7 @@ export const Translator: React.FC = () => {
                       className={`w-full h-32 p-6 text-xl border border-slate-200 rounded-[1.5rem] outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50 transition-all resize-none shadow-sm font-medium arabic-font placeholder:text-slate-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}
                     />
                     <button 
-                      onClick={() => setIsEngToAr(!isEngToAr)}
+                      onClick={() => { setIsEngToAr(!isEngToAr); setResult(null); setQuestions([]); }}
                       className="absolute bottom-4 left-4 p-2 bg-white border border-slate-100 rounded-lg shadow-sm hover:bg-slate-50 transition-colors flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest"
                     >
                       <ArrowRightLeft size={12} className="text-blue-500" />
