@@ -185,7 +185,7 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
           </div>
 
           <motion.div className="qul-alphabet-cover" aria-hidden={open} style={{ transformOrigin: 'right center' }}
-            animate={open ? { rotateY: 175, opacity: 0.12 } : { rotateY: 0, opacity: 1 }}
+            animate={open ? { rotateY: 175, opacity: 0 } : { rotateY: 0, opacity: 1 }}
             transition={reducedMotion ? { duration: .01 } : { duration: 1.16, ease: [.48, .01, .2, 1] }}>
             <div className="qul-alphabet-cover-ridge" aria-hidden="true"/>
             <span className="qul-alphabet-cover-monogram">قُل</span>
