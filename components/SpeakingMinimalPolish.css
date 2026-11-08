@@ -296,3 +296,52 @@
     width: min(65vw, 255px, calc((100dvh - 200px) * .78)) !important;
   }
 }
+
+
+/*
+ * Final telephone composition fix.
+ * Old layered art carried a triangular earpiece fragment and duplicated cord.
+ * The phone now has ONLY two complete source photographs, registered to the
+ * same fixed cradle/dial coordinates. No cropped masks are rendered.
+ */
+.qul-call-scene .qul-photo-phone .qul-phone-intrinsic-size {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 558 / 780 !important;
+  pointer-events: none;
+}
+.qul-call-scene .qul-photo-phone .qul-phone-cradled-photo {
+  position: absolute !important;
+  display: block !important;
+  top: 17.44% !important;
+  left: 8.24% !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 558 / 680 !important;
+  object-fit: contain !important;
+  pointer-events: none;
+  user-select: none;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.qul-call-scene .qul-photo-phone .qul-phone-lifted-photo {
+  position: absolute !important;
+  display: block !important;
+  top: 8.72% !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 558 / 680 !important;
+  object-fit: contain !important;
+  pointer-events: none;
+  user-select: none;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+/* Hitbox alone responds to the learner; photograph layers never steal taps. */
+.qul-call-scene .qul-photo-phone .qul-phone-receiver-hit {
+  background: transparent !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
