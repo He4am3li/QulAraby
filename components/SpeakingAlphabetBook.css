@@ -1,0 +1,84 @@
+/* Physical Arabic address book: opens from the bottom-left corner with a hinged cover.
+   Every letter has a real six-entry spread, with page transitions around the book spine. */
+.qul-alphabet-directory{position:relative;display:flex;flex-direction:column;min-height:0;flex:1;gap:7px;container-type:inline-size}
+.qul-alphabet-heading{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:0 8px;min-height:41px}
+.qul-alphabet-heading>div{display:flex;flex-direction:column;gap:2px}
+.qul-alphabet-heading span{color:#7794aa;font:800 9px/1.3 ui-monospace,monospace;letter-spacing:.11em}
+.qul-alphabet-heading h3{font:900 clamp(17px,1.5vw,22px)/1.1 'Tajawal',sans-serif;color:#224760;margin:0}
+.qul-alphabet-close{display:flex;align-items:center;gap:5px;padding:5px 9px;border:1px solid #c5dbe7;border-radius:9px;background:#fffffff2;color:#56758e;font-size:10px;font-weight:900}
+.qul-alphabet-stage{position:relative;perspective:1400px;min-height:0;flex:1;display:flex;align-items:center;justify-content:center;padding:8px 6px 8px 25px}
+.qul-alphabet-book{--paper:#f5ecd9;position:relative;width:min(100%,570px);height:min(100%,485px);min-height:286px;max-height:485px;border-radius:13px 18px 18px 13px;perspective:1800px;transform-style:preserve-3d;box-shadow:0 21px 27px #51657b24,0 8px 3px #5a463f35;isolation:isolate}
+.qul-alphabet-book:before{content:"";position:absolute;inset:0 2px 2px 0;border-radius:13px 18px 18px 13px;background:linear-gradient(95deg,#693b25,#a27850 1.8%,#fdf8eb 3.7%,#f4e3c6 49%,#f4e9d4 95%,#70452f 99%);border:2px solid #6f4633;box-shadow:inset 0 0 0 4px #f7eccd,inset 0 0 0 7px #936b43}
+.qul-alphabet-book-edge{position:absolute;inset:7px 5px -6px 8px;z-index:-1;border-radius:12px;background:repeating-linear-gradient(0deg,#d4bf9f 0 1px,#e8ddc5 1px 2px,#f7f1e5 2px 4px);border:2px solid #8c704f;box-shadow:0 3px 5px #452d2044}
+.qul-alphabet-book-spine{position:absolute;z-index:4;pointer-events:none;top:3px;bottom:3px;left:50%;transform:translateX(-50%);width:24px;background:linear-gradient(90deg,#66503a2b 2%,#32291f47 24%,#ffffffbf 50%,#3b322348 83%,#634c3030);filter:blur(1.4px)}
+.qul-alphabet-paper-content{position:absolute;z-index:2;inset:9px 10px;display:flex;flex-direction:column;opacity:0;transition:opacity .2s .2s;pointer-events:none}
+.is-open .qul-alphabet-paper-content{opacity:1;pointer-events:auto}
+.qul-alphabet-tabs{position:absolute;z-index:6;top:11px;bottom:16px;left:-37px;display:grid;grid-template-columns:repeat(2,20px);grid-template-rows:repeat(14,minmax(0,1fr));column-gap:1px;row-gap:1px;width:40px;direction:ltr}
+.qul-alphabet-tab{display:flex;align-items:center;justify-content:center;border:1px solid #9d825b;background:linear-gradient(95deg,#f3e4c9,#e6c79e 80%,#a87d55);color:#543f2a;font:900 12px 'Tajawal',sans-serif;border-radius:7px 1px 1px 7px;box-shadow:-2px 1px 2px #4335272c;cursor:pointer;padding:0}
+.qul-alphabet-tab:nth-child(n+15){grid-column:2}
+.qul-alphabet-tab:nth-child(-n+14){grid-column:1}
+.qul-alphabet-tab:nth-child(15){grid-row:1}
+.qul-alphabet-tab:nth-child(16){grid-row:2}
+.qul-alphabet-tab:nth-child(17){grid-row:3}
+.qul-alphabet-tab:nth-child(18){grid-row:4}
+.qul-alphabet-tab:nth-child(19){grid-row:5}
+.qul-alphabet-tab:nth-child(20){grid-row:6}
+.qul-alphabet-tab:nth-child(21){grid-row:7}
+.qul-alphabet-tab:nth-child(22){grid-row:8}
+.qul-alphabet-tab:nth-child(23){grid-row:9}
+.qul-alphabet-tab:nth-child(24){grid-row:10}
+.qul-alphabet-tab:nth-child(25){grid-row:11}
+.qul-alphabet-tab:nth-child(26){grid-row:12}
+.qul-alphabet-tab:nth-child(27){grid-row:13}
+.qul-alphabet-tab:nth-child(28){grid-row:14}
+.qul-alphabet-tab:hover:not(:disabled){background:#fff1cd;color:#1b3853}
+.qul-alphabet-tab.selected{background:linear-gradient(#254967,#0d2a49);border-color:#122f4b;color:#fff;transform:translateX(-3px);box-shadow:0 2px 5px #34415169}
+.qul-alphabet-book-pages{position:relative;flex:1;display:flex;flex-direction:column;gap:5px;min-height:0}
+.qul-alphabet-search{position:relative;z-index:6;display:flex;align-items:center;gap:6px;flex:0 0 auto;height:31px;margin:5px 10% 1px;background:#fff8ed;border:1px solid #d9c29e;border-radius:7px;padding:0 10px;color:#98785c}
+.qul-alphabet-search input{min-width:0;width:100%;border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;font:800 11px 'Tajawal',sans-serif;color:#30475e}
+.qul-alphabet-search button{background:transparent;border:0;color:#846f5e;display:grid;place-items:center}
+.qul-alphabet-pages-frame{position:relative;flex:1;min-height:0;perspective:1200px;transform-style:preserve-3d}
+.qul-alphabet-visible-spread{height:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));transform-style:preserve-3d;backface-visibility:hidden}
+.qul-alphabet-center-fold{position:absolute;z-index:2;left:50%;top:0;bottom:0;transform:translateX(-50%);width:16px;pointer-events:none;background:linear-gradient(90deg,#56473316,#42362330,#fff8 51%,#42362338,#56473316);box-shadow:inset 2px 0 3px #4833221e}
+.qul-alphabet-page{position:relative;display:flex;flex-direction:column;padding:9px 12px 12px;min-width:0;background:linear-gradient(95deg,#fcf8ec 4%,#f4e8d3 92%,#e7d6b8);border:1px solid #c9b495;box-shadow:inset 2px 1px 5px #fffaf0}
+.qul-alphabet-page:first-child{border-radius:3px 0 0 6px;box-shadow:inset -9px 0 10px #92795d26,inset 2px 1px 4px #fff}
+.qul-alphabet-page:last-child{border-radius:0 5px 6px 0;background:linear-gradient(100deg,#e7d8bf,#fef8eb 12%,#f5e8d5);box-shadow:inset 9px 0 11px #92795d25,inset -2px 1px 4px #fff}
+.qul-alphabet-page header{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:4px;border-bottom:1px solid #bda78383;padding:3px 1px 6px;color:#564329}
+.qul-alphabet-page header strong{font:900 13px 'Tajawal',sans-serif}
+.qul-alphabet-page header span{font:800 7px ui-monospace,monospace;color:#a1855f;white-space:nowrap}
+.qul-alphabet-page-lines{display:flex;flex-direction:column;flex:1;justify-content:flex-start;min-height:0}
+.qul-index-entry{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:1;max-height:88px;min-height:40px;text-align:right;background:transparent;border:0;border-bottom:1px solid #c3b4976e;color:#234767;padding:7px 4px;cursor:pointer;transition:background .15s}
+.qul-index-entry:hover:not(:disabled){background:#eae1cdcc}
+.qul-index-entry.chosen{background:#cfe7dd;color:#1d6056;box-shadow:inset 3px 0 #4c9c88}
+.qul-index-entry:disabled{cursor:default;opacity:.63}
+.qul-index-entry-name{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.qul-index-entry-name strong{font:900 clamp(10px,.95vw,14px)/1.3 'Tajawal',sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qul-index-entry-name span{font:700 9px 'Tajawal',sans-serif;color:#9d8870;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.qul-index-extension{flex:0 0 auto;border:1px solid #d6c1a5;background:#e9e1ce;color:#426681;padding:4px 5px;border-radius:6px;font:900 clamp(11px,1vw,15px) ui-monospace,monospace;letter-spacing:.04em}
+.qul-index-no-results{font-size:12px;text-align:center;color:#876f55;margin:18px auto}
+.qul-alphabet-page footer{margin-top:auto;display:flex;align-items:center;justify-content:space-between;font:800 8px 'Tajawal',sans-serif;color:#99846b;opacity:.9;padding:6px 2px 0}
+.qul-alphabet-page footer span{font:700 8px ui-monospace,monospace}
+.qul-alphabet-navigation{position:relative;z-index:6;display:flex;justify-content:space-between;align-items:center;gap:5px;flex:0 0 auto;height:31px;padding:0 10px;color:#91734f}
+.qul-alphabet-navigation button{display:flex;align-items:center;gap:2px;border:1px solid #d6bd95;background:#fff9ee;color:#765d46;padding:3px 7px;border-radius:6px;font:900 10px 'Tajawal',sans-serif}
+.qul-alphabet-navigation button:disabled{opacity:.3;cursor:default}
+.qul-alphabet-navigation span{font:800 10px ui-monospace,monospace}
+.qul-alphabet-cover{position:absolute;inset:0;z-index:10;transform-style:preserve-3d;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:
+ radial-gradient(ellipse at 26% 12%,#52708380,transparent 48%),
+ linear-gradient(110deg,#1a3b56 0%,#09253d 31%,#163752 80%,#0c2945);border:4px solid #9a714e;
+ border-radius:13px 18px 18px 13px;box-shadow:inset 0 0 0 3px #d1a36c80,inset 12px 0 14px #050d1680,inset -5px 0 12px #cfae763e,0 10px 14px #1833465c;
+ color:#e3c48c;text-align:center;overflow:hidden}
+.qul-alphabet-cover:before{position:absolute;inset:14px;content:"";pointer-events:none;border:1px solid #b89b6485;border-radius:4px 10px 10px 4px}
+.qul-alphabet-cover-ridge{position:absolute;inset:0 auto 0 16px;width:19px;border-left:1px solid #c8ab79;border-right:1px solid #080f1b;background:repeating-linear-gradient(90deg,#0d243b,#3d5e77 3px,#102e49 6px);box-shadow:10px 0 14px #040d1c75}
+.qul-alphabet-cover-monogram{font:900 clamp(32px,5vw,65px)/1.1 'Tajawal',sans-serif;border:2px solid #c4a16e;border-radius:50%;width:110px;height:110px;display:grid;place-items:center;box-shadow:inset 0 0 0 7px #d9b87d24;text-shadow:0 1px 2px #0009}
+.qul-alphabet-cover-title{font:900 clamp(20px,2.6vw,33px)/1.3 'Tajawal',sans-serif;letter-spacing:.02em;color:#f8e8c8}
+.qul-alphabet-cover-subtitle{font:800 10px/1.3 ui-monospace,monospace;letter-spacing:.16em;color:#e4bc7c}
+.qul-alphabet-cover-decoration{width:36%;height:1px;background:linear-gradient(90deg,transparent,#e1bc7f,transparent)}
+.qul-alphabet-cover-opener{position:absolute;bottom:20px;left:15px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid #e8c993a8;border-radius:9px 9px 9px 2px;color:#fff3d7;background:linear-gradient(140deg,#a57c50,#56412f);box-shadow:0 3px 3px #050c18a0,inset 0 1px #ffe7ad70;font:900 10px 'Tajawal',sans-serif;min-width:120px;height:35px;cursor:pointer}
+.qul-alphabet-cover-opener:hover:not(:disabled){background:linear-gradient(140deg,#c59b63,#775332);transform:translateY(-2px)}
+.qul-alphabet-cover-opener:disabled{visibility:hidden}
+.is-open .qul-alphabet-cover{pointer-events:none}
+.qul-alphabet-instruction{flex:0 0 auto;min-height:19px;text-align:center;color:#6487a0;font:800 10px/1.6 'Tajawal',sans-serif;margin:0;padding:0 7px}
+@container(max-width:460px){.qul-alphabet-stage{padding-left:26px}.qul-alphabet-tab{font-size:10px}.qul-index-entry-name strong{font-size:10px}.qul-index-extension{font-size:10px}.qul-alphabet-page{padding:6px 7px}.qul-alphabet-page header strong{font-size:10px}.qul-alphabet-cover-monogram{width:82px;height:82px;font-size:39px}.qul-alphabet-cover-title{font-size:23px}}
+@media(max-width:900px){.qul-alphabet-book{min-height:335px;max-height:430px}.qul-alphabet-stage{min-height:320px;flex:1}.qul-alphabet-directory{min-height:0}.qul-alphabet-cover-opener{left:12px;bottom:15px}.qul-alphabet-book{max-width:560px}}
+@media(max-height:730px) and (min-width:901px){.qul-alphabet-book{max-height:355px}.qul-index-entry{min-height:28px;padding:3px 4px}.qul-alphabet-page{padding:5px 9px}.qul-alphabet-heading{min-height:32px}.qul-alphabet-cover-monogram{width:74px;height:74px;font-size:38px}.qul-alphabet-cover{gap:7px}}
+@media(prefers-reduced-motion:reduce){.qul-alphabet-paper-content,.qul-index-entry,.qul-alphabet-cover-opener{transition:none}}
