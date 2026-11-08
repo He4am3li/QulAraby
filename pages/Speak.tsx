@@ -117,7 +117,8 @@ export const Speak: React.FC = () => {
 
   const [isActive, setIsActive] = React.useState(false);
   const [setupMode, setSetupMode] = React.useState(true);
-  const [showMobileOptions, setShowMobileOptions] = React.useState(true);
+  // Start on the actual speaking experience on phones, not the sidebar. The menu remains accessible.
+  const [showMobileOptions, setShowMobileOptions] = React.useState(false);
   const [showSummary, setShowSummary] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [generatingInsights, setGeneratingInsights] = React.useState(false);
@@ -1292,6 +1293,7 @@ export const Speak: React.FC = () => {
               onStop={() => stopSession()}
               onResume={() => startSession(true)}
               onToggleMic={toggleMicrophone}
+              onOpenOptions={() => setShowMobileOptions(true)}
               meterRef={phoneMeterRef}
             />
           ) : setupMode ? (
