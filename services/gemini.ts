@@ -576,6 +576,9 @@ export const translateAndExpand = async (word: string, isFromArabic: boolean, ot
       config: { responseMimeType: "application/json", responseSchema: vocabSchema }
     });
     const data = safeJSONParse(response.text, {});
+    if (!data || typeof data !== 'object' || !data.analysis || !data.analysis.details_other || !data.analysis.details_ar || !data.translation || !data.original_word) {
+      throw new Error('Invalid translation response');
+    }
     // Map back to Vocabulary type for compatibility
     return { 
       ...data, 
@@ -1390,9 +1393,9 @@ Return strictly JSON format:
       });
 
       const parsed = safeJSONParse(response.text, {
-        accuracy: 85,
-        isCorrect: true,
-        feedbackEn: "Good effort! Keep practicing your sentence structure.",
+        accuracy: 0,
+        isCorrect: false,
+        feedbackEn: "Evaluation is temporarily unavailable. Please retry.",
         feedbackAr: "مُحَاوَلَةٌ جَيِّدَةٌ!",
         vocalizedArabic: referenceTranslation || userArabic,
         transliteration: "Al-Arabiyyah",
@@ -1406,11 +1409,11 @@ Return strictly JSON format:
     // Deterministic intelligent local comparison fallback
     const cleanUser = userArabic.replace(/[\u064B-\u065F\u0670]/g, '').trim();
     const cleanRef = (referenceTranslation || '').replace(/[\u064B-\u065F\u0670]/g, '').trim();
-    const isClose = cleanRef.length > 0 && (cleanUser.includes(cleanRef) || cleanRef.includes(cleanUser) || cleanUser.length >= 3);
+    const isClose = cleanRef.length > 0 && cleanUser === cleanRef;
 
     return {
-      accuracy: isClose ? 90 : 75,
-      isCorrect: true,
+      accuracy: isClose ? 90 : 0,
+      isCorrect: isClose,
       feedbackEn: isClose 
         ? "Excellent translation! Your phrasing is very natural and communicates the meaning well."
         : "Good effort! Practice saying the sentence aloud with full vowel markers.",

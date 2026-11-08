@@ -178,10 +178,10 @@ export const TranslatorAcademy: React.FC<TranslatorAcademyProps> = ({ lang }) =>
     } catch (e) {
       console.error("Evaluation failed", e);
       setEvaluationResult({
-        accuracy: 85,
-        isCorrect: true,
-        feedbackEn: "Good effort! Keep practicing sentence patterns.",
-        feedbackAr: "مُحَاوَلَةٌ طَيِّبَةٌ!",
+        accuracy: 0,
+        isCorrect: false,
+        feedbackEn: "Evaluation is temporarily unavailable. Please retry.",
+        feedbackAr: "التقييم غير متاح مؤقتًا، يُرجى إعادة المحاولة.",
         vocalizedArabic: currentChallenge.referenceTranslation || userTranslationText,
         transliteration: "Al-Arabiyyah",
         grammarTip: "Review word order and endings."
@@ -258,52 +258,52 @@ export const TranslatorAcademy: React.FC<TranslatorAcademyProps> = ({ lang }) =>
   ];
 
   return (
-    <div className="w-full flex-1 flex flex-col overflow-hidden bg-slate-50/40 relative">
+    <div className="w-full min-w-0 min-h-0 flex-1 flex flex-col overflow-hidden bg-slate-50/40 relative">
       
       {/* Top Professional Control Bar */}
-      <div className="bg-white border-b border-slate-200/80 px-5 py-3 shrink-0 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+      <div className="bg-white border-b border-slate-200/80 px-3 sm:px-5 py-3 shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-2xs">
         
         {/* Left: Refined Level Selector */}
-        <div className="flex items-center gap-1 p-1 bg-slate-100/80 rounded-xl border border-slate-200/60">
+        <div className="grid grid-cols-3 w-full sm:w-auto gap-1 p-1 bg-slate-100/80 rounded-xl border border-slate-200/60">
           <button
             onClick={() => { setSelectedLevel(1); setCurrentIdx(0); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`min-w-0 px-1 sm:px-3 py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
               selectedLevel === 1 
                 ? 'bg-white text-blue-700 shadow-xs border border-slate-200/60' 
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Puzzle size={13} className={selectedLevel === 1 ? 'text-blue-600' : 'text-slate-400'} />
-            <span>{lang === 'ar' ? 'المستوى 1: تركيب الجمل' : 'Level 1: Sentence Puzzle'}</span>
+            <span className="text-center leading-tight">{lang === 'ar' ? 'تركيب الجمل' : 'Sentence Puzzle'}</span>
           </button>
 
           <button
             onClick={() => { setSelectedLevel(2); setCurrentIdx(0); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`min-w-0 px-1 sm:px-3 py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
               selectedLevel === 2 
                 ? 'bg-white text-emerald-700 shadow-xs border border-slate-200/60' 
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Target size={13} className={selectedLevel === 2 ? 'text-emerald-600' : 'text-slate-400'} />
-            <span>{lang === 'ar' ? 'المستوى 2: الكلمة المفقودة' : 'Level 2: Fill in Blank'}</span>
+            <span className="text-center leading-tight">{lang === 'ar' ? 'الكلمة المفقودة' : 'Fill in Blank'}</span>
           </button>
 
           <button
             onClick={() => { setSelectedLevel(3); setCurrentIdx(0); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`min-w-0 px-1 sm:px-3 py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
               selectedLevel === 3 
                 ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60' 
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <PenTool size={13} className={selectedLevel === 3 ? 'text-indigo-600' : 'text-slate-400'} />
-            <span>{lang === 'ar' ? 'المستوى 3: الترجمة المباشرة' : 'Level 3: Direct Translation'}</span>
+            <span className="text-center leading-tight">{lang === 'ar' ? 'ترجمة مباشرة' : 'Translation'}</span>
           </button>
         </div>
 
         {/* Right: Clean Stats & Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between sm:justify-end gap-2">
           {/* XP Metric */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 text-xs font-bold font-sans">
             <Zap size={13} className="text-amber-500 fill-amber-500" />
@@ -333,9 +333,9 @@ export const TranslatorAcademy: React.FC<TranslatorAcademyProps> = ({ lang }) =>
       </div>
 
       {/* Main Challenge Area */}
-      <div className="flex-1 overflow-y-auto custom-scroll p-4 sm:p-6 flex flex-col items-center">
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto custom-scroll p-3 sm:p-6 flex flex-col items-center">
         {currentChallenge ? (
-          <div className="w-full max-w-3xl space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="w-full min-w-0 max-w-3xl space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
             
             {/* Top Prompt Card */}
             <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-sm relative overflow-hidden">

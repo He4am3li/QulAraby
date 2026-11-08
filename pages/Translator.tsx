@@ -25,6 +25,7 @@ export const Translator: React.FC = () => {
   const [questions, setQuestions] = React.useState<QuizQuestion[]>([]);
   const [currentStep, setCurrentStep] = React.useState(0);
   const [feedback, setFeedback] = React.useState<{ isCorrect: boolean; text: string } | null>(null);
+  const [correctAnswers, setCorrectAnswers] = React.useState(0);
   const [lang, setLang] = React.useState<'ar' | 'en'>(
     (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar'
   );
@@ -82,7 +83,7 @@ export const Translator: React.FC = () => {
     setResult(null);
     setPracticeMode(false);
     try {
-      const data = await translateAndExpand(word, isEngToAr);
+      const data = await translateAndExpand(word, !isEngToAr);
       setResult(data);
     } catch (error) { alert('Failed to translate.'); }
     finally { setLoading(false); }
@@ -93,7 +94,9 @@ export const Translator: React.FC = () => {
     setLoading(true);
     try {
       const qs = await generatePracticeQuestions(result as Vocabulary);
+      if (!Array.isArray(qs) || qs.length === 0) throw new Error('No practice questions');
       setQuestions(qs);
+      setCorrectAnswers(0);
       setPracticeMode(true);
       setCurrentStep(0);
       setFeedback(null);
@@ -104,6 +107,7 @@ export const Translator: React.FC = () => {
   const handleAnswer = (answer: string) => {
     if (feedback) return;
     const correct = questions[currentStep].correctAnswer === answer;
+    if (correct) setCorrectAnswers(prev => prev + 1);
     setFeedback({
       isCorrect: correct,
       text: correct ? "Excellent! أحسنت" : `Note: ${questions[currentStep].explanation}`
@@ -121,7 +125,7 @@ export const Translator: React.FC = () => {
 
   const finishPractice = () => {
     if (result) {
-      const updated = updateSRS(result as Vocabulary, feedback?.isCorrect ? 'easy' : 'medium');
+      const updated = updateSRS(result as Vocabulary, correctAnswers === questions.length ? 'easy' : correctAnswers >= Math.ceil(questions.length * 0.6) ? 'medium' : 'hard');
       const existing = JSON.parse(localStorage.getItem('hub_vocab') || '[]');
       localStorage.setItem('hub_vocab', JSON.stringify([...existing.filter((v:any)=>v.id !== result.id), updated]));
 
@@ -163,7 +167,7 @@ export const Translator: React.FC = () => {
       <div className="flex-1 flex overflow-hidden bg-slate-50/30">
         
         {/* Right Sidebar (aside) */}
-        <aside className="w-[280px] bg-white border-r rtl:border-r-0 rtl:border-l border-slate-100 flex flex-col shrink-0 no-print relative shadow-sm">
+        <aside className="hidden md:flex w-[280px] bg-white border-r rtl:border-r-0 rtl:border-l border-slate-100 flex flex-col shrink-0 no-print relative shadow-sm">
           <div className="flex-1 overflow-y-auto p-5 scrollbar-hide">
             <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">
               {lang === 'ar' ? 'أقسام المترجم' : 'Translator Sections'}
@@ -223,7 +227,11 @@ export const Translator: React.FC = () => {
         </aside>
 
         {/* Left Main View */}
-        <main className="flex-1 flex flex-col overflow-hidden relative">
+        <main className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden relative">
+          <nav className="md:hidden shrink-0 grid grid-cols-2 gap-2 px-3 py-2 bg-white" aria-label="Translator sections">
+            <button type="button" aria-pressed={activeTab === 'translator'} onClick={() => setActiveTab('translator')} className={`min-h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 border ${activeTab === 'translator' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 border-slate-200'}`}><Languages size={17}/>{lang === 'ar' ? 'المترجم' : 'Translator'}</button>
+            <button type="button" aria-pressed={activeTab === 'academy'} onClick={() => setActiveTab('academy')} className={`min-h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 border ${activeTab === 'academy' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200'}`}><GraduationCap size={17}/>{lang === 'ar' ? 'الأكاديمية' : 'Academy'}</button>
+          </nav>
           {/* Tab 1: Translator Academy */}
           {activeTab === 'academy' && (
             <TranslatorAcademy lang={lang} />
@@ -235,7 +243,7 @@ export const Translator: React.FC = () => {
               
               {/* Practice Mode Overlays */}
               {practiceMode && (
-                <div className="absolute inset-0 z-[60] bg-white p-6 flex flex-col items-center justify-center animate-in zoom-in duration-300">
+                <div className="absolute inset-0 z-[60] bg-white p-3 sm:p-6 overflow-y-auto flex flex-col items-center justify-center animate-in zoom-in duration-300">
                   <div className="max-w-lg w-full space-y-6 text-center">
                     <div className="flex gap-2 justify-center mb-4">
                       {questions.map((_, i) => (
@@ -260,7 +268,7 @@ export const Translator: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex-1 flex flex-col p-6 space-y-6 overflow-hidden">
+              <div className="flex-1 min-h-0 flex flex-col p-3 sm:p-6 space-y-3 sm:space-y-6 overflow-y-auto md:overflow-hidden">
                 
                 {/* Input Section */}
                 <div className="shrink-0 space-y-4">
@@ -269,10 +277,10 @@ export const Translator: React.FC = () => {
                       value={word}
                       onChange={(e) => setWord(e.target.value)}
                       placeholder={t.placeholder}
-                      className={`w-full h-32 p-6 text-xl border border-slate-200 rounded-[1.5rem] outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50 transition-all resize-none shadow-sm font-medium arabic-font placeholder:text-slate-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}
+                      className={`w-full h-24 sm:h-32 p-4 sm:p-6 text-base sm:text-xl border border-slate-200 rounded-[1.5rem] outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50 transition-all resize-none shadow-sm font-medium arabic-font placeholder:text-slate-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}
                     />
                     <button 
-                      onClick={() => setIsEngToAr(!isEngToAr)}
+                      onClick={() => { setIsEngToAr(!isEngToAr); setResult(null); setQuestions([]); }}
                       className="absolute bottom-4 left-4 p-2 bg-white border border-slate-100 rounded-lg shadow-sm hover:bg-slate-50 transition-colors flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest"
                     >
                       <ArrowRightLeft size={12} className="text-blue-500" />
@@ -298,7 +306,7 @@ export const Translator: React.FC = () => {
 
                 {/* Results Grid */}
                 {result && (
-                  <div className="flex-1 overflow-hidden grid grid-cols-1 gap-3 animate-in fade-in slide-in-from-top-4 flex flex-col">
+                  <div className="flex-1 min-h-0 grid grid-cols-1 gap-3 animate-in fade-in slide-in-from-top-4 flex flex-col">
                     
                     <div className="flex justify-between items-center mb-1 shrink-0 px-2">
                       <button onClick={startPractice} className="bg-slate-900 text-white px-5 py-2 rounded-xl text-[10px] font-black shadow-lg flex items-center gap-2 hover:scale-105 transition-all">
@@ -309,7 +317,7 @@ export const Translator: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1 overflow-y-auto custom-scroll pr-2">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 flex-1 min-h-0 md:overflow-y-auto custom-scroll pb-4">
                       
                       {/* 1. Pronunciation Card */}
                       <CompactBilingualCard 
@@ -393,10 +401,10 @@ const CompactBilingualCard: React.FC<{ titleAr: string, titleEn: string, content
   return (
     <div className={`p-4 rounded-[1.5rem] border-x-4 ${colorSet} shadow-sm flex flex-col justify-center min-h-[100px] transition-all hover:shadow-md group`}>
       <div className="flex justify-between items-center mb-2 opacity-40">
-        <span className="text-[10px] font-black arabic-font">{titleAr}</span>
-        <span className="text-[8px] font-black uppercase tracking-[0.2em]">{titleEn}</span>
+        <span className="text-xs font-black arabic-font">{titleAr}</span>
+        <span className="text-[11px] font-black uppercase tracking-wide">{titleEn}</span>
       </div>
-      <div className="grid grid-cols-2 gap-4 items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 items-center">
         <div className="text-right animate-in slide-in-from-right-2">{contentAr}</div>
         <div className="text-left animate-in slide-in-from-left-2">{contentEn}</div>
       </div>
