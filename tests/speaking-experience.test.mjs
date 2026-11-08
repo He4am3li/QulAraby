@@ -147,3 +147,19 @@ test('student must dial exact three-digit extension of chosen entry',()=>{
   assert.ok(booth.includes("dialed.length !== 3"));
   assert.equal(booth.includes('setDialed(entry.extension)'),false);
 });
+
+
+test('mobile opens speaking call booth immediately instead of hiding it behind sidebar', () => {
+  const speak = source('pages/Speak.tsx');
+  const booth = source('components/SpeakingCallBooth.tsx');
+  const css = source('components/SpeakingMinimalPolish.css');
+  assert.match(speak, /const \[showMobileOptions, setShowMobileOptions\] = React\.useState\(false\)/);
+  assert.match(speak, /onOpenOptions=\{\(\) => setShowMobileOptions\(true\)\}/);
+  assert.match(speak, /aria-label=\{lang === 'ar' \? 'إغلاق قائمة التحدث' : 'Close speaking menu'\}/);
+  assert.match(booth, /const \[mobilePane, setMobilePane\] = React\.useState<'book' \| 'phone'>\('phone'\)/);
+  assert.match(booth, /className="qul-call-options-button"/);
+  assert.match(booth, /onClick=\{onOpenOptions\}/);
+  assert.match(booth, /aria-label=\{ar\?'عرض الهاتف':'Show telephone'\}/);
+  assert.match(css, /max-width:900px/);
+  assert.match(css, /qul-call-options-button/);
+});
