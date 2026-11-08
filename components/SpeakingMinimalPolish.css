@@ -1,0 +1,78 @@
+/* QUL: faithful photographic assets, fixed body, one turning dial, clean Arabic book. */
+.qul-call-scene .qul-call-heading{display:none!important}
+.qul-call-world.qul-call-scene{padding:clamp(5px,.6vw,10px)!important}
+.qul-call-scene .qul-scene-layout{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(6px,1.5vw,20px);padding:0!important;align-items:center}
+.qul-call-scene .qul-scene-phone-pane,.qul-call-scene .qul-scene-book-pane{overflow:visible!important;min-height:0;padding:0;gap:0}
+.qul-call-scene .qul-scene-dial-feedback{padding:5px!important;border:0!important;background:transparent!important;box-shadow:none!important;color:#a64242;font:800 11px 'Tajawal',sans-serif}
+.qul-call-scene .qul-scene-mission,.qul-call-scene .qul-reference-controls{display:none!important}
+.qul-call-scene .qul-call-atmosphere{display:none!important}
+/* Photographic base NEVER moves. Only the isolated receiver is animated. */
+.qul-photo-phone.qul-source-telephone{position:relative!important;width:min(100%,435px,calc((100dvh - 205px)*.7))!important;height:auto!important;aspect-ratio:558/780!important;min-height:0!important;max-height:100%!important;overflow:visible!important;isolation:isolate;filter:drop-shadow(0 15px 18px #713e292a)}
+.qul-phone-static-body,.qul-phone-independent-handset{position:absolute;left:0;top:8.72%;width:100%;height:auto;aspect-ratio:558/680;display:block;user-select:none;pointer-events:none}
+.qul-phone-static-body{z-index:1;object-fit:contain}
+.qul-phone-independent-handset{z-index:6;will-change:transform}
+.qul-phone-independent-handset img{width:100%;height:100%;object-fit:contain;display:block}
+.qul-photo-phone .qul-phone-receiver-hit{position:absolute;z-index:13;background:transparent!important;border:0!important;box-shadow:none!important;cursor:pointer;top:7%;left:5%;width:93%;height:35%;padding:0;border-radius:15%;touch-action:manipulation}
+.qul-photo-phone.is-lifted .qul-phone-receiver-hit{top:2%;left:10%;width:89%;height:33%}
+.qul-photo-phone .qul-phone-receiver-hit:focus-visible{outline:2px dashed #9d734d;outline-offset:-2px}
+.qul-photo-phone .qul-phone-receiver-hit:disabled{cursor:default}
+/* The dial image is cropped from the identical photograph, so there is no second dial. */
+.qul-phone-native-dial{position:absolute;z-index:8;left:36.38%;top:47.95%;width:47.31%;aspect-ratio:1;isolation:isolate}
+.qul-phone-native-dial>img{display:block;width:100%;height:100%;object-fit:contain;transform-origin:50% 50%;pointer-events:none}
+.qul-phone-native-key{position:absolute;z-index:2;width:15%;height:15%;transform:translate(-50%,-50%);padding:0;border:0!important;border-radius:50%;background:transparent!important;box-shadow:none!important;outline:0!important;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.qul-phone-native-key:focus,.qul-phone-native-key:focus-visible,.qul-phone-native-key:hover,.qul-phone-native-key:active{background:transparent!important;outline:0!important;border:0!important;box-shadow:none!important;filter:none!important}
+.qul-phone-native-key:disabled{cursor:default}
+.qul-phone-number-minimal{position:absolute;z-index:12;bottom:2%;left:50%;transform:translateX(-50%);border-radius:12px;background:#fbefdaee;border:1px solid #c8aa79;color:#68432e;font:900 12px ui-monospace,monospace;letter-spacing:.15em;padding:3px 10px}
+.qul-phone-live-badge{position:absolute;z-index:12;bottom:4%;right:0;padding:6px 10px;display:flex;align-items:center;gap:6px;background:#fff8e9f5;color:#68432e;border:1px solid #d7b891;border-radius:20px;box-shadow:0 5px 16px #673a2432;font:900 10px 'Tajawal',sans-serif}
+.qul-phone-live-badge button{background:transparent;border:0;color:#7f4437;padding:2px;display:grid;place-items:center}
+.qul-phone-live-bars{display:flex;gap:2px;align-items:center;height:19px}
+.qul-phone-live-bars i{width:3px;border-radius:8px;background:#a2774d}
+/* Closed book is ONLY the exact provided leather cover photograph. */
+.qul-clean-book{position:relative;flex:1;display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;height:100%;isolation:isolate}
+.qul-clean-book-stage{position:relative;width:min(100%,650px);aspect-ratio:789/560;max-height:100%;perspective:1200px;transform-style:preserve-3d}
+.qul-clean-book-cover{position:absolute;left:19%;top:0;width:61%;height:100%;display:flex;justify-content:center;align-items:center;padding:0;background:transparent!important;border:0!important;box-shadow:none!important;cursor:pointer;transform-origin:right center;transform-style:preserve-3d}
+.qul-clean-book-cover img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;filter:drop-shadow(0 8px 15px #7344213d)}
+.qul-clean-book-cover:focus-visible{outline:2px solid #b37e4b;outline-offset:3px}
+.qul-clean-book-inside{position:absolute;inset:0;overflow:visible;transform-style:preserve-3d}
+.qul-clean-book-photo{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:fill;pointer-events:none;user-select:none;filter:drop-shadow(0 7px 12px #6941242a)}
+/* Every Arabic alphabet tab leads to real, callable entries. */
+.qul-clean-book-tabs{position:absolute;z-index:5;left:1.2%;top:8%;width:9.3%;height:83.2%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(14,1fr);grid-auto-flow:column;gap:1px;padding:1px;background:#c7a57a;border-radius:6px 0 0 7px}
+.qul-clean-book-tabs button{display:flex;align-items:center;justify-content:center;background:linear-gradient(120deg,#f2dfb9,#debf96);color:#65492d;border:1px solid #c0a17b;border-radius:5px 2px 2px 5px;padding:0;min-width:0;font:900 clamp(9px,.9vw,12px) 'Tajawal','Cairo',sans-serif;cursor:pointer}
+.qul-clean-book-tabs button.active{background:linear-gradient(#8b6746,#5a3524);color:#fff0cb;border-color:#76513b}
+.qul-clean-book-tabs button:hover:not(:disabled){filter:brightness(1.05)}
+.qul-clean-book-tabs button:disabled{opacity:.5}
+/* Mask only the inactive printed names, not the user's leather, metal rings or paper edges. */
+.qul-clean-book-spread{position:absolute;z-index:2;left:12%;right:4.8%;top:10.8%;bottom:8.4%;perspective:1100px}
+.qul-clean-book-sheet{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:7.5%;height:100%;width:100%;transform-style:preserve-3d}
+.qul-clean-book-page{min-width:0;min-height:0;height:100%;display:flex;flex-direction:column;justify-content:space-around;padding:1% 2%;background:repeating-linear-gradient(to bottom,transparent 0px,transparent 45px,#bbab8f45 46px,transparent 47px),linear-gradient(110deg,#f9eedb,#fcf5e8 55%,#f7eada);box-shadow:inset 0 0 11px #6c4b2710;border-radius:3px}
+.qul-clean-book-page:last-child{background:repeating-linear-gradient(to bottom,transparent 0px,transparent 45px,#bbab8f45 46px,transparent 47px),linear-gradient(105deg,#f7ead8,#fff8ed 48%,#faefdd)}
+.qul-clean-book-entry{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:2px;border:0;border-bottom:1px solid #b9a5844c;background:transparent;width:100%;text-align:center;color:#334c64;cursor:pointer}
+.qul-clean-book-entry:hover:not(:disabled){background:#e5d1b344}
+.qul-clean-book-entry.selected{background:#e1d0ad70;box-shadow:inset 0 0 0 1px #b39469a3}
+.qul-clean-book-entry:disabled{opacity:.5;cursor:default}
+.qul-clean-book-ar{font:900 clamp(9px,1.07vw,15px)/1.25 'Tajawal','Cairo',sans-serif;color:#2c4663;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qul-clean-book-en{font:600 clamp(7px,.74vw,10px)/1.25 'Tajawal',system-ui,sans-serif;color:#a6a29a;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qul-clean-book-ext{font:900 clamp(10px,.97vw,14px)/1.1 ui-monospace,monospace;color:#355b7f;letter-spacing:.045em}
+.qul-clean-book-corner{position:absolute;z-index:6;width:10%;height:17%;bottom:0;border:0;padding:0;cursor:pointer;background:transparent}
+.qul-clean-book-corner.previous{left:0}.qul-clean-book-corner.next{right:0}
+.qul-clean-book-corner:after{content:'';position:absolute;bottom:2px;width:17px;height:17px;background:linear-gradient(135deg,transparent 50%,#d8bd92c2 50%);border-radius:0 0 4px 0}
+.qul-clean-book-corner.previous:after{left:0;transform:scaleX(-1)}.qul-clean-book-corner.next:after{right:0}
+@media(max-width:900px){
+.qul-call-scene .qul-scene-layout{display:flex;flex-direction:column;overflow:hidden;padding:0}
+.qul-call-scene .qul-scene-phone-pane,.qul-call-scene .qul-scene-book-pane{flex:1;min-height:0;overflow:visible!important}
+.qul-photo-phone.qul-source-telephone{width:min(97%,350px,calc((100dvh - 230px)*.68))!important}
+.qul-clean-book-stage{width:min(100%,650px)}
+.qul-clean-book-ar{font-size:clamp(8px,2.5vw,12px)}
+.qul-clean-book-en{font-size:clamp(7px,2vw,10px)}
+.qul-clean-book-ext{font-size:clamp(9px,2.5vw,12px)}
+.qul-clean-book-tabs button{font-size:clamp(8px,2.2vw,11px)}
+}
+@media(max-width:530px){
+.qul-call-scene .qul-scene-layout{gap:2px}
+.qul-photo-phone.qul-source-telephone{width:min(96%,320px,calc((100dvh - 210px)*.69))!important}
+.qul-phone-native-key{width:17%;height:17%}
+.qul-clean-book-page{padding:0 1%}
+.qul-clean-book-entry{gap:0}
+.qul-clean-book-tabs{gap:0}
+}
+@media(prefers-reduced-motion:reduce){.qul-phone-independent-handset,.qul-phone-native-dial>img{transition:none!important}}
