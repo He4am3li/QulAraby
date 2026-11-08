@@ -124,7 +124,7 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
     }
     if (!/^[0-9]$/.test(digit)) return;
     tone(390 + Number(digit) * 39);
-    setDialed(value => value.length >= 3 ? value : value + digit);
+    setDialed(value => value.length >= 3 ? digit : value + digit);
   };
   const liftReceiver = () => {
     if (busy || offHook) return;
