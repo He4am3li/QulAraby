@@ -1,0 +1,18 @@
+/* QUL Translator, vocabulary-inspired optical liquid glass */
+.qul-translation-glass-scene{position:relative;isolation:isolate;background:radial-gradient(ellipse at 12% 14%,rgba(125,190,185,.25),transparent 43%),radial-gradient(ellipse at 88% 83%,rgba(150,174,228,.19),transparent 44%),linear-gradient(135deg,#eaf3f1,#f1f5f8 58%,#f5f1ec)}
+.qul-translation-glass-scene:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(circle at 77% 20%,rgba(255,255,255,.75),transparent 22%);opacity:.8}
+.qul-translation-glass{position:relative;isolation:isolate;overflow:hidden;border:1px solid rgba(255,255,255,.95)!important;background:linear-gradient(150deg,rgba(255,255,255,.84),rgba(248,253,255,.57) 53%,rgba(226,239,241,.52))!important;box-shadow:inset 0 1px 0 #fff,inset 0 -1px 0 rgba(100,116,139,.1),0 5px 12px rgba(21,57,61,.05),0 18px 35px rgba(21,57,61,.1)!important;-webkit-backdrop-filter:blur(22px) saturate(145%);backdrop-filter:blur(22px) saturate(145%);transition:transform .16s ease-out,box-shadow .16s ease-out}
+.qul-translation-glass:before,.qul-translation-glass:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0}
+.qul-translation-glass:before{background:radial-gradient(ellipse 85% 36% at 20% -6%,rgba(255,255,255,.93),transparent 88%),linear-gradient(116deg,transparent 24%,rgba(255,255,255,.22) 47%,transparent 72%)}
+.qul-translation-glass:after{inset:2px;border:1px solid rgba(255,255,255,.5)}
+.qul-translation-glass>*{position:relative;z-index:1}
+.qul-translation-glass:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 #fff,0 9px 19px rgba(21,57,61,.09),0 24px 43px rgba(21,57,61,.14)!important}
+.qul-translation-glass-tab{border:1px solid rgba(255,255,255,.85);background:linear-gradient(145deg,rgba(255,255,255,.84),rgba(235,246,245,.57));box-shadow:inset 0 1px 0 #fff,0 5px 16px rgba(21,57,61,.08);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);transition:transform .15s ease,box-shadow .15s ease}
+.qul-translation-glass-tab:hover{transform:translateY(-2px)}
+.qul-translation-glass-tab[aria-selected="true"]{background:linear-gradient(145deg,rgba(18,83,79,.96),rgba(34,101,95,.91));color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.36),0 9px 23px rgba(20,88,80,.24)}
+.qul-translation-glass-input{background:rgba(255,255,255,.55)!important;border:1px solid rgba(255,255,255,.94)!important;box-shadow:inset 0 2px 7px rgba(42,82,86,.07),0 1px 0 #fff;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.qul-translation-glass-input:focus{outline:2px solid rgba(35,122,114,.3);outline-offset:2px}
+.qul-translation-glass-orb{position:relative;display:inline-flex;width:45px;height:45px;align-items:center;justify-content:center;border-radius:50%;border:1px solid rgba(255,255,255,.98);background:radial-gradient(circle at 27% 17%,rgba(255,255,255,.94),transparent 40%),radial-gradient(circle at 60% 110%,rgba(39,106,113,.37),transparent 55%),linear-gradient(145deg,rgba(255,255,255,.85),rgba(147,204,208,.48));box-shadow:inset 2px 3px 4px #fff,inset -5px -7px 12px rgba(25,76,83,.26),0 7px 15px rgba(24,72,80,.18)}
+.qul-translation-glass-orb:after{content:"";position:absolute;inset:2px;border-radius:50%;border:1px solid rgba(255,255,255,.75);background:radial-gradient(ellipse 38% 12% at 32% 15%,#fff,transparent)}
+@media(max-width:640px){.qul-translation-glass{border-radius:22px!important}.qul-translation-glass-orb{width:38px;height:38px}}
+@media(prefers-reduced-motion:reduce){.qul-translation-glass,.qul-translation-glass-tab{transition:none!important}.qul-translation-glass:hover,.qul-translation-glass-tab:hover{transform:none}}
