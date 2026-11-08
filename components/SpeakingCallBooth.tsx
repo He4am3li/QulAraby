@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, RotateCcw, BookOpen } from 'lucide-react';
+import { Phone, RotateCcw, BookOpen, SlidersHorizontal } from 'lucide-react';
 import { SpeakingPhoneBook } from './SpeakingPhoneBook';
 import { validateSimulatedDial } from '../services/speakingDial.mjs';
 import './SpeakingCallBooth.css';
@@ -34,13 +34,14 @@ interface CallBoothProps {
   onStop: () => void;
   onResume: () => void;
   onToggleMic: () => void;
+  onOpenOptions: () => void;
   meterRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
   lang, contact, isActive, loading, isAiSpeaking, micMuted, recoveryNotice,
   history, learnerText, tutorText,
-  onSelectContact, onStart, onStop, onResume, onToggleMic, meterRef,
+  onSelectContact, onStart, onStop, onResume, onToggleMic, onOpenOptions, meterRef,
 }) => {
   const ar = lang === 'ar';
   const [bookSelection, setBookSelection] = React.useState<string | null>(null);
@@ -164,12 +165,19 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
       <div className="qul-call-atmosphere" aria-hidden="true"/>
       <div className="qul-call-mobile-switch" role="group" aria-label={ar?'عرض الهاتف والدليل':'Phone and book views'}>
         <button type="button" className={mobilePane==='phone'?'active':''}
-          onClick={()=>setMobilePane('phone')} aria-pressed={mobilePane==='phone'}>
+          onClick={()=>setMobilePane('phone')} aria-pressed={mobilePane==='phone'}
+          aria-label={ar?'عرض الهاتف':'Show telephone'}>
           <Phone size={18}/>
         </button>
         <button type="button" className={mobilePane==='book'?'active':''}
-          onClick={()=>setMobilePane('book')} aria-pressed={mobilePane==='book'}>
+          onClick={()=>setMobilePane('book')} aria-pressed={mobilePane==='book'}
+          aria-label={ar?'عرض دليل الهاتف':'Show telephone directory'}>
           <BookOpen size={18}/>
+        </button>
+        <button type="button" onClick={onOpenOptions}
+          aria-label={ar?'الأقسام والمستوى':'Speaking sections and level'}
+          className="qul-call-options-button" title={ar?'الأقسام والمستوى':'Speaking sections and level'}>
+          <SlidersHorizontal size={18}/>
         </button>
       </div>
 
