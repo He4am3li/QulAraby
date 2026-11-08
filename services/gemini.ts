@@ -1390,8 +1390,8 @@ Return strictly JSON format:
       });
 
       const parsed = safeJSONParse(response.text, {
-        accuracy: 85,
-        isCorrect: true,
+        accuracy: 0,
+        isCorrect: false,
         feedbackEn: "Good effort! Keep practicing your sentence structure.",
         feedbackAr: "مُحَاوَلَةٌ جَيِّدَةٌ!",
         vocalizedArabic: referenceTranslation || userArabic,
@@ -1406,11 +1406,11 @@ Return strictly JSON format:
     // Deterministic intelligent local comparison fallback
     const cleanUser = userArabic.replace(/[\u064B-\u065F\u0670]/g, '').trim();
     const cleanRef = (referenceTranslation || '').replace(/[\u064B-\u065F\u0670]/g, '').trim();
-    const isClose = cleanRef.length > 0 && (cleanUser.includes(cleanRef) || cleanRef.includes(cleanUser) || cleanUser.length >= 3);
+    const isClose = cleanRef.length > 0 && cleanUser === cleanRef;
 
     return {
-      accuracy: isClose ? 90 : 75,
-      isCorrect: true,
+      accuracy: isClose ? 90 : 0,
+      isCorrect: isClose,
       feedbackEn: isClose 
         ? "Excellent translation! Your phrasing is very natural and communicates the meaning well."
         : "Good effort! Practice saying the sentence aloud with full vowel markers.",
