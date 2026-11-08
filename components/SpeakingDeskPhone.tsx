@@ -33,8 +33,10 @@ export const SpeakingDeskPhone: React.FC<DeskPhoneProps> = ({
     <div className={'qul-source-telephone qul-photo-phone '+(offHook?'is-lifted':'is-cradled')}
       role="group" aria-label={ar?'هاتف برونزي تفاعلي':'Interactive bronze telephone'}>
       {/* The body has one unchanging coordinate system in both states. */}
-      <img className="qul-phone-static-body" src="/assets/speaking/phone-body-fixed.avif"
-        alt="" draggable={false} aria-hidden="true"/>
+      <motion.img className="qul-phone-static-body" src="/assets/speaking/phone-body-fixed.avif"
+        alt="" draggable={false} aria-hidden="true" initial={false}
+        animate={{opacity:offHook?1:0}}
+        transition={reducedMotion?{duration:0}:{duration:offHook?.08:.18,delay:offHook?0:.55}}/>
       {/* The original, complete ON-HOOK photograph gives a perfectly seated receiver.
           It is aligned to the fixed body's cradle instead of rotating the lifted photo. */}
       <motion.img className="qul-phone-cradled-photo" src="/assets/speaking/phone-closed.avif"
