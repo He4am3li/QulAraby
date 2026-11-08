@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Phone, PhoneOff, Mic, MicOff, RotateCcw, BookOpen, MessageCircle } from 'lucide-react';
+import { Phone, RotateCcw, BookOpen } from 'lucide-react';
 import { SpeakingPhoneBook } from './SpeakingPhoneBook';
 import { validateSimulatedDial } from '../services/speakingDial.mjs';
 import './SpeakingCallBooth.css';
@@ -7,11 +7,12 @@ import './SpeakingScene.css';
 import './SpeakingReferencePhoto.css';
 import { type SpeakingPhoneContact } from '../data/speakingDirectory';
 import { EVERYDAY_CALL_CONTACTS } from '../data/speakingEverydayContacts';
+import { ADDITIONAL_EVERYDAY_CONTACTS } from '../data/speakingExtraEverydayContacts';
 import './SpeakingSourceAssets.css';
 import { SpeakingDeskPhone } from './SpeakingDeskPhone';
 
 export type CallContact = SpeakingPhoneContact;
-export const CALL_CONTACTS: CallContact[] = EVERYDAY_CALL_CONTACTS;
+export const CALL_CONTACTS: CallContact[] = [...EVERYDAY_CALL_CONTACTS, ...ADDITIONAL_EVERYDAY_CONTACTS];
 
 type CallTurn = { role: 'user' | 'ai'; text: string };
 interface CallBoothProps {
@@ -37,8 +38,8 @@ interface CallBoothProps {
 }
 
 export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
-  lang, contact, level, isActive, loading, isAiSpeaking, micMuted, recoveryNotice,
-  history, learnerText, tutorText, missionEvidence, assessmentStatus,
+  lang, contact, isActive, loading, isAiSpeaking, micMuted, recoveryNotice,
+  history, learnerText, tutorText,
   onSelectContact, onStart, onStop, onResume, onToggleMic, meterRef,
 }) => {
   const ar = lang === 'ar';
@@ -53,8 +54,6 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
   const transcriptRef = React.useRef<HTMLDivElement>(null);
 
   const busy = loading || isActive;
-  const completedGoals = missionEvidence?.filter(item => item.achieved).length || 0;
-  const verified = assessmentStatus === 'analyzed' && completedGoals === contact.objectivesAr.length;
   const selected = CALL_CONTACTS.find(item => item.id === bookSelection) || null;
   const allTurns = [
     ...history.filter(item => item.text.trim()),
@@ -133,33 +132,6 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
     setDialError('');
     tone(420, .1);
   };
-  const startCall = () => {
-    if (busy) return;
-    if (!offHook) {
-      liftReceiver();
-      return;
-    }
-    const result = validateSimulatedDial({
-      selectedId: bookSelection,
-      dialed,
-      contacts: CALL_CONTACTS,
-    });
-    if (result !== 'ready') {
-      const errors = {
-        select_contact: ar ? 'اختر جهة من دليل الهاتف أولًا.' : 'Choose a contact in the address book.',
-        incomplete: ar ? 'اطلب الأرقام الثلاثة من القرص.' : 'Dial all three digits.',
-        wrong_number: ar ? 'الرقم خطأ، راجع الدليل واطلبه مجددًا.' : 'Wrong number, check the book and dial again.',
-      };
-      setDialError(errors[result as keyof typeof errors]);
-      tone(230,.12);
-      return;
-    }
-    if (callAttemptRef.current === dialed) return;
-    callAttemptRef.current = dialed;
-    setDialError('');
-    setShowScript(true);
-    onStart();
-  };
   const endCall = () => {
     tone(260,.13);
     if (busy) onStop();
@@ -187,29 +159,17 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
     }
   }, [offHook, dialed, busy, bookSelection, onStart, ar]);
 
-  const statusText = loading
-    ? (ar ? 'جارٍ الاتصال...' : 'Connecting...')
-    : isActive ? (ar ? 'المكالمة جارية' : 'Call connected')
-    : recoveryNotice ? (ar ? 'انقطع الاتصال' : 'Connection interrupted')
-    : (ar ? 'جاهز للاتصال' : 'Ready to dial');
-
   return (
     <div className="qul-call-world qul-call-scene" dir={ar?'rtl':'ltr'}>
       <div className="qul-call-atmosphere" aria-hidden="true"/>
-      <header className="qul-call-heading">
-        <div className="qul-reference-instruction">
-          <MessageCircle size={21} aria-hidden="true"/>
-          <span>{ar ? 'استخدم دليل الهاتف لإجراء مكالمة هاتفية.' : 'Use the telephone directory to make a phone call.'}</span>
-        </div>
-      </header>
       <div className="qul-call-mobile-switch" role="group" aria-label={ar?'عرض الهاتف والدليل':'Phone and book views'}>
         <button type="button" className={mobilePane==='phone'?'active':''}
           onClick={()=>setMobilePane('phone')} aria-pressed={mobilePane==='phone'}>
-          <Phone size={17}/>{ar?'الهاتف':'Telephone'}
+          <Phone size={18}/>
         </button>
         <button type="button" className={mobilePane==='book'?'active':''}
           onClick={()=>setMobilePane('book')} aria-pressed={mobilePane==='book'}>
-          <BookOpen size={17}/>{ar?'دليل الهاتف':'Address book'}
+          <BookOpen size={18}/>
         </button>
       </div>
 
@@ -219,12 +179,7 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
             micMuted={micMuted} isAiSpeaking={isAiSpeaking} selected={selected}
             onDial={dialKey} onLift={liftReceiver} onHangup={endCall}
             onToggleMic={onToggleMic} meterRef={meterRef}/>
-          {(dialError || dialed || selected) && (
-            <div className={'qul-scene-dial-feedback '+(dialError?'error':'')} aria-live="polite">
-              <span>{dialError || (dialed ? (ar ? 'الرقم المدخل: ' : 'Dialled: ') + dialed :
-                selected ? (ar ? 'اقرأ الرقم في الأجندة ثم اطلبه.' : 'Read the number in the book and dial it.') : '')}</span>
-            </div>
-          )}
+          {dialError && <div className="qul-scene-dial-feedback error" role="alert">{dialError}</div>}
           {recoveryNotice && !isActive && (
             <div className="qul-scene-recovery">
               <span>{recoveryNotice}</span>
@@ -238,34 +193,6 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
         <div className="qul-scene-book-pane" data-pane="book">
           <SpeakingPhoneBook lang={lang} contacts={CALL_CONTACTS}
             selectedId={bookSelection} disabled={busy} onSelect={selectBookEntry}/>
-          {selected && (
-          <section className="qul-scene-mission" aria-label={ar?'مهمة المكالمة':'Call mission'}>
-            {selected ? (
-              <>
-                <div className="qul-scene-mission-header">
-                  <div><small>QUL · MISSION</small><strong>{ar?selected.ar:selected.en}</strong></div>
-                  {assessmentStatus==='analyzed' &&
-                    <span className={'qul-scene-mission-progress '+(verified?'verified':'')}>
-                      {completedGoals} / {selected.objectivesAr.length}
-                    </span>}
-                </div>
-                <p>{ar?selected.aimAr:selected.aimEn}</p>
-                <div className="qul-scene-mission-steps">
-                  {(ar?selected.objectivesAr:selected.objectivesEn).map((objective,index)=>
-                    <span key={index} className={assessmentStatus==='analyzed' && missionEvidence?.[index]?.achieved ? 'achieved' : ''}>
-                      {assessmentStatus==='analyzed' && missionEvidence?.[index]?.achieved?<Check size={12}/>:index+1}
-                      {objective}
-                    </span>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="qul-scene-mission-empty">
-                <BookOpen size={20}/><span>{ar?'اختر اسم الجهة من صفحات الدليل لتظهر المهمة.':'Select an entry in the book to discover your mission.'}</span>
-              </div>
-            )}
-          </section>
-          )}
           {(showScript || busy) && (
           <section className="qul-scene-transcript" aria-label={ar?'سجل المكالمة':'Call transcript'}>
             <button type="button" onClick={()=>setShowScript(value=>!value)} aria-expanded={showScript}
@@ -289,27 +216,7 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
           )}
         </div>
       </div>
-      <div className="qul-reference-controls" role="group" aria-label={ar ? 'التحكم بالمكالمة' : 'Call controls'}>
-        <button type="button" className={'qul-reference-aux-control '+(micMuted?'is-muted':'')}
-          disabled={!isActive} onClick={onToggleMic}
-          title={ar ? (micMuted ? 'تشغيل الميكروفون' : 'كتم الميكروفون') : (micMuted ? 'Unmute' : 'Mute')}
-          aria-label={ar ? 'تشغيل أو كتم الميكروفون' : 'Mute or unmute microphone'}>
-          {micMuted ? <MicOff size={21}/> : <Mic size={21}/>}
-        </button>
-        <button type="button" className="qul-reference-start" disabled={loading}
-          onClick={busy ? endCall : startCall}>
-          {busy ? <PhoneOff size={20}/> : <Mic size={21}/>}
-          {loading ? (ar?'جارٍ الاتصال...':'Connecting...') :
-           busy ? (ar?'إنهاء المكالمة':'End call') :
-           offHook ? (ar?'اطلب الرقم':'Dial the number') : (ar?'ارفع السماعة':'Lift receiver')}
-        </button>
-        <button type="button" className="qul-reference-aux-control"
-          disabled={busy || !dialed} onClick={()=>dialKey('*')}
-          title={ar?'مسح الرقم والمحاولة مجددًا':'Reset number'}
-          aria-label={ar?'مسح الرقم وإعادة المحاولة':'Reset number'}>
-          <RotateCcw size={20}/>
-        </button>
-      </div>
+
     </div>
   );
 };
