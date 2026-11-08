@@ -129,20 +129,54 @@ test('physical Arabic book is closed on load and opens from bottom-left with a 3
   assert.match(css,/\.qul-alphabet-center-fold/);
 });
 
-test('vintage telephone includes a fully lifted moving handset and mechanical rotary dial', () => {
+test('approved bronze photographic telephone has accessible ten-digit dial and independent lifted receiver', () => {
   const phone=readFileSync(new URL('../components/SpeakingDeskPhone.tsx',import.meta.url),'utf8');
-  const css=readFileSync(new URL('../components/SpeakingDeskPhone.css',import.meta.url),'utf8');
-  assert.match(phone,/qul-vintage-handset/);
-  assert.match(phone,/y:-122/);
-  assert.match(phone,/y:-52/);
+  const css=readFileSync(new URL('../components/SpeakingReferencePhoto.css',import.meta.url),'utf8');
+  assert.match(phone,/qul-ref-phone-base/);
+  assert.match(phone,/qul-ref-phone-receiver/);
+  assert.match(phone,/qul-ref-phone-cord/);
+  assert.match(phone,/x:26,y:-49/);
   assert.match(phone,/onClick=\{busy\?onEnd:onCall\}/);
-  assert.match(phone,/qul-vintage-rotary-wheel/);
+  assert.match(phone,/DIAL_POSITIONS\.map/);
   assert.match(phone,/onDial\(digit\)/);
-  assert.match(phone,/qul-vintage-cable/);
-  assert.match(css,/\.qul-vintage-ear/);
-  assert.match(css,/\.qul-vintage-body/);
-  assert.match(css,/\.qul-vintage-call-console/);
+  assert.match(phone,/aria-label=\{\(ar\?'اتصل بالرقم '/);
+  assert.match(css,/bronze and gold proportions/);
+  assert.match(css,/qul-ref-phone-receiver/);
+  assert.match(css,/qul-ref-phone-base/);
+  assert.match(css,/qul-ref-phone-cord/);
   assert.match(css,/prefers-reduced-motion/);
+  const asset=readFileSync(new URL('../public/assets/qul-speaking-reference.atlas.avif',import.meta.url));
+  assert.ok(asset.length>18000,'approved photo atlas is present');
+  assert.equal(asset.toString('ascii',4,12),'ftypavif');
+});
+
+test('real leather directory keeps 28 clickable tabs with a closed initial photo cover', () => {
+  const book=readFileSync(new URL('../components/SpeakingPhoneBook.tsx',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../components/SpeakingReferencePhoto.css',import.meta.url),'utf8');
+  assert.match(book,/qul-reference-book-photo/);
+  assert.match(book,/React\.useState\(false\)/);
+  assert.match(book,/ARABIC_DIRECTORY_LETTERS\.map/);
+  assert.match(book,/onClick=\{\(\) => setOpen\(true\)\}/);
+  assert.match(book,/qul-alphabet-flipping-leaf/);
+  assert.match(css,/qul-reference-book-photo/);
+  assert.match(css,/\.is-closed \.qul-reference-book-photo\{opacity:0\}/);
+  assert.match(css,/qul-alphabet-cover/);
+  assert.match(css,/qul-alphabet-cover-opener/);
+  assert.match(css,/qul-alphabet-tab/);
+});
+
+test('approved QUL speaking composition has only the reference-style central instruction and call bar', () => {
+  const booth=readFileSync(new URL('../components/SpeakingCallBooth.tsx',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../components/SpeakingReferencePhoto.css',import.meta.url),'utf8');
+  assert.match(booth,/qul-reference-instruction/);
+  assert.match(booth,/qul-reference-controls/);
+  assert.match(booth,/qul-reference-start/);
+  assert.match(booth,/onClick=\{busy \? endCall : startCall\}/);
+  assert.match(booth,/onToggleMic/);
+  assert.match(booth,/onClick=\{\(\)=>dialKey\('\*'\)\}/);
+  assert.match(booth,/\{selected && \(/);
+  assert.match(css,/qul-call-world\.qul-call-scene/);
+  assert.match(css,/qul-reference-start/);
 });
 
 test('entry selection never fills the number, the student must dial the exact extension', () => {

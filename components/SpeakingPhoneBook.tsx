@@ -4,6 +4,7 @@ import { BookOpen, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { ARABIC_DIRECTORY_LETTERS, directoryLetterOf } from '../data/speakingDirectory';
 import type { CallContact } from './SpeakingCallBooth';
 import './SpeakingAlphabetBook.css';
+import './SpeakingReferencePhoto.css';
 
 interface Props {
   lang: 'ar' | 'en';
@@ -91,6 +92,7 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
 
       <div className={'qul-alphabet-stage ' + (open ? 'is-open' : 'is-closed')}>
         <div className="qul-alphabet-book" dir="rtl">
+          <div className="qul-reference-book-photo" aria-hidden="true"/>
           <div className="qul-alphabet-book-edge" aria-hidden="true"/>
           <div className="qul-alphabet-book-spine" aria-hidden="true"/>
 
