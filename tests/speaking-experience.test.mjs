@@ -122,9 +122,9 @@ test('real leather cover is shown alone before opening and every contact is clic
 test('all 28 alphabet letters have practical callable examples',()=>{
   const extra=source('data/speakingExtraEverydayContacts.ts');
   const dir=source('data/speakingDirectory.ts');
-  const match=dir.match(/export const ARABIC_DIRECTORY_LETTERS = (\[[^\n]+\]) as const;/);
+  const match=dir.match(/ARABIC_DIRECTORY_LETTERS = \[([\s\S]*?)\] as const;/);
   assert.ok(match,'alphabet definition exists');
-  const letters=JSON.parse(match[1]);
+  const letters=(match[1].match(/'[^']+'/g)||[]).map(value=>value.slice(1,-1));
   assert.equal(letters.length,28);
   const rowsMatch=extra.match(/const ROWS: readonly \[string,string,Scene\]\[\] = (\[[\s\S]+?\]);/);
   assert.ok(rowsMatch,'extra everyday directory exists');
