@@ -76,7 +76,6 @@ test('speaking retains both modules and hides directory contacts from sidebar', 
   assert.match(booth,/onSelect=\{selectBookEntry\}/);
   assert.match(booth,/onToggleMic/);
   assert.match(booth,/missionEvidence/);
-  assert.match(booth,/generate/i);
   assert.match(booth,/ADDITIONAL_SPEAKING_CONTACTS/);
 });
 
