@@ -1,31 +1,9 @@
 import React from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { BookOpen, ChevronLeft, ChevronRight, Search, X, MapPin } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
+import { ARABIC_DIRECTORY_LETTERS, directoryLetterOf } from '../data/speakingDirectory';
 import type { CallContact } from './SpeakingCallBooth';
-import './SpeakingPhoneBook.css';
-
-const GROUPS = {
-  restaurant: 'daily',
-  hotel: 'travel',
-  friend: 'daily',
-  support: 'services',
-  taxi: 'travel',
-  clinic: 'services',
-  library: 'study',
-  bakery: 'daily',
-  school: 'study',
-  museum: 'travel',
-} as const;
-
-const CATEGORY_OPTIONS = [
-  { id: 'all', ar: 'الكل', en: 'All' },
-  { id: 'daily', ar: 'الحياة اليومية', en: 'Everyday' },
-  { id: 'travel', ar: 'تنقل وزيارات', en: 'Travel' },
-  { id: 'services', ar: 'خدمات', en: 'Services' },
-  { id: 'study', ar: 'تعليم وثقافة', en: 'Learning' },
-] as const;
-
-type Category = typeof CATEGORY_OPTIONS[number]['id'];
+import './SpeakingAlphabetBook.css';
 
 interface Props {
   lang: 'ar' | 'en';
@@ -35,156 +13,159 @@ interface Props {
   onSelect: (contact: CallContact) => void;
 }
 
+const ITEMS_PER_SPREAD = 6;
+const FIRST_LETTER = ARABIC_DIRECTORY_LETTERS[0];
+
 export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId, disabled, onSelect }) => {
   const ar = lang === 'ar';
   const reducedMotion = useReducedMotion();
   const [open, setOpen] = React.useState(false);
+  const [activeLetter, setActiveLetter] = React.useState<string>(FIRST_LETTER);
   const [query, setQuery] = React.useState('');
-  const [category, setCategory] = React.useState<Category>('all');
-  const [spread, setSpread] = React.useState(0);
-  const [direction, setDirection] = React.useState(1);
+  const [page, setPage] = React.useState(0);
+  const [turnDirection, setTurnDirection] = React.useState(1);
+  const [lastTurn, setLastTurn] = React.useState(0);
 
-  const filtered = React.useMemo(() => {
-    const term = query.toLocaleLowerCase().trim();
-    return contacts.filter(c =>
-      (category === 'all' || GROUPS[c.id] === category) &&
-      (!term || (c.ar + ' ' + c.en + ' ' + c.agentAr + ' ' + c.extension)
-        .toLocaleLowerCase().includes(term))
-    );
-  }, [contacts, query, category]);
-  const perSpread = 4;
-  const pages = Math.max(1, Math.ceil(filtered.length / perSpread));
-  const spreadIndex = Math.min(spread, pages - 1);
-  const entries = filtered.slice(spreadIndex * perSpread, spreadIndex * perSpread + perSpread);
+  const matching = React.useMemo(() => {
+    const q = query.trim().toLocaleLowerCase();
+    return contacts.filter(entry => q
+      ? [entry.ar, entry.en, entry.extension].some(field => field.toLocaleLowerCase().includes(q))
+      : directoryLetterOf(entry.ar) === activeLetter
+    ).sort((a,b) => a.ar.localeCompare(b.ar, 'ar'));
+  }, [contacts, activeLetter, query]);
 
-  const chooseCategory = (next: Category) => {
-    setCategory(next);
-    setSpread(0);
-    setDirection(1);
+  const totalPages = Math.max(1, Math.ceil(matching.length / ITEMS_PER_SPREAD));
+  const currentPage = Math.min(page, totalPages - 1);
+  const visible = matching.slice(currentPage * ITEMS_PER_SPREAD, (currentPage + 1) * ITEMS_PER_SPREAD);
+  const changePage = (direction: number) => {
+    setTurnDirection(direction);
+    setPage(prev => Math.max(0, Math.min(totalPages - 1, prev + direction)));
+    setLastTurn(value => value + 1);
   };
-  const nextPage = (delta: number) => {
-    setDirection(delta);
-    setSpread(current => Math.max(0, Math.min(pages - 1, current + delta)));
+  const goToLetter = (letter: string) => {
+    if (disabled) return;
+    setQuery('');
+    setActiveLetter(letter);
+    setTurnDirection(1);
+    setPage(0);
+    setLastTurn(value => value + 1);
   };
 
-  const Entry: React.FC<{ item: CallContact }> = ({ item }) => (
-    <button type="button" disabled={disabled} onClick={() => onSelect(item)}
-      className={'qul-book-entry ' + (item.id === selectedId ? 'selected' : '')}
-      aria-pressed={item.id === selectedId}
-      aria-label={(ar ? item.ar : item.en) + ', ' + item.extension}>
-      <span className="qul-book-entry-icon" aria-hidden="true">{item.symbol}</span>
-      <span className="qul-book-entry-copy">
+  const displayEntry = (item: CallContact) => (
+    <button key={item.id} type="button" disabled={disabled} className={'qul-index-entry ' + (selectedId === item.id ? 'chosen' : '')}
+      onClick={() => onSelect(item)} aria-pressed={selectedId === item.id}
+      aria-label={(ar ? item.ar : item.en) + '، ' + item.extension}>
+      <div className="qul-index-entry-name">
         <strong>{ar ? item.ar : item.en}</strong>
-        <small>{ar ? item.en : item.ar}</small>
-      </span>
-      <span className="qul-book-entry-number" dir="ltr">{item.extension}</span>
+        <span dir="auto">{ar ? item.en : item.ar}</span>
+      </div>
+      <span className="qul-index-extension" dir="ltr">{item.extension}</span>
     </button>
   );
 
-  const openBook = () => {
-    setOpen(true);
-    setSpread(0);
-  };
-
   return (
-    <section className="qul-book-area" aria-label={ar ? 'أجندة دليل الاتصالات' : 'Telephone address book'}>
-      <div className="qul-book-intro">
+    <section className="qul-alphabet-directory" aria-label={ar ? 'دليل الهاتف الهجائي' : 'Arabic alphabetical telephone directory'}>
+      <div className="qul-alphabet-heading">
         <div>
-          <span className="qul-book-overline">QUL CONTACTS • 10</span>
-          <h3>{ar ? 'أجندة الاتصالات' : 'Telephone directory'}</h3>
-          <p>{ar ? 'ابحث عن الجهة، اقرأ الرقم ثم اطلبه بنفسك.' : 'Find a place, read its number, then dial it yourself.'}</p>
+          <span>QUL · TELEPHONE ADDRESS BOOK</span>
+          <h3>{ar ? 'دليل الهاتف' : 'Telephone directory'}</h3>
         </div>
         {open && (
-          <button type="button" onClick={() => setOpen(false)} className="qul-book-close">
-            <X size={16} />{ar ? 'إغلاق' : 'Close'}
-          </button>
+          <button type="button" className="qul-alphabet-close" onClick={() => setOpen(false)}
+            aria-label={ar ? 'إغلاق دليل الهاتف' : 'Close address book'}><X size={15}/>{ar ? 'إغلاق' : 'Close'}</button>
         )}
       </div>
 
-      <AnimatePresence mode="wait" initial={false}>
-        {!open ? (
-          <motion.button type="button" key="cover" onClick={openBook}
-            className="qul-book-closed"
-            initial={reducedMotion ? false : { rotateY: 12, opacity: 0 }}
-            animate={{ rotateY: 0, opacity: 1 }}
-            exit={reducedMotion ? { opacity: 0 } : { rotateY: -65, opacity: 0 }}
-            transition={{ duration: reducedMotion ? 0.01 : 0.48 }}>
-            <span className="qul-book-binding" aria-hidden="true" />
-            <span className="qul-book-cover-emboss" aria-hidden="true">Q</span>
-            <span className="qul-book-cover-heading">QUL</span>
-            <strong>{ar ? 'دليل الاتصالات' : 'THE TELEPHONE BOOK'}</strong>
-            <span className="qul-book-cover-detail">{ar ? 'عشرة عناوين ومهمات حقيقية للتدريب' : 'Ten fictional places, ten speaking missions'}</span>
-            <span className="qul-book-open-action"><BookOpen size={17}/>{ar ? 'افتح الأجندة' : 'Open the book'}</span>
-          </motion.button>
-        ) : (
-          <motion.div key="pages" className="qul-book-open"
-            initial={reducedMotion ? false : { rotateY: -28, scale: .94, opacity: 0 }}
-            animate={{ rotateY: 0, scale: 1, opacity: 1 }}
-            exit={{ opacity: 0, scale: .98 }}
-            transition={{ duration: reducedMotion ? 0.01 : .44 }}>
-            <div className="qul-book-toolbar">
-              <div className="qul-book-search">
-                <Search size={16} />
-                <input value={query}
-                  onChange={e => { setQuery(e.target.value); setSpread(0); setDirection(1); }}
-                  placeholder={ar ? 'ابحث عن اسم أو جهة...' : 'Search a place or contact...'}
-                  aria-label={ar ? 'البحث في دليل الاتصالات' : 'Search telephone directory'}
-                  disabled={disabled} />
-                {query && <button type="button" onClick={() => { setQuery(''); setSpread(0); }} aria-label={ar ? 'مسح البحث' : 'Clear search'}><X size={13}/></button>}
+      <div className={'qul-alphabet-stage ' + (open ? 'is-open' : 'is-closed')}>
+        <div className="qul-alphabet-book" dir="rtl">
+          <div className="qul-alphabet-book-edge" aria-hidden="true"/>
+          <div className="qul-alphabet-book-spine" aria-hidden="true"/>
+
+          <div className="qul-alphabet-paper-content" aria-hidden={!open}>
+            <div className="qul-alphabet-tabs" role="group" aria-label={ar ? 'الحروف الهجائية' : 'Arabic alphabet'}>
+              {ARABIC_DIRECTORY_LETTERS.map((letter, index) => (
+                <button key={letter} type="button" disabled={!open || disabled}
+                  aria-label={(ar ? 'حرف ' : 'Arabic letter ') + letter}
+                  aria-pressed={query.length === 0 && activeLetter === letter}
+                  className={'qul-alphabet-tab ' + (query.length === 0 && activeLetter === letter ? 'selected' : '')}
+                  onClick={() => goToLetter(letter)}
+                  style={{ '--tab-group': index < 14 ? 0 : 1 } as React.CSSProperties}>
+                  {letter}
+                </button>
+              ))}
+            </div>
+            <div className="qul-alphabet-book-pages">
+              <div className="qul-alphabet-search">
+                <Search size={13}/>
+                <input disabled={!open || disabled} dir={ar ? 'rtl' : 'ltr'}
+                  value={query}
+                  onChange={event => {setQuery(event.target.value); setPage(0);setTurnDirection(1);setLastTurn(x=>x+1);}}
+                  placeholder={ar ? 'ابحث عن اسم أو رقم' : 'Search name or number'}
+                  aria-label={ar ? 'بحث في دليل الهاتف' : 'Search address book'}/>
+                {query && <button type="button" onClick={() => {setQuery('');setPage(0);}} aria-label={ar ? 'مسح البحث' : 'Clear search'}><X size={12}/></button>}
               </div>
-              <div className="qul-book-filters" aria-label={ar ? 'تصنيف جهات الاتصال' : 'Contact category'}>
-                {CATEGORY_OPTIONS.map(group => (
-                  <button type="button" key={group.id} onClick={() => chooseCategory(group.id)}
-                    className={category === group.id ? 'active' : ''}
-                    aria-pressed={category === group.id}>
-                    {ar ? group.ar : group.en}
-                  </button>
-                ))}
+              <div className="qul-alphabet-pages-frame">
+                <div className="qul-alphabet-center-fold" aria-hidden="true"/>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={activeLetter + ':' + query + ':' + currentPage + ':' + lastTurn}
+                    className="qul-alphabet-visible-spread"
+                    initial={reducedMotion ? false : { rotateY: turnDirection > 0 ? 78 : -78, opacity: .55, scaleX: .84 }}
+                    animate={{ rotateY: 0, opacity: 1, scaleX: 1 }}
+                    exit={reducedMotion ? { opacity: 0 } : { rotateY: turnDirection > 0 ? -72 : 72, opacity: .35, scaleX: .85 }}
+                    transition={{ duration: reducedMotion ? 0 : .57, ease: [0.24, .65, .28, 1] }}
+                    style={{ transformOrigin: turnDirection > 0 ? 'right center' : 'left center' }}>
+                    <div className="qul-alphabet-page">
+                      <header>
+                        <strong>{query ? (ar ? 'نتائج البحث' : 'Search results') : (ar ? 'حرف ' + activeLetter : 'Letter ' + activeLetter)}</strong>
+                        <span>QUL / {String(currentPage * 2 + 1).padStart(2,'0')}</span>
+                      </header>
+                      <div className="qul-alphabet-page-lines">
+                        {visible.slice(0,3).map(displayEntry)}
+                        {!matching.length && <span className="qul-index-no-results">{ar ? 'لا توجد نتائج' : 'No results'}</span>}
+                      </div>
+                      <footer>قُل <span>• {currentPage * 2 + 1} •</span></footer>
+                    </div>
+                    <div className="qul-alphabet-page">
+                      <header><strong>{ar ? 'الأسماء والأرقام' : 'Names and numbers'}</strong><span>QUL / {String(currentPage * 2 + 2).padStart(2,'0')}</span></header>
+                      <div className="qul-alphabet-page-lines">{visible.slice(3,6).map(displayEntry)}</div>
+                      <footer>{ar ? 'دليل التدريب' : 'TRAINING DIRECTORY'} <span>• {currentPage * 2 + 2} •</span></footer>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              <div className="qul-alphabet-navigation">
+                <button type="button" disabled={!open || currentPage === 0} onClick={() => changePage(-1)}><ChevronRight size={15}/>{ar ? 'السابق' : 'Previous'}</button>
+                <span dir="ltr">{currentPage + 1} / {totalPages}</span>
+                <button type="button" disabled={!open || currentPage === totalPages - 1} onClick={() => changePage(1)}>{ar ? 'التالي' : 'Next'}<ChevronLeft size={15}/></button>
               </div>
             </div>
-            <div className="qul-book-pages-shell">
-              <div className="qul-book-page-stack" aria-hidden="true"/>
-              <div className="qul-book-page-spine" aria-hidden="true"/>
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div key={category + ':' + query + ':' + spreadIndex}
-                  className="qul-book-page-pair"
-                  initial={reducedMotion ? false : { rotateY: direction > 0 ? 14 : -14, opacity: .3 }}
-                  animate={{ rotateY: 0, opacity: 1 }}
-                  exit={reducedMotion ? { opacity: 0 } : { rotateY: direction > 0 ? -14 : 14, opacity: .2 }}
-                  transition={{ duration: reducedMotion ? 0.01 : .27 }}>
-                  <div className="qul-book-page">
-                    <div className="qul-book-page-label">{ar ? 'الجهات' : 'CONTACTS'} <span>Q / 01</span></div>
-                    {entries.slice(0,2).map(c => <Entry item={c} key={c.id}/>)}
-                    {!entries.length && <div className="qul-book-no-results"><Search size={22}/>{ar ? 'لا توجد جهة بهذا الاسم' : 'No matching contacts'}</div>}
-                    <span className="qul-book-page-number" dir="ltr">{spreadIndex * 2 + 1}</span>
-                  </div>
-                  <div className="qul-book-page">
-                    <div className="qul-book-page-label">{ar ? 'أرقام التدريب' : 'EXTENSIONS'} <span>Q / 02</span></div>
-                    {entries.slice(2,4).map(c => <Entry item={c} key={c.id}/>)}
-                    <div className="qul-book-page-watermark" aria-hidden="true">قُل</div>
-                    <span className="qul-book-page-number" dir="ltr">{spreadIndex * 2 + 2}</span>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-            <div className="qul-book-navigation">
-              <button type="button" onClick={() => nextPage(-1)} disabled={spreadIndex === 0}
-                aria-label={ar ? 'الصفحة السابقة' : 'Previous page'}><ChevronRight size={17}/>{ar ? 'السابق' : 'Back'}</button>
-              <span>{ar ? 'صفحات الدليل' : 'DIRECTORY'} <b dir="ltr">{spreadIndex + 1} / {pages}</b></span>
-              <button type="button" onClick={() => nextPage(1)} disabled={spreadIndex >= pages - 1}
-                aria-label={ar ? 'الصفحة التالية' : 'Next page'}>{ar ? 'التالي' : 'Next'}<ChevronLeft size={17}/></button>
-            </div>
+          </div>
+
+          <motion.div className="qul-alphabet-cover" aria-hidden={open} style={{ transformOrigin: 'right center' }}
+            animate={open ? { rotateY: 175, opacity: 0.12 } : { rotateY: 0, opacity: 1 }}
+            transition={reducedMotion ? { duration: .01 } : { duration: 1.16, ease: [.48, .01, .2, 1] }}>
+            <div className="qul-alphabet-cover-ridge" aria-hidden="true"/>
+            <span className="qul-alphabet-cover-monogram">قُل</span>
+            <span className="qul-alphabet-cover-title">دليل الهاتف</span>
+            <span className="qul-alphabet-cover-subtitle">QUL PHONE DIRECTORY</span>
+            <span className="qul-alphabet-cover-decoration" aria-hidden="true"/>
+            <button type="button" disabled={open} className="qul-alphabet-cover-opener" onClick={() => setOpen(true)}
+              aria-label={ar ? 'افتح الغلاف من أسفل اليسار' : 'Open book from lower left corner'}
+              tabIndex={open ? -1 : 0}>
+              <BookOpen size={17} />
+              <span>{ar ? 'افتح الدليل' : 'OPEN BOOK'}</span>
+            </button>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="qul-book-tip">
-        <MapPin size={14} />
-        <p>{selectedId
-          ? (ar ? 'وجدت الجهة. انظر إلى رقمها في الصفحة واكتبه على الهاتف يدويًا.' : 'Contact found. Read its extension and enter it manually on the phone.')
-          : (ar ? 'افتح الأجندة واختر الجهة التي تريد الاتصال بها.' : 'Open the book and select who you want to call.')}
-        </p>
+        </div>
       </div>
+      <p className="qul-alphabet-instruction">
+        {open
+          ? (selectedId
+            ? (ar ? 'اكتب رقم الجهة المختارة بنفسك على قرص الهاتف.' : 'Manually dial the selected entry on the phone.')
+            : (ar ? 'اختر حرفًا، ثم اسم الجهة لمعرفة رقمها.' : 'Choose a letter and then an entry to find its number.'))
+          : (ar ? 'اضغط أسفل يسار الغلاف لفتح الدليل.' : 'Press the lower-left corner to open the address book.')}
+      </p>
     </section>
   );
 };
