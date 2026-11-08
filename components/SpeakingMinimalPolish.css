@@ -174,3 +174,110 @@
     width: min(96%, 370px) !important;
   }
 }
+
+
+/* Receiver alignment, November 2026. Keep the original cradled photo unchanged
+   while resting, use the fully-separated handset only for the lifting animation.
+   Positions are measured from the 558 x 680 source photos. */
+.qul-call-scene .qul-photo-phone .qul-phone-cradled-photo {
+  position: absolute !important;
+  z-index: 5;
+  display: block;
+  top: 17.44% !important;
+  left: 8.24% !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 558 / 680;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+.qul-call-scene .qul-photo-phone .qul-phone-independent-handset {
+  top: 8.72% !important;
+  left: 0 !important;
+  width: 100% !important;
+  aspect-ratio: 558 / 680;
+  z-index: 6;
+  pointer-events: none;
+}
+/* The wheel graphic must not cover its original photograph except while spinning. */
+.qul-call-scene .qul-phone-native-dial > img { opacity: 0; }
+
+/* The leather directory has a PORTRAIT shape when closed and LANDSCAPE pages
+   after opening. A portrait cover in a landscape-sized box previously became
+   too small to notice, especially on a real iPhone. */
+.qul-call-scene .qul-clean-book,
+.qul-call-scene .qul-clean-book-stage {
+  min-width: 0 !important;
+  flex-shrink: 0 !important;
+}
+.qul-call-scene .qul-clean-book-stage.is-closed {
+  width: min(72%, 395px, calc((100dvh - 190px) * .75)) !important;
+  height: auto !important;
+  aspect-ratio: 468 / 585 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+.qul-call-scene .qul-clean-book-stage.is-closed .qul-clean-book-cover {
+  inset: 0 !important;
+  left: 0 !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+.qul-call-scene .qul-clean-book-stage.is-open {
+  width: min(100%, 650px) !important;
+  height: auto !important;
+  aspect-ratio: 789 / 560 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+@media (max-width: 900px) {
+  .qul-call-scene .qul-scene-show-book .qul-scene-book-pane[data-pane="book"] {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 245px !important;
+    padding: 8px 2px !important;
+    overflow: auto !important;
+  }
+  .qul-call-scene .qul-scene-show-phone .qul-scene-book-pane[data-pane="book"] {
+    display: none !important;
+  }
+  .qul-call-scene .qul-scene-show-book .qul-clean-book {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .qul-call-scene .qul-clean-book-stage.is-closed {
+    width: min(76vw, 330px, calc((100dvh - 235px) * .78)) !important;
+    max-width: 94% !important;
+    aspect-ratio: 468 / 585 !important;
+  }
+  .qul-call-scene .qul-clean-book-stage.is-open {
+    width: min(94vw, 480px) !important;
+    max-width: 100% !important;
+    aspect-ratio: 789 / 560 !important;
+  }
+  .qul-call-scene .qul-clean-book-cover img {
+    object-fit: contain !important;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 660px) {
+  .qul-call-scene .qul-clean-book-stage.is-closed {
+    width: min(65vw, 255px, calc((100dvh - 200px) * .78)) !important;
+  }
+}
