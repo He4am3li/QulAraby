@@ -994,11 +994,18 @@ export const Speak: React.FC = () => {
         {/* Sidebar - Topics & Levels */}
         <aside className={`${showMobileOptions && (speakingBranch === 'booth' || setupMode) ? 'flex' : 'hidden'} lg:flex w-full lg:w-[280px] flex-1 lg:flex-none min-h-0 bg-white border-b lg:border-b-0 lg:border-r rtl:lg:border-r-0 rtl:lg:border-l border-slate-100 flex-col shrink-0 no-print relative overflow-hidden shadow-sm`}>
             <div className="p-4 sm:p-6 border-b border-slate-50 overflow-y-auto custom-scroll flex-1 min-h-0">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{lang === 'ar' ? 'أقسام التحدث' : 'Speaking sections'}</h3>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">{lang === 'ar' ? 'أقسام التحدث' : 'Speaking sections'}</h3>
+                  <button type="button" className="lg:hidden rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+                    onClick={() => setShowMobileOptions(false)}
+                    aria-label={lang === 'ar' ? 'إغلاق قائمة التحدث' : 'Close speaking menu'}>
+                    <X size={18}/>
+                  </button>
+                </div>
                 <nav className="space-y-2 mb-5" aria-label={lang === 'ar' ? 'فروع التحدث' : 'Speaking sections'}>
                   {([
                     { id: 'booth' as const, icon: <Phone size={20} />, title: lang === 'ar' ? 'كابينة الاتصال' : 'The Call Booth',
-                      sub: lang === 'ar' ? '١٠ جهات اتصال' : '10 CONTACTS' },
+                      sub: lang === 'ar' ? 'الدليل الهجائي' : 'ALPHABETICAL DIRECTORY' },
                     { id: 'studio' as const, icon: <StudioMicIcon size={22} />, title: lang === 'ar' ? 'المحادثة الحرة' : 'Free Conversation',
                       sub: lang === 'ar' ? 'تحدث بحرية' : 'FREE SPEAKING' },
                   ]).map(branch => (
@@ -1076,7 +1083,7 @@ export const Speak: React.FC = () => {
                         <button
                             key={level.id}
                             disabled={isActive || loading}
-                            onClick={() => { manualLevelRef.current = true; setSelectedLevel(level); }}
+                            onClick={() => { manualLevelRef.current = true; setSelectedLevel(level); if (speakingBranch === 'booth') setShowMobileOptions(false); }}
                             className={`w-full px-4 py-3 rounded-xl text-xs font-black transition-all flex items-center justify-between ${selectedLevel?.id === level.id ? 'bg-[#2563eb] text-white shadow-md' : 'bg-white text-slate-400 hover:text-slate-600 border border-slate-100'} ${isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             <span className="arabic-font leading-none">{level.ar}</span>
