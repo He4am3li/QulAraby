@@ -192,6 +192,21 @@
   pointer-events: none;
   user-select: none;
 }
+/* Final raised receiver is the complete source photograph without masking seams.
+   Only the receiver layer moves during the lift; the body element itself never transforms. */
+.qul-call-scene .qul-photo-phone .qul-phone-raised-photo {
+  position: absolute !important;
+  z-index: 7;
+  top: 8.72% !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 558 / 680;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
 .qul-call-scene .qul-photo-phone .qul-phone-independent-handset {
   top: 8.72% !important;
   left: 0 !important;
