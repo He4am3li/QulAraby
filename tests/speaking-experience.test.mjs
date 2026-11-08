@@ -121,7 +121,9 @@ test('physical Arabic book is closed on load and opens from bottom-left with a 3
   assert.match(book,/directoryLetterOf\(entry\.ar\) === activeLetter/);
   assert.match(book,/ITEMS_PER_SPREAD = 6/);
   assert.match(book,/AnimatePresence mode="wait"/);
-  assert.match(book,/rotateY: turnDirection > 0 \? 78 : -78/);
+  assert.match(book,/rotateY: flippingLeaf.direction > 0 \? -176 : 176/);
+  assert.match(book,/qul-alphabet-flipping-leaf/);
+  assert.match(css,/\.qul-alphabet-flip-front,.qul-alphabet-flip-back/);
   assert.match(css,/\.qul-alphabet-cover-opener\{[^}]*bottom:20px;left:15px/);
   assert.match(css,/\.qul-alphabet-tabs/);
   assert.match(css,/\.qul-alphabet-center-fold/);
