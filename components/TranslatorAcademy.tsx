@@ -178,8 +178,8 @@ export const TranslatorAcademy: React.FC<TranslatorAcademyProps> = ({ lang }) =>
     } catch (e) {
       console.error("Evaluation failed", e);
       setEvaluationResult({
-        accuracy: 85,
-        isCorrect: true,
+        accuracy: 0,
+        isCorrect: false,
         feedbackEn: "Good effort! Keep practicing sentence patterns.",
         feedbackAr: "مُحَاوَلَةٌ طَيِّبَةٌ!",
         vocalizedArabic: currentChallenge.referenceTranslation || userTranslationText,
