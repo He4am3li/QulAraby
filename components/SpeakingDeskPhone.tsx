@@ -40,7 +40,13 @@ export const SpeakingDeskPhone: React.FC<DeskPhoneProps> = ({
       <motion.img className="qul-phone-cradled-photo" src="/assets/speaking/phone-closed.avif"
         alt="" draggable={false} aria-hidden="true" initial={false}
         animate={{opacity:offHook?0:1}}
-        transition={reducedMotion?{duration:0}:{duration:offHook?.2:.3,ease:'easeInOut'}}/>
+        transition={reducedMotion?{duration:0}:{duration:offHook?.2:.22,delay:offHook?0:.53,ease:'easeInOut'}}/>
+      {/* The fully raised endpoint also uses the untouched reference photograph.
+          A short handoff from the moving receiver hides the seam in the supplied mask. */}
+      <motion.img className="qul-phone-raised-photo" src="/assets/speaking/phone-lifted.avif"
+        alt="" draggable={false} aria-hidden="true" initial={false}
+        animate={{opacity:offHook?1:0}}
+        transition={reducedMotion?{duration:0}:{duration:.2,delay:offHook?.64:0,ease:'easeInOut'}}/>
       {/* Only the receiver animates. Raised endpoint matches the source photograph exactly,
           preventing the detached straight-edge fragment seen in earlier builds. */}
       <motion.div className="qul-phone-independent-handset"
