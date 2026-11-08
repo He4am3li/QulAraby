@@ -25,6 +25,10 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
   const [page, setPage] = React.useState(0);
   const [turnDirection, setTurnDirection] = React.useState(1);
   const [lastTurn, setLastTurn] = React.useState(0);
+  const flipCounterRef = React.useRef(0);
+  const [flippingLeaf, setFlippingLeaf] = React.useState<{
+    key: number; direction: number; entries: CallContact[];
+  } | null>(null);
 
   const matching = React.useMemo(() => {
     const q = query.trim().toLocaleLowerCase();
@@ -37,18 +41,27 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
   const totalPages = Math.max(1, Math.ceil(matching.length / ITEMS_PER_SPREAD));
   const currentPage = Math.min(page, totalPages - 1);
   const visible = matching.slice(currentPage * ITEMS_PER_SPREAD, (currentPage + 1) * ITEMS_PER_SPREAD);
-  const changePage = (direction: number) => {
+  const turnLeaf = (direction: number) => {
+    if (!reducedMotion) {
+      setFlippingLeaf({
+        key: ++flipCounterRef.current,
+        direction,
+        entries: visible.slice(direction > 0 ? 0 : 3, direction > 0 ? 3 : 6),
+      });
+    }
     setTurnDirection(direction);
-    setPage(prev => Math.max(0, Math.min(totalPages - 1, prev + direction)));
     setLastTurn(value => value + 1);
+  };
+  const changePage = (direction: number) => {
+    turnLeaf(direction);
+    setPage(prev => Math.max(0, Math.min(totalPages - 1, prev + direction)));
   };
   const goToLetter = (letter: string) => {
     if (disabled) return;
     setQuery('');
     setActiveLetter(letter);
-    setTurnDirection(1);
     setPage(0);
-    setLastTurn(value => value + 1);
+    turnLeaf(1);
   };
 
   const displayEntry = (item: CallContact) => (
@@ -110,11 +123,11 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
                   <motion.div
                     key={activeLetter + ':' + query + ':' + currentPage + ':' + lastTurn}
                     className="qul-alphabet-visible-spread"
-                    initial={reducedMotion ? false : { rotateY: turnDirection > 0 ? 78 : -78, opacity: .55, scaleX: .84 }}
-                    animate={{ rotateY: 0, opacity: 1, scaleX: 1 }}
-                    exit={reducedMotion ? { opacity: 0 } : { rotateY: turnDirection > 0 ? -72 : 72, opacity: .35, scaleX: .85 }}
-                    transition={{ duration: reducedMotion ? 0 : .57, ease: [0.24, .65, .28, 1] }}
-                    style={{ transformOrigin: turnDirection > 0 ? 'right center' : 'left center' }}>
+                    initial={reducedMotion ? false : { opacity: .45, scale: .985 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={reducedMotion ? { opacity: 0 } : { opacity: .65, scale: .985 }}
+                    transition={{ duration: reducedMotion ? 0 : .33 }}
+                    style={{ transformOrigin: 'center center' }}>
                     <div className="qul-alphabet-page">
                       <header>
                         <strong>{query ? (ar ? 'نتائج البحث' : 'Search results') : (ar ? 'حرف ' + activeLetter : 'Letter ' + activeLetter)}</strong>
@@ -132,6 +145,31 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
                       <footer>{ar ? 'دليل التدريب' : 'TRAINING DIRECTORY'} <span>• {currentPage * 2 + 2} •</span></footer>
                     </div>
                   </motion.div>
+                </AnimatePresence>
+                <AnimatePresence initial={false}>
+                  {flippingLeaf && (
+                    <motion.div key={flippingLeaf.key}
+                      className={'qul-alphabet-flipping-leaf ' + (flippingLeaf.direction < 0 ? 'backward' : 'forward')}
+                      initial={{ rotateY: 0, opacity: 1 }}
+                      animate={{ rotateY: flippingLeaf.direction > 0 ? -176 : 176, opacity: .9 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: .82, ease: [.29, .06, .34, 1] }}
+                      onAnimationComplete={() => setFlippingLeaf(current => current?.key === flippingLeaf.key ? null : current)}>
+                      <div className="qul-alphabet-flip-front">
+                        <div className="qul-alphabet-flip-label">{query ? 'QUL' : activeLetter}</div>
+                        {flippingLeaf.entries.map(entry => (
+                          <div key={entry.id} className="qul-alphabet-flip-ruled">
+                            <span>{ar ? entry.ar : entry.en}</span>
+                            <b dir="ltr">{entry.extension}</b>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="qul-alphabet-flip-back" aria-hidden="true">
+                        <span>QUL · قُل</span>
+                        <i/><i/><i/><i/><i/>
+                      </div>
+                    </motion.div>
+                  )}
                 </AnimatePresence>
               </div>
               <div className="qul-alphabet-navigation">
