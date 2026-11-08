@@ -163,3 +163,19 @@ test('mobile opens speaking call booth immediately instead of hiding it behind s
   assert.match(css, /max-width:900px/);
   assert.match(css, /qul-call-options-button/);
 });
+
+test('iPhone photograph has in-flow height and book has intrinsic dimensions, preventing blank mobile canvas', () => {
+  const css = source('components/SpeakingMinimalPolish.css');
+  const phone = source('components/SpeakingDeskPhone.tsx');
+  const book = source('components/SpeakingPhoneBook.tsx');
+  assert.match(css, /iOS Safari\/WebKit render fix/);
+  assert.match(css, /\.qul-call-scene \.qul-photo-phone \.qul-phone-static-body\s*\{/);
+  assert.match(css, /position: relative !important;[\s\S]*?margin-top: 12\.19% !important/);
+  assert.match(css, /\.qul-call-scene \.qul-scene-show-phone \.qul-scene-phone-pane\[data-pane="phone"\]/);
+  assert.match(css, /\.qul-call-scene \.qul-scene-show-book \.qul-scene-phone-pane\[data-pane="phone"\]/);
+  assert.match(css, /\.qul-call-scene \.qul-clean-book-stage\s*\{/);
+  assert.match(css, /aspect-ratio: 789 \/ 560 !important/);
+  assert.match(phone, /phone-body-fixed\.avif/);
+  assert.match(book, /phonebook-cover\.avif/);
+  assert.match(book, /phonebook-open\.avif/);
+});
