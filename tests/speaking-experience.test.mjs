@@ -88,7 +88,9 @@ test('phone body remains still and its original receiver and disc move independe
   const css=source('components/SpeakingMinimalPolish.css');
   assert.ok(phone.includes('qul-phone-static-body'));
   assert.ok(phone.includes('qul-phone-independent-handset'));
-  assert.ok(phone.includes('animate={offHook?'));
+  assert.ok(phone.includes('animate={offHook'));
+  assert.ok(phone.includes('qul-phone-cradled-photo'));
+  assert.ok(phone.includes('qul-phone-raised-photo'));
   assert.ok(phone.includes('qul-phone-native-dial'));
   assert.ok(phone.includes('qul-phone-native-key'));
   assert.ok(phone.includes('onDial(digit)'));
