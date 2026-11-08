@@ -2,6 +2,7 @@ import React from 'react';
 import { BookOpen, CheckCircle2, ChevronLeft, ChevronRight, Eye, Lightbulb, RefreshCw, Volume2, WandSparkles } from 'lucide-react';
 import { speak, evaluateStudentTranslation } from '../services/gemini';
 import { TRANSLATION_BANK } from '../data/translationBank';
+import { EXTENDED_TRANSLATION_BANK } from '../data/translationBankExtended';
 
 type Level = 1 | 2 | 3;
 type Task = { en: string; ar: string; contextAr: string; contextEn: string; tipAr: string; tipEn: string; alternatives?: string[] };
@@ -22,7 +23,7 @@ const lessons: Record<Level, Task[]> = {
     { en: 'The author deliberately leaves the ending ambiguous, inviting readers to question their assumptions.', ar: 'يتعمد الكاتب ترك النهاية ملتبسة، داعيًا القراء إلى مراجعة افتراضاتهم.', contextAr: 'نقد أدبي', contextEn: 'Literary criticism', tipAr: 'انقل مقصد الكاتب والأسلوب، لا المفردات فقط.', tipEn: 'Convey the author’s intent and style, not just vocabulary.' }
   ]
 };
-([1,2,3] as const).forEach(level => lessons[level].push(...TRANSLATION_BANK[level]));
+([1,2,3] as const).forEach(level => lessons[level].push(...TRANSLATION_BANK[level], ...EXTENDED_TRANSLATION_BANK[level]));
 const createQueue = (level: Level): number[] => {
  const key = `qul_translation_last_${level}`;
  const last = Number(localStorage.getItem(key) ?? -1);
