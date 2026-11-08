@@ -32,12 +32,23 @@ export const SpeakingDeskPhone: React.FC<DeskPhoneProps> = ({
   return (
     <div className={'qul-source-telephone qul-photo-phone '+(offHook?'is-lifted':'is-cradled')}
       role="group" aria-label={ar?'هاتف برونزي تفاعلي':'Interactive bronze telephone'}>
+      {/* The body has one unchanging coordinate system in both states. */}
       <img className="qul-phone-static-body" src="/assets/speaking/phone-body-fixed.avif"
         alt="" draggable={false} aria-hidden="true"/>
+      {/* The original, complete ON-HOOK photograph gives a perfectly seated receiver.
+          It is aligned to the fixed body's cradle instead of rotating the lifted photo. */}
+      <motion.img className="qul-phone-cradled-photo" src="/assets/speaking/phone-closed.avif"
+        alt="" draggable={false} aria-hidden="true" initial={false}
+        animate={{opacity:offHook?0:1}}
+        transition={reducedMotion?{duration:0}:{duration:offHook?.2:.3,ease:'easeInOut'}}/>
+      {/* Only the receiver animates. Raised endpoint matches the source photograph exactly,
+          preventing the detached straight-edge fragment seen in earlier builds. */}
       <motion.div className="qul-phone-independent-handset"
         style={{transformOrigin:'57% 23.4%'}} initial={false}
-        animate={offHook?{x:'1.8%',y:'-5.6%',rotate:-4}:{x:0,y:'10%',rotate:23}}
-        transition={reducedMotion?{duration:0}:{duration:.78,ease:[.24,.75,.21,1]}}
+        animate={offHook
+          ? {x:0,y:0,rotate:0,opacity:1}
+          : {x:0,y:'10%',rotate:23,opacity:0}}
+        transition={reducedMotion?{duration:0}:{duration:.84,ease:[.25,.65,.25,1]}}
         aria-hidden="true">
         <img src="/assets/speaking/phone-handset-layer.avif" draggable={false} alt=""/>
       </motion.div>
@@ -48,9 +59,11 @@ export const SpeakingDeskPhone: React.FC<DeskPhoneProps> = ({
         aria-label={ar?'قرص الأرقام الدوار':'Rotary number dial'}>
         <motion.img key={rotation.tick} src="/assets/speaking/phone-wheel-native.avif"
           draggable={false} alt="" aria-hidden="true"
-          animate={rotation.tick&&!reducedMotion?
-            {rotate:[0,(rotation.digit==='0'?10:Number(rotation.digit))*16,0]}:{rotate:0}}
-          transition={{duration:reducedMotion?0:.79,times:[0,.4,1],ease:'easeInOut'}}/>
+          initial={{opacity:0,rotate:0}}
+          animate={rotation.tick&&!reducedMotion&&offHook?
+            {rotate:[0,(rotation.digit==='0'?10:Number(rotation.digit))*16,0],opacity:[0,1,1,0]}:
+            {rotate:0,opacity:0}}
+          transition={{duration:reducedMotion?0:.79,times:[0,.08,.55,1],ease:'easeInOut'}}/>
         {DIAL_HOLES.map(([digit,x,y])=>(
           <button type="button" key={digit} className="qul-phone-native-key"
             disabled={!canDial} style={{left:x+'%',top:y+'%'}} onClick={()=>pressDigit(digit)}
