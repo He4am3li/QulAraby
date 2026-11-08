@@ -25,6 +25,7 @@ export const Translator: React.FC = () => {
   const [questions, setQuestions] = React.useState<QuizQuestion[]>([]);
   const [currentStep, setCurrentStep] = React.useState(0);
   const [feedback, setFeedback] = React.useState<{ isCorrect: boolean; text: string } | null>(null);
+  const [correctAnswers, setCorrectAnswers] = React.useState(0);
   const [lang, setLang] = React.useState<'ar' | 'en'>(
     (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar'
   );
@@ -82,7 +83,6 @@ export const Translator: React.FC = () => {
     setResult(null);
     setPracticeMode(false);
     try {
-      setResult(null);
       const data = await translateAndExpand(word, !isEngToAr);
       setResult(data);
     } catch (error) { alert('Failed to translate.'); }
@@ -96,6 +96,7 @@ export const Translator: React.FC = () => {
       const qs = await generatePracticeQuestions(result as Vocabulary);
       if (!Array.isArray(qs) || qs.length === 0) throw new Error('No practice questions');
       setQuestions(qs);
+      setCorrectAnswers(0);
       setPracticeMode(true);
       setCurrentStep(0);
       setFeedback(null);
@@ -106,6 +107,7 @@ export const Translator: React.FC = () => {
   const handleAnswer = (answer: string) => {
     if (feedback) return;
     const correct = questions[currentStep].correctAnswer === answer;
+    if (correct) setCorrectAnswers(prev => prev + 1);
     setFeedback({
       isCorrect: correct,
       text: correct ? "Excellent! أحسنت" : `Note: ${questions[currentStep].explanation}`
@@ -123,7 +125,7 @@ export const Translator: React.FC = () => {
 
   const finishPractice = () => {
     if (result) {
-      const updated = updateSRS(result as Vocabulary, feedback?.isCorrect ? 'easy' : 'medium');
+      const updated = updateSRS(result as Vocabulary, correctAnswers === questions.length ? 'easy' : correctAnswers >= Math.ceil(questions.length * 0.6) ? 'medium' : 'hard');
       const existing = JSON.parse(localStorage.getItem('hub_vocab') || '[]');
       localStorage.setItem('hub_vocab', JSON.stringify([...existing.filter((v:any)=>v.id !== result.id), updated]));
 
