@@ -93,7 +93,12 @@ test('phone body remains still and its original receiver and disc move independe
   assert.ok(phone.includes('qul-phone-native-key'));
   assert.ok(phone.includes('onDial(digit)'));
   assert.equal(phone.includes('phone-dial.avif'),false);
-  assert.equal(phone.includes('phone-lifted.avif'),false);
+  assert.ok(phone.includes('phone-closed.avif'),'exact resting handset reference is used');
+  assert.ok(phone.includes('phone-lifted.avif'),'raised endpoint uses intact reference instead of cropped mask');
+  assert.ok(phone.includes('qul-phone-cradled-photo'));
+  assert.ok(phone.includes('qul-phone-raised-photo'));
+  assert.ok(phone.includes("animate={{opacity:offHook?1:0}}"));
+  assert.ok(phone.includes("opacity:[0,1,1,0]"),'rotary disc appears only while turning');
   assert.ok(css.includes('qul-phone-native-key:hover'));
   assert.ok(css.includes('background:transparent!important'));
   for(const name of ['phone-body-fixed','phone-handset-layer','phone-wheel-native']){
@@ -178,4 +183,32 @@ test('iPhone photograph has in-flow height and book has intrinsic dimensions, pr
   assert.match(phone, /phone-body-fixed\.avif/);
   assert.match(book, /phonebook-cover\.avif/);
   assert.match(book, /phonebook-open\.avif/);
+});
+
+test('closed and raised receiver endpoints use unbroken source photos without moving handset base',()=>{
+  const phone=source('components/SpeakingDeskPhone.tsx');
+  const css=source('components/SpeakingMinimalPolish.css');
+  assert.match(phone,/className="qul-phone-static-body"/);
+  assert.match(phone,/className="qul-phone-cradled-photo"/);
+  assert.match(phone,/className="qul-phone-raised-photo"/);
+  assert.match(phone,/animate=\{offHook\s*\?/);
+  assert.match(css,/\.qul-call-scene \.qul-photo-phone \.qul-phone-cradled-photo/);
+  assert.match(css,/top: 17\.44% !important/);
+  assert.match(css,/left: 8\.24% !important/);
+  assert.match(css,/\.qul-call-scene \.qul-photo-phone \.qul-phone-raised-photo/);
+  assert.match(css,/top: 8\.72% !important/);
+  assert.match(css,/pointer-events: none/);
+});
+
+test('closed telephone directory is a full portrait notebook on mobile and opens landscape',()=>{
+  const book=source('components/SpeakingPhoneBook.tsx');
+  const css=source('components/SpeakingMinimalPolish.css');
+  assert.match(book,/qul-clean-book-stage '\+\(open\?'is-open':'is-closed'\)/);
+  assert.match(css,/\.qul-call-scene \.qul-clean-book-stage\.is-closed/);
+  assert.match(css,/aspect-ratio: 468 \/ 585 !important/);
+  assert.match(css,/\.qul-call-scene \.qul-clean-book-stage\.is-open/);
+  assert.match(css,/aspect-ratio: 789 \/ 560 !important/);
+  assert.match(css,/\.qul-call-scene \.qul-scene-show-book \.qul-scene-book-pane\[data-pane="book"\]/);
+  assert.match(css,/visibility: visible !important/);
+  assert.match(css,/\.qul-call-scene \.qul-clean-book-stage\.is-closed \.qul-clean-book-cover/);
 });
