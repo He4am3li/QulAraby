@@ -1,0 +1,50 @@
+/* Reference-led QUL call booth. Light editorial studio, navy vintage handset and real book. */
+.qul-call-world.qul-call-scene{min-height:0;color:#24435e;padding:clamp(11px,1.2vw,20px);background:
+  radial-gradient(ellipse 47% 55% at 6% 18%,#c5e8fb8b,transparent 80%),
+  radial-gradient(ellipse 50% 61% at 100% 10%,#eff9ffe3,transparent 82%),
+  radial-gradient(ellipse 55% 35% at 51% 82%,#e8f5fbd8,transparent 80%),
+  linear-gradient(145deg,#f6fbff 0%,#fcfeff 47%,#f2f8fc 100%);--ink:#294b64;overflow:hidden}
+.qul-call-scene:before{content:"";position:absolute;inset:0 auto auto 12%;width:70%;height:100%;transform:rotate(-19deg);pointer-events:none;background:linear-gradient(90deg,transparent,#ffffff90,transparent)}
+.qul-call-scene .qul-call-atmosphere{opacity:.55;mask-image:linear-gradient(to bottom,#000,transparent 78%);background:repeating-linear-gradient(90deg,#457e9c06 0 1px,transparent 1px 60px)}
+.qul-call-scene .qul-call-heading{gap:12px;border-bottom:1px solid #d5e5edb3;padding-bottom:10px;flex-shrink:0}
+.qul-call-scene .qul-call-heading h2{font:900 clamp(20px,2.2vw,29px)/1.3 'Tajawal',sans-serif;color:#214461;margin:4px 0 0}
+.qul-call-scene .qul-call-heading p{font:800 clamp(10px,1vw,12px)/1.5 'Tajawal',sans-serif;color:#7593a8;margin:3px 0 0}
+.qul-call-scene .qul-call-eyebrow{font-size:8px;letter-spacing:.15em;color:#92a7b6}
+.qul-call-scene .qul-call-online{display:flex;align-items:center;gap:9px;border-radius:40px;border:1px solid #d8e8ee;background:#ffffffce;box-shadow:0 3px 14px #7aa2b620,inset 0 1px #fff;padding:9px 13px;color:#3c6679;font-size:11px;font-weight:900}
+.qul-call-scene .qul-call-online i{width:8px;height:8px;border-radius:50%;background:#bda975;box-shadow:0 0 7px #a39b6978;flex-shrink:0}
+.qul-call-scene .qul-call-online.connected i{background:#1ab68b;box-shadow:0 0 9px #11aa83a0}
+.qul-scene-layout{position:relative;z-index:1;display:grid;grid-template-columns:minmax(320px,44%) minmax(0,1fr);gap:clamp(10px,1.2vw,20px);flex:1;min-height:0;padding:12px 7px 3px;overflow:hidden}
+.qul-scene-phone-pane{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;min-height:0;gap:7px;overflow:visible}
+.qul-scene-book-pane{position:relative;display:flex;flex-direction:column;gap:9px;min-width:0;min-height:0;overflow:hidden;padding:3px 9px 7px 2px}
+.qul-scene-dial-feedback{position:relative;z-index:15;border:1px solid #d5e7f1;background:#e5f2f8df;box-shadow:inset 0 1px #fff;padding:8px 12px;border-radius:10px;min-height:35px;width:min(92%,410px);margin:0 auto;color:#66839e;font:900 10px/1.5 'Tajawal',sans-serif;text-align:center}
+.qul-scene-dial-feedback.error{border-color:#edc5a5;color:#9f553a;background:#fff1e6}
+.qul-scene-recovery{position:relative;z-index:16;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;color:#9b5d40;background:#fff7e5;border:1px solid #eec69d;padding:8px 12px;border-radius:10px;font-size:10px}
+.qul-scene-recovery button{display:flex;align-items:center;gap:5px;background:#fff;border:1px solid #b9a285;border-radius:7px;padding:5px 8px;font-weight:900}
+.qul-scene-mission{position:relative;z-index:1;flex:0 0 auto;min-height:60px;border:1px solid #d3e3eb;border-radius:13px;background:#ffffffd8;box-shadow:inset 0 1px #fff,0 4px 13px #7da6be1a;color:#294f6b;padding:9px 13px}
+.qul-scene-mission-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.qul-scene-mission-header>div{display:flex;align-items:center;gap:10px}
+.qul-scene-mission-header small{font:900 8px ui-monospace,monospace;letter-spacing:.08em;color:#9cacc0}
+.qul-scene-mission-header strong{font:900 12px 'Tajawal',sans-serif;color:#325d73}
+.qul-scene-mission>p{font:700 10px/1.3 'Tajawal',sans-serif;color:#667f90;margin:4px 0}
+.qul-scene-mission-steps{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.qul-scene-mission-steps>span{display:flex;align-items:center;gap:5px;border:1px solid #e0ebf0;background:#f4fafd;border-radius:8px;padding:4px 7px;color:#4b728c;font:800 9px 'Tajawal',sans-serif}
+.qul-scene-mission-steps>span.achieved{border-color:#a3dcc7;background:#e8f9ef;color:#218263}
+.qul-scene-mission-progress{font:900 11px ui-monospace,monospace;padding:5px;border-radius:6px;border:1px solid #aac8d8}
+.qul-scene-mission-progress.verified{background:#d7f3e0;color:#13774d;border-color:#8bd1a4}
+.qul-scene-mission-empty{display:flex;align-items:center;gap:9px;padding:7px 0;color:#7b94a6;font:800 11px 'Tajawal',sans-serif}
+.qul-scene-transcript{flex:0 0 auto;border:1px solid #d4e5ed;border-radius:13px;background:#ffffffcd;overflow:hidden}
+.qul-scene-transcript-toggle{width:100%;display:flex;align-items:center;gap:9px;padding:9px 12px;color:#456b81;font:900 11px 'Tajawal',sans-serif;text-align:start}
+.qul-scene-transcript-toggle span{margin-inline-start:auto;border:1px solid #d5e6ee;background:#edf7fc;padding:4px 7px;border-radius:7px;color:#62849c;font-size:9px}
+.qul-scene-transcript-lines{padding:8px 11px;max-height:125px;overflow-y:auto;scrollbar-width:thin}
+.qul-scene-transcript-lines>p{font-size:11px;color:#7d97a8}
+.qul-scene-transcript-line{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid #dbe5e8;padding:5px 0}
+.qul-scene-transcript-line strong{font-size:10px;color:#4b7a94}
+.qul-scene-transcript-line p{margin:0;font-size:11px;line-height:1.45;color:#32536a}
+.qul-scene-transcript-line.ai strong{color:#a58152}
+.qul-call-scene .qul-call-bottom-line{font-size:8px;color:#97aebd;margin:0 5px}
+.qul-call-scene .qul-call-mobile-switch{display:none}
+@media(max-width:1190px){.qul-scene-layout{grid-template-columns:minmax(280px,42%) minmax(0,1fr)}.qul-scene-book-pane{gap:7px;padding:2px 3px 5px}.qul-scene-mission{padding:6px 8px}.qul-scene-mission-steps>span{font-size:8px}}
+@media(max-width:900px){.qul-call-world.qul-call-scene{padding:9px}.qul-call-scene .qul-call-heading{padding-bottom:6px}.qul-scene-layout{display:flex;flex-direction:column;gap:0;flex:1;padding:5px 2px;overflow:hidden}.qul-call-scene .qul-call-mobile-switch{display:flex;flex:0 0 auto;align-items:center;gap:6px;border-radius:12px;padding:4px;margin-top:6px;background:#f3f9fd;border:1px solid #d8e6ed}.qul-call-scene .qul-call-mobile-switch button{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border-radius:9px;background:transparent;color:#6686a0;font:900 12px 'Tajawal',sans-serif}.qul-call-scene .qul-call-mobile-switch button.active{background:#d2e8f6;color:#1f5b7a;box-shadow:inset 0 1px #fff}.qul-scene-show-phone [data-pane="book"],.qul-scene-show-book [data-pane="phone"]{display:none}.qul-scene-phone-pane{flex:1;min-height:0;gap:6px}.qul-scene-book-pane{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;gap:9px;padding:4px 8px}.qul-scene-book-pane::-webkit-scrollbar{display:none}.qul-scene-layout .qul-vintage-device{max-height:calc(100% - 44px)}.qul-call-scene .qul-call-bottom-line{display:none}}
+@media(max-width:640px){.qul-call-scene .qul-call-heading h2{font-size:19px}.qul-call-scene .qul-call-heading p{font-size:9px}.qul-call-scene .qul-call-online{font-size:9px;padding:6px 7px;max-width:120px;white-space:normal}.qul-scene-mission-steps{gap:4px}.qul-scene-mission-steps>span{padding:4px}.qul-scene-book-pane .qul-alphabet-directory{min-height:340px}}
+@media(max-height:740px) and (min-width:901px){.qul-scene-layout{padding-top:5px;gap:8px}.qul-scene-book-pane{gap:5px}.qul-scene-mission{min-height:50px;padding:6px 9px}.qul-scene-mission-steps>span{font-size:8px;padding:3px 5px}.qul-scene-transcript-toggle{padding:6px 10px}.qul-scene-dial-feedback{min-height:27px;padding:5px}.qul-call-scene .qul-call-heading{padding-bottom:6px}.qul-scene-book-pane .qul-alphabet-directory{gap:2px}}
+@media(max-height:680px) and (max-width:900px){.qul-scene-layout .qul-vintage-device{transform:scale(.82);transform-origin:center;margin:-28px auto}.qul-scene-phone-pane{gap:0}.qul-scene-dial-feedback{font-size:9px;padding:5px;min-height:26px}.qul-call-scene .qul-call-heading{padding-bottom:4px}.qul-scene-book-pane .qul-alphabet-directory{min-height:330px}}
