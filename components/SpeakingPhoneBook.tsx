@@ -31,7 +31,7 @@ export const SpeakingPhoneBook:React.FC<Props>=({lang,contacts,selectedId,disabl
     </button>
   );
   return <section className="qul-clean-book" aria-label={ar?'دليل الأرقام الهجائي':'Alphabetical directory'}>
-    <div className="qul-clean-book-stage" dir="rtl">
+    <div className={'qul-clean-book-stage '+(open?'is-open':'is-closed')} dir="rtl">
       <AnimatePresence initial={false} mode="sync">
         {!open ? (
           <motion.button type="button" key="cover" className="qul-clean-book-cover"
