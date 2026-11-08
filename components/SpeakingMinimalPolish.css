@@ -87,3 +87,90 @@
     border-inline-start: 1px solid #ded2c5;
   }
 }
+
+
+/*
+ * iOS Safari/WebKit render fix.
+ * The previous phone and book were made entirely of absolutely positioned
+ * images inside auto-height flex items. On iPhone the intrinsic flex height
+ * can collapse to zero, leaving a full-screen empty background.
+ * Give the photograph a real in-flow height and stop flex from shrinking it.
+ */
+.qul-call-scene .qul-photo-phone.qul-source-telephone {
+  display: block !important;
+  flex: 0 0 auto !important;
+  align-self: center !important;
+  position: relative !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+.qul-call-scene .qul-photo-phone .qul-phone-static-body {
+  position: relative !important;
+  display: block !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  margin-top: 12.19% !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 558 / 680 !important;
+  object-fit: contain !important;
+}
+@media (max-width: 900px) {
+  .qul-call-scene .qul-scene-layout {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  .qul-call-scene .qul-scene-show-phone .qul-scene-phone-pane[data-pane="phone"] {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .qul-call-scene .qul-scene-show-book .qul-scene-phone-pane[data-pane="phone"] {
+    display: none !important;
+  }
+  .qul-call-scene .qul-photo-phone.qul-source-telephone {
+    width: min(82vw, 350px) !important;
+    max-width: 100% !important;
+    aspect-ratio: 558 / 780 !important;
+    flex-shrink: 0 !important;
+  }
+  .qul-call-scene .qul-scene-show-book .qul-scene-book-pane[data-pane="book"] {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  .qul-call-scene .qul-clean-book {
+    width: 100% !important;
+    height: auto !important;
+    flex: 0 0 auto !important;
+  }
+  .qul-call-scene .qul-clean-book-stage {
+    display: block !important;
+    width: min(100%, 480px) !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+    aspect-ratio: 789 / 560 !important;
+    flex-shrink: 0 !important;
+  }
+}
+/* A shorter viewport uses smaller photographs, never a zero-height item. */
+@media (max-width: 900px) and (max-height: 700px) {
+  .qul-call-scene .qul-photo-phone.qul-source-telephone {
+    width: min(72vw, 270px) !important;
+  }
+  .qul-call-scene .qul-clean-book-stage {
+    width: min(96%, 370px) !important;
+  }
+}
