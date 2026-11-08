@@ -191,6 +191,7 @@ test('closed and raised receiver endpoints use unbroken source photos without mo
   const phone=source('components/SpeakingDeskPhone.tsx');
   const css=source('components/SpeakingMinimalPolish.css');
   assert.match(phone,/className="qul-phone-static-body"/);
+  assert.match(phone,/animate=\{\{opacity:offHook\?1:0\}\}/);
   assert.match(phone,/className="qul-phone-cradled-photo"/);
   assert.match(phone,/className="qul-phone-raised-photo"/);
   assert.match(phone,/animate=\{offHook\s*\?/);
