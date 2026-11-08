@@ -4,9 +4,11 @@ import { Check, Phone, PhoneCall, PhoneOff, Mic, MicOff, RotateCcw, BookOpen, Ch
 import { SpeakingPhoneBook } from './SpeakingPhoneBook';
 import { validateSimulatedDial } from '../services/speakingDial.mjs';
 import './SpeakingCallBooth.css';
-import './SpeakingModernPhone.css';
+import './SpeakingScene.css';
+import { ADDITIONAL_SPEAKING_CONTACTS, type SpeakingPhoneContact } from '../data/speakingDirectory';
+import { SpeakingDeskPhone } from './SpeakingDeskPhone';
 
-export const CALL_CONTACTS = [
+const ORIGINAL_CALL_CONTACTS = [
   {
     id: 'restaurant', extension: '101', voice: 'Achird', ar: 'مطعم الياسمين', en: 'Jasmine Restaurant',
     agentAr: 'موظف الاستقبال', agentEn: 'Restaurant receptionist', symbol: '✦',
@@ -100,7 +102,8 @@ export const CALL_CONTACTS = [
   },
 ] as const;
 
-export type CallContact = typeof CALL_CONTACTS[number];
+export type CallContact = SpeakingPhoneContact;
+export const CALL_CONTACTS: CallContact[] = [...ORIGINAL_CALL_CONTACTS, ...ADDITIONAL_SPEAKING_CONTACTS];
 type CallTurn = { role: 'user' | 'ai'; text: string };
 interface CallBoothProps {
   lang: 'ar' | 'en';
