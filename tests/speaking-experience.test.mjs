@@ -83,27 +83,21 @@ test('remove all requested instructional UI and call-control strip',()=>{
   }
 });
 
-test('phone body remains still and its original receiver and disc move independently',()=>{
+test('telephone renders a single intact reference photograph per state, without clipped overlay fragments',()=>{
   const phone=source('components/SpeakingDeskPhone.tsx');
   const css=source('components/SpeakingMinimalPolish.css');
-  assert.ok(phone.includes('qul-phone-static-body'));
-  assert.ok(phone.includes('qul-phone-independent-handset'));
-  assert.ok(phone.includes('animate={offHook'));
-  assert.ok(phone.includes('qul-phone-cradled-photo'));
-  assert.ok(phone.includes('qul-phone-raised-photo'));
-  assert.ok(phone.includes('qul-phone-native-dial'));
-  assert.ok(phone.includes('qul-phone-native-key'));
-  assert.ok(phone.includes('onDial(digit)'));
-  assert.equal(phone.includes('phone-dial.avif'),false);
-  assert.ok(phone.includes('phone-closed.avif'),'exact resting handset reference is used');
-  assert.ok(phone.includes('phone-lifted.avif'),'raised endpoint uses intact reference instead of cropped mask');
-  assert.ok(phone.includes('qul-phone-cradled-photo'));
-  assert.ok(phone.includes('qul-phone-raised-photo'));
-  assert.ok(phone.includes("animate={{opacity:offHook?1:0}}"));
-  assert.ok(phone.includes("opacity:[0,1,1,0]"),'rotary disc appears only while turning');
-  assert.ok(css.includes('qul-phone-native-key:hover'));
-  assert.ok(css.includes('background:transparent!important'));
-  for(const name of ['phone-body-fixed','phone-handset-layer','phone-wheel-native']){
+  assert.match(phone,/qul-phone-cradled-photo/);
+  assert.match(phone,/qul-phone-lifted-photo/);
+  assert.match(phone,/phone-closed\.avif/);
+  assert.match(phone,/phone-lifted\.avif/);
+  assert.doesNotMatch(phone,/phone-body-fixed\.avif|phone-handset-layer\.avif|qul-phone-independent-handset|qul-phone-raised-photo/);
+  assert.match(phone,/qul-phone-native-dial/);
+  assert.match(phone,/qul-phone-native-key/);
+  assert.match(phone,/onDial\(digit\)/);
+  assert.match(phone,/opacity:\[0,1,1,0\]/);
+  assert.match(css,/qul-phone-native-key:hover/);
+  assert.match(css,/background:transparent!important/);
+  for(const name of ['phone-closed','phone-lifted','phone-wheel-native']){
     const asset=readFileSync(new URL('../public/assets/speaking/'+name+'.avif',import.meta.url));
     assert.ok(asset.length>4000,name);
     assert.equal(asset.toString('ascii',4,12),'ftypavif');
@@ -171,36 +165,35 @@ test('mobile opens speaking call booth immediately instead of hiding it behind s
   assert.match(css, /qul-call-options-button/);
 });
 
-test('iPhone photograph has in-flow height and book has intrinsic dimensions, preventing blank mobile canvas', () => {
-  const css = source('components/SpeakingMinimalPolish.css');
-  const phone = source('components/SpeakingDeskPhone.tsx');
-  const book = source('components/SpeakingPhoneBook.tsx');
-  assert.match(css, /iOS Safari\/WebKit render fix/);
-  assert.match(css, /\.qul-call-scene \.qul-photo-phone \.qul-phone-static-body\s*\{/);
-  assert.match(css, /position: relative !important;[\s\S]*?margin-top: 12\.19% !important/);
-  assert.match(css, /\.qul-call-scene \.qul-scene-show-phone \.qul-scene-phone-pane\[data-pane="phone"\]/);
-  assert.match(css, /\.qul-call-scene \.qul-scene-show-book \.qul-scene-phone-pane\[data-pane="phone"\]/);
-  assert.match(css, /\.qul-call-scene \.qul-clean-book-stage\s*\{/);
-  assert.match(css, /aspect-ratio: 789 \/ 560 !important/);
-  assert.match(phone, /phone-body-fixed\.avif/);
-  assert.match(book, /phonebook-cover\.avif/);
-  assert.match(book, /phonebook-open\.avif/);
+test('iPhone photos have an in-flow canvas spacer so the telephone cannot disappear',()=>{
+  const css=source('components/SpeakingMinimalPolish.css');
+  const phone=source('components/SpeakingDeskPhone.tsx');
+  const book=source('components/SpeakingPhoneBook.tsx');
+  assert.match(phone,/qul-phone-intrinsic-size/);
+  assert.match(css,/\.qul-call-scene \.qul-photo-phone \.qul-phone-intrinsic-size/);
+  assert.match(css,/aspect-ratio: 558 \/ 780 !important/);
+  assert.match(css,/\.qul-call-scene \.qul-scene-show-phone \.qul-scene-phone-pane\[data-pane="phone"\]/);
+  assert.match(css,/\.qul-call-scene \.qul-scene-show-book \.qul-scene-phone-pane\[data-pane="phone"\]/);
+  assert.match(css,/aspect-ratio: 789 \/ 560 !important/);
+  assert.match(book,/phonebook-cover\.avif/);
+  assert.match(book,/phonebook-open\.avif/);
 });
 
-test('closed and raised receiver endpoints use unbroken source photos without moving handset base',()=>{
+test('both untouched phone photographs share registered base coordinates without extra receiver or cord',()=>{
   const phone=source('components/SpeakingDeskPhone.tsx');
   const css=source('components/SpeakingMinimalPolish.css');
-  assert.match(phone,/className="qul-phone-static-body"/);
-  assert.match(phone,/animate=\{\{opacity:offHook\?1:0\}\}/);
   assert.match(phone,/className="qul-phone-cradled-photo"/);
-  assert.match(phone,/className="qul-phone-raised-photo"/);
-  assert.match(phone,/animate=\{offHook\s*\?/);
+  assert.match(phone,/className="qul-phone-lifted-photo"/);
+  assert.match(phone,/animate=\{\{opacity:offHook\?0:1\}\}/);
+  assert.match(phone,/animate=\{\{opacity:offHook\?1:0\}\}/);
   assert.match(css,/\.qul-call-scene \.qul-photo-phone \.qul-phone-cradled-photo/);
   assert.match(css,/top: 17\.44% !important/);
   assert.match(css,/left: 8\.24% !important/);
-  assert.match(css,/\.qul-call-scene \.qul-photo-phone \.qul-phone-raised-photo/);
+  assert.match(css,/\.qul-call-scene \.qul-photo-phone \.qul-phone-lifted-photo/);
   assert.match(css,/top: 8\.72% !important/);
   assert.match(css,/pointer-events: none/);
+  assert.equal((phone.match(/className="qul-phone-lifted-photo"/g)||[]).length,1);
+  assert.equal((phone.match(/className="qul-phone-cradled-photo"/g)||[]).length,1);
 });
 
 test('closed telephone directory is a full portrait notebook on mobile and opens landscape',()=>{
