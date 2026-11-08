@@ -576,6 +576,9 @@ export const translateAndExpand = async (word: string, isFromArabic: boolean, ot
       config: { responseMimeType: "application/json", responseSchema: vocabSchema }
     });
     const data = safeJSONParse(response.text, {});
+    if (!data || typeof data !== 'object' || !data.analysis || !data.analysis.details_other || !data.analysis.details_ar || !data.translation || !data.original_word) {
+      throw new Error('Invalid translation response');
+    }
     // Map back to Vocabulary type for compatibility
     return { 
       ...data, 
@@ -1392,7 +1395,7 @@ Return strictly JSON format:
       const parsed = safeJSONParse(response.text, {
         accuracy: 0,
         isCorrect: false,
-        feedbackEn: "Good effort! Keep practicing your sentence structure.",
+        feedbackEn: "Evaluation is temporarily unavailable. Please retry.",
         feedbackAr: "مُحَاوَلَةٌ جَيِّدَةٌ!",
         vocalizedArabic: referenceTranslation || userArabic,
         transliteration: "Al-Arabiyyah",
