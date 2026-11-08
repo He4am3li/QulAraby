@@ -1,0 +1,76 @@
+/* Restored vintage telephone, engineered in CSS, not a screenshot or static mock-up. */
+.qul-vintage-device{position:relative;width:min(100%,510px);height:min(100%,570px);min-height:415px;isolation:isolate;flex-shrink:0;perspective:1100px}
+.qul-vintage-stage-halo{position:absolute;z-index:-1;bottom:1%;left:12%;width:83%;height:20%;border-radius:50%;background:#618dac50;filter:blur(30px)}
+.qul-vintage-device:before{content:"";position:absolute;z-index:-1;bottom:15px;left:12%;right:7%;height:15px;border-radius:50%;background:#324f6d71;filter:blur(12px)}
+.qul-vintage-body{position:absolute;z-index:3;left:7%;right:5%;top:177px;bottom:29px;min-height:220px;border-radius:47% 47% 12% 12%/33% 33% 10% 10%;border:3px solid #102b42;background:
+  radial-gradient(ellipse 65% 32% at 42% 12%,#6d95b2 0%,#1c4b70 42%,transparent 85%),
+  linear-gradient(112deg,#173d5a 0%,#0c2740 14%,#1b4364 33%,#08283f 68%,#154366 89%,#061b2b 100%);
+box-shadow:inset 0 4px 3px #9cbbd59a,inset -19px -18px 17px #06192bd9,inset 13px 6px 14px #bad9ef29,4px 13px 0 -4px #061728,0 20px 18px #46657b5a,0 35px 28px #31465f3c;transform:rotateX(3deg);transform-style:preserve-3d}
+.qul-vintage-body:before{position:absolute;content:"";inset:6px 10px 10px;border-radius:inherit;pointer-events:none;border:1px solid #7299b93f;box-shadow:inset 1px 2px 1px #f3fcff1f}
+.qul-vintage-enamel{position:absolute;top:18px;left:14%;width:72%;height:16%;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse,#d3e4f43a,transparent 68%);filter:blur(5px)}
+.qul-vintage-reflection{position:absolute;top:20px;right:17%;width:17px;height:50%;border-radius:50%;pointer-events:none;background:linear-gradient(90deg,transparent,#d0e8ff27,transparent);transform:rotate(-13deg);filter:blur(6px)}
+.qul-vintage-handset{position:absolute;z-index:12;left:0;width:100%;height:112px;top:114px;display:flex;align-items:center;justify-content:center;padding:0 3%;background:transparent;border:0;cursor:pointer;filter:drop-shadow(3px 14px 8px #092235b7);transform-origin:56% 67%;transform-style:preserve-3d}
+.qul-vintage-handset:focus-visible{outline:3px solid #d9b47f;outline-offset:3px;border-radius:50px}
+.qul-vintage-handset:disabled{cursor:default}
+.qul-vintage-ear{position:relative;flex-shrink:0;width:26%;height:99px;background:
+radial-gradient(ellipse at 33% 13%,#79a2bd9a,transparent 39%),
+radial-gradient(ellipse at 55% 30%,#305c81 6%,#071e34 66%,#051726 86%);
+border:2px solid #183e5a;box-shadow:inset 6px 7px 8px #9cc1d53f,inset -7px -7px 11px #02101fe6,1px 7px 3px #0923398c}
+.qul-vintage-ear.left{border-radius:62% 34% 40% 63%/50% 30% 50% 62%;transform:rotate(-14deg)}
+.qul-vintage-ear.right{border-radius:34% 62% 63% 40%/30% 50% 62% 50%;transform:rotate(14deg)}
+.qul-vintage-ear:before{content:"";position:absolute;inset:16px 13px 15px 17px;border-radius:50%;background:
+repeating-radial-gradient(circle,#061521 0 3px,#5b8299 4px 5px,#041727 6px 9px);
+border:2px solid #446a87;box-shadow:inset 0 4px 11px #020a11,0 2px 6px #c7d7ed45}
+.qul-vintage-ear i{position:absolute;z-index:2;inset:32px 31px 30px 35px;background:radial-gradient(circle,#101a25,#22425e);border-radius:50%;opacity:.9}
+.qul-vintage-handle{position:relative;z-index:2;width:54%;height:54px;margin:0 -12px 2px;border-radius:44% 44% 27% 27% / 60% 60% 20% 20%;border:2px solid #1e4561;border-bottom:6px solid #0c253a;background:
+linear-gradient(180deg,#6689a5 0%,#285372 15%,#08263e 42%,#0a283e 67%,#375e7b 91%,#112e46 100%);
+box-shadow:inset 0 6px 6px #a5c6dc75,inset 0 -5px 9px #061829dc,0 6px 5px #03152573}
+.qul-vintage-handle i{position:absolute;top:15px;width:32px;height:5px;border-radius:8px;background:#dfedfd1d}
+.qul-vintage-handle i:first-child{left:19%}.qul-vintage-handle i:last-child{right:19%}
+.qul-vintage-rest{position:absolute;z-index:4;top:160px;left:19%;right:18%;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 21px;pointer-events:none}
+.qul-vintage-rest span{width:40px;height:39px;border-radius:14px 14px 18px 18px;background:radial-gradient(ellipse,#071624,#153a57);border:2px solid #244c69;box-shadow:inset 0 5px 6px #020a17,0 2px 3px #6589a448}
+.qul-vintage-cable{position:absolute;z-index:2;left:-10%;top:150px;width:46%;height:calc(100% - 140px);pointer-events:none;filter:drop-shadow(2px 4px 2px #0d253a91)}
+.qul-vintage-cable svg{width:100%;height:100%;overflow:visible}
+.qul-vintage-cable path{fill:none;stroke:#0a2437;stroke-width:10;stroke-linecap:round;stroke-linejoin:round}
+.qul-vintage-cable path.qul-vintage-cord-shine{stroke:#7196b65c;stroke-width:2;filter:none}
+.qul-vintage-dial-label{position:absolute;z-index:4;top:22px;left:50%;transform:translateX(-50%);width:47%;min-height:48px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;background:linear-gradient(130deg,#e5d9bd,#a78a64 50%,#f7e9cb);border:2px solid #4e3b2d;border-radius:10px;box-shadow:inset 0 1px 1px #fff,0 3px 5px #0c192c93;color:#203c56;text-align:center}
+.qul-vintage-dial-label>span{font:800 8px ui-monospace,monospace;letter-spacing:.12em}
+.qul-vintage-dial-label>strong{max-width:94%;font:900 14px 'Tajawal',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qul-vintage-dial-label>small{display:flex;align-items:center;gap:6px;font:900 13px ui-monospace,monospace;letter-spacing:.08em}
+.qul-vintage-dial-label i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#96774c}
+.qul-vintage-dial-label i.live{background:#2db07f;box-shadow:0 0 7px #19eaa1}
+.qul-vintage-rotary-groove{position:absolute;z-index:5;left:50%;top:22%;height:min(72%,270px);aspect-ratio:1;transform:translateX(-50%);border-radius:50%;border:7px solid #b29466;background:radial-gradient(circle,#cabb96 0%,#ffe7b5 65%,#836443 80%,#c2a06c 88%,#3b342a 100%);box-shadow:inset 0 6px 7px #49351b8a,inset 0 -4px 4px #fff7,0 6px 9px #02142294}
+.qul-vintage-bezel{position:absolute;inset:4px;border-radius:50%;border:3px solid #6c5034;pointer-events:none;box-shadow:inset 0 3px 6px #edddae87,inset 0 -4px 8px #8d6c46a1}
+.qul-vintage-rotary-wheel{position:absolute;z-index:4;inset:11px;border-radius:50%;border:5px solid #bb9c6e;background:
+radial-gradient(circle at 45% 35%,#e5d7af 0%,#f1e4c5 31%,#dbc39a 56%,#a78656 86%,#715032 100%);
+box-shadow:inset 0 3px 4px #fff9,inset -2px -6px 7px #6f4c27b5,0 3px 3px #0008;transform-origin:center}
+.qul-vintage-dial-scratches{position:absolute;inset:7px;border:1px solid #76543185;border-radius:50%;pointer-events:none;box-shadow:inset 0 1px #ffedb7a1}
+.qul-vintage-hole{position:absolute;z-index:4;transform:translate(-50%,-50%);width:20%;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;padding:0;background:radial-gradient(circle at 40% 34%,#f9e8c0 0 51%,#aa8c61 58%,#304453 65%,#041e33 77%,#8ca2b0 84%,#1d2d3a 100%);
+border:2px solid #4d3c30;box-shadow:inset 2px 4px 5px #080c10a8,inset -1px -2px 4px #fff5,0 2px 2px #c6ae82bb;color:#27475c;cursor:pointer}
+.qul-vintage-hole span{font:900 clamp(16px,1.6vw,23px)/1 ui-sans-serif,system-ui;text-shadow:0 1px #fff}
+.qul-vintage-hole:hover:not(:disabled){filter:brightness(1.12)}
+.qul-vintage-hole:disabled{cursor:default;opacity:.7}
+.qul-vintage-center-call{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:40%;aspect-ratio:1;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:linear-gradient(130deg,#f3e5c1,#d5bb87 63%,#e3cda0);color:#1d4c70;border:3px double #664e39;box-shadow:inset 0 2px 3px #fff8,inset 0 -3px 3px #8c6f4c,0 2px 5px #162e4969;cursor:pointer}
+.qul-vintage-center-call svg{flex-shrink:0}
+.qul-vintage-center-call strong{font:900 clamp(10px,1.1vw,14px) 'Tajawal',sans-serif}
+.qul-vintage-center-call:hover:not(:disabled){background:linear-gradient(135deg,#fff5d5,#e6c995)}
+.qul-vintage-center-call:disabled{opacity:.6;cursor:default}
+.qul-vintage-rotary-stop{position:absolute;z-index:6;bottom:7%;right:3%;width:25%;height:11%;border:2px solid #76634d;background:linear-gradient(#d7d7ce,#969992 40%,#e7e8da 70%,#495560);border-radius:40% 10% 45% 22%;transform:rotate(-32deg);box-shadow:inset 0 2px #fff,0 3px 3px #23231e7d;pointer-events:none}
+.qul-vintage-bottom-actions{position:absolute;z-index:6;bottom:10px;left:25%;right:25%;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.qul-vintage-bottom-actions button{display:flex;align-items:center;justify-content:center;gap:3px;background:#e5d1a89c;border:1px solid #ae9874;border-radius:7px;color:#203e52;padding:3px 6px;font:900 9px ui-sans-serif,system-ui;box-shadow:inset 0 1px #fff6}
+.qul-vintage-bottom-actions button:disabled{opacity:.3}
+.qul-vintage-feet{position:absolute;z-index:-1;bottom:-21px;left:18%;right:18%;height:26px;display:flex;justify-content:space-between}
+.qul-vintage-feet i{width:24%;height:20px;border-radius:9px;background:#041421;box-shadow:0 3px 5px #092031bd}
+.qul-vintage-call-console{position:absolute;z-index:13;right:5px;bottom:13px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;min-width:152px;padding:9px;background:linear-gradient(140deg,#fcfffce3,#dceeeedb);border:1px solid #aec7cf;border-radius:17px;box-shadow:0 5px 18px #22415c3a;color:#20435b;backdrop-filter:blur(13px)}
+.qul-vintage-call-status{font:900 9px 'Tajawal',sans-serif;letter-spacing:.04em}
+.qul-vintage-call-wave{display:flex;align-items:center;justify-content:center;gap:3px;height:29px}
+.qul-vintage-call-wave i{width:3px;border-radius:6px;background:linear-gradient(#1eb7ad,#4673a1)}
+.qul-vintage-call-buttons{display:flex;gap:7px}
+.qul-vintage-call-buttons button{border:1px solid #9dc0cb;border-radius:8px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px 10px;color:#2e5770;font:800 9px 'Tajawal',sans-serif}
+.qul-vintage-call-buttons button:disabled{opacity:.35}
+.qul-vintage-call-buttons .qul-vintage-call-hangup{background:#bb4352;color:#fff;border-color:#af3d4a}
+@media(max-width:1180px){.qul-vintage-device{width:min(100%,440px)}.qul-vintage-rotary-groove{top:23%;height:min(68%,245px)}.qul-vintage-handset{top:115px}.qul-vintage-body{top:176px}}
+@media(max-height:780px) and (min-width:901px){.qul-vintage-device{width:min(100%,430px);height:min(100%,460px);min-height:340px}.qul-vintage-body{top:137px;bottom:18px}.qul-vintage-handset{top:100px;height:95px}.qul-vintage-ear{height:82px}.qul-vintage-rest{top:128px}.qul-vintage-rotary-groove{height:min(68%,220px);top:24%}.qul-vintage-dial-label{top:16px;min-height:40px}.qul-vintage-cable{top:120px}.qul-vintage-hole span{font-size:17px}}
+@media(max-width:900px){.qul-vintage-device{width:min(100%,470px);height:min(100%,555px);min-height:400px;margin:0 auto}.qul-vintage-rotary-groove{height:min(67%,252px)}}
+@media(max-width:480px){.qul-vintage-device{width:min(100%,360px);height:405px;min-height:405px}.qul-vintage-body{top:151px;bottom:15px}.qul-vintage-handset{top:100px;height:88px}.qul-vintage-ear{height:77px}.qul-vintage-rest{top:138px;height:30px}.qul-vintage-rest span{width:28px;height:28px}.qul-vintage-cable{top:131px}.qul-vintage-rotary-groove{height:188px;top:21%;border-width:5px}.qul-vintage-rotary-wheel{inset:7px;border-width:3px}.qul-vintage-hole span{font-size:15px}.qul-vintage-dial-label{top:10px;min-height:34px}.qul-vintage-dial-label>strong{font-size:10px}.qul-vintage-dial-label>span{font-size:6px}.qul-vintage-center-call svg{width:16px}.qul-vintage-center-call strong{font-size:10px}.qul-vintage-bottom-actions{bottom:5px}.qul-vintage-call-console{min-width:136px;padding:6px}}
+@media(prefers-reduced-motion:reduce){.qul-vintage-hole{transition:none}}
