@@ -64,87 +64,106 @@ test('an AI claim with a mismatched goal or no Arabic evidence never counts', ()
   assert.equal(validateSpeakingMissionEvidence([{ role: 'user', text: 'أريد طاولة' }], goals, [{ goal: 'غير مطابق', evidence: 'أريد طاولة' }])[0].achieved, false);
 });
 
-test('speaking retains two sections but no longer exposes contact extensions in its sidebar', () => {
-  const speak = readFileSync(new URL('../pages/Speak.tsx', import.meta.url), 'utf8');
-  const booth = readFileSync(new URL('../components/SpeakingCallBooth.tsx', import.meta.url), 'utf8');
-  assert.match(speak, /speakingBranch === 'booth'/);
-  assert.match(speak, /SpeakingCallBooth/);
-  assert.doesNotMatch(speak, /CALL_CONTACTS\.map/);
-  assert.match(speak, /<PageHeader/);
-  assert.match(speak, /<aside/);
-  assert.match(speak, /missionEvidence=/);
-  assert.match(speak, /generateSessionInsights\(finalHistory, activeTopic\.ar/);
-  assert.match(booth, /<SpeakingPhoneBook/);
-  assert.match(booth, /onSelect=\{selectBookEntry\}/);
-  assert.match(booth, /onStart\(\)/);
-  assert.match(booth, /onStop\(\)/);
-  assert.match(booth, /onToggleMic/);
-  assert.match(booth, /missionEvidence/);
-  const names = ['restaurant', 'hotel', 'friend', 'support', 'taxi', 'clinic', 'library', 'bakery', 'school', 'museum'];
-  for (const place of names) assert.match(booth, new RegExp("id: '" + place + "'"));
-  const extensions = [...booth.matchAll(/extension: '(\d{3})'/g)].map(x => x[1]);
-  assert.equal(extensions.length, 10);
-  assert.equal(new Set(extensions).size, 10);
+test('speaking retains both modules and hides directory contacts from sidebar', () => {
+  const speak=readFileSync(new URL('../pages/Speak.tsx',import.meta.url),'utf8');
+  const booth=readFileSync(new URL('../components/SpeakingCallBooth.tsx',import.meta.url),'utf8');
+  assert.match(speak,/speakingBranch === 'booth'/);
+  assert.match(speak,/speakingBranch === 'studio'/);
+  assert.doesNotMatch(speak,/CALL_CONTACTS\.map/);
+  assert.match(speak,/qul-word-gallery-item-active/);
+  assert.match(booth,/<SpeakingPhoneBook/);
+  assert.match(booth,/<SpeakingDeskPhone/);
+  assert.match(booth,/onSelect=\{selectBookEntry\}/);
+  assert.match(booth,/onToggleMic/);
+  assert.match(booth,/missionEvidence/);
+  assert.match(booth,/generate/i);
+  assert.match(booth,/ADDITIONAL_SPEAKING_CONTACTS/);
 });
 
-test('speaking branches use the exact vocabulary gallery navigation classes', () => {
-  const speak = readFileSync(new URL('../pages/Speak.tsx', import.meta.url), 'utf8');
-  assert.match(speak, /import '..\/components\/vocabulary-word-gallery.css'/);
-  assert.match(speak, /qul-word-gallery-item-active/);
-  assert.match(speak, /qul-word-gallery-tile/);
-  assert.match(speak, /aria-pressed=\{speakingBranch === branch.id\}/);
+test('all 28 Arabic letters receive six fictional entries each, without mixing initial letters', () => {
+  const dir=readFileSync(new URL('../data/speakingDirectory.ts',import.meta.url),'utf8');
+  const alphabet=JSON.parse(dir.match(/export const ARABIC_DIRECTORY_LETTERS = (\[[^\n]+\]) as const;/)[1]);
+  const records=JSON.parse(dir.match(/export const ARABIC_DIRECTORY_RECORDS:[\s\S]+? = (\{[\s\S]+?\});\s*\n\nconst BASE_RESERVED/)[1]);
+  assert.equal(alphabet.length,28);
+  assert.equal(Object.keys(records).length,28);
+  const distinct=new Set();
+  for(const letter of alphabet){
+    assert.equal(records[letter].length,6, 'six entries under '+letter);
+    for(const record of records[letter]){
+      assert.equal(record[0][0],letter,'correct Arabic first letter: '+record[0]);
+      assert.equal(record.length,3);
+      assert.ok(record[1].trim());
+      assert.ok(!distinct.has(record[0]),'unique name '+record[0]);
+      distinct.add(record[0]);
+    }
+  }
+  assert.equal(distinct.size,168);
 });
 
-test('smartphone replaces rotary dial with modern screen and supports book-first manual calling', () => {
-  const booth = readFileSync(new URL('../components/SpeakingCallBooth.tsx', import.meta.url), 'utf8');
-  const css = readFileSync(new URL('../components/SpeakingModernPhone.css', import.meta.url), 'utf8');
-  assert.match(booth, /qul-phone-device/);
-  assert.match(booth, /qul-phone-dynamic-island/);
-  assert.match(booth, /qul-phone-ios-keypad/);
-  assert.match(booth, /qul-call-mobile-switch/);
-  assert.match(booth, /SpeakingPhoneBook/);
-  assert.match(booth, /setBookSelection\(entry\.id\)/);
-  assert.match(booth, /setDialed\(''\)/);
-  assert.match(booth, /validateSimulatedDial/);
-  assert.match(booth, /onClick=\{startCall\}/);
-  assert.match(booth, /onClick=\{onToggleMic\}/);
-  assert.doesNotMatch(booth, /qul-phone-rotary-wheel|qul-phone-dial-hole/);
-  assert.match(css, /qul-phone-device/);
-  assert.match(css, /qul-phone-ios-keypad/);
-  assert.match(css, /qul-call-world\.qul-call-modern/);
-  assert.match(css, /prefers-reduced-motion/);
+test('the original ten speaking scenarios remain callable and have unique extensions', () => {
+  const booth=readFileSync(new URL('../components/SpeakingCallBooth.tsx',import.meta.url),'utf8');
+  const names=['restaurant','hotel','friend','support','taxi','clinic','library','bakery','school','museum'];
+  for(const id of names) assert.match(booth,new RegExp("id: '"+id+"'"));
+  const ext=[...booth.matchAll(/extension: '(\d{3})'/g)].map(x=>x[1]);
+  assert.equal(ext.length,10);
+  assert.equal(new Set(ext).size,10);
 });
 
-test('animated address book opens like a book, filters and pages through every contact', () => {
-  const book = readFileSync(new URL('../components/SpeakingPhoneBook.tsx', import.meta.url), 'utf8');
-  const css = readFileSync(new URL('../components/SpeakingPhoneBook.css', import.meta.url), 'utf8');
-  assert.match(book, /setOpen\(true\)/);
-  assert.match(book, /qul-book-closed/);
-  assert.match(book, /qul-book-page-pair/);
-  assert.match(book, /onChange=\{e => \{ setQuery\(e\.target\.value\)/);
-  assert.match(book, /contacts\.filter/);
-  assert.match(book, /setSpread\(0\)/);
-  assert.match(book, /perSpread = 4/);
-  assert.match(book, /onSelect\(item\)/);
-  assert.match(css, /qul-book-page-spine/);
-  assert.match(css, /qul-book-binding/);
-  assert.match(css, /qul-book-page-stack/);
+test('physical Arabic book is closed on load and opens from bottom-left with a 3D cover hinge', () => {
+  const book=readFileSync(new URL('../components/SpeakingPhoneBook.tsx',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../components/SpeakingAlphabetBook.css',import.meta.url),'utf8');
+  assert.match(book,/React\.useState\(false\)/);
+  assert.match(book,/qul-alphabet-cover-opener/);
+  assert.match(book,/onClick=\{\(\) => setOpen\(true\)\}/);
+  assert.match(book,/rotateY: 175/);
+  assert.match(book,/transformOrigin: 'right center'/);
+  assert.match(book,/ARABIC_DIRECTORY_LETTERS\.map/);
+  assert.match(book,/goToLetter\(letter\)/);
+  assert.match(book,/directoryLetterOf\(entry\.ar\) === activeLetter/);
+  assert.match(book,/ITEMS_PER_SPREAD = 6/);
+  assert.match(book,/AnimatePresence mode="wait"/);
+  assert.match(book,/rotateY: turnDirection > 0 \? 78 : -78/);
+  assert.match(css,/\.qul-alphabet-cover-opener\{[^}]*bottom:20px;left:15px/);
+  assert.match(css,/\.qul-alphabet-tabs/);
+  assert.match(css,/\.qul-alphabet-center-fold/);
 });
 
-test('manual dial is required, no selection auto-fills the extension', () => {
-  const sample = [
-    { id: 'restaurant', extension: '101' },
-    { id: 'museum', extension: '110' },
-  ];
-  assert.equal(validateSimulatedDial({ selectedId: null, dialed: '101', contacts: sample }), 'select_contact');
-  assert.equal(validateSimulatedDial({ selectedId: 'restaurant', dialed: '', contacts: sample }), 'incomplete');
-  assert.equal(validateSimulatedDial({ selectedId: 'restaurant', dialed: '10', contacts: sample }), 'incomplete');
-  assert.equal(validateSimulatedDial({ selectedId: 'restaurant', dialed: '110', contacts: sample }), 'wrong_number');
-  assert.equal(validateSimulatedDial({ selectedId: 'restaurant', dialed: '101', contacts: sample }), 'ready');
-  assert.equal(validateSimulatedDial({ selectedId: 'museum', dialed: '110', contacts: sample }), 'ready');
-  assert.equal(validateSimulatedDial({ selectedId: 'museum', dialed: '101', contacts: sample }), 'wrong_number');
-  assert.equal(validateSimulatedDial({ selectedId: 'restaurant', dialed: '1019', contacts: sample }), 'incomplete');
-  const booth = readFileSync(new URL('../components/SpeakingCallBooth.tsx', import.meta.url), 'utf8');
-  assert.match(booth, /setBookSelection\(entry\.id\);\s*setDialed\(''\)/);
-  assert.doesNotMatch(booth, /setDialed\(entry\.extension\)/);
+test('vintage telephone includes a fully lifted moving handset and mechanical rotary dial', () => {
+  const phone=readFileSync(new URL('../components/SpeakingDeskPhone.tsx',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../components/SpeakingDeskPhone.css',import.meta.url),'utf8');
+  assert.match(phone,/qul-vintage-handset/);
+  assert.match(phone,/y:-122/);
+  assert.match(phone,/y:-52/);
+  assert.match(phone,/onClick=\{busy\?onEnd:onCall\}/);
+  assert.match(phone,/qul-vintage-rotary-wheel/);
+  assert.match(phone,/onDial\(digit\)/);
+  assert.match(phone,/qul-vintage-cable/);
+  assert.match(css,/\.qul-vintage-ear/);
+  assert.match(css,/\.qul-vintage-body/);
+  assert.match(css,/\.qul-vintage-call-console/);
+  assert.match(css,/prefers-reduced-motion/);
+});
+
+test('entry selection never fills the number, the student must dial the exact extension', () => {
+  const sample=[{id:'restaurant',extension:'101'},{id:'museum',extension:'110'}];
+  assert.equal(validateSimulatedDial({selectedId:null,dialed:'101',contacts:sample}),'select_contact');
+  assert.equal(validateSimulatedDial({selectedId:'restaurant',dialed:'10',contacts:sample}),'incomplete');
+  assert.equal(validateSimulatedDial({selectedId:'restaurant',dialed:'110',contacts:sample}),'wrong_number');
+  assert.equal(validateSimulatedDial({selectedId:'restaurant',dialed:'101',contacts:sample}),'ready');
+  assert.equal(validateSimulatedDial({selectedId:'museum',dialed:'110',contacts:sample}),'ready');
+  const booth=readFileSync(new URL('../components/SpeakingCallBooth.tsx',import.meta.url),'utf8');
+  assert.match(booth,/setBookSelection\(entry\.id\);\s*setDialed\(''\)/);
+  assert.match(booth,/validateSimulatedDial/);
+  assert.doesNotMatch(booth,/setDialed\(entry\.extension\)/);
+});
+
+test('reference-matched light studio adapts to mobile without old iPhone interface', () => {
+  const css=readFileSync(new URL('../components/SpeakingScene.css',import.meta.url),'utf8');
+  const booth=readFileSync(new URL('../components/SpeakingCallBooth.tsx',import.meta.url),'utf8');
+  assert.match(css,/\.qul-call-world\.qul-call-scene/);
+  assert.match(css,/\.qul-scene-layout/);
+  assert.match(css,/max-width:900px/);
+  assert.match(css,/qul-scene-show-phone/);
+  assert.match(booth,/qul-call-mobile-switch/);
+  assert.doesNotMatch(booth,/qul-phone-ios-keypad|qul-phone-dynamic-island/);
 });
