@@ -5,105 +5,14 @@ import { validateSimulatedDial } from '../services/speakingDial.mjs';
 import './SpeakingCallBooth.css';
 import './SpeakingScene.css';
 import './SpeakingReferencePhoto.css';
-import { ADDITIONAL_SPEAKING_CONTACTS, type SpeakingPhoneContact } from '../data/speakingDirectory';
+import { type SpeakingPhoneContact } from '../data/speakingDirectory';
+import { EVERYDAY_CALL_CONTACTS } from '../data/speakingEverydayContacts';
+import './SpeakingSourceAssets.css';
 import { SpeakingDeskPhone } from './SpeakingDeskPhone';
 
-const ORIGINAL_CALL_CONTACTS = [
-  {
-    id: 'restaurant', extension: '101', voice: 'Achird', ar: 'مطعم الياسمين', en: 'Jasmine Restaurant',
-    agentAr: 'موظف الاستقبال', agentEn: 'Restaurant receptionist', symbol: '✦',
-    aimAr: 'احجز طاولة لشخصين، وحدد اليوم والوقت.', aimEn: 'Reserve a table for two and choose a date and time.',
-    objectivesAr: ['اطلب طاولة', 'حدد عدد الأشخاص', 'حدد موعد الحجز'],
-    objectivesEn: ['Request a table', 'Specify the number of guests', 'Set a reservation time'],
-    complication: 'If the learner completes the basic request, say the requested time is unavailable and offer a different time.',
-    accent: '#d9ad74',
-  },
-  {
-    id: 'hotel', extension: '202', voice: 'Charon', ar: 'فندق الواحة', en: 'Oasis Hotel',
-    agentAr: 'موظف الاستقبال', agentEn: 'Hotel receptionist', symbol: '◈',
-    aimAr: 'استفسر عن غرفة وحدد عدد الليالي.', aimEn: 'Ask about a room and specify the length of stay.',
-    objectivesAr: ['اسأل عن غرفة', 'حدد عدد الليالي', 'استفسر عن السعر'],
-    objectivesEn: ['Ask about a room', 'Specify the nights', 'Ask about the price'],
-    complication: 'If the learner manages the initial request, offer a different room type and invite a decision.',
-    accent: '#a6c5cb',
-  },
-  {
-    id: 'friend', extension: '303', voice: 'Puck', ar: 'صديقك أحمد', en: 'Your friend Ahmed',
-    agentAr: 'أحمد', agentEn: 'Ahmed', symbol: '✳',
-    aimAr: 'رتب نزهة مع صديقك في نهاية الأسبوع.', aimEn: 'Plan a weekend outing with a friend.',
-    objectivesAr: ['سلّم على صديقك', 'اقترح نشاطًا', 'اتفق على موعد'],
-    objectivesEn: ['Greet your friend', 'Suggest an activity', 'Agree on a time'],
-    complication: 'If the learner proposes an outing, say you have a conflicting appointment and suggest an alternative.',
-    accent: '#b9c69c',
-  },
-  {
-    id: 'support', extension: '404', voice: 'Rasalgethi', ar: 'خدمة العملاء', en: 'Customer Service',
-    agentAr: 'ممثل خدمة العملاء', agentEn: 'Customer service agent', symbol: '⌁',
-    aimAr: 'اشرح مشكلة في طلبك واقترح حلًا مناسبًا.', aimEn: 'Explain a problem with an order and propose a solution.',
-    objectivesAr: ['عرّف بالمشكلة', 'اذكر التفاصيل', 'اطلب حلًا'],
-    objectivesEn: ['Describe the problem', 'Provide details', 'Request a solution'],
-    complication: 'Ask one follow-up question about the problem, then suggest a reasonable resolution.',
-    accent: '#d6b6aa',
-  },
-
-  {
-    id: 'taxi', extension: '505', voice: 'Orus', ar: 'مكتب سيارات الأجرة', en: 'Taxi Dispatch',
-    agentAr: 'موظف الحجز', agentEn: 'Taxi dispatcher', symbol: '◉',
-    aimAr: 'اطلب سيارة أجرة وحدد مكان الانطلاق والوجهة.', aimEn: 'Request a taxi, give a pickup point and a destination.',
-    objectivesAr: ['اطلب سيارة', 'اذكر مكان الانطلاق', 'اذكر الوجهة'],
-    objectivesEn: ['Request a taxi', 'Name the pickup point', 'Name the destination'],
-    complication: 'If the learner completes a basic ride request, explain there is a short delay and ask whether that is acceptable. Do not request an exact home address.',
-    accent: '#c4b5d7',
-  },
-  {
-    id: 'clinic', extension: '606', voice: 'Leda', ar: 'العيادة الطبية', en: 'Medical Clinic',
-    agentAr: 'موظفة الاستقبال', agentEn: 'Clinic receptionist', symbol: '✚',
-    aimAr: 'اطلب موعدًا، واذكر اليوم والوقت المناسبين.', aimEn: 'Ask for an appointment and choose a day and time.',
-    objectivesAr: ['اطلب موعدًا', 'حدد اليوم', 'حدد الوقت المناسب'],
-    objectivesEn: ['Request an appointment', 'Choose the day', 'Choose a suitable time'],
-    complication: 'The preferred time slot is unavailable; offer another slot. This is scheduling roleplay, not medical advice.',
-    accent: '#adcac4',
-  },
-  {
-    id: 'library', extension: '707', voice: 'Aoede', ar: 'المكتبة العامة', en: 'Public Library',
-    agentAr: 'أمينة المكتبة', agentEn: 'Librarian', symbol: '▤',
-    aimAr: 'اسأل عن كتاب، واستفسر عن موعد استعارتِه.', aimEn: 'Ask about a book and when it can be borrowed.',
-    objectivesAr: ['اطلب كتابًا', 'اسأل هل هو متاح', 'اسأل عن الاستعارة'],
-    objectivesEn: ['Ask for a book', 'Ask if it is available', 'Ask about borrowing'],
-    complication: 'Say one book is on loan and suggest a similar topic, then ask if the learner wants the alternative.',
-    accent: '#c6b991',
-  },
-  {
-    id: 'bakery', extension: '808', voice: 'Kore', ar: 'مخبز الصباح', en: 'Morning Bakery',
-    agentAr: 'موظفة المخبز', agentEn: 'Bakery assistant', symbol: '◒',
-    aimAr: 'اطلب خبزًا ومعجنات، واسأل عن الكمية والسعر.', aimEn: 'Order bread and pastries, asking about quantity and price.',
-    objectivesAr: ['اطلب صنفًا', 'حدد الكمية', 'اسأل عن السعر'],
-    objectivesEn: ['Order an item', 'Specify quantity', 'Ask the price'],
-    complication: 'One type of pastry is sold out; suggest a substitute and invite the learner to choose.',
-    accent: '#dfb389',
-  },
-  {
-    id: 'school', extension: '909', voice: 'Fenrir', ar: 'مكتب المدرسة', en: 'School Office',
-    agentAr: 'موظف شؤون الطلاب', agentEn: 'School office administrator', symbol: '◇',
-    aimAr: 'اسأل عن نشاط مدرسي وموعده ومكانه.', aimEn: 'Ask about a school activity, including its time and location.',
-    objectivesAr: ['اسأل عن النشاط', 'اسأل عن الموعد', 'اسأل عن المكان'],
-    objectivesEn: ['Ask about the activity', 'Ask when it happens', 'Ask where it takes place'],
-    complication: 'The venue changed to another room; help the learner confirm the new location.',
-    accent: '#abbad8',
-  },
-  {
-    id: 'museum', extension: '110', voice: 'Zephyr', ar: 'متحف المدينة', en: 'City Museum',
-    agentAr: 'مرشدة المتحف', agentEn: 'Museum guide', symbol: '❖',
-    aimAr: 'استفسر عن زيارة المتحف، وحدد وقت الزيارة وسعر التذكرة.', aimEn: 'Ask about visiting the museum, the opening time and ticket price.',
-    objectivesAr: ['اسأل عن الزيارة', 'اسأل عن موعد الفتح', 'اسأل عن التذاكر'],
-    objectivesEn: ['Ask about visiting', 'Ask about opening hours', 'Ask about tickets'],
-    complication: 'Offer an alternative tour time after the learner asks about visiting. Keep everything fictional.',
-    accent: '#c4b2a3',
-  },
-] as const;
-
 export type CallContact = SpeakingPhoneContact;
-export const CALL_CONTACTS: CallContact[] = [...ORIGINAL_CALL_CONTACTS, ...ADDITIONAL_SPEAKING_CONTACTS];
+export const CALL_CONTACTS: CallContact[] = EVERYDAY_CALL_CONTACTS;
+
 type CallTurn = { role: 'user' | 'ai'; text: string };
 interface CallBoothProps {
   lang: 'ar' | 'en';
@@ -127,13 +36,6 @@ interface CallBoothProps {
   meterRef: React.RefObject<HTMLDivElement | null>;
 }
 
-const DIAL_KEYS = [
-  ['1',''], ['2','ABC'], ['3','DEF'],
-  ['4','GHI'], ['5','JKL'], ['6','MNO'],
-  ['7','PQRS'], ['8','TUV'], ['9','WXYZ'],
-  ['*',''], ['0','+'], ['#',''],
-] as const;
-
 export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
   lang, contact, level, isActive, loading, isAiSpeaking, micMuted, recoveryNotice,
   history, learnerText, tutorText, missionEvidence, assessmentStatus,
@@ -142,6 +44,8 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
   const ar = lang === 'ar';
   const [bookSelection, setBookSelection] = React.useState<string | null>(null);
   const [dialed, setDialed] = React.useState('');
+  const [offHook,setOffHook] = React.useState(false);
+  const callAttemptRef = React.useRef('');
   const [dialError, setDialError] = React.useState('');
   const [showScript, setShowScript] = React.useState(false);
   const [mobilePane, setMobilePane] = React.useState<'book' | 'phone'>('phone');
@@ -194,6 +98,7 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
     setBookSelection(entry.id);
     setDialed('');
     setDialError('');
+    callAttemptRef.current = '';
     setShowScript(false);
     onSelectContact(entry.id);
     // On phones keep the directory visible until the learner chooses the phone tab.
@@ -201,13 +106,19 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
 
   const dialKey = (digit: string) => {
     if (busy) return;
+    if (!offHook) {
+      setDialError(ar ? 'ارفع السماعة أولًا، ثم اطلب الرقم.' : 'Lift the receiver before dialing.');
+      return;
+    }
     setDialError('');
     if (digit === '*') {
+      callAttemptRef.current = '';
       setDialed('');
       tone(330);
       return;
     }
     if (digit === '#') {
+      callAttemptRef.current = '';
       setDialed(value => value.slice(0,-1));
       tone(440);
       return;
@@ -216,32 +127,66 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
     tone(390 + Number(digit) * 39);
     setDialed(value => value.length >= 3 ? value : value + digit);
   };
-
+  const liftReceiver = () => {
+    if (busy || offHook) return;
+    setOffHook(true);
+    setDialError('');
+    tone(420, .1);
+  };
   const startCall = () => {
     if (busy) return;
+    if (!offHook) {
+      liftReceiver();
+      return;
+    }
     const result = validateSimulatedDial({
       selectedId: bookSelection,
       dialed,
       contacts: CALL_CONTACTS,
     });
     if (result !== 'ready') {
-      const messages = {
-        select_contact: ar ? 'افتح الأجندة واختر جهة الاتصال أولًا.' : 'Open the book and choose a contact first.',
-        incomplete: ar ? 'أدخل الرقم المكوّن من ثلاثة أرقام.' : 'Enter the complete three-digit number.',
-        wrong_number: ar ? 'الرقم غير مطابق. تحقق من الأجندة وحاول مجددًا.' : 'Wrong number. Check the book and try again.',
+      const errors = {
+        select_contact: ar ? 'اختر جهة من دليل الهاتف أولًا.' : 'Choose a contact in the address book.',
+        incomplete: ar ? 'اطلب الأرقام الثلاثة من القرص.' : 'Dial all three digits.',
+        wrong_number: ar ? 'الرقم خطأ، راجع الدليل واطلبه مجددًا.' : 'Wrong number, check the book and dial again.',
       };
-      setDialError(messages[result as keyof typeof messages]);
-      tone(230,.16);
+      setDialError(errors[result as keyof typeof errors]);
+      tone(230,.12);
       return;
     }
+    if (callAttemptRef.current === dialed) return;
+    callAttemptRef.current = dialed;
     setDialError('');
     setShowScript(true);
     onStart();
   };
   const endCall = () => {
     tone(260,.13);
-    onStop();
+    if (busy) onStop();
+    callAttemptRef.current = '';
+    setOffHook(false);
+    setDialed('');
+    setDialError('');
   };
+  React.useEffect(() => {
+    if (!offHook || busy || dialed.length !== 3 || callAttemptRef.current === dialed) return;
+    const result = validateSimulatedDial({
+      selectedId: bookSelection,
+      dialed,
+      contacts: CALL_CONTACTS,
+    });
+    if (result === 'ready') {
+      callAttemptRef.current = dialed;
+      setDialError('');
+      setShowScript(true);
+      onStart();
+    } else {
+      setDialError(result === 'select_contact'
+        ? (ar ? 'اختر جهة من الدليل أولًا.' : 'Choose a contact first.')
+        : (ar ? 'الرقم غير صحيح، راجعه في الدليل.' : 'Wrong number, check the book.'));
+    }
+  }, [offHook, dialed, busy, bookSelection, onStart, ar]);
+
   const statusText = loading
     ? (ar ? 'جارٍ الاتصال...' : 'Connecting...')
     : isActive ? (ar ? 'المكالمة جارية' : 'Call connected')
@@ -270,9 +215,9 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
 
       <div className={'qul-scene-layout qul-scene-show-'+mobilePane}>
         <div className="qul-scene-phone-pane" data-pane="phone">
-          <SpeakingDeskPhone lang={lang} dialed={dialed} active={isActive} loading={loading}
+          <SpeakingDeskPhone lang={lang} dialed={dialed} offHook={offHook} active={isActive} loading={loading}
             micMuted={micMuted} isAiSpeaking={isAiSpeaking} selected={selected}
-            onDial={dialKey} onCall={startCall} onEnd={endCall}
+            onDial={dialKey} onLift={liftReceiver} onHangup={endCall}
             onToggleMic={onToggleMic} meterRef={meterRef}/>
           {(dialError || dialed || selected) && (
             <div className={'qul-scene-dial-feedback '+(dialError?'error':'')} aria-live="polite">
@@ -283,7 +228,7 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
           {recoveryNotice && !isActive && (
             <div className="qul-scene-recovery">
               <span>{recoveryNotice}</span>
-              <button type="button" disabled={loading} onClick={onResume}>
+              <button type="button" disabled={loading} onClick={() => { setOffHook(true); onResume(); }}>
                 <RotateCcw size={14}/>{ar?'إعادة الاتصال':'Reconnect'}
               </button>
             </div>
@@ -356,7 +301,7 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
           {busy ? <PhoneOff size={20}/> : <Mic size={21}/>}
           {loading ? (ar?'جارٍ الاتصال...':'Connecting...') :
            busy ? (ar?'إنهاء المكالمة':'End call') :
-           (ar?'ابدأ التحدث':'Start Speaking')}
+           offHook ? (ar?'اطلب الرقم':'Dial the number') : (ar?'ارفع السماعة':'Lift receiver')}
         </button>
         <button type="button" className="qul-reference-aux-control"
           disabled={busy || !dialed} onClick={()=>dialKey('*')}

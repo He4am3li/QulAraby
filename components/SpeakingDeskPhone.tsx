@@ -1,114 +1,103 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Phone, Mic, MicOff, PhoneOff } from 'lucide-react';
+import { Mic, MicOff, PhoneOff } from 'lucide-react';
 import type { CallContact } from './SpeakingCallBooth';
-import './SpeakingDeskPhone.css';
-import './SpeakingReferencePhoto.css';
+import './SpeakingSourceAssets.css';
 
-type DeskPhoneProps = {
+interface DeskPhoneProps {
   lang: 'ar' | 'en';
   dialed: string;
+  offHook: boolean;
   active: boolean;
   loading: boolean;
   micMuted: boolean;
   isAiSpeaking: boolean;
   selected: CallContact | null;
   onDial: (digit: string) => void;
-  onCall: () => void;
-  onEnd: () => void;
+  onLift: () => void;
+  onHangup: () => void;
   onToggleMic: () => void;
   meterRef: React.RefObject<HTMLDivElement | null>;
-};
+}
 
-/** Real bronze telephone photographed in the approved QUL reference, with accessible dial hotspots. */
-const DIAL_POSITIONS = [
-  ['1',68.0,41.0], ['2',57.6,35.2], ['3',45.9,31.3], ['4',35.5,35.0],
-  ['5',27.5,40.5], ['6',23.8,50.0], ['7',24.5,59.0], ['8',32.3,69.0],
-  ['9',42.9,71.6], ['0',53.2,71.5],
+/* Exact numerals in the user's supplied rotary dial close-up, not drawn circles. */
+const DIAL_HOLES = [
+  ['1',79,31], ['2',66,22], ['3',51,15], ['4',34,22],
+  ['5',21,34], ['6',16,48], ['7',18,62], ['8',29,75],
+  ['9',46,81], ['0',60,82],
 ] as const;
 
 export const SpeakingDeskPhone: React.FC<DeskPhoneProps> = ({
-  lang, dialed, active, loading, micMuted, isAiSpeaking, selected,
-  onDial, onCall, onEnd, onToggleMic, meterRef,
+  lang, dialed, offHook, active, loading, micMuted, isAiSpeaking, selected,
+  onDial, onLift, onHangup, onToggleMic, meterRef,
 }) => {
   const ar = lang === 'ar';
-  const reduced = useReducedMotion();
-  const busy = active || loading;
-  const [lastDigit,setLastDigit] = React.useState('1');
-  const [dialTurn,setDialTurn] = React.useState(0);
+  const reducedMotion = useReducedMotion();
+  const [rotation, setRotation] = React.useState({ tick: 0, digit: '1' });
+  const canDial = offHook && !loading && !active;
+  const turn = (digit: string) => {
+    if (!canDial) return;
+    setRotation(prev => ({ tick: prev.tick + 1, digit }));
+    onDial(digit);
+  };
 
   return (
-    <div className="qul-reference-telephone" role="group"
-      aria-label={ar ? 'الهاتف البرونزي التفاعلي، مطابق للمرجع' : 'Interactive reference-matched bronze telephone'}>
-      <div className="qul-ref-phone-shadow" aria-hidden="true"/>
-      <motion.div className="qul-ref-phone-cord" aria-hidden="true"
-        animate={busy ? { scaleY: 1.035, y: -4 } : {scaleY:1,y:0}}
-        transition={{duration:reduced?0:.58}}/>
-      <div className="qul-ref-phone-base" role="group"
-        aria-label={ar ? 'قرص طلب الأرقام' : 'Rotary dial'}>
-        <motion.div className="qul-ref-dial-glint" key={dialTurn}
-          initial={{rotate:0,opacity:0}}
-          animate={dialTurn?{rotate:[0,(lastDigit==='0'?10:Number(lastDigit))*17,0],opacity:[0,.35,0]}:{rotate:0,opacity:0}}
-          transition={{duration:reduced?0:.74,ease:'easeInOut'}}
-          aria-hidden="true"/>
-        {DIAL_POSITIONS.map(([digit,x,y])=>(
-          <button key={digit} type="button"
-            className="qul-ref-dial-hit"
-            style={{left:x+'%',top:y+'%'}}
-            disabled={busy}
-            title={(ar?'الرقم ':'Digit ')+digit}
-            aria-label={(ar?'اتصل بالرقم ':'Dial digit ')+digit}
-            onClick={()=>{
-              setLastDigit(digit);
-              setDialTurn(t=>t+1);
-              onDial(digit);
-            }}>
+    <div className={'qul-source-telephone ' + (offHook ? 'is-lifted' : 'is-cradled')}
+      role="group" aria-label={ar ? 'هاتف برونزي من الصور الأصلية' : 'Original photographic bronze telephone'}>
+      <img src="/assets/speaking/phone-closed.avif" className="qul-source-phone-image is-closed"
+        draggable={false} alt="" aria-hidden="true" />
+      <img src="/assets/speaking/phone-lifted.avif" className="qul-source-phone-image is-open"
+        draggable={false} alt="" aria-hidden="true" />
+
+      <button type="button" className="qul-source-handset-action"
+        disabled={loading}
+        onClick={offHook ? onHangup : onLift}
+        aria-label={offHook
+          ? (ar ? 'أعد السماعة إلى مكانها لإنهاء المكالمة' : 'Put the receiver down to hang up')
+          : (ar ? 'ارفع السماعة من فوق الهاتف' : 'Lift the receiver from the cradle')}
+        title={offHook ? (ar ? 'أغلق السماعة' : 'Hang up') : (ar ? 'ارفع السماعة' : 'Lift receiver')}
+      />
+
+      <div className="qul-source-dial-mount" role="group"
+        aria-label={ar ? 'القرص الدوار بالأرقام من صفر إلى تسعة' : 'Rotary dial with ten real digits'}>
+        <motion.img key={rotation.tick} src="/assets/speaking/phone-dial.avif"
+          className="qul-source-dial-image" draggable={false} alt=""
+          animate={rotation.tick && !reducedMotion ? {
+            rotate: [0, (rotation.digit === '0' ? 10 : Number(rotation.digit)) * 17, 0],
+          } : { rotate: 0 }}
+          transition={{ duration: reducedMotion ? 0 : .77, times: [0, .36, 1], ease: 'easeInOut' }}
+          aria-hidden="true" />
+        {DIAL_HOLES.map(([digit,x,y]) => (
+          <button type="button" key={digit} className="qul-source-dial-hit"
+            style={{ left: x + '%', top: y + '%' }} disabled={!canDial}
+            onClick={() => turn(digit)}
+            aria-label={(ar ? 'اطلب الرقم ' : 'Dial digit ') + digit}
+            title={digit}>
             <span className="sr-only">{digit}</span>
           </button>
         ))}
       </div>
-      <motion.button type="button"
-        className="qul-ref-phone-receiver"
-        disabled={loading}
-        title={busy?(ar?'إنهاء المكالمة':'Hang up'):(ar?'رفع السماعة للاتصال':'Lift receiver to call')}
-        aria-label={busy?(ar?'إغلاق السماعة وإنهاء المكالمة':'Hang up the handset'):
-          (ar?'رفع السماعة بالكامل وبدء المكالمة':'Lift the receiver completely to call')}
-        onClick={busy?onEnd:onCall}
-        initial={false}
-        animate={busy
-          ? {x:26,y:-49,rotate:8,scale:1.025}
-          : {x:0,y:0,rotate:0,scale:1}}
-        transition={reduced?{duration:0}:{type:'spring',stiffness:76,damping:15,mass:1.2}}
-      />
-      {busy && (
-        <div className="qul-ref-call-indicator" aria-live="polite">
-          <div className="qul-ref-call-message">
-            {loading?(ar?'جارٍ الاتصال':'Connecting')
-             : isAiSpeaking?(ar?'الطرف الآخر يتحدث':'Contact speaking')
-             : micMuted?(ar?'الميكروفون مكتوم':'Muted')
-             :(ar?'المكالمة متصلة':'Connected')}
-          </div>
-          <div className="qul-ref-meter" ref={meterRef}
-            style={{'--phone-mic':.12} as React.CSSProperties} aria-hidden="true">
-            {Array.from({length:15},(_,i)=>
-              <i key={i} style={{
-                height:(8+Math.abs(Math.sin(i*.61))*21)+'px',
-                transform:'scaleY(var(--phone-mic, .12))',
-              }}/>
-            )}
-          </div>
-          <div className="qul-ref-inline-actions">
-            <button type="button" disabled={!active} onClick={onToggleMic}>
-              {micMuted?<MicOff size={15}/>:<Mic size={15}/>}
-              <span>{micMuted?(ar?'تشغيل':'Unmute'):(ar?'كتم':'Mute')}</span>
+      <div className="qul-source-number" dir="ltr" aria-live="polite">{dialed || (offHook ? '···' : '')}</div>
+      {offHook && (
+        <div className="qul-source-call-state" aria-live="polite">
+          <strong>{loading ? (ar ? 'جارٍ الاتصال' : 'Connecting')
+            : active ? (isAiSpeaking ? (ar ? 'الطرف الآخر يتحدث' : 'Contact speaking') : (ar ? 'المكالمة متصلة' : 'Connected'))
+              : selected ? (ar ? 'اطلب الرقم من الدليل' : 'Dial the number')
+                : (ar ? 'اختر جهة من الدليل' : 'Choose a contact')}</strong>
+          {active && <>
+            <div className="qul-source-audio-meter" ref={meterRef} style={{ '--phone-mic': .12 } as React.CSSProperties} aria-hidden="true">
+              {Array.from({ length: 14 }, (_,i) => (
+                <i key={i} style={{ height: (8 + Math.abs(Math.sin(i * .65)) * 15) + 'px', transform: 'scaleY(var(--phone-mic, .12))' }}/>
+              ))}
+            </div>
+            <button type="button" className="qul-source-mute" onClick={onToggleMic} aria-label={ar ? 'كتم الميكروفون' : 'Mute microphone'}>
+              {micMuted ? <MicOff size={16}/> : <Mic size={16}/>}
             </button>
-            <button type="button" onClick={onEnd}><PhoneOff size={16}/>{ar?'إنهاء':'End'}</button>
-          </div>
-        </div>
-      )}
-      {dialed && !busy && (
-        <div className="qul-ref-dialed-number" role="status">
-          <Phone size={12}/><span dir="ltr">{dialed}</span>
+          </>}
+          <button type="button" className="qul-source-hangup" onClick={onHangup} disabled={loading}
+            title={ar ? 'إنهاء المكالمة' : 'Hang up'} aria-label={ar ? 'إنهاء المكالمة وإعادة السماعة' : 'Hang up and replace handset'}>
+            <PhoneOff size={16}/>
+          </button>
         </div>
       )}
     </div>

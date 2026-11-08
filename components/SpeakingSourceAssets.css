@@ -1,0 +1,152 @@
+/* Real user-provided photographic assets, never a CSS facsimile. */
+.qul-call-scene .qul-scene-phone-pane { overflow: visible; }
+.qul-source-telephone {
+  position: relative; width: min(96%, 480px, calc((100dvh - 252px) * .82));
+  aspect-ratio: 558 / 680; height: auto; flex: 0 1 auto;
+  min-width: 0; min-height: 0; isolation: isolate; overflow: visible;
+  filter: drop-shadow(0 14px 17px #5f382324);
+}
+.qul-source-phone-image {
+  position: absolute; inset: 0; height: 100%; width: 100%;
+  display: block; object-fit: contain; user-select: none; pointer-events: none;
+  transition: opacity .62s ease, transform .82s cubic-bezier(.18,.68,.22,1);
+}
+.qul-source-phone-image.is-closed { opacity: 1; transform: translateY(0); z-index: 1; }
+.qul-source-phone-image.is-open { opacity: 0; transform: translateY(2%); z-index: 2; }
+.qul-source-telephone.is-lifted .qul-source-phone-image.is-closed { opacity: 0; }
+.qul-source-telephone.is-lifted .qul-source-phone-image.is-open { opacity: 1; transform: translateY(-7.8%); }
+.qul-source-handset-action {
+  position: absolute; z-index: 9; top: 9%; left: 6%; width: 91%; height: 30%;
+  background: transparent; border: 0; border-radius: 35%; cursor: pointer;
+  touch-action: manipulation;
+}
+.qul-source-telephone.is-lifted .qul-source-handset-action { top: 0; left: 8%; height: 38%; }
+.qul-source-handset-action:focus-visible { outline: 3px solid #b3814a; outline-offset: -2px; }
+.qul-source-handset-action:hover:not(:disabled) { background: radial-gradient(ellipse at 50% 40%, #f6d38f1b, transparent 75%); }
+.qul-source-handset-action:disabled { cursor: default; }
+.qul-source-dial-mount {
+  position: absolute; z-index: 8; width: 49.5%; aspect-ratio: 1;
+  left: 51.5%; top: 53.7%; transform: translate(-50%,-50%);
+  transition: left .65s ease, top .65s ease;
+  border-radius: 50%;
+  filter: drop-shadow(0 1px 3px #35190e5c);
+}
+.qul-source-telephone.is-lifted .qul-source-dial-mount { left: 58.7%; top: 54.8%; }
+.qul-source-dial-image { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: contain; pointer-events: none; }
+.qul-source-dial-hit {
+  position: absolute; z-index: 9; width: 14%; height: 14%;
+  border: 1px solid transparent; border-radius: 50%;
+  background: transparent; padding: 0; transform: translate(-50%,-50%);
+  touch-action: manipulation; cursor: pointer;
+}
+.qul-source-dial-hit:disabled { cursor: default; }
+.qul-source-dial-hit:not(:disabled):hover,
+.qul-source-dial-hit:not(:disabled):focus-visible {
+  background: #fff3bb36; border-color: #ffdda1a3; box-shadow: 0 0 0 2px #fff7df63;
+}
+.qul-source-dial-hit:not(:disabled):active { background: #ffe6ad80; }
+.qul-source-number {
+  position: absolute; z-index: 12; bottom: 1.4%; left: 50%;
+  transform: translateX(-50%); font: 900 12px ui-monospace,monospace;
+  letter-spacing: .13em; background: #fff9eddf; color: #68452e;
+  border-radius: 20px; padding: 3px 12px; min-height: 0;
+}
+.qul-source-number:empty { display: none; }
+.qul-source-call-state {
+  position: absolute; z-index: 14; bottom: 3%; right: -3%;
+  padding: 8px 11px; min-width: 135px; max-width: 48%;
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px;
+  border-radius: 13px; border: 1px solid #d8bda0;
+  background: #fff9f1eb; color: #70412e;
+  backdrop-filter: blur(10px); box-shadow: 0 5px 17px #57331e4a;
+}
+.qul-source-call-state>strong { width: 100%; text-align: center; font: 900 10px 'Tajawal',sans-serif; }
+.qul-source-audio-meter { height: 23px; display: flex; align-items: center; gap: 2px; }
+.qul-source-audio-meter i { width: 3px; border-radius: 8px; background: #9d6138; }
+.qul-source-mute,.qul-source-hangup { display: grid; place-items: center; padding: 5px; border-radius: 9px; }
+.qul-source-mute { border: 1px solid #cbaa8b; background: #fff8e7; color: #734832; }
+.qul-source-hangup { border: 1px solid #9b2a40; background: #9b2a40; color: #fff; }
+
+/* The exact photograph of the user's open Arabic leather address book. */
+.qul-call-scene .qul-reference-book-photo {
+  background-image: url('/assets/speaking/phonebook-open.avif') !important;
+  background-size: 100% 100% !important;
+  background-position: center center !important;
+  filter: drop-shadow(0 6px 13px #613b2e39);
+}
+/* Entire closed cover is the supplied photograph, without title, decoration, or icons added. */
+.qul-call-scene .qul-alphabet-cover {
+  top: 0 !important; bottom: 0 !important; right: 9% !important; left: auto !important;
+  width: 55% !important; height: 100% !important;
+  background: url('/assets/speaking/phonebook-cover.avif') center/contain no-repeat !important;
+  border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+  overflow: visible !important;
+}
+.qul-call-scene .qul-alphabet-cover:before,
+.qul-call-scene .qul-alphabet-cover-ridge,
+.qul-call-scene .qul-alphabet-cover-monogram,
+.qul-call-scene .qul-alphabet-cover-title,
+.qul-call-scene .qul-alphabet-cover-subtitle,
+.qul-call-scene .qul-alphabet-cover-decoration { display: none !important; }
+.qul-call-scene .qul-alphabet-cover-opener {
+  left: 0 !important; bottom: 3% !important; width: 41% !important;
+  height: 31% !important; max-width: none !important;
+  background: transparent !important; color: transparent !important;
+  border: 0 !important; box-shadow: none !important;
+  opacity: 0 !important; cursor: pointer; pointer-events: auto;
+}
+.qul-call-scene .qul-alphabet-cover-opener:focus-visible {
+  opacity: 1 !important; outline: 3px solid #d6a769 !important;
+}
+.qul-call-scene .qul-alphabet-cover-opener svg,
+.qul-call-scene .qul-alphabet-cover-opener span { display: none !important; }
+/* Reveal the exact inside photo before navigating to a different alphabetical page. */
+.qul-call-scene .qul-alphabet-book.qul-book-pristine .qul-alphabet-book-pages { visibility: hidden; }
+.qul-call-scene .qul-alphabet-book.qul-book-pristine .qul-alphabet-tabs { visibility: visible; }
+/* Keep the original paper, spine and leather visible while overlaying readable live entries. */
+.qul-call-scene .qul-alphabet-paper-content { inset: 4.5% 4% 4.5% 10.3%; }
+.qul-call-scene .qul-alphabet-page,
+.qul-call-scene .qul-alphabet-page:first-child,
+.qul-call-scene .qul-alphabet-page:last-child {
+  background: linear-gradient(110deg,#fffaf1ee,#f7eddef0 75%,#f4e5d5e9) !important;
+  box-shadow: inset 0 0 9px #e3d2ba28 !important;
+}
+.qul-call-scene .qul-alphabet-page header strong {
+  font-family: 'Tajawal','Cairo',sans-serif !important;
+  color: #354c67 !important;
+  font-size: clamp(10px,.95vw,13px) !important;
+}
+.qul-call-scene .qul-index-entry-name strong {
+  font-family: 'Tajawal','Cairo',sans-serif !important;
+  font-weight: 900 !important; font-size: clamp(10px,1vw,14px) !important;
+  color: #263d5c !important; line-height: 1.3 !important;
+}
+.qul-call-scene .qul-index-entry-name span {
+  display: block !important; font-family: 'Tajawal',sans-serif !important;
+  font-weight: 700 !important; font-style: normal !important;
+  font-size: clamp(8px,.72vw,10px) !important;
+  color: #a4a5a7 !important; line-height: 1.2 !important;
+}
+.qul-call-scene .qul-index-extension {
+  font-family: ui-monospace,monospace !important;
+  font-size: clamp(10px,.85vw,13px) !important;
+  font-style: normal !important; letter-spacing: .03em;
+}
+.qul-call-scene .qul-index-entry { gap: 2px; }
+.qul-call-scene .qul-alphabet-tab { font-family: 'Tajawal',sans-serif !important; }
+.qul-call-scene .qul-alphabet-flip-ruled span { font-family:'Tajawal',sans-serif !important; }
+
+@media (max-width:900px) {
+  .qul-call-scene .qul-scene-phone-pane { overflow: visible; }
+  .qul-source-telephone { width: min(96%,390px,calc((100dvh - 230px) * .78)); }
+  .qul-source-call-state { right: 0; }
+}
+@media (max-width:530px) {
+  .qul-source-telephone { width: min(96%,348px,calc((100dvh - 215px) * .78)); }
+  .qul-source-dial-hit { width:16%; height:16%; }
+  .qul-source-call-state { min-width:120px; max-width:53%; padding:6px; }
+  .qul-call-scene .qul-index-entry-name span { font-size:8px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qul-source-phone-image,.qul-source-dial-mount { transition: none !important; }
+}

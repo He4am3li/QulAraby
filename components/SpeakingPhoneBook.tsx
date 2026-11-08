@@ -21,6 +21,7 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
   const ar = lang === 'ar';
   const reducedMotion = useReducedMotion();
   const [open, setOpen] = React.useState(false);
+  const [pristine,setPristine] = React.useState(true);
   const [activeLetter, setActiveLetter] = React.useState<string>(FIRST_LETTER);
   const [query, setQuery] = React.useState('');
   const [page, setPage] = React.useState(0);
@@ -59,6 +60,7 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
   };
   const goToLetter = (letter: string) => {
     if (disabled) return;
+    setPristine(false);
     setQuery('');
     setActiveLetter(letter);
     setPage(0);
@@ -85,13 +87,13 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
           <h3>{ar ? 'دليل الهاتف' : 'Telephone directory'}</h3>
         </div>
         {open && (
-          <button type="button" className="qul-alphabet-close" onClick={() => setOpen(false)}
+          <button type="button" className="qul-alphabet-close" onClick={() => { setOpen(false); setPristine(true); }}
             aria-label={ar ? 'إغلاق دليل الهاتف' : 'Close address book'}><X size={15}/>{ar ? 'إغلاق' : 'Close'}</button>
         )}
       </div>
 
       <div className={'qul-alphabet-stage ' + (open ? 'is-open' : 'is-closed')}>
-        <div className="qul-alphabet-book" dir="rtl">
+        <div className={'qul-alphabet-book '+(pristine ? 'qul-book-pristine' : '')} dir="rtl">
           <div className="qul-reference-book-photo" aria-hidden="true"/>
           <div className="qul-alphabet-book-edge" aria-hidden="true"/>
           <div className="qul-alphabet-book-spine" aria-hidden="true"/>
@@ -114,7 +116,7 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
                 <Search size={13}/>
                 <input disabled={!open || disabled} dir={ar ? 'rtl' : 'ltr'}
                   value={query}
-                  onChange={event => {setQuery(event.target.value); setPage(0);setTurnDirection(1);setLastTurn(x=>x+1);}}
+                  onChange={event => {setPristine(false);setQuery(event.target.value); setPage(0);setTurnDirection(1);setLastTurn(x=>x+1);}}
                   placeholder={ar ? 'ابحث عن اسم أو رقم' : 'Search name or number'}
                   aria-label={ar ? 'بحث في دليل الهاتف' : 'Search address book'}/>
                 {query && <button type="button" onClick={() => {setQuery('');setPage(0);}} aria-label={ar ? 'مسح البحث' : 'Clear search'}><X size={12}/></button>}
