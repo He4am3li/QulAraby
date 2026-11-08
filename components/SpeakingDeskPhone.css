@@ -9,7 +9,7 @@ box-shadow:inset 0 4px 3px #9cbbd59a,inset -19px -18px 17px #06192bd9,inset 13px
 .qul-vintage-body:before{position:absolute;content:"";inset:6px 10px 10px;border-radius:inherit;pointer-events:none;border:1px solid #7299b93f;box-shadow:inset 1px 2px 1px #f3fcff1f}
 .qul-vintage-enamel{position:absolute;top:18px;left:14%;width:72%;height:16%;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse,#d3e4f43a,transparent 68%);filter:blur(5px)}
 .qul-vintage-reflection{position:absolute;top:20px;right:17%;width:17px;height:50%;border-radius:50%;pointer-events:none;background:linear-gradient(90deg,transparent,#d0e8ff27,transparent);transform:rotate(-13deg);filter:blur(6px)}
-.qul-vintage-handset{position:absolute;z-index:12;left:0;width:100%;height:112px;top:114px;display:flex;align-items:center;justify-content:center;padding:0 3%;background:transparent;border:0;cursor:pointer;filter:drop-shadow(3px 14px 8px #092235b7);transform-origin:56% 67%;transform-style:preserve-3d}
+.qul-vintage-handset{position:absolute;z-index:12;left:0;width:100%;height:112px;top:132px;display:flex;align-items:center;justify-content:center;padding:0 3%;background:transparent;border:0;cursor:pointer;filter:drop-shadow(3px 14px 8px #092235b7);transform-origin:56% 67%;transform-style:preserve-3d}
 .qul-vintage-handset:focus-visible{outline:3px solid #d9b47f;outline-offset:3px;border-radius:50px}
 .qul-vintage-handset:disabled{cursor:default}
 .qul-vintage-ear{position:relative;flex-shrink:0;width:26%;height:99px;background:
@@ -74,3 +74,7 @@ border:2px solid #4d3c30;box-shadow:inset 2px 4px 5px #080c10a8,inset -1px -2px 
 @media(max-width:900px){.qul-vintage-device{width:min(100%,470px);height:min(100%,555px);min-height:400px;margin:0 auto}.qul-vintage-rotary-groove{height:min(67%,252px)}}
 @media(max-width:480px){.qul-vintage-device{width:min(100%,360px);height:405px;min-height:405px}.qul-vintage-body{top:151px;bottom:15px}.qul-vintage-handset{top:100px;height:88px}.qul-vintage-ear{height:77px}.qul-vintage-rest{top:138px;height:30px}.qul-vintage-rest span{width:28px;height:28px}.qul-vintage-cable{top:131px}.qul-vintage-rotary-groove{height:188px;top:21%;border-width:5px}.qul-vintage-rotary-wheel{inset:7px;border-width:3px}.qul-vintage-hole span{font-size:15px}.qul-vintage-dial-label{top:10px;min-height:34px}.qul-vintage-dial-label>strong{font-size:10px}.qul-vintage-dial-label>span{font-size:6px}.qul-vintage-center-call svg{width:16px}.qul-vintage-center-call strong{font-size:10px}.qul-vintage-bottom-actions{bottom:5px}.qul-vintage-call-console{min-width:136px;padding:6px}}
 @media(prefers-reduced-motion:reduce){.qul-vintage-hole{transition:none}}
+
+/* Guarantee the lifted receiver stays entirely visible above its cradle at every breakpoint. */
+@media(max-height:780px) and (min-width:901px){.qul-vintage-handset{top:139px}}
+@media(max-width:480px){.qul-vintage-handset{top:126px}}
