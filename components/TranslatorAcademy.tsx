@@ -180,8 +180,8 @@ export const TranslatorAcademy: React.FC<TranslatorAcademyProps> = ({ lang }) =>
       setEvaluationResult({
         accuracy: 0,
         isCorrect: false,
-        feedbackEn: "Good effort! Keep practicing sentence patterns.",
-        feedbackAr: "مُحَاوَلَةٌ طَيِّبَةٌ!",
+        feedbackEn: "Evaluation is temporarily unavailable. Please retry.",
+        feedbackAr: "التقييم غير متاح مؤقتًا، يُرجى إعادة المحاولة.",
         vocalizedArabic: currentChallenge.referenceTranslation || userTranslationText,
         transliteration: "Al-Arabiyyah",
         grammarTip: "Review word order and endings."
