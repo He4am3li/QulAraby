@@ -4,6 +4,7 @@
  * Each pulse corresponds to a rotary contact closing; zero has ten pulses.
  */
 export type RotarySoundPlayer = {
+  prepare(): void;
   play(digit: string): void;
   close(): void;
 };
@@ -44,6 +45,11 @@ export function createRotarySoundPlayer(): RotarySoundPlayer {
     return context;
   };
   return {
+    // Initialise in the receiver-lift gesture so the first digit never waits for
+    // AudioContext creation or iOS audio-session activation.
+    prepare() {
+      try { ensure(); } catch { /* audio remains optional */ }
+    },
     play(digit) {
       try {
         const ctx = ensure();
