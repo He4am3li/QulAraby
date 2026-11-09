@@ -178,7 +178,7 @@ test('iPhone photos have an in-flow canvas spacer so the telephone cannot disapp
   assert.match(css,/\.qul-call-scene \.qul-scene-show-book \.qul-scene-phone-pane\[data-pane="phone"\]/);
   assert.match(css,/aspect-ratio: 789 \/ 560 !important/);
   assert.match(book,/phonebook-cover\.avif/);
-  assert.match(book,/phonebook-open\.avif/);
+  assert.match(book,/phonebook-open-clean\.avif/);
 });
 
 test('both untouched phone photographs share registered base coordinates without extra receiver or cord',()=>{
