@@ -80,7 +80,7 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
               initial={reduced?false:{opacity:0,scale:.97}}
               animate={{opacity:1,scale:1}}
               transition={{duration:reduced?0:.38}}>
-              <img src="/assets/speaking/phonebook-open-clean-v2.avif" alt="" draggable={false}
+              <img src="/assets/speaking/phonebook-open-clean-v3.avif" alt="" draggable={false}
                 className="qul-clean-book-photo"/>
               <div className="qul-clean-book-tabs" role="group"
                 aria-label={ar?'الحروف الهجائية':'Arabic alphabet'}>
@@ -102,7 +102,7 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
                       className={'qul-clean-book-turnleaf '+(leaf.direction>0?'forward':'backward')}
                       initial={{rotateY:0,opacity:1}}
                       animate={{rotateY:leaf.direction>0?170:-170,opacity:1}}
-                      exit={{opacity:0}}
+                      exit={{opacity:0,transition:{duration:0}}}
                       transition={{duration:.72,ease:[.34,.04,.22,1]}}
                       onAnimationComplete={()=>setLeaf(prev=>prev?.serial===leaf.serial?null:prev)}>
                       <div className="qul-clean-book-leaf-face front">
@@ -127,7 +127,7 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
               </div>
               {/* The untouched leather and metal binding are preserved in the cleaned photo. */}
               <img className="qul-clean-book-spine-photo"
-                src="/assets/speaking/phonebook-open-clean-v2.avif" alt="" draggable={false} aria-hidden="true"/>
+                src="/assets/speaking/phonebook-open-clean-v3.avif" alt="" draggable={false} aria-hidden="true"/>
             </motion.div>
           )}
         </AnimatePresence>
