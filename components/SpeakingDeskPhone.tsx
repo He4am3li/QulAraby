@@ -50,7 +50,7 @@ export const SpeakingDeskPhone: React.FC<DeskPhoneProps> = ({
     ], { duration:rotaryDurationMs(digit), easing:'cubic-bezier(.22,.65,.27,1)', fill:'none' });
   };
   return (
-    <div className={'qul-source-telephone qul-photo-phone '+(offHook?'is-lifted':'is-cradled')}
+    <div className={'qul-source-telephone qul-photo-phone qul-object-hint-host '+(offHook?'is-lifted':'is-cradled')}
       role="group" aria-label={ar?'هاتف برونزي تفاعلي':'Interactive bronze telephone'}>
       {/* Keep the original complete telephone photographs intact.
           Both states are registered to the SAME stationary base. No clipped
@@ -82,6 +82,11 @@ export const SpeakingDeskPhone: React.FC<DeskPhoneProps> = ({
         ))}
       </div>
       {!!dialed && <output dir="ltr" className="qul-phone-number-minimal" aria-live="polite">{dialed}</output>}
+      <span className="qul-object-hint" role="tooltip">
+        {offHook
+          ? (ar ? 'أدر القرص لاختيار الرقم من الدليل' : 'Rotate the dial to enter the directory number')
+          : (ar ? 'اضغط على السماعة لرفعها' : 'Tap the receiver to lift it')}
+      </span>
       {(loading||active) && <div className="qul-phone-live-badge" aria-live="polite">
         <span>{loading?(ar?'جارٍ الاتصال':'Connecting'):isAiSpeaking?(ar?'يتحدث':'Speaking'):(ar?'متصل':'Connected')}</span>
         {active && <>
