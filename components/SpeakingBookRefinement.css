@@ -121,7 +121,27 @@
   box-shadow: inset 8px 0 14px #6f543b30;
 }
 .qul-call-scene .qul-clean-book-leaf-face .qul-clean-book-entry { flex: 1 1 0; }
-.qul-call-scene .qul-clean-book-leaf-face.back .qul-clean-book-entry { visibility:hidden; }
+.qul-call-scene .qul-clean-book-leaf-face.back .qul-clean-book-entry {
+  visibility: visible;
+  font-family: 'Tajawal', sans-serif;
+}
+/* Photographic binding remains above the turning leaf, while the sheet itself
+   has front and back ink like a real page, not a blank rectangular overlay. */
+.qul-call-scene .qul-clean-book-turnleaf {
+  perspective: 1500px;
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+  box-shadow: -3px 4px 9px #71594023;
+}
+.qul-call-scene .qul-clean-book-leaf-face {
+  background: linear-gradient(105deg, #f9efdf, #fff8eb 46%, #e9ddca);
+  border-color: #d0b7944f;
+  box-shadow: inset -7px 0 16px #92755527, 4px 4px 10px #4c3b2a24;
+}
+.qul-call-scene .qul-clean-book-leaf-face.back {
+  background: linear-gradient(95deg, #e9dac4, #fff9ed 60%, #f5e9d8);
+  box-shadow: inset 7px 0 13px #92755525, -4px 4px 10px #4c3b2a24;
+}
 .qul-object-hint-host { position:relative; }
 .qul-object-hint {
   position: absolute;
