@@ -325,3 +325,40 @@ test('paper leaf is removed immediately after finishing, without a reversed ghos
   assert.match(book,/phonebook-open-clean-v3\.avif/);
   assert.doesNotMatch(book,/phonebook-open-clean-v2\.avif/);
 });
+
+
+test('dial audio is prewarmed when lifting receiver and the rotary art is decoded once',()=>{
+  const phone=source('components/SpeakingDeskPhone.tsx');
+  const sound=source('services/rotaryDialAudio.ts');
+  assert.match(phone,/wheel\.decode\(\)/);
+  assert.match(phone,/soundRef\.current\.prepare\(\)/);
+  assert.match(phone,/onClick=\{offHook\?onHangup:liftReceiver\}/);
+  assert.match(phone,/wheel\.animate\(/);
+  assert.match(phone,/currentMotionRef\.current\?\.cancel\(\)/);
+  assert.match(sound,/prepare\(\)/);
+  assert.match(sound,/const pulses = rotaryPulseCount\(digit\)/);
+});
+
+test('page turning uses the next sheet on the reverse, not blank paper that reveals old printed names',()=>{
+  const book=source('components/SpeakingPhoneBook.tsx');
+  const css=source('components/SpeakingBookRefinement.css');
+  assert.match(book,/next: CallContact\[\]/);
+  assert.match(book,/next: newEntries\.slice/);
+  assert.match(book,/leaf\.next\.map/);
+  assert.match(css,/\.qul-clean-book-leaf-face\.back \.qul-clean-book-entry \{\s*visibility: visible/);
+  assert.match(css,/backface-visibility: visible/);
+  assert.match(book,/phonebook-open-clean-v3\.avif/);
+});
+
+test('worksheet-style report uses QUL logo in preview and print, plus verified regional price guidance',()=>{
+  const sheet=source('components/SpeakingReportSheet.tsx');
+  const css=source('components/SpeakingReportSheet.css');
+  const price=source('services/speakingUaePrices.mjs');
+  assert.match(sheet,/Speaking Practice Worksheet/);
+  assert.match(sheet,/ورقة متابعة التحدث/);
+  assert.match(sheet,/src="\/Logo\.png"/);
+  assert.match(css,/Printed worksheet styling shared/);
+  assert.match(price,/Abu Dhabi silver taxis have an AED 12 minimum trip fare/);
+  assert.match(price,/Al Ain or Abu Dhabi/);
+  assert.match(price,/not real-time quotes/i);
+});
