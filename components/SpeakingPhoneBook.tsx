@@ -80,7 +80,7 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
               initial={reduced?false:{opacity:0,scale:.97}}
               animate={{opacity:1,scale:1}}
               transition={{duration:reduced?0:.38}}>
-              <img src="/assets/speaking/phonebook-open-clean.avif" alt="" draggable={false}
+              <img src="/assets/speaking/phonebook-open-clean-v2.avif" alt="" draggable={false}
                 className="qul-clean-book-photo"/>
               <div className="qul-clean-book-tabs" role="group"
                 aria-label={ar?'الحروف الهجائية':'Arabic alphabet'}>
@@ -127,7 +127,7 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
               </div>
               {/* The untouched leather and metal binding are preserved in the cleaned photo. */}
               <img className="qul-clean-book-spine-photo"
-                src="/assets/speaking/phonebook-open-clean.avif" alt="" draggable={false} aria-hidden="true"/>
+                src="/assets/speaking/phonebook-open-clean-v2.avif" alt="" draggable={false} aria-hidden="true"/>
             </motion.div>
           )}
         </AnimatePresence>
