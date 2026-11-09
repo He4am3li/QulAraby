@@ -1,0 +1,188 @@
+.qul-speaking-report-sheet {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  background: #fff;
+  color: #25354a;
+  font-family: 'Tajawal','Cairo',system-ui,sans-serif;
+  padding: 22px 25px 17px;
+  text-align: start;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 20px #30436114;
+  --paper-ink: #283446;
+  --paper-muted: #8593a4;
+}
+.qul-speaking-report-sheet * { box-sizing: border-box; }
+.qul-speaking-report-sheet.is-print {
+  max-width: none;
+  width: 800px;
+  padding: 38px 42px 28px;
+  border: 0;
+  box-shadow: none;
+  font-size: 16px;
+}
+.qul-report-paper-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 15px;
+  padding-bottom: 11px;
+  margin-bottom: 11px;
+  border-bottom: 2px solid #2d3845;
+}
+.qul-report-overline {
+  display: block;
+  color: #8090a3;
+  font: 800 9px ui-sans-serif,system-ui,sans-serif;
+  letter-spacing: .13em;
+  direction: ltr;
+}
+.qul-report-paper-header h2 {
+  font-size: 19px;
+  color: #243243;
+  font-weight: 900;
+  margin: 4px 0 1px;
+  line-height: 1.3;
+}
+.qul-report-paper-header p {
+  color: var(--paper-muted);
+  font-size: 9px;
+  font-weight: 750;
+  margin: 1px 0 0;
+}
+.qul-report-seal {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #3b4c60;
+  border-radius: 50%;
+  font-size: 20px;
+  color: #394e63;
+  font-weight: 900;
+}
+.qul-report-session-meta {
+  display: grid;
+  grid-template-columns: minmax(0,1.45fr) minmax(0,1fr) minmax(0,.8fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.qul-report-session-meta > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6px 8px;
+  min-width: 0;
+  border: 1px solid #d8e0ea;
+  background: #f8fafc;
+}
+.qul-report-session-meta span { font-size: 8px; color: var(--paper-muted); font-weight: 800; }
+.qul-report-session-meta strong { font-size: 11px; line-height: 1.3; font-weight: 900; color: var(--paper-ink); }
+.qul-report-session-meta small { font-size: 8px; color: var(--paper-muted); line-height: 1.3; }
+.qul-report-section { margin: 0 0 12px; page-break-inside: avoid; break-inside: avoid; }
+.qul-report-section-title {
+  margin: 0 0 7px;
+  padding: 6px 9px;
+  background: #f0f3f6;
+  color: #253345;
+  border-inline-start: 4px solid #394d63;
+  font-size: 11px;
+  font-weight: 900;
+}
+.qul-report-evidence { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
+.qul-report-evidence>div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #e1e6ec;
+  padding: 6px 3px;
+}
+.qul-report-evidence strong {
+  color: #29445b;
+  font: 900 21px ui-sans-serif,system-ui,sans-serif;
+}
+.qul-report-evidence span { color: #657386; font-weight: 700; font-size: 9px; text-align: center; }
+.qul-report-caution { margin: 5px 0 0; color: #758397; font-size: 8px; line-height: 1.45; }
+.qul-report-goals { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 5px; }
+.qul-report-goal { display: flex; align-items: start; gap: 6px; padding: 6px; border: 1px solid #e4e9ef; }
+.qul-report-goal-mark { flex: 0 0 14px; font-size: 13px; color: #9aa8b6; font-weight: 900; }
+.qul-report-goal.achieved .qul-report-goal-mark { color: #188564; }
+.qul-report-goal div { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.qul-report-goal strong { font-size: 10px; font-weight: 800; color: #36465a; }
+.qul-report-goal small { color: #6c7c8c; font-size: 8px; line-height: 1.4; }
+.qul-report-body-paragraph {
+  color: #3b4c5b;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1.75;
+  padding: 4px 8px;
+  margin: 0;
+}
+.qul-report-tutor-tip,
+.qul-report-next-practice {
+  border: 1px solid #dfe7ef;
+  padding: 8px 10px;
+}
+.qul-report-tutor-tip p,
+.qul-report-next-practice p {
+  margin: 0;
+  font-weight: 800;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #263c51;
+}
+.qul-report-tutor-tip p[lang="en"],
+.qul-report-next-practice p[lang="en"] {
+  color: #8190a0;
+  font-size: 9px;
+  font-weight: 650;
+  margin-top: 4px;
+}
+.qul-report-vocabulary { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
+.qul-report-vocabulary>div { border-bottom: 1px solid #dce3ea; padding: 4px 6px; display: flex; justify-content: space-between; align-items: center; gap: 5px; }
+.qul-report-vocabulary strong { color: #293b50; font-size: 10px; font-weight: 900; }
+.qul-report-vocabulary span { color: #91a0ae; font-size: 9px; text-align: end; }
+.qul-report-corrections { display: flex; flex-direction: column; gap: 5px; }
+.qul-report-corrections>div { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; padding: 6px; border-bottom: 1px dashed #d3dce6; }
+.qul-report-corrections del { font-size: 10px; color: #a66a68; }
+.qul-report-corrections strong { font-size: 10px; color: #23715b; }
+.qul-report-corrections small { font-size: 9px; color: #697a8e; }
+.qul-report-paper-footer {
+  border-top: 1px solid #cdd5dd;
+  margin-top: 14px;
+  padding-top: 7px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  font-weight: 800;
+  color: #8c9ba9;
+}
+.qul-speaking-report-sheet.is-print .qul-report-paper-header h2 { font-size: 28px; }
+.qul-speaking-report-sheet.is-print .qul-report-paper-header p { font-size: 12px; }
+.qul-speaking-report-sheet.is-print .qul-report-overline { font-size: 13px; }
+.qul-speaking-report-sheet.is-print .qul-report-section-title { font-size: 16px; padding: 11px 15px; }
+.qul-speaking-report-sheet.is-print .qul-report-session-meta strong { font-size: 15px; }
+.qul-speaking-report-sheet.is-print .qul-report-session-meta span { font-size: 11px; }
+.qul-speaking-report-sheet.is-print .qul-report-session-meta small { font-size: 11px; }
+.qul-speaking-report-sheet.is-print .qul-report-evidence strong { font-size: 30px; }
+.qul-speaking-report-sheet.is-print .qul-report-evidence span,
+.qul-speaking-report-sheet.is-print .qul-report-caution { font-size: 12px; }
+.qul-speaking-report-sheet.is-print .qul-report-goal strong,
+.qul-speaking-report-sheet.is-print .qul-report-body-paragraph,
+.qul-speaking-report-sheet.is-print .qul-report-tutor-tip p,
+.qul-speaking-report-sheet.is-print .qul-report-next-practice p { font-size: 15px; }
+.qul-speaking-report-sheet.is-print .qul-report-vocabulary strong,
+.qul-speaking-report-sheet.is-print .qul-report-vocabulary span,
+.qul-speaking-report-sheet.is-print .qul-report-corrections strong,
+.qul-speaking-report-sheet.is-print .qul-report-corrections del { font-size: 13px; }
+.qul-speaking-report-sheet.is-print .qul-report-tutor-tip p[lang="en"],
+.qul-speaking-report-sheet.is-print .qul-report-next-practice p[lang="en"] { font-size: 12px; }
+@media(max-width:530px) {
+  .qul-speaking-report-sheet { padding: 15px 12px 12px; }
+  .qul-report-paper-header h2 { font-size: 16px; }
+  .qul-report-seal { width: 36px; height: 36px; flex-basis: 36px; font-size: 15px; }
+  .qul-report-goals { grid-template-columns: 1fr; }
+  .qul-report-vocabulary { grid-template-columns: 1fr; }
+}
