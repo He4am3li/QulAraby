@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { summarizeSpeakingEvidence, createNextSpeakingTask, mapPlacementLevel, validateSpeakingMissionEvidence } from '../services/speakingLearning.mjs';
 import { validateSimulatedDial } from '../services/speakingDial.mjs';
 import { getUaePriceGuidance, UAE_PRACTICE_PRICES } from '../services/speakingUaePrices.mjs';
+import { makeSpeakingSampleDialogue } from '../services/speakingSampleDialogue.mjs';
 
 const source = (path) => readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
@@ -222,7 +223,7 @@ test('rotary disc starts immediately per click, without remounting or losing dig
   assert.match(phone,/rotaryPulseCount\(digit\)/);
   assert.doesNotMatch(phone,/key=\{rotation\.tick\}/);
   assert.doesNotMatch(phone,/setRotation\(/);
-  assert.match(sound,/const pulses = rotaryPulseCount\(digit\)/);
+  assert.match(sound,/const pulses\s*=\s*rotaryPulseCount\(digit\)/);
   assert.match(sound,/ctx\.createBufferSource/);
   assert.match(sound,/context\.state === 'suspended'/);
   assert.match(sound,/digit === '0' \? 10/);
@@ -336,7 +337,7 @@ test('dial audio is prewarmed when lifting receiver and the rotary art is decode
   assert.match(phone,/wheel\.animate\(/);
   assert.match(phone,/currentMotionRef\.current\?\.cancel\(\)/);
   assert.match(sound,/prepare\(\)/);
-  assert.match(sound,/const pulses = rotaryPulseCount\(digit\)/);
+  assert.match(sound,/const pulses\s*=\s*rotaryPulseCount\(digit\)/);
 });
 
 test('page turning uses the next sheet on the reverse, not blank paper that reveals old printed names',()=>{
@@ -361,4 +362,63 @@ test('worksheet-style report uses QUL logo in preview and print, plus verified r
   assert.match(price,/Abu Dhabi silver taxis have an AED 12 minimum trip fare/);
   assert.match(price,/Al Ain or Abu Dhabi/);
   assert.match(price,/not real-time quotes/i);
+});
+
+
+test('rotary sounds use exactly one cached AudioBufferSource per digit, not many live nodes',()=>{
+  const sound=source('services/rotaryDialAudio.ts');
+  assert.match(sound,/const samples=new Map<string,AudioBuffer>/);
+  assert.match(sound,/for\(const digit of '1234567890'\) samples\.set/);
+  assert.match(sound,/const src=ctx\.createBufferSource\(\)/);
+  assert.doesNotMatch(sound,/for\s*\(let i\s*=\s*0;\s*i\s*<\s*pulses;\s*i\+\+\)\s*\{[\s\S]*ctx\.createBufferSource/);
+  const phone=source('components/SpeakingDeskPhone.tsx');
+  assert.match(phone,/soundRef\.current\.prepare\(\)/);
+  assert.match(phone,/currentMotionRef\.current\?\.cancel\(\)/);
+});
+
+test('every report PDF exports exactly two explicit paper pages without transcript overflow',()=>{
+  const speak=source('pages/Speak.tsx');
+  const sample=source('components/SpeakingSuggestedDialogueSheet.tsx');
+  const reportCss=source('components/SpeakingReportSheet.css');
+  assert.match(speak,/const sheets = \[summaryPrintRef\.current, sampleDialoguePrintRef\.current\]/);
+  assert.match(speak,/if\(i>0\)pdf\.addPage\(\)/);
+  assert.match(speak,/fit=Math\.min/);
+  assert.doesNotMatch(speak,/summaryOffset -= pdfHeight/);
+  assert.doesNotMatch(speak,/transcriptPrintRef/);
+  assert.match(speak,/reportPage==='sample'/);
+  assert.match(sample,/makeSpeakingSampleDialogue/);
+  assert.match(sample,/src="\/Logo\.png"/);
+  assert.match(reportCss,/Compact one-page worksheet/);
+});
+
+test('sample conversation is bilingual and directly related to a realistic phone scenario',()=>{
+  for(const [ar,en,matches] of [
+    ['مطعم','Restaurant',/وجبة|meal/],
+    ['صيدلية','Pharmacy',/ضمادات|bandages/],
+    ['تاكسي','Taxi',/المدرسة|school/],
+    ['عيادة','Clinic',/موعد|appointment/],
+    ['مدرسة','School',/الأنشطة|activities/],
+    ['مغسلة','Laundry',/جهازي|device/]
+  ]){
+    const sample=makeSpeakingSampleDialogue({topicAr:ar,topicEn:en,level:'beginner'});
+    assert.equal(sample.lines.length,8);
+    assert.ok(sample.lines.every(x=>x.ar&&x.en&&['learner','agent'].includes(x.role)));
+    assert.match(sample.lines.map(x=>x.ar+' '+x.en).join(' '),matches);
+    assert.match(sample.noteEn,/not a recording or a real transaction/);
+  }
+});
+
+test('alphabet tabs cover old printed letters and conversation log uses a paper tape without AI badges',()=>{
+  const css=source('components/SpeakingFinishing.css');
+  const book=source('components/SpeakingPhoneBook.tsx');
+  const booth=source('components/SpeakingCallBooth.tsx');
+  assert.match(css,/\.qul-clean-book-inside::before/);
+  assert.match(css,/width:11\.9%/);
+  assert.match(css,/\.qul-clean-book-tabs::before/);
+  assert.match(css,/\.qul-clean-book-tabs button/);
+  assert.match(booth,/className=\{'qul-call-receipt '/);
+  assert.match(booth,/qul-call-receipt-paper/);
+  assert.match(booth,/qul-call-receipt-turn/);
+  assert.doesNotMatch(booth,/qul-scene-transcript-toggle/);
+  assert.match(book,/ARABIC_DIRECTORY_LETTERS\.map/);
 });
