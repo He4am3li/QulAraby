@@ -225,7 +225,7 @@ test('rotary disc starts immediately per click, without remounting or losing dig
   assert.doesNotMatch(phone,/setRotation\(/);
   assert.match(sound,/const pulses\s*=\s*rotaryPulseCount\(digit\)/);
   assert.match(sound,/ctx\.createBufferSource/);
-  assert.match(sound,/context\.state === 'suspended'/);
+  assert.match(sound,/context\.state\s*===\s*'suspended'/);
   assert.match(sound,/digit === '0' \? 10/);
 });
 
