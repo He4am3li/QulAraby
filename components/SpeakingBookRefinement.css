@@ -1,0 +1,164 @@
+/* Full-bleed paper surfaces laid into the original photographed leather frame.
+   Unlike earlier rectangular overlays, the paper occupies the entire physical page.
+   The original metal rings remain photo-real as a cropped photo layer above it. */
+.qul-call-scene .qul-clean-book-spread {
+  left: 10.7%;
+  right: 2.9%;
+  top: 3.6%;
+  bottom: 3.5%;
+  perspective: 1500px;
+  isolation: isolate;
+  overflow: visible;
+}
+.qul-call-scene .qul-clean-book-spread::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 3.1% 2.9% 2.5% 2.5% / 2.6%;
+  background:
+    radial-gradient(ellipse at 50% 46%, transparent 0 22%, #86725319 50%, transparent 58%),
+    linear-gradient(90deg, #e9dac2 0%, #fbf2e2 3%, #fff8e9 38%, #d9c6a74f 49.7%, #c6b39460 50.2%, #fbf3e4 54%, #fff9ed 91%, #ead9c1 100%);
+  box-shadow: inset 0 0 11px #ad8b5f26, 0 0 0 1px #e6cfaa77;
+  pointer-events: none;
+}
+.qul-call-scene .qul-clean-book-sheet {
+  display: grid;
+  position: relative;
+  z-index: 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 4.7%;
+  width: 100%;
+  height: 100%;
+  transform: none;
+  transform-style: preserve-3d;
+  pointer-events: auto;
+}
+.qul-call-scene .qul-clean-book-page {
+  position: relative;
+  background:
+    repeating-linear-gradient(to bottom, transparent 0, transparent calc(20% - 1px), #bdaf9854 20%, transparent calc(20% + 1px)),
+    linear-gradient(91deg, #f7ecdc90, #fff9ef85 34%, #faf0df79 100%) !important;
+  box-shadow: none !important;
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  padding: 2.8% 4.3% 3%;
+  gap: 0;
+}
+.qul-call-scene .qul-clean-book-page:last-child {
+  background:
+    repeating-linear-gradient(to bottom, transparent 0, transparent calc(20% - 1px), #bdaf9854 20%, transparent calc(20% + 1px)),
+    linear-gradient(95deg,#f2e3cc77,#fff9ee70 30%,#f4e6d17a) !important;
+}
+.qul-call-scene .qul-clean-book-entry {
+  border: 0;
+  border-bottom: 1px solid #ae9d8461;
+  border-radius: 0;
+  background: transparent !important;
+  padding: 3px 2px;
+  gap: 1px;
+}
+.qul-call-scene .qul-clean-book-entry:hover:not(:disabled),
+.qul-call-scene .qul-clean-book-entry:focus-visible {
+  background: #eee2cf96 !important;
+  outline: 1px dashed #ab9372;
+}
+.qul-call-scene .qul-clean-book-entry.selected {
+  box-shadow: inset 0 -2px 0 #b38b56b3;
+}
+.qul-call-scene .qul-clean-book-spine-photo {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  clip-path: polygon(47.2% 0, 54.6% 0, 54.6% 100%, 47.2% 100%);
+}
+.qul-call-scene .qul-clean-book-tabs {
+  z-index: 8;
+  background: transparent;
+  border: 0;
+}
+.qul-call-scene .qul-clean-book-photo {
+  /* Only the leather border and printed binding remain visible.
+     Old printed numbers are permanently covered by the full-bleed paper. */
+  pointer-events: none;
+}
+.qul-call-scene .qul-clean-book-turnleaf {
+  position: absolute;
+  z-index: 9;
+  top: 0;
+  bottom: 0;
+  width: 48%;
+  border: 1px solid #d1b9957a;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  will-change: transform;
+  box-shadow: -5px 4px 13px #71594032;
+}
+.qul-call-scene .qul-clean-book-turnleaf.forward { left: 2%; transform-origin: right center; }
+.qul-call-scene .qul-clean-book-turnleaf.backward { right: 2%; transform-origin: left center; }
+.qul-call-scene .qul-clean-book-leaf-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  padding: 10px;
+  border: 1px solid #e3d0b4;
+  background:
+    repeating-linear-gradient(180deg,transparent 0 29px,#b4a28a55 30px, transparent 31px),
+    linear-gradient(103deg,#f8eddd,#fff8e9 40%,#e9d9c0);
+  box-shadow: inset -8px 0 14px #6f543b20;
+}
+.qul-call-scene .qul-clean-book-leaf-face.back {
+  transform: rotateY(180deg);
+  background: repeating-linear-gradient(180deg,transparent 0 29px,#b4a28a55 30px,transparent 31px),linear-gradient(95deg,#e7d4b9,#fff7e8 65%,#f4e8d2);
+  box-shadow: inset 8px 0 14px #6f543b30;
+}
+.qul-call-scene .qul-clean-book-leaf-face .qul-clean-book-entry { flex: 1 1 0; }
+.qul-call-scene .qul-clean-book-leaf-face.back .qul-clean-book-entry { visibility:hidden; }
+.qul-object-hint-host { position:relative; }
+.qul-object-hint {
+  position: absolute;
+  z-index: 35;
+  left: 50%;
+  top: 2%;
+  transform: translate(-50%, 6px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  max-width: min(92%, 285px);
+  min-width: 145px;
+  padding: 9px 14px;
+  border: 1px solid #cfb99a;
+  border-radius: 11px;
+  background: #fff9efee;
+  color: #664b39;
+  box-shadow: 0 7px 25px #563a2430;
+  text-align: center;
+  font: 800 11px/1.5 'Tajawal',system-ui,sans-serif;
+  white-space: normal;
+  transition: opacity .16s ease, transform .16s ease, visibility .16s;
+  backdrop-filter: blur(12px);
+}
+.qul-object-hint-host:hover > .qul-object-hint,
+.qul-object-hint-host:focus-within > .qul-object-hint {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.qul-object-hint-host:has(.qul-clean-book-inside) > .qul-object-hint { top: 1%; }
+@media (max-width: 900px) {
+  .qul-object-hint { font-size: 10px; max-width: 75%; top: 2%; }
+  .qul-call-scene .qul-clean-book-page { padding: 1.5% 2.5%; }
+  .qul-call-scene .qul-clean-book-turnleaf { width: 48%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qul-object-hint { transition: none; }
+  .qul-call-scene .qul-clean-book-turnleaf { display: none; }
+}
