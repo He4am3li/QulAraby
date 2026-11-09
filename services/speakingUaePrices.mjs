@@ -34,7 +34,8 @@ export const getUaePriceGuidance = (contact = {}) => {
     reference ? 'Indicative educational price EXAMPLES, not real-time quotes: '+reference+'.' :
       'No reliable example for this particular service: do not invent an exact price. Explain the price depends on the provider and details.',
     'State prices as approximate, for example حوالي or تقريبًا. Adjust for the item, quantity and emirate.',
-    'Dubai metered taxis have a minimum fare near AED 12, but fares vary by destination and emirate. Never apply Dubai rates universally.',
+    'Abu Dhabi silver taxis have an AED 12 minimum trip fare (Abu Dhabi Mobility), with a daytime flag fall of AED 5 and AED 1.82/km; Dubai taxis also have an AED 12 minimum road-pickup trip fare (RTA). These are official tariff references, NOT a fixed quote for any individual journey.',
+    'If the fictional trip starts in Al Ain or Abu Dhabi, use the Abu Dhabi tariff model as context. Do not apply Dubai kilometer rates or booking fees to Al Ain. Price estimates must depend on distance and time.',
     'Do not recommend, prescribe, quote a price for a named medicine, or suggest doses. Refer medical decisions to a real pharmacist or physician.',
     'These are fictional practice scenarios: never claim to make real orders, appointments, deliveries or payments.'
   ].join('\n');
