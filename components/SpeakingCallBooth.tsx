@@ -10,6 +10,7 @@ import { EVERYDAY_CALL_CONTACTS } from '../data/speakingEverydayContacts';
 import { ADDITIONAL_EVERYDAY_CONTACTS } from '../data/speakingExtraEverydayContacts';
 import './SpeakingSourceAssets.css';
 import { SpeakingDeskPhone } from './SpeakingDeskPhone';
+import './SpeakingFinishing.css';
 
 export type CallContact = SpeakingPhoneContact;
 export const CALL_CONTACTS: CallContact[] = [...EVERYDAY_CALL_CONTACTS, ...ADDITIONAL_EVERYDAY_CONTACTS];
