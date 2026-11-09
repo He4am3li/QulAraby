@@ -26,11 +26,24 @@ export const SpeakingDeskPhone: React.FC<DeskPhoneProps> = ({
   const wheelRef = React.useRef<HTMLImageElement | null>(null);
   const currentMotionRef = React.useRef<Animation | null>(null);
   const soundRef = React.useRef<ReturnType<typeof createRotarySoundPlayer> | null>(null);
-  React.useEffect(() => () => {
-    currentMotionRef.current?.cancel();
-    soundRef.current?.close();
-    soundRef.current = null;
+  React.useEffect(() => {
+    // Decode once before the first click, otherwise Safari may stall while decoding
+    // the wheel's AVIF as the user rotates it.
+    const wheel = wheelRef.current;
+    if (wheel && typeof wheel.decode === 'function') {
+      void wheel.decode().catch(() => undefined);
+    }
+    return () => {
+      currentMotionRef.current?.cancel();
+      soundRef.current?.close();
+      soundRef.current = null;
+    };
   }, []);
+  const liftReceiver = () => {
+    if (!soundRef.current) soundRef.current = createRotarySoundPlayer();
+    soundRef.current.prepare();
+    onLift();
+  };
   const canDial=offHook&&!loading&&!active;
   const pressDigit=(digit:string)=>{
     if(!canDial)return;
@@ -67,12 +80,12 @@ export const SpeakingDeskPhone: React.FC<DeskPhoneProps> = ({
         animate={{opacity:offHook?1:0}}
         transition={reducedMotion?{duration:0}:{duration:.42,ease:'easeInOut'}}/>
       <button type="button" className="qul-phone-receiver-hit" disabled={loading}
-        onClick={offHook?onHangup:onLift}
+        onClick={offHook?onHangup:liftReceiver}
         aria-label={offHook?(ar?'إعادة السماعة إلى مكانها':'Return the receiver'):(ar?'رفع السماعة':'Lift the receiver')}/>
       <div className="qul-phone-native-dial" role="group"
         aria-label={ar?'قرص الأرقام الدوار':'Rotary number dial'}>
         <img ref={wheelRef} src="/assets/speaking/phone-wheel-native.avif"
-          draggable={false} alt="" aria-hidden="true" decoding="async" />
+          draggable={false} alt="" aria-hidden="true" decoding="sync" loading="eager" />
         {DIAL_HOLES.map(([digit,x,y])=>(
           <button type="button" key={digit} className="qul-phone-native-key"
             disabled={!canDial} style={{left:x+'%',top:y+'%'}} onClick={()=>pressDigit(digit)}
