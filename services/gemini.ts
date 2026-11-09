@@ -944,7 +944,7 @@ ${historyText.slice(0, 12000)}`,
         next_practice: parsed.next_practice?.ar && parsed.next_practice?.en
           ? parsed.next_practice : createFallbackInsights().next_practice,
         missionEvidence: validateSpeakingMissionEvidence(
-          validTurns, mission?.objectivesAr || [], parsed.mission_evidence
+          validTurns, Array.from(mission?.objectivesAr || []), parsed.mission_evidence
         ),
         assessmentStatus: 'analyzed',
       };
