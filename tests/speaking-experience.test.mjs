@@ -111,7 +111,7 @@ test('real leather cover is shown alone before opening and every contact is clic
   const css=source('components/SpeakingMinimalPolish.css');
   assert.ok(book.includes('useState(false)'));
   assert.ok(book.includes('phonebook-cover.avif'));
-  assert.ok(book.includes('phonebook-open-clean.avif'));
+  assert.ok(book.includes('phonebook-open-clean-v2.avif'));
   assert.ok(book.includes('onClick={()=>setOpen(true)}'));
   assert.ok(book.includes('ARABIC_DIRECTORY_LETTERS.map'));
   assert.ok(book.includes('directoryLetterOf(c.ar)===letter'));
@@ -178,7 +178,7 @@ test('iPhone photos have an in-flow canvas spacer so the telephone cannot disapp
   assert.match(css,/\.qul-call-scene \.qul-scene-show-book \.qul-scene-phone-pane\[data-pane="phone"\]/);
   assert.match(css,/aspect-ratio: 789 \/ 560 !important/);
   assert.match(book,/phonebook-cover\.avif/);
-  assert.match(book,/phonebook-open-clean\.avif/);
+  assert.match(book,/phonebook-open-clean-v2\.avif/);
 });
 
 test('both untouched phone photographs share registered base coordinates without extra receiver or cord',()=>{
@@ -297,12 +297,22 @@ test('subtle bilingual hints do not change the base telephone or notebook artwor
 test('live contacts sit on cleaned original paper with no pasted rectangles or old printed names',()=>{
   const book=source('components/SpeakingPhoneBook.tsx');
   const css=source('components/SpeakingBookRefinement.css');
-  assert.match(book,/phonebook-open-clean\.avif/);
+  assert.match(book,/phonebook-open-clean-v2\.avif/);
   assert.match(css,/\.qul-clean-book-spread::before\s*\{\s*display: none !important;/);
   assert.match(css,/\.qul-clean-book-page:last-child\s*\{\s*background: transparent !important;/);
   const original=readFileSync(new URL('../public/assets/speaking/phonebook-open.avif',import.meta.url));
-  const cleaned=readFileSync(new URL('../public/assets/speaking/phonebook-open-clean.avif',import.meta.url));
+  const cleaned=readFileSync(new URL('../public/assets/speaking/phonebook-open-clean-v2.avif',import.meta.url));
   assert.ok(original.length>4000);
   assert.ok(cleaned.length>4000);
   assert.equal(cleaned.toString('ascii',4,12),'ftypavif');
+});
+
+
+test('touch devices never keep directory guidance pinned over contact names',()=>{
+  const css=source('components/SpeakingBookRefinement.css');
+  assert.match(css,/@media \(hover:none\)/);
+  assert.match(css,/\.qul-object-hint-host:focus-within:not\(:hover\):not\(:has\(:focus-visible\)\)/);
+  assert.match(css,/display: none !important/);
+  const book=source('components/SpeakingPhoneBook.tsx');
+  assert.match(book,/phonebook-open-clean-v2\.avif/);
 });
