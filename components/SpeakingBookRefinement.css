@@ -192,3 +192,26 @@
 .qul-call-scene .qul-clean-book-entry.selected {
   box-shadow: inset 0 -2px 0 #b38b56b3 !important;
 }
+
+
+/* Touchscreens must never retain a large focus tooltip above the book after tapping
+   a letter. Desktop hover and keyboard focus-visible still provide guidance. */
+.qul-object-hint-host:focus-within:not(:hover):not(:has(:focus-visible)) > .qul-object-hint {
+  opacity: 0;
+  visibility: hidden;
+}
+@media (hover:none) {
+  .qul-object-hint-host > .qul-object-hint,
+  .qul-object-hint-host:hover > .qul-object-hint,
+  .qul-object-hint-host:focus-within > .qul-object-hint {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    display: none !important;
+  }
+}
+/* The text remains legible at real iPhone widths without any floating paper panels. */
+@media (max-width:530px) {
+  .qul-call-scene .qul-clean-book-ar { font-size: clamp(11px,3.2vw,14px) !important; }
+  .qul-call-scene .qul-clean-book-en { font-size: clamp(8px,2.25vw,10px) !important; }
+  .qul-call-scene .qul-clean-book-ext { font-size: clamp(11px,2.8vw,13px) !important; }
+}
