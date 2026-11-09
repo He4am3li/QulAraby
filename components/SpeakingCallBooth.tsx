@@ -202,25 +202,28 @@ export const SpeakingCallBooth: React.FC<CallBoothProps> = ({
           <SpeakingPhoneBook lang={lang} contacts={CALL_CONTACTS}
             selectedId={bookSelection} disabled={busy} onSelect={selectBookEntry}/>
           {(showScript || busy) && (
-          <section className="qul-scene-transcript" aria-label={ar?'سجل المكالمة':'Call transcript'}>
-            <button type="button" onClick={()=>setShowScript(value=>!value)} aria-expanded={showScript}
-              className="qul-scene-transcript-toggle">
-              <BookOpen size={17}/>{ar?'سجل المحادثة':'Conversation log'}
-              <span>{showScript?(ar?'إخفاء':'Hide'):(ar?'عرض':'Show')}</span>
-            </button>
-            {showScript && (
-              <div ref={transcriptRef} className="qul-scene-transcript-lines">
-                {allTurns.length
-                  ? allTurns.slice(-8).map((turn,index)=>(
-                    <div key={index} className={'qul-scene-transcript-line '+turn.role}>
-                      <strong>{turn.role==='ai'?(ar?contact.agentAr:contact.agentEn):(ar?'أنت':'You')}</strong>
-                      <p dir="auto">{turn.text}</p>
-                    </div>
-                  ))
-                  : <p>{ar?'سيظهر نص الحوار هنا عند بدء المكالمة.':'The transcript will appear after the call starts.'}</p>}
-              </div>
-            )}
-          </section>
+            <section className={'qul-call-receipt '+(showScript?'is-open':'')}
+              aria-label={ar?'ورقة سجل المكالمة':'Telephone call record'}>
+              <button type="button" className="qul-call-receipt-toggle"
+                onClick={()=>setShowScript(value=>!value)} aria-expanded={showScript}>
+                <span className="qul-receipt-smallprint" dir="ltr">QUL / CALL RECORD</span>
+                <strong>{ar?'شريط المحادثة':'Conversation paper tape'}</strong>
+                <span className="qul-receipt-fold">{showScript?(ar?'طي الورقة':'Fold'):(ar?'فتح الورقة':'Unfold')}</span>
+              </button>
+              {showScript && <div ref={transcriptRef} className="qul-call-receipt-paper" role="log"
+                aria-label={ar?'نص المكالمة':'Call transcript'}>
+                {allTurns.length ? allTurns.slice(-12).map((turn,index)=>(
+                  <div className={'qul-call-receipt-turn '+turn.role} key={index}>
+                    <small>{turn.role==='ai'?(ar?contact.agentAr:contact.agentEn):(ar?'الطالب':'Learner')}</small>
+                    <p dir="auto">{turn.text}</p>
+                  </div>
+                )) : (
+                  <p className="qul-call-receipt-empty">
+                    {ar?'تظهر عبارات المحادثة هنا عند التحدث.':'Spoken turns will appear here during the call.'}
+                  </p>
+                )}
+              </div>}
+            </section>
           )}
         </div>
       </div>
