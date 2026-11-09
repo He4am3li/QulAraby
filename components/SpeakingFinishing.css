@@ -1,0 +1,199 @@
+/* QUL speaking finishing details: tactile leather alphabet, rotary compositing,
+   and the call record printed as a folded strip coming out below the directory. */
+
+/* Mask the OLD letters printed inside the reference artwork completely, not
+   just with transparent buttons that let them show between the new labels. */
+.qul-call-scene .qul-clean-book-inside::before {
+  content:"";
+  position:absolute;
+  z-index:5;
+  left:0;
+  top:4.5%;
+  width:11.9%;
+  height:91%;
+  pointer-events:none;
+  border-radius:8px 2px 2px 11px;
+  background:
+    repeating-linear-gradient(90deg,#4f3426 0px,#754731 2px,#593622 3px,#482b21 5px),
+    linear-gradient(#4f3024,#342017);
+  border:1px solid #5c3b26;
+  box-shadow:inset 5px 0 8px #1f100a9b,1px 1px 3px #140f0a77;
+}
+.qul-call-scene .qul-clean-book-tabs {
+  z-index:8;
+  isolation:isolate;
+  left:.65%;
+  top:7.5%;
+  width:10.3%;
+  height:84.5%;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:repeat(14,minmax(0,1fr));
+  grid-auto-flow:column;
+  gap:1px 2px;
+  border:0;
+  border-radius:0;
+  padding:2px 1px;
+  background:transparent;
+}
+.qul-call-scene .qul-clean-book-tabs::before {
+  content:"";
+  position:absolute;
+  inset:-1.5% -2%;
+  z-index:-1;
+  pointer-events:none;
+  border-radius:7px 1px 1px 8px;
+  background:
+    repeating-linear-gradient(0deg,#ead3b4 0px,#ebd6b9 2px,#c7ad89 3px,#dec6a5 4px),
+    linear-gradient(90deg,#b28b5f,#ead1ad);
+  box-shadow:inset -3px 0 6px #70503380,-3px 1px 5px #28180b61;
+}
+.qul-call-scene .qul-clean-book-tabs button {
+  min-width:0;
+  min-height:0;
+  position:relative;
+  padding:0;
+  border:1px solid #b89c72;
+  border-inline-start:2px solid #92734f;
+  border-radius:6px 2px 2px 6px;
+  color:#4c3a27;
+  text-shadow:0 1px #fff5;
+  background:
+    radial-gradient(ellipse at 28% 19%,#fff4dacc,transparent 55%),
+    linear-gradient(100deg,#d8ba91 0%,#f3dfbd 37%,#e2c5a0 80%,#bb9569 100%);
+  font:900 clamp(9px,.84vw,12px)/1 'Tajawal','Cairo',sans-serif;
+  box-shadow:inset 0 1px 1px #fff9,inset -1px -2px 2px #98775477,-1px 1px 2px #3b251b56;
+  transform:translate3d(0,0,0);
+  transition:transform .16s ease,filter .16s ease;
+}
+.qul-call-scene .qul-clean-book-tabs button:nth-child(even){
+  background:linear-gradient(108deg,#cdb087,#f3dfc4 50%,#d0aa7b);
+}
+.qul-call-scene .qul-clean-book-tabs button.active {
+  z-index:2;
+  border-color:#725332;
+  color:#fff3dc;
+  text-shadow:none;
+  background:linear-gradient(110deg,#725039,#a17c53 54%,#4f3425);
+  box-shadow:inset 0 1px #c9ab796b,0 2px 4px #39251494;
+  transform:translate3d(-2px,0,0);
+}
+.qul-call-scene .qul-clean-book-tabs button:hover:not(:disabled) {
+  filter:brightness(1.07);
+  transform:translate3d(-2px,0,0);
+}
+.qul-call-scene .qul-clean-book-tabs button:focus-visible{
+  outline:2px solid #263c51;
+  outline-offset:1px;
+}
+/* Paper tape unfolds from the lower edge of the real notebook.
+   No AI icons, colored chat bubbles or floating card frames. */
+.qul-call-scene .qul-call-receipt{
+  position:relative;
+  z-index:7;
+  flex:0 0 auto;
+  width:min(88%,510px);
+  align-self:center;
+  margin:-5px auto 1px;
+  padding:0 13px 9px;
+  background:
+    repeating-linear-gradient(0deg,#f2e8d6 0 27px,#dccdb64c 28px,#f4ead8 29px),
+    linear-gradient(90deg,#f0e4ce,#fff8e9 45%,#eee0cb);
+  box-shadow:0 5px 9px #49382c29,inset 0 2px #fff9;
+  color:#594d43;
+  clip-path:polygon(0 0,100% 0,100% 96%,98% 98%,96% 97%,94% 99%,92% 97%,90% 99%,88% 97%,86% 99%,84% 97%,82% 99%,80% 97%,78% 99%,76% 97%,74% 99%,72% 97%,70% 99%,68% 97%,66% 99%,64% 97%,62% 99%,60% 97%,58% 99%,56% 97%,54% 99%,52% 97%,50% 99%,48% 97%,46% 99%,44% 97%,42% 99%,40% 97%,38% 99%,36% 97%,34% 99%,32% 97%,30% 99%,28% 97%,26% 99%,24% 97%,22% 99%,20% 97%,18% 99%,16% 97%,14% 99%,12% 97%,10% 99%,8% 97%,6% 99%,4% 97%,2% 99%,0 97%);
+}
+.qul-call-scene .qul-call-receipt::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:8%;
+  right:8%;
+  height:3px;
+  background:linear-gradient(#c5a982,#f3dfc1);
+  border-radius:0 0 10px 10px;
+}
+.qul-call-scene .qul-call-receipt-toggle{
+  padding:11px 0 7px;
+  width:100%;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+  text-align:start;
+  border:0;
+  background:transparent;
+  color:#564b41;
+  cursor:pointer;
+}
+.qul-call-scene .qul-receipt-smallprint{
+  font:700 7px ui-monospace,monospace;
+  letter-spacing:.09em;
+  color:#a49179;
+}
+.qul-call-scene .qul-call-receipt-toggle strong{
+  font:900 11px 'Tajawal',sans-serif;
+}
+.qul-call-scene .qul-receipt-fold{
+  margin-inline-start:auto;
+  color:#907b60;
+  font-size:9px;
+  font-weight:800;
+  border-bottom:1px solid #ac9a83;
+}
+.qul-call-scene .qul-call-receipt-paper{
+  max-height:130px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  border-top:1px solid #d9c7aa;
+  padding:4px 1px 8px;
+}
+.qul-call-scene .qul-call-receipt-turn{
+  padding:7px 0 5px;
+  border-bottom:1px solid #bca78b64;
+  display:flex;
+  align-items:baseline;
+  gap:9px;
+}
+.qul-call-scene .qul-call-receipt-turn small{
+  flex:0 0 72px;
+  max-width:72px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font:800 9px 'Tajawal',sans-serif;
+  color:#9a7a53;
+}
+.qul-call-scene .qul-call-receipt-turn.user small{color:#47726b}
+.qul-call-scene .qul-call-receipt-turn p{
+  flex:1;
+  margin:0;
+  font:700 11px/1.55 'Tajawal',sans-serif;
+  color:#443b34;
+  overflow-wrap:anywhere;
+}
+.qul-call-scene .qul-call-receipt-empty{
+  margin:10px auto;
+  color:#95816c;
+  font:750 10px 'Tajawal',sans-serif;
+  text-align:center;
+}
+/* Animate the photographed metal dial on its own compositor layer.
+   No frame-by-frame React rendering is needed during a rotation. */
+.qul-call-scene .qul-phone-native-dial > img{
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  transform:translateZ(0);
+}
+@media(max-width:900px){
+ .qul-call-scene .qul-call-receipt{width:min(92%,420px);margin-top:0}
+ .qul-call-scene .qul-clean-book-tabs{gap:1px;width:11%;left:.2%}
+ .qul-call-scene .qul-clean-book-tabs button{font-size:clamp(8px,2.4vw,11px)}
+ .qul-call-scene .qul-call-receipt-paper{max-height:min(25dvh,155px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .qul-call-scene .qul-clean-book-tabs button{transition:none}
+ .qul-call-scene .qul-call-receipt{clip-path:none}
+}
