@@ -162,3 +162,33 @@
   .qul-object-hint { transition: none; }
   .qul-call-scene .qul-clean-book-turnleaf { display: none; }
 }
+
+
+/* The base photograph is now cleaned in the asset itself.
+   Do not draw a second cream rectangle on top of the user's real paper:
+   readable live entries are transparent text sitting directly on the
+   original paper texture, rules, stitch and ring shadows. */
+.qul-call-scene .qul-clean-book-spread::before {
+  display: none !important;
+}
+.qul-call-scene .qul-clean-book-page,
+.qul-call-scene .qul-clean-book-page:last-child {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  padding-inline: 4%;
+}
+.qul-call-scene .qul-clean-book-entry {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.qul-call-scene .qul-clean-book-entry:hover:not(:disabled),
+.qul-call-scene .qul-clean-book-entry:focus-visible {
+  background: #fff4d846 !important;
+  outline: 1px dotted #b1936f8c;
+}
+.qul-call-scene .qul-clean-book-entry.selected {
+  box-shadow: inset 0 -2px 0 #b38b56b3 !important;
+}
