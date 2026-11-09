@@ -1106,173 +1106,60 @@ export const Speak: React.FC = () => {
         {/* Main Content Area */}
         <main className={`${showMobileOptions && (speakingBranch === 'booth' || setupMode) ? 'hidden' : 'flex'} lg:flex flex-1 min-w-0 min-h-0 flex-col overflow-hidden relative`}>
           {showSummary && (
-            <div className="absolute inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm p-4 flex items-center justify-center animate-in fade-in duration-300">
-              <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl flex flex-col max-h-[90%] overflow-hidden animate-in zoom-in-95 duration-500">
-                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-blue-50/30">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-gradient-to-br from-[#2563eb] to-[#059669] text-white rounded-2xl shadow-lg">
-                      <Sparkles size={22} />
+            <div className="absolute inset-0 z-[60] bg-slate-900/75 backdrop-blur-sm px-2 py-3 sm:p-4 flex items-center justify-center animate-in fade-in duration-300"
+              role="dialog" aria-modal="true" aria-label={lang === 'ar' ? 'معاينة تقرير المحادثة' : 'Speaking report preview'}>
+              <div className="bg-slate-100 rounded-2xl max-w-2xl w-full max-h-[96%] flex flex-col overflow-hidden shadow-2xl border border-slate-300/80">
+                <div className="bg-white px-4 py-3 border-b border-slate-200 flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                      <FileText size={18} />
                     </div>
-                    <div>
-                      <h3 className="text-xl font-black text-slate-800 arabic-font">{t.summaryTitle}</h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeTopic?.ar} • {selectedLevel?.ar}</p>
-                    </div>
-                  </div>
-                  <button onClick={() => { setShowSummary(false); setSetupMode(true); }} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-all">
-                    <X size={24} />
-                  </button>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto p-6 custom-scroll">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    
-                    <div className="lg:col-span-2 space-y-6">
-                      {generatingInsights ? (
-                        <div className="p-12 flex flex-col items-center justify-center text-center space-y-4 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200">
-                          <Loader2 size={48} className="animate-spin text-[#2563eb]" />
-                          <p className="font-black text-slate-400 uppercase text-xs tracking-widest">تحليل الجلسة بذكاء...</p>
-                        </div>
-                      ) : insights && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5">
-                          <div className="rounded-3xl border border-blue-100 bg-blue-50/60 p-5 space-y-3">
-                            <p className="font-black text-sm text-slate-800">{lang === 'ar' ? 'دليل التحدث من النص' : 'Speaking evidence from transcript'}</p>
-                            <div className="grid grid-cols-3 gap-2 text-center">
-                              {[
-                                [speakingEvidence.learnerTurns, lang === 'ar' ? 'مداخلات الطالب' : 'Learner turns'],
-                                [speakingEvidence.arabicWords, lang === 'ar' ? 'كلمات عربية' : 'Arabic words'],
-                                [speakingEvidence.uniqueArabicWords, lang === 'ar' ? 'كلمات مختلفة' : 'Distinct words'],
-                              ].map(([value, label]) => (
-                                <div key={String(label)} className="rounded-2xl bg-white/90 p-3">
-                                  <div className="text-xl font-black text-blue-800" dir="ltr">{value}</div>
-                                  <div className="text-[10px] font-bold text-slate-500">{label}</div>
-                                </div>
-                              ))}
-                            </div>
-                            <p className="text-xs text-slate-600 leading-relaxed">
-                              {lang === 'ar' ? 'مؤشرات من النص المكتوب، وليست قياسًا للنطق أو الطلاقة الصوتية. قد يخطئ تحويل الصوت إلى نص.'
-                                : 'These figures come from the transcript, not an audio pronunciation or fluency assessment. Speech recognition may make errors.'}
-                            </p>
-                            {insights.assessmentStatus === 'limited' && (
-                              <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-bold text-amber-900">
-                                {lang === 'ar' ? 'تعذر إجراء تحليل تربوي موثوق، لذا لا نعرض درجة غير مستندة إلى دليل.'
-                                  : 'A reliable assessment was unavailable. No unsupported score is shown.'}
-                              </p>
-                            )}
-                          </div>
-                          {speakingBranch === 'booth' && Array.isArray(insights.missionEvidence) && (
-                            <div className="rounded-3xl border border-amber-200 bg-amber-50/60 p-5 space-y-3">
-                              <div className="flex items-center justify-between gap-3">
-                                <p className="font-black text-sm text-amber-950">{lang === 'ar' ? 'تذكرة إنجاز المكالمة' : 'Call mission receipt'}</p>
-                                <strong className="font-mono text-amber-900" dir="ltr">{insights.missionEvidence.filter((goal: any) => goal.achieved).length} / {selectedCallContact.objectivesAr.length}</strong>
-                              </div>
-                              <p className="text-xs text-amber-900">{lang === 'ar'
-                                ? 'يُحتسب الهدف إذا ظهرت عبارة عربية داعمة له في كلام الطالب المسجل، وقد يخطئ التفريغ الصوتي.'
-                                : 'Goals count only with supporting Arabic words from the learner transcript. Recognition may be imperfect.'}</p>
-                              <div className="space-y-2">
-                                {insights.missionEvidence.map((goal: any, index: number) => (
-                                  <div className="flex items-center gap-2 text-sm" key={index}>
-                                    {goal.achieved ? <CheckCircle2 size={17} className="text-emerald-600"/> : <span className="w-4 h-4 rounded-full border border-amber-500 shrink-0" />}
-                                    <span className="font-bold text-slate-800 arabic-font">{lang === 'ar' ? goal.goal : selectedCallContact.objectivesEn[index]}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {/* Bilingual Tutor Tip UI */}
-                          <div className="bg-gradient-to-br from-[#2563eb] to-[#059669] p-6 rounded-[2rem] text-white shadow-xl shadow-blue-200 relative overflow-hidden group">
-                             <Lightbulb className="absolute top-4 left-4 opacity-20 group-hover:scale-110 transition-transform" size={80} />
-                             <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-80">{t.tipTitle}</p>
-                             <p className="text-lg font-black arabic-font leading-relaxed mb-2">{insights.tutor_tip_ar}</p>
-                             <p className="text-sm italic opacity-90 border-t border-white/20 pt-2">{insights.tutor_tip_en}</p>
-                          </div>
-
-                          <div className="bg-white border border-slate-100 p-6 rounded-[2rem] shadow-sm">
-                             <h4 className="text-xs font-black text-slate-400 uppercase mb-4 flex items-center gap-2">
-                               <BookmarkPlus size={16} className="text-emerald-500" /> {t.vocabTitle}
-                             </h4>
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {insights.key_vocabulary.map((v: any, i: number) => (
-                                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 group">
-                                    <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
-                                      <p className="text-sm font-black text-slate-800 arabic-font leading-none">{v.word}</p>
-                                      <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">{v.translation}</p>
-                                    </div>
-                                    <button 
-                                      onClick={() => handleSaveToVocab(v.word)}
-                                      disabled={savedWords.includes(v.word)}
-                                      className={`p-2 rounded-lg transition-all ${savedWords.includes(v.word) ? 'bg-emerald-50 text-emerald-500' : 'bg-white text-slate-400 hover:text-[#2563eb] shadow-sm'}`}
-                                    >
-                                      {savedWords.includes(v.word) ? <CheckCircle2 size={18} /> : <BookmarkPlus size={18} />}
-                                    </button>
-                                  </div>
-                                ))}
-                             </div>
-                          </div>
-
-                          <div className="rounded-3xl border border-emerald-100 bg-emerald-50/60 p-5 space-y-3">
-                            <p className="font-black text-sm text-emerald-900">{lang === 'ar' ? 'مهمتك التالية' : 'Your next speaking task'}</p>
-                            <p className="text-base font-bold arabic-font text-slate-800" dir="rtl">{nextPractice.promptAr}</p>
-                            <p className="text-xs text-slate-600" dir="ltr">{nextPractice.promptEn}</p>
-                            <button type="button" onClick={() => {
-                              setPracticeGoal(nextPractice.promptAr);
-                              setShowSummary(false);
-                              setSetupMode(true);
-                              setShowMobileOptions(false);
-                            }} className="rounded-xl bg-emerald-700 px-4 py-3 text-sm font-bold text-white">
-                              {lang === 'ar' ? 'تدرب على هذه المهمة' : 'Practice this task'}
-                            </button>
-                          </div>
-                          {insights.corrections && insights.corrections.length > 0 && (
-                            <div className="bg-white border border-slate-100 p-6 rounded-[2rem] shadow-sm">
-                              <h4 className="text-xs font-black text-slate-400 uppercase mb-4">{t.correctionsTitle}</h4>
-                              <div className="space-y-3">
-                                {insights.corrections.map((c: any, i: number) => (
-                                  <div key={i} className="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className="text-xs font-black text-slate-400 line-through arabic-font">{c.original}</span>
-                                      <ChevronRight size={14} className="text-slate-300" />
-                                      <span className="text-sm font-black text-emerald-600 arabic-font">{c.correction}</span>
-                                    </div>
-                                    <p className="text-[10px] text-slate-500 italic">{c.explanation}</p>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="bg-slate-50/50 rounded-[2rem] p-6 border border-slate-100">
-                      <h4 className="text-xs font-black text-slate-400 uppercase mb-4 flex items-center gap-2">
-                        <History size={16} /> {t.historyTitle}
-                      </h4>
-                      <div className="space-y-4 max-h-[500px] overflow-y-auto custom-scroll pr-2">
-                        {conversationHistory.filter(h => h.text.trim()).map((entry, i) => (
-                          <div key={i} className={`flex flex-col ${entry.role === 'ai' ? 'items-start' : 'items-end'}`}>
-                            <div className={`max-w-[90%] p-3 rounded-2xl text-xs font-bold arabic-font ${entry.role === 'ai' ? 'bg-emerald-50 text-emerald-900 rounded-tl-none' : 'bg-white text-slate-700 border border-slate-100 rounded-tr-none shadow-sm'}`}>
-                              {entry.text}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-black text-slate-800">
+                        {lang === 'ar' ? 'معاينة تقرير المحادثة' : 'Speaking Report Preview'}
+                      </h3>
+                      <p className="text-[10px] text-slate-400 font-bold">
+                        {lang === 'ar' ? 'ورقة تقدم قابلة للطباعة والتنزيل' : 'A printable record of your speaking practice'}
+                      </p>
                     </div>
                   </div>
+                  <button type="button" className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center"
+                    aria-label={lang === 'ar' ? 'إغلاق التقرير' : 'Close report'}
+                    onClick={() => { setShowSummary(false); setSetupMode(true); }}>
+                    <X size={18}/>
+                  </button>
                 </div>
-
-                <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-4">
-                  <button 
-                    onClick={handlePrint}
-                    className="flex-1 bg-[#2563eb] hover:bg-blue-700 text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 shadow-xl shadow-blue-200 transition-all active:scale-95"
-                  >
-                    <Download size={20} /> {t.downloadBtn}
-                  </button>
-                  <button 
-                    onClick={() => { setShowSummary(false); setSetupMode(true); }}
-                    className="px-10 bg-slate-900 text-white py-4 rounded-2xl font-black text-sm hover:bg-black transition-all shadow-xl"
-                  >
-                    {t.closeBtn}
-                  </button>
+                <div className="flex-1 overflow-y-auto bg-slate-200/90 p-2 sm:p-4 custom-scroll min-h-0">
+                  {generatingInsights ? (
+                    <div className="min-h-[250px] flex flex-col items-center justify-center gap-3 text-slate-500">
+                      <Loader2 size={29} className="animate-spin"/>
+                      <p className="text-xs font-bold">
+                        {lang === 'ar' ? 'جارٍ إعداد تقرير المحادثة...' : 'Preparing your speaking report...'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="relative w-full max-w-[540px] mx-auto bg-white shadow-xl border border-slate-300 rounded-lg overflow-hidden">
+                      <SpeakingReportSheet
+                        lang={lang}
+                      topicAr={activeTopic?.ar}
+                      topicEn={activeTopic?.en}
+                      levelAr={selectedLevel?.ar}
+                      levelEn={selectedLevel?.en}
+                      evidence={speakingEvidence}
+                      insights={insights}
+                      objectivesAr={speakingBranch === 'booth' ? selectedCallContact.objectivesAr : []}
+                      objectivesEn={speakingBranch === 'booth' ? selectedCallContact.objectivesEn : []}
+                      nextPractice={nextPractice}
+                        mode="preview"
+                      />
+                      <button type="button" disabled={loading} onClick={handlePrint}
+                        className="absolute bottom-3 left-3 w-9 h-9 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-lg flex items-center justify-center border border-white/60 disabled:opacity-50"
+                        title={lang === 'ar' ? 'تنزيل PDF' : 'Download PDF'}
+                        aria-label={lang === 'ar' ? 'تنزيل التقرير PDF' : 'Download speaking report PDF'}>
+                        {loading ? <Loader2 size={18} className="animate-spin"/> : <Download size={18}/>}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1557,124 +1444,23 @@ export const Speak: React.FC = () => {
       
       {/* Hidden Worksheet Template for PDF Generation */}
       <div className="fixed left-[-9999px] top-0 no-print" dir="rtl">
-        {/* Page 1: Summary */}
-        <div 
-          ref={summaryPrintRef}
-          className="w-[800px] bg-white p-12 text-slate-900 arabic-font"
-        >
-          {/* Header */}
-          <div className="border-b-2 border-slate-900 pb-4 mb-6 flex justify-between items-center">
-            <div className="w-1/3">
-              <h1 className="text-base font-bold max-w-[200px] leading-[2] pb-2">{activeTopic?.ar || 'محادثة عامة'}</h1>
-              <p className="text-slate-400 text-[10px] uppercase font-bold">{selectedLevel?.ar || 'مستوى عام'}</p>
-            </div>
-            <div className="w-1/3 text-center">
-              <h2 className="text-2xl font-black leading-relaxed pb-2">تقرير المحادثة الذكي</h2>
-            </div>
-            <div className="w-1/3 flex items-center justify-end gap-3" dir="ltr">
-              <img 
-                src="/Logo.png" 
-                alt="شعار منصة قُل" 
-                className="w-12 h-12 object-contain shrink-0" 
-              />
-              <div className="text-left">
-                <div className="text-xl font-black tracking-tighter text-slate-900 leading-tight">
-                  قُل / QUL
-                </div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Interactive Learning</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Learner Info */}
-          <div className="flex gap-10 mb-8 border-b border-slate-100 pb-4">
-            <div className="flex-1 flex items-center gap-3">
-              <span className="text-xs font-bold text-slate-400 uppercase whitespace-nowrap">اسم المتعلم:</span>
-              <div className="flex-1 border-b border-slate-300 h-6"></div>
-            </div>
-            <div className="w-1/3 flex items-center gap-3">
-              <span className="text-xs font-bold text-slate-400 uppercase whitespace-nowrap">التاريخ:</span>
-              <div className="flex-1 border-b border-slate-300 h-6 text-sm flex items-end font-sans">
-                {new Date().toLocaleDateString('en-GB')}
-              </div>
-            </div>
-          </div>
-
-          {/* Transcript-based evidence is not a test of acoustic pronunciation. */}
-          <div className="mb-7 rounded-xl border border-blue-100 bg-blue-50/50 p-4 text-sm leading-relaxed">
-            <p className="font-bold text-slate-800">مؤشرات النشاط من النص المكتوب</p>
-            <p className="mt-2 text-slate-600">مداخلات الطالب: {speakingEvidence.learnerTurns} | الكلمات العربية: {speakingEvidence.arabicWords} | الكلمات المختلفة: {speakingEvidence.uniqueArabicWords}</p>
-            <p className="mt-2 text-xs text-slate-500">هذه مؤشرات تفريغ نصي ولا تقيس جودة النطق أو الطلاقة الصوتية.</p>
-            {insights?.assessmentStatus === 'limited' && <p className="text-amber-800 text-xs mt-2">تعذر تحليل لغوي موثوق لهذه الجلسة.</p>}
-          </div>
-
-          {insights && (
-            <div className="mb-7 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 text-sm leading-relaxed">
-              <p className="font-bold text-slate-800">المهمة المقترحة التالية</p>
-              <p className="mt-2 arabic-font">{nextPractice.promptAr}</p>
-              <p className="mt-1 text-xs text-slate-600" dir="ltr">{nextPractice.promptEn}</p>
-            </div>
-          )}
-
-          {/* Call mission receipt, based on verified learner transcript evidence. */}
-          {speakingBranch === 'booth' && insights && Array.isArray(insights.missionEvidence) && (
-            <div className="mb-7 rounded-xl border border-amber-200 bg-amber-50/50 p-4">
-              <h2 className="font-bold text-slate-800 mb-2">تذكرة إنجاز مكالمة: {selectedCallContact.ar}</h2>
-              <p className="text-xs text-slate-500 mb-3">يستند التحقق إلى الكلمات العربية الموجودة في سجل كلام الطالب، لا إلى تحليل النطق الصوتي.</p>
-              {insights.missionEvidence.map((item: any, index: number) => (
-                <div key={index} className="flex items-center gap-3 border-b border-amber-100 py-2 text-sm">
-                  <strong className="text-amber-900">{item.achieved ? '✓' : '○'}</strong>
-                  <span className="font-bold text-slate-700">{item.goal}</span>
-                  {item.achieved && <span className="text-xs text-emerald-800">«{item.evidence}»</span>}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Section 1: Tutor Advice */}
-          {insights && (
-            <div className="mb-10">
-              <h2 className="text-lg font-bold bg-slate-100 p-3 rounded-lg mb-4 border-r-4 border-blue-600">نصيحة المعلم الذكي</h2>
-              <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
-                <p className="text-md font-bold mb-3 leading-relaxed text-slate-800">{insights.tutor_tip_ar}</p>
-                <div className="border-t border-blue-100 pt-3" dir="ltr">
-                  <p className="text-xs italic text-slate-500">{insights.tutor_tip_en}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Section 2: Key Vocabulary */}
-          {insights && (
-            <div className="mb-10">
-              <h2 className="text-lg font-bold bg-slate-100 p-3 rounded-lg mb-4 border-r-4 border-emerald-600">مفردات وردت في المحادثة</h2>
-              <div className="grid grid-cols-2 gap-x-12 gap-y-3">
-                {insights.key_vocabulary.map((v: any, i: number) => (
-                  <div key={i} className="flex justify-between items-center border-b border-slate-100 py-2.5">
-                    <span className="text-sm font-bold text-slate-800">{v.word}</span>
-                    <span className="text-xs text-slate-400 font-sans" dir="ltr">{v.translation}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Section 3: Performance Summary */}
-          {insights && (
-            <div className="mb-10">
-              <h2 className="text-lg font-bold bg-slate-100 p-3 rounded-lg mb-4 border-r-4 border-slate-900">ملخص الأداء والتقييم</h2>
-              <div className="p-6 border border-slate-200 rounded-2xl leading-relaxed text-sm text-slate-700 bg-slate-50/30">
-                {insights.summary}
-              </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="mt-20 pt-8 border-t border-slate-100 text-center">
-            <p className="text-[10px] text-slate-400 uppercase tracking-[0.4em]">Generated by Qul Interactive Platform - {new Date().getFullYear()}</p>
-          </div>
+        {/* Page 1: Same worksheet-style sheet as the student's preview. */}
+        <div ref={summaryPrintRef} className="w-[800px] bg-white text-slate-900">
+          <SpeakingReportSheet
+            lang={lang}
+                      topicAr={activeTopic?.ar}
+                      topicEn={activeTopic?.en}
+                      levelAr={selectedLevel?.ar}
+                      levelEn={selectedLevel?.en}
+                      evidence={speakingEvidence}
+                      insights={insights}
+                      objectivesAr={speakingBranch === 'booth' ? selectedCallContact.objectivesAr : []}
+                      objectivesEn={speakingBranch === 'booth' ? selectedCallContact.objectivesEn : []}
+                      nextPractice={nextPractice}
+            mode="print"
+          />
         </div>
-
+        
         {/* Page 2+: Dialogue Log */}
         <div 
           ref={transcriptPrintRef}
