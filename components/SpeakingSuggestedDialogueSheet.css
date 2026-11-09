@@ -1,0 +1,35 @@
+/* QUL second worksheet page, a full-page printable bilingual dialogue. */
+.qul-speaking-sample-sheet{box-sizing:border-box;background:#fff;color:#273749;width:100%;max-width:540px;margin:0 auto;padding:19px 23px 17px;font-family:'Tajawal','Cairo',system-ui,sans-serif;border:1px solid #d5dbe2;box-shadow:0 12px 24px #30436116;display:flex;flex-direction:column;gap:14px;min-width:0;}
+.qul-speaking-sample-sheet *{box-sizing:border-box}
+.qul-sample-header{display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:2px solid #26313c;padding-bottom:12px}
+.qul-sample-header>div{min-width:0}
+.qul-sample-header small{font:800 10px ui-sans-serif,system-ui,sans-serif;color:#8a9aab;letter-spacing:.08em}
+.qul-sample-header h2{font-size:19px;line-height:1.3;font-weight:900;margin:3px 0;color:#243449}
+.qul-sample-header p{color:#7b8895;font-size:11px;font-weight:750;margin:2px 0}
+.qul-sample-header img{width:46px;height:46px;object-fit:contain;flex:none}
+.qul-sample-intro{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:7px;border-bottom:1px solid #d7dfe6;font:800 10px 'Tajawal',sans-serif;color:#495d70}
+.qul-sample-intro>span:last-child{font-weight:650;color:#94a0ac}
+.qul-sample-lines{display:flex;flex-direction:column;gap:0;flex:1;min-height:0}
+.qul-sample-turn{display:flex;gap:11px;align-items:start;min-width:0;padding:10px 0;border-bottom:1px solid #e8eaee}
+.qul-sample-who{flex:0 0 47px;color:#748598;font-weight:900;font-size:10px;padding-top:2px}
+.qul-sample-turn.learner .qul-sample-who{color:#2b766a}
+.qul-sample-utterance{display:flex;flex-direction:column;flex:1;min-width:0;gap:3px}
+.qul-sample-utterance strong{font-size:12px;line-height:1.4;font-weight:850;color:#2e4154}
+.qul-sample-utterance span{font-size:10px;line-height:1.35;font-weight:600;color:#94a0a9}
+.qul-sample-followup{padding:9px 0;border-top:2px solid #344457}
+.qul-sample-followup strong{color:#293f51;font-size:11px}
+.qul-sample-followup p{color:#63778c;font-size:10px;line-height:1.5;margin:4px 0 0}
+.qul-sample-footer{display:flex;justify-content:space-between;gap:8px;border-top:1px solid #d5dce2;padding-top:8px;font:750 9px 'Tajawal',sans-serif;color:#9aa4af}
+.qul-speaking-sample-sheet.is-print{max-width:none;width:800px;height:1131px;padding:39px 43px 30px;gap:21px;border:0;box-shadow:none}
+.qul-speaking-sample-sheet.is-print .qul-sample-header h2{font-size:28px}
+.qul-speaking-sample-sheet.is-print .qul-sample-header p{font-size:15px}
+.qul-speaking-sample-sheet.is-print .qul-sample-header img{width:65px;height:65px}
+.qul-speaking-sample-sheet.is-print .qul-sample-turn{padding:17px 0}
+.qul-speaking-sample-sheet.is-print .qul-sample-who{font-size:15px;flex-basis:76px}
+.qul-speaking-sample-sheet.is-print .qul-sample-utterance strong{font-size:20px}
+.qul-speaking-sample-sheet.is-print .qul-sample-utterance span{font-size:14px}
+.qul-speaking-sample-sheet.is-print .qul-sample-intro{font-size:15px}
+.qul-speaking-sample-sheet.is-print .qul-sample-followup strong{font-size:16px}
+.qul-speaking-sample-sheet.is-print .qul-sample-followup p{font-size:15px}
+.qul-speaking-sample-sheet.is-print .qul-sample-footer{font-size:12px}
+@media(max-width:530px){.qul-speaking-sample-sheet{padding:14px 12px 12px;gap:8px}.qul-sample-header h2{font-size:16px}.qul-sample-turn{padding:7px 0;gap:6px}.qul-sample-who{flex-basis:36px;font-size:9px}.qul-sample-utterance strong{font-size:11px}.qul-sample-utterance span{font-size:9px}.qul-sample-header img{width:36px;height:36px}}
