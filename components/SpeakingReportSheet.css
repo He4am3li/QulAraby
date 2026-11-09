@@ -216,3 +216,63 @@
 @media(max-width:530px) {
   .qul-report-seal { width:36px; height:36px; flex-basis:36px; }
 }
+
+
+/* Compact one-page worksheet, no oversized floating rectangles. */
+.qul-speaking-report-sheet{
+  padding:18px 20px 12px;
+  box-shadow:0 8px 20px #24374810;
+}
+.qul-report-paper-header{padding-bottom:8px;margin-bottom:8px}
+.qul-report-session-meta{gap:0;border-top:1px solid #e2e5e9;border-bottom:1px solid #e2e5e9;margin-bottom:8px}
+.qul-report-session-meta>div{
+  background:transparent!important;border:0;border-inline-end:1px solid #e4e7ea;
+  padding:5px 9px;
+}
+.qul-report-session-meta>div:last-child{border-inline-end:0}
+.qul-report-section{margin-bottom:8px}
+.qul-report-section-title{
+  background:transparent!important;border:0!important;border-bottom:1px solid #b9c2cb!important;
+  padding:3px 0 5px;font-size:11px;margin:0 0 5px;
+}
+.qul-report-evidence{display:flex;align-items:center;gap:0}
+.qul-report-evidence>div{border:0;border-inline-end:1px solid #d9e0e5;padding:3px 10px;flex:1;min-width:0;flex-direction:row;justify-content:center;gap:6px}
+.qul-report-evidence>div:last-child{border-inline-end:0}
+.qul-report-evidence strong{font-size:17px}
+.qul-report-evidence span{font-size:9px}
+.qul-report-caution{margin:3px 0 0;font-size:8px}
+.qul-report-goals{display:flex;gap:5px;flex-wrap:wrap}
+.qul-report-goal{
+  display:flex;align-items:center;gap:4px;border:0;border-bottom:1px solid #e2e6e9;
+  padding:3px 5px;flex:1 1 30%;min-width:90px;
+}
+.qul-report-goal strong{font-size:9px;line-height:1.35}
+.qul-report-goal small{font-size:8px}
+.qul-report-goal-mark{flex:0 0 auto;font-size:11px}
+.qul-report-body-paragraph{padding:2px 1px;font-size:10px;line-height:1.5}
+.qul-report-tutor-tip,.qul-report-next-practice{border:0;border-inline-start:2px solid #c8d0d8;padding:4px 9px}
+.qul-report-tutor-tip p,.qul-report-next-practice p{font-size:10px;line-height:1.45}
+.qul-report-vocabulary{gap:2px 9px}
+.qul-report-vocabulary>div{padding:2px 3px}
+.qul-report-corrections>div{padding:3px 2px}
+.qul-report-paper-footer{margin-top:auto;padding-top:8px}
+.qul-speaking-report-sheet.is-print{
+  width:800px;max-width:none;min-height:1131px;height:auto;
+  padding:32px 39px 28px;display:flex;flex-direction:column;gap:2px;box-shadow:none;
+}
+.qul-speaking-report-sheet.is-print .qul-report-section{margin-bottom:10px}
+.qul-speaking-report-sheet.is-print .qul-report-section-title{font-size:16px;padding:6px 0}
+.qul-speaking-report-sheet.is-print .qul-report-paper-header{margin-bottom:14px}
+.qul-speaking-report-sheet.is-print .qul-report-session-meta strong{font-size:15px}
+.qul-speaking-report-sheet.is-print .qul-report-evidence strong{font-size:25px}
+.qul-speaking-report-sheet.is-print .qul-report-goal strong{font-size:14px}
+.qul-speaking-report-sheet.is-print .qul-report-body-paragraph{font-size:15px;line-height:1.65}
+.qul-speaking-report-sheet.is-print .qul-report-tutor-tip p,.qul-speaking-report-sheet.is-print .qul-report-next-practice p{font-size:14px}
+.qul-speaking-report-sheet.is-print .qul-report-goal{padding:8px}
+.qul-speaking-report-sheet.is-print .qul-report-paper-footer{font-size:12px}
+@media(max-width:530px){
+ .qul-speaking-report-sheet{padding:13px 11px 10px}
+ .qul-report-goals{display:flex;flex-wrap:wrap}
+ .qul-report-goal{flex:1 1 45%;min-width:0}
+ .qul-report-evidence>div{padding:3px 4px;flex-direction:column;gap:0}
+}
