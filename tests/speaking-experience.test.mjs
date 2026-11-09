@@ -111,7 +111,7 @@ test('real leather cover is shown alone before opening and every contact is clic
   const css=source('components/SpeakingMinimalPolish.css');
   assert.ok(book.includes('useState(false)'));
   assert.ok(book.includes('phonebook-cover.avif'));
-  assert.ok(book.includes('phonebook-open.avif'));
+  assert.ok(book.includes('phonebook-open-clean.avif'));
   assert.ok(book.includes('onClick={()=>setOpen(true)}'));
   assert.ok(book.includes('ARABIC_DIRECTORY_LETTERS.map'));
   assert.ok(book.includes('directoryLetterOf(c.ar)===letter'));
@@ -291,4 +291,18 @@ test('subtle bilingual hints do not change the base telephone or notebook artwor
   assert.match(css,/\.qul-object-hint-host:hover/);
   assert.match(css,/\.qul-object-hint-host:focus-within/);
   assert.match(css,/pointer-events: none/);
+});
+
+
+test('live contacts sit on cleaned original paper with no pasted rectangles or old printed names',()=>{
+  const book=source('components/SpeakingPhoneBook.tsx');
+  const css=source('components/SpeakingBookRefinement.css');
+  assert.match(book,/phonebook-open-clean\.avif/);
+  assert.match(css,/\.qul-clean-book-spread::before\s*\{\s*display: none !important;/);
+  assert.match(css,/\.qul-clean-book-page:last-child\s*\{\s*background: transparent !important;/);
+  const original=readFileSync(new URL('../public/assets/speaking/phonebook-open.avif',import.meta.url));
+  const cleaned=readFileSync(new URL('../public/assets/speaking/phonebook-open-clean.avif',import.meta.url));
+  assert.ok(original.length>4000);
+  assert.ok(cleaned.length>4000);
+  assert.equal(cleaned.toString('ascii',4,12),'ftypavif');
 });
