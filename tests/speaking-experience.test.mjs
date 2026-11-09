@@ -94,7 +94,8 @@ test('telephone renders a single intact reference photograph per state, without 
   assert.match(phone,/qul-phone-native-dial/);
   assert.match(phone,/qul-phone-native-key/);
   assert.match(phone,/onDial\(digit\)/);
-  assert.match(phone,/opacity:\[0,1,1,0\]/);
+  assert.match(phone,/animate=\{\{opacity:offHook\?0:1\}\}/);
+  assert.match(phone,/animate=\{\{opacity:offHook\?1:0\}\}/);
   assert.match(css,/qul-phone-native-key:hover/);
   assert.match(css,/background:transparent!important/);
   for(const name of ['phone-closed','phone-lifted','phone-wheel-native']){
