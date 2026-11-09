@@ -35,7 +35,7 @@ export const SpeakingReportSheet: React.FC<SpeakingReportSheetProps> = ({
   const goals=Array.isArray(insights?.missionEvidence)?insights.missionEvidence:[];
   const hasGoals=objectivesAr.length>0;
   const limited=insights?.assessmentStatus!=='analyzed';
-  const title=ar?'تقرير المحادثة':'Speaking Session Report';
+  const title=ar?'ورقة متابعة التحدث':'Speaking Practice Worksheet';
   const labels={
     session:ar?'معلومات الجلسة':'Session details',
     evidence:ar?'مؤشرات من الحوار':'Transcript evidence',
@@ -69,7 +69,9 @@ export const SpeakingReportSheet: React.FC<SpeakingReportSheetProps> = ({
             {ar?'ARABIC SPEAKING PRACTICE':'تقرير ممارسة التحدث بالعربية'}
           </p>
         </div>
-        <div className="qul-report-seal" aria-hidden="true">قُل</div>
+        <div className="qul-report-seal" aria-hidden="true">
+          <img src="/Logo.png" alt="" draggable={false}/>
+        </div>
       </header>
       <div className="qul-report-session-meta">
         <div><span>{labels.session}</span>
