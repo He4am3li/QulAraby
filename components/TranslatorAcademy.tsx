@@ -56,14 +56,14 @@ export const TranslatorAcademy: React.FC<{lang:'ar'|'en'}> = ({lang}) => {
    const result=await evaluateStudentTranslation(task.en,answer,task.ar);
    setReview({correct:result.isCorrect,accuracy:result.accuracy,feedbackAr:result.feedbackAr,feedbackEn:result.feedbackEn,grammarTip:result.grammarTip});
   } catch {
-   const exact=normalize(answer)===normalize(task.ar);
-   setReview({correct:exact,accuracy:exact?100:0,feedbackAr:exact?'ترجمة مطابقة للمرجع.':'تعذر التقييم الدلالي حاليًا. أعد المحاولة عند توفر الخدمة.',feedbackEn:exact?'Your translation matches the reference.':'Semantic evaluation is unavailable. Please retry.',grammarTip:''});
+   const exact=normalize(answer)===normalize(task.ar);setShowReference(true);
+   setReview({correct:exact,accuracy:exact?100:0,feedbackAr:exact?'ترجمة صحيحة.':'التقييم الذكي غير متاح حاليًا، لذلك لا يمكن تقدير صحة إجابتك بدقة. قارن إجابتك بالصياغة المقترحة أدناه.',feedbackEn:exact?'Correct translation.':'AI assessment is currently unavailable, so your answer cannot be graded reliably. Compare it with the suggested translation below.',grammarTip:''});
   } finally {setBusy(false)}
  };
  return <section className="w-full min-w-0 flex-1 min-h-0 overflow-y-auto qul-translation-glass-scene text-[#292d31]" dir={ar?'rtl':'ltr'}>
   <div className="max-w-6xl mx-auto px-4 sm:px-8 py-5 sm:py-8 space-y-5">
    <header className="flex flex-wrap items-end justify-between gap-3 border-b border-[#d8d0c3] pb-5">
-    <div><div className="flex items-center gap-3"><span className="qul-translation-glass-orb" aria-hidden="true"></span><span className="text-[11px] uppercase tracking-[.24em] text-[#847d71] font-bold">QUL / TRANSLATION STUDIO</span></div><h2 className="text-2xl sm:text-4xl font-bold mt-2">{ar?'استوديو الترجمة':'Translation Studio'}</h2><p className="text-sm text-[#777269] mt-2">{ar?'افهم المعنى، اكتب ترجمتك، راجعها، ثم حسّنها.':'Understand, translate, review, then refine.'}</p></div>
+    <h2 className="text-2xl sm:text-4xl font-bold">{ar?'استوديو الترجمة':'Translation Studio'}</h2>
     <div className="text-xs text-[#777269]">{ar?'المهمة':'Task'} {index+1} / {lessons[level].length}</div>
    </header>
    <div className="grid grid-cols-3 gap-2" role="tablist" aria-label={ar?'مستويات الترجمة':'Translation levels'}>
@@ -84,7 +84,7 @@ export const TranslatorAcademy: React.FC<{lang:'ar'|'en'}> = ({lang}) => {
     </article>
    </div>
    {(review||showReference)&&<div className="qul-translation-glass rounded-2xl p-5 sm:p-7 space-y-3" aria-live="polite">
-    {review&&<><div className="flex items-center gap-2 font-bold text-[#203b36]"><CheckCircle2 size={19}/>{ar?'مراجعة الترجمة':'Translation review'}</div><p className="text-sm leading-relaxed">{ar?review.feedbackAr:review.feedbackEn}</p><p className="text-xs text-[#777269]">{ar?'التقدير الآلي':'Automated score'}: {review.accuracy}%</p>{review.grammarTip&&<p className="text-sm text-[#666057]">{review.grammarTip}</p>}</>}
+    {review&&<><div className="flex items-center gap-2 font-bold text-[#203b36]"><CheckCircle2 size={19}/>{ar?'مراجعة الترجمة':'Translation review'}</div><p className="text-sm leading-relaxed">{ar?review.feedbackAr:review.feedbackEn}</p><p className="text-xs text-[#777269]">{ar?'تقدير الترجمة':'Translation score'}: {review.accuracy}%</p>{review.grammarTip&&<p className="text-sm text-[#666057]" dir={ar?'rtl':'ltr'}>{review.grammarTip}</p>}</>}
     {showReference&&<div className="pt-3 border-t border-[#e7dfd3]"><p className="text-xs text-[#777269] mb-2">{ar?'ترجمة مرجعية ممكنة':'One possible reference translation'}</p><p dir="rtl" className="text-lg text-right">{task.ar}</p></div>}
    </div>}
    <footer className="flex flex-wrap justify-between items-center gap-3 pb-5"><button onClick={()=>setShowReference(v=>!v)} className="inline-flex items-center gap-2 text-sm text-[#376a5e] font-bold"><Eye size={17}/>{ar?'عرض ترجمة مرجعية':'Show reference'}</button><button onClick={next} className="inline-flex items-center gap-2 rounded-xl border border-[#cfc5b6] px-5 py-3 font-bold text-sm bg-white">{ar?'المهمة التالية':'Next task'} {ar?<ChevronLeft size={17}/>:<ChevronRight size={17}/>}</button></footer>
