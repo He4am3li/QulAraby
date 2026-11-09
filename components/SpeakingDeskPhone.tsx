@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
+import { createRotarySoundPlayer, rotaryDurationMs, rotaryPulseCount } from '../services/rotaryDialAudio';
 import { Mic, MicOff } from 'lucide-react';
 import type { CallContact } from './SpeakingCallBooth';
 import './SpeakingSourceAssets.css';
@@ -22,12 +23,31 @@ export const SpeakingDeskPhone: React.FC<DeskPhoneProps> = ({
   onDial,onLift,onHangup,onToggleMic,meterRef,
 }) => {
   const ar=lang==='ar', reducedMotion=useReducedMotion();
-  const [rotation,setRotation]=React.useState({tick:0,digit:'1'});
+  const wheelRef = React.useRef<HTMLImageElement | null>(null);
+  const currentMotionRef = React.useRef<Animation | null>(null);
+  const soundRef = React.useRef<ReturnType<typeof createRotarySoundPlayer> | null>(null);
+  React.useEffect(() => () => {
+    currentMotionRef.current?.cancel();
+    soundRef.current?.close();
+    soundRef.current = null;
+  }, []);
   const canDial=offHook&&!loading&&!active;
   const pressDigit=(digit:string)=>{
     if(!canDial)return;
-    setRotation(prev=>({tick:prev.tick+1,digit}));
+    // The learner gets the new digit immediately even if a previous turn is still finishing.
     onDial(digit);
+    if (!soundRef.current) soundRef.current = createRotarySoundPlayer();
+    soundRef.current.play(digit);
+    const wheel = wheelRef.current;
+    if (!wheel || reducedMotion || typeof wheel.animate !== 'function') return;
+    currentMotionRef.current?.cancel();
+    const sweep = Math.min(152, 19 + rotaryPulseCount(digit) * 12.6);
+    currentMotionRef.current = wheel.animate([
+      { transform:'rotate(0deg)', opacity:0, offset:0 },
+      { transform:`rotate(${sweep}deg)`, opacity:1, offset:.22 },
+      { transform:`rotate(${sweep}deg)`, opacity:1, offset:.31 },
+      { transform:'rotate(0deg)', opacity:0, offset:1 }
+    ], { duration:rotaryDurationMs(digit), easing:'cubic-bezier(.22,.65,.27,1)', fill:'none' });
   };
   return (
     <div className={'qul-source-telephone qul-photo-phone '+(offHook?'is-lifted':'is-cradled')}
@@ -51,13 +71,8 @@ export const SpeakingDeskPhone: React.FC<DeskPhoneProps> = ({
         aria-label={offHook?(ar?'إعادة السماعة إلى مكانها':'Return the receiver'):(ar?'رفع السماعة':'Lift the receiver')}/>
       <div className="qul-phone-native-dial" role="group"
         aria-label={ar?'قرص الأرقام الدوار':'Rotary number dial'}>
-        <motion.img key={rotation.tick} src="/assets/speaking/phone-wheel-native.avif"
-          draggable={false} alt="" aria-hidden="true"
-          initial={{opacity:0,rotate:0}}
-          animate={rotation.tick&&!reducedMotion&&offHook?
-            {rotate:[0,(rotation.digit==='0'?10:Number(rotation.digit))*16,0],opacity:[0,1,1,0]}:
-            {rotate:0,opacity:0}}
-          transition={{duration:reducedMotion?0:.79,times:[0,.08,.55,1],ease:'easeInOut'}}/>
+        <img ref={wheelRef} src="/assets/speaking/phone-wheel-native.avif"
+          draggable={false} alt="" aria-hidden="true" decoding="async" />
         {DIAL_HOLES.map(([digit,x,y])=>(
           <button type="button" key={digit} className="qul-phone-native-key"
             disabled={!canDial} style={{left:x+'%',top:y+'%'}} onClick={()=>pressDigit(digit)}
