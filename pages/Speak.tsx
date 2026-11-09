@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PageHeader } from '../components/PageHeader';
 import { StudioMicIcon } from '../components/StudioMicIcon';
 import { SpeakingCallBooth, CALL_CONTACTS } from '../components/SpeakingCallBooth';
+import { SpeakingReportSheet } from '../components/SpeakingReportSheet';
+import { getUaePriceGuidance } from '../services/speakingUaePrices.mjs';
 import '../components/vocabulary-word-gallery.css';
 import { FallingLetters } from '../components/Layout';
 import { Modality, Type } from '@google/genai';
@@ -500,7 +502,7 @@ export const Speak: React.FC = () => {
           
           ${proactiveContext}
 
-          ${speakingBranch === 'booth' ? `TELEPHONE ROLEPLAY. You are the fictional agent ${selectedCallContact.agentEn} at ${selectedCallContact.en}. This is a simulated educational call, not a real transaction. Student's mission: ${selectedCallContact.aimEn}. Objectives: ${selectedCallContact.objectivesEn.join('; ')}. Situation twist only after learner begins the request: ${selectedCallContact.complication}. Answer as a natural person on a telephone, with one short greeting and one simple question. Remain in character. Allow English hints for A1 and when a learner struggles, then model a tiny Arabic phrase. Ask no real identifiers, phone numbers, addresses, or payment details. Never claim a real booking was created. Don't assess pronunciation from transcripts.` : ''}
+          ${speakingBranch === 'booth' ? `TELEPHONE ROLEPLAY. You are the fictional agent ${selectedCallContact.agentEn} at ${selectedCallContact.en}. This is a simulated educational call, not a real transaction. Student's mission: ${selectedCallContact.aimEn}. Objectives: ${selectedCallContact.objectivesEn.join('; ')}. Situation twist only after learner begins the request: ${selectedCallContact.complication}. ${getUaePriceGuidance(selectedCallContact)} Answer as a natural person on a telephone, with one short greeting and one simple question. Remain in character. Allow English hints for A1 and when a learner struggles, then model a tiny Arabic phrase. Ask no real identifiers, phone numbers, addresses, or payment details. Never claim a real booking was created. Don't assess pronunciation from transcripts.` : ''}
 
           SPEAKING COACH RULES:
           Start with one short greeting and one easy question about the topic.
