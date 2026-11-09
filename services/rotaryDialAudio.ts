@@ -1,7 +1,8 @@
 /**
- * Local mechanical sound for QUL's simulated rotary phone.
- * Offline Web Audio clicks, no network fetch or delayed media decoding.
- * Each pulse corresponds to a rotary contact closing; zero has ten pulses.
+ * Offline, mechanically modelled QUL rotary return sound.
+ * All ten audio buffers are precomputed when the learner lifts the receiver.
+ * A digit press then starts ONE buffer source, avoiding the dozens of audio
+ * nodes previously scheduled on every iPhone tap.
  */
 export type RotarySoundPlayer = {
   prepare(): void;
@@ -15,85 +16,76 @@ export const rotaryPulseCount = (digit: string): number =>
 export const rotaryDurationMs = (digit: string): number =>
   270 + rotaryPulseCount(digit) * 58;
 
-export function createRotarySoundPlayer(): RotarySoundPlayer {
-  let context: AudioContext | null = null;
-  let transient: AudioBuffer | null = null;
-  let lastNodes: AudioScheduledSourceNode[] = [];
-  const stopPending = () => {
-    for (const node of lastNodes) {
-      try { node.stop(); } catch { /* already finished */ }
+export function createRotarySoundPlayer():RotarySoundPlayer {
+  let context:AudioContext|null=null;
+  let currentSource:AudioBufferSourceNode|null=null;
+  const samples=new Map<string,AudioBuffer>();
+
+  const makeSound=(ctx:AudioContext,digit:string):AudioBuffer=>{
+    const pulses=rotaryPulseCount(digit);
+    const rate=ctx.sampleRate;
+    const duration=rotaryDurationMs(digit)/1000;
+    const buffer=ctx.createBuffer(1,Math.ceil(rate*duration),rate);
+    const out=buffer.getChannelData(0);
+
+    // A short spring wind, fading as the wheel reaches the finger stop.
+    for(let i=0;i<Math.min(out.length,Math.round(rate*.17));i++){
+      const t=i/rate;
+      const taper=Math.sin(Math.PI*Math.min(1,t/.17))**1.3;
+      out[i]=Math.sin(2*Math.PI*(157*t-105*t*t))*.024*taper;
     }
-    lastNodes = [];
-  };
-  const ensure = (): AudioContext | null => {
-    if (typeof window === 'undefined') return null;
-    const Constructor = window.AudioContext || (window as typeof window & {
-      webkitAudioContext?: typeof AudioContext;
-    }).webkitAudioContext;
-    if (!Constructor) return null;
-    if (!context || context.state === 'closed') {
-      context = new Constructor();
-      transient = context.createBuffer(1, Math.ceil(context.sampleRate * .022), context.sampleRate);
-      const samples = transient.getChannelData(0);
-      // Fast crackle taper sounds like a telephone contact, not a keypad DTMF tone.
-      for (let i = 0; i < samples.length; i++) {
-        const envelope = Math.exp(-i / (context.sampleRate * .0042));
-        samples[i] = (Math.random() * 2 - 1) * envelope;
+    // Dry metal contacts pulse during the return stroke, matching 1..10 pulses.
+    let seed=1125+pulses*7243;
+    for(let p=0;p<pulses;p++){
+      const offset=Math.floor((.18+p*.057)*rate);
+      const count=Math.floor(.023*rate);
+      for(let k=0;k<count&&offset+k<out.length;k++){
+        seed=(Math.imul(seed,1664525)+1013904223)|0;
+        const noise=((seed>>>0)/4294967295)*2-1;
+        const t=k/rate;
+        const envelope=Math.exp(-t/.004);
+        out[offset+k]+=noise*.17*envelope+
+          Math.sin(2*Math.PI*620*t)*.055*envelope;
       }
     }
-    if (context.state === 'suspended') void context.resume().catch(() => undefined);
+    return buffer;
+  };
+
+  const ensure=():AudioContext|null=>{
+    if(typeof window==='undefined')return null;
+    const Constructor=window.AudioContext||(window as typeof window&{
+      webkitAudioContext?:typeof AudioContext;
+    }).webkitAudioContext;
+    if(!Constructor)return null;
+    if(!context||context.state==='closed'){
+      context=new Constructor();
+      samples.clear();
+      for(const digit of '1234567890') samples.set(digit,makeSound(context,digit));
+    }
+    if(context.state==='suspended')void context.resume().catch(()=>undefined);
     return context;
   };
   return {
-    // Initialise in the receiver-lift gesture so the first digit never waits for
-    // AudioContext creation or iOS audio-session activation.
-    prepare() {
-      try { ensure(); } catch { /* audio remains optional */ }
+    prepare(){try{ensure();}catch{/* Sound is optional, never block speaking. */}},
+    play(digit){
+      try{
+        const ctx=ensure();
+        if(!ctx)return;
+        const buffer=samples.get(digit);
+        if(!buffer)return;
+        if(currentSource){try{currentSource.stop();}catch{/* already finished */}}
+        const src=ctx.createBufferSource();
+        src.buffer=buffer;
+        src.connect(ctx.destination);
+        src.onended=()=>{if(currentSource===src)currentSource=null;src.disconnect();};
+        src.start();
+        currentSource=src;
+      }catch{/* Fail silently if iOS audio output is unavailable. */}
     },
-    play(digit) {
-      try {
-        const ctx = ensure();
-        if (!ctx || !transient) return;
-        stopPending();
-        const pulses = rotaryPulseCount(digit);
-        const start = ctx.currentTime + .018;
-        // Brief mechanical winding whisper before the dry return clicks.
-        const spring = ctx.createOscillator();
-        spring.type = 'triangle';
-        spring.frequency.setValueAtTime(155, start);
-        spring.frequency.exponentialRampToValueAtTime(74, start + .16);
-        const springGain = ctx.createGain();
-        springGain.gain.setValueAtTime(.0001, start);
-        springGain.gain.exponentialRampToValueAtTime(.012, start + .028);
-        springGain.gain.exponentialRampToValueAtTime(.0001, start + .175);
-        spring.connect(springGain).connect(ctx.destination);
-        spring.start(start);
-        spring.stop(start + .18);
-        lastNodes.push(spring);
-
-        for (let i = 0; i < pulses; i++) {
-          const when = start + .18 + i * .057;
-          const click = ctx.createBufferSource();
-          click.buffer = transient;
-          const gain = ctx.createGain();
-          gain.gain.setValueAtTime(.0001, when);
-          gain.gain.linearRampToValueAtTime(.09, when + .002);
-          gain.gain.exponentialRampToValueAtTime(.0001, when + .021);
-          click.connect(gain).connect(ctx.destination);
-          click.start(when);
-          click.stop(when + .022);
-          lastNodes.push(click);
-        }
-      } catch {
-        // Audio is optional: inaccessible or suspended hardware must never block dialing.
-      }
+    close(){
+      if(currentSource){try{currentSource.stop();}catch{}currentSource=null;}
+      const old=context;context=null;samples.clear();
+      if(old&&old.state!=='closed')void old.close().catch(()=>undefined);
     },
-    close() {
-      stopPending();
-      const old = context;
-      context = null;
-      transient = null;
-      if (old && old.state !== 'closed') void old.close().catch(() => undefined);
-    }
   };
 }
