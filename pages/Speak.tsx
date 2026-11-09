@@ -11,6 +11,7 @@ import { PageHeader } from '../components/PageHeader';
 import { StudioMicIcon } from '../components/StudioMicIcon';
 import { SpeakingCallBooth, CALL_CONTACTS } from '../components/SpeakingCallBooth';
 import { SpeakingReportSheet } from '../components/SpeakingReportSheet';
+import { SpeakingSuggestedDialogueSheet } from '../components/SpeakingSuggestedDialogueSheet';
 import { getUaePriceGuidance } from '../services/speakingUaePrices.mjs';
 import '../components/vocabulary-word-gallery.css';
 import { FallingLetters } from '../components/Layout';
@@ -261,7 +262,9 @@ export const Speak: React.FC = () => {
   }, [closeTransport]);
   const reportRef = React.useRef<HTMLDivElement>(null);
   const summaryPrintRef = React.useRef<HTMLDivElement>(null);
-  const transcriptPrintRef = React.useRef<HTMLDivElement>(null);
+  const sampleDialoguePrintRef = React.useRef<HTMLDivElement>(null);
+  const [reportPage, setReportPage] = React.useState<'summary'|'sample'>('summary');
+  React.useEffect(() => { if (showSummary) setReportPage('summary'); }, [showSummary]);
 
   const STRINGS = {
     ar: {
@@ -816,100 +819,34 @@ export const Speak: React.FC = () => {
   };
 
   const handlePrint = async () => {
-    if (!summaryPrintRef.current || !transcriptPrintRef.current) return;
+    if (!summaryPrintRef.current || !sampleDialoguePrintRef.current) return;
     setLoading(true);
     try {
-      // Heavy PDF modules are loaded only when a learner requests a report.
       const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-        import('html2canvas'),
-        import('jspdf'),
+        import('html2canvas'), import('jspdf'),
       ]);
-      const allImgs = [
-        ...Array.from(summaryPrintRef.current.querySelectorAll('img')),
-        ...Array.from(transcriptPrintRef.current.querySelectorAll('img'))
-      ];
-      await Promise.all(allImgs.map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise(res => {
-          img.onload = res;
-          img.onerror = res;
-        });
-      }));
-
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-
-      // Helper to capture a ref and return canvas
-      const capture = async (ref: HTMLDivElement) => {
-        return await html2canvas(ref, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        });
-      };
-
-      // Page 1: Summary
-      const summaryCanvas = await capture(summaryPrintRef.current);
-      const summaryImgData = summaryCanvas.toDataURL('image/png');
-      const summaryPdfHeight = (summaryCanvas.height * pdfWidth) / summaryCanvas.width;
-      pdf.addImage(summaryImgData, 'PNG', 0, 0, pdfWidth, summaryPdfHeight);
-      // A long summary must continue onto another page, not get clipped at A4.
-      let summaryOffset = 0;
-      while (summaryPdfHeight + summaryOffset > pdfHeight + 0.5) {
-        summaryOffset -= pdfHeight;
-        pdf.addPage();
-        pdf.addImage(summaryImgData, 'PNG', 0, summaryOffset, pdfWidth, summaryPdfHeight);
+      await document.fonts?.ready;
+      // Two fixed worksheets, no extra pages and no cropped A4 content.
+      const pdf = new jsPDF('p','mm','a4');
+      const width = pdf.internal.pageSize.getWidth();
+      const height = pdf.internal.pageSize.getHeight();
+      const sheets = [summaryPrintRef.current, sampleDialoguePrintRef.current];
+      for (let i=0;i<sheets.length;i++) {
+        const sheet=sheets[i];
+        const images=Array.from(sheet.querySelectorAll('img'));
+        await Promise.all(images.map(img=>img.decode?.().catch(()=>undefined)));
+        const canvas=await html2canvas(sheet,{scale:1.75,useCORS:true,logging:false,
+          backgroundColor:'#fff',windowWidth:1100});
+        const fit=Math.min((width-12)/canvas.width,(height-12)/canvas.height);
+        const imageWidth=canvas.width*fit, imageHeight=canvas.height*fit;
+        if(i>0)pdf.addPage();
+        pdf.addImage(canvas.toDataURL('image/jpeg',.92),'JPEG',
+          (width-imageWidth)/2,(height-imageHeight)/2,imageWidth,imageHeight);
       }
-
-      // Following pages: Transcript
-      pdf.addPage();
-      const transcriptEl = transcriptPrintRef.current;
-      const messages = transcriptEl.querySelectorAll('.transcript-message');
-      
-      let currentY = 20; 
-      const margin = 15;
-      const contentWidth = pdfWidth - (2 * margin);
-      
-      // Capture and add header
-      const headerEl = transcriptEl.querySelector('.transcript-header') as HTMLElement;
-      if (headerEl) {
-        const headerCanvas = await html2canvas(headerEl, { scale: 2, useCORS: true });
-        const hImg = headerCanvas.toDataURL('image/png');
-        const hHeight = (headerCanvas.height * contentWidth) / headerCanvas.width;
-        pdf.addImage(hImg, 'PNG', margin, currentY, contentWidth, hHeight);
-        currentY += hHeight + 15;
-      }
-
-      for (let i = 0; i < messages.length; i++) {
-        const msgEl = messages[i] as HTMLElement;
-        const msgCanvas = await html2canvas(msgEl, { 
-          scale: 2, 
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        });
-        const msgImg = msgCanvas.toDataURL('image/png');
-        const msgHeight = (msgCanvas.height * contentWidth) / msgCanvas.width;
-
-        if (currentY + msgHeight > pdfHeight - 20) {
-          pdf.addPage();
-          currentY = 20;
-          // Small header on new pages
-          pdf.setFontSize(8);
-          pdf.setTextColor(150, 150, 150);
-          const pageNum = (pdf as any).internal.getNumberOfPages();
-          pdf.text(`Qul Conversation Transcript - Page ${pageNum}`, margin, 12);
-        }
-
-        pdf.addImage(msgImg, 'PNG', margin, currentY, contentWidth, msgHeight);
-        currentY += msgHeight + 8;
-      }
-
-      pdf.save(`Qul_Conversation_Report_${activeTopic?.en}_${new Date().toISOString().slice(0, 10)}.pdf`);
-    } catch (err) {
-      console.error("PDF Generation failed", err);
+      const name=(activeTopic?.en||'Speaking').replace(/[^a-zA-Z0-9_ -]/g,'').trim().replace(/\s+/g,'_').slice(0,35);
+      pdf.save('QUL_Speaking_'+name+'_'+new Date().toISOString().slice(0,10)+'.pdf');
+    } catch(err) {
+      console.error('Speaking worksheet PDF generation failed',err);
       window.print();
     } finally {
       setLoading(false);
@@ -1138,25 +1075,39 @@ export const Speak: React.FC = () => {
                       </p>
                     </div>
                   ) : (
-                    <div className="relative w-full max-w-[540px] mx-auto bg-white shadow-xl border border-slate-300 rounded-lg overflow-hidden">
-                      <SpeakingReportSheet
-                        lang={lang}
-                      topicAr={activeTopic?.ar}
-                      topicEn={activeTopic?.en}
-                      levelAr={selectedLevel?.ar}
-                      levelEn={selectedLevel?.en}
-                      evidence={speakingEvidence}
-                      insights={insights}
-                      objectivesAr={speakingBranch === 'booth' ? selectedCallContact.objectivesAr : []}
-                      objectivesEn={speakingBranch === 'booth' ? selectedCallContact.objectivesEn : []}
-                      nextPractice={nextPractice}
-                        mode="preview"
-                      />
+                    <div className="w-full max-w-[540px] mx-auto">
+                      <div className="mb-2 flex items-center justify-center gap-1 rounded-lg bg-white/90 border border-slate-200 p-1"
+                        role="group" aria-label={lang==='ar'?'صفحات التقرير':'Report pages'}>
+                        <button type="button" aria-pressed={reportPage==='summary'} onClick={()=>setReportPage('summary')}
+                          className={`flex-1 rounded-md px-3 py-2 text-xs font-black ${reportPage==='summary'?'bg-slate-800 text-white':'text-slate-600 hover:bg-slate-100'}`}>
+                          {lang==='ar'?'١. ورقة المتابعة':'1. Progress sheet'}
+                        </button>
+                        <button type="button" aria-pressed={reportPage==='sample'} onClick={()=>setReportPage('sample')}
+                          className={`flex-1 rounded-md px-3 py-2 text-xs font-black ${reportPage==='sample'?'bg-slate-800 text-white':'text-slate-600 hover:bg-slate-100'}`}>
+                          {lang==='ar'?'٢. الحوار المقترح':'2. Practice dialogue'}
+                        </button>
+                      </div>
+                      <div className="relative bg-white shadow-lg border border-slate-300 overflow-hidden">
+                        {reportPage==='summary' ? (
+                          <SpeakingReportSheet
+                            lang={lang} topicAr={activeTopic?.ar} topicEn={activeTopic?.en}
+                            levelAr={selectedLevel?.ar} levelEn={selectedLevel?.en}
+                            evidence={speakingEvidence} insights={insights}
+                            objectivesAr={speakingBranch==='booth'?selectedCallContact.objectivesAr:[]}
+                            objectivesEn={speakingBranch==='booth'?selectedCallContact.objectivesEn:[]}
+                            nextPractice={nextPractice} mode="preview"/>
+                        ) : (
+                          <SpeakingSuggestedDialogueSheet lang={lang}
+                            topicAr={activeTopic?.ar||'محادثة يومية'}
+                            topicEn={activeTopic?.en||'Everyday conversation'}
+                            level={selectedLevel?.id||'beginner'} mode="preview"/>
+                        )}
+                      </div>
                       <button type="button" disabled={loading} onClick={handlePrint}
-                        className="absolute bottom-3 left-3 w-9 h-9 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-lg flex items-center justify-center border border-white/60 disabled:opacity-50"
-                        title={lang === 'ar' ? 'تنزيل PDF' : 'Download PDF'}
-                        aria-label={lang === 'ar' ? 'تنزيل التقرير PDF' : 'Download speaking report PDF'}>
-                        {loading ? <Loader2 size={18} className="animate-spin"/> : <Download size={18}/>}
+                        className="mt-3 w-full rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-black py-3 flex items-center justify-center gap-2 disabled:opacity-50"
+                        aria-label={lang==='ar'?'تنزيل ملف PDF من صفحتين':'Download two-page PDF'}>
+                        {loading?<Loader2 size={17} className="animate-spin"/>:<Download size={17}/>}
+                        {lang==='ar'?'تنزيل ورقتي المتابعة والحوار (PDF)':'Download two-page worksheet (PDF)'}
                       </button>
                     </div>
                   )}
@@ -1442,61 +1393,21 @@ export const Speak: React.FC = () => {
         </main>
       </div>
       
-      {/* Hidden Worksheet Template for PDF Generation */}
-      <div className="fixed left-[-9999px] top-0 no-print" dir="rtl">
-        {/* Page 1: Same worksheet-style sheet as the student's preview. */}
-        <div ref={summaryPrintRef} className="w-[800px] bg-white text-slate-900">
-          <SpeakingReportSheet
-            lang={lang}
-                      topicAr={activeTopic?.ar}
-                      topicEn={activeTopic?.en}
-                      levelAr={selectedLevel?.ar}
-                      levelEn={selectedLevel?.en}
-                      evidence={speakingEvidence}
-                      insights={insights}
-                      objectivesAr={speakingBranch === 'booth' ? selectedCallContact.objectivesAr : []}
-                      objectivesEn={speakingBranch === 'booth' ? selectedCallContact.objectivesEn : []}
-                      nextPractice={nextPractice}
-            mode="print"
-          />
+      {/* Fixed two-page PDF source, independent of the visible preview tab. */}
+      <div className="fixed left-[-9999px] top-0 no-print" aria-hidden="true">
+        <div ref={summaryPrintRef} className="w-[800px] bg-white">
+          <SpeakingReportSheet lang={lang}
+            topicAr={activeTopic?.ar} topicEn={activeTopic?.en}
+            levelAr={selectedLevel?.ar} levelEn={selectedLevel?.en}
+            evidence={speakingEvidence} insights={insights}
+            objectivesAr={speakingBranch==='booth'?selectedCallContact.objectivesAr:[]}
+            objectivesEn={speakingBranch==='booth'?selectedCallContact.objectivesEn:[]}
+            nextPractice={nextPractice} mode="print"/>
         </div>
-        
-        {/* Page 2+: Dialogue Log */}
-        <div 
-          ref={transcriptPrintRef}
-          className="w-[800px] bg-white p-12 text-slate-900 arabic-font"
-        >
-          {/* Header for Transcript Page */}
-          <div className="transcript-header border-b-2 border-slate-900 pb-4 mb-10 flex justify-between items-center">
-            <h2 className="text-xl font-black">سجل الحوار الكامل (The Full Transcript)</h2>
-            <div className="flex items-center gap-2" dir="ltr">
-              <img src="/Logo.png" alt="شعار منصة قُل" className="w-8 h-8 object-contain shrink-0" />
-              <div className="text-lg font-black tracking-tighter text-slate-900">قُل / QUL</div>
-            </div>
-          </div>
-
-          <div className="space-y-8">
-            {conversationHistory.filter(h => h.text.trim()).map((entry, i) => {
-              const isArabicText = /[\u0600-\u06FF]/.test(entry.text);
-              return (
-                <div key={i} className="transcript-message flex flex-col" dir={isArabicText ? 'rtl' : 'ltr'}>
-                   <div className={`flex items-center gap-2 mb-2 ${isArabicText ? 'justify-start' : 'justify-start'}`}>
-                      <span className={`text-[10px] font-black px-2 py-0.5 rounded ${entry.role === 'ai' ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-400'} ${!isArabicText ? 'uppercase tracking-widest' : ''}`}>
-                        {entry.role === 'ai' ? (isArabicText ? 'المعلم الذكي' : 'AI Teacher') : (isArabicText ? 'المتعلم' : 'Learner')}
-                      </span>
-                   </div>
-                   <div className={`p-5 rounded-2xl text-base leading-relaxed ${entry.role === 'ai' ? 'bg-slate-50/80 border border-slate-100' : 'bg-white border border-slate-200 shadow-sm'}`}>
-                      {entry.text}
-                   </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Transcript Footer */}
-          <div className="mt-12 pt-6 border-t border-slate-50 text-center">
-             <p className="text-[10px] text-slate-300 uppercase tracking-widest font-sans">End of Professional Conversation Transcript</p>
-          </div>
+        <div ref={sampleDialoguePrintRef} className="w-[800px] bg-white">
+          <SpeakingSuggestedDialogueSheet lang={lang}
+            topicAr={activeTopic?.ar||'محادثة يومية'} topicEn={activeTopic?.en||'Everyday conversation'}
+            level={selectedLevel?.id||'beginner'} mode="print"/>
         </div>
       </div>
     </div>
