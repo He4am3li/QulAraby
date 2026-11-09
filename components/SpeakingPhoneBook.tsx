@@ -17,6 +17,7 @@ type TurningLeaf = {
   serial: number;
   direction: number;
   previous: CallContact[];
+  next: CallContact[];
 };
 
 export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId, disabled, onSelect }) => {
@@ -37,10 +38,17 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
   const change = (nextLetter: string, nextPage=0, dir=1) => {
     if (disabled || (nextLetter===letter && nextPage===page)) return;
     if (!reduced) {
+      // Both sides of the physical leaf carry live ink. A blank back briefly
+      // revealed the photographed page and looked like a floating overlay.
+      const newEntries = contacts
+        .filter(c => directoryLetterOf(c.ar)===nextLetter)
+        .sort((a,b) => a.ar.localeCompare(b.ar,'ar'))
+        .slice(nextPage*PAGE_SIZE,(nextPage+1)*PAGE_SIZE);
       setLeaf({
         serial: turn+1,
         direction: dir,
         previous: visible.slice(dir>0 ? 3 : 0, dir>0 ? 6 : 3),
+        next: newEntries.slice(dir>0 ? 0 : 3, dir>0 ? 3 : 6),
       });
     }
     setLetter(nextLetter);
@@ -114,7 +122,15 @@ export const SpeakingPhoneBook: React.FC<Props> = ({ lang, contacts, selectedId,
                           </div>
                         ))}
                       </div>
-                      <div className="qul-clean-book-leaf-face back" aria-hidden="true"/>
+                      <div className="qul-clean-book-leaf-face back" aria-hidden="true">
+                        {leaf.next.map(c=>(
+                          <div key={c.id} className="qul-clean-book-entry">
+                            <span className="qul-clean-book-ar" lang="ar" dir="rtl">{c.ar}</span>
+                            <span className="qul-clean-book-en" lang="en" dir="ltr">{c.en}</span>
+                            <strong className="qul-clean-book-ext" dir="ltr">{c.extension}</strong>
+                          </div>
+                        ))}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
