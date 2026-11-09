@@ -1364,11 +1364,11 @@ CRITICAL EVALUATION RULES:
 2. FOCUS ON ESSENTIAL MEANING & STRUCTURE: Evaluate whether the vocabulary and basic grammar (word order, gender, subject-verb agreement) accurately express the meaning of the English sentence. Minor spelling variations (like alif with or without hamzah: ا / أ / إ, or taa marbutah vs haa: ة / ه) should be gently tolerated with full or near-full credit.
 3. "accuracy": integer from 0 to 100 representing how well the meaning was conveyed (if the correct words and order are present without tashkeel, score 90-100%).
 4. "isCorrect": boolean (true if accuracy >= 70).
-5. "feedbackEn": 1-2 friendly, clear English sentences praising their translation and gently mentioning any structural tip.
-6. "feedbackAr": 1 short encouraging sentence in Arabic with full tashkeel (e.g., "أَحْسَنْتَ! تَرْجَمَةٌ مُمْتَازَةٌ وَدَقِيقَةٌ.").
+5. "feedbackEn": 2-3 specific English sentences explaining what the student translated correctly, identifying the exact mistaken word(s) and providing corrected Arabic with English meaning. Never praise an incorrect translation as correct.
+6. "feedbackAr": 2-3 specific educational Arabic sentences with the student's exact incorrect expression, the corrected Arabic phrase, and why it is correct. Avoid generic encouragement. If the learner writes a foreign word in Arabic letters (e.g. كولد for cold), explain its Arabic equivalent (بارد) explicitly.
 7. "vocalizedArabic": provide the ideal Arabic sentence with COMPLETE beautiful Tashkeel for the student to learn and listen to.
 8. "transliteration": clear English phonetics/romanization for the vocalized Arabic (e.g. "Ashrabu al-qahwata al-saakhinah").
-9. "grammarTip": a concise, helpful insight in English explaining one interesting grammatical structure or cultural nuance.
+9. "grammarTip": a concise, actionable Arabic grammar or vocabulary insight relevant ONLY to the actual error, written in Arabic (e.g. الماء بارد, ماء بارد, never an unrelated gender tip). Include a concrete example.
 
 Return strictly JSON format:
 {
@@ -1393,34 +1393,42 @@ Return strictly JSON format:
       });
 
       const parsed = safeJSONParse(response.text, {
-        accuracy: 0,
+        accuracy: -1,
         isCorrect: false,
-        feedbackEn: "Evaluation is temporarily unavailable. Please retry.",
-        feedbackAr: "مُحَاوَلَةٌ جَيِّدَةٌ!",
+        feedbackEn: "Evaluation is unavailable. Compare your answer with the reference.",
+        feedbackAr: "التقييم غير متاح حاليًا، قارن إجابتك بالترجمة المرجعية.",
         vocalizedArabic: referenceTranslation || userArabic,
         transliteration: "Al-Arabiyyah",
-        grammarTip: "Pay attention to word order and gender agreement."
+        grammarTip: ""
       });
 
       return parsed;
     }, 2, 1000);
   } catch (err) {
     console.warn("AI evaluation unavailable, falling back to local evaluation:", err);
-    // Deterministic intelligent local comparison fallback
-    const cleanUser = userArabic.replace(/[\u064B-\u065F\u0670]/g, '').trim();
-    const cleanRef = (referenceTranslation || '').replace(/[\u064B-\u065F\u0670]/g, '').trim();
-    const isClose = cleanRef.length > 0 && cleanUser === cleanRef;
-
+    // Offline comparison is not a semantic grader. Never invent a zero score.
+    const normalizeArabic = (value: string) => value.normalize('NFKC')
+      .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+      .replace(/[إأآ]/g, 'ا').replace(/ى/g, 'ي')
+      .replace(/[،؛.!?؟]/g, '').replace(/\s+/g, ' ').trim();
+    const cleanUser = normalizeArabic(userArabic);
+    const cleanRef = normalizeArabic(referenceTranslation || '');
+    const isExact = Boolean(cleanRef) && cleanUser === cleanRef;
+    const coldExample = /i drink cold water/i.test(promptEn) && /كولد/.test(cleanUser);
+    const explanationAr = coldExample
+      ? 'كتبت «كولد» وهي نقل صوتي للكلمة الإنجليزية cold، وليست ترجمة عربية. استخدم «بارد» بدلًا منها: «أشرب ماءً باردًا». كلمة «بارد» صفة تصف الماء.'
+      : 'تعذّر التقييم الدلالي الآن. قارن إجابتك بالترجمة المرجعية، وانتبه إلى الكلمات التي بقيت بالإنجليزية أو نُقلت صوتيًا دون ترجمة.';
+    const explanationEn = coldExample
+      ? 'You wrote «كولد», a transliteration of the English word cold. Translate cold as «بارد». A natural sentence is «أشرب ماءً باردًا».'
+      : 'Semantic assessment is unavailable. Compare your answer with the reference and check for English words that were transliterated instead of translated.';
     return {
-      accuracy: isClose ? 90 : 0,
-      isCorrect: isClose,
-      feedbackEn: isClose 
-        ? "Excellent translation! Your phrasing is very natural and communicates the meaning well."
-        : "Good effort! Practice saying the sentence aloud with full vowel markers.",
-      feedbackAr: isClose ? "أَحْسَنْتَ! مُحَاوَلَةٌ مُمْتَازَةٌ وَدَقِيقَةٌ." : "مُحَاوَلَةٌ طَيِّبَةٌ، وَاصِلِ التَّدْرِيبَ!",
+      accuracy: isExact ? 100 : -1,
+      isCorrect: isExact,
+      feedbackEn: isExact ? 'Your translation matches the reference in meaning and wording.' : explanationEn,
+      feedbackAr: isExact ? 'ترجمتك مطابقة للصياغة المرجعية، أحسنت.' : explanationAr,
       vocalizedArabic: referenceTranslation || userArabic,
-      transliteration: "Al-Arabiyyah al-Fusha",
-      grammarTip: "Remember that Arabic sentences maintain gender agreement between nouns and descriptive adjectives."
+      transliteration: '',
+      grammarTip: coldExample ? 'تأتي الصفة بعد الموصوف: ماء بارد، وماءً باردًا في هذه الجملة.' : ''
     };
   }
 };

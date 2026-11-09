@@ -16,3 +16,14 @@
 .qul-translation-glass-orb:after{content:"";position:absolute;inset:2px;border-radius:50%;border:1px solid rgba(255,255,255,.75);background:radial-gradient(ellipse 38% 12% at 32% 15%,#fff,transparent)}
 @media(max-width:640px){.qul-translation-glass{border-radius:22px!important}.qul-translation-glass-orb{width:38px;height:38px}}
 @media(prefers-reduced-motion:reduce){.qul-translation-glass,.qul-translation-glass-tab{transition:none!important}.qul-translation-glass:hover,.qul-translation-glass-tab:hover{transform:none}}
+
+/* Shared vocabulary-gallery inspired navigation, desktop and mobile */
+.qul-translation-nav-panel{background:linear-gradient(155deg,rgba(255,255,255,.66),rgba(231,245,246,.4));border-inline-end:1px solid rgba(255,255,255,.9);box-shadow:inset -1px 0 rgba(116,153,156,.08);-webkit-backdrop-filter:blur(22px) saturate(145%);backdrop-filter:blur(22px) saturate(145%)}
+.qul-translation-nav-card{position:relative;isolation:isolate;overflow:hidden;border:1px solid rgba(255,255,255,.95);background:linear-gradient(155deg,rgba(255,255,255,.89),rgba(241,249,251,.68) 55%,rgba(222,239,240,.63));box-shadow:inset 0 1px #fff,inset 0 -1px rgba(91,124,132,.12),0 5px 13px rgba(25,70,77,.06),0 13px 28px rgba(25,70,77,.08);-webkit-backdrop-filter:blur(16px) saturate(130%);backdrop-filter:blur(16px) saturate(130%);transition:transform .16s ease,box-shadow .16s ease}
+.qul-translation-nav-card:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(ellipse 82% 42% at 16% -10%,rgba(255,255,255,.95),transparent),linear-gradient(110deg,transparent 30%,rgba(255,255,255,.25) 50%,transparent 70%)}
+.qul-translation-nav-card:hover{transform:translateY(-2px);box-shadow:inset 0 1px #fff,0 11px 24px rgba(25,70,77,.14)}
+.qul-translation-nav-active{border-color:rgba(54,147,138,.5)!important;background:linear-gradient(145deg,rgba(221,247,241,.94),rgba(242,252,251,.84),rgba(210,236,234,.78))!important;box-shadow:inset 0 1px #fff,0 0 0 1px rgba(43,139,127,.13),0 10px 26px rgba(25,99,91,.14)!important}
+.qul-translation-mobile-nav{background:rgba(242,249,248,.7);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.qul-translation-main .rounded-xl,.qul-translation-main .rounded-2xl{border-color:rgba(255,255,255,.8)}
+.qul-translation-main .bg-white,.qul-translation-main .bg-slate-50{background:linear-gradient(145deg,rgba(255,255,255,.8),rgba(234,246,248,.6))!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:inset 0 1px rgba(255,255,255,.8),0 8px 22px rgba(25,70,77,.06)}
+@media(prefers-reduced-motion:reduce){.qul-translation-nav-card{transition:none}.qul-translation-nav-card:hover{transform:none}}

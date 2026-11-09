@@ -6,6 +6,7 @@ import { LanguageToggle } from '../components/LanguageToggle';
 import { PageHeader } from '../components/PageHeader';
 import { FallingLetters } from '../components/Layout';
 import { TranslatorAcademy } from '../components/TranslatorAcademy';
+import '../components/translator-liquid-glass.css';
 import { translateAndExpand, generateSpeech, decodeAudioData, generatePracticeQuestions, speak as globalSpeak } from '../services/gemini';
 import { Vocabulary, QuizQuestion } from '../types';
 import { updateSRS } from '../utils/srs';
@@ -153,7 +154,7 @@ export const Translator: React.FC = () => {
   };
 
   return (
-    <div className={`w-full flex flex-col h-full bg-[radial-gradient(ellipse_at_75%_12%,rgba(99,184,164,.18),transparent_43%),linear-gradient(140deg,#f2f8f7,#f2f5fb_60%,#f9fafc)] overflow-hidden animate-in fade-in duration-700 ${lang === 'ar' ? 'text-right' : 'text-left'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={`w-full flex flex-col h-full qul-translation-glass-scene overflow-hidden animate-in fade-in duration-700 ${lang === 'ar' ? 'text-right' : 'text-left'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       
       {/* Header Bar */}
       <PageHeader
@@ -167,7 +168,7 @@ export const Translator: React.FC = () => {
       <div className="flex-1 flex overflow-hidden bg-transparent">
         
         {/* Right Sidebar (aside) */}
-        <aside className="hidden md:flex w-[280px] bg-white/65 backdrop-blur-2xl border-r rtl:border-r-0 rtl:border-l border-slate-100 flex flex-col shrink-0 no-print relative shadow-sm">
+        <aside className="hidden md:flex w-[280px] qul-translation-nav-panel flex-col shrink-0 no-print relative">
           <div className="flex-1 overflow-y-auto p-5 scrollbar-hide">
             <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">
               {lang === 'ar' ? 'أقسام المترجم' : 'Translator Sections'}
@@ -176,10 +177,10 @@ export const Translator: React.FC = () => {
               {/* Item 1: Instant Translator */}
               <button 
                 onClick={() => setActiveTab('translator')}
-                className={`w-full p-3.5 rounded-2xl border transition-all flex items-center gap-3 text-right group ${
+                className={`qul-translation-nav-card w-full p-3.5 rounded-2xl transition-all flex items-center gap-3 text-right group ${
                   activeTab === 'translator' 
-                    ? 'border-teal-400 bg-white/75 backdrop-blur-xl text-teal-800 shadow-xs' 
-                    : 'border-slate-100 bg-slate-50/50 hover:border-slate-200 text-slate-600'
+                    ? 'qul-translation-nav-active text-teal-800' 
+                    : 'text-slate-600'
                 }`}
               >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105 shrink-0 ${
@@ -198,13 +199,13 @@ export const Translator: React.FC = () => {
                 <ChevronRight size={14} className={`opacity-30 shrink-0 ${lang === 'ar' ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* Item 2: Translator Academy (placed directly beneath) */}
+              {/* Item 2: Translation Studio (placed directly beneath) */}
               <button 
                 onClick={() => setActiveTab('academy')}
-                className={`w-full p-3.5 rounded-2xl border transition-all flex items-center gap-3 text-right group ${
+                className={`qul-translation-nav-card w-full p-3.5 rounded-2xl transition-all flex items-center gap-3 text-right group ${
                   activeTab === 'academy' 
-                    ? 'border-teal-400 bg-white/75 backdrop-blur-xl text-teal-800 shadow-xs' 
-                    : 'border-slate-100 bg-slate-50/50 hover:border-slate-200 text-slate-600'
+                    ? 'qul-translation-nav-active text-teal-800' 
+                    : 'text-slate-600'
                 }`}
               >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-2xs transition-transform group-hover:scale-105 shrink-0 ${
@@ -214,7 +215,7 @@ export const Translator: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-black arabic-font truncate leading-tight mb-0.5">
-                    {lang === 'ar' ? 'أكاديمية الترجمة' : 'Translator Academy'}
+                    {lang === 'ar' ? 'استوديو الترجمة' : 'Translation Studio'}
                   </p>
                   <p className="text-[10px] text-slate-400 font-medium truncate font-sans">
                     {lang === 'ar' ? 'Translator Academy' : 'أكاديمية الترجمة'}
@@ -228,9 +229,9 @@ export const Translator: React.FC = () => {
 
         {/* Left Main View */}
         <main className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden relative">
-          <nav className="md:hidden shrink-0 grid grid-cols-2 gap-2 px-3 py-2 bg-white" aria-label="Translator sections">
-            <button type="button" aria-pressed={activeTab === 'translator'} onClick={() => setActiveTab('translator')} className={`min-h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 border ${activeTab === 'translator' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 border-slate-200'}`}><Languages size={17}/>{lang === 'ar' ? 'المترجم' : 'Translator'}</button>
-            <button type="button" aria-pressed={activeTab === 'academy'} onClick={() => setActiveTab('academy')} className={`min-h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 border ${activeTab === 'academy' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200'}`}><GraduationCap size={17}/>{lang === 'ar' ? 'الأكاديمية' : 'Academy'}</button>
+          <nav className="md:hidden shrink-0 grid grid-cols-2 gap-2 px-3 py-2 qul-translation-mobile-nav" aria-label="Translator sections">
+            <button type="button" aria-pressed={activeTab === 'translator'} onClick={() => setActiveTab('translator')} className={`qul-translation-nav-card min-h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 ${activeTab === 'translator' ? 'qul-translation-nav-active text-teal-900' : 'text-slate-700'}`}><Languages size={17}/>{lang === 'ar' ? 'المترجم' : 'Translator'}</button>
+            <button type="button" aria-pressed={activeTab === 'academy'} onClick={() => setActiveTab('academy')} className={`qul-translation-nav-card min-h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 ${activeTab === 'academy' ? 'qul-translation-nav-active text-teal-900' : 'text-slate-700'}`}><GraduationCap size={17}/>{lang === 'ar' ? 'استوديو الترجمة' : 'Translation Studio'}</button>
           </nav>
           {/* Tab 1: Translator Academy */}
           {activeTab === 'academy' && (
@@ -268,16 +269,16 @@ export const Translator: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex-1 min-h-0 flex flex-col p-3 sm:p-6 space-y-3 sm:space-y-6 overflow-y-auto md:overflow-hidden">
+              <div className="flex-1 min-h-0 flex flex-col p-3 sm:p-6 space-y-3 sm:space-y-6 overflow-y-auto md:overflow-hidden qul-translation-main">
                 
                 {/* Input Section */}
                 <div className="shrink-0 space-y-4">
-                  <div className="relative group">
+                  <div className="relative group qul-translation-glass rounded-[1.5rem]">
                     <textarea
                       value={word}
                       onChange={(e) => setWord(e.target.value)}
                       placeholder={t.placeholder}
-                      className={`w-full h-24 sm:h-32 p-4 sm:p-6 text-base sm:text-xl border border-slate-200 rounded-[1.5rem] outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50 transition-all resize-none shadow-sm font-medium arabic-font placeholder:text-slate-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}
+                      className={`qul-translation-glass-input w-full h-24 sm:h-32 p-4 sm:p-6 text-base sm:text-xl border border-slate-200 rounded-[1.5rem] outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-50 transition-all resize-none shadow-sm font-medium arabic-font placeholder:text-slate-300 ${lang === 'ar' ? 'text-right' : 'text-left'}`}
                     />
                     <button 
                       onClick={() => { setIsEngToAr(!isEngToAr); setResult(null); setQuestions([]); }}
