@@ -1,3 +1,4 @@
+import { reviewTranslationOffline } from './translationOfflineReview.mjs';
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { Vocabulary, MasteryLevel, QuizQuestion, ChatMessage, IrabAnalysisResult } from "../types";
 import { getCachedAsset, setCachedAsset } from "./cache";
@@ -1406,30 +1407,7 @@ Return strictly JSON format:
     }, 2, 1000);
   } catch (err) {
     console.warn("AI evaluation unavailable, falling back to local evaluation:", err);
-    // Offline comparison is not a semantic grader. Never invent a zero score.
-    const normalizeArabic = (value: string) => value.normalize('NFKC')
-      .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
-      .replace(/[إأآ]/g, 'ا').replace(/ى/g, 'ي')
-      .replace(/[،؛.!?؟]/g, '').replace(/\s+/g, ' ').trim();
-    const cleanUser = normalizeArabic(userArabic);
-    const cleanRef = normalizeArabic(referenceTranslation || '');
-    const isExact = Boolean(cleanRef) && cleanUser === cleanRef;
-    const coldExample = /i drink cold water/i.test(promptEn) && /كولد/.test(cleanUser);
-    const explanationAr = coldExample
-      ? 'كتبت «كولد» وهي نقل صوتي للكلمة الإنجليزية cold، وليست ترجمة عربية. استخدم «بارد» بدلًا منها: «أشرب ماءً باردًا». كلمة «بارد» صفة تصف الماء.'
-      : 'تعذّر التقييم الدلالي الآن. قارن إجابتك بالترجمة المرجعية، وانتبه إلى الكلمات التي بقيت بالإنجليزية أو نُقلت صوتيًا دون ترجمة.';
-    const explanationEn = coldExample
-      ? 'You wrote «كولد», a transliteration of the English word cold. Translate cold as «بارد». A natural sentence is «أشرب ماءً باردًا».'
-      : 'Semantic assessment is unavailable. Compare your answer with the reference and check for English words that were transliterated instead of translated.';
-    return {
-      accuracy: isExact ? 100 : -1,
-      isCorrect: isExact,
-      feedbackEn: isExact ? 'Your translation matches the reference in meaning and wording.' : explanationEn,
-      feedbackAr: isExact ? 'ترجمتك مطابقة للصياغة المرجعية، أحسنت.' : explanationAr,
-      vocalizedArabic: referenceTranslation || userArabic,
-      transliteration: '',
-      grammarTip: coldExample ? 'تأتي الصفة بعد الموصوف: ماء بارد، وماءً باردًا في هذه الجملة.' : ''
-    };
+    return reviewTranslationOffline(promptEn, userArabic, referenceTranslation);
   }
 };
 
