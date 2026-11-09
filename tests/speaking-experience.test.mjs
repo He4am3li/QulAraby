@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { summarizeSpeakingEvidence, createNextSpeakingTask, mapPlacementLevel, validateSpeakingMissionEvidence } from '../services/speakingLearning.mjs';
 import { validateSimulatedDial } from '../services/speakingDial.mjs';
+import { getUaePriceGuidance, UAE_PRACTICE_PRICES } from '../services/speakingUaePrices.mjs';
 
 const source = (path) => readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
@@ -208,4 +209,86 @@ test('closed telephone directory is a full portrait notebook on mobile and opens
   assert.match(css,/\.qul-call-scene \.qul-scene-show-book \.qul-scene-book-pane\[data-pane="book"\]/);
   assert.match(css,/visibility: visible !important/);
   assert.match(css,/\.qul-call-scene \.qul-clean-book-stage\.is-closed \.qul-clean-book-cover/);
+});
+
+
+test('rotary disc starts immediately per click, without remounting or losing digits', () => {
+  const phone=source('components/SpeakingDeskPhone.tsx');
+  const sound=source('services/rotaryDialAudio.ts');
+  assert.match(phone,/const wheelRef = React\.useRef/);
+  assert.match(phone,/currentMotionRef\.current\?\.cancel\(\)/);
+  assert.match(phone,/onDial\(digit\)/);
+  assert.match(phone,/wheel\.animate\(/);
+  assert.match(phone,/rotaryPulseCount\(digit\)/);
+  assert.doesNotMatch(phone,/key=\{rotation\.tick\}/);
+  assert.doesNotMatch(phone,/setRotation\(/);
+  assert.match(sound,/const pulses = rotaryPulseCount\(digit\)/);
+  assert.match(sound,/ctx\.createBufferSource/);
+  assert.match(sound,/context\.state === 'suspended'/);
+  assert.match(sound,/digit === '0' \? 10/);
+});
+
+test('book has permanent pages, a two-sided hinged leaf, no ghost original printed names',()=>{
+  const book=source('components/SpeakingPhoneBook.tsx');
+  const css=source('components/SpeakingBookRefinement.css');
+  assert.match(book,/className="qul-clean-book-sheet"/);
+  assert.match(book,/className="qul-clean-book-leaf-face front"/);
+  assert.match(book,/className="qul-clean-book-leaf-face back"/);
+  assert.match(book,/qul-clean-book-spine-photo/);
+  assert.match(book,/rotateY:leaf\.direction>0\?170:-170/);
+  assert.doesNotMatch(book,/AnimatePresence mode="wait"/);
+  assert.match(css,/\.qul-clean-book-spread::before/);
+  assert.match(css,/\.qul-clean-book-spine-photo/);
+  assert.match(css,/\.qul-clean-book-turnleaf/);
+  assert.match(css,/full-bleed paper/i);
+});
+
+test('simulated calls use plausible UAE dirham estimates and avoid false live quotes',()=>{
+  const prompt=source('pages/Speak.tsx');
+  assert.match(prompt,/getUaePriceGuidance\(selectedCallContact\)/);
+  assert.equal(UAE_PRACTICE_PRICES.shortTaxi.min,12);
+  assert.ok(UAE_PRACTICE_PRICES.casualMeal.max >= 30);
+  assert.ok(UAE_PRACTICE_PRICES.karak.max <= 8);
+  const restaurant=getUaePriceGuidance({ar:'مطعم',en:'Restaurant'});
+  const taxi=getUaePriceGuidance({ar:'تاكسي',en:'Taxi'});
+  const pharmacy=getUaePriceGuidance({ar:'صيدلية',en:'Pharmacy'});
+  for(const result of [restaurant,taxi,pharmacy]){
+    assert.match(result,/درهم/);
+    assert.match(result,/AED/);
+    assert.match(result,/simulated|fictional/i);
+    assert.match(result,/not real-time|do not invent an exact price/i);
+  }
+  assert.match(taxi,/AED 12 to 40/);
+  assert.match(pharmacy,/Do not recommend, prescribe/);
+});
+
+test('speaking report uses worksheet-style paper both for preview and generated PDF',()=>{
+  const speak=source('pages/Speak.tsx');
+  const sheet=source('components/SpeakingReportSheet.tsx');
+  const css=source('components/SpeakingReportSheet.css');
+  assert.match(speak,/SpeakingReportSheet/);
+  assert.match(speak,/mode="preview"/);
+  assert.match(speak,/mode="print"/);
+  assert.match(speak,/ref=\{summaryPrintRef\}/);
+  assert.match(speak,/handlePrint/);
+  assert.match(speak,/Speaking Report Preview/);
+  assert.match(sheet,/qul-report-paper-header/);
+  assert.match(sheet,/qul-report-section-title/);
+  assert.match(sheet,/assessmentStatus!==/);
+  assert.match(sheet,/missionEvidence/);
+  assert.match(css,/qul-speaking-report-sheet/);
+  assert.match(css,/border-bottom: 2px solid/);
+});
+
+test('subtle bilingual hints do not change the base telephone or notebook artwork',()=>{
+  const phone=source('components/SpeakingDeskPhone.tsx');
+  const book=source('components/SpeakingPhoneBook.tsx');
+  const css=source('components/SpeakingBookRefinement.css');
+  assert.match(phone,/Tap the receiver to lift it/);
+  assert.match(phone,/اضغط على السماعة لرفعها/);
+  assert.match(book,/Tap the leather cover to open the directory/);
+  assert.match(book,/اختر الحرف ثم اضغط على اسم الجهة/);
+  assert.match(css,/\.qul-object-hint-host:hover/);
+  assert.match(css,/\.qul-object-hint-host:focus-within/);
+  assert.match(css,/pointer-events: none/);
 });
