@@ -1032,7 +1032,7 @@ export const Speak: React.FC = () => {
                     <button
                       type="button"
                       key={branch.id}
-                      disabled={isActive || loading}
+                      disabled={isActive || loading || isFinishing || showSummary}
                       onClick={() => {
                         if (branch.id === 'booth') {
                           if (speakingBranch !== 'booth') chooseCallContact(selectedCallContact);
@@ -1070,9 +1070,13 @@ export const Speak: React.FC = () => {
                         return (
                           <button 
                               key={topic.id} 
-                              disabled={isActive || !selectedLevel}
+                              disabled={isActive || loading || isFinishing || showSummary || !selectedLevel}
                               onClick={() => {
-                                  if (isActive) return;
+                                  if (isActive || loading || isFinishing || showSummary) return;
+                                  if (selectedTopic?.id !== topic.id) {
+                                    setReportAvailable(false);
+                                    setInsights(null);
+                                  }
                                   setSelectedTopic(topic);
                                   setSetupMode(true);
                                   setShowSummary(false);
