@@ -551,8 +551,9 @@ export const VocabularyPage: React.FC = () => {
 
         {/* Main Work Area */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
-           {activeTab === 'lexicon' && (
-             <div className="flex-1 min-h-0 relative z-10 p-3 md:p-5" data-testid="my-words-gallery-surface">
+           <AnimatePresence mode="wait" initial={false}>
+            {activeTab === 'lexicon' && (
+             <motion.div key="lexicon" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.23, ease: "easeOut" }} className="flex-1 min-h-0 relative z-10 p-3 md:p-5" data-testid="my-words-gallery-surface">
                <VocabularyWordGallery
                  words={vocab}
                  lang={lang}
@@ -560,11 +561,11 @@ export const VocabularyPage: React.FC = () => {
                  onDelete={deleteWord}
                  onReviewResult={recordVocabularyReview}
                />
-             </div>
+             </motion.div>
            )}
 
            {activeTab === 'discovery' && (
-           <div id="vocab-scroll-container" style={{ overscrollBehaviorY: 'contain', scrollBehavior: 'auto', touchAction: selectedTopic ? 'pan-y' : 'auto' }} className={`flex-1 ${selectedTopic ? 'overflow-y-auto custom-scroll flex items-start justify-center p-3 md:p-6 h-full' : 'overflow-y-auto custom-scroll px-8 pb-8'} relative z-10 ${activeTab === 'discovery' && !selectedTopic ? 'pt-8' : ''}`}>
+           <motion.div key="discovery" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.23, ease: "easeOut" }} id="vocab-scroll-container" style={{ overscrollBehaviorY: 'contain', scrollBehavior: 'auto', touchAction: selectedTopic ? 'pan-y' : 'auto' }} className={`flex-1 ${selectedTopic ? 'overflow-y-auto custom-scroll flex items-start justify-center p-3 md:p-6 h-full' : 'overflow-y-auto custom-scroll px-8 pb-8'} relative z-10 ${activeTab === 'discovery' && !selectedTopic ? 'pt-8' : ''}`}>
               
               {activeTab === 'discovery' && !selectedTopic && (
                 <div className="animate-in fade-in duration-700">
@@ -643,9 +644,10 @@ export const VocabularyPage: React.FC = () => {
 
 
 
-           </div>
+           </motion.div>
            )}
-        </div>
+           </AnimatePresence>
+         </div>
 
       </div>
     </motion.div>
@@ -2019,18 +2021,19 @@ const SidebarNavBtn: React.FC<{
     aria-current={active ? 'page' : undefined}
     aria-pressed={active}
     aria-label={label}
-    className={`qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all max-sm:justify-center max-sm:gap-0 max-sm:px-1 ${
+    className={`qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all qul-vocab-liquid-nav relative isolate overflow-hidden max-sm:justify-center max-sm:gap-0 max-sm:px-1 ${
       active ? 'qul-word-gallery-item-active' : ''
     }`}
   >
-    <div className="qul-word-gallery-tile h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600">
+    {active && <motion.span layoutId="qul-vocab-liquid-nav-lens" className="qul-vocab-liquid-nav-lens" transition={{ type: 'spring', stiffness: 380, damping: 34 }} aria-hidden="true" />}
+    <div className="qul-word-gallery-tile h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600 relative z-10">
       {icon}
     </div>
-    <div className="hidden sm:block flex-1 min-w-0">
+    <div className="relative z-10 hidden sm:block flex-1 min-w-0">
       <div className="text-[13px] font-black arabic-font text-slate-800 truncate">{label}</div>
       <div className="text-[10px] text-slate-500 truncate" dir={lang === 'ar' ? 'rtl' : 'ltr'}>{sub}</div>
     </div>
-    <span className={`hidden sm:block h-2 w-2 rounded-full shrink-0 ${active ? 'bg-emerald-500' : 'bg-slate-300'}`} aria-hidden="true" />
+    <span className={`relative z-10 hidden sm:block h-2 w-2 rounded-full shrink-0 ${active ? 'bg-emerald-500' : 'bg-slate-300'}`} aria-hidden="true" />
   </button>
 );
 

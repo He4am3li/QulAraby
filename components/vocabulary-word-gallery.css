@@ -206,3 +206,62 @@
   flex: none;
   border-radius: 50%;
 }
+
+
+/* Vocabulary lens motion: keep the saved-word shelf, discovery navigation and
+   detail stage in their existing layout. Only the active glass moves. */
+.qul-vocab-liquid-nav {
+  position: relative;
+  background: rgba(255,255,255,.69);
+  border-color: rgba(255,255,255,.94);
+  will-change: auto;
+}
+.qul-vocab-liquid-nav.qul-word-gallery-item-active {
+  background: rgba(255,255,255,.68);
+  box-shadow: 0 4px 15px rgba(61,85,111,.075), inset 0 1px 0 #fff;
+}
+.qul-vocab-liquid-nav-lens,
+.qul-word-gallery-selection,
+.qul-word-gallery-filter-lens {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 21% 12%, rgba(255,255,255,.97), transparent 63%),
+    linear-gradient(115deg, rgba(228,242,247,.9), rgba(248,252,255,.93) 55%, rgba(230,243,236,.84));
+  border: 1px solid rgba(255,255,255,.9);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.99), inset 0 -1px 1px rgba(108,132,153,.11),
+    0 3px 13px rgba(49,73,97,.095);
+}
+.qul-vocab-liquid-nav-lens::after,
+.qul-word-gallery-selection::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: inherit;
+  border: 1px solid rgba(255,255,255,.55);
+  pointer-events: none;
+}
+.qul-word-gallery-shelf .qul-word-gallery-item-active {
+  background: rgba(255,255,255,.59);
+  border-color: rgba(159,183,190,.4) !important;
+  box-shadow: none;
+}
+.qul-word-gallery-filter-active {
+  background: rgba(255,255,255,.72);
+  border: 1px solid rgba(160,192,201,.38);
+}
+.qul-word-gallery-filter-lens {
+  background: linear-gradient(112deg, rgba(233,247,251,.98), rgba(255,255,255,.94), rgba(227,246,237,.9));
+}
+.qul-vocab-liquid-nav:focus-visible {
+  outline: 2px solid #059669;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .qul-vocab-liquid-nav, .qul-word-gallery-filter-active {
+    transition: none !important;
+  }
+}

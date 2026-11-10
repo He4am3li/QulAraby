@@ -259,13 +259,16 @@ export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, o
                   onClick={() => { setFilter(tab.key); setShowMobileDetail(false); setMode('word'); }}
                   aria-pressed={filter === tab.key}
                   className={[
-                    'rounded-full px-2.5 py-1.5 text-[10px] font-bold arabic-font transition-colors',
+                    'relative isolate overflow-hidden rounded-full px-2.5 py-1.5 text-[10px] font-bold arabic-font transition-colors',
                     filter === tab.key
-                      ? 'bg-slate-800 text-white shadow-sm'
+                      ? 'qul-word-gallery-filter-active text-slate-800 shadow-sm'
                       : 'bg-white/80 text-slate-600 border border-white hover:bg-white'
                   ].join(' ')}
                 >
-                  {lang === 'ar' ? tab.ar : tab.en}
+                  {filter === tab.key && (
+                    <motion.span layoutId="qul-word-gallery-filter-lens" className="qul-word-gallery-filter-lens" transition={{ type: 'spring', stiffness: 400, damping: 36 }} aria-hidden="true" />
+                  )}
+                  <span className="relative z-10">{lang === 'ar' ? tab.ar : tab.en}</span>
                 </button>
               ))}
             </div>
@@ -288,20 +291,23 @@ export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, o
                 onClick={() => chooseWord(word)}
                 aria-pressed={selected?.id === word.id}
                 className={[
-                  'qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all',
+                  'qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all relative isolate overflow-hidden',
                   selected?.id === word.id ? 'qul-word-gallery-item-active' : ''
                 ].join(' ')}
               >
-                <div className="qul-word-gallery-tile h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600">
+                {selected?.id === word.id && (
+                  <motion.span layoutId="qul-word-gallery-selection" className="qul-word-gallery-selection" transition={{ type: 'spring', stiffness: 420, damping: 38 }} aria-hidden="true" />
+                )}
+                <div className="qul-word-gallery-tile h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600 relative z-10">
                   {word.emoji && !word.emoji.startsWith('/')
                     ? <span>{word.emoji}</span> : <BookText size={18} strokeWidth={1.7}/>}
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="relative z-10 flex-1 min-w-0">
                   <div className="text-[13px] font-black arabic-font text-slate-800 truncate" dir="rtl">{mode === 'practice' && game === 'scramble' && selected?.id === word.id ? '••••' : word.original_word}</div>
                   <div className="text-[10px] text-slate-500 truncate" dir="ltr">{mode === 'practice' && game === 'meaning' && selected?.id === word.id ? '••••' : word.translation}</div>
                 </div>
                 <span className={[
-                  'h-2 w-2 rounded-full shrink-0',
+                  'relative z-10 h-2 w-2 rounded-full shrink-0',
                   isMastered(word) ? 'bg-emerald-500'
                     : isDue(word) ? 'bg-amber-400' : 'bg-sky-400'
                 ].join(' ')} aria-hidden="true"/>
@@ -351,22 +357,22 @@ export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, o
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={selected.id + ':' + mode}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.15 }}
+                initial={{ opacity: 0, y: 9, scale: 0.975 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.99 }}
+                transition={{ type: "spring", stiffness: 360, damping: 34 }}
                 className="flex-1 min-h-0 flex flex-col text-center px-4 sm:px-6 pb-3 sm:pb-5 pt-2"
               >
                 {mode === 'word' ? (
                   <>
                     <div className="flex-1 min-h-0 w-full flex flex-col justify-center items-center gap-2">
-                      <div className="qul-word-gallery-orb shrink-0 flex items-center justify-center" aria-hidden="true">
+                      <motion.div key={selected.id + "-art"} initial={{ opacity: 0.55, y: 11, scale: 0.86 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: "spring", stiffness: 270, damping: 25, delay: 0.04 }} className="qul-word-gallery-orb shrink-0 flex items-center justify-center" aria-hidden="true">
                         {selected.image_data
                           ? <img src={selected.image_data} alt="" className="w-[66%] h-[66%] object-contain relative z-10" referrerPolicy="no-referrer" />
                           : selected.emoji && !selected.emoji.startsWith('/')
                             ? <span className="relative z-10 text-4xl sm:text-5xl">{selected.emoji}</span>
                             : <BookOpen size={40} strokeWidth={1.2} className="relative z-10 text-slate-500" />}
-                      </div>
+                      </motion.div>
                       <h2 className="arabic-font font-black text-slate-900 text-2xl sm:text-3xl leading-normal max-w-full break-words" dir="rtl">
                         {selected.original_word}
                       </h2>
