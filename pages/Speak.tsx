@@ -360,13 +360,13 @@ export const Speak: React.FC = () => {
     const transport = sessionRef.current;
     if (!clean || !transport?.session) return false;
     try {
-      transport.stream?.getAudioTracks().forEach((track: MediaStreamTrack) => { track.enabled = false; });
-      setMicMuted(true);
-      micMeterRef.current?.style.setProperty('--mic-scale', '0.12');
       transport.session.sendClientContent({
         turns: [{ role: 'user', parts: [{ text: clean }] }],
         turnComplete: true,
       });
+      transport.stream?.getAudioTracks().forEach((track: MediaStreamTrack) => { track.enabled = false; });
+      setMicMuted(true);
+      micMeterRef.current?.style.setProperty('--mic-scale', '0.12');
       if (learnerTextRef.current.trim() || tutorTextRef.current.trim()) flushPendingTranscript();
       historyRef.current = [...historyRef.current, { role: 'user', text: clean, modality: 'text' }];
       setConversationHistory(historyRef.current);
