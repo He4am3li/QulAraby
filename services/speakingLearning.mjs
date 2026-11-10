@@ -76,3 +76,45 @@ export const validateSpeakingMissionEvidence = (history = [], objectives = [], c
     return { goal, evidence: achieved ? evidence : '', achieved: Boolean(achieved) };
   });
 };
+
+
+/**
+ * A session ending is not an assessment guarantee. It must still produce a
+ * truthful printable record when live transcription is partial or absent.
+ * The lack of speech recognition is NOT evidence that the learner was silent.
+ */
+export const createLimitedSpeakingReport = ({ topicAr='المحادثة', history=[] }={}) => {
+  const lines=Array.isArray(history)?history:[];
+  const transcribedSpeech=lines.some(entry=>entry?.role==='user'&&entry?.modality!=='text'&&
+    typeof entry.text==='string'&&entry.text.trim());
+  const typedOnly=lines.some(entry=>entry?.role==='user'&&entry?.modality==='text'&&
+    typeof entry.text==='string'&&entry.text.trim())&&!transcribedSpeech;
+  const summary=transcribedSpeech
+    ? 'انتهت الجلسة، لكن التحليل الآلي غير متاح. احتفظنا بما وصل من النص، ولا يمكن الجزم بجودة النطق أو اكتمال التفريغ.'
+    : typedOnly
+      ? 'انتهت الجلسة. توجد ردود كتابية، لكن لم يصل تفريغ موثوق لكلام الطالب، لذا لا يمكن إصدار تقييم شفهي.'
+      : 'انتهت الجلسة، لكن لم يصل تفريغ موثوق لكلام الطالب. هذا لا يعني أنه لم يتحدث، ولا يمكن إصدار تقييم شفهي.';
+  const summaryEn=transcribedSpeech
+    ? 'The session ended, but automated analysis is unavailable. Available transcript text was retained. Pronunciation and transcription completeness cannot be verified.'
+    : typedOnly
+      ? 'The session ended. Typed responses were recorded, but no reliable learner speech transcript was received, so an oral assessment is not possible.'
+      : 'The session ended, but no reliable learner speech transcript was received. This does not mean the learner was silent, and an oral assessment is not possible.';
+  return {
+    assessmentStatus:'limited',
+    summary, summaryEn,
+    key_vocabulary:[],
+    corrections:[],
+    missionEvidence:[],
+    tutor_tip_ar:'راجع عبارات الحوار المتاحة، ثم تدرب على جملة قصيرة مرة أخرى.',
+    tutor_tip_en:'Review the available dialogue and practise one short sentence again.',
+    next_practice:{
+      ar:'قل جملة قصيرة عن '+String(topicAr||'موضوعك').slice(0,60)+' واطلب من المعلم إعادتها.',
+      en:'Say one short Arabic sentence about the topic and ask the tutor to repeat it.',
+    },
+  };
+};
+
+export const hasTranscribedLearnerSpeech = (history=[]) =>
+  Array.isArray(history)&&history.some(entry=>
+    entry?.role==='user'&&entry?.modality!=='text'&&typeof entry.text==='string'&&entry.text.trim()
+  );
