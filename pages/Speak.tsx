@@ -1106,8 +1106,16 @@ export const Speak: React.FC = () => {
                     {LEVELS.map(level => (
                         <button
                             key={level.id}
-                            disabled={isActive || loading}
-                            onClick={() => { manualLevelRef.current = true; setSelectedLevel(level); if (speakingBranch === 'booth') setShowMobileOptions(false); }}
+                            disabled={isActive || loading || isFinishing || showSummary}
+                            onClick={() => {
+                              if (selectedLevel?.id !== level.id) {
+                                setReportAvailable(false);
+                                setInsights(null);
+                              }
+                              manualLevelRef.current = true;
+                              setSelectedLevel(level);
+                              if (speakingBranch === 'booth') setShowMobileOptions(false);
+                            }}
                             className={`w-full px-4 py-3 rounded-xl text-xs font-black transition-all flex items-center justify-between ${selectedLevel?.id === level.id ? 'bg-[#2563eb] text-white shadow-md' : 'bg-white text-slate-400 hover:text-slate-600 border border-slate-100'} ${isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             <span className="arabic-font leading-none">{level.ar}</span>
