@@ -1631,7 +1631,7 @@ export function createSecretMission(container:HTMLElement, events:SecretEvents, 
       // Finite-state locomotion: grounded, airborne, prone and transitions.
       // Available Soldier.glb clips are blended, while missing actions fall
       // back to procedural poses rather than freezing the character.
-      const desiredState=!grounded?'jump':horizontalSpeed<.18?'idle':crouch?'walk':horizontalSpeed>4.25?'run':'walk';
+      const desiredState: string=!grounded?'jump':horizontalSpeed<.18?'idle':crouch?'walk':horizontalSpeed>4.25?'run':'walk';
       const candidates=desiredState==='jump'?['jump','running','run','idle']:
         desiredState==='crawl'?['crawl','crouch','walk','idle']:
         desiredState==='prone'?['prone','crouch','idle']:
