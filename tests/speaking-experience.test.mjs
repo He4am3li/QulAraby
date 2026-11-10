@@ -422,3 +422,41 @@ test('alphabet tabs cover old printed letters and conversation log uses a paper 
   assert.doesNotMatch(booth,/qul-scene-transcript-toggle/);
   assert.match(book,/ARABIC_DIRECTORY_LETTERS\.map/);
 });
+
+
+test('typed speaking turns stay in dialogue but never inflate oral evidence or mission proof',()=>{
+  const turns=[
+    {role:'user',text:'أريد الذهاب إلى المكتبة',modality:'text'},
+    {role:'ai',text:'فكرة جميلة'},
+    {role:'user',text:'أنا أقرأ كتابًا',modality:'speech'}
+  ];
+  const evidence=summarizeSpeakingEvidence(turns);
+  assert.equal(evidence.learnerTurns,1);
+  assert.equal(evidence.arabicWords,3);
+  assert.equal(validateSpeakingMissionEvidence(turns,['موضوع'],[
+    {goal:'موضوع',evidence:'أريد الذهاب إلى المكتبة'}
+  ])[0].achieved,false);
+});
+
+test('free conversation has its own glass dock without changing physical call booth',()=>{
+  const speak=source('pages/Speak.tsx');
+  const studio=source('components/SpeakingFreeStudio.tsx');
+  const css=source('components/SpeakingFreeStudio.css');
+  const booth=source('components/SpeakingCallBooth.tsx');
+  assert.match(speak,/speakingBranch === 'booth' \? \(/);
+  assert.match(speak,/<SpeakingFreeStudio/);
+  assert.match(studio,/data-testid="free-speaking-studio"/);
+  assert.match(studio,/data-testid="free-speaking-tool-dock"/);
+  assert.match(studio,/onSendText\(value\)/);
+  assert.match(speak,/sendClientContent\(\{/);
+  assert.match(speak,/modality: 'text'/);
+  assert.match(speak,/finalHistory\.filter\(entry => entry\.role === 'ai' \|\| entry\.modality !== 'text'\)/);
+  assert.match(studio,/onTranslate\(source\)/);
+  assert.match(studio,/onToggleMic/);
+  assert.match(studio,/onStop/);
+  assert.match(studio,/onResume/);
+  assert.match(studio,/onStartSpelling/);
+  assert.match(css,/@media\(max-width:640px\)/);
+  assert.match(css, /prefers-reduced-motion:reduce/);
+  assert.ok(!booth.includes('SpeakingFreeStudio'), 'The photographic telephone booth must remain independent');
+});

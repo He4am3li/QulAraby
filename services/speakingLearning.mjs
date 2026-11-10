@@ -1,10 +1,13 @@
-// Derived only from the learner's transcribed text. This does NOT evaluate audio pronunciation.
+// Only transcribed learner SPEECH counts as oral evidence. Typed replies may
+// remain in the conversation but must not inflate spoken turns or words.
+// This still does NOT evaluate audio pronunciation.
 export const summarizeSpeakingEvidence = (history = []) => {
-  const learner = history.filter(turn => turn?.role === 'user' && typeof turn?.text === 'string' && turn.text.trim());
+  const learner = history.filter(turn => turn?.role === 'user' && turn?.modality !== 'text' && typeof turn?.text === 'string' && turn.text.trim());
   const learnerText = learner.map(turn => turn.text.trim());
   const allWords = learnerText.flatMap(text => text.split(/\s+/u).filter(Boolean));
-  const arabicWords = learnerText.flatMap(text => (text.match(/[\u0621-\u064A]+/gu) || []));
+  const arabicWords = learnerText.flatMap(text => (text.match(/[\u0621-\u064A][\u0621-\u064A\u064B-\u065F]*/gu) || []));
   const normalizedWords = arabicWords.map(word => word
+    .replace(/[\u064B-\u065F]/gu, '')
     .replace(/[أإآ]/gu, 'ا')
     .replace(/ى/gu, 'ي')
     .replace(/ـ/gu, ''));
@@ -60,7 +63,7 @@ export const mapPlacementLevel = (cefr) => {
  */
 export const validateSpeakingMissionEvidence = (history = [], objectives = [], claimed = []) => {
   const learnerText = (Array.isArray(history) ? history : [])
-    .filter(turn => turn?.role === 'user' && typeof turn.text === 'string')
+    .filter(turn => turn?.role === 'user' && turn?.modality !== 'text' && typeof turn.text === 'string')
     .map(turn => turn.text.trim())
     .join(' ');
   return (Array.isArray(objectives) ? objectives : []).map((goal, index) => {
