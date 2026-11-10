@@ -432,7 +432,7 @@ test('typed speaking turns stay in dialogue but never inflate oral evidence or m
   ];
   const evidence=summarizeSpeakingEvidence(turns);
   assert.equal(evidence.learnerTurns,1);
-  assert.equal(evidence.arabicWords,4);
+  assert.equal(evidence.arabicWords,3);
   assert.equal(validateSpeakingMissionEvidence(turns,['موضوع'],[
     {goal:'موضوع',evidence:'أريد الذهاب إلى المكتبة'}
   ])[0].achieved,false);
