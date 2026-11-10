@@ -12,6 +12,7 @@ interface FreeStudioProps {
   level: string;
   isActive: boolean;
   loading: boolean;
+  isFinishing: boolean;
   isAiSpeaking: boolean;
   micMuted: boolean;
   recoveryNotice: string | null;
@@ -37,7 +38,7 @@ const HELP_LINES = [
 ];
 
 export const SpeakingFreeStudio: React.FC<FreeStudioProps> = ({
-  lang, topic, level, isActive, loading, isAiSpeaking, micMuted, recoveryNotice,
+  lang, topic, level, isActive, loading, isFinishing, isAiSpeaking, micMuted, recoveryNotice,
   history, learnerText, tutorText, meterRef, onResume, onStop, onToggleMic,
   onSendText, onTranslate, onStartSpelling, isGeneratingChallenge, children
 }) => {
@@ -125,9 +126,7 @@ export const SpeakingFreeStudio: React.FC<FreeStudioProps> = ({
             <small>{level} <span aria-hidden="true">·</span> {micMuted ? (ar ? 'الميكروفون مكتوم' : 'Mic muted') : isAiSpeaking ? (ar ? 'المعلم يتحدث' : 'Tutor speaking') : isActive ? (ar ? 'جاهز للاستماع' : 'Listening') : (ar ? 'غير متصل' : 'Disconnected')}</small>
           </div>
         </div>
-        <button type="button" onClick={onStop} className="qul-free-end" aria-label={ar ? 'إنهاء الجلسة وإعداد التقرير' : 'End session and prepare report'}>
-          <Check size={15} aria-hidden="true" />{ar ? 'إنهاء الجلسة' : 'Finish'}
-        </button>
+        <span className="qul-free-session-hint">{isFinishing ? (ar ? 'جارٍ حفظ الجلسة' : 'Saving session') : isActive ? (ar ? 'المحادثة جارية' : 'Session in progress') : (ar ? 'جاهز' : 'Ready')}</span>
       </header>
 
       {recoveryNotice && !isActive && (
@@ -260,7 +259,13 @@ export const SpeakingFreeStudio: React.FC<FreeStudioProps> = ({
           aria-label={dockOpen ? (ar ? 'طي أدوات المحادثة' : 'Collapse conversation tools') : (ar ? 'فتح أدوات المحادثة' : 'Open conversation tools')}>
           {dockOpen ? <ChevronDown size={23}/> : <StudioMicIcon size={25} strokeWidth={1.8}/>}
         </button>
-        <span id="qul-free-dock-label" className="qul-free-dock-caption">{dockOpen ? (ar ? 'أدوات المحادثة' : 'Conversation tools') : (ar ? 'أدوات المحادثة' : 'Conversation tools')}</span>
+        <span id="qul-free-dock-label" className="qul-free-dock-caption">{ar ? 'أدوات المحادثة' : 'Conversation tools'}</span>
+        <button type="button" data-testid="free-speaking-finish" onClick={onStop}
+          disabled={isFinishing} className="qul-free-finish"
+          aria-label={ar ? 'إنهاء المحادثة وعرض التقرير' : 'Finish conversation and show report'}>
+          {isFinishing ? <Loader2 size={15} className="qul-free-spin" aria-hidden="true" /> : <Check size={15} aria-hidden="true" />}
+          {isFinishing ? (ar ? 'جارٍ إعداد التقرير...' : 'Preparing report...') : (ar ? 'إنهاء المحادثة وعرض التقرير' : 'Finish & view report')}
+        </button>
       </footer>
     </section>
   );
