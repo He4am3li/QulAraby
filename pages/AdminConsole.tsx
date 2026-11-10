@@ -466,6 +466,17 @@ export const AdminConsole: React.FC = () => {
     return () => window.removeEventListener('keydown', escape);
   }, [deleteTarget, activeAccountMenu, deletingAccount]);
 
+  React.useEffect(() => {
+    if (!activeAccountMenu) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (event.target instanceof Element && !event.target.closest('[data-account-actions]')) {
+        setActiveAccountMenu(null);
+      }
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    return () => document.removeEventListener('pointerdown', closeOutside);
+  }, [activeAccountMenu]);
+
   const recordAdminEvent = async (action: string, target: string, details: string) => {
     try {
       await addDoc(collection(db, 'admin_audit_logs'), {
@@ -752,7 +763,7 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
                   <div className="min-w-0"><div className="truncate font-bold">{userRecord.displayName || 'مستخدم قُل'}</div><div className="truncate text-xs text-slate-500">{userRecord.email}</div><div className="mt-1 text-[11px] text-slate-400">UID: {userRecord.uid}</div><div className={`mt-2 text-xs font-bold ${isPlatformAdmin ? 'text-violet-700' : userRecord.approved === true ? 'text-emerald-700' : 'text-amber-700'}`}>{isPlatformAdmin ? 'مالك المنصة' : userRecord.approved === true ? 'حساب معتمد' : 'بانتظار موافقة الإدارة'}</div></div>
                   {isPlatformAdmin ? <div className="rounded-xl bg-violet-50 px-3 py-2 text-sm font-bold text-violet-800">أدمن المنصة</div> : <label className="space-y-1 text-xs font-bold text-slate-500">الدور<select className={inputClass} value={draft.role} onChange={e => setDrafts(old => ({ ...old, [userRecord.uid]: { ...draft, role: e.target.value } }))}>{userRecord.role === 'admin' && <option value="admin">أدمن</option>}<option value="student">طالب</option><option value="teacher">معلم</option><option value="schoolAdmin">مدير مدرسة</option></select></label>}
                   <label className="space-y-1 text-xs font-bold text-slate-500">المدرسة المرتبط بها<select disabled={isPlatformAdmin} className={inputClass} value={draft.schoolId} onChange={e => setDrafts(old => ({ ...old, [userRecord.uid]: { ...draft, schoolId: e.target.value } }))}><option value="">حساب مستقل</option>{schools.map(school => <option key={school.id} value={school.id}>{school.name}</option>)}</select></label>
-                  <div className="relative flex min-w-[130px] justify-end">
+                  <div data-account-actions className="relative flex min-w-[130px] justify-end">
                     {isPlatformAdmin ? (
                       <span className="flex items-center gap-2 rounded-xl border border-violet-100 bg-violet-50/90 px-3 py-2.5 text-xs font-bold text-violet-700"><LockKeyhole size={15}/> محمي</span>
                     ) : (
