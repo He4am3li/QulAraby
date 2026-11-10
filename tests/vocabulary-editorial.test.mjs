@@ -79,3 +79,17 @@ assert.ok(source.includes('const [savingWord, setSavingWord]'),
   'Saving needs a pending state, avoiding accidental repeated clicks');
 assert.ok(source.includes("Researcher', color: 'teal'"),
   'Intermediate learner rank must translate correctly and keep its color');
+
+
+// Interactive word-gallery regression guards. Keep these effects local to
+// Vocabulary so section changes cannot alter unrelated navigation.
+const gallery = readFileSync(new URL('../components/VocabularyWordGallery.tsx', import.meta.url), 'utf8');
+const glassCss = readFileSync(new URL('../components/vocabulary-word-gallery.css', import.meta.url), 'utf8');
+assert.match(source, /layoutId="qul-vocab-liquid-nav-lens"/, 'Vocabulary navigation needs a shared glass highlight');
+assert.match(source, /<AnimatePresence mode="wait" initial={false}>/, 'Switching Vocabulary views should animate without reflow');
+assert.match(gallery, /layoutId="qul-word-gallery-selection"/, 'Selected word must move its highlight across the shelf');
+assert.match(gallery, /layoutId="qul-word-gallery-filter-lens"/, 'Gallery filters must retain a shared glass selection');
+assert.match(gallery, /data-testid="word-inline-practice"/, 'Keep practice inside the word stage');
+assert.match(gallery, /data-testid="word-inline-analysis"/, 'Keep analysis inside the word stage');
+assert.match(glassCss, /prefers-reduced-motion: reduce/, 'Gallery must support reduced-motion preferences');
+console.log('Vocabulary glass navigation and inline word stage guards OK.');
