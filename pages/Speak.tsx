@@ -755,14 +755,30 @@ export const Speak: React.FC = () => {
         return;
       }
 
-      const data = await generateSessionInsights(
-        finalHistory.filter(entry => entry.role === 'ai' || entry.modality !== 'text'),
-        topicAtFinish,
-        speakingBranch === 'booth' ? {
-          objectivesAr: selectedCallContact.objectivesAr,
-          aimAr: selectedCallContact.aimAr,
-        } : undefined
-      );
+      // Give the analysis a deadline. Failure or a slow provider must never
+      // trap the learner behind an endless 'Preparing report' spinner.
+      let analysisTimer: number | undefined;
+      const timedOutReport = new Promise<ReturnType<typeof createLimitedSpeakingReport>>(resolve => {
+        analysisTimer = window.setTimeout(() => resolve(
+          createLimitedSpeakingReport({ topicAr:topicAtFinish, history:finalHistory })
+        ), 12000);
+      });
+      let data: any;
+      try {
+        data = await Promise.race([
+          generateSessionInsights(
+            finalHistory.filter(entry => entry.role === 'ai' || entry.modality !== 'text'),
+            topicAtFinish,
+            speakingBranch === 'booth' ? {
+              objectivesAr: selectedCallContact.objectivesAr,
+              aimAr: selectedCallContact.aimAr,
+            } : undefined
+          ),
+          timedOutReport,
+        ]);
+      } finally {
+        if (analysisTimer !== undefined) window.clearTimeout(analysisTimer);
+      }
       setInsights(data);
 
       // Only observed, validated learning evidence may be persisted.
