@@ -291,14 +291,14 @@ export const VocabularyWordGallery: React.FC<Props> = ({ words, lang, onSpeak, o
                 onClick={() => chooseWord(word)}
                 aria-pressed={selected?.id === word.id}
                 className={[
-                  'qul-word-gallery-item relative isolate overflow-hidden w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-colors',
+                  'qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all relative isolate overflow-hidden',
                   selected?.id === word.id ? 'qul-word-gallery-item-active' : ''
                 ].join(' ')}
               >
                 {selected?.id === word.id && (
                   <motion.span layoutId="qul-word-gallery-selection" className="qul-word-gallery-selection" transition={{ type: 'spring', stiffness: 420, damping: 38 }} aria-hidden="true" />
                 )}
-                <div className="qul-word-gallery-tile relative z-10 h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600">
+                <div className="qul-word-gallery-tile h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600 relative z-10">
                   {word.emoji && !word.emoji.startsWith('/')
                     ? <span>{word.emoji}</span> : <BookText size={18} strokeWidth={1.7}/>}
                 </div>
