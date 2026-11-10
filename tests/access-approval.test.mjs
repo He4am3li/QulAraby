@@ -26,7 +26,7 @@ assert.doesNotMatch(rules, /allow read: if true;/, 'Firestore must not permit an
 assert.doesNotMatch(rules, /hasAny\(\['poll', 'exercise', 'reaction', 'stickyNotes'\]\)/, 'Students must not edit unrelated session fields');
 const deleteApi = read('api/admin-delete-user.ts');
 assert.match(deleteApi, /auth\.verifyIdToken\(match\[1\], true\)/, 'Owner ID token must be verified and revocation checked server-side');
-assert.match(deleteApi, /decoded\.email\?\.toLowerCase\(\) !== OWNER_EMAIL/, 'Only the owner's verified email may delete accounts');
+assert.match(deleteApi, /decoded\.email\?\.toLowerCase\(\) !== OWNER_EMAIL/, 'Only the verified owner email may delete accounts');
 assert.match(deleteApi, /decoded\.email_verified !== true/, 'Owner must use a verified identity');
 assert.match(deleteApi, /decoded\.auth_time\) < 300/, 'Deletion requires recent reauthentication');
 assert.match(deleteApi, /uid === decoded\.uid/, 'Account deletion must exclude the owner');
