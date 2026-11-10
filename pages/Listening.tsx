@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CassettePlayer } from '../components/CassettePlayer';
 import { RadioThermalPrinter, RadioLearningStage } from '../components/RadioThermalPrinter';
 import '../components/ListeningRadioRetouch.css';
+import '../components/vocabulary-word-gallery.css';
 import { RadioVolumeDial } from '../components/RadioVolumeDial';
 import { RadioAudioSettings } from '../components/RadioAudioSettings';
 import { useRadioNarration } from '../src/hooks/useRadioNarration';
@@ -31,8 +32,6 @@ const LEVELS = [
 ];
 
 const TOPICS = [
-  { id: 'dictation', ar: 'تحدي الإملاء', en: 'Spelling Challenge', icon: PenTool, color: 'blue', bg: 'bg-blue-50', border: 'border-blue-500', text: 'text-blue-600', activeBg: 'bg-blue-500', description: 'استمع للكلمة واكتبها بشكل صحيح.' },
-  { id: 'emotions', ar: 'المشاعر', en: 'Emotions', icon: Heart, color: 'rose', bg: 'bg-rose-50', border: 'border-rose-500', text: 'text-rose-600', activeBg: 'bg-rose-500', description: 'افهم نبرة الصوت وحدد شعور المتحدث.' },
   { id: 'radio', ar: 'الراديو', en: 'Radio', icon: RadioIcon, color: 'amber', bg: 'bg-amber-50', border: 'border-amber-500', text: 'text-amber-600', activeBg: 'bg-amber-500', description: 'استمع لمحطات مختلفة واكتشف القصص والأخبار.' },
   {
     id: 'cassette_stories',
@@ -117,19 +116,6 @@ export const Listening: React.FC = () => {
   const [lipFeedback, setLipFeedback] = React.useState<any>(null);
   const [lipLoading, setLipLoading] = React.useState(false);
 
-  // Emotions State
-  const [emotionExercise, setEmotionExercise] = React.useState<any>(null);
-  const [emotionFeedback, setEmotionFeedback] = React.useState<any>(null);
-  const [emotionAudio, setEmotionAudio] = React.useState<AudioBuffer | null>(null);
-
-  // Dictation State
-  const [dictationWord, setDictationWord] = React.useState<string>('');
-  const [dictationInput, setDictationInput] = React.useState<string>('');
-  const [dictationFeedback, setDictationFeedback] = React.useState<any>(null);
-  const [dictationLoading, setDictationLoading] = React.useState(false);
-  const [dictationAudio, setDictationAudio] = React.useState<AudioBuffer | null>(null);
-  const [showDictationKeyboard, setShowDictationKeyboard] = React.useState(false);
-
   const audioContextRef = React.useRef<AudioContext | null>(null);
   const sourceNodeRef = React.useRef<AudioBufferSourceNode | null>(null);
   const staticNodeRef = React.useRef<AudioBufferSourceNode | null>(null);
@@ -166,7 +152,6 @@ export const Listening: React.FC = () => {
       back: 'رجوع',
       radio: 'الراديو',
       lipReader: 'قارئ الشفاه',
-      emotions: 'المشاعر',
       chooseTopic: 'اختر موضوعاً للبدء',
       frequency: 'تردد',
       listen: 'استمع',
@@ -175,7 +160,6 @@ export const Listening: React.FC = () => {
       tryAgain: 'حاول مرة أخرى',
       loading: 'جاري التحميل...',
       matchLips: 'ما هو الصوت الذي يتطابق مع حركة الشفاه؟',
-      identifyEmotion: 'ما هو شعور المتحدث في هذه الجملة؟',
       happy: 'سعيد',
       sad: 'حزين',
       angry: 'غاضب',
@@ -190,8 +174,6 @@ export const Listening: React.FC = () => {
       del: 'حذف',
       clear: 'مسح',
       done: 'تم',
-      spellingChallenge: 'تحدي الإملاء',
-      emotionsChallenge: 'تحدي المشاعر',
       visualAuditoryFocus: 'تدريب التركيز البصري السمعي',
     },
     en: {
@@ -201,7 +183,6 @@ export const Listening: React.FC = () => {
       back: 'Back',
       radio: 'Radio',
       lipReader: 'Lip Reader',
-      emotions: 'Emotions',
       chooseTopic: 'Choose a topic to start',
       frequency: 'Freq',
       listen: 'Listen',
@@ -210,7 +191,6 @@ export const Listening: React.FC = () => {
       tryAgain: 'Try Again',
       loading: 'Loading...',
       matchLips: 'Which audio matches the lip movement?',
-      identifyEmotion: 'What is the speaker\'s emotion?',
       happy: 'Happy',
       sad: 'Sad',
       angry: 'Angry',
@@ -225,8 +205,6 @@ export const Listening: React.FC = () => {
       del: 'Del',
       clear: 'Clear',
       done: 'Done',
-      spellingChallenge: 'Spelling Challenge',
-      emotionsChallenge: 'Emotions Challenge',
       visualAuditoryFocus: 'Visual-Auditory Focus Training',
     }
   };
@@ -348,48 +326,6 @@ export const Listening: React.FC = () => {
 
   // --- Logic Helpers ---
 
-  const loadDictation = async () => {
-    if (!selectedLevel) return;
-    setDictationLoading(true);
-    setDictationFeedback(null);
-    setDictationInput('');
-    setDictationAudio(null);
-    stopAudio();
-
-    try {
-      let words = ['تفاحة', 'كتاب', 'مدرسة', 'قلم', 'بيت', 'شمس', 'قمر', 'بحر'];
-      if (selectedLevel.id === 'intermediate') {
-        words = ['مستشفى', 'طائرة', 'مهندس', 'حديقة', 'سيارة', 'جامعة', 'عائلة', 'صديق'];
-      } else if (selectedLevel.id === 'advanced') {
-        words = ['حضارة', 'اكتشاف', 'تكنولوجيا', 'مستقبل', 'اجتماعي', 'اقتصادي', 'ثقافي', 'سياسي'];
-      }
-      
-      const targetWord = words[Math.floor(Math.random() * words.length)];
-      setDictationWord(targetWord);
-      
-      const audioBytes = await generateSpeech(targetWord, 'ar');
-      if (audioBytes) {
-        const ctx = await initAudio();
-        const buffer = await decodeAudioData(audioBytes, ctx);
-        setDictationAudio(buffer);
-      }
-    } catch (e) {
-      console.error(e);
-      setError("Failed to load dictation word");
-    } finally {
-      setDictationLoading(false);
-    }
-  };
-
-  const checkDictation = () => {
-    const isCorrect = dictationInput.trim() === dictationWord.trim();
-    setDictationFeedback({
-      isCorrect,
-      messageAr: isCorrect ? 'إجابة صحيحة! أحسنت صنعاً.' : `للأسف، الكلمة الصحيحة هي: ${dictationWord}`,
-      messageEn: isCorrect ? 'Correct! Well done.' : `Correction: ${dictationWord}`
-    });
-  };
-
   const loadLipReader = async () => {
     if (!selectedLevel) return;
     setLipLoading(true);
@@ -413,34 +349,6 @@ export const Listening: React.FC = () => {
       setError("Failed to load lip reader");
     } finally {
       setLipLoading(false);
-    }
-  };
-
-  const loadEmotions = async () => {
-    if (!selectedLevel) return;
-    setLoading(true);
-    setEmotionFeedback(null);
-    setEmotionAudio(null);
-    stopAudio();
-    const emotions = ['happy', 'sad', 'angry', 'surprised', 'neutral'];
-    const targetEmotion = emotions[Math.floor(Math.random() * emotions.length)];
-    let sentences = ["سأذهب إلى هناك غداً في الصباح الباكر.", "هل رأيت ما حدث في الخارج قبل قليل؟"];
-    if (selectedLevel.id === 'intermediate') sentences = ["الجو اليوم مختلف تماماً عما كان عليه بالأمس.", "لا أصدق أننا وصلنا إلى هذه النتيجة أخيراً."];
-    else if (selectedLevel.id === 'advanced') sentences = ["إن تداعيات هذا القرار ستظهر جلياً في المستقبل القريب.", "لم أكن أتخيل أن الأمور ستسير بهذا التعقيد."];
-    try {
-      const sentence = sentences[Math.floor(Math.random() * sentences.length)];
-      setEmotionExercise({ sentence, emotion: targetEmotion });
-      const audioBytes = await generateSpeech(sentence, 'ar');
-      if (audioBytes) {
-        const ctx = await initAudio();
-        const buffer = await decodeAudioData(audioBytes, ctx);
-        setEmotionAudio(buffer);
-      }
-    } catch (e) {
-      console.error(e);
-      setError("Failed to load emotion exercise");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -681,122 +589,6 @@ export const Listening: React.FC = () => {
     );
   };
 
-  const renderDictation = () => {
-    return renderModuleCard(
-      t.spellingChallenge,
-      PenTool,
-      "blue",
-      dictationLoading ? (
-        <div className="flex flex-col items-center gap-3 text-blue-500">
-          <Loader2 size={32} className="animate-spin" />
-          <p className="text-slate-400 font-bold arabic-font text-[10px] uppercase tracking-widest">{t.loading}</p>
-        </div>
-      ) : (
-        <div className="w-full h-full flex flex-col items-center justify-between py-1">
-          <div className="flex flex-col items-center gap-3 w-full">
-            <button 
-              onClick={() => dictationAudio && playBuffer(dictationAudio)}
-              disabled={!dictationAudio}
-              className="w-12 h-12 md:w-14 md:h-14 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-200 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-200 transition-all hover:scale-105 active:scale-95"
-            >
-              <Volume2 size={24} />
-            </button>
-
-            <div className="w-full max-w-sm relative px-4">
-              <input 
-                type="text"
-                readOnly
-                onFocus={() => setShowDictationKeyboard(true)}
-                onClick={() => setShowDictationKeyboard(true)}
-                value={dictationInput}
-                placeholder={t.typeWord}
-                className={`w-full p-3 bg-slate-50 border-2 rounded-2xl text-center text-xl font-black text-slate-800 outline-none transition-all placeholder:text-slate-300 arabic-font ${showDictationKeyboard ? 'border-blue-400 bg-white ring-4 ring-blue-50' : 'border-slate-100'}`}
-                disabled={!!dictationFeedback}
-              />
-              {dictationFeedback && (
-                <div className={`absolute -right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg z-10 ${dictationFeedback.isCorrect ? 'bg-emerald-500' : 'bg-rose-500'}`}>
-                  {dictationFeedback.isCorrect ? <Check size={18} /> : <X size={18} />}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="w-full max-w-md relative min-h-[180px] flex flex-col justify-center px-2">
-            <AnimatePresence mode="wait">
-              {dictationFeedback ? (
-                <motion.div 
-                  key="feedback"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="space-y-4 w-full"
-                >
-                  <div className={`p-4 rounded-3xl border-2 ${dictationFeedback.isCorrect ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700'}`}>
-                    <p className="text-lg font-black arabic-font leading-relaxed">{dictationFeedback.messageAr}</p>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      loadDictation();
-                      setShowDictationKeyboard(false);
-                    }}
-                    className="w-full max-w-[180px] mx-auto py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-sm transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 arabic-font"
-                  >
-                    <RefreshCw size={16} />
-                    {t.nextWord}
-                  </button>
-                </motion.div>
-              ) : showDictationKeyboard ? (
-                <motion.div 
-                  key="keyboard"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-slate-50 p-2 rounded-2xl grid gap-1 select-none w-full border border-slate-100 shadow-inner"
-                >
-                  {[
-                    ['أ', 'إ', 'آ', 'ض', 'ص', 'ث', 'ق', 'ف', 'غ', 'ع', 'ه', 'خ', 'ح', 'ج', 'د'],
-                    ['ش', 'س', 'ي', 'ب', 'ل', 'ت', 'ن', 'م', 'ك', 'ط', 'ذ'],
-                    ['ئ', 'ء', 'ؤ', 'ر', 'لا', 'ى', 'ة', 'و', 'ز', 'ظ']
-                  ].map((row, i) => (
-                    <div key={i} className="flex justify-center flex-wrap gap-0.5 md:gap-1">
-                      {row.map(char => (
-                        <button
-                          key={char}
-                          onClick={() => setDictationInput(prev => prev + char)}
-                          className="w-6 h-8 md:w-8 md:h-10 bg-white hover:bg-blue-50 border border-slate-200 rounded-lg flex items-center justify-center text-[10px] md:text-sm font-black text-slate-700 shadow-sm active:scale-95 transition-all"
-                        >
-                          {char}
-                        </button>
-                      ))}
-                    </div>
-                  ))}
-                  <div className="flex justify-center gap-2 mt-2">
-                    <button onClick={() => setDictationInput(prev => prev.slice(0, -1))} className="flex-1 h-8 bg-rose-50 text-rose-500 rounded-lg text-[10px] font-black">{t.del}</button>
-                    <button onClick={() => setDictationInput('')} className="flex-1 h-8 bg-slate-200 text-slate-600 rounded-lg text-[10px] font-black">{t.clear}</button>
-                    <button onClick={() => setShowDictationKeyboard(false)} className="flex-1 h-8 bg-blue-100 text-blue-700 rounded-lg text-[10px] font-black">{t.done}</button>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.button 
-                  key="check"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  onClick={() => {
-                    checkDictation();
-                    setShowDictationKeyboard(false);
-                  }}
-                  disabled={!dictationInput.trim()}
-                  className="w-full max-w-[200px] mx-auto py-3 bg-slate-900 hover:bg-black disabled:bg-slate-200 text-white rounded-2xl font-black text-sm transition-all shadow-xl active:scale-95 arabic-font"
-                >
-                  {t.check}
-                </motion.button>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      )
-    );
-  };
-
   const renderLipReader = () => {
     return renderModuleCard(
       t.lipReader,
@@ -873,75 +665,6 @@ export const Listening: React.FC = () => {
     );
   };
 
-  const renderEmotions = () => {
-    return renderModuleCard(
-      t.emotionsChallenge,
-      Heart,
-      "rose",
-      <div className="w-full h-full flex flex-col items-center justify-between py-2">
-          <div className="flex flex-col items-center gap-4 w-full shrink-0">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-rose-200 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
-            <button 
-              onClick={() => emotionAudio && playBuffer(emotionAudio)}
-              disabled={loading || !emotionAudio}
-              className={`w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-90 relative ${emotionAudio ? 'bg-rose-500 text-white hover:bg-rose-600 shadow-rose-200' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
-            >
-              {loading ? <Loader2 size={24} className="animate-spin" /> : isRadioPlaying ? <Volume2 size={24} className="animate-pulse" /> : <Play size={24} fill="currentColor" className="ml-1" />}
-            </button>
-          </div>
-          
-          <div className="bg-rose-50/50 px-6 py-4 rounded-[2rem] border-2 border-rose-100/50 italic text-rose-900 font-bold arabic-font text-base md:text-xl w-full max-w-2xl mx-auto shadow-sm backdrop-blur-sm">
-            " {emotionExercise?.sentence || "..."} "
-          </div>
-        </div>
-
-        <div className="w-full max-w-2xl space-y-4">
-          <div className="grid grid-cols-5 gap-3 px-2">
-            {[
-              { id: 'happy', ar: t.happy, icon: '😊' },
-              { id: 'sad', ar: t.sad, icon: '😢' },
-              { id: 'angry', ar: t.angry, icon: '😠' },
-              { id: 'surprised', ar: t.surprised, icon: '😲' },
-              { id: 'neutral', ar: t.neutral, icon: '😐' },
-            ].map(emo => (
-              <button 
-                key={emo.id} 
-                onClick={() => setEmotionFeedback({ isCorrect: emo.id === emotionExercise.emotion, selected: emo.id })}
-                className={`p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-1 aspect-square justify-center ${emotionFeedback ? (emo.id === emotionExercise.emotion ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-lg shadow-emerald-50' : emotionFeedback.selected === emo.id ? 'border-red-200 bg-red-50 text-red-600' : 'border-slate-50 opacity-40') : 'border-slate-50 bg-slate-50 hover:border-rose-400 hover:bg-white text-slate-700 shadow-sm transition-transform active:scale-95'}`}
-              >
-                <span className="text-3xl md:text-4xl">{emo.icon}</span>
-                <span className="text-[9px] md:text-[10px] font-black arabic-font uppercase tracking-tighter">{emo.ar}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="h-20 flex items-center justify-center">
-            <AnimatePresence>
-              {emotionFeedback && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`p-4 rounded-3xl flex items-center justify-between w-full border-2 ${emotionFeedback.isCorrect ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${emotionFeedback.isCorrect ? 'bg-emerald-500' : 'bg-red-500'}`}>
-                      {emotionFeedback.isCorrect ? <Check size={20} /> : <X size={20} />}
-                    </div>
-                    <span className="font-black arabic-font text-base md:text-lg">{emotionFeedback.isCorrect ? t.wellDone : t.tryAgain}</span>
-                  </div>
-                  <button onClick={loadEmotions} className={`px-8 py-3 rounded-2xl text-xs font-black uppercase text-white shadow-lg ${emotionFeedback.isCorrect ? 'bg-emerald-600 shadow-emerald-100' : 'bg-red-600 shadow-red-100'}`}>
-                    {t.next}
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
 
   return (
     <div className={`w-full flex flex-col h-full bg-white overflow-hidden animate-in fade-in duration-500 ${lang === 'ar' ? 'text-right' : 'text-left'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -953,14 +676,20 @@ export const Listening: React.FC = () => {
       />
 
       <div className="flex-1 flex overflow-hidden bg-slate-50/30">
-        <aside className="w-[280px] bg-white border-r rtl:border-r-0 rtl:border-l border-slate-100 flex flex-col shrink-0 no-print relative shadow-sm">
-            <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">{t.chooseTopic}</h3>
-                <div className="space-y-3">
-                    {TOPICS.map(topic => (
-                        <button 
-                            key={topic.id} 
+        <aside className={`w-[76px] sm:w-[190px] md:w-[230px] xl:w-[280px] bg-white flex flex-col shrink-0 no-print relative z-[50] shadow-sm ${lang === 'ar' ? 'border-l' : 'border-r'} border-slate-100`}>
+            <div className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-5 xl:p-6 scrollbar-hide">
+                <h3 className="hidden sm:block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 px-1">{t.chooseTopic}</h3>
+                <nav className="flex-1 space-y-2" aria-label={lang === 'ar' ? 'أقسام الاستماع' : 'Listening sections'}>
+                    {TOPICS.map(topic => {
+                        const active = selectedTopic?.id === topic.id;
+                        return (
+                        <button
+                            key={topic.id}
+                            type="button"
                             disabled={!selectedLevel}
+                            aria-current={active ? 'page' : undefined}
+                            aria-pressed={active}
+                            aria-label={lang === 'ar' ? topic.ar : topic.en}
                             onClick={() => {
                                 setSelectedTopic(topic);
                                 if (topic.id === 'radio') {
@@ -974,36 +703,31 @@ export const Listening: React.FC = () => {
                                     stopAudio();
                                 }
                                 if (topic.id !== 'radio') {
-                                    // Leaving radio invalidates a pending five-second tune.
+                                    // Leaving radio invalidates a pending station request.
                                     radioStationRequestRef.current++;
                                     stopAudio();
                                     setLoading(false);
                                 }
-                                if (topic.id === 'emotions') loadEmotions();
-                                if (topic.id === 'dictation') loadDictation();
                             }}
-                            className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-4 text-right group ${selectedTopic?.id === topic.id ? `${topic.border} ${topic.bg} ${topic.text} shadow-md` : 'border-slate-50 bg-slate-50/50 hover:border-slate-200 text-slate-500'} ${!selectedLevel ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+                            className={`qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all qul-vocab-liquid-nav relative isolate overflow-hidden max-sm:justify-center max-sm:gap-0 max-sm:px-1 ${active ? 'qul-word-gallery-item-active' : ''} ${!selectedLevel ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
                         >
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110 ${selectedTopic?.id === topic.id ? `${topic.activeBg} text-white` : 'bg-white text-slate-400'}`}>
-                                <topic.icon size={24}  />
+                            {active && <motion.span layoutId="qul-listening-liquid-nav-lens" className="qul-vocab-liquid-nav-lens" transition={{ type: 'spring', stiffness: 380, damping: 34 }} aria-hidden="true" />}
+                            <div className="qul-word-gallery-tile h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600 relative z-10">
+                                <topic.icon size={20} />
                             </div>
-                            <div className="flex-1 min-w-0 pr-1 overflow-visible">
-                                <p
-                                    className="text-sm font-black leading-snug whitespace-nowrap text-right py-1 overflow-visible"
-                                    style={{ fontFamily: "'Tajawal', 'Cairo', sans-serif" }}
-                                >
-                                    {lang === 'ar' ? topic.ar : topic.en}
-                                </p>
-                                <p className="text-[10px] opacity-60 font-bold uppercase tracking-tighter truncate">{lang === 'ar' ? topic.en : topic.ar}</p>
+                            <div className="relative z-10 hidden sm:block flex-1 min-w-0">
+                                <div className="text-[13px] font-black arabic-font text-slate-800 truncate">{lang === 'ar' ? topic.ar : topic.en}</div>
+                                <div className="text-[10px] text-slate-500 truncate" dir={lang === 'ar' ? 'rtl' : 'ltr'}>{topic.id === 'radio' ? (lang === 'ar' ? 'محطات صوتية' : 'AUDIO STATIONS') : (lang === 'ar' ? 'قصص مسموعة' : 'AUDIO STORIES')}</div>
                             </div>
-                            <ChevronRight size={16} className={`opacity-20 ${lang === 'ar' ? 'rotate-180' : ''}`} />
+                            <span className={`relative z-10 hidden sm:block h-2 w-2 rounded-full shrink-0 ${active ? 'bg-emerald-500' : 'bg-slate-300'}`} aria-hidden="true" />
                         </button>
-                    ))}
-                </div>
+                        );
+                    })}
+                </nav>
             </div>
 
-            <div className="p-6 bg-slate-50/50 border-t border-slate-100 mt-auto shrink-0">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 text-center">{t.studentLevel}</p>
+            <div className="p-2 sm:p-3 md:p-5 xl:p-6 bg-slate-50/50 border-t border-slate-100 mt-auto shrink-0">
+                <p className="hidden sm:block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 text-center">{t.studentLevel}</p>
                 <div className="flex flex-col gap-2">
                     {LEVELS.map(level => (
                         <button
@@ -1022,10 +746,10 @@ export const Listening: React.FC = () => {
                               }
                               setSelectedLevel(level);
                             }}
-                            className={`w-full px-4 py-3 rounded-xl text-xs font-black transition-all flex items-center justify-between ${selectedLevel?.id === level.id ? 'bg-[#2563eb] text-white shadow-md' : 'bg-white text-slate-400 hover:text-slate-600 border border-slate-100'}`}
+                            className={`w-full px-1 sm:px-4 py-3 rounded-xl text-[10px] sm:text-xs font-black transition-all flex items-center justify-center sm:justify-between ${selectedLevel?.id === level.id ? 'bg-[#2563eb] text-white shadow-md' : 'bg-white text-slate-400 hover:text-slate-600 border border-slate-100'}`}
                         >
                             <span className="arabic-font leading-none">{level.ar}</span>
-                            <span className="opacity-70 leading-none text-[10px]">{level.en}</span>
+                            <span className="hidden sm:inline opacity-70 leading-none text-[10px]">{level.en}</span>
                         </button>
                     ))}
                 </div>
@@ -1274,10 +998,6 @@ export const Listening: React.FC = () => {
                     >
                         <CassettePlayer key={selectedLevel.id} allStories={STORY_CASSETTES} selectedLevel={selectedLevel.id} />
                     </motion.div>
-                ) : selectedTopic.id === 'emotions' ? (
-                    renderEmotions()
-                ) : selectedTopic.id === 'dictation' ? (
-                    renderDictation()
                 ) : null}
             </AnimatePresence>
         </main>
