@@ -22,8 +22,8 @@ export const SchoolAccessProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [state, setState] = React.useState<Omit<SchoolAccessValue, 'canAccess' | 'refreshAccess'>>({
     loading: true,
-    isRestricted: false,
-    enabledModules: ALL_SCHOOL_MODULE_IDS,
+    isRestricted: true,
+    enabledModules: [],
     schoolName: null,
     schoolStatus: null,
     accessError: null,
@@ -38,14 +38,14 @@ export const SchoolAccessProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      if (!profile) {
+      if (!profile || (profile.email !== 'he4amali22@gmail.com' && profile.approved !== true)) {
         setState({
           loading: false,
-          isRestricted: false,
-          enabledModules: ALL_SCHOOL_MODULE_IDS,
+          isRestricted: true,
+          enabledModules: [],
           schoolName: null,
-          schoolStatus: null,
-          accessError: null,
+          schoolStatus: 'pending',
+          accessError: 'هذا الحساب غير معتمد من إدارة المنصة.',
         });
         return;
       }
