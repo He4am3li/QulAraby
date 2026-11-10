@@ -37,7 +37,7 @@ import { SchoolDashboard } from './pages/SchoolDashboard';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
-  const { user, profile, isAuthReady, loading } = useAuth();
+  const { user, profile, isAuthReady, loading, signOut } = useAuth();
   const [splashCompleted, setSplashCompleted] = React.useState(false);
 
   // Sync splash state with auth session
@@ -55,6 +55,27 @@ const AppContent: React.FC = () => {
     return (
       <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // A Google sign-in is not an invitation. Block every unapproved account,
+  // including legacy users whose profile has no approval field.
+  const isPlatformOwner = user?.email === 'he4amali22@gmail.com';
+  if (user && (!user.emailVerified || (!isPlatformOwner && profile?.approved !== true))) {
+    return (
+      <div dir="rtl" className="min-h-screen flex items-center justify-center bg-slate-950 p-6 text-white">
+        <div className="w-full max-w-md rounded-3xl border border-white/15 bg-white/5 p-8 text-center shadow-2xl">
+          <img src="/Logo.png" alt="شعار قُل" className="mx-auto mb-6 h-16 w-16 rounded-2xl object-cover" />
+          <h1 className="mb-3 text-2xl font-black">الحساب بانتظار اعتماد الإدارة</h1>
+          <p className="mb-5 text-sm leading-7 text-slate-300">
+            تسجيل الدخول بحساب Google لا يمنح تصريحًا لاستخدام منصة قُل.
+            يرجى التواصل مع مسؤول المنصة لاعتماد حسابك.
+          </p>
+          <div className="mb-5 break-all rounded-xl bg-black/25 px-3 py-3 text-xs text-slate-300">{user.email}</div>
+          <button onClick={() => window.location.reload()} className="me-2 rounded-xl border border-white/20 px-5 py-3 text-sm font-bold">التحقق من الاعتماد</button>
+          <button onClick={() => void signOut()} className="rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-900">تسجيل الخروج</button>
+        </div>
       </div>
     );
   }
