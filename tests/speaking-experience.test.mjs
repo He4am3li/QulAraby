@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { summarizeSpeakingEvidence, createNextSpeakingTask, mapPlacementLevel, validateSpeakingMissionEvidence } from '../services/speakingLearning.mjs';
+import { summarizeSpeakingEvidence, createNextSpeakingTask, mapPlacementLevel, validateSpeakingMissionEvidence, createLimitedSpeakingReport, hasTranscribedLearnerSpeech } from '../services/speakingLearning.mjs';
 import { validateSimulatedDial } from '../services/speakingDial.mjs';
 import { getUaePriceGuidance, UAE_PRACTICE_PRICES } from '../services/speakingUaePrices.mjs';
 import { makeSpeakingSampleDialogue } from '../services/speakingSampleDialogue.mjs';
@@ -459,4 +459,60 @@ test('free conversation has its own glass dock without changing physical call bo
   assert.match(css,/@media\(max-width:640px\)/);
   assert.match(css, /prefers-reduced-motion:reduce/);
   assert.ok(!booth.includes('SpeakingFreeStudio'), 'The photographic telephone booth must remain independent');
+});
+
+
+test('finishing Pivot conversation always opens an honest report, including an incomplete transcript',()=>{
+  const speak=source('pages/Speak.tsx');
+  const studio=source('components/SpeakingFreeStudio.tsx');
+  assert.match(speak,/const stopSession = async \(\) => \{/);
+  assert.match(speak,/if \(finishingRef\.current\) return/);
+  assert.match(speak,/setGeneratingInsights\(true\)/);
+  assert.match(speak,/setShowSummary\(true\)/);
+  assert.match(speak,/transport\.stream\?\.getAudioTracks\(\)/);
+  assert.match(speak,/window\.setTimeout\(resolve, 850\)/);
+  assert.ok(speak.indexOf('const finalHistory = flushPendingTranscript()',speak.indexOf('const stopSession'))<
+    speak.indexOf('closeTransport();',speak.indexOf('const stopSession')));
+  assert.match(speak,/if \(!hasTranscribedLearnerSpeech\(finalHistory\)\)/);
+  assert.doesNotMatch(speak,/finalHistory\.some\(entry => entry\.role === 'user'.*&&/);
+  assert.match(speak,/Promise\.race\(\[/);
+  assert.match(speak,/12000/);
+  assert.match(speak,/setInsights\(createLimitedSpeakingReport/);
+  assert.match(speak,/setReportAvailable\(true\)/);
+  assert.match(speak,/reportAvailable && speakingBranch === 'studio'/);
+  assert.match(studio,/data-testid="free-speaking-finish"/);
+  assert.match(studio,/isFinishing \?/);
+  assert.match(studio,/disabled=\{isFinishing\}/);
+  assert.match(studio,/إنهاء المحادثة وعرض التقرير/);
+  assert.match(studio,/Finish & view report/);
+});
+
+test('missing speech evidence produces a limited bilingual report, not an assertion of silence',()=>{
+  const examples=[
+    [],
+    [{role:'ai',text:'أهلاً وسهلاً'}],
+    [{role:'user',text:'Please help',modality:'text'},{role:'ai',text:'بالطبع'}],
+  ];
+  for(const history of examples){
+    assert.equal(hasTranscribedLearnerSpeech(history),false);
+    const report=createLimitedSpeakingReport({topicAr:'المدرسة',history});
+    assert.equal(report.assessmentStatus,'limited');
+    assert.equal(report.corrections.length,0);
+    assert.equal(report.key_vocabulary.length,0);
+    assert.match(report.summary,/لا يمكن|غير موثوق/);
+    assert.match(report.summaryEn,/not possible|cannot/);
+    assert.match(report.next_practice.ar,/المدرسة/);
+  }
+  assert.equal(hasTranscribedLearnerSpeech([{role:'user',text:'أنا أريد الكتاب'}]),true);
+  assert.equal(hasTranscribedLearnerSpeech([{role:'user',text:'أنا أريد الكتاب',modality:'text'}]),false);
+});
+
+test('report preview explains partial evidence in the selected UI language',()=>{
+  const sheet=source('components/SpeakingReportSheet.tsx');
+  const speak=source('pages/Speak.tsx');
+  assert.match(sheet,/summaryEn\?: string/);
+  assert.match(sheet,/ar \? insights\?\.summary : insights\?\.summaryEn/);
+  assert.match(speak,/عرض آخر تقرير للمحادثة/);
+  assert.match(speak,/View last conversation report/);
+  assert.match(speak,/setShowMobileOptions\(false\); setShowSummary\(true\)/);
 });
