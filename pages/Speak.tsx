@@ -21,7 +21,7 @@ import { getAI, getLiveAI, generateSessionInsights, translateAndExpand, generate
 import { useAuth } from '../components/AuthProvider';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
-import { summarizeSpeakingEvidence, createNextSpeakingTask, mapPlacementLevel } from '../services/speakingLearning.mjs';
+import { summarizeSpeakingEvidence, createNextSpeakingTask, mapPlacementLevel, createLimitedSpeakingReport, hasTranscribedLearnerSpeech } from '../services/speakingLearning.mjs';
 
 const LEVELS = [
   {
@@ -127,6 +127,9 @@ export const Speak: React.FC = () => {
   const [showSummary, setShowSummary] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [generatingInsights, setGeneratingInsights] = React.useState(false);
+  const [isFinishing, setIsFinishing] = React.useState(false);
+  const [reportAvailable, setReportAvailable] = React.useState(false);
+  const finishingRef = React.useRef(false);
   const [selectedLevel, setSelectedLevel] = React.useState<typeof LEVELS[0] | null>(LEVELS[0]);
   const [selectedTopic, setSelectedTopic] = React.useState<typeof TOPICS[0] | null>(null);
   const [speakingBranch, setSpeakingBranch] = React.useState<'booth' | 'studio'>('booth');
@@ -207,6 +210,7 @@ export const Speak: React.FC = () => {
     setUserTranscription('');
     setAiTranscription('');
     setInsights(null);
+    setReportAvailable(false);
     setRecoveryNotice(null);
     setError(null);
     setShowSummary(false);
@@ -457,7 +461,7 @@ export const Speak: React.FC = () => {
   };
 
   const startSession = async (preserveHistory = false) => {
-    if (!selectedLevel || !activeTopic) return;
+    if (finishingRef.current || !selectedLevel || !activeTopic) return;
     closeTransport();
     const attempt = startAttemptRef.current;
     const previousTurns = preserveHistory ? [...historyRef.current].slice(-8) : [];
@@ -473,6 +477,8 @@ export const Speak: React.FC = () => {
       setUserTranscription('');
       setAiTranscription('');
       setInsights(null);
+      setReportAvailable(false);
+      setShowSummary(false);
       setSavedWords([]);
     }
     
@@ -716,60 +722,77 @@ export const Speak: React.FC = () => {
   };
 
   const stopSession = async () => {
-    closeTransport();
-    setLoading(false);
-
-    const finalHistory = flushPendingTranscript();
+    // Guard against double taps before React renders the disabled button.
+    if (finishingRef.current) return;
+    finishingRef.current = true;
+    setIsFinishing(true);
+    setLoading(true);
+    setGeneratingInsights(true);
+    setSetupMode(false);
+    setShowMobileOptions(false);
+    setReportAvailable(true);
+    setShowSummary(true);
     setRecoveryNotice(null);
 
-    if (finalHistory.some(entry => entry.role === 'user' && entry.text.trim()) &&
-        finalHistory.some(entry => entry.role === 'ai' && entry.text.trim())) {
-      setShowSummary(true);
-      setGeneratingInsights(true);
-      try {
-        const data = await generateSessionInsights(finalHistory.filter(entry => entry.role === 'ai' || entry.modality !== 'text'), activeTopic.ar,
-          speakingBranch === 'booth' ? {
-            objectivesAr: selectedCallContact.objectivesAr,
-            aimAr: selectedCallContact.aimAr,
-          } : undefined
-        );
-        setInsights(data);
-
-        // Sync to Knowledge Graph (Mistakes & Interests)
-        if (user) {
-          // 1. Sync Mistakes
-          if (data.corrections && data.corrections.length > 0) {
-            const memoryRef = collection(db, 'users', user.uid, 'memory');
-            for (const correction of data.corrections) {
-              addDoc(memoryRef, {
-                type: 'speaking',
-                content: correction.original,
-                correction: correction.correction,
-                explanation: correction.explanation,
-                userId: user.uid,
-                source: 'Speaking',
-                timestamp: serverTimestamp()
-              }).catch(err => handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}/memory`));
-            }
-          }
-
-          // 2. Sync Interest
-          const interestsRef = collection(db, 'users', user.uid, 'interests');
-          addDoc(interestsRef, {
-            topic: activeTopic.ar,
-            userId: user.uid,
-            frequency: 1,
-            lastSeen: serverTimestamp(),
-            source: 'Speaking'
-          }).catch(err => handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}/interests`));
-        }
-      } catch (e) {
-        console.error("Failed to generate insights", e);
-      } finally {
-        setGeneratingInsights(false);
+    const topicAtFinish = activeTopic?.ar || 'المحادثة';
+    const transport = sessionRef.current;
+    try {
+      if (transport) {
+        // Stop new sound, but keep the live connection briefly to receive the
+        // last speech transcription. This wait is bounded on slow connections.
+        transport.stream?.getAudioTracks().forEach((track:MediaStreamTrack) => track.stop());
+        try { transport.scriptProcessor?.disconnect(); } catch {}
+        try { transport.source?.disconnect(); } catch {}
+        await new Promise<void>(resolve => window.setTimeout(resolve, 850));
       }
-    } else {
-      setSetupMode(true);
+      const finalHistory = flushPendingTranscript();
+      closeTransport();
+
+      // Lack of text recognition is not evidence that the learner was silent.
+      // Never require an utterance from both speaker roles to open the report.
+      if (!hasTranscribedLearnerSpeech(finalHistory)) {
+        setInsights(createLimitedSpeakingReport({ topicAr:topicAtFinish, history:finalHistory }));
+        return;
+      }
+
+      const data = await generateSessionInsights(
+        finalHistory.filter(entry => entry.role === 'ai' || entry.modality !== 'text'),
+        topicAtFinish,
+        speakingBranch === 'booth' ? {
+          objectivesAr: selectedCallContact.objectivesAr,
+          aimAr: selectedCallContact.aimAr,
+        } : undefined
+      );
+      setInsights(data);
+
+      // Only observed, validated learning evidence may be persisted.
+      if (user && data?.assessmentStatus === 'analyzed') {
+        if (Array.isArray(data.corrections)) {
+          const memoryRef = collection(db, 'users', user.uid, 'memory');
+          for (const correction of data.corrections) {
+            addDoc(memoryRef, {
+              type:'speaking', content:correction.original,
+              correction:correction.correction, explanation:correction.explanation,
+              userId:user.uid, source:'Speaking', timestamp:serverTimestamp()
+            }).catch(err => handleFirestoreError(err, OperationType.CREATE, 'users/' + user.uid + '/memory'));
+          }
+        }
+        const interestsRef = collection(db, 'users', user.uid, 'interests');
+        addDoc(interestsRef, {
+          topic:topicAtFinish, userId:user.uid, frequency:1,
+          lastSeen:serverTimestamp(), source:'Speaking'
+        }).catch(err => handleFirestoreError(err, OperationType.CREATE, 'users/' + user.uid + '/interests'));
+      }
+    } catch (e) {
+      console.error('Failed to finish speaking session', e);
+      closeTransport();
+      const partial = flushPendingTranscript();
+      setInsights(createLimitedSpeakingReport({ topicAr:topicAtFinish, history:partial }));
+    } finally {
+      setGeneratingInsights(false);
+      setLoading(false);
+      setIsFinishing(false);
+      finishingRef.current = false;
     }
   };
 
@@ -1104,7 +1127,7 @@ export const Speak: React.FC = () => {
                   </div>
                   <button type="button" className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center"
                     aria-label={lang === 'ar' ? 'إغلاق التقرير' : 'Close report'}
-                    onClick={() => { setShowSummary(false); setSetupMode(true); }}>
+                    onClick={() => { setShowSummary(false); setSetupMode(true); setShowMobileOptions(false); }}>
                     <X size={18}/>
                   </button>
                 </div>
@@ -1265,9 +1288,17 @@ export const Speak: React.FC = () => {
                       </div>
                     )}
 
+                    {reportAvailable && speakingBranch === 'studio' && (
+                      <button type="button" onClick={() => { setShowMobileOptions(false); setShowSummary(true); }}
+                        className="w-full rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 px-4 py-3 flex items-center justify-center gap-2 text-sm font-black"
+                        aria-label={lang === 'ar' ? 'عرض آخر تقرير للمحادثة' : 'View last conversation report'}>
+                        <FileText size={17}/>
+                        {lang === 'ar' ? 'عرض آخر تقرير للمحادثة' : 'View last conversation report'}
+                      </button>
+                    )}
                     <button
                       onClick={() => startSession()}
-                      disabled={loading}
+                      disabled={loading || isFinishing}
                       className="w-full py-5 bg-gradient-to-r from-[#2563eb] to-[#059669] text-white rounded-2xl font-black text-xl shadow-xl shadow-blue-500/30 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                     >
                       {loading ? <Loader2 size={28} className="animate-spin" /> : <StudioMicIcon size={28} strokeWidth={2.5} />}
@@ -1284,6 +1315,7 @@ export const Speak: React.FC = () => {
               level={lang === 'ar' ? (selectedLevel?.ar || '') : (selectedLevel?.en || '')}
               isActive={isActive}
               loading={loading}
+              isFinishing={isFinishing}
               isAiSpeaking={isAiSpeaking}
               micMuted={micMuted}
               recoveryNotice={recoveryNotice || error}
