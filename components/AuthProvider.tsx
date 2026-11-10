@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, deleteField } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, signInWithGoogle, logout } from '../firebase';
 
 export type UserRole = 'admin' | 'schoolAdmin' | 'teacher' | 'student';
@@ -10,6 +10,7 @@ export interface UserProfile {
   email: string;
   displayName?: string;
   role: UserRole;
+  approved?: boolean;
   photoURL?: string;
   createdAt?: any;
   schoolId?: string;
@@ -68,19 +69,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
 
+    let active = true;
+    let profileUnsubscribe: (() => void) | null = null;
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      profileUnsubscribe?.();
+      profileUnsubscribe = null;
       setUser(currentUser);
+      setProfile(null);
+      setLoading(true);
+      setIsAuthReady(false);
       if (currentUser) {
         setAuthError(null);
         try {
           const userDocRef = doc(db, 'users', currentUser.uid);
           const docSnap = await getDoc(userDocRef);
-          
-          if (docSnap.exists()) {
-            const storedProfile = docSnap.data() as UserProfile;
-            setProfile(applyDeveloperPreview(storedProfile, currentUser));
-          } else {
-            // Determine default role
+          if (!active || auth.currentUser?.uid !== currentUser.uid) return;
+          if (!docSnap.exists()) {
+            // No approval flag on creation, so first-time users remain pending.
+            // Compatible with existing Firestore rules until the new rules are published.
             const role: UserRole = currentUser.email === 'he4amali22@gmail.com' ? 'admin' : 'student';
             const newProfile: UserProfile = {
               uid: currentUser.uid,
@@ -91,28 +97,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               createdAt: serverTimestamp(),
             };
             await setDoc(userDocRef, newProfile);
-            setProfile(applyDeveloperPreview(newProfile, currentUser));
           }
+          if (!active || auth.currentUser?.uid !== currentUser.uid) return;
+          profileUnsubscribe = onSnapshot(userDocRef, (snapshot) => {
+            if (!active || auth.currentUser?.uid !== currentUser.uid) return;
+            setProfile(snapshot.exists()
+              ? applyDeveloperPreview(snapshot.data() as UserProfile, currentUser)
+              : null);
+          }, (error) => {
+            console.error('Account approval subscription failed:', error);
+            if (!active || auth.currentUser?.uid !== currentUser.uid) return;
+            setProfile(null); // Fail closed when approval cannot be verified.
+            setAuthError('تعذر التحقق من صلاحية الحساب. يرجى إعادة المحاولة لاحقًا.');
+          });
         } catch (error) {
           console.error('Error fetching or creating user profile:', error);
-          // Fallback profile
-          setProfile(applyDeveloperPreview({
-            uid: currentUser.uid,
-            email: currentUser.email || '',
-            displayName: currentUser.displayName || 'مستخدم قُل',
-            role: currentUser.email === 'he4amali22@gmail.com' ? 'admin' : 'student',
-            photoURL: currentUser.photoURL || '',
-          }, currentUser));
+          if (!active || auth.currentUser?.uid !== currentUser.uid) return;
+          setProfile(null); // Never grant a fallback role on Firestore errors.
+          setAuthError('تعذر التحقق من حالة الحساب في قاعدة البيانات.');
         }
-      } else {
-        setProfile(null);
       }
+      if (!active || (currentUser && auth.currentUser?.uid !== currentUser.uid)) return;
       setIsAuthReady(true);
       setLoading(false);
       setIsSigningIn(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      active = false;
+      profileUnsubscribe?.();
+      unsubscribe();
+    };
   }, []);
 
   const handleSignIn = async () => {
