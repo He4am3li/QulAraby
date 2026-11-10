@@ -2021,12 +2021,12 @@ const SidebarNavBtn: React.FC<{
     aria-current={active ? 'page' : undefined}
     aria-pressed={active}
     aria-label={label}
-    className={`qul-vocab-liquid-nav qul-word-gallery-item relative isolate overflow-hidden w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-colors max-sm:justify-center max-sm:gap-0 max-sm:px-1 ${
+    className={`qul-word-gallery-item w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-start transition-all qul-vocab-liquid-nav relative isolate overflow-hidden max-sm:justify-center max-sm:gap-0 max-sm:px-1 ${
       active ? 'qul-word-gallery-item-active' : ''
     }`}
   >
     {active && <motion.span layoutId="qul-vocab-liquid-nav-lens" className="qul-vocab-liquid-nav-lens" transition={{ type: 'spring', stiffness: 380, damping: 34 }} aria-hidden="true" />}
-    <div className="qul-word-gallery-tile relative z-10 h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600">
+    <div className="qul-word-gallery-tile h-10 w-10 rounded-xl shrink-0 flex items-center justify-center text-lg text-slate-600 relative z-10">
       {icon}
     </div>
     <div className="relative z-10 hidden sm:block flex-1 min-w-0">
