@@ -215,7 +215,7 @@ export const SpeakingFreeStudio: React.FC<FreeStudioProps> = ({
             )}
             {panel === 'history' && (
               <div className="qul-free-history-tools">
-                <span>{ar ? 'المحادثة كاملة في تقرير الجلسة.' : 'The complete transcript is included in your session report.'}</span>
+                <span>{ar ? 'يعرض التقرير مؤشرات من الكلام الذي وصل تفريغه، وليس تسجيلًا صوتيًا كاملًا.' : 'The report summarizes the available transcript, not a full audio recording.'}</span>
                 {latestTutor && (
                   <button type="button" disabled={isGeneratingChallenge || isAiSpeaking}
                     onClick={() => onStartSpelling(latestTutor.text)}>
