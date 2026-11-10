@@ -27,7 +27,7 @@ type SchoolRecord = {
   createdAt?: any; expiresAt?: any;
 };
 type UserRecord = {
-  uid: string; email: string; displayName?: string; role: string; schoolId?: string;
+  uid: string; email: string; displayName?: string; role: string; schoolId?: string; approved?: boolean;
 };
 type TabKey = 'overview' | 'schools' | 'plans' | 'users' | 'subscriptions' | 'analytics' | 'audit' | 'support' | 'settings';
 type AdminLogRecord = { id: string; action?: string; target?: string; details?: string; actorEmail?: string; createdAt?: any };
@@ -365,6 +365,34 @@ export const AdminConsole: React.FC = () => {
     }
   };
 
+  const setUserApproval = async (userRecord: UserRecord, approved: boolean) => {
+    if (userRecord.role === 'admin' || userRecord.email === 'he4amali22@gmail.com') {
+      flash('error', 'لا يمكن تغيير اعتماد حساب إدارة المنصة من هنا.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateDoc(doc(db, 'users', userRecord.uid), {
+        approved,
+        updatedAt: serverTimestamp(),
+      });
+      await recordAdminEvent(
+        approved ? 'اعتماد حساب' : 'إيقاف اعتماد حساب',
+        userRecord.uid,
+        `الحساب: ${userRecord.email}، الحالة: ${approved ? 'معتمد' : 'موقوف'}`,
+      );
+      await loadData();
+      flash('success', approved
+        ? `تم اعتماد حساب ${userRecord.displayName || userRecord.email}.`
+        : `تم حظر حساب ${userRecord.displayName || userRecord.email} من المنصة.`);
+    } catch (error) {
+      console.error('User approval update failed:', error);
+      flash('error', 'تعذر تعديل اعتماد المستخدم. تحقق من صلاحيات Firestore.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const recordAdminEvent = async (action: string, target: string, details: string) => {
     try {
       await addDoc(collection(db, 'admin_audit_logs'), {
@@ -643,15 +671,15 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
             </section>}
 
             {tab === 'users' && <section className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
-              <div className="mb-5"><h2 className="text-xl font-black">الحسابات والصلاحيات ({users.length})</h2><p className="mt-1 text-sm leading-6 text-slate-500">يجب على المستخدم تسجيل الدخول مرة واحدة على الأقل حتى يظهر هنا. لا يمكن تغيير دور أدمن المنصة من هذه الشاشة.</p></div>
+              <div className="mb-5"><h2 className="text-xl font-black">الحسابات والصلاحيات ({users.length})</h2><p className="mt-1 text-sm leading-6 text-slate-500">الحسابات غير المعتمدة لا يمكنها دخول المنصة. أي حساب قديم بلا اعتماد صريح يبقى موقوفًا حتى توافق عليه. لا يمكن تغيير حساب الأدمن من هنا.</p><p className="mt-2 text-sm font-bold text-amber-700">حسابات تنتظر الاعتماد: {users.filter(u => u.role !== 'admin' && u.approved !== true).length}</p></div>
               {users.length === 0 ? <EmptyState message="لم تظهر حسابات بعد."/> : <div className="space-y-3">{users.map(userRecord => {
                 const draft = drafts[userRecord.uid] || { role: userRecord.role, schoolId: userRecord.schoolId || '' };
                 const isPlatformAdmin = userRecord.role === 'admin';
                 return <div key={userRecord.uid} className="grid gap-3 rounded-2xl border border-slate-200 p-4 md:grid-cols-[minmax(0,1.2fr)_minmax(130px,0.7fr)_minmax(170px,0.9fr)_auto] md:items-center">
-                  <div className="min-w-0"><div className="truncate font-bold">{userRecord.displayName || 'مستخدم قُل'}</div><div className="truncate text-xs text-slate-500">{userRecord.email}</div><div className="mt-1 text-[11px] text-slate-400">UID: {userRecord.uid}</div></div>
+                  <div className="min-w-0"><div className="truncate font-bold">{userRecord.displayName || 'مستخدم قُل'}</div><div className="truncate text-xs text-slate-500">{userRecord.email}</div><div className="mt-1 text-[11px] text-slate-400">UID: {userRecord.uid}</div><div className={`mt-2 text-xs font-bold ${isPlatformAdmin ? 'text-violet-700' : userRecord.approved === true ? 'text-emerald-700' : 'text-amber-700'}`}>{isPlatformAdmin ? 'مالك المنصة' : userRecord.approved === true ? 'حساب معتمد' : 'بانتظار موافقة الإدارة'}</div></div>
                   {isPlatformAdmin ? <div className="rounded-xl bg-violet-50 px-3 py-2 text-sm font-bold text-violet-800">أدمن المنصة</div> : <label className="space-y-1 text-xs font-bold text-slate-500">الدور<select className={inputClass} value={draft.role} onChange={e => setDrafts(old => ({ ...old, [userRecord.uid]: { ...draft, role: e.target.value } }))}><option value="student">طالب</option><option value="teacher">معلم</option><option value="schoolAdmin">مدير مدرسة</option></select></label>}
                   <label className="space-y-1 text-xs font-bold text-slate-500">المدرسة المرتبط بها<select disabled={isPlatformAdmin} className={inputClass} value={draft.schoolId} onChange={e => setDrafts(old => ({ ...old, [userRecord.uid]: { ...draft, schoolId: e.target.value } }))}><option value="">حساب مستقل</option>{schools.map(school => <option key={school.id} value={school.id}>{school.name}</option>)}</select></label>
-                  <button disabled={saving || isPlatformAdmin || (draft.role === userRecord.role && draft.schoolId === (userRecord.schoolId || ''))} onClick={() => void saveUser(userRecord)} className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700`}><Check size={15}/> حفظ</button>
+                  <div className="flex flex-col gap-2"><button disabled={saving || isPlatformAdmin || (draft.role === userRecord.role && draft.schoolId === (userRecord.schoolId || ''))} onClick={() => void saveUser(userRecord)} className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700`}><Check size={15}/> حفظ الدور</button>{!isPlatformAdmin && <button disabled={saving} onClick={() => void setUserApproval(userRecord, userRecord.approved !== true)} className={`${buttonClass} ${userRecord.approved === true ? 'border border-red-200 bg-red-50 text-red-700 hover:bg-red-100' : 'bg-emerald-700 text-white hover:bg-emerald-800'}`}>{userRecord.approved === true ? 'إيقاف الحساب' : 'اعتماد الحساب'}</button>}</div>
                 </div>;
               })}</div>}
             </section>}
