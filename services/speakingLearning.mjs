@@ -5,8 +5,9 @@ export const summarizeSpeakingEvidence = (history = []) => {
   const learner = history.filter(turn => turn?.role === 'user' && turn?.modality !== 'text' && typeof turn?.text === 'string' && turn.text.trim());
   const learnerText = learner.map(turn => turn.text.trim());
   const allWords = learnerText.flatMap(text => text.split(/\s+/u).filter(Boolean));
-  const arabicWords = learnerText.flatMap(text => (text.match(/[\u0621-\u064A]+/gu) || []));
+  const arabicWords = learnerText.flatMap(text => (text.match(/[\u0621-\u064A][\u0621-\u064A\u064B-\u065F]*/gu) || []));
   const normalizedWords = arabicWords.map(word => word
+    .replace(/[\u064B-\u065F]/gu, '')
     .replace(/[أإآ]/gu, 'ا')
     .replace(/ى/gu, 'ي')
     .replace(/ـ/gu, ''));
