@@ -5,6 +5,7 @@ type TurnEvidence = { learnerTurns: number; arabicWords: number; uniqueArabicWor
 type SessionInsights = {
   assessmentStatus?: 'analyzed' | 'limited' | string;
   summary?: string;
+  summaryEn?: string;
   tutor_tip_ar?: string;
   tutor_tip_en?: string;
   key_vocabulary?: Array<{ word: string; translation: string }>;
@@ -116,7 +117,7 @@ export const SpeakingReportSheet: React.FC<SpeakingReportSheetProps> = ({
         </div>
       )}
       {section(labels.summary,
-        <p className="qul-report-body-paragraph">{limited?labels.status:insights?.summary}</p>
+        <p className="qul-report-body-paragraph">{limited ? ((ar ? insights?.summary : insights?.summaryEn) || labels.status) : insights?.summary}</p>
       )}
       {section(labels.tip,
         <div className="qul-report-tutor-tip">
