@@ -83,8 +83,25 @@ service cloud.firestore {
     // Helper Functions
     // ===============================================================
     
-    function isAuthenticated() {
+    // Authentication and authorisation are separate. Google login alone grants no data access.
+    function isSignedIn() {
       return request.auth != null;
+    }
+
+    function isPlatformOwner() {
+      return isSignedIn() &&
+        request.auth.token.email_verified == true &&
+        request.auth.token.email == "he4amali22@gmail.com";
+    }
+
+    // Fail closed for both new and legacy profiles that lack an explicit approval.
+    function isAuthenticated() {
+      return isPlatformOwner() ||
+        (isSignedIn() &&
+         request.auth.token.email_verified == true &&
+         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.approved == true &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email == request.auth.token.email);
     }
 
     function isOwner(userId) {
@@ -92,10 +109,9 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() &&
-        (request.auth.token.email == "he4amali22@gmail.com" || 
-         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+      return isPlatformOwner() ||
+        (isAuthenticated() &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
     function isTeacher() {
@@ -156,10 +172,12 @@ service cloud.firestore {
 
     function isValidUser(data) {
       return hasRequiredFields(['uid', 'email', 'role', 'createdAt']) &&
-             hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'photoURL', 'createdAt', 'schoolId', 'updatedAt']) &&
+             hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'photoURL', 'createdAt', 'schoolId', 'classId', 'approved', 'updatedAt']) &&
              data.uid is string && data.uid.size() > 0 &&
              data.email is string && isValidEmail(data.email) &&
              data.role in ['admin', 'schoolAdmin', 'teacher', 'student'] &&
+             (!('approved' in data) || data.approved is bool) &&
+             (!('classId' in data) || data.classId is string) &&
              data.createdAt is timestamp &&
              (!('schoolId' in data) || data.schoolId is string) &&
              (!('updatedAt' in data) || data.updatedAt is timestamp);
@@ -283,7 +301,7 @@ service cloud.firestore {
 
     // Connection Test Rule
     match /test/connection {
-      allow read: if true;
+      allow read: if isAuthenticated();
     }
 
     // Quizzes Collection
@@ -292,19 +310,19 @@ service cloud.firestore {
       allow get: if isAuthenticated();
       allow create: if isTeacher() && isValidQuiz(request.resource.data) && isAuthor(request.resource.data);
       allow update: if (isAdmin() || (isTeacher() && isAuthor(resource.data))) && isValidQuiz(request.resource.data);
-      allow delete: if request.auth.token.email == "he4amali22@gmail.com" || (isAuthenticated() && isAuthor(resource.data));
+      allow delete: if isPlatformOwner() || (isAuthenticated() && isAuthor(resource.data));
 
       match /questions/{questionId} {
         allow read: if isAuthenticated();
         allow create: if isTeacher() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid && isValidQuestion(request.resource.data);
         allow update: if (isAdmin() || (isTeacher() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid)) && isValidQuestion(request.resource.data);
-        allow delete: if request.auth.token.email == "he4amali22@gmail.com" || (isAuthenticated() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
+        allow delete: if isPlatformOwner() || (isAuthenticated() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
       }
 
       match /results/{resultId} {
         allow read: if isAuthenticated() && (isAdmin() || get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid || isOwner(resource.data.userId));
         allow create: if isAuthenticated() && isValidResult(request.resource.data) && request.resource.data.userId == request.auth.uid;
-        allow delete: if request.auth.token.email == "he4amali22@gmail.com" || (isAuthenticated() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
+        allow delete: if isPlatformOwner() || (isAuthenticated() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
       }
     }
 
@@ -315,13 +333,13 @@ service cloud.firestore {
       allow create, delete: if isAdmin();
       // School admins may edit only their own basic contact details.
       allow update: if isAdmin() ||
-        (belongsToSchool(schoolId) &&
+        (isSchoolAdmin() && belongsToSchool(schoolId) &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'contactEmail', 'updatedAt']));
 
       match /classes/{classId} {
         allow read: if isAdmin() || belongsToSchool(schoolId);
         allow create: if isAdmin() ||
-          (belongsToSchool(schoolId) &&
+          (isSchoolAdmin() && belongsToSchool(schoolId) &&
            request.resource.data.schoolId == schoolId &&
            request.resource.data.name is string &&
            request.resource.data.name.size() > 0 &&
@@ -331,7 +349,7 @@ service cloud.firestore {
               get(/databases/$(database)/documents/users/$(request.resource.data.teacherId)).data.role == 'teacher' &&
               get(/databases/$(database)/documents/users/$(request.resource.data.teacherId)).data.schoolId == schoolId)));
         allow update: if isAdmin() ||
-          (belongsToSchool(schoolId) &&
+          (isSchoolAdmin() && belongsToSchool(schoolId) &&
            resource.data.schoolId == schoolId &&
            request.resource.data.schoolId == schoolId &&
            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'grade', 'teacherId', 'schoolId', 'updatedAt']) &&
@@ -342,7 +360,7 @@ service cloud.firestore {
              (exists(/databases/$(database)/documents/users/$(request.resource.data.teacherId)) &&
               get(/databases/$(database)/documents/users/$(request.resource.data.teacherId)).data.role == 'teacher' &&
               get(/databases/$(database)/documents/users/$(request.resource.data.teacherId)).data.schoolId == schoolId)));
-        allow delete: if isAdmin() || (belongsToSchool(schoolId) && resource.data.schoolId == schoolId);
+        allow delete: if isAdmin() || (isSchoolAdmin() && belongsToSchool(schoolId) && resource.data.schoolId == schoolId);
       }
     }
 
@@ -419,12 +437,25 @@ service cloud.firestore {
 
     // Users Collection
     match /users/{userId} {
-      allow get: if isAdmin() || isOwner(userId) ||
+      // Pending accounts must be able to read their own approval status only.
+      allow get: if isAdmin() || (isSignedIn() && request.auth.uid == userId) ||
         (isSchoolAdmin() && resource.data.schoolId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId);
       allow list: if isAdmin() ||
         (isSchoolAdmin() && resource.data.schoolId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId);
-      allow create: if isOwner(userId) && isValidUser(request.resource.data) &&
-                      (request.resource.data.role == 'student' || isAdmin());
+      // New Google users can register a pending student profile, but cannot self-approve,
+      // choose a school, forge an email, or grant themselves a privileged role.
+      allow create: if isSignedIn() &&
+        request.auth.uid == userId &&
+        request.resource.data.uid == userId &&
+        request.resource.data.email == request.auth.token.email &&
+        request.auth.token.email_verified == true &&
+        isValidUser(request.resource.data) &&
+        (
+          (isPlatformOwner() && request.resource.data.role == 'admin') ||
+          (request.resource.data.role == 'student' &&
+           !('schoolId' in request.resource.data) &&
+           (!('approved' in request.resource.data) || request.resource.data.approved == false))
+        );
       allow update: if isAdmin() ||
         (isOwner(userId) && isValidUser(request.resource.data) &&
          request.resource.data.role == resource.data.role &&
@@ -529,7 +560,7 @@ service cloud.firestore {
 
     // Writing Boards Collection
     match /writing_boards/{boardId} {
-      allow read: if isAuthenticated() || (exists(/databases/$(database)/documents/writing_boards/$(boardId)) && get(/databases/$(database)/documents/writing_boards/$(boardId)).data.isPublic == true);
+      allow read: if isAuthenticated();
       allow create: if isTeacher() && isValidBoard(request.resource.data) && 
                       request.resource.data.teacherId == request.auth.uid;
       allow update: if isTeacher() && isValidBoard(request.resource.data) && 
@@ -538,12 +569,12 @@ service cloud.firestore {
 
       // Posts Subcollection
       match /posts/{postId} {
-        allow read: if isAuthenticated() || (get(/databases/$(database)/documents/writing_boards/$(boardId)).data.isPublic == true);
-        allow create: if (isAuthenticated() || get(/databases/$(database)/documents/writing_boards/$(boardId)).data.isPublic == true) && 
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && 
                         isValidPost(request.resource.data) &&
-                        (request.auth != null ? request.resource.data.authorId == request.auth.uid : request.resource.data.authorId == 'anonymous') &&
+                        request.resource.data.authorId == request.auth.uid &&
                         (request.resource.data.isApproved == false || isTeacher());
-        allow update: if (isAuthenticated() || get(/databases/$(database)/documents/writing_boards/$(boardId)).data.isPublic == true) && 
+        allow update: if isAuthenticated() && 
                         isValidPost(request.resource.data) &&
                         (
                           // Owner or teacher can update anything (like content/approval/feedback)
@@ -565,7 +596,7 @@ service cloud.firestore {
         isTeacher() || 
         // Allow students to interact with specific session features
         (
-          request.resource.data.diff(resource.data).affectedKeys().hasAny(['poll', 'exercise', 'reaction', 'stickyNotes'])
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['poll', 'exercise', 'reaction', 'stickyNotes'])
         )
       );
       allow delete: if isTeacher();
