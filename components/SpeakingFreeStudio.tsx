@@ -148,7 +148,7 @@ export const SpeakingFreeStudio: React.FC<FreeStudioProps> = ({
             <StudioMicIcon size={31} strokeWidth={1.6} />
             <div ref={meterRef} className="qul-free-meter" style={{ '--mic-scale': 0.12 } as React.CSSProperties} aria-hidden="true">
               {Array.from({ length: 17 }, (_, index) => (
-                <i key={index} style={{ height: 9 + Math.round(22 * Math.abs(Math.sin((index + 1) * .51))) + 'px' }} />
+                <i key={index} style={{ height: 9 + Math.round(22 * Math.abs(Math.sin((index + 1) * .51))) + 'px', '--index': index } as React.CSSProperties} />
               ))}
             </div>
           </div>
@@ -190,11 +190,11 @@ export const SpeakingFreeStudio: React.FC<FreeStudioProps> = ({
                   maxLength={500} autoComplete="off" dir="auto"
                   placeholder={ar ? 'اكتب جملة أو سؤالًا...' : 'Type a sentence or question...'}
                   aria-label={ar ? 'رسالة الطالب المكتوبة' : 'Typed student message'} />
-                <button type="submit" disabled={!isActive || loading || !draft.trim()} aria-label={ar ? 'إرسال' : 'Send'}>
+                <button type="submit" disabled={!isActive || loading || isAiSpeaking || !draft.trim()} aria-label={ar ? 'إرسال' : 'Send'}>
                   <Send size={18} />
                 </button>
                 {sendError && <p className="qul-free-compose-error" role="alert">{sendError}</p>}
-                <small>{ar ? 'الردود المكتوبة لا تُحتسب ممارسة شفوية.' : 'Typed replies do not count as spoken practice.'}</small>
+                <small>{isAiSpeaking ? (ar ? 'أكمل بعد انتهاء رد المعلم.' : 'Continue when the tutor finishes speaking.') : (ar ? 'الردود المكتوبة لا تُحتسب ممارسة شفوية.' : 'Typed replies do not count as spoken practice.')}</small>
               </form>
             )}
             {panel === 'help' && (
