@@ -1,15 +1,17 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
+import { reauthenticateWithPopup } from 'firebase/auth';
 import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Activity, Building2, Check, ChevronDown, ChevronLeft, CircleDollarSign, GraduationCap, Layers3,
   LoaderCircle, Plus, RefreshCw, School, Settings2, ShieldCheck, Users, X, BarChart3,
-  Receipt, Headphones, History, SlidersHorizontal, ExternalLink, CalendarDays
+  Receipt, Headphones, History, SlidersHorizontal, ExternalLink, CalendarDays, MoreHorizontal, Trash2, Ban, UserRoundCheck, LockKeyhole
 } from 'lucide-react';
 import {
   addDoc, collection, deleteField, doc, getDocs, serverTimestamp, setDoc, updateDoc, limit, query
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { auth, db, googleProvider } from '../firebase';
 import { ALL_SCHOOL_MODULE_IDS, SCHOOL_MODULES } from '../config/schoolPlans';
 import { useAuth } from '../components/AuthProvider';
 import { PlatformTopBar } from '../components/PlatformTopBar';
@@ -69,6 +71,11 @@ export const AdminConsole: React.FC = () => {
   const [loading, setLoading] = React.useState(true);
   const [dataLoadFailed, setDataLoadFailed] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
+  const [activeAccountMenu, setActiveAccountMenu] = React.useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = React.useState<UserRecord | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = React.useState('');
+  const [deletingAccount, setDeletingAccount] = React.useState(false);
+  const [deleteError, setDeleteError] = React.useState('');
   const [notice, setNotice] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [schoolName, setSchoolName] = React.useState('');
   const [schoolEmail, setSchoolEmail] = React.useState('');
@@ -393,6 +400,72 @@ export const AdminConsole: React.FC = () => {
     }
   };
 
+  const openDeleteConfirmation = (account: UserRecord) => {
+    if (account.email.toLowerCase() === 'he4amali22@gmail.com') return;
+    setActiveAccountMenu(null);
+    setDeleteTarget(account);
+    setDeleteConfirmation('');
+    setDeleteError('');
+  };
+
+  const confirmAccountDeletion = async () => {
+    const target = deleteTarget;
+    if (!target || deletingAccount ||
+        deleteConfirmation.trim().toLowerCase() !== target.email.trim().toLowerCase() ||
+        target.email.toLowerCase() === 'he4amali22@gmail.com') return;
+    const currentUser = auth.currentUser;
+    if (!currentUser || currentUser.email?.toLowerCase() !== 'he4amali22@gmail.com') {
+      setDeleteError('هذه العملية متاحة لحساب مالك المنصة فقط.');
+      return;
+    }
+    setDeletingAccount(true);
+    setDeleteError('');
+    try {
+      // Recent reauthentication is required. The server validates auth_time
+      // and owner privileges again, never trusting browser state.
+      await reauthenticateWithPopup(currentUser, googleProvider);
+      const token = await currentUser.getIdToken(true);
+      const response = await fetch('/api/admin-delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({
+          uid: target.uid,
+          confirmationEmail: deleteConfirmation.trim(),
+        }),
+      });
+      const result = await response.json().catch(() => ({})) as { deleted?: boolean; error?: string };
+      if (!response.ok || result.deleted !== true) {
+        throw new Error(result.error || 'تعذّر حذف الحساب من خادم المنصة.');
+      }
+      setDeleteTarget(null);
+      setDeleteConfirmation('');
+      await loadData();
+      flash('success', 'حُذف الحساب من Firebase Authentication وملف المستخدم والبيانات الشخصية المباشرة.');
+    } catch (error: any) {
+      console.error('Owner deletion request failed:', error);
+      setDeleteError(error?.code === 'auth/popup-closed-by-user'
+        ? 'أُغلق التحقق من الهوية، لم يبدأ الحذف.'
+        : error?.message || 'تعذّر حذف الحساب. يرجى إعادة المحاولة.');
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (!deleteTarget && !activeAccountMenu) return;
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !deletingAccount) {
+        setDeleteTarget(null);
+        setActiveAccountMenu(null);
+      }
+    };
+    window.addEventListener('keydown', escape);
+    return () => window.removeEventListener('keydown', escape);
+  }, [deleteTarget, activeAccountMenu, deletingAccount]);
+
   const recordAdminEvent = async (action: string, target: string, details: string) => {
     try {
       await addDoc(collection(db, 'admin_audit_logs'), {
@@ -674,12 +747,44 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
               <div className="mb-5"><h2 className="text-xl font-black">الحسابات والصلاحيات ({users.length})</h2><p className="mt-1 text-sm leading-6 text-slate-500">الحسابات غير المعتمدة لا يمكنها دخول المنصة. أي حساب قديم بلا اعتماد صريح يبقى موقوفًا حتى توافق عليه. لا يمكن تغيير حساب الأدمن من هنا.</p><p className="mt-2 text-sm font-bold text-amber-700">حسابات تنتظر الاعتماد: {users.filter(u => u.role !== 'admin' && u.approved !== true).length}</p></div>
               {users.length === 0 ? <EmptyState message="لم تظهر حسابات بعد."/> : <div className="space-y-3">{users.map(userRecord => {
                 const draft = drafts[userRecord.uid] || { role: userRecord.role, schoolId: userRecord.schoolId || '' };
-                const isPlatformAdmin = userRecord.role === 'admin';
+                const isPlatformAdmin = userRecord.email.toLowerCase() === 'he4amali22@gmail.com';
                 return <div key={userRecord.uid} className="grid gap-3 rounded-2xl border border-slate-200 p-4 md:grid-cols-[minmax(0,1.2fr)_minmax(130px,0.7fr)_minmax(170px,0.9fr)_auto] md:items-center">
                   <div className="min-w-0"><div className="truncate font-bold">{userRecord.displayName || 'مستخدم قُل'}</div><div className="truncate text-xs text-slate-500">{userRecord.email}</div><div className="mt-1 text-[11px] text-slate-400">UID: {userRecord.uid}</div><div className={`mt-2 text-xs font-bold ${isPlatformAdmin ? 'text-violet-700' : userRecord.approved === true ? 'text-emerald-700' : 'text-amber-700'}`}>{isPlatformAdmin ? 'مالك المنصة' : userRecord.approved === true ? 'حساب معتمد' : 'بانتظار موافقة الإدارة'}</div></div>
-                  {isPlatformAdmin ? <div className="rounded-xl bg-violet-50 px-3 py-2 text-sm font-bold text-violet-800">أدمن المنصة</div> : <label className="space-y-1 text-xs font-bold text-slate-500">الدور<select className={inputClass} value={draft.role} onChange={e => setDrafts(old => ({ ...old, [userRecord.uid]: { ...draft, role: e.target.value } }))}><option value="student">طالب</option><option value="teacher">معلم</option><option value="schoolAdmin">مدير مدرسة</option></select></label>}
+                  {isPlatformAdmin ? <div className="rounded-xl bg-violet-50 px-3 py-2 text-sm font-bold text-violet-800">أدمن المنصة</div> : <label className="space-y-1 text-xs font-bold text-slate-500">الدور<select className={inputClass} value={draft.role} onChange={e => setDrafts(old => ({ ...old, [userRecord.uid]: { ...draft, role: e.target.value } }))}>{userRecord.role === 'admin' && <option value="admin">أدمن</option>}<option value="student">طالب</option><option value="teacher">معلم</option><option value="schoolAdmin">مدير مدرسة</option></select></label>}
                   <label className="space-y-1 text-xs font-bold text-slate-500">المدرسة المرتبط بها<select disabled={isPlatformAdmin} className={inputClass} value={draft.schoolId} onChange={e => setDrafts(old => ({ ...old, [userRecord.uid]: { ...draft, schoolId: e.target.value } }))}><option value="">حساب مستقل</option>{schools.map(school => <option key={school.id} value={school.id}>{school.name}</option>)}</select></label>
-                  <div className="flex flex-col gap-2"><button disabled={saving || isPlatformAdmin || (draft.role === userRecord.role && draft.schoolId === (userRecord.schoolId || ''))} onClick={() => void saveUser(userRecord)} className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700`}><Check size={15}/> حفظ الدور</button>{!isPlatformAdmin && <button disabled={saving} onClick={() => void setUserApproval(userRecord, userRecord.approved !== true)} className={`${buttonClass} ${userRecord.approved === true ? 'border border-red-200 bg-red-50 text-red-700 hover:bg-red-100' : 'bg-emerald-700 text-white hover:bg-emerald-800'}`}>{userRecord.approved === true ? 'إيقاف الحساب' : 'اعتماد الحساب'}</button>}</div>
+                  <div className="relative flex min-w-[130px] justify-end">
+                    {isPlatformAdmin ? (
+                      <span className="flex items-center gap-2 rounded-xl border border-violet-100 bg-violet-50/90 px-3 py-2.5 text-xs font-bold text-violet-700"><LockKeyhole size={15}/> محمي</span>
+                    ) : (
+                      <>
+                        <button type="button" aria-haspopup="menu" aria-expanded={activeAccountMenu === userRecord.uid}
+                          onClick={() => setActiveAccountMenu(previous => previous === userRecord.uid ? null : userRecord.uid)}
+                          disabled={saving || deletingAccount}
+                          className="inline-flex min-w-[116px] items-center justify-center gap-2 rounded-xl border border-white/90 bg-gradient-to-br from-white via-[#f8faf9] to-[#e7f0ec] px-4 py-2.5 text-xs font-black text-[#225541] shadow-[0_4px_18px_rgba(35,84,64,0.10),inset_0_1px_0_white] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg disabled:opacity-50">
+                          <MoreHorizontal size={18}/> إدارة <ChevronDown size={13} className={`transition-transform ${activeAccountMenu === userRecord.uid ? 'rotate-180' : ''}`}/>
+                        </button>
+                        {activeAccountMenu === userRecord.uid && (
+                          <div role="menu" aria-label={`إدارة حساب ${userRecord.displayName || userRecord.email}`}
+                            className="absolute bottom-[calc(100%+8px)] end-0 z-[90] w-60 overflow-hidden rounded-2xl border border-white/95 bg-white/95 p-1.5 text-right shadow-[0_18px_45px_rgba(15,38,30,0.20)] backdrop-blur-2xl"
+                            dir="rtl">
+                            <p className="mb-1 truncate px-3 pt-2 text-[10px] font-bold text-slate-400">{userRecord.email}</p>
+                            <button type="button" role="menuitem" disabled={saving || (draft.role === userRecord.role && draft.schoolId === (userRecord.schoolId || ''))}
+                              onClick={() => { setActiveAccountMenu(null); void saveUser(userRecord); }}
+                              className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-right text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-40"><Check size={16}/> حفظ الدور والمدرسة</button>
+                            <button type="button" role="menuitem" disabled={saving}
+                              onClick={() => { setActiveAccountMenu(null); void setUserApproval(userRecord, userRecord.approved !== true); }}
+                              className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-right text-xs font-semibold transition hover:bg-slate-100 ${userRecord.approved === true ? 'text-amber-700' : 'text-emerald-700'}`}>
+                              {userRecord.approved === true ? <Ban size={16}/> : <UserRoundCheck size={16}/>}
+                              {userRecord.approved === true ? 'إيقاف الحساب' : 'اعتماد الحساب أو استعادته'}
+                            </button>
+                            <div className="my-1 border-t border-slate-100"/>
+                            <button type="button" role="menuitem" onClick={() => openDeleteConfirmation(userRecord)}
+                              className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-right text-xs font-bold text-rose-700 transition hover:bg-rose-50"><Trash2 size={16}/> حذف الحساب نهائيًا</button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>;
               })}</div>}
             </section>}
@@ -835,6 +940,46 @@ const userCountForSchool = (schoolId: string) => users.filter((item) => item.sch
         </div>
       </div>
     </div>
+    {deleteTarget && createPortal(
+      <div dir="rtl" className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 p-3 backdrop-blur-md sm:p-6"
+        onMouseDown={(event) => { if (event.target === event.currentTarget && !deletingAccount) setDeleteTarget(null); }}>
+        <motion.div role="dialog" aria-modal="true" aria-labelledby="delete-account-title"
+          initial={{ opacity: 0, y: 22, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 27 }}
+          className="relative w-full max-w-md overflow-hidden rounded-[28px] border border-white/80 bg-gradient-to-br from-white via-[#fbfcfb] to-[#edf3ef] p-6 text-slate-900 shadow-[0_35px_110px_rgba(0,0,0,0.40)] sm:p-8">
+          <div className="pointer-events-none absolute -left-20 -top-20 h-44 w-44 rounded-full bg-rose-100/80 blur-3xl"/>
+          <div className="relative">
+            <div className="mb-5 flex h-13 w-13 items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 p-3 text-rose-700 shadow-inner"><Trash2 size={24}/></div>
+            <h2 id="delete-account-title" className="text-xl font-black">حذف الحساب نهائيًا</h2>
+            <p className="mt-2 text-sm leading-7 text-slate-600">سيُلغى حساب تسجيل الدخول ويُحذف ملفه الشخصي وتقدمه الدراسي المباشر. السجلات الصفية المشتركة قد تبقى وفق سياسة الاحتفاظ، ولا يمكن التراجع عن الحذف.</p>
+            <div className="my-5 rounded-2xl border border-slate-200/90 bg-white/75 p-4 shadow-[inset_0_1px_0_white]">
+              <p className="truncate text-sm font-black">{deleteTarget.displayName || 'مستخدم قُل'}</p>
+              <p dir="ltr" className="mt-1 break-all text-left text-xs text-slate-500">{deleteTarget.email}</p>
+            </div>
+            <form onSubmit={event => { event.preventDefault(); void confirmAccountDeletion(); }}>
+              <label htmlFor="delete-account-email" className="block text-xs font-bold text-slate-700">للتأكيد، اكتب البريد الإلكتروني للحساب كما يظهر أعلاه.</label>
+              <input id="delete-account-email" autoFocus autoComplete="off" spellCheck={false} dir="ltr" type="email" value={deleteConfirmation}
+                onChange={event => setDeleteConfirmation(event.target.value)}
+                placeholder="name@school.com"
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100"/>
+              <p className="mt-2 text-[11px] leading-5 text-slate-500">ستتحقق المنصة مرة أخرى من هوية المالك قبل تنفيذ العملية.</p>
+              {deleteError && <p role="alert" className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold leading-6 text-rose-700">{deleteError}</p>}
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <button type="button" disabled={deletingAccount}
+                  onClick={() => { setDeleteTarget(null); setDeleteError(''); }}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50">إلغاء</button>
+                <button type="submit" disabled={deletingAccount || deleteConfirmation.trim().toLowerCase() !== deleteTarget.email.toLowerCase()}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-rose-700 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-rose-900/15 transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:bg-rose-200 disabled:shadow-none">
+                  {deletingAccount ? <LoaderCircle size={16} className="animate-spin"/> : <Trash2 size={16}/>}
+                  {deletingAccount ? 'جارٍ الحذف الآمن...' : 'حذف نهائي'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </motion.div>
+      </div>,
+      document.body,
+    )}
     </RoleLocalizer>
   );
 };
