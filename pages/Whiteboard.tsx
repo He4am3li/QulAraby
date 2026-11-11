@@ -167,6 +167,9 @@ export const WhiteboardPage: React.FC = () => {
   const [isQuestionEditorOpen, setIsQuestionEditorOpen] = useState(false);
   const [joinAttempt, setJoinAttempt] = useState(0);
   const [questionDraft, setQuestionDraft] = useState('');
+  const [exportPageIndex, setExportPageIndex] = useState<number | null>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [pdfExportError, setPdfExportError] = useState('');
   const classroomSchoolId = profile?.schoolId || 'independent';
 
   // Teachers own the authoritative board document. Every student observes the same code.
@@ -371,6 +374,51 @@ export const WhiteboardPage: React.FC = () => {
     };
   }, [isTeacher, cloudReady, cloudCode, user?.uid]);
 
+  const exportAllPagesPdf = async () => {
+    if (!isTeacher || isExportingPdf || !sessionRef.current.pages.length) return;
+    setIsExportingPdf(true);
+    setPdfExportError('');
+    try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+      await document.fonts.ready;
+      const pages = [...sessionRef.current.pages];
+      let pdf: InstanceType<typeof jsPDF> | null = null;
+      for (let index = 0; index < pages.length; index += 1) {
+        setExportPageIndex(index);
+        // Wait for React to render both the DOM cards and the drawing canvas.
+        await new Promise<void>(resolve => window.requestAnimationFrame(() =>
+          window.requestAnimationFrame(() => resolve())
+        ));
+        const board = document.getElementById('whiteboard-canvas-container');
+        if (!board) throw new Error('Whiteboard capture element was not found');
+        const image = await html2canvas(board, {
+          useCORS: true, allowTaint: false, backgroundColor: '#ffffff',
+          scale: Math.min(2, window.devicePixelRatio || 1.5), logging: false,
+        });
+        const width = image.width;
+        const height = image.height;
+        const orientation = width >= height ? 'landscape' : 'portrait';
+        if (!pdf) {
+          pdf = new jsPDF({ orientation, unit: 'px', format: [width, height], compress: true });
+        } else {
+          pdf.addPage([width, height], orientation);
+        }
+        pdf.addImage(image.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, width, height);
+      }
+      if (!pdf) throw new Error('No whiteboard page rendered');
+      pdf.save('سبورة_قل_' + sessionRef.current.code + '.pdf');
+    } catch (error) {
+      console.error('Exporting all whiteboard pages failed:', error);
+      setPdfExportError('تعذر تصدير جميع الصفحات، قد تكون إحدى الوسائط غير قابلة للالتقاط.');
+    } finally {
+      setExportPageIndex(null);
+      setIsExportingPdf(false);
+    }
+  };
+
   const beginClassQuestion = () => {
     if (!isTeacher || !questionDraft.trim() || !cloudReady) return;
     const question = questionDraft.trim();
@@ -484,7 +532,7 @@ export const WhiteboardPage: React.FC = () => {
     };
   }, []);
 
-  const currentPage = session.pages[session.currentPageIndex] || session.pages[0];
+  const currentPage = session.pages[exportPageIndex ?? session.currentPageIndex] || session.pages[0];
 
   useEffect(() => {
     setStudentAnswerSent(false);
@@ -883,6 +931,11 @@ export const WhiteboardPage: React.FC = () => {
             </div>
           </form>
         )}
+        {(isExportingPdf || pdfExportError) && (
+          <div className="absolute top-2 left-1/2 z-[60] -translate-x-1/2 rounded-xl border border-white/15 bg-slate-900/95 px-4 py-2 text-xs font-bold text-white shadow-xl" role="status">
+            {isExportingPdf ? 'جارٍ تجهيز صفحات السبورة في PDF...' : pdfExportError}
+          </div>
+        )}
         {!isTeacher && !cloudReady && (
           <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950 p-5">
             <div className="w-full max-w-md rounded-3xl border border-emerald-500/25 bg-slate-900/90 p-6 text-center shadow-2xl">
@@ -1084,9 +1137,7 @@ export const WhiteboardPage: React.FC = () => {
           onClose={() => setIsHistoryOpen(false)}
           currentSession={session}
           onRestoreSession={(restored) => setSession(restored)}
-          onExportPdf={() => {
-            window.print();
-          }}
+          onExportPdf={() => { void exportAllPagesPdf(); }}
           onExportImage={() => {
             void captureWhiteboardScreenshot().catch(error => {
               console.error('Whiteboard image export failed:', error);
