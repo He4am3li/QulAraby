@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Type, Image, Pencil, StickyNote, X, ChevronRight, ChevronLeft, ChevronUp, ChevronDown, Send } from 'lucide-react';
+import { Type, Image, Pencil, Hand, X, ChevronRight, ChevronLeft, ChevronUp, ChevronDown, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface StudentToolbarProps {
@@ -71,10 +71,8 @@ export const StudentToolbar: React.FC<StudentToolbarProps> = ({ onAction }) => {
   const sidebarGradient = 'linear-gradient(to left, #0f172a 0%, #064e3b 100%)';
 
   const tools = [
-    { id: 'text', icon: <Type size={18} />, label: 'نص', color: 'bg-indigo-500' },
-    { id: 'sticky', icon: <StickyNote size={18} />, label: 'ملاحظة لاصقة', color: 'bg-amber-500' },
-    { id: 'image', icon: <Image size={18} />, label: 'إرفاق صورة', color: 'bg-emerald-500' },
-    { id: 'pen', icon: <Pencil size={18} />, label: 'قلم', color: 'bg-amber-500' },
+    { id: 'answer', icon: <Type size={18} />, label: 'كتابة إجابة', color: 'bg-indigo-500' },
+    { id: 'hand', icon: <Hand size={18} />, label: 'رفع اليد', color: 'bg-amber-500' },
   ];
 
   return (
