@@ -790,7 +790,7 @@ export const WhiteboardPage: React.FC = () => {
                 >الإجابات</button>
               </>
             )}
-            {/* Session Code Badge */
+            {/* Session Code Badge */}
             {(isTeacher || cloudReady) && <div className="flex items-center gap-1.5 bg-slate-900/80 border border-emerald-500/30 px-3 py-1.5 rounded-2xl">
               <span className="text-xs text-slate-400 font-bold hidden sm:inline">رمز الحصة:</span>
               <span className="font-mono font-black text-emerald-400 tracking-wider text-xs sm:text-sm">{session.code}</span>
