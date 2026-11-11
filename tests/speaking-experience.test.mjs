@@ -516,3 +516,42 @@ test('report preview explains partial evidence in the selected UI language',()=>
   assert.match(speak,/View last conversation report/);
   assert.match(speak,/setShowMobileOptions\(false\); setShowSummary\(true\)/);
 });
+
+
+test('free conversation renders an interactive QUL voice studio, not a pasted interface image',()=>{
+  const studio=source('components/SpeakingFreeStudio.tsx');
+  const css=source('components/SpeakingFreeStudio.css');
+  const mic=source('components/SpeakingStudioMicrophone.tsx');
+  assert.match(studio,/qul-voice-workspace/);
+  assert.match(studio,/qul-voice-stage/);
+  assert.match(studio,/<SpeakingStudioMicrophone active=\{isActive\}/);
+  assert.match(studio,/ref=\{meterRef\} className="qul-voice-waveform"/);
+  assert.match(studio,/qul-voice-assists/);
+  assert.match(studio,/qul-voice-latest/);
+  assert.match(studio,/data-testid="free-speaking-tool-dock"/);
+  assert.match(studio,/onClick=\{onToggleMic\}/);
+  assert.match(studio,/onClick=\{onStop\}/);
+  assert.match(studio,/disabled=\{isFinishing\}/);
+  assert.match(studio,/onSendText\(value\)/);
+  assert.match(studio,/onTranslate\(source\)/);
+  assert.match(studio,/onStartSpelling\(latestTutor\.text\)/);
+  assert.match(studio,/dir=\{ar\?'rtl':'ltr'\}/);
+  assert.match(css,/--voice-aqua/);
+  assert.match(css,/@media\(max-width:750px\)/);
+  assert.match(css,/@media\(max-width:390px\)/);
+  assert.match(css,/prefers-reduced-motion:reduce/);
+  assert.match(mic,/<svg/);
+  assert.match(mic,/qMicGrill/);
+  assert.doesNotMatch(studio,/https?:\/\/.*(jpg|png|webp)|<img/);
+});
+
+test('free studio help, translation and transcript stay available in both languages',()=>{
+  const s=source('components/SpeakingFreeStudio.tsx');
+  assert.match(s,/Could you repeat the question/);
+  assert.match(s,/هل يمكنك إعادة السؤال/);
+  assert.match(s,/Conversation transcript/);
+  assert.match(s,/سجل المحادثة/);
+  assert.match(s,/typed replies do not count toward oral practice/i);
+  assert.match(s,/أجب بالعربية قدر استطاعتك/);
+  assert.match(s,/Speak as much Arabic as you can/);
+});
