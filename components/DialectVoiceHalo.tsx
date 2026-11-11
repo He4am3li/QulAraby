@@ -48,8 +48,12 @@ export const DialectVoiceHalo: React.FC<Props> = React.memo(({
   const record = records[index];
   const freshSpeech = historyIndex === null && speaking && Boolean(currentSpeechText?.trim());
   const source = freshSpeech ? currentSpeechText!.trim() : record?.text || '';
-  const translated = !freshSpeech && record?.translationEn?.trim() !== source
-    ? record?.translationEn?.trim() || '' : '';
+  const displayedRecord = freshSpeech
+    ? records.slice().reverse().find(turn => turn.role !== 'user' && turn.text.trim() === source
+        && (!turn.speakerName || turn.speakerName === tutorName))
+    : record;
+  const translation = displayedRecord?.translationEn?.trim() || '';
+  const translated = translation === source ? '' : translation;
 
   // An unrecognized language remains on the spoken line, rather than
   // fabricating a translation. Mixed-language tutor replies keep their wording.
@@ -80,7 +84,7 @@ export const DialectVoiceHalo: React.FC<Props> = React.memo(({
 
   const visible = hasWords && (held || active || speaking || historyIndex !== null);
   const isTutor = freshSpeech || record?.role !== 'user';
-  const speaker = isTutor ? record?.speakerName || tutorName || (ar ? 'المعلم' : 'Tutor')
+  const speaker = isTutor ? displayedRecord?.speakerName || tutorName || (ar ? 'المعلم' : 'Tutor')
     : (ar ? 'الطالب' : 'Student');
 
   const navigate = (direction: -1 | 1) => {
@@ -105,11 +109,11 @@ export const DialectVoiceHalo: React.FC<Props> = React.memo(({
       <AnimatePresence mode="wait">
         {visible && (
           <motion.div
-            key={(historyIndex ?? record?.liveTurnKey ?? newestIndex) + ':' + (freshSpeech ? 'spoken' : 'turn')}
+            key={(historyIndex ?? displayedRecord?.liveTurnKey ?? newestIndex) + ':' + (freshSpeech ? 'spoken' : 'turn')}
             {...motionProps}
             animate={{ opacity: 1, y: 0, scaleX: 1 }}
             className="absolute inset-x-[2%] bottom-[78px] flex min-h-[48px] items-end justify-between gap-[82px]"
-            role="status" aria-live="polite" aria-atomic="false"
+            role="status" aria-live="polite" aria-atomic="false" dir="ltr"
           >
             {/* English emerges from the left channel of the central recorder. */}
             <div className="relative flex min-w-0 flex-1 flex-col items-start text-left">

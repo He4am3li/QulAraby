@@ -1875,6 +1875,7 @@ export const Dialects: React.FC = () => {
       // A single in-flight request per speaker prevents high-frequency API bursts.
       let tutorTurnId = 0;
       let studentTurnId = 0;
+      const liveTurnKey = (speaker: 'tutor' | 'student', id: number) => `${generation}:${speaker}:${id}`;
       const translationStreams: Record<'tutor' | 'student', {
         timer: ReturnType<typeof setTimeout> | null; busy: boolean;
         pending: { text: string; id: number } | null;
@@ -1912,7 +1913,7 @@ export const Dialects: React.FC = () => {
             const translation = (result.text || '').trim().slice(0, 1100);
             if (translation && stillCurrent() && selectedCountryRef.current?.id === country.id) {
               setChatMessages(prev => {
-                const index = prev.map(msg => msg.liveTurnKey).lastIndexOf(speaker + ':' + snapshot.id);
+                const index = prev.map(msg => msg.liveTurnKey).lastIndexOf(liveTurnKey(speaker, snapshot.id));
                 if (index < 0 || !prev[index].text.startsWith(snapshot.text)) return prev;
                 // Keep a useful partial translation on screen while newer words arrive.
                 // Never overwrite a newer result with a shorter, older snapshot.
@@ -1940,7 +1941,8 @@ export const Dialects: React.FC = () => {
         captureMissionTurn(country.id, { role: 'user', text: speech, authored: true });
         updateJourney(country.id, { role: 'user', text: speech });
         if (selectedCountryRef.current?.id === country.id) {
-          setChatMessages(prev => [...prev, { role: 'user', text: speech, liveTurnKey: 'student:' + studentTurnId }]);
+          const key = liveTurnKey('student', studentTurnId);
+          setChatMessages(prev => [...prev, { role: 'user', text: speech, liveTurnKey: key }]);
           requestTranslation('student', speech, studentTurnId, true);
           studentTurnId++;
         }
@@ -1998,10 +2000,11 @@ export const Dialects: React.FC = () => {
               setCurrentSpeechText(caption);
               requestTranslation('tutor', caption, tutorTurnId);
               if (selectedCountryRef.current?.id === country.id) {
+                const key = liveTurnKey('tutor', tutorTurnId);
                 setChatMessages(prev => {
                   const last = prev[prev.length - 1];
-                  if (last?.role === 'live-model' && last.liveTurnKey === 'tutor:' + tutorTurnId) return [...prev.slice(0, -1), { ...last, text: caption, translationEn: last.translationEn }];
-                  return [...prev, { role: 'live-model', text: caption, speakerName: persona.nameAr, liveTurnKey: 'tutor:' + tutorTurnId }];
+                  if (last?.role === 'live-model' && last.liveTurnKey === key) return [...prev.slice(0, -1), { ...last, text: caption }];
+                  return [...prev, { role: 'live-model', text: caption, speakerName: persona.nameAr, liveTurnKey: key }];
                 });
               }
             }
@@ -2473,9 +2476,12 @@ export const Dialects: React.FC = () => {
                             currentSpeechText={chosen && isSpeaking ? currentSpeechText : undefined}
                             lang={lang}
                             onSelect={() => {
+                              if (chosen) return;
+                              const continueLive = isLiveActiveRef.current || liveConnectingRef.current;
                               stopLiveConversation();
                               setSelectedPersona(char);
                               setChatMessages(previous => previous.length ? previous : (learningJourneysRef.current[selectedCountry.id]?.turns || []));
+                              if (continueLive) void startLiveConversation(char);
                             }}
                           />
                         );

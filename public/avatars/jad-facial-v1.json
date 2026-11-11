@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "lebanon_male",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/jad-stance-v1.webp",
+  "sourceSha256": "39cafe16ae59fe8d735d689f9862931a1a54ab8bd245f6f922a69c68b7685e32",
+  "pose": {
+    "bodyFacing": "left",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "right"
+  },
+  "registration": {
+    "shift": 20,
+    "shiftY": -3,
+    "scale": 0.755,
+    "offset": [
+      396,
+      3
+    ],
+    "eyes": [
+      498,
+      124,
+      115,
+      34
+    ],
+    "brows": [
+      496,
+      104,
+      118,
+      27
+    ],
+    "mouth": [
+      517,
+      185,
+      78,
+      59
+    ],
+    "mouthSampleDy": 9
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 498,
+      "y": 124,
+      "w": 115,
+      "h": 34,
+      "visible": true,
+      "url": "/avatars/jad-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 498,
+      "y": 124,
+      "w": 115,
+      "h": 34,
+      "visible": true,
+      "url": "/avatars/jad-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 498,
+      "y": 124,
+      "w": 115,
+      "h": 34,
+      "visible": true,
+      "url": "/avatars/jad-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 496,
+      "y": 104,
+      "w": 118,
+      "h": 27,
+      "visible": true,
+      "url": "/avatars/jad-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 496,
+      "y": 104,
+      "w": 118,
+      "h": 27,
+      "visible": true,
+      "url": "/avatars/jad-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 517,
+      "y": 185,
+      "w": 78,
+      "h": 59,
+      "visible": true,
+      "url": "/avatars/jad-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 517,
+      "y": 185,
+      "w": 78,
+      "h": 59,
+      "visible": true,
+      "url": "/avatars/jad-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 517,
+      "y": 185,
+      "w": 78,
+      "h": 59,
+      "visible": true,
+      "url": "/avatars/jad-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 517,
+      "y": 185,
+      "w": 78,
+      "h": 59,
+      "visible": true,
+      "url": "/avatars/jad-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 517,
+      "y": 185,
+      "w": 78,
+      "h": 59,
+      "visible": true,
+      "url": "/avatars/jad-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 517,
+      "y": 185,
+      "w": 78,
+      "h": 59,
+      "visible": true,
+      "url": "/avatars/jad-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}
