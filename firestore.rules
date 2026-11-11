@@ -588,6 +588,204 @@ service cloud.firestore {
       }
     }
 
+    // Only a teacher can resolve the latest code belonging to their own account.
+    // This allows restoration on a different device without exposing class indexes.
+    match /whiteboard_teacher_index/{teacherId} {
+      allow get: if isTeacher() && request.auth.uid == teacherId;
+      allow list: if false;
+      allow create, update: if isTeacher() &&
+        request.auth.uid == teacherId &&
+        request.resource.data.teacherId == teacherId &&
+        request.resource.data.sessionCode is string &&
+        request.resource.data.sessionCode.matches('^QUL-[0-9A-Z]{8} Joining requires the exact 8-character code and
+    // an approved account from the same school. No collection listing is allowed.
+    function whiteboardParent(code) {
+      return /databases/$(database)/documents/whiteboard_sessions/$(code);
+    }
+
+    function whiteboardOwner(code) {
+      return isTeacher() && exists(whiteboardParent(code)) &&
+        (isAdmin() || get(whiteboardParent(code)).data.teacherId == request.auth.uid);
+    }
+
+    function mayReadWhiteboard(data) {
+      return isAuthenticated() && (
+        isAdmin() ||
+        data.teacherId == request.auth.uid ||
+        (data.schoolId != 'independent' && belongsToSchool(data.schoolId))
+      );
+    }
+
+    function mayJoinWhiteboard(code) {
+      return exists(whiteboardParent(code)) &&
+        mayReadWhiteboard(get(whiteboardParent(code)).data) &&
+        get(whiteboardParent(code)).data.schoolId != 'independent' &&
+        belongsToSchool(get(whiteboardParent(code)).data.schoolId);
+    }
+
+    match /whiteboard_sessions/{code} {
+      allow get: if mayReadWhiteboard(resource.data);
+      allow list: if false;
+      allow create: if isTeacher() &&
+        request.resource.data.keys().hasAll(['teacherId', 'code', 'schoolId', 'pages', 'isLocked']) &&
+        request.resource.data.teacherId == request.auth.uid &&
+        request.resource.data.code == code &&
+        (
+          isPlatformOwner() ||
+          request.resource.data.schoolId ==
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('schoolId', 'independent')
+        );
+      allow update: if whiteboardOwner(code) &&
+        request.resource.data.teacherId == resource.data.teacherId &&
+        request.resource.data.schoolId == resource.data.schoolId &&
+        request.resource.data.code == resource.data.code;
+      allow delete: if whiteboardOwner(code);
+
+      match /participants/{studentId} {
+        allow get: if whiteboardOwner(code) ||
+          (isAuthenticated() && request.auth.uid == studentId && mayJoinWhiteboard(code));
+        allow list: if whiteboardOwner(code);
+        allow create: if isAuthenticated() &&
+          request.auth.uid == studentId &&
+          mayJoinWhiteboard(code) &&
+          request.resource.data.keys().hasOnly(['id', 'name', 'score', 'handRaised', 'isOnline', 'lastActive']) &&
+          request.resource.data.id == studentId &&
+          request.resource.data.score == 0 &&
+          request.resource.data.handRaised is bool &&
+          request.resource.data.isOnline is bool;
+        allow update: if whiteboardOwner(code) ||
+          (isAuthenticated() &&
+            request.auth.uid == studentId &&
+            mayJoinWhiteboard(code) &&
+            request.resource.data.id == resource.data.id &&
+            request.resource.data.score == resource.data.score &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['handRaised', 'isOnline', 'lastActive']));
+        allow delete: if whiteboardOwner(code);
+      }
+
+      match /answers/{studentId} {
+        allow get: if whiteboardOwner(code) ||
+          (isAuthenticated() && request.auth.uid == studentId && mayJoinWhiteboard(code));
+        allow list: if whiteboardOwner(code);
+        allow create: if isAuthenticated() &&
+          request.auth.uid == studentId &&
+          mayJoinWhiteboard(code) &&
+          get(whiteboardParent(code)).data.activeActivity.isActive == true &&
+          request.resource.data.keys().hasOnly(['studentId', 'studentName', 'answer', 'activityId', 'timestamp']) &&
+          request.resource.data.studentId == studentId &&
+          request.resource.data.activityId == get(whiteboardParent(code)).data.activeActivity.id &&
+          request.resource.data.answer is string &&
+          request.resource.data.answer.size() > 0 &&
+          request.resource.data.answer.size() <= 4000;
+        allow update: if whiteboardOwner(code) ||
+          (isAuthenticated() &&
+            request.auth.uid == studentId &&
+            mayJoinWhiteboard(code) &&
+            get(whiteboardParent(code)).data.activeActivity.isActive == true &&
+            request.resource.data.studentId == studentId &&
+            request.resource.data.activityId == get(whiteboardParent(code)).data.activeActivity.id &&
+            request.resource.data.answer is string &&
+            request.resource.data.answer.size() > 0 &&
+            request.resource.data.answer.size() <= 4000 &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['studentName', 'answer', 'activityId', 'timestamp']));
+        allow delete: if whiteboardOwner(code);
+      }
+    }
+
+    // Legacy toolbar documents are private to the authenticated teacher.
+    // Students interact solely through whiteboard_sessions scoped subcollections.
+    match /live_sessions/{sessionId} {
+      allow get: if isAdmin() || (isTeacher() && sessionId == request.auth.uid);
+      allow list: if false;
+      allow create, update, delete: if isTeacher() && sessionId == request.auth.uid;
+    }
+
+    // Placement Results: students see their own reports, teachers see their school only.
+    match /placement_results/{resultId} {
+      allow read: if isAdmin() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid) ||
+        (isTeacher() && ('schoolId' in resource.data) && belongsToSchool(resource.data.schoolId));
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        (
+          ('schoolId' in request.resource.data &&
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId == request.resource.data.schoolId) ||
+          (!('schoolId' in request.resource.data) &&
+            !('schoolId' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data))
+        );
+      allow update: if isAdmin() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid &&
+         request.resource.data.userId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studyPlan']));
+      allow delete: if isAdmin();
+    }
+
+    // Letter Homework Submissions: isolate school inboxes and student submissions.
+    match /letter_submissions/{submissionId} {
+      allow read: if isAdmin() ||
+        (isAuthenticated() && resource.data.studentId == request.auth.uid) ||
+        (isTeacher() && submissionBelongsToCurrentScope(resource.data));
+      allow create: if isAdmin() ||
+        (isTeacher() && submissionBelongsToCurrentScope(request.resource.data)) ||
+        (isAuthenticated() && request.resource.data.studentId == request.auth.uid &&
+         submissionBelongsToCurrentScope(request.resource.data));
+      allow update: if isAdmin() ||
+        (isTeacher() && submissionBelongsToCurrentScope(resource.data) &&
+         submissionBelongsToCurrentScope(request.resource.data));
+      allow delete: if isAdmin() ||
+        (isTeacher() && submissionBelongsToCurrentScope(resource.data));
+    }
+
+    // Dialect voice approvals are public to signed-in learners, but only
+    // platform administrators can publish reviewed voice identity changes.
+    match /dialect_voice_profiles/{profileId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() &&
+        request.resource.data.keys().hasOnly([
+          'countryId', 'gender', 'voiceName', 'delivery', 'approved',
+          'reviewedArabic', 'reviewedEnglish', 'updatedAt'
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'countryId', 'gender', 'voiceName', 'delivery', 'approved',
+          'reviewedArabic', 'reviewedEnglish', 'updatedAt'
+        ]) &&
+        request.resource.data.countryId is string &&
+        request.resource.data.countryId in [
+          'uae','egypt','saudi','morocco','jordan','lebanon','palestine','iraq',
+          'tunisia','algeria','libya','syria','sudan','oman','kuwait','qatar',
+          'bahrain','yemen','mauritania','somalia','djibouti','comoros'
+        ] &&
+        request.resource.data.gender in ['male', 'female'] &&
+        profileId == request.resource.data.countryId + '_' + request.resource.data.gender &&
+        request.resource.data.voiceName in [
+          'Puck','Charon','Fenrir','Orus','Enceladus',
+          'Kore','Aoede','Leda','Zephyr','Callirrhoe'
+        ] &&
+        request.resource.data.delivery in ['gentle', 'natural', 'expressive'] &&
+        request.resource.data.approved == true &&
+        request.resource.data.reviewedArabic == true &&
+        request.resource.data.reviewedEnglish == true &&
+        request.resource.data.updatedAt is timestamp;
+      allow delete: if isAdmin();
+    }
+
+    // Default Deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
+) &&
+        (
+          isAdmin() ||
+          request.resource.data.schoolId ==
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('schoolId', 'independent')
+        );
+      allow delete: if isTeacher() && request.auth.uid == teacherId;
+    }
+
     // Isolated class whiteboards. Joining requires the exact 8-character code and
     // an approved account from the same school. No collection listing is allowed.
     function whiteboardParent(code) {
