@@ -315,6 +315,7 @@ export const WhiteboardPage: React.FC = () => {
         };
       });
       setSession(previous => ({ ...previous, students: people }));
+      window.dispatchEvent(new CustomEvent('qul_whiteboard_students_updated', { detail: { students: people } }));
     }, error => console.error('Student attendance sync failed:', error));
     const unsubscribeAnswers = onSnapshot(answers, snapshot => {
       setSession(previous => {
@@ -447,6 +448,7 @@ export const WhiteboardPage: React.FC = () => {
   // Route toolbar commands to live page controls.
   useEffect(() => {
     const openMedia = () => setIsMediaStickersOpen(true);
+    const openWorks = () => setIsStudentWorksOpen(true);
     const submitAnswer = () => document.getElementById('qul-student-answer-submit')?.click();
     const focusAnswer = () => document.getElementById('qul-student-answer-input')?.focus();
     const raiseHand = () => document.getElementById('qul-student-raise-hand')?.click();
@@ -455,12 +457,14 @@ export const WhiteboardPage: React.FC = () => {
       if (typeof locked === 'boolean') setSession(prev => ({ ...prev, isLocked: locked }));
     };
     window.addEventListener('qul_open_whiteboard_media', openMedia);
+    window.addEventListener('qul_open_whiteboard_student_works', openWorks);
     window.addEventListener('qul_student_submit_answer', submitAnswer);
     window.addEventListener('qul_student_focus_answer', focusAnswer);
     window.addEventListener('qul_student_raise_hand', raiseHand);
     window.addEventListener('qul_whiteboard_toggle_lock', applyLock);
     return () => {
       window.removeEventListener('qul_open_whiteboard_media', openMedia);
+      window.removeEventListener('qul_open_whiteboard_student_works', openWorks);
       window.removeEventListener('qul_student_submit_answer', submitAnswer);
       window.removeEventListener('qul_student_focus_answer', focusAnswer);
       window.removeEventListener('qul_student_raise_hand', raiseHand);
@@ -693,6 +697,32 @@ export const WhiteboardPage: React.FC = () => {
       setCloudStatus('تعذر تسجيل النقاط، أعد المحاولة.');
     });
   };
+
+  // Cross-component classroom events use real Firestore-backed actions.
+  useEffect(() => {
+    if (!isTeacher) return;
+    const onAward = (event: Event) => {
+      const { studentId, delta } = (event as CustomEvent<{ studentId?: string; delta?: number }>).detail || {};
+      if (studentId && Number.isInteger(delta)) handleScoreChange(studentId, delta!);
+    };
+    const onActivity = (event: Event) => {
+      const question = (event as CustomEvent<{ question?: string }>).detail?.question?.trim();
+      if (!question || !cloudReady) return;
+      setSession(previous => ({
+        ...previous,
+        activeActivity: {
+          id: 'act_' + Date.now(), title: 'سؤال الحصة',
+          type: 'qa', question, isActive: true, submissions: {},
+        },
+      }));
+    };
+    window.addEventListener('qul_whiteboard_award_student', onAward);
+    window.addEventListener('qul_whiteboard_start_activity', onActivity);
+    return () => {
+      window.removeEventListener('qul_whiteboard_award_student', onAward);
+      window.removeEventListener('qul_whiteboard_start_activity', onActivity);
+    };
+  }, [isTeacher, cloudReady, cloudCode, session.students]);
 
   const toggleTeacherLock = () => {
     setSession(prev => ({
