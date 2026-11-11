@@ -133,7 +133,17 @@ const AppContent: React.FC = () => {
         </AnimatePresence>
       </Layout>
       {isWhiteboard && (
-        isTeacher ? <TeacherToolbar /> : <StudentToolbar onAction={(action) => console.log('Student action:', action)} />
+        isTeacher ? <TeacherToolbar /> : <StudentToolbar onAction={(action) => {
+          if (action === 'text' || action === 'pen' || action === 'sticky') {
+            window.dispatchEvent(new CustomEvent('qul_set_whiteboard_tool', {
+              detail: { tool: action === 'sticky' ? 'note' : action }
+            }));
+          } else if (action === 'image') {
+            window.dispatchEvent(new Event('qul_open_whiteboard_media'));
+          } else if (action === 'submit') {
+            window.dispatchEvent(new Event('qul_student_submit_answer'));
+          }
+        }} />
       )}
       <LiveInteractionLayer />
       <QuotaWarning />
