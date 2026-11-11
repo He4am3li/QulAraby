@@ -140,21 +140,6 @@ export const SpeakingFreeStudio:React.FC<FreeStudioProps>=({
       <div className="qul-voice-atmosphere" aria-hidden="true">
         <span>ع</span><span>ق</span><span>ف</span><span>ض</span>
       </div>
-      <header className="qul-voice-header">
-        <div className="qul-voice-heading">
-          <span className="qul-voice-header-mark" aria-hidden="true"><AudioLines size={22}/></span>
-          <div>
-            <span className="qul-voice-eyebrow">QUL / VOICE STUDIO</span>
-            <h2>{ar?'استوديو المحادثة':'Conversation Studio'}</h2>
-            <p>{topic} <span aria-hidden="true">·</span> {level}</p>
-          </div>
-        </div>
-        <div className={'qul-voice-onair'+(isActive?' is-live':'')} aria-live="polite">
-          <i aria-hidden="true"/>
-          <span>{isFinishing?(ar?'جاري الإنهاء':'Finishing'):isActive?(ar?'اتصال مباشر':'Live conversation'):(ar?'غير متصل':'Offline')}</span>
-        </div>
-      </header>
-
       {recoveryNotice&&!isActive&&(
         <div className="qul-voice-recovery" role="alert">
           <span>{recoveryNotice}</span>
