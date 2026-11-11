@@ -24,7 +24,7 @@ test('teachers own the only writable board surface, students read cloud snapshot
   assert.match(rules, /allow update: if whiteboardOwner\(code\)/);
   assert.match(page, /onSnapshot\(boardRef/);
   assert.match(page, /whiteboardCloudPayload\(session, classroomSchoolId\)/);
-  assert.match(page, /isReadOnly=\{!isTeacher \|\| !cloudReady\}/);
+  assert.match(page, /isReadOnly=\{!isTeacher \|\| !cloudReady \|\| isExportingPdf\}/);
   assert.match(page, /isWhiteboardPayloadSizeSafe\(payload\)/);
 });
 
@@ -74,6 +74,22 @@ test('fake student roster and fabricated archive records are removed', () => {
   assert.doesNotMatch(archive, /QUL-9821|QUL-4412/);
 });
 
+test('teacher sessions can be restored across devices through a private index', () => {
+  assert.match(rules, /match \/whiteboard_teacher_index\/\{teacherId\}/);
+  assert.match(rules, /request\.auth\.uid == teacherId/);
+  assert.match(page, /getDoc\(indexRef\)/);
+  assert.match(page, /sessionCode: code/);
+});
+
+test('multi-page PDF export renders each page without changing class page state', () => {
+  assert.doesNotMatch(page, /window\.print\(\)/);
+  assert.match(page, /for \(let index = 0; index < pages\.length; index \+= 1\)/);
+  assert.match(page, /html2canvas\(board/);
+  assert.match(page, /pdf\.addPage/);
+  assert.match(page, /pdf\.save/);
+  assert.match(page, /exportPageIndex \?\? session\.currentPageIndex/);
+});
+
 test('PNG export captures board DOM layers', () => {
   assert.match(page, /captureWhiteboardScreenshot\(\)/);
   assert.match(capture, /html2canvas\(targetElement/);
@@ -82,7 +98,7 @@ test('PNG export captures board DOM layers', () => {
 test.todo('Firebase Emulator proves cross-school, unauthenticated and false-role requests are denied');
 test.todo('30 signed-in browsers concurrently submit 30 separate answers and 30 presence records');
 test.todo('teacher lock prevents board edits on a second device after reconnect');
-test.todo('PDF exports all pages with cards, embedded media and handwriting');
+test.todo('visually verify PDF page captures include cards, Arabic text and embedded media');
 test.todo('desktop, iPhone and iPad preserve touch precision and readable controls');
 test.todo('offline reconnect does not lose or duplicate work');
 
