@@ -550,3 +550,20 @@
 .qul-free-studio.qul-voice-studio .qul-voice-stage::after{display:none}
 .qul-free-studio.qul-voice-studio .qul-voice-stage-performance{background:transparent}
 .qul-free-studio.qul-voice-studio .qul-voice-stage-top{background:transparent}
+
+/* Speaking topics: single-line, mouse-draggable and touch-swipeable gallery */
+.qul-studio-preview-actions{width:100%;min-width:0;max-width:100%;align-items:stretch;overflow:hidden}
+.qul-topic-rail-wrap{width:100%;min-width:0;max-width:100%;overflow:hidden;text-align:start}
+.qul-topic-rail{display:flex;flex-wrap:nowrap;gap:12px;width:100%;max-width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;padding:6px 8px 14px;scroll-behavior:auto;scroll-snap-type:x proximity;overscroll-behavior-x:contain;touch-action:pan-x;cursor:grab;user-select:none;-webkit-user-select:none;scrollbar-width:none}
+.qul-topic-rail::-webkit-scrollbar{display:none}
+.qul-topic-rail:active{cursor:grabbing}
+.qul-topic-tile{display:flex;flex:none;align-items:center;gap:10px;min-width:148px;min-height:64px;padding:10px 15px;border-radius:17px;background:rgba(255,255,255,.76);border:1px solid rgba(181,216,224,.85);box-shadow:0 4px 18px rgba(31,78,100,.09),inset 0 1px rgba(255,255,255,.95);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);scroll-snap-align:start;transition:background .2s,border-color .2s,box-shadow .2s;text-align:start}
+.qul-topic-tile:hover{background:rgba(255,255,255,.97);border-color:#70c9c3;box-shadow:0 6px 22px rgba(31,78,100,.14)}
+.qul-topic-tile:disabled{opacity:.45;cursor:not-allowed}
+.qul-topic-emoji{font-size:25px;line-height:1;flex:none}
+.qul-topic-labels{display:flex;flex-direction:column;gap:3px;min-width:0}
+.qul-topic-ar{font-size:13px;font-weight:800;color:#244354;white-space:nowrap}
+.qul-topic-en{font-size:10px;font-weight:600;color:#7895a2;white-space:nowrap}
+.qul-topic-arrow{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid #d7e7ec;border-radius:10px;background:rgba(255,255,255,.8);color:#527986}
+.qul-topic-arrow:hover{background:#e7f8f6;color:#147d80}
+@media(max-width:750px){.qul-topic-tile{min-width:135px;min-height:60px;padding:9px 12px}.qul-topic-rail{gap:9px}}
