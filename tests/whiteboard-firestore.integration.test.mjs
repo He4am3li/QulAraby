@@ -111,6 +111,43 @@ test('only the owner can resolve their latest classroom from another device', as
   }));
 });
 
+test('30 verified classroom identities submit independently without overwriting another learner', async () => {
+  const classSize = 30;
+  await environment.withSecurityRulesDisabled(async context => {
+    const writes = [];
+    for (let i = 1; i <= classSize; i += 1) {
+      const uid = 'classStudent' + String(i).padStart(2, '0');
+      const email = uid.toLowerCase() + '@example.com';
+      writes.push(setDoc(doc(context.firestore(), 'users', uid), {
+        uid, email, role: 'student', schoolId: 'schoolA', approved: true,
+      }));
+    }
+    await Promise.all(writes);
+  });
+  const writes = [];
+  for (let i = 1; i <= classSize; i += 1) {
+    const uid = 'classStudent' + String(i).padStart(2, '0');
+    const email = uid.toLowerCase() + '@example.com';
+    const student = asUser(uid, email);
+    writes.push(assertSucceeds(setDoc(doc(student, 'whiteboard_sessions', code, 'participants', uid), {
+      id: uid, name: uid, score: 0, handRaised: false, isOnline: true, lastActive: Date.now(),
+    })));
+    writes.push(assertSucceeds(setDoc(doc(student, 'whiteboard_sessions', code, 'answers', uid), {
+      studentId: uid, studentName: uid, answer: 'إجابة مستقلة رقم ' + i,
+      activityId: 'activity1', timestamp: Date.now(),
+    })));
+  }
+  await Promise.all(writes);
+  const participants = await assertSucceeds(getDocs(collection(teacherA, 'whiteboard_sessions', code, 'participants')));
+  const answers = await assertSucceeds(getDocs(collection(teacherA, 'whiteboard_sessions', code, 'answers')));
+  assert.ok(participants.size >= classSize, 'All 30 learner presence documents must persist');
+  assert.ok(answers.size >= classSize, 'All 30 learner answers must persist');
+  const observed = new Set(answers.docs.map(item => item.id));
+  for (let i = 1; i <= classSize; i += 1) {
+    assert.ok(observed.has('classStudent' + String(i).padStart(2, '0')));
+  }
+});
+
 test('reject outsider attempts to create or enumerate another classroom', async () => {
   await assertFails(setDoc(doc(teacherB, 'whiteboard_sessions', 'QUL-CCCCCCCC'), {
     ...classroom, code: 'QUL-CCCCCCCC', id: 'QUL-CCCCCCCC', schoolId: 'schoolA',
