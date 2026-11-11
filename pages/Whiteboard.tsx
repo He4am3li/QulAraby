@@ -1139,7 +1139,18 @@ export const WhiteboardPage: React.FC = () => {
           isOpen={isHistoryOpen}
           onClose={() => setIsHistoryOpen(false)}
           currentSession={session}
-          onRestoreSession={(restored) => setSession(restored)}
+          onRestoreSession={(restored) => {
+            if (!isTeacher || !cloudReady || !Array.isArray(restored.pages) || !restored.pages.length) return;
+            // Restore lesson content while preserving the authenticated teacher's
+            // existing class code, scope, participant records and live permissions.
+            setSession(previous => ({
+              ...previous,
+              title: restored.title || previous.title,
+              pages: restored.pages,
+              currentPageIndex: 0,
+              activeActivity: null,
+            }));
+          }}
           onExportPdf={() => { void exportAllPagesPdf(); }}
           onExportImage={() => {
             void captureWhiteboardScreenshot().catch(error => {
