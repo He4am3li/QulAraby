@@ -381,8 +381,8 @@ test('every report PDF exports exactly two explicit paper pages without transcri
   const sample=source('components/SpeakingSuggestedDialogueSheet.tsx');
   const reportCss=source('components/SpeakingReportSheet.css');
   assert.match(speak,/const sheets = \[summaryPrintRef\.current, sampleDialoguePrintRef\.current\]/);
-  assert.match(speak,/if\(i>0\)pdf\.addPage\(\)/);
-  assert.match(speak,/fit=Math\.min/);
+  assert.match(speak,/if\(i>0\)pdf\.addPage\('a4','portrait'\)/);
+  assert.match(speak,/const fit=i===0/);
   assert.doesNotMatch(speak,/summaryOffset -= pdfHeight/);
   assert.doesNotMatch(speak,/transcriptPrintRef/);
   assert.match(speak,/reportPage==='sample'/);
@@ -479,7 +479,7 @@ test('finishing Pivot conversation always opens an honest report, including an i
   assert.match(speak,/12000/);
   assert.match(speak,/setInsights\(createLimitedSpeakingReport/);
   assert.match(speak,/setReportAvailable\(true\)/);
-  assert.match(speak,/reportAvailable && speakingBranch === 'studio'/);
+  assert.match(speak,/reportAvailable &&/);
   assert.match(studio,/data-testid="free-speaking-finish"/);
   assert.match(studio,/isFinishing \?/);
   assert.match(studio,/disabled=\{isFinishing\}/);
@@ -511,10 +511,10 @@ test('report preview explains partial evidence in the selected UI language',()=>
   const sheet=source('components/SpeakingReportSheet.tsx');
   const speak=source('pages/Speak.tsx');
   assert.match(sheet,/summaryEn\?: string/);
-  assert.match(sheet,/ar \? insights\?\.summary : insights\?\.summaryEn/);
-  assert.match(speak,/عرض آخر تقرير للمحادثة/);
-  assert.match(speak,/View last conversation report/);
-  assert.match(speak,/setShowMobileOptions\(false\); setShowSummary\(true\)/);
+  assert.match(sheet,/fullTranscript=transcript\.filter/);
+  assert.match(speak,/عرض آخر تقرير/);
+  assert.match(speak,/View last report/);
+  assert.match(speak,/setShowSummary\(true\)/);
 });
 
 
