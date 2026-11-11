@@ -97,6 +97,20 @@ test('students cannot read or overwrite legacy teacher toolbar documents', async
   await assertSucceeds(updateDoc(doc(teacherA, 'live_sessions', 'teacherA'), { activeTool: 'text' }));
 });
 
+test('only the owner can resolve their latest classroom from another device', async () => {
+  const indexPath = ['whiteboard_teacher_index', 'teacherA'];
+  await assertSucceeds(getDoc(doc(teacherA, ...indexPath)));
+  await assertSucceeds(setDoc(doc(teacherA, ...indexPath), {
+    teacherId: 'teacherA', schoolId: 'schoolA', sessionCode: code,
+  }));
+  await assertFails(getDoc(doc(studentA, ...indexPath)));
+  await assertFails(getDoc(doc(teacherB, ...indexPath)));
+  await assertFails(getDocs(collection(teacherA, 'whiteboard_teacher_index')));
+  await assertFails(setDoc(doc(teacherB, 'whiteboard_teacher_index', 'teacherB'), {
+    teacherId: 'teacherB', schoolId: 'schoolA', sessionCode: code,
+  }));
+});
+
 test('reject outsider attempts to create or enumerate another classroom', async () => {
   await assertFails(setDoc(doc(teacherB, 'whiteboard_sessions', 'QUL-CCCCCCCC'), {
     ...classroom, code: 'QUL-CCCCCCCC', id: 'QUL-CCCCCCCC', schoolId: 'schoolA',
