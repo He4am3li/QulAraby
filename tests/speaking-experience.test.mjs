@@ -456,7 +456,7 @@ test('free conversation has its own glass dock without changing physical call bo
   assert.match(studio,/onStop/);
   assert.match(studio,/onResume/);
   assert.match(studio,/onStartSpelling/);
-  assert.match(css,/@media\(max-width:640px\)/);
+  assert.match(css,/@media\(max-width:750px\)/);
   assert.match(css, /prefers-reduced-motion:reduce/);
   assert.ok(!booth.includes('SpeakingFreeStudio'), 'The photographic telephone booth must remain independent');
 });
