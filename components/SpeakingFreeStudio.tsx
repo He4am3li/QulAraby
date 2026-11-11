@@ -62,12 +62,12 @@ export const SpeakingFreeStudio:React.FC<FreeStudioProps>=({
   const transcriptRef=React.useRef<HTMLDivElement>(null);
 
   const turns:FreeStudioTurn[]=[
-    ...history,
+    ...history.filter((turn): turn is FreeStudioTurn => Boolean(turn && typeof turn.text === 'string')),
     ...(learnerText.trim()?[{role:'user' as const,text:learnerText}]:[]),
     ...(tutorText.trim()?[{role:'ai' as const,text:tutorText}]:[]),
   ];
-  const latest=[...turns].reverse().find(turn=>turn.text.trim());
-  const latestTutor=[...turns].reverse().find(turn=>turn.role==='ai'&&turn.text.trim());
+  const latest=[...turns].reverse().find(turn=>turn?.text?.trim());
+  const latestTutor=[...turns].reverse().find(turn=>turn?.role==='ai'&&turn?.text?.trim());
   const visible=turns.slice(-24);
 
   React.useEffect(()=>()=>{translationRequest.current+=1},[]);
