@@ -483,8 +483,9 @@ export const Speak: React.FC = () => {
     return { output: audioContextRef.current, input: inputAudioContextRef.current };
   };
 
-  const startSession = async (preserveHistory = false) => {
-    if (finishingRef.current || !selectedLevel || !activeTopic) return;
+  const startSession = async (preserveHistory = false, topicOverride: typeof TOPICS[number] | null = null) => {
+    const sessionTopic = topicOverride || activeTopic;
+    if (finishingRef.current || !selectedLevel || !sessionTopic) return;
     closeTransport();
     const attempt = startAttemptRef.current;
     // Show the studio immediately. Network, microphone and AI startup must not block navigation.
@@ -579,7 +580,7 @@ export const Speak: React.FC = () => {
           systemInstruction: `You are a professional Arabic tutor named "QUL AI". 
           User Name: ${user?.displayName || 'Learner'}
           User Level: ${selectedLevel?.en} (${selectedLevel?.ar}). ${selectedLevel?.prompt}
-          Topic: ${activeTopic?.en} (${activeTopic?.ar}).
+          Topic: ${sessionTopic?.en} (${sessionTopic?.ar}).
           ${practiceGoal ? 'Current practice target: ' + practiceGoal.slice(0, 240) : ''} 
           
           ${proactiveContext}
@@ -1086,7 +1087,7 @@ export const Speak: React.FC = () => {
                           setSpeakingBranch('studio');
                           setSetupMode(true);
                           setShowSummary(false);
-                          setShowMobileOptions(!selectedTopic);
+                          setShowMobileOptions(false);
                         }
                       }}
                       aria-current={speakingBranch === branch.id ? 'page' : undefined}
@@ -1106,40 +1107,7 @@ export const Speak: React.FC = () => {
                   ))}
                 </nav>
 
-                {speakingBranch === 'studio' && (
-                <div className="space-y-3">
-                    {TOPICS.map(topic => {
-                        const color = TOPIC_COLORS[topic.color] || TOPIC_COLORS.blue;
-                        return (
-                          <button 
-                              key={topic.id} 
-                              disabled={isActive || loading || isFinishing || showSummary || !selectedLevel}
-                              onClick={() => {
-                                  if (isActive || loading || isFinishing || showSummary) return;
-                                  if (selectedTopic?.id !== topic.id) {
-                                    setReportAvailable(false);
-                                    setInsights(null);
-                                  }
-                                  setSelectedTopic(topic);
-                                  setSetupMode(true);
-                                  setShowSummary(false);
-                                  setShowMobileOptions(false);
-                              }}
-                              className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-4 text-right group ${selectedTopic?.id === topic.id ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-md' : 'border-slate-50 bg-slate-50/50 hover:border-slate-200 text-slate-500'} ${isActive || !selectedLevel ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
-                          >
-                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm border transition-all group-hover:scale-110 group-hover:rotate-6 ${selectedTopic?.id === topic.id ? 'bg-blue-500 text-white' : `${color.bg} ${color.border} ${color.text}`}`}>
-                                  <span className="text-2xl">{topic.icon}</span>
-                              </div>
-                              <div className="flex-1">
-                                  <p className="text-sm font-black arabic-font leading-none mb-1">{topic.ar}</p>
-                                  <p className="text-[10px] opacity-60 font-bold uppercase tracking-tighter">{topic.en}</p>
-                              </div>
-                              <ChevronRight size={16} className={`opacity-20 ${lang === 'ar' ? 'rotate-180' : ''}`} />
-                          </button>
-                        );
-                    })}
-                </div>
-                )}
+
             </div>
 
             {/* Level Selection */}
@@ -1294,19 +1262,36 @@ export const Speak: React.FC = () => {
                 </div>
               </div>
               <div className="qul-studio-preview-actions">
-                {selectedTopic && selectedLevel ? (
-                  <button type="button" className="qul-studio-preview-start" disabled={loading || isFinishing} onClick={() => startSession()}>
-                    <Mic size={19}/>{lang === 'ar' ? 'ابدأ المحادثة' : 'Start conversation'}
-                  </button>
-                ) : (
-                  <p role="status">{lang === 'ar' ? 'اختر موضوعًا من القائمة لبدء المحادثة' : 'Choose a topic to start the conversation'}</p>
-                )}
+                <div className="w-full min-w-0" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                  <div className="flex items-center justify-between px-2 mb-2">
+                    <span className="text-xs font-semibold text-slate-500">{lang === 'ar' ? 'اختر موضوع المحادثة' : 'Choose a conversation topic'}</span>
+                    <span className="text-[11px] text-slate-400">{lang === 'ar' ? 'اسحب لعرض المزيد' : 'Swipe for more'}</span>
+                  </div>
+                  <div className="flex gap-3 overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory pb-3 pt-1 px-2 overscroll-x-contain touch-pan-x" role="group" aria-label={lang === 'ar' ? 'موضوعات المحادثة الحرة' : 'Free conversation topics'}>
+                    {TOPICS.map(topic => (
+                      <button key={topic.id} type="button"
+                        disabled={loading || isActive || isFinishing || showSummary || !selectedLevel}
+                        onClick={() => {
+                          if (loading || isActive || isFinishing || showSummary || !selectedLevel) return;
+                          setSelectedTopic(topic);
+                          setShowMobileOptions(false);
+                          setReportAvailable(false);
+                          setInsights(null);
+                          void startSession(false, topic);
+                        }}
+                        className="snap-start shrink-0 whitespace-nowrap rounded-2xl border border-white/70 bg-white/65 backdrop-blur-xl shadow-[0_4px_18px_rgba(31,78,100,.09)] hover:bg-white/95 hover:border-teal-200 hover:shadow-md active:scale-[.98] transition-all px-6 py-3.5 min-h-[52px] text-sm font-bold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                        aria-label={lang === 'ar' ? `ابدأ محادثة عن ${topic.ar}` : `Start conversation about ${topic.en}`}>
+                        {lang === 'ar' ? topic.ar : topic.en}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 {reportAvailable && <button type="button" className="qul-studio-preview-report" onClick={() => setShowSummary(true)}>
                   <FileText size={16}/>{lang === 'ar' ? 'عرض آخر تقرير' : 'View last report'}
                 </button>}
                 {error && <p role="alert" className="text-red-600 text-sm">{error}</p>}
                 <button type="button" className="qul-studio-preview-mobile lg:hidden" onClick={() => setShowMobileOptions(true)}>
-                  {lang === 'ar' ? 'اختيار الموضوع والمستوى' : 'Choose topic and level'}
+                  {lang === 'ar' ? 'اختيار المستوى' : 'Choose level'}
                 </button>
               </div>
             </div>
