@@ -945,22 +945,25 @@ export const Speak: React.FC = () => {
         import('html2canvas'), import('jspdf'),
       ]);
       await document.fonts?.ready;
-      // Two fixed worksheets, no extra pages and no cropped A4 content.
-      const pdf = new jsPDF('p','mm','a4');
-      const width = pdf.internal.pageSize.getWidth();
-      const height = pdf.internal.pageSize.getHeight();
+      // Page one grows vertically with the complete dialogue, preserving readable type.
+      // Page two remains a conventional A4 practice sheet.
       const sheets = [summaryPrintRef.current, sampleDialoguePrintRef.current];
+      const firstWidthMm = 210;
+      const firstHeightMm = Math.max(297, Math.ceil(sheets[0].scrollHeight * firstWidthMm / sheets[0].clientWidth) + 12);
+      const pdf = new jsPDF({orientation:'portrait',unit:'mm',format:[firstWidthMm,firstHeightMm]});
       for (let i=0;i<sheets.length;i++) {
         const sheet=sheets[i];
         const images=Array.from(sheet.querySelectorAll('img'));
         await Promise.all(images.map(img=>img.decode?.().catch(()=>undefined)));
         const canvas=await html2canvas(sheet,{scale:1.75,useCORS:true,logging:false,
           backgroundColor:'#fff',windowWidth:1100});
-        const fit=Math.min((width-12)/canvas.width,(height-12)/canvas.height);
+        if(i>0)pdf.addPage('a4','portrait');
+        const width=pdf.internal.pageSize.getWidth();
+        const height=pdf.internal.pageSize.getHeight();
+        const fit=i===0 ? (width-12)/canvas.width : Math.min((width-12)/canvas.width,(height-12)/canvas.height);
         const imageWidth=canvas.width*fit, imageHeight=canvas.height*fit;
-        if(i>0)pdf.addPage();
         pdf.addImage(canvas.toDataURL('image/jpeg',.92),'JPEG',
-          (width-imageWidth)/2,(height-imageHeight)/2,imageWidth,imageHeight);
+          (width-imageWidth)/2,i===0?6:(height-imageHeight)/2,imageWidth,imageHeight);
       }
       const name=(activeTopic?.en||'Speaking').replace(/[^a-zA-Z0-9_ -]/g,'').trim().replace(/\s+/g,'_').slice(0,35);
       pdf.save('QUL_Speaking_'+name+'_'+new Date().toISOString().slice(0,10)+'.pdf');
@@ -1211,7 +1214,7 @@ export const Speak: React.FC = () => {
                         role="group" aria-label={lang==='ar'?'صفحات التقرير':'Report pages'}>
                         <button type="button" aria-pressed={reportPage==='summary'} onClick={()=>setReportPage('summary')}
                           className={`flex-1 rounded-md px-3 py-2 text-xs font-black ${reportPage==='summary'?'bg-slate-800 text-white':'text-slate-600 hover:bg-slate-100'}`}>
-                          {lang==='ar'?'١. ورقة المتابعة':'1. Progress sheet'}
+                          {lang==='ar'?'١. الحوار الكامل':'1. Full transcript'}
                         </button>
                         <button type="button" aria-pressed={reportPage==='sample'} onClick={()=>setReportPage('sample')}
                           className={`flex-1 rounded-md px-3 py-2 text-xs font-black ${reportPage==='sample'?'bg-slate-800 text-white':'text-slate-600 hover:bg-slate-100'}`}>
@@ -1226,7 +1229,7 @@ export const Speak: React.FC = () => {
                             evidence={speakingEvidence} insights={insights}
                             objectivesAr={speakingBranch==='booth'?selectedCallContact.objectivesAr:[]}
                             objectivesEn={speakingBranch==='booth'?selectedCallContact.objectivesEn:[]}
-                            nextPractice={nextPractice} mode="preview"/>
+                            nextPractice={nextPractice} transcript={conversationHistory} mode="preview"/>
                         ) : (
                           <SpeakingSuggestedDialogueSheet lang={lang}
                             topicAr={activeTopic?.ar||'محادثة يومية'}
@@ -1478,7 +1481,7 @@ export const Speak: React.FC = () => {
             evidence={speakingEvidence} insights={insights}
             objectivesAr={speakingBranch==='booth'?selectedCallContact.objectivesAr:[]}
             objectivesEn={speakingBranch==='booth'?selectedCallContact.objectivesEn:[]}
-            nextPractice={nextPractice} mode="print"/>
+            nextPractice={nextPractice} transcript={conversationHistory} mode="print"/>
         </div>
         <div ref={sampleDialoguePrintRef} className="w-[800px] bg-white">
           <SpeakingSuggestedDialogueSheet lang={lang}
