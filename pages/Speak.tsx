@@ -464,6 +464,8 @@ export const Speak: React.FC = () => {
     if (finishingRef.current || !selectedLevel || !activeTopic) return;
     closeTransport();
     const attempt = startAttemptRef.current;
+    // Show the studio immediately. Network, microphone and AI startup must not block navigation.
+    setSetupMode(false);
     const previousTurns = preserveHistory ? [...historyRef.current].slice(-8) : [];
     setLoading(true);
     setError(null);
@@ -528,7 +530,7 @@ export const Speak: React.FC = () => {
           return;
         }
       } catch (e: any) {
-        setError(t.permError);
+        setRecoveryNotice(t.permError);
         setLoading(false);
         return;
       }
@@ -688,9 +690,9 @@ export const Speak: React.FC = () => {
       const connectionTimeout = setTimeout(() => {
         if (sessionRef.current !== transport || attempt !== startAttemptRef.current) return;
         closeTransport();
-        setSetupMode(true);
+        setSetupMode(false);
         setLoading(false);
-        setError(lang === 'ar' ? 'استغرق الاتصال وقتًا أطول من المتوقع. حاول بدء المحادثة مجددًا.' : 'The voice connection timed out. Please try starting again.');
+        setRecoveryNotice(lang === 'ar' ? 'استغرق الاتصال وقتًا أطول من المتوقع. حاول بدء المحادثة مجددًا.' : 'The voice connection timed out. Please try starting again.');
       }, 18000);
       void sessionPromise.finally(() => clearTimeout(connectionTimeout)).catch(() => {});
       transport.sessionPromise = sessionPromise;
@@ -717,8 +719,8 @@ export const Speak: React.FC = () => {
         console.error('Live connection failed', err);
         if (sessionRef.current !== transport) return;
         closeTransport();
-        setSetupMode(true);
-        setError(t.genError);
+        setSetupMode(false);
+        setRecoveryNotice(t.genError);
         setLoading(false);
       });
     } catch (err: any) {
@@ -729,8 +731,8 @@ export const Speak: React.FC = () => {
         setSetupMode(false);
         setRecoveryNotice(lang === 'ar' ? 'تعذرت إعادة الاتصال، وما زال الحوار محفوظًا.' : 'Reconnection failed. Your dialogue is still available.');
       } else {
-        setSetupMode(true);
-        setError(t.genError);
+        setSetupMode(false);
+        setRecoveryNotice(t.genError);
       }
       setLoading(false);
     }
