@@ -460,3 +460,60 @@
 @media(prefers-reduced-motion:reduce){
  .qul-voice-indicator,.qul-voice-waveform i,.qul-voice-eq span,.qul-free-spin{animation:none!important;transition:none!important}
 }
+
+
+/* QUL light studio, keep the microphone and live audio visualizations.
+   Secondary learning tools remain accessible from the dock on demand. */
+.qul-free-studio.qul-voice-studio{
+  --voice-text:#18374b;--voice-dim:#617b8d;--voice-line:#d9e7eb;
+  background:radial-gradient(ellipse 50% 48% at 50% 53%,#e8fbfc 0%,transparent 82%),linear-gradient(145deg,#ffffff,#f5fafb);
+  color:#18374b;
+}
+.qul-voice-atmosphere{opacity:.3}
+.qul-voice-header{border-bottom:1px solid #e8eff2}
+.qul-voice-heading h2{color:#17374a}
+.qul-voice-heading p,.qul-voice-eyebrow{color:#688899}
+.qul-voice-header-mark{background:#e7f8f7;color:#138e94;border-color:#c4e8e7;box-shadow:none}
+.qul-voice-onair{background:#f3f9f9;color:#607e89;border-color:#dcebec}
+.qul-voice-onair.is-live{color:#137f79;border-color:#b8e6db}
+.qul-voice-workspace{grid-template-columns:minmax(0,1fr);padding:12px clamp(12px,3vw,32px)}
+.qul-voice-assists,.qul-voice-latest{display:none}
+.qul-voice-stage{
+  width:min(100%,820px);justify-self:center;
+  background:radial-gradient(ellipse at 50% 58%,rgba(25,205,209,.12),transparent 68%),linear-gradient(145deg,#fafdff,#eff9fb);
+  border:1px solid #d7e9ee;box-shadow:0 12px 35px rgba(27,90,115,.07),inset 0 1px #fff;
+}
+.qul-voice-stage::before{border-color:#e4eff2}
+.qul-voice-stage-id{color:#8aa5b3}
+.qul-voice-status{background:#e5f8f4;color:#147c76;border-color:#b8e8dd;box-shadow:none}
+.qul-voice-stage-caption{color:#577b8b}
+.qul-voice-hardware{filter:drop-shadow(0 15px 17px rgba(22,57,75,.23))}
+.qul-voice-glow{opacity:.36}
+.qul-voice-eq{opacity:.65}
+.qul-voice-dock{
+  background:rgba(255,255,255,.82);border:1px solid #dce9ee;
+  box-shadow:0 8px 26px rgba(23,82,103,.07);min-height:74px;
+}
+.qul-voice-dock-divider{background:#d9e6eb}
+.qul-voice-tools>button{color:#456779}
+.qul-voice-tools>button>svg{color:#558b9c}
+.qul-voice-tools>button:hover,.qul-voice-tools>button.selected{background:#e8f6f6;color:#176e75;border-color:#cce7e8}
+.qul-voice-finish{background:#f2f7fa;color:#375c70;border:1px solid #d4e4ea}
+.qul-voice-finish:hover:not(:disabled){background:#e4f1f5}
+.qul-voice-talk-control{box-shadow:0 4px 17px rgba(13,176,169,.17);border-color:#a3e9df}
+.qul-voice-panel{background:rgba(255,255,255,.98);color:#24465a;border-color:#d2e7ea;box-shadow:0 15px 45px rgba(29,83,105,.16)}
+.qul-voice-panel-header{border-bottom-color:#e4eff2}
+.qul-voice-panel-header button{color:#4c7585}
+.qul-voice-compose input{background:#f7fbfc;color:#17374b;border-color:#cfe4e9}
+.qul-voice-compose input::placeholder{color:#8097a2}
+.qul-voice-compose small{color:#668392}
+.qul-voice-help-list button{background:#f2f9fa;border-color:#d9e8ec}
+.qul-voice-help-list strong,.qul-voice-translation-result{color:#234b60}
+.qul-voice-help-list small{color:#6b8796}
+.qul-voice-history-lines>div{border-bottom-color:#e4edf1}
+.qul-voice-recovery{background:#fff9ed;color:#775b32;border-color:#f0dfbd}
+@media(max-width:750px){
+  .qul-voice-workspace{display:flex;flex-direction:column}
+  .qul-voice-stage{flex:1;min-height:0}
+  .qul-voice-assists,.qul-voice-latest{display:none}
+}
