@@ -973,7 +973,7 @@ export const WhiteboardPage: React.FC = () => {
           activeTool={activeTool}
           activeColor={activeColor}
           activeStrokeWidth={activeStrokeWidth}
-          isReadOnly={!isTeacher || !cloudReady}
+          isReadOnly={!isTeacher || !cloudReady || isExportingPdf}
           theme={currentPage.theme || activeTheme}
           background={currentPage.background}
           currentUserId={user?.uid}
