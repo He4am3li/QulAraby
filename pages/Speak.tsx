@@ -11,6 +11,8 @@ import { PageHeader } from '../components/PageHeader';
 import { StudioMicIcon } from '../components/StudioMicIcon';
 import { SpeakingCallBooth, CALL_CONTACTS } from '../components/SpeakingCallBooth';
 import { SpeakingFreeStudio } from '../components/SpeakingFreeStudio';
+import { SpeakingStudioMicrophone } from '../components/SpeakingStudioMicrophone';
+import '../components/SpeakingFreeStudio.css';
 import { SpeakingReportSheet } from '../components/SpeakingReportSheet';
 import { SpeakingSuggestedDialogueSheet } from '../components/SpeakingSuggestedDialogueSheet';
 import { getUaePriceGuidance } from '../services/speakingUaePrices.mjs';
@@ -1278,105 +1280,36 @@ export const Speak: React.FC = () => {
               meterRef={phoneMeterRef}
             />
           ) : setupMode ? (
-            <AnimatePresence mode="wait">
-              {!selectedLevel ? (
-                <motion.div 
-                  key="no-level"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="h-full flex flex-col items-center justify-center text-center space-y-6 p-6"
-                >
-                  <div className="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
-                    <StudioMicIcon size={64} strokeWidth={2.4} />
+            <div className="qul-free-studio qul-voice-studio qul-studio-preview" dir={lang === 'ar' ? 'rtl' : 'ltr'} data-testid="free-speaking-preview">
+              <div className="qul-voice-workspace">
+                <div className="qul-voice-stage" aria-label={lang === 'ar' ? 'معاينة الميكروفون' : 'Microphone preview'}>
+                  <div className="qul-voice-stage-performance">
+                    <div className="qul-voice-waveform" aria-hidden="true" style={{'--mic-scale':0.12} as React.CSSProperties}>
+                      {Array.from({length:81},(_,index)=><i key={index} style={{height:(18+32*Math.abs(Math.sin(index*.41)))+'%','--index':index} as React.CSSProperties}/>)}
+                    </div>
+                    <div className="qul-voice-glow" aria-hidden="true"/>
+                    <SpeakingStudioMicrophone active={false}/>
+                    <div className="qul-voice-eq" aria-hidden="true"/>
                   </div>
-                  <div>
-                    <h2 className="text-3xl font-black text-slate-800 arabic-font mb-2">{t.selectLevelFirst}</h2>
-                    <p className="text-slate-400 font-bold max-w-sm mx-auto">{t.subtitle}</p>
-                  </div>
-                </motion.div>
-              ) : !selectedTopic ? (
-                <motion.div 
-                  key="empty"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="h-full flex flex-col items-center justify-center text-center space-y-6 p-6"
-                >
-                  <div className="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center text-[#2563eb] animate-pulse">
-                    <StudioMicIcon size={64} strokeWidth={2.4} />
-                  </div>
-                  <div>
-                    <h2 className="text-3xl font-black text-slate-800 arabic-font mb-2">{t.chooseTopic}</h2>
-                    <p className="text-slate-400 font-bold max-w-sm mx-auto">{t.subtitle}</p>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div 
-                  key="setup"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="h-full min-h-0 overflow-y-auto flex flex-col items-center justify-center px-4 py-6 sm:p-6 gap-4 sm:gap-8"
-                >
-                  <button type="button" onClick={() => setShowMobileOptions(true)}
-                    className="lg:hidden text-sm font-bold text-blue-700 border border-blue-200 rounded-xl px-4 py-2 bg-blue-50">
-                    {lang === 'ar' ? 'تغيير المستوى أو الموضوع' : 'Change level or topic'}
+                </div>
+              </div>
+              <div className="qul-studio-preview-actions">
+                {selectedTopic && selectedLevel ? (
+                  <button type="button" className="qul-studio-preview-start" disabled={loading || isFinishing} onClick={() => startSession()}>
+                    <Mic size={19}/>{lang === 'ar' ? 'ابدأ المحادثة' : 'Start conversation'}
                   </button>
-                  <div className="text-center space-y-4">
-                    <div className="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center text-[#2563eb] shadow-sm mx-auto">
-                      <span className="text-5xl">{selectedTopic.icon}</span>
-                    </div>
-                    <div>
-                      <h2 className="text-3xl font-black text-slate-800 arabic-font leading-none">
-                        {lang === 'ar' ? selectedTopic.ar : selectedTopic.en}
-                      </h2>
-                      <p className="text-slate-400 text-sm font-bold mt-2 uppercase tracking-widest">
-                        {selectedTopic.en} • {selectedLevel.ar}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="max-w-md w-full bg-white p-5 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 shadow-xl space-y-5 sm:space-y-6">
-                    <div className="space-y-2">
-                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest text-center">{t.setupTitle}</p>
-                      <p className="text-sm text-slate-500 text-center arabic-font leading-relaxed">
-                        {lang === 'ar' ? selectedLevel.descriptionAr : selectedLevel.descriptionEn}
-                      </p>
-                    </div>
-
-                    {practiceGoal && (
-                      <p className="rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-900 p-3 text-sm arabic-font" dir="rtl">
-                        {lang === 'ar' ? 'هدف المحادثة: ' : 'Practice goal: '}{practiceGoal}
-                      </p>
-                    )}
-                    {error && (
-                      <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-center gap-3 text-red-600 animate-in fade-in">
-                        <AlertCircle size={16} />
-                        <p className="text-xs font-bold">{error}</p>
-                        <button onClick={() => startSession()} className="mr-auto bg-red-600 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase"><RefreshCw size={10} className="inline mr-1" /> {lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}</button>
-                      </div>
-                    )}
-
-                    {reportAvailable && speakingBranch === 'studio' && (
-                      <button type="button" onClick={() => { setShowMobileOptions(false); setShowSummary(true); }}
-                        className="w-full rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 px-4 py-3 flex items-center justify-center gap-2 text-sm font-black"
-                        aria-label={lang === 'ar' ? 'عرض آخر تقرير للمحادثة' : 'View last conversation report'}>
-                        <FileText size={17}/>
-                        {lang === 'ar' ? 'عرض آخر تقرير للمحادثة' : 'View last conversation report'}
-                      </button>
-                    )}
-                    <button
-                      onClick={() => startSession()}
-                      disabled={loading || isFinishing}
-                      className="w-full py-5 bg-gradient-to-r from-[#2563eb] to-[#059669] text-white rounded-2xl font-black text-xl shadow-xl shadow-blue-500/30 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
-                    >
-                      {loading ? <Loader2 size={28} className="animate-spin" /> : <StudioMicIcon size={28} strokeWidth={2.5} />}
-                      <span className="arabic-font">{t.start}</span>
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                ) : (
+                  <p role="status">{lang === 'ar' ? 'اختر موضوعًا من القائمة لبدء المحادثة' : 'Choose a topic to start the conversation'}</p>
+                )}
+                {reportAvailable && <button type="button" className="qul-studio-preview-report" onClick={() => setShowSummary(true)}>
+                  <FileText size={16}/>{lang === 'ar' ? 'عرض آخر تقرير' : 'View last report'}
+                </button>}
+                {error && <p role="alert" className="text-red-600 text-sm">{error}</p>}
+                <button type="button" className="qul-studio-preview-mobile lg:hidden" onClick={() => setShowMobileOptions(true)}>
+                  {lang === 'ar' ? 'اختيار الموضوع والمستوى' : 'Choose topic and level'}
+                </button>
+              </div>
+            </div>
           ) : (
             <SpeakingStudioErrorBoundary onBack={() => { closeTransport(); setLoading(false); setSetupMode(true); }}>
             <SpeakingFreeStudio
