@@ -165,6 +165,7 @@ export const WhiteboardPage: React.FC = () => {
   const [isSendingAnswer, setIsSendingAnswer] = useState(false);
   const [answerError, setAnswerError] = useState('');
   const [isQuestionEditorOpen, setIsQuestionEditorOpen] = useState(false);
+  const [joinAttempt, setJoinAttempt] = useState(0);
   const [questionDraft, setQuestionDraft] = useState('');
   const classroomSchoolId = profile?.schoolId || 'independent';
 
@@ -293,7 +294,7 @@ export const WhiteboardPage: React.FC = () => {
       if (!cancelled) { setCloudReady(false); setCloudStatus('تعذر الانضمام، تأكد من الرمز واعتماد حسابك ومدرستك.'); }
     });
     return () => { cancelled = true; unsubscribe(); };
-  }, [isTeacher, joinedCode, user?.uid, profile?.schoolId]);
+  }, [isTeacher, joinedCode, joinAttempt, user?.uid, profile?.schoolId]);
 
   // Each learner occupies their own Firestore subdocument, preventing collisions
   // when a class of 30 students raises hands or submits answers together.
@@ -575,6 +576,7 @@ export const WhiteboardPage: React.FC = () => {
 
   // Canvas elements update
   const handleElementsChange = (newElements: WhiteboardElement[]) => {
+    if (!isTeacher || !cloudReady) return;
     setHistory(prev => [...prev, currentPage.elements]);
     setRedoStack([]);
 
@@ -667,19 +669,15 @@ export const WhiteboardPage: React.FC = () => {
   };
 
   const handleScoreChange = (studentId: string, delta: number) => {
-    setSession(prev => {
-      const student = prev.students[studentId];
-      if (!student) return prev;
-      return {
-        ...prev,
-        students: {
-          ...prev.students,
-          [studentId]: {
-            ...student,
-            score: Math.max(0, student.score + delta)
-          }
-        }
-      };
+    if (!isTeacher || !cloudReady || !cloudCode) return;
+    const student = sessionRef.current.students[studentId];
+    if (!student) return;
+    const score = Math.max(0, student.score + delta);
+    void updateDoc(doc(db, 'whiteboard_sessions', cloudCode, 'participants', studentId), {
+      score,
+    }).catch(error => {
+      console.error('Score update failed:', error);
+      setCloudStatus('تعذر تسجيل النقاط، أعد المحاولة.');
     });
   };
 
@@ -691,66 +689,55 @@ export const WhiteboardPage: React.FC = () => {
   };
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(session.code);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
+    if (!cloudReady) return;
+    void navigator.clipboard.writeText(session.code).then(() => {
+      setCopiedCode(true);
+      window.setTimeout(() => setCopiedCode(false), 2000);
+    }).catch(() => setCloudStatus('تعذر نسخ رمز الحصة.'));
   };
 
-  const handleSendStudentAnswer = () => {
-    if (!studentAnswerText.trim() || !user || !session.activeActivity?.isActive) return;
-    const stId = user.uid || 'current_student';
-    const stName = profile?.displayName || user.displayName || 'أنا';
-
-    setSession(prev => {
-      if (!prev.activeActivity) return prev;
-      return {
-        ...prev,
-        activeActivity: {
-          ...prev.activeActivity,
-          submissions: {
-            ...prev.activeActivity.submissions,
-            [stId]: {
-              studentId: stId,
-              studentName: stName,
-              answer: studentAnswerText,
-              timestamp: Date.now(),
-              evaluated: false
-            }
-          }
-        }
-      };
-    });
-    setStudentAnswerSent(true);
-  };
-
-  const toggleHandRaise = () => {
-    const nextState = !handRaised;
-    setHandRaised(nextState);
-    if (user) {
-      setSession(prev => {
-        const current = prev.students[user.uid] || {
-          id: user.uid,
-          name: profile?.displayName || user.displayName || 'أنا',
-          score: 10,
-          isOnline: true,
-          handRaised: false,
-          lastActive: Date.now()
-        };
-        return {
-          ...prev,
-          students: {
-            ...prev.students,
-            [user.uid]: {
-              ...current,
-              handRaised: nextState
-            }
-          }
-        };
-      });
+  const handleSendStudentAnswer = async () => {
+    if (isTeacher || !cloudReady || !cloudCode || !studentAnswerText.trim() ||
+        !user?.uid || !session.activeActivity?.isActive || isSendingAnswer) return;
+    if (!navigator.onLine) {
+      setAnswerError('الاتصال بالإنترنت غير متاح، لم تُرسل الإجابة.');
+      return;
+    }
+    setIsSendingAnswer(true);
+    setStudentAnswerSent(false);
+    setAnswerError('');
+    try {
+      await setDoc(doc(db, 'whiteboard_sessions', cloudCode, 'answers', user.uid), {
+        studentId: user.uid,
+        studentName: profile?.displayName || user.displayName || 'طالب',
+        answer: studentAnswerText.trim(),
+        activityId: session.activeActivity.id,
+        timestamp: Date.now(),
+      }, { merge: true });
+      setStudentAnswerSent(true);
+    } catch (error) {
+      console.error('Whiteboard submission failed:', error);
+      setAnswerError('تعذر تسليم الإجابة، تأكد من الاتصال وصلاحية الحصة.');
+    } finally {
+      setIsSendingAnswer(false);
     }
   };
 
+  const toggleHandRaise = () => {
+    if (isTeacher || !cloudReady || !cloudCode || !user?.uid) return;
+    const nextState = !handRaised;
+    setHandRaised(nextState);
+    void updateDoc(doc(db, 'whiteboard_sessions', cloudCode, 'participants', user.uid), {
+      handRaised: nextState, lastActive: Date.now(),
+    }).catch(error => {
+      console.error('Hand raise failed:', error);
+      setHandRaised(!nextState);
+      setAnswerError('تعذر تحديث حالة رفع اليد.');
+    });
+  };
+
   const insertGenericElement = (el: Partial<WhiteboardElement>) => {
+    if (!isTeacher || !cloudReady) return;
     const newElem: WhiteboardElement = {
       ...el,
       id: el.id || ('el_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)),
