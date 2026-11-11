@@ -488,11 +488,17 @@ export const Speak: React.FC = () => {
       if (user) {
         try {
           const vocabRef = collection(db, 'users', user.uid, 'vocabulary');
-          const vocabSnap = await getDocs(query(vocabRef, orderBy('createdAt', 'desc'), limit(3)));
+          const vocabSnap = await Promise.race([
+            getDocs(query(vocabRef, orderBy('createdAt', 'desc'), limit(3))),
+            new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Vocabulary context timeout')), 2500))
+          ]);
           const recentVocab = vocabSnap.docs.map(d => d.data().word).join(", ");
           
           const memoryRef = collection(db, 'users', user.uid, 'memory');
-          const mistakesSnap = await getDocs(query(memoryRef, orderBy('timestamp', 'desc'), limit(3)));
+          const mistakesSnap = await Promise.race([
+            getDocs(query(memoryRef, orderBy('timestamp', 'desc'), limit(3))),
+            new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Memory context timeout')), 2500))
+          ]);
           const recentMistakes = mistakesSnap.docs.map(d => d.data().content).join(", ");
 
           if (recentVocab) proactiveContext += `\nRecent words learned: ${recentVocab}.`;
@@ -678,6 +684,15 @@ export const Speak: React.FC = () => {
           },
         },
       });
+      // A stalled Live handshake must not trap the learner behind the loading state.
+      const connectionTimeout = setTimeout(() => {
+        if (sessionRef.current !== transport || attempt !== startAttemptRef.current) return;
+        closeTransport();
+        setSetupMode(true);
+        setLoading(false);
+        setError(lang === 'ar' ? 'استغرق الاتصال وقتًا أطول من المتوقع. حاول بدء المحادثة مجددًا.' : 'The voice connection timed out. Please try starting again.');
+      }, 18000);
+      void sessionPromise.finally(() => clearTimeout(connectionTimeout)).catch(() => {});
       transport.sessionPromise = sessionPromise;
       void sessionPromise.then(session => {
         transport.session = session;
