@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { collection, doc, getDoc, onSnapshot, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
+import { createWhiteboardCode, isWhiteboardCode, normalizeWhiteboardCode, whiteboardCloudPayload, mergeWhiteboardCloud, isWhiteboardPayloadSizeSafe } from '../services/whiteboardCloud';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PenTool, Users, Clock, Sparkles, Plus, ChevronLeft, ChevronRight, 
@@ -67,7 +70,9 @@ export const WhiteboardPage: React.FC = () => {
 
   // Session State
   const [session, setSession] = useState<WhiteboardSessionState>(() => {
-    const saved = localStorage.getItem('qul_active_whiteboard_session');
+    const saved = isTeacher && user?.uid
+      ? (localStorage.getItem('qul_active_whiteboard_session_' + user.uid) || localStorage.getItem('qul_active_whiteboard_session'))
+      : null;
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -89,14 +94,18 @@ export const WhiteboardPage: React.FC = () => {
           parsed.activeActivity.title = 'نشاط الفصل';
           parsed.activeActivity.question = 'سيظهر هنا سؤال المعلم عند بدء النشاط.';
         }
-        return parsed;
+        if (parsed.teacherId === user?.uid && Array.isArray(parsed.pages) && parsed.pages.length) {
+          if (!isWhiteboardCode(parsed.code)) parsed.code = createWhiteboardCode();
+          parsed.id = parsed.code;
+          return parsed;
+        }
       } catch (e) {}
     }
     return {
-      id: 'session_' + Date.now(),
-      code: 'QUL-' + Math.floor(1000 + Math.random() * 9000),
+      id: 'new_session',
+      code: createWhiteboardCode(),
       title: 'درس اللغة العربية التفاعلي',
-      teacherId: user?.uid || 'teacher_1',
+      teacherId: user?.uid || '',
       teacherName: profile?.displayName || user?.displayName || 'المعلم',
       createdAt: Date.now(),
       currentPageIndex: 0,
@@ -131,10 +140,236 @@ export const WhiteboardPage: React.FC = () => {
     };
   });
 
-  // Save session state locally
+  // Keep browser recovery strictly scoped to the signed-in teacher.
   useEffect(() => {
-    localStorage.setItem('qul_active_whiteboard_session', JSON.stringify(session));
-  }, [session]);
+    if (!isTeacher || !user?.uid) return;
+    try {
+      localStorage.setItem('qul_active_whiteboard_session_' + user.uid, JSON.stringify(session));
+    } catch (error) {
+      console.warn('Local whiteboard recovery unavailable:', error);
+    }
+  }, [session, isTeacher, user?.uid]);
+
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+  const publishedFingerprint = useRef('');
+  const [cloudCode, setCloudCode] = useState<string>(isTeacher ? session.code : '');
+  const [joinedCode, setJoinedCode] = useState<string>(() => {
+    if (isTeacher) return '';
+    const hashQuery = window.location.hash.split('?')[1] || '';
+    return normalizeWhiteboardCode(new URLSearchParams(hashQuery).get('session') || '');
+  });
+  const [joinInput, setJoinInput] = useState(joinedCode);
+  const [cloudReady, setCloudReady] = useState(false);
+  const [cloudStatus, setCloudStatus] = useState('جارٍ الاتصال بالحصة...');
+  const [isSendingAnswer, setIsSendingAnswer] = useState(false);
+  const [answerError, setAnswerError] = useState('');
+  const [isQuestionEditorOpen, setIsQuestionEditorOpen] = useState(false);
+  const [questionDraft, setQuestionDraft] = useState('');
+  const classroomSchoolId = profile?.schoolId || 'independent';
+
+  // Teachers own the authoritative board document. Every student observes the same code.
+  useEffect(() => {
+    if (!isTeacher || !user?.uid) return;
+    let cancelled = false;
+    let unsubscribe = () => {};
+    const code = sessionRef.current.code;
+    const boardRef = doc(db, 'whiteboard_sessions', code);
+    setCloudCode(code);
+    setCloudReady(false);
+    setCloudStatus('جارٍ فتح حصة المعلم...');
+    const initialize = async () => {
+      const existing = await getDoc(boardRef);
+      if (!existing.exists()) {
+        const base = { ...sessionRef.current, teacherId: user.uid, id: code, code };
+        await setDoc(boardRef, {
+          ...whiteboardCloudPayload(base, classroomSchoolId),
+          updatedAt: serverTimestamp(),
+        });
+      } else if (existing.data().teacherId !== user.uid) {
+        throw new Error('رمز الحصة مملوك لمعلم آخر.');
+      }
+      if (cancelled) return;
+      unsubscribe = onSnapshot(boardRef, (snapshot) => {
+        const remote = snapshot.data();
+        if (!remote) {
+          setCloudStatus('انتهت الحصة أو حُذفت.'); setCloudReady(false);
+          return;
+        }
+        const normalized = whiteboardCloudPayload(remote as WhiteboardSessionState, remote.schoolId);
+        publishedFingerprint.current = JSON.stringify(normalized);
+        setSession(previous => mergeWhiteboardCloud(previous, normalized));
+        setCloudReady(true);
+        setCloudStatus('الحصة متصلة');
+      }, (error) => {
+        console.error('Whiteboard classroom subscription failed:', error);
+        setCloudReady(false);
+        setCloudStatus('تعذر استقبال تحديثات الحصة.');
+      });
+    };
+    void initialize().catch(error => {
+      console.error('Whiteboard classroom initialization failed:', error);
+      if (!cancelled) setCloudStatus('تعذر إنشاء الحصة السحابية، تحقق من صلاحيات المدرسة.');
+    });
+    return () => { cancelled = true; unsubscribe(); };
+  }, [isTeacher, user?.uid, classroomSchoolId]);
+
+  // Firestore is authoritative for published teacher changes. Debounce strokes and
+  // never rewrite attendance or student answers into the teacher document.
+  useEffect(() => {
+    if (!isTeacher || !cloudReady || !cloudCode || !user?.uid) return;
+    const payload = whiteboardCloudPayload(session, classroomSchoolId);
+    const fingerprint = JSON.stringify(payload);
+    if (fingerprint === publishedFingerprint.current) return;
+    if (!isWhiteboardPayloadSizeSafe(payload)) {
+      setCloudStatus('الحصة كبيرة جدًا للحفظ، قلل الصور أو صفحات الرسم.');
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setCloudStatus('جارٍ حفظ التعديلات...');
+      void setDoc(doc(db, 'whiteboard_sessions', cloudCode), {
+        ...payload,
+        updatedAt: serverTimestamp(),
+      }, { merge: true }).then(() => {
+        publishedFingerprint.current = fingerprint;
+        setCloudStatus('حُفظت التعديلات');
+      }).catch(error => {
+        console.error('Whiteboard sync write failed:', error);
+        setCloudStatus('تعذر حفظ التعديلات سحابيًا.');
+      });
+    }, 450);
+    return () => window.clearTimeout(timer);
+  }, [session, cloudReady, cloudCode, classroomSchoolId, isTeacher, user?.uid]);
+
+  // Students cannot enumerate class sessions. They enter the exact code, and
+  // Firestore checks approval and school membership before granting access.
+  useEffect(() => {
+    if (isTeacher || !user?.uid || !joinedCode) return;
+    if (!profile?.schoolId || !isWhiteboardCode(joinedCode)) {
+      setCloudStatus('أدخل رمز حصة صحيحًا من معلم مدرستك.');
+      setCloudReady(false);
+      return;
+    }
+    let cancelled = false;
+    let unsubscribe = () => {};
+    setCloudReady(false);
+    setCloudStatus('جارٍ التحقق من رمز الحصة...');
+    const boardRef = doc(db, 'whiteboard_sessions', joinedCode);
+    const personRef = doc(db, 'whiteboard_sessions', joinedCode, 'participants', user.uid);
+    const initialize = async () => {
+      const result = await getDoc(boardRef);
+      if (!result.exists() || result.data().schoolId !== profile.schoolId) {
+        throw new Error('لم تُعثر على حصة متاحة لهذه المدرسة.');
+      }
+      const myPresence = await getDoc(personRef);
+      if (!myPresence.exists()) {
+        await setDoc(personRef, {
+          id: user.uid, name: profile.displayName || user.displayName || 'طالب',
+          score: 0, handRaised: false, isOnline: true, lastActive: Date.now(),
+        });
+      } else {
+        await updateDoc(personRef, { isOnline: true, lastActive: Date.now() });
+      }
+      if (cancelled) return;
+      setCloudCode(joinedCode);
+      unsubscribe = onSnapshot(boardRef, snapshot => {
+        const remote = snapshot.data();
+        if (!remote) {
+          setCloudStatus('أُغلقت الحصة.');
+          setCloudReady(false); return;
+        }
+        const normalized = whiteboardCloudPayload(remote as WhiteboardSessionState, remote.schoolId);
+        setSession(previous => mergeWhiteboardCloud(previous, normalized));
+        setCloudReady(true);
+        setCloudStatus('متصل بحصة المعلم');
+      }, error => {
+        console.error('Student whiteboard subscription failed:', error);
+        setCloudReady(false);
+        setCloudStatus('انقطع الاتصال بالحصة.');
+      });
+    };
+    void initialize().catch(error => {
+      console.error('Whiteboard student join rejected:', error);
+      if (!cancelled) { setCloudReady(false); setCloudStatus('تعذر الانضمام، تأكد من الرمز واعتماد حسابك ومدرستك.'); }
+    });
+    return () => { cancelled = true; unsubscribe(); };
+  }, [isTeacher, joinedCode, user?.uid, profile?.schoolId]);
+
+  // Each learner occupies their own Firestore subdocument, preventing collisions
+  // when a class of 30 students raises hands or submits answers together.
+  useEffect(() => {
+    if (!isTeacher || !cloudReady || !cloudCode) return;
+    const participants = collection(db, 'whiteboard_sessions', cloudCode, 'participants');
+    const answers = collection(db, 'whiteboard_sessions', cloudCode, 'answers');
+    const unsubscribeParticipants = onSnapshot(participants, snapshot => {
+      const people: WhiteboardSessionState['students'] = {};
+      snapshot.docs.forEach(item => {
+        const entry = item.data();
+        people[item.id] = {
+          id: item.id, name: String(entry.name || 'طالب'),
+          score: Number(entry.score || 0), handRaised: !!entry.handRaised,
+          isOnline: !!entry.isOnline && Date.now() - Number(entry.lastActive || 0) < 90000,
+          lastActive: Number(entry.lastActive || 0),
+        };
+      });
+      setSession(previous => ({ ...previous, students: people }));
+    }, error => console.error('Student attendance sync failed:', error));
+    const unsubscribeAnswers = onSnapshot(answers, snapshot => {
+      setSession(previous => {
+        if (!previous.activeActivity) return previous;
+        const submissions: NonNullable<WhiteboardSessionState['activeActivity']>['submissions'] = {};
+        snapshot.docs.forEach(item => {
+          const answer = item.data();
+          if (answer.activityId !== previous.activeActivity?.id) return;
+          submissions[item.id] = {
+            studentId: item.id, studentName: String(answer.studentName || 'طالب'),
+            answer: String(answer.answer || ''), timestamp: Number(answer.timestamp || 0),
+            evaluated: !!answer.evaluated,
+            score: typeof answer.score === 'number' ? answer.score : undefined,
+            feedback: typeof answer.feedback === 'string' ? answer.feedback : undefined,
+          };
+        });
+        return { ...previous, activeActivity: { ...previous.activeActivity, submissions } };
+      });
+    }, error => console.error('Student answer sync failed:', error));
+    return () => { unsubscribeParticipants(); unsubscribeAnswers(); };
+  }, [isTeacher, cloudReady, cloudCode]);
+
+  // Presence is updated on focus and periodically. No false online indicator
+  // should remain forever when the browser disconnects unexpectedly.
+  useEffect(() => {
+    if (isTeacher || !cloudReady || !cloudCode || !user?.uid) return;
+    const participantRef = doc(db, 'whiteboard_sessions', cloudCode, 'participants', user.uid);
+    const announce = () => {
+      void updateDoc(participantRef, {
+        isOnline: document.visibilityState === 'visible',
+        lastActive: Date.now(),
+      }).catch(error => console.warn('Unable to update board presence:', error));
+    };
+    announce();
+    const timer = window.setInterval(announce, 30000);
+    document.addEventListener('visibilitychange', announce);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', announce);
+      void updateDoc(participantRef, { isOnline: false, lastActive: Date.now() }).catch(() => {});
+    };
+  }, [isTeacher, cloudReady, cloudCode, user?.uid]);
+
+  const beginClassQuestion = () => {
+    if (!isTeacher || !questionDraft.trim() || !cloudReady) return;
+    const question = questionDraft.trim();
+    setSession(previous => ({
+      ...previous,
+      activeActivity: {
+        id: 'act_' + Date.now(), title: 'سؤال الحصة',
+        type: 'qa', question, isActive: true, submissions: {},
+      },
+    }));
+    setIsQuestionEditorOpen(false);
+    setQuestionDraft('');
+  };
+
 
   // Real-time tab visibility & focus tracking: turns student presence green when focused on whiteboard page, dark when switching tab/app
   useEffect(() => {
