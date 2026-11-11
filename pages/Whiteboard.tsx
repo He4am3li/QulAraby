@@ -448,16 +448,22 @@ export const WhiteboardPage: React.FC = () => {
   useEffect(() => {
     const openMedia = () => setIsMediaStickersOpen(true);
     const submitAnswer = () => document.getElementById('qul-student-answer-submit')?.click();
+    const focusAnswer = () => document.getElementById('qul-student-answer-input')?.focus();
+    const raiseHand = () => document.getElementById('qul-student-raise-hand')?.click();
     const applyLock = (event: Event) => {
       const locked = (event as CustomEvent<{ isLocked?: boolean }>).detail?.isLocked;
       if (typeof locked === 'boolean') setSession(prev => ({ ...prev, isLocked: locked }));
     };
     window.addEventListener('qul_open_whiteboard_media', openMedia);
     window.addEventListener('qul_student_submit_answer', submitAnswer);
+    window.addEventListener('qul_student_focus_answer', focusAnswer);
+    window.addEventListener('qul_student_raise_hand', raiseHand);
     window.addEventListener('qul_whiteboard_toggle_lock', applyLock);
     return () => {
       window.removeEventListener('qul_open_whiteboard_media', openMedia);
       window.removeEventListener('qul_student_submit_answer', submitAnswer);
+      window.removeEventListener('qul_student_focus_answer', focusAnswer);
+      window.removeEventListener('qul_student_raise_hand', raiseHand);
       window.removeEventListener('qul_whiteboard_toggle_lock', applyLock);
     };
   }, []);
@@ -901,6 +907,7 @@ export const WhiteboardPage: React.FC = () => {
                 </h4>
               </div>
               <button
+                id="qul-student-raise-hand"
                 onClick={toggleHandRaise}
                 className={`px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
                   handRaised 
@@ -915,6 +922,7 @@ export const WhiteboardPage: React.FC = () => {
 
             <div className="flex items-center gap-2">
               <input
+                id="qul-student-answer-input"
                 type="text"
                 value={studentAnswerText}
                 onChange={(e) => { setStudentAnswerText(e.target.value); setStudentAnswerSent(false); setAnswerError(''); }}
