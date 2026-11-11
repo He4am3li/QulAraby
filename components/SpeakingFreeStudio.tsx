@@ -188,7 +188,7 @@ export const SpeakingFreeStudio:React.FC<FreeStudioProps>=({
               <strong>{ar?'الترجمة والمساعدة':'Translation & help'}</strong>
             </div>
             <p>{latest?.text|| (ar?'ترجم عبارة من المحادثة عند الحاجة.':'Translate a conversation line when you need help.')}</p>
-            {translation?.source===latest?.text.trim()&&<small dir="auto">{translation.text}</small>}
+            {translation && latest && translation.source === latest.text.trim() && <small dir="auto">{translation.text}</small>}
             <button type="button" onClick={()=>void showTranslation()} disabled={translating||!latest}
               aria-label={ar?'ترجم آخر عبارة':'Translate last line'}>
               {translating?<Loader2 size={14} className="qul-free-spin"/>:<Languages size={14}/>}
