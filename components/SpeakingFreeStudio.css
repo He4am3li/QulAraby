@@ -333,7 +333,7 @@
 .qul-voice-talk-control:disabled{opacity:.58}
 
 .qul-voice-panel{
-  position:absolute;z-index:20;bottom:clamp(99px,13vh,125px);left:50%;transform:translateX(-50%);
+  position:absolute;z-index:20;bottom:clamp(99px,13vh,125px);left:0;right:0;margin-inline:auto;
   width:min(calc(100% - 36px),600px);
   max-height:min(51%,410px);
   min-width:0;
