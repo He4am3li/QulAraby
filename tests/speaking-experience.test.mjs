@@ -70,7 +70,10 @@ test('speaking retains booth and free speaking with a single swipeable topic row
   assert.ok(speak.includes("speakingBranch === 'booth'"));
   assert.ok(speak.includes("id: 'studio' as const"));
   assert.match(speak,/TOPICS\.map\(topic =>/);
-  assert.match(speak,/overflow-x-auto/);
+  assert.match(speak,/qul-topic-rail/);
+  assert.match(speak,/onPointerMove/);
+  assert.match(speak,/topic.icon/);
+  assert.match(speak,/topic.en/);
   assert.match(speak,/startSession\(false, topic\)/);
   assert.doesNotMatch(speak,/qul-studio-preview-start/);
   assert.equal(speak.includes('CALL_CONTACTS.map'),false);
