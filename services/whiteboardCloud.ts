@@ -19,7 +19,7 @@ export const whiteboardCloudPayload = (session: WhiteboardSessionState, schoolId
   const safeActivity = activity
     ? { ...activity, submissions: {} }
     : null;
-  return {
+  const data = {
     id: session.code,
     code: session.code,
     teacherId: session.teacherId,
@@ -35,6 +35,9 @@ export const whiteboardCloudPayload = (session: WhiteboardSessionState, schoolId
     wordBox: session.wordBox,
     activeActivity: safeActivity,
   };
+  // Firestore refuses undefined properties inside nested drawing cards.
+  // JSON normalization also avoids persisting live React-only objects.
+  return JSON.parse(JSON.stringify(data)) as typeof data;
 };
 
 /** Never overwrite the locally tracked participants or their returned answers. */
