@@ -588,6 +588,103 @@ service cloud.firestore {
       }
     }
 
+    // Isolated class whiteboards. Joining requires the exact 8-character code and
+    // an approved account from the same school. No collection listing is allowed.
+    function whiteboardParent(code) {
+      return /databases/$(database)/documents/whiteboard_sessions/$(code);
+    }
+
+    function whiteboardOwner(code) {
+      return isTeacher() && exists(whiteboardParent(code)) &&
+        (isAdmin() || get(whiteboardParent(code)).data.teacherId == request.auth.uid);
+    }
+
+    function mayReadWhiteboard(data) {
+      return isAuthenticated() && (
+        isAdmin() ||
+        data.teacherId == request.auth.uid ||
+        (data.schoolId != 'independent' && belongsToSchool(data.schoolId))
+      );
+    }
+
+    function mayJoinWhiteboard(code) {
+      return exists(whiteboardParent(code)) &&
+        mayReadWhiteboard(get(whiteboardParent(code)).data) &&
+        get(whiteboardParent(code)).data.schoolId != 'independent' &&
+        belongsToSchool(get(whiteboardParent(code)).data.schoolId);
+    }
+
+    match /whiteboard_sessions/{code} {
+      allow get: if mayReadWhiteboard(resource.data);
+      allow list: if false;
+      allow create: if isTeacher() &&
+        request.resource.data.keys().hasAll(['teacherId', 'code', 'schoolId', 'pages', 'isLocked']) &&
+        request.resource.data.teacherId == request.auth.uid &&
+        request.resource.data.code == code &&
+        (
+          isPlatformOwner() ||
+          request.resource.data.schoolId ==
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('schoolId', 'independent')
+        );
+      allow update: if whiteboardOwner(code) &&
+        request.resource.data.teacherId == resource.data.teacherId &&
+        request.resource.data.schoolId == resource.data.schoolId &&
+        request.resource.data.code == resource.data.code;
+      allow delete: if whiteboardOwner(code);
+
+      match /participants/{studentId} {
+        allow get: if whiteboardOwner(code) ||
+          (isAuthenticated() && request.auth.uid == studentId && mayJoinWhiteboard(code));
+        allow list: if whiteboardOwner(code);
+        allow create: if isAuthenticated() &&
+          request.auth.uid == studentId &&
+          mayJoinWhiteboard(code) &&
+          request.resource.data.keys().hasOnly(['id', 'name', 'score', 'handRaised', 'isOnline', 'lastActive']) &&
+          request.resource.data.id == studentId &&
+          request.resource.data.score == 0 &&
+          request.resource.data.handRaised is bool &&
+          request.resource.data.isOnline is bool;
+        allow update: if whiteboardOwner(code) ||
+          (isAuthenticated() &&
+            request.auth.uid == studentId &&
+            mayJoinWhiteboard(code) &&
+            request.resource.data.id == resource.data.id &&
+            request.resource.data.score == resource.data.score &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['handRaised', 'isOnline', 'lastActive']));
+        allow delete: if whiteboardOwner(code);
+      }
+
+      match /answers/{studentId} {
+        allow get: if whiteboardOwner(code) ||
+          (isAuthenticated() && request.auth.uid == studentId && mayJoinWhiteboard(code));
+        allow list: if whiteboardOwner(code);
+        allow create: if isAuthenticated() &&
+          request.auth.uid == studentId &&
+          mayJoinWhiteboard(code) &&
+          get(whiteboardParent(code)).data.activeActivity.isActive == true &&
+          request.resource.data.keys().hasOnly(['studentId', 'studentName', 'answer', 'activityId', 'timestamp']) &&
+          request.resource.data.studentId == studentId &&
+          request.resource.data.activityId == get(whiteboardParent(code)).data.activeActivity.id &&
+          request.resource.data.answer is string &&
+          request.resource.data.answer.size() > 0 &&
+          request.resource.data.answer.size() <= 4000;
+        allow update: if whiteboardOwner(code) ||
+          (isAuthenticated() &&
+            request.auth.uid == studentId &&
+            mayJoinWhiteboard(code) &&
+            get(whiteboardParent(code)).data.activeActivity.isActive == true &&
+            request.resource.data.studentId == studentId &&
+            request.resource.data.activityId == get(whiteboardParent(code)).data.activeActivity.id &&
+            request.resource.data.answer is string &&
+            request.resource.data.answer.size() > 0 &&
+            request.resource.data.answer.size() <= 4000 &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['studentName', 'answer', 'activityId', 'timestamp']));
+        allow delete: if whiteboardOwner(code);
+      }
+    }
+
     // Live Sessions Collection
     match /live_sessions/{sessionId} {
       allow read: if isAuthenticated();
