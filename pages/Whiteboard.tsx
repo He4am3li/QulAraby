@@ -76,6 +76,19 @@ export const WhiteboardPage: React.FC = () => {
             p.elements = (p.elements || []).filter(el => el.id !== 'el_welcome' && el.id !== 'el_word_future' && el.id !== 'el_letter_b');
           });
         }
+        // Strip old demo records from sessions created before the fix.
+        // These IDs were reserved by the demo initializer, never by Firebase Auth.
+        if (parsed.students) {
+          ['st_1', 'st_2', 'st_3', 'st_4'].forEach(id => delete parsed.students[id]);
+        }
+        if (parsed.activeActivity?.submissions) {
+          delete parsed.activeActivity.submissions['st_2'];
+        }
+        if (parsed.activeActivity?.id === 'act_1' && parsed.activeActivity?.title === 'نشاط تكوين الجمل السريعة') {
+          parsed.activeActivity.isActive = false;
+          parsed.activeActivity.title = 'نشاط الفصل';
+          parsed.activeActivity.question = 'سيظهر هنا سؤال المعلم عند بدء النشاط.';
+        }
         return parsed;
       } catch (e) {}
     }
