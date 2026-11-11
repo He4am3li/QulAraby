@@ -64,11 +64,15 @@ test('mismatched goal and English-only evidence are not credited',()=>{
 });
 
 
-test('speaking retains booth and free speaking with no sidebar directory',()=>{
+test('speaking retains booth and free speaking with a single swipeable topic row',()=>{
   const speak=source('pages/Speak.tsx');
   const booth=source('components/SpeakingCallBooth.tsx');
   assert.ok(speak.includes("speakingBranch === 'booth'"));
-  assert.ok(speak.includes("speakingBranch === 'studio'"));
+  assert.ok(speak.includes("id: 'studio' as const"));
+  assert.match(speak,/TOPICS\.map\(topic =>/);
+  assert.match(speak,/overflow-x-auto/);
+  assert.match(speak,/startSession\(false, topic\)/);
+  assert.doesNotMatch(speak,/qul-studio-preview-start/);
   assert.equal(speak.includes('CALL_CONTACTS.map'),false);
   assert.ok(booth.includes('ADDITIONAL_EVERYDAY_CONTACTS'));
   assert.ok(booth.includes('callAttemptRef.current = dialed'));
