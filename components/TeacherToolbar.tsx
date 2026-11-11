@@ -233,7 +233,7 @@ export const TeacherToolbar: React.FC = () => {
     const nextLocked = !isLocked;
     setIsLocked(nextLocked);
     try {
-      await updateDoc(doc(db, 'live_sessions', 'global'), {
+      await updateDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
         isLocked: nextLocked,
         lastUpdate: serverTimestamp()
       });
@@ -274,7 +274,7 @@ export const TeacherToolbar: React.FC = () => {
   useEffect(() => {
     if (!isAuthReady || !user) return;
     
-    const unsubscribe = onSnapshot(doc(db, 'live_sessions', 'global'), (docSnapshot) => {
+    const unsubscribe = onSnapshot(doc(db, 'live_sessions', user?.uid || 'unavailable'), (docSnapshot) => {
       if (docSnapshot.exists()) {
         const data = docSnapshot.data();
         setSessionData(data);
@@ -314,7 +314,7 @@ export const TeacherToolbar: React.FC = () => {
       const now = Date.now();
       if (now - lastBroadcastTime > 80) {
         lastBroadcastTime = now;
-        setDoc(doc(db, 'live_sessions', 'global'), {
+        setDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
           laserPosition: { x, y, timestamp: now },
           teacherId: user?.uid,
           lastUpdate: serverTimestamp()
@@ -360,7 +360,7 @@ export const TeacherToolbar: React.FC = () => {
       window.dispatchEvent(new CustomEvent('qul_set_whiteboard_tool', { detail: { tool: 'select' } }));
 
       // 2. Clear Firestore live session document
-      await updateDoc(doc(db, 'live_sessions', 'global'), {
+      await updateDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
         activeTool: null,
         currentStroke: null,
         highlights: [],
@@ -404,7 +404,7 @@ export const TeacherToolbar: React.FC = () => {
     if (sessionDataRef.current?.highlights && sessionDataRef.current.highlights.length > 0) {
       const remaining = sessionDataRef.current.highlights.slice(0, -1);
       try {
-        await updateDoc(doc(db, 'live_sessions', 'global'), {
+        await updateDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
           highlights: remaining,
           lastUpdate: serverTimestamp()
         });
@@ -625,7 +625,7 @@ export const TeacherToolbar: React.FC = () => {
       origin: { y: 0.8 }
     });
     try {
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
         reaction: { emoji, timestamp: Date.now(), teacher: profile?.displayName || 'المعلم' },
         lastUpdate: serverTimestamp()
       }, { merge: true });
@@ -640,7 +640,7 @@ export const TeacherToolbar: React.FC = () => {
       const curScore = currentStudents[studentId]?.score || 0;
       const newScore = Math.max(0, curScore + delta);
 
-      await updateDoc(doc(db, 'live_sessions', 'global'), {
+      await updateDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
         [`students.${studentId}.score`]: newScore,
         lastUpdate: serverTimestamp()
       });
@@ -660,8 +660,8 @@ export const TeacherToolbar: React.FC = () => {
   const handlePickRandomStudent = () => {
     const studentsMap = sessionData?.students || {};
     const studentNames = Object.values(studentsMap).map((s: any) => s.name || s.displayName).filter(Boolean);
-    const defaultPool = ['أحمد بن محمد', 'سارة العلي', 'عمر الخالد', 'فاطمة الزهراء', 'يوسف محمود', 'مريم القحطاني'];
-    const candidates = studentNames.length > 0 ? studentNames : defaultPool;
+    const candidates = studentNames;
+    if (candidates.length === 0) { setPickedStudent(''); return; }
 
     setIsPickingStudent(true);
     let count = 0;
@@ -742,7 +742,7 @@ export const TeacherToolbar: React.FC = () => {
     if (toolId === 'select') {
       setActiveTool(null);
       setShowSubMenu(null);
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
         activeTool: null,
         teacherId: user?.uid,
         lastUpdate: serverTimestamp()
@@ -757,7 +757,7 @@ export const TeacherToolbar: React.FC = () => {
       setShowSubMenu(null);
       window.dispatchEvent(new CustomEvent('qul_set_whiteboard_tool', { detail: { tool: newTool ? 'laser' : 'select' } }));
       try {
-        await setDoc(doc(db, 'live_sessions', 'global'), {
+        await setDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
           activeTool: newTool,
           teacherId: user?.uid,
           lastUpdate: serverTimestamp()
@@ -785,7 +785,7 @@ export const TeacherToolbar: React.FC = () => {
     }
 
     try {
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
         activeTool: newTool,
         teacherId: user?.uid,
         lastUpdate: serverTimestamp()
@@ -797,7 +797,7 @@ export const TeacherToolbar: React.FC = () => {
 
   const startTimer = async () => {
     try {
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
         timer: {
           endTime: Date.now() + (timerDuration * 1000),
           duration: timerDuration,
@@ -812,7 +812,7 @@ export const TeacherToolbar: React.FC = () => {
 
   const startPoll = async () => {
     try {
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
         poll: {
           question: pollQuestion,
           options: pollOptions,
@@ -830,7 +830,7 @@ export const TeacherToolbar: React.FC = () => {
     setIsGenerating(true);
     try {
       const exercise = await generateQuickExercise(wandContext);
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
         exercise: { ...exercise, isActive: true, timestamp: Date.now() },
         lastUpdate: serverTimestamp()
       }, { merge: true });
@@ -868,7 +868,7 @@ export const TeacherToolbar: React.FC = () => {
         mode: drawMode,
         timestamp: Date.now()
       }];
-      await updateDoc(doc(db, 'live_sessions', 'global'), {
+      await updateDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
         highlights: newHighlights,
         currentStroke: null
       });
@@ -909,7 +909,7 @@ export const TeacherToolbar: React.FC = () => {
             return !h.points.some((p: any) => Math.abs(p.x - x) < 3 && Math.abs(p.y - y) * (window.innerHeight/window.innerWidth) < 3);
           });
           if (remainingHighlights.length !== (sessionDataRef.current?.highlights || []).length) {
-            await updateDoc(doc(db, 'live_sessions', 'global'), { highlights: remainingHighlights });
+            await updateDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), { highlights: remainingHighlights });
           }
           return;
         }
@@ -928,13 +928,13 @@ export const TeacherToolbar: React.FC = () => {
             return !h.points.some((p: any) => Math.abs(p.x - x) < 3 && Math.abs(p.y - y) * (window.innerHeight/window.innerWidth) < 3);
           });
           if (remainingHighlights.length !== (sessionDataRef.current?.highlights || []).length) {
-            await updateDoc(doc(db, 'live_sessions', 'global'), { highlights: remainingHighlights });
+            await updateDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), { highlights: remainingHighlights });
           }
         } else {
           const newStroke = [...currentStrokeRef.current, {x, y}];
           setCurrentStroke(newStroke);
           if (newStroke.length % 5 === 0) {
-            await updateDoc(doc(db, 'live_sessions', 'global'), { 
+            await updateDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), { 
               currentStroke: { points: newStroke, color: highlightColorRef.current, width: drawMode === 'pen' ? 4 : highlightWidthRef.current, mode: drawMode }
             });
           }
@@ -1058,7 +1058,7 @@ export const TeacherToolbar: React.FC = () => {
   const shareFile = async () => {
     if (!fileData) return;
     try {
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
         sharedFile: { url: fileData, isActive: true },
         lastUpdate: serverTimestamp()
       }, { merge: true });
@@ -1553,7 +1553,7 @@ export const TeacherToolbar: React.FC = () => {
                                   <span>تفاعل الطلاب والتحفيز</span>
                                 </div>
                                 <span className="text-[8px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full font-bold">
-                                  {Object.keys(sessionData?.students || {}).length || 4} طلاب
+                                  {Object.keys(sessionData?.students || {}).length} طلاب
                                 </span>
                               </div>
 
@@ -1606,12 +1606,7 @@ export const TeacherToolbar: React.FC = () => {
                               <div className="flex flex-col gap-1">
                                 <span className="text-[8px] text-white/50 font-bold">تحفيز ومنح النقاط:</span>
                                 <div className="flex flex-col gap-1 max-h-36 overflow-y-auto custom-scrollbar">
-                                  {Object.entries(sessionData?.students || {
-                                    s1: { name: 'أحمد بن محمد', score: 15, handRaised: true },
-                                    s2: { name: 'سارة العلي', score: 20, handRaised: false },
-                                    s3: { name: 'عمر الخالد', score: 10, handRaised: true },
-                                    s4: { name: 'مريم القحطاني', score: 25, handRaised: false }
-                                  }).map(([sid, s]: [string, any], sIdx) => (
+                                  {Object.entries(sessionData?.students || {}).map(([sid, s]: [string, any], sIdx) => (
                                     <div key={`student_${sid}_${sIdx}`} className="p-1.5 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
                                       <div className="flex items-center gap-1.5">
                                         <span className="text-[9px] font-bold text-white arabic-font">{s.name}</span>
