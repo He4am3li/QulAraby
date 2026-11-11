@@ -103,29 +103,16 @@ export const WhiteboardPage: React.FC = () => {
         lastUpdated: Date.now()
       },
       students: {
-        'st_1': { id: 'st_1', name: 'أحمد علي', score: 12, isOnline: true, handRaised: false, lastActive: Date.now() },
-        'st_2': { id: 'st_2', name: 'سارة محمد', score: 15, isOnline: true, handRaised: true, lastActive: Date.now() },
-        'st_3': { id: 'st_3', name: 'عمر خالد', score: 9, isOnline: true, handRaised: false, lastActive: Date.now() },
-        'st_4': { id: 'st_4', name: 'نورة المنصور', score: 14, isOnline: true, handRaised: false, lastActive: Date.now() },
+
       },
       wordBox: ['السفر', 'الوظيفة', 'المستقبل', 'النجاح', 'الطموح', 'اللغة', 'المعرفة'],
       activeActivity: {
         id: 'act_1',
-        title: 'نشاط تكوين الجمل السريعة',
+        title: 'نشاط الفصل',
         type: 'qa',
-        question: 'استخدم كلمة (المُسْتَقْبَل) في جملة مفيدة تدل على طموحك المهني:',
-        isActive: true,
-        submissions: {
-          'st_2': {
-            studentId: 'st_2',
-            studentName: 'سارة محمد',
-            answer: 'أُرِيدُ أَنْ أُصْبِحَ طَبِيبَةً نَاجِحَةً فِي المُسْتَقْبَلِ.',
-            score: 5,
-            feedback: 'ممتازة جداً يا سارة! إجابة صحيحة نحوياً وتركيبياً.',
-            timestamp: Date.now(),
-            evaluated: true
-          }
-        }
+        question: 'سيظهر هنا سؤال المعلم عند بدء النشاط.',
+        isActive: false,
+        submissions: {}
       }
     };
   });
@@ -203,6 +190,24 @@ export const WhiteboardPage: React.FC = () => {
 
     return () => {
       window.removeEventListener('qul_change_whiteboard_theme', handleRemoteThemeChange);
+    };
+  }, []);
+
+  // Route toolbar commands to live page controls.
+  useEffect(() => {
+    const openMedia = () => setIsMediaStickersOpen(true);
+    const submitAnswer = () => document.getElementById('qul-student-answer-submit')?.click();
+    const applyLock = (event: Event) => {
+      const locked = (event as CustomEvent<{ isLocked?: boolean }>).detail?.isLocked;
+      if (typeof locked === 'boolean') setSession(prev => ({ ...prev, isLocked: locked }));
+    };
+    window.addEventListener('qul_open_whiteboard_media', openMedia);
+    window.addEventListener('qul_student_submit_answer', submitAnswer);
+    window.addEventListener('qul_whiteboard_toggle_lock', applyLock);
+    return () => {
+      window.removeEventListener('qul_open_whiteboard_media', openMedia);
+      window.removeEventListener('qul_student_submit_answer', submitAnswer);
+      window.removeEventListener('qul_whiteboard_toggle_lock', applyLock);
     };
   }, []);
 
@@ -443,7 +448,7 @@ export const WhiteboardPage: React.FC = () => {
   };
 
   const handleSendStudentAnswer = () => {
-    if (!studentAnswerText.trim() || !user) return;
+    if (!studentAnswerText.trim() || !user || !session.activeActivity?.isActive) return;
     const stId = user.uid || 'current_student';
     const stName = profile?.displayName || user.displayName || 'أنا';
 
@@ -592,14 +597,15 @@ export const WhiteboardPage: React.FC = () => {
               <input
                 type="text"
                 value={studentAnswerText}
-                onChange={(e) => setStudentAnswerText(e.target.value)}
-                placeholder="اكتب إجابتك هنا ليراها المعلم ويقيمها فوراً..."
+                onChange={(e) => { setStudentAnswerText(e.target.value); setStudentAnswerSent(false); }}
+                placeholder={session.activeActivity?.isActive ? 'اكتب إجابتك هنا...' : 'في انتظار أن يبدأ المعلم النشاط...'}
                 className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-white arabic-font text-sm focus:outline-none focus:border-emerald-500"
                 dir="rtl"
               />
               <button
+                id="qul-student-answer-submit"
                 onClick={handleSendStudentAnswer}
-                disabled={!studentAnswerText.trim()}
+                disabled={!studentAnswerText.trim() || !session.activeActivity?.isActive}
                 className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white rounded-xl text-xs font-bold arabic-font flex items-center gap-1.5 shadow-lg transition"
               >
                 <Send size={14} />
@@ -610,7 +616,7 @@ export const WhiteboardPage: React.FC = () => {
             {studentAnswerSent && (
               <div className="text-[11px] text-emerald-400 font-bold mt-1.5 flex items-center gap-1">
                 <CheckCircle2 size={12} />
-                تم إرسال إجابتك بنجاح إلى المعلم!
+                تم حفظ الإجابة على هذا الجهاز فقط، ولم تصل إلى المعلم بعد.
               </div>
             )}
           </div>
