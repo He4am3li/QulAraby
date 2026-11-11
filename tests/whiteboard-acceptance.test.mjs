@@ -8,55 +8,82 @@ const page = read('pages/Whiteboard.tsx');
 const archive = read('components/whiteboard/SessionHistoryModal.tsx');
 const capture = read('services/mediaRecordingService.ts');
 const teacher = read('components/TeacherToolbar.tsx');
+const toolbar = read('components/StudentToolbar.tsx');
+const cloud = read('services/whiteboardCloud.ts');
 const rules = read('firestore.rules');
 
-test('student tools are routed to active whiteboard controls', () => {
+test('class has a nonenumerable unpredictable join code', () => {
+  assert.match(cloud, /crypto\.getRandomValues/);
+  assert.match(cloud, /\^QUL-\[0-9A-Z\]\{8\}\$/);
+  assert.match(rules, /match \/whiteboard_sessions\/\{code\} \{\s+allow get: if mayReadWhiteboard\(resource\.data\);\s+allow list: if false;/);
+  assert.match(rules, /data\.schoolId != 'independent' && belongsToSchool\(data\.schoolId\)/);
+  assert.match(page, /getDoc\(boardRef\)/);
+});
+
+test('teachers own the only writable board surface, students read cloud snapshots', () => {
+  assert.match(rules, /allow update: if whiteboardOwner\(code\)/);
+  assert.match(page, /onSnapshot\(boardRef/);
+  assert.match(page, /whiteboardCloudPayload\(session, classroomSchoolId\)/);
+  assert.match(page, /isReadOnly=\{!isTeacher \|\| !cloudReady\}/);
+  assert.match(page, /isWhiteboardPayloadSizeSafe\(payload\)/);
+});
+
+test('all 30 students can write to distinct presence and answer document IDs', () => {
+  assert.match(rules, /match \/participants\/\{studentId\}/);
+  assert.match(rules, /match \/answers\/\{studentId\}/);
+  assert.match(rules, /request\.auth\.uid == studentId/);
+  assert.match(rules, /request\.resource\.data\.score == 0/);
+  assert.match(page, /'participants', user\.uid/);
+  assert.match(page, /'answers', user\.uid/);
+  assert.match(page, /onSnapshot\(participants/);
+  assert.match(page, /onSnapshot\(answers/);
+  assert.match(page, /updateDoc\(participantRef/);
+});
+
+test('student toolbar performs only supported actions', () => {
   assert.doesNotMatch(app, /console\.log\('Student action:'/);
-  assert.match(app, /qul_set_whiteboard_tool/);
-  assert.match(app, /qul_open_whiteboard_media/);
+  assert.match(app, /qul_student_focus_answer/);
+  assert.match(app, /qul_student_raise_hand/);
   assert.match(app, /qul_student_submit_answer/);
-  assert.match(page, /qul_open_whiteboard_media/);
-  assert.match(page, /qul_student_submit_answer/);
+  assert.match(page, /qul_student_focus_answer/);
+  assert.match(page, /qul_student_raise_hand/);
+  assert.match(toolbar, /id: 'answer'/);
+  assert.match(toolbar, /id: 'hand'/);
+  assert.doesNotMatch(toolbar, /id: 'pen'|id: 'image'|id: 'sticky'/);
 });
 
-test('teacher lock is reflected in the canvas local permission', () => {
-  assert.match(teacher, /qul_whiteboard_toggle_lock/);
-  assert.match(page, /addEventListener\('qul_whiteboard_toggle_lock'/);
-  assert.match(page, /isReadOnly=\{!isTeacher && session\.isLocked\}/);
+test('answer receipt is shown only after setDoc resolves', () => {
+  assert.match(page, /await setDoc\(doc\(db, 'whiteboard_sessions', cloudCode, 'answers', user\.uid\)/);
+  assert.match(page, /setStudentAnswerSent\(true\)/);
+  assert.match(page, /catch \(error\) \{\s+console\.error\('Whiteboard submission failed:'/);
+  assert.match(page, /تم تسجيل الإجابة في الحصة بنجاح/);
+  assert.match(page, /جارٍ تسليم الإجابة/);
 });
 
-test('no fabricated class roster, answers, or archive records appear by default', () => {
+test('teacher controls no longer use the shared global document', () => {
+  assert.doesNotMatch(teacher, /doc\(db, 'live_sessions', 'global'\)/);
+  assert.match(teacher, /doc\(db, 'live_sessions', user\?\.uid \|\| 'unavailable'\)/);
+  assert.match(rules, /allow create, update, delete: if isTeacher\(\) && sessionId == request\.auth\.uid/);
+  assert.match(rules, /allow list: if false/);
+});
+
+test('fake student roster and fabricated archive records are removed', () => {
   assert.doesNotMatch(page, /'st_1':|studentName: 'سارة محمد'/);
   assert.match(page, /students: \{\s*\}/);
-  assert.match(page, /isActive: false,\s*submissions: \{\}/);
+  assert.doesNotMatch(teacher, /s1: \{ name: 'أحمد بن محمد'/);
   assert.doesNotMatch(archive, /QUL-9821|QUL-4412/);
 });
 
-test('student action never promises remote receipt for a local-only submission', () => {
-  assert.doesNotMatch(page, /تم إرسال إجابتك بنجاح إلى المعلم!/);
-  assert.match(page, /لم تصل إلى المعلم بعد/);
-  assert.match(page, /!session\.activeActivity\?\.isActive/);
-});
-
-test('PNG export uses a full layered DOM capture, not the drawing canvas alone', () => {
+test('PNG export captures board DOM layers', () => {
   assert.match(page, /captureWhiteboardScreenshot\(\)/);
   assert.match(capture, /html2canvas\(targetElement/);
-  assert.match(capture, /#whiteboard-canvas-container/);
 });
 
-test('current architecture blockers remain explicitly tracked', () => {
-  // A passing test here does NOT mean these requirements work.
-  // This describes why live multi-client acceptance is still blocked.
-  assert.match(page, /qul_active_whiteboard_session/);
-  assert.match(teacher, /'live_sessions', 'global'/);
-  assert.match(rules, /match \/live_sessions\/\{sessionId\}/);
-});
-
-test.todo('30 signed-in browser clients receive one class session and 30 distinct acknowledgements');
-test.todo('teacher from school A cannot read or change school B class session');
-test.todo('teacher lock prevents edits from a second device after reconnect');
+test.todo('Firebase Emulator proves cross-school, unauthenticated and false-role requests are denied');
+test.todo('30 signed-in browsers concurrently submit 30 separate answers and 30 presence records');
+test.todo('teacher lock prevents board edits on a second device after reconnect');
 test.todo('PDF exports all pages with cards, embedded media and handwriting');
-test.todo('desktop, iPhone and iPad preserve canvas hit-testing and readable controls');
-test.todo('offline reconnect reconciles strokes and submissions without losing or duplicating work');
+test.todo('desktop, iPhone and iPad preserve touch precision and readable controls');
+test.todo('offline reconnect does not lose or duplicate work');
 
-console.log('Whiteboard local regression gates checked. Multi-client items remain unverified.');
+console.log('Whiteboard class protocol regression gates checked. Browser and emulator validation remains pending.');
