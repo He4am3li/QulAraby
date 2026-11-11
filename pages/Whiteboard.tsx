@@ -509,6 +509,7 @@ export const WhiteboardPage: React.FC = () => {
   useEffect(() => {
     const openMedia = () => setIsMediaStickersOpen(true);
     const openWorks = () => setIsStudentWorksOpen(true);
+    const openArchive = () => setIsHistoryOpen(true);
     const submitAnswer = () => document.getElementById('qul-student-answer-submit')?.click();
     const focusAnswer = () => document.getElementById('qul-student-answer-input')?.focus();
     const raiseHand = () => document.getElementById('qul-student-raise-hand')?.click();
@@ -518,6 +519,7 @@ export const WhiteboardPage: React.FC = () => {
     };
     window.addEventListener('qul_open_whiteboard_media', openMedia);
     window.addEventListener('qul_open_whiteboard_student_works', openWorks);
+    window.addEventListener('qul_open_whiteboard_history', openArchive);
     window.addEventListener('qul_student_submit_answer', submitAnswer);
     window.addEventListener('qul_student_focus_answer', focusAnswer);
     window.addEventListener('qul_student_raise_hand', raiseHand);
@@ -525,6 +527,7 @@ export const WhiteboardPage: React.FC = () => {
     return () => {
       window.removeEventListener('qul_open_whiteboard_media', openMedia);
       window.removeEventListener('qul_open_whiteboard_student_works', openWorks);
+      window.removeEventListener('qul_open_whiteboard_history', openArchive);
       window.removeEventListener('qul_student_submit_answer', submitAnswer);
       window.removeEventListener('qul_student_focus_answer', focusAnswer);
       window.removeEventListener('qul_student_raise_hand', raiseHand);
