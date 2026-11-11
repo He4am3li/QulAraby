@@ -23,6 +23,27 @@ import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 import { summarizeSpeakingEvidence, createNextSpeakingTask, mapPlacementLevel, createLimitedSpeakingReport, hasTranscribedLearnerSpeech } from '../services/speakingLearning.mjs';
 
+class SpeakingStudioErrorBoundary extends React.Component<
+  { children: React.ReactNode; onBack: () => void },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('Speaking studio render failed', error, info.componentStack);
+  }
+  render() {
+    if (this.state.failed) return (
+      <div role="alert" className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+        <h2 className="text-xl font-bold text-slate-800">تعذر عرض استوديو المحادثة</h2>
+        <p className="text-slate-600">حدث خطأ في عرض الواجهة. يمكنك العودة لاختيار الموضوع والمحاولة مجددًا.</p>
+        <button type="button" onClick={() => { this.setState({ failed: false }); this.props.onBack(); }} className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white">العودة إلى إعداد المحادثة</button>
+      </div>
+    );
+    return this.props.children;
+  }
+}
+
 const LEVELS = [
   {
     id: 'beginner',
@@ -1354,6 +1375,7 @@ export const Speak: React.FC = () => {
               )}
             </AnimatePresence>
           ) : (
+            <SpeakingStudioErrorBoundary onBack={() => { closeTransport(); setLoading(false); setSetupMode(true); }}>
             <SpeakingFreeStudio
               lang={lang}
               topic={lang === 'ar' ? (selectedTopic?.ar || 'محادثة حرة') : (selectedTopic?.en || 'Free conversation')}
@@ -1442,6 +1464,7 @@ export const Speak: React.FC = () => {
                     </div>
                   )}
             </SpeakingFreeStudio>
+            </SpeakingStudioErrorBoundary>
           )}
         </main>
       </div>
