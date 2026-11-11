@@ -533,3 +533,20 @@
 .qul-studio-preview-start:disabled{opacity:.45;cursor:not-allowed}
 .qul-studio-preview-report,.qul-studio-preview-mobile{color:#3d7886;display:flex;gap:7px;align-items:center;font-size:12px;font-weight:700;padding:5px}
 @media(max-width:750px){.qul-studio-preview .qul-voice-stage{min-height:210px}.qul-studio-preview-actions{padding-bottom:14px}}
+
+/* Frameless microphone: merge the performance area into the page itself. */
+.qul-free-studio.qul-voice-studio .qul-voice-stage,
+.qul-free-studio.qul-voice-studio .qul-voice-stage:hover,
+.qul-studio-preview .qul-voice-stage{
+  background:transparent;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  outline:0;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+.qul-free-studio.qul-voice-studio .qul-voice-stage::before,
+.qul-free-studio.qul-voice-studio .qul-voice-stage::after{display:none}
+.qul-free-studio.qul-voice-studio .qul-voice-stage-performance{background:transparent}
+.qul-free-studio.qul-voice-studio .qul-voice-stage-top{background:transparent}
