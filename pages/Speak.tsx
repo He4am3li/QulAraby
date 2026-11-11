@@ -155,6 +155,11 @@ export const Speak: React.FC = () => {
   const finishingRef = React.useRef(false);
   const [selectedLevel, setSelectedLevel] = React.useState<typeof LEVELS[0] | null>(LEVELS[0]);
   const [selectedTopic, setSelectedTopic] = React.useState<typeof TOPICS[0] | null>(null);
+  const topicRailRef = React.useRef<HTMLDivElement>(null);
+  const topicDragRef = React.useRef<{x:number; scroll:number; moved:boolean; active:boolean}>({x:0,scroll:0,moved:false,active:false});
+  const topicSuppressClickRef = React.useRef(false);
+  const scrollTopics = (direction: number) => topicRailRef.current?.scrollBy({left: direction * (lang === 'ar' ? -320 : 320),behavior:'smooth'});
+
   const [speakingBranch, setSpeakingBranch] = React.useState<'booth' | 'studio'>('booth');
   const [selectedCallContact, setSelectedCallContact] = React.useState<(typeof CALL_CONTACTS)[number]>(CALL_CONTACTS[0]);
   const activeTopic = speakingBranch === 'booth' ? selectedCallContact : selectedTopic;
@@ -1262,16 +1267,47 @@ export const Speak: React.FC = () => {
                 </div>
               </div>
               <div className="qul-studio-preview-actions">
-                <div className="w-full min-w-0" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-                  <div className="flex items-center justify-between px-2 mb-2">
+                <div className="qul-topic-rail-wrap" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                  <div className="flex items-center justify-between gap-3 px-2 mb-2">
                     <span className="text-xs font-semibold text-slate-500">{lang === 'ar' ? 'اختر موضوع المحادثة' : 'Choose a conversation topic'}</span>
-                    <span className="text-[11px] text-slate-400">{lang === 'ar' ? 'اسحب لعرض المزيد' : 'Swipe for more'}</span>
+                    <div className="flex gap-1 shrink-0">
+                      <button type="button" onClick={() => scrollTopics(-1)} className="qul-topic-arrow" aria-label={lang === 'ar' ? 'الموضوعات السابقة' : 'Previous topics'}><ChevronRight size={17}/></button>
+                      <button type="button" onClick={() => scrollTopics(1)} className="qul-topic-arrow" aria-label={lang === 'ar' ? 'الموضوعات التالية' : 'Next topics'}><ChevronRight size={17} className="rotate-180"/></button>
+                    </div>
                   </div>
-                  <div className="flex gap-3 overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory pb-3 pt-1 px-2 overscroll-x-contain touch-pan-x" role="group" aria-label={lang === 'ar' ? 'موضوعات المحادثة الحرة' : 'Free conversation topics'}>
+                  <div ref={topicRailRef} className="qul-topic-rail" role="group"
+                    aria-label={lang === 'ar' ? 'موضوعات المحادثة الحرة' : 'Free conversation topics'}
+                    onPointerDown={e => {
+                      if (e.pointerType === 'touch') return;
+                      topicDragRef.current = {x:e.clientX,scroll:e.currentTarget.scrollLeft,moved:false,active:true};
+                    }}
+                    onPointerMove={e => {
+                      const drag=topicDragRef.current;
+                      if (!drag.active || e.pointerType === 'touch') return;
+                      const delta=e.clientX-drag.x;
+                      if(Math.abs(delta)>6) {
+                        drag.moved=true;
+                        e.currentTarget.scrollLeft=drag.scroll-delta;
+                      }
+                    }}
+                    onPointerUp={() => {
+                      if(topicDragRef.current.moved) {
+                        topicSuppressClickRef.current=true;
+                        window.setTimeout(()=>{topicSuppressClickRef.current=false},120);
+                      }
+                      topicDragRef.current.active=false;
+                    }}
+                    onPointerCancel={() => {topicDragRef.current.active=false}}
+                    onDragStart={e => e.preventDefault()}>
                     {TOPICS.map(topic => (
                       <button key={topic.id} type="button"
                         disabled={loading || isActive || isFinishing || showSummary || !selectedLevel}
-                        onClick={() => {
+                        onClick={e => {
+                          if(topicSuppressClickRef.current || topicDragRef.current.moved) {
+                            e.preventDefault();
+                            topicDragRef.current.moved=false;
+                            return;
+                          }
                           if (loading || isActive || isFinishing || showSummary || !selectedLevel) return;
                           setSelectedTopic(topic);
                           setShowMobileOptions(false);
@@ -1279,9 +1315,13 @@ export const Speak: React.FC = () => {
                           setInsights(null);
                           void startSession(false, topic);
                         }}
-                        className="snap-start shrink-0 whitespace-nowrap rounded-2xl border border-white/70 bg-white/65 backdrop-blur-xl shadow-[0_4px_18px_rgba(31,78,100,.09)] hover:bg-white/95 hover:border-teal-200 hover:shadow-md active:scale-[.98] transition-all px-6 py-3.5 min-h-[52px] text-sm font-bold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="qul-topic-tile"
                         aria-label={lang === 'ar' ? `ابدأ محادثة عن ${topic.ar}` : `Start conversation about ${topic.en}`}>
-                        {lang === 'ar' ? topic.ar : topic.en}
+                        <span className="qul-topic-emoji" aria-hidden="true">{topic.icon}</span>
+                        <span className="qul-topic-labels">
+                          <span className="qul-topic-ar">{lang === 'ar' ? topic.ar : topic.en}</span>
+                          <span className="qul-topic-en">{lang === 'ar' ? topic.en : topic.ar}</span>
+                        </span>
                       </button>
                     ))}
                   </div>
