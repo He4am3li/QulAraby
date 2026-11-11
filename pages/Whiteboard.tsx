@@ -706,13 +706,20 @@ export const WhiteboardPage: React.FC = () => {
       if (studentId && Number.isInteger(delta)) handleScoreChange(studentId, delta!);
     };
     const onActivity = (event: Event) => {
-      const question = (event as CustomEvent<{ question?: string }>).detail?.question?.trim();
+      const details = (event as CustomEvent<{ question?: string; options?: string[] }>).detail;
+      const question = details?.question?.trim();
       if (!question || !cloudReady) return;
+      const options = Array.isArray(details?.options)
+        ? details.options.map(option => String(option).trim()).filter(Boolean).slice(0, 6)
+        : [];
       setSession(previous => ({
         ...previous,
         activeActivity: {
-          id: 'act_' + Date.now(), title: 'سؤال الحصة',
-          type: 'qa', question, isActive: true, submissions: {},
+          id: 'act_' + Date.now(),
+          title: options.length > 1 ? 'تصويت الحصة' : 'سؤال الحصة',
+          type: options.length > 1 ? 'mcq' : 'qa',
+          question, ...(options.length > 1 ? { options } : {}),
+          isActive: true, submissions: {},
         },
       }));
     };
@@ -812,18 +819,18 @@ export const WhiteboardPage: React.FC = () => {
                 <button
                   onClick={() => setIsQuestionEditorOpen(previous => !previous)}
                   disabled={!cloudReady}
-                  className="rounded-xl bg-emerald-600/20 border border-emerald-500/30 px-3 py-1.5 text-xs font-bold text-emerald-200 disabled:opacity-40"
-                >سؤال الحصة</button>
+                  className="rounded-xl bg-emerald-600/20 border border-emerald-500/30 px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold text-emerald-200 disabled:opacity-40"
+                >سؤال</button>
                 <button
                   onClick={() => setIsStudentWorksOpen(true)}
-                  className="rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold text-white"
-                >الإجابات</button>
+                  className="rounded-xl border border-white/15 bg-white/5 px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold text-white"
+                >أعمال</button>
               </>
             )}
             {/* Session Code Badge */}
             {(isTeacher || cloudReady) && <div className="flex items-center gap-1.5 bg-slate-900/80 border border-emerald-500/30 px-3 py-1.5 rounded-2xl">
               <span className="text-xs text-slate-400 font-bold hidden sm:inline">رمز الحصة:</span>
-              <span className="font-mono font-black text-emerald-400 tracking-wider text-xs sm:text-sm">{session.code}</span>
+              <span className="font-mono font-black text-emerald-400 tracking-tight text-[10px] sm:text-sm">{session.code}</span>
               <button
                 onClick={handleCopyCode}
                 className="p-1 text-slate-400 hover:text-emerald-400 rounded-lg transition"
@@ -950,6 +957,21 @@ export const WhiteboardPage: React.FC = () => {
               </button>
             </div>
 
+            {session.activeActivity?.isActive && session.activeActivity.type === 'mcq' && session.activeActivity.options && (
+              <div className="mb-2 grid grid-cols-2 gap-1.5">
+                {session.activeActivity.options.map((option, index) => (
+                  <button
+                    key={index}
+                    onClick={() => { setStudentAnswerText(option); setStudentAnswerSent(false); }}
+                    className={`rounded-lg border p-2 text-xs font-bold transition ${
+                      studentAnswerText === option
+                        ? 'border-emerald-400 bg-emerald-500/20 text-white'
+                        : 'border-white/15 bg-white/5 text-slate-200'
+                    }`}
+                  >{option}</button>
+                ))}
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <input
                 id="qul-student-answer-input"
