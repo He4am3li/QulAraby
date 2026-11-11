@@ -174,12 +174,19 @@ export const WhiteboardPage: React.FC = () => {
     if (!isTeacher || !user?.uid) return;
     let cancelled = false;
     let unsubscribe = () => {};
-    const code = sessionRef.current.code;
-    const boardRef = doc(db, 'whiteboard_sessions', code);
-    setCloudCode(code);
     setCloudReady(false);
     setCloudStatus('جارٍ فتح حصة المعلم...');
     const initialize = async () => {
+      const indexRef = doc(db, 'whiteboard_teacher_index', user.uid);
+      const index = await getDoc(indexRef);
+      let code = sessionRef.current.code;
+      const previousCode = index.data()?.sessionCode;
+      if (index.exists() && index.data()?.schoolId === classroomSchoolId &&
+          typeof previousCode === 'string' && isWhiteboardCode(previousCode)) {
+        code = previousCode;
+      }
+      const boardRef = doc(db, 'whiteboard_sessions', code);
+      setCloudCode(code);
       const existing = await getDoc(boardRef);
       if (!existing.exists()) {
         const base = { ...sessionRef.current, teacherId: user.uid, id: code, code };
@@ -190,7 +197,12 @@ export const WhiteboardPage: React.FC = () => {
       } else if (existing.data().teacherId !== user.uid) {
         throw new Error('رمز الحصة مملوك لمعلم آخر.');
       }
+      await setDoc(indexRef, {
+        teacherId: user.uid, schoolId: classroomSchoolId,
+        sessionCode: code, updatedAt: serverTimestamp(),
+      });
       if (cancelled) return;
+      setSession(previous => ({ ...previous, id: code, code }));
       unsubscribe = onSnapshot(boardRef, (snapshot) => {
         const remote = snapshot.data();
         if (!remote) {
