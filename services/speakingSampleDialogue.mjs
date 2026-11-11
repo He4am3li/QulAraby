@@ -9,7 +9,36 @@ export const makeSpeakingSampleDialogue = ({ topicAr = 'محادثة يومية'
   const u = (ar, en) => turn('learner', ar, en);
   const a = (ar, en) => turn('agent', ar, en);
   let lines;
-  if (/صيدلية|دواء|أدوية|ضمادات|pharmac|medicine|bandage/.test(text)) {
+  if (/العائلة|الأسرة|أفراد الأسرة|family|relatives/.test(text)) {
+    lines = [
+      a('مرحبًا! هل لديك عائلة كبيرة؟','Hello! Do you have a big family?'),
+      u('نعم، عائلتي كبيرة.','Yes, my family is big.'),
+      a('كم شخصًا في عائلتك؟','How many people are in your family?'),
+      u('في عائلتي خمسة أشخاص.','There are five people in my family.'),
+      a('هل لديك إخوة أو أخوات؟','Do you have brothers or sisters?'),
+      u('نعم، لدي أخ واحد وأختان.','Yes, I have one brother and two sisters.'),
+      a('ماذا تحب أن تفعل مع عائلتك؟','What do you like doing with your family?'),
+      u('أحب أن أتناول الطعام مع عائلتي.','I like eating with my family.'),
+    ];
+  } else if (/الطقس|الجو|weather/.test(text)) {
+    lines = [
+      a('كيف الطقس اليوم؟','How is the weather today?'),
+      u('الطقس مشمس وحار.','It is sunny and hot.'),
+      a('هل تحب الطقس الحار؟','Do you like hot weather?'),
+      u('لا، أحب الطقس المعتدل.','No, I like mild weather.'),
+      a('ماذا ترتدي عندما يكون الجو باردًا؟','What do you wear when it is cold?'),
+      u('أرتدي معطفًا وأحمل مظلة إذا أمطرت.','I wear a coat and carry an umbrella if it rains.'),
+    ];
+  } else if (/الروتين|اليوم|routine|daily/.test(text)) {
+    lines = [
+      a('متى تستيقظ كل يوم؟','When do you wake up every day?'),
+      u('أستيقظ الساعة السادسة صباحًا.','I wake up at six in the morning.'),
+      a('ماذا تفعل بعد الاستيقاظ؟','What do you do after waking up?'),
+      u('أغسل وجهي وأتناول الفطور.','I wash my face and eat breakfast.'),
+      a('متى تذهب إلى المدرسة؟','When do you go to school?'),
+      u('أذهب إلى المدرسة الساعة السابعة.','I go to school at seven.'),
+    ];
+  } else if (/صيدلية|دواء|أدوية|ضمادات|pharmac|medicine|bandage/.test(text)) {
     lines = [
       a('مرحبًا، صيدلية المدينة، كيف أساعدك؟','Hello, City Pharmacy. How can I help?'),
       u('مرحبًا، هل عندكم ضمادات؟','Hello, do you have bandages?'),
