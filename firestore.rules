@@ -685,18 +685,12 @@ service cloud.firestore {
       }
     }
 
-    // Live Sessions Collection
+    // Legacy toolbar documents are private to the authenticated teacher.
+    // Students interact solely through whiteboard_sessions scoped subcollections.
     match /live_sessions/{sessionId} {
-      allow read: if isAuthenticated();
-      allow create: if isTeacher();
-      allow update: if isAuthenticated() && (
-        isTeacher() || 
-        // Allow students to interact with specific session features
-        (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['poll', 'exercise', 'reaction', 'stickyNotes'])
-        )
-      );
-      allow delete: if isTeacher();
+      allow get: if isAdmin() || (isTeacher() && sessionId == request.auth.uid);
+      allow list: if false;
+      allow create, update, delete: if isTeacher() && sessionId == request.auth.uid;
     }
 
     // Placement Results: students see their own reports, teachers see their school only.
