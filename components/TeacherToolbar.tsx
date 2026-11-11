@@ -1831,6 +1831,15 @@ export const TeacherToolbar: React.FC = () => {
                                     <span>تم تنزيل لقطة السبورة بنجاح!</span>
                                   </div>
                                 )}
+                                <button
+                                  onClick={() => {
+                                    window.dispatchEvent(new Event('qul_open_whiteboard_history'));
+                                    setShowSubMenu(null);
+                                  }}
+                                  className="w-full rounded-lg border border-indigo-400/30 bg-indigo-500/15 px-3 py-2 text-[9px] font-bold text-indigo-100 transition hover:bg-indigo-500/25"
+                                >
+                                  الأرشيف وتصدير جميع الصفحات PDF
+                                </button>
                               </div>
 
                               <div className="p-2 rounded-xl bg-white/5 border border-white/5 flex flex-col gap-1.5">
