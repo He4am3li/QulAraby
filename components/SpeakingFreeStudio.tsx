@@ -256,7 +256,7 @@ export const SpeakingFreeStudio:React.FC<FreeStudioProps>=({
           onClick={onStop} disabled={isFinishing}
           aria-label={ar?'إنهاء المحادثة وعرض التقرير':'Finish conversation and show report'}>
           {isFinishing?<Loader2 size={17} className="qul-free-spin"/>:<Check size={17}/>}
-          <span>{isFinishing?(ar?'جارٍ إعداد التقرير...':'Preparing report...')
+          <span>{isFinishing ? (ar?'جارٍ إعداد التقرير...':'Preparing report...')
             :(ar?'إنهاء المحادثة وعرض التقرير':'Finish & view report')}</span>
         </button>
         <span className="qul-voice-dock-divider" aria-hidden="true"/>
@@ -284,7 +284,7 @@ export const SpeakingFreeStudio:React.FC<FreeStudioProps>=({
         </div>
         <button type="button" className={'qul-voice-talk-control'+(micMuted?' is-muted':'')}
           onClick={onToggleMic} disabled={!isActive||loading||isFinishing}
-          aria-pressed={!micMuted} aria-label={micMuted?(ar?'تشغيل الميكروفون':'Unmute microphone'):(ar?'كتم الميكروفون':'Mute microphone')}
+          aria-pressed={isActive&&!micMuted} aria-label={micMuted?(ar?'تشغيل الميكروفون':'Unmute microphone'):(ar?'كتم الميكروفون':'Mute microphone')}
           title={micMuted?(ar?'تشغيل الميكروفون':'Unmute'):(ar?'كتم الميكروفون':'Mute')}>
           {micMuted?<MicOff size={28}/>:<Mic size={30}/>}
           <span>{micMuted?(ar?'تشغيل الصوت':'Unmute'):(ar?'تحدث الآن':'Speak now')}</span>
