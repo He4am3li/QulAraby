@@ -269,6 +269,7 @@ export const WhiteboardPage: React.FC = () => {
           score: 0, handRaised: false, isOnline: true, lastActive: Date.now(),
         });
       } else {
+        setHandRaised(!!myPresence.data().handRaised);
         await updateDoc(personRef, { isOnline: true, lastActive: Date.now() });
       }
       if (cancelled) return;
@@ -462,6 +463,12 @@ export const WhiteboardPage: React.FC = () => {
   }, []);
 
   const currentPage = session.pages[session.currentPageIndex] || session.pages[0];
+
+  useEffect(() => {
+    setStudentAnswerSent(false);
+    setStudentAnswerText('');
+    setAnswerError('');
+  }, [session.activeActivity?.id]);
 
   // Listen to remote undo / redo / tool changes from TeacherToolbar
   useEffect(() => {
@@ -760,11 +767,27 @@ export const WhiteboardPage: React.FC = () => {
         icon={PenTool}
         lang={lang}
         rightContent={
-          <div className="flex items-center gap-2 sm:gap-4">
-            {/* Session Code Badge */}
-            <div className="flex items-center gap-1.5 bg-slate-900/80 border border-emerald-500/30 px-3 py-1.5 rounded-2xl">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className={`hidden md:inline text-[10px] font-bold ${cloudReady ? 'text-emerald-400' : 'text-amber-300'}`} role="status">
+              {cloudStatus}
+            </span>
+            {isTeacher && (
+              <>
+                <button
+                  onClick={() => setIsQuestionEditorOpen(previous => !previous)}
+                  disabled={!cloudReady}
+                  className="rounded-xl bg-emerald-600/20 border border-emerald-500/30 px-3 py-1.5 text-xs font-bold text-emerald-200 disabled:opacity-40"
+                >سؤال الحصة</button>
+                <button
+                  onClick={() => setIsStudentWorksOpen(true)}
+                  className="rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold text-white"
+                >الإجابات</button>
+              </>
+            )}
+            {/* Session Code Badge */
+            {(isTeacher || cloudReady) && <div className="flex items-center gap-1.5 bg-slate-900/80 border border-emerald-500/30 px-3 py-1.5 rounded-2xl">
               <span className="text-xs text-slate-400 font-bold hidden sm:inline">رمز الحصة:</span>
-              <span className="font-mono font-black text-emerald-400 tracking-wider text-sm">{session.code}</span>
+              <span className="font-mono font-black text-emerald-400 tracking-wider text-xs sm:text-sm">{session.code}</span>
               <button
                 onClick={handleCopyCode}
                 className="p-1 text-slate-400 hover:text-emerald-400 rounded-lg transition"
@@ -772,21 +795,77 @@ export const WhiteboardPage: React.FC = () => {
               >
                 {copiedCode ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
               </button>
-            </div>
+            </div>}
           </div>
         }
       />
 
       {/* Main Classroom Whiteboard Layout */}
       <div id="qul-whiteboard-canvas-area" className="flex-1 relative overflow-hidden bg-slate-950">
+        {isTeacher && isQuestionEditorOpen && (
+          <form onSubmit={(e) => { e.preventDefault(); beginClassQuestion(); }} className="absolute top-3 left-3 z-50 w-[min(92vw,420px)] rounded-2xl border border-emerald-500/40 bg-slate-900/95 p-3 shadow-xl backdrop-blur-xl">
+            <label htmlFor="qul-class-question" className="text-xs text-emerald-100 font-bold">سؤال الحصة للطلاب</label>
+            <input
+              id="qul-class-question"
+              value={questionDraft}
+              onChange={event => setQuestionDraft(event.target.value)}
+              placeholder="اكتب السؤال الذي تريد طرحه..."
+              maxLength={1000}
+              className="mt-2 w-full rounded-lg border border-white/20 bg-slate-950 p-2 text-sm text-white"
+            />
+            <div className="mt-2 flex gap-2">
+              <button type="submit" disabled={!questionDraft.trim() || !cloudReady} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-40">بدء النشاط</button>
+              <button type="button" onClick={() => setIsQuestionEditorOpen(false)} className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white">إلغاء</button>
+              {session.activeActivity?.isActive && (
+                <button type="button" onClick={() => {
+                  setSession(previous => previous.activeActivity ? {
+                    ...previous,
+                    activeActivity: { ...previous.activeActivity, isActive: false },
+                  } : previous);
+                  setIsQuestionEditorOpen(false);
+                }} className="rounded-lg bg-amber-500/15 px-3 py-1.5 text-xs font-bold text-amber-200">إنهاء السؤال</button>
+              )}
+            </div>
+          </form>
+        )}
+        {!isTeacher && !cloudReady && (
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950 p-5">
+            <div className="w-full max-w-md rounded-3xl border border-emerald-500/25 bg-slate-900/90 p-6 text-center shadow-2xl">
+              <h2 className="text-xl font-black text-white">الانضمام إلى سبورة المعلم</h2>
+              <p className="my-3 text-sm text-slate-300">أدخل رمز الحصة الذي حصلت عليه من معلمك في المدرسة.</p>
+              <form onSubmit={event => {
+                event.preventDefault();
+                const entered = normalizeWhiteboardCode(joinInput);
+                if (!isWhiteboardCode(entered)) {
+                  setCloudStatus('رمز الحصة غير صحيح. مثال: QUL-XXXXXXXX');
+                  return;
+                }
+                setJoinedCode(entered);
+                setJoinAttempt(value => value + 1);
+              }}>
+                <input
+                  aria-label="رمز الحصة"
+                  value={joinInput}
+                  onChange={event => setJoinInput(event.target.value.toUpperCase())}
+                  placeholder="QUL-XXXXXXXX"
+                  maxLength={12}
+                  dir="ltr"
+                  className="w-full rounded-xl border border-white/20 bg-slate-950 p-3 text-center font-mono text-lg text-emerald-300"
+                />
+                <button type="submit" className="mt-3 w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-black text-slate-950">الانضمام للحصة</button>
+              </form>
+              <p className="mt-3 text-xs text-amber-200" role="status">{cloudStatus}</p>
+            </div>
+          </div>
+        )}
         {/* Live Whiteboard Canvas with Integrated Compact Student Counter & Real-Time Interaction Under Hijri Date */}
-        <WhiteboardCanvas
+        {(isTeacher || cloudReady) && <WhiteboardCanvas
           elements={currentPage.elements}
           onElementsChange={handleElementsChange}
           activeTool={activeTool}
           activeColor={activeColor}
           activeStrokeWidth={activeStrokeWidth}
-          isReadOnly={!isTeacher && session.isLocked}
+          isReadOnly={!isTeacher || !cloudReady}
           theme={currentPage.theme || activeTheme}
           background={currentPage.background}
           currentUserId={user?.uid}
@@ -798,17 +877,22 @@ export const WhiteboardPage: React.FC = () => {
           selectedStudentId={selectedStudentId}
           onThemeChange={(th) => setActiveTheme(th)}
           onClearHands={() => {
-            setSession(prev => {
-              const updated = { ...prev.students };
-              Object.keys(updated).forEach(k => { updated[k].handRaised = false; });
-              return { ...prev, students: updated };
+            if (!isTeacher || !cloudReady || !cloudCode) return;
+            const raisedIds = Object.values(sessionRef.current.students).filter(s => s.handRaised).map(s => s.id);
+            void Promise.all(raisedIds.map(studentId =>
+              updateDoc(doc(db, 'whiteboard_sessions', cloudCode, 'participants', studentId), {
+                handRaised: false,
+              })
+            )).catch(error => {
+              console.error('Clear student hands failed:', error);
+              setCloudStatus('تعذر خفض جميع الأيدي.');
             });
           }}
-        />
+        />}
 
         {/* Student Response & Interaction Drawer (Visible to Student Only) */}
-        {!isTeacher && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-xl border border-emerald-500/30 rounded-3xl p-4 shadow-2xl w-full max-w-xl">
+        {!isTeacher && cloudReady && (
+          <div className="fixed bottom-20 sm:bottom-20 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-xl border border-emerald-500/30 rounded-3xl p-3 sm:p-4 shadow-2xl w-[calc(100%-1rem)] max-w-xl">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -833,7 +917,7 @@ export const WhiteboardPage: React.FC = () => {
               <input
                 type="text"
                 value={studentAnswerText}
-                onChange={(e) => { setStudentAnswerText(e.target.value); setStudentAnswerSent(false); }}
+                onChange={(e) => { setStudentAnswerText(e.target.value); setStudentAnswerSent(false); setAnswerError(''); }}
                 placeholder={session.activeActivity?.isActive ? 'اكتب إجابتك هنا...' : 'في انتظار أن يبدأ المعلم النشاط...'}
                 className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-white arabic-font text-sm focus:outline-none focus:border-emerald-500"
                 dir="rtl"
@@ -841,20 +925,21 @@ export const WhiteboardPage: React.FC = () => {
               <button
                 id="qul-student-answer-submit"
                 onClick={handleSendStudentAnswer}
-                disabled={!studentAnswerText.trim() || !session.activeActivity?.isActive}
+                disabled={!studentAnswerText.trim() || !session.activeActivity?.isActive || isSendingAnswer || !cloudReady}
                 className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white rounded-xl text-xs font-bold arabic-font flex items-center gap-1.5 shadow-lg transition"
               >
                 <Send size={14} />
-                إرسال الإجابة
+                {isSendingAnswer ? 'جارٍ تسليم الإجابة...' : 'إرسال الإجابة'}
               </button>
             </div>
 
             {studentAnswerSent && (
               <div className="text-[11px] text-emerald-400 font-bold mt-1.5 flex items-center gap-1">
                 <CheckCircle2 size={12} />
-                تم حفظ الإجابة على هذا الجهاز فقط، ولم تصل إلى المعلم بعد.
+                تم تسجيل الإجابة في الحصة بنجاح.
               </div>
             )}
+            {answerError && <p className="mt-1 text-xs font-semibold text-rose-300" role="alert">{answerError}</p>}
           </div>
         )}
 
