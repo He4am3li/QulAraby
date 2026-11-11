@@ -9,6 +9,7 @@ import {
 import { PageHeader } from '../components/PageHeader';
 import { useAuth } from '../components/AuthProvider';
 import { WhiteboardCanvas } from '../components/whiteboard/WhiteboardCanvas';
+import { captureWhiteboardScreenshot } from '../services/mediaRecordingService';
 import { FortuneWheelModal } from '../components/whiteboard/FortuneWheelModal';
 import { ArabicToolsModal } from '../components/whiteboard/ArabicToolsModal';
 import { WordSlicerModal } from '../components/whiteboard/WordSlicerModal';
@@ -695,43 +696,9 @@ export const WhiteboardPage: React.FC = () => {
             window.print();
           }}
           onExportImage={() => {
-            const canvas = document.querySelector('#whiteboard-canvas-container canvas') as HTMLCanvasElement;
-            if (canvas) {
-              const exportCanvas = document.createElement('canvas');
-              exportCanvas.width = canvas.width;
-              exportCanvas.height = canvas.height;
-              const ctx = exportCanvas.getContext('2d');
-              if (ctx) {
-                ctx.drawImage(canvas, 0, 0);
-                const logoImg = new Image();
-                logoImg.crossOrigin = 'anonymous';
-                logoImg.onload = () => {
-                  const logoSize = Math.max(48, Math.min(80, exportCanvas.width * 0.06));
-                  const padding = 24;
-                  const x = exportCanvas.width - logoSize - padding;
-                  const y = exportCanvas.height - logoSize - padding;
-                  ctx.shadowColor = 'rgba(0,0,0,0.2)';
-                  ctx.shadowBlur = 8;
-                  ctx.drawImage(logoImg, x, y, logoSize, logoSize);
-                  const link = document.createElement('a');
-                  link.download = `سبورة_قل_${session.code}_${new Date().toISOString().slice(0, 10)}.png`;
-                  link.href = exportCanvas.toDataURL('image/png');
-                  link.click();
-                };
-                logoImg.onerror = () => {
-                  const link = document.createElement('a');
-                  link.download = `سبورة_قل_${session.code}_${new Date().toISOString().slice(0, 10)}.png`;
-                  link.href = canvas.toDataURL('image/png');
-                  link.click();
-                };
-                logoImg.src = '/Logo.png';
-              } else {
-                const link = document.createElement('a');
-                link.download = `سبورة_قل_${session.code}_${new Date().toISOString().slice(0, 10)}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-              }
-            }
+            void captureWhiteboardScreenshot().catch(error => {
+              console.error('Whiteboard image export failed:', error);
+            });
           }}
         />
       </div>
