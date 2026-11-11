@@ -24,13 +24,32 @@ export type SpeakingReportSheetProps = {
   objectivesEn?: readonly string[];
   nextPractice: { promptAr: string; promptEn: string };
   mode?: 'preview' | 'print';
+  transcript?: Array<{role:string;text:string}>;
 };
 
 export const SpeakingReportSheet: React.FC<SpeakingReportSheetProps> = ({
   lang, topicAr, topicEn, levelAr, levelEn, evidence, insights,
-  objectivesAr=[], objectivesEn=[], nextPractice, mode='preview',
+  objectivesAr=[], objectivesEn=[], nextPractice, mode='preview', transcript=[],
 }) => {
   const ar=lang==='ar';
+  const fullTranscript=transcript.filter(turn=>turn && typeof turn.text==='string' && turn.text.trim().length>0);
+  return <article className={'qul-speaking-report-sheet qul-transcript-sheet '+(mode==='print'?'is-print':'is-preview')}
+    dir={ar?'rtl':'ltr'} aria-label={ar?'الحوار الكامل':'Complete conversation transcript'}
+    style={{background:'#fff',color:'#1c3545',padding:'26px 30px',fontFamily:"'Tajawal','Cairo',sans-serif",fontSize:14}}>
+    <header style={{display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'2px solid #d5e8e9',paddingBottom:12,marginBottom:16}}>
+      <div><strong style={{fontSize:22}}>{ar?'الحوار الكامل':'Complete Conversation'}</strong>
+      <p style={{margin:'5px 0',color:'#5d7d8a'}}>{ar?(topicAr||'المحادثة'):(topicEn||'Conversation')} | {ar?levelAr:levelEn}</p></div>
+      <img src="/Logo.png" alt="QUL" style={{width:62,height:62,objectFit:'contain'}}/>
+    </header>
+    <div style={{display:'flex',flexDirection:'column',gap:8}}>
+      {fullTranscript.length?fullTranscript.map((turn,index)=><div key={index} style={{display:'grid',gridTemplateColumns:'85px minmax(0,1fr)',gap:12,padding:'9px 12px',borderRadius:10,background:turn.role==='user'?'#edf9f7':'#f3f6fa',breakInside:'avoid'}}>
+        <strong style={{color:turn.role==='user'?'#087e76':'#355e88'}}>{turn.role==='user'?(ar?'الطالب':'Learner'):(ar?'المعلم':'Tutor')}</strong>
+        <span style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',lineHeight:1.7}}>{turn.text}</span>
+      </div>):<p>{ar?'لم يُسجّل أي نص للحوار في هذه الجلسة.':'No conversation transcript was captured in this session.'}</p>}
+    </div>
+    <footer style={{marginTop:18,paddingTop:10,borderTop:'1px solid #dce8ea',color:'#738b95',fontSize:11}}>QUL | {ar?'سجل المحادثة':'Conversation record'}</footer>
+  </article>;
+
   const words=Array.isArray(insights?.key_vocabulary)?insights.key_vocabulary.slice(0,5):[];
   const corrections=Array.isArray(insights?.corrections)?insights.corrections.slice(0,2):[];
   const goals=Array.isArray(insights?.missionEvidence)?insights.missionEvidence:[];
