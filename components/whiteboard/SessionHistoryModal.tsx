@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../AuthProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, History, Download, FileText, Calendar, Users, Award, Trash2, ArrowRight, Play, Sparkles, Check, Image as ImageIcon } from 'lucide-react';
 import { WhiteboardSessionState } from '../../types/whiteboard';
@@ -31,39 +32,21 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
   onExportPdf,
   onExportImage
 }) => {
+  const { user } = useAuth();
+  const archiveKey = 'qul_whiteboard_archive_' + (user?.uid || 'guest');
   const [activeTab, setActiveTab] = useState<'export' | 'history'>('export');
   const [savedRecords, setSavedRecords] = useState<SavedSessionRecord[]>(() => {
-    const raw = localStorage.getItem('qul_whiteboard_archive');
+    const raw = localStorage.getItem(archiveKey);
     if (raw) {
       try {
         return JSON.parse(raw);
       } catch (e) {}
     }
-    return [
-      {
-        id: 'rec_1',
-        code: 'QUL-9821',
-        title: 'درس المفردات وتراكيب السفر والمطار',
-        date: '2026-08-28',
-        studentsCount: 6,
-        pagesCount: 3,
-        totalScore: 85,
-        data: currentSession
-      },
-      {
-        id: 'rec_2',
-        code: 'QUL-4412',
-        title: 'حصة تدريب الخط العربي ورسم الحروف',
-        date: '2026-08-25',
-        studentsCount: 4,
-        pagesCount: 2,
-        totalScore: 60,
-        data: currentSession
-      }
-    ];
+    return [];
   });
 
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   if (!isOpen) return null;
 
@@ -80,17 +63,29 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
     };
 
     const updated = [newRecord, ...savedRecords];
-    setSavedRecords(updated);
-    localStorage.setItem('qul_whiteboard_archive', JSON.stringify(updated));
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+    setSaveError('');
+    try {
+      localStorage.setItem(archiveKey, JSON.stringify(updated));
+      setSavedRecords(updated);
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
+    } catch (error) {
+      console.error('Local archive save failed:', error);
+      setSavedSuccess(false);
+      setSaveError('لم تُحفظ النسخة، مساحة تخزين المتصفح غير كافية. صدّر الحصة إلى PDF.');
+    }
   };
 
   const handleDeleteRecord = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const updated = savedRecords.filter(r => r.id !== id);
-    setSavedRecords(updated);
-    localStorage.setItem('qul_whiteboard_archive', JSON.stringify(updated));
+    try {
+      localStorage.setItem(archiveKey, JSON.stringify(updated));
+      setSavedRecords(updated);
+    } catch (error) {
+      console.error('Local archive deletion failed:', error);
+      setSaveError('تعذر تحديث سجل الحصص المحلي.');
+    }
   };
 
   return (
@@ -206,7 +201,8 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center justify-between">
                 <div>
                   <h4 className="text-xs font-bold text-slate-800 mb-0.5">حفظ الحصة في أرشيف المتصفح:</h4>
-                  <p className="text-[11px] text-slate-500">حفظ محتويات جميع الصفحات مع نقاط وتفاعل الطلاب</p>
+                  <p className="text-[11px] text-slate-500">نسخة على هذا الجهاز فقط، واستعادة آخر حصة متاحة من السحابة</p>
+                  {saveError && <p className="mt-1 text-[11px] font-bold text-rose-600" role="alert">{saveError}</p>}
                 </div>
                 <button
                   onClick={handleSaveCurrentSession}

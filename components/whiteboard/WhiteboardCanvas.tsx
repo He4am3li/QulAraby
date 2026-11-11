@@ -893,7 +893,7 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
       ref={containerRef}
       id="whiteboard-canvas-container"
       onMouseLeave={handleEndDraw}
-      className={`whiteboard-board-container relative w-full h-full min-h-[580px] overflow-hidden select-none cursor-crosshair ${containerThemeStyles.wrapper}`}
+      className={`whiteboard-board-container relative w-full h-full min-h-0 overflow-hidden select-none cursor-crosshair ${containerThemeStyles.wrapper}`}
       style={{ backgroundImage: containerThemeStyles.chalkDust }}
     >
       {/* Authentic Chalkboard Smudges & Dust Waves Overlay (matching real slate chalkboard) */}
