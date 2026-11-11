@@ -90,6 +90,15 @@ test('multi-page PDF export renders each page without changing class page state'
   assert.match(page, /exportPageIndex \?\? session\.currentPageIndex/);
 });
 
+test('archived lessons restore only content and preserve class identity', () => {
+  assert.match(page, /onRestoreSession=\{\(restored\) => \{/);
+  assert.match(page, /title: restored\.title \|\| previous\.title/);
+  assert.match(page, /pages: restored\.pages/);
+  assert.match(page, /activeActivity: null/);
+  assert.match(archive, /qul_whiteboard_archive_' \+ \(user\?\.uid/);
+  assert.match(archive, /Local archive save failed/);
+});
+
 test('PNG export captures board DOM layers', () => {
   assert.match(page, /captureWhiteboardScreenshot\(\)/);
   assert.match(capture, /html2canvas\(targetElement/);
