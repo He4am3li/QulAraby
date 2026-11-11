@@ -217,6 +217,15 @@ export const TeacherToolbar: React.FC = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentStroke, setCurrentStroke] = useState<{x: number, y: number}[]>([]);
   const [sessionData, setSessionData] = useState<any>(null);
+  const [classroomStudents, setClassroomStudents] = useState<Record<string, any>>({});
+  useEffect(() => {
+    const handleClassRoster = (event: Event) => {
+      const students = (event as CustomEvent<{ students?: Record<string, any> }>).detail?.students;
+      setClassroomStudents(students || {});
+    };
+    window.addEventListener('qul_whiteboard_students_updated', handleClassRoster);
+    return () => window.removeEventListener('qul_whiteboard_students_updated', handleClassRoster);
+  }, []);
   const [isLocked, setIsLocked] = useState(false);
   const [fileData, setFileData] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -634,31 +643,15 @@ export const TeacherToolbar: React.FC = () => {
     }
   };
 
-  const handleAwardStudent = async (studentId: string, studentName: string, delta: number) => {
-    try {
-      const currentStudents = sessionData?.students || {};
-      const curScore = currentStudents[studentId]?.score || 0;
-      const newScore = Math.max(0, curScore + delta);
-
-      await updateDoc(doc(db, 'live_sessions', user?.uid || 'unavailable'), {
-        [`students.${studentId}.score`]: newScore,
-        lastUpdate: serverTimestamp()
-      });
-
-      if (delta > 0) {
-        confetti({
-          particleCount: 35,
-          spread: 50,
-          origin: { y: 0.7 }
-        });
-      }
-    } catch (err) {
-      console.error("Error awarding student:", err);
-    }
+  const handleAwardStudent = (studentId: string, studentName: string, delta: number) => {
+    if (!classroomStudents[studentId]) return;
+    window.dispatchEvent(new CustomEvent('qul_whiteboard_award_student', {
+      detail: { studentId, delta },
+    }));
   };
 
   const handlePickRandomStudent = () => {
-    const studentsMap = sessionData?.students || {};
+    const studentsMap = classroomStudents;
     const studentNames = Object.values(studentsMap).map((s: any) => s.name || s.displayName).filter(Boolean);
     const candidates = studentNames;
     if (candidates.length === 0) { setPickedStudent(''); return; }
@@ -739,6 +732,11 @@ export const TeacherToolbar: React.FC = () => {
   ];
 
   const toggleTool = async (toolId: string) => {
+    if (toolId === 'student-work') {
+      window.dispatchEvent(new Event('qul_open_whiteboard_student_works'));
+      setShowSubMenu(null);
+      return;
+    }
     if (toolId === 'select') {
       setActiveTool(null);
       setShowSubMenu(null);
@@ -834,6 +832,11 @@ export const TeacherToolbar: React.FC = () => {
         exercise: { ...exercise, isActive: true, timestamp: Date.now() },
         lastUpdate: serverTimestamp()
       }, { merge: true });
+      if (exercise?.question) {
+        window.dispatchEvent(new CustomEvent('qul_whiteboard_start_activity', {
+          detail: { question: exercise.question },
+        }));
+      }
     } catch (err) {
       console.error("Error generating exercise:", err);
     } finally {
@@ -1553,7 +1556,7 @@ export const TeacherToolbar: React.FC = () => {
                                   <span>تفاعل الطلاب والتحفيز</span>
                                 </div>
                                 <span className="text-[8px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full font-bold">
-                                  {Object.keys(sessionData?.students || {}).length} طلاب
+                                  {Object.keys(classroomStudents).length} طلاب
                                 </span>
                               </div>
 
@@ -1606,7 +1609,7 @@ export const TeacherToolbar: React.FC = () => {
                               <div className="flex flex-col gap-1">
                                 <span className="text-[8px] text-white/50 font-bold">تحفيز ومنح النقاط:</span>
                                 <div className="flex flex-col gap-1 max-h-36 overflow-y-auto custom-scrollbar">
-                                  {Object.entries(sessionData?.students || {}).map(([sid, s]: [string, any], sIdx) => (
+                                  {Object.entries(classroomStudents).map(([sid, s]: [string, any], sIdx) => (
                                     <div key={`student_${sid}_${sIdx}`} className="p-1.5 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
                                       <div className="flex items-center gap-1.5">
                                         <span className="text-[9px] font-bold text-white arabic-font">{s.name}</span>
