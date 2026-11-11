@@ -160,7 +160,7 @@ export const Speak: React.FC = () => {
   const topicSuppressClickRef = React.useRef(false);
   const scrollTopics = (direction: number) => topicRailRef.current?.scrollBy({left: direction * (lang === 'ar' ? -320 : 320),behavior:'smooth'});
 
-  const [speakingBranch, setSpeakingBranch] = React.useState<'booth' | 'studio'>('booth');
+  const [speakingBranch, setSpeakingBranch] = React.useState<'booth' | 'studio'>('studio');
   const [selectedCallContact, setSelectedCallContact] = React.useState<(typeof CALL_CONTACTS)[number]>(CALL_CONTACTS[0]);
   const activeTopic = speakingBranch === 'booth' ? selectedCallContact : selectedTopic;
   const [placementHint, setPlacementHint] = React.useState<{ cefr: string; levelId: string } | null>(null);
@@ -584,20 +584,22 @@ export const Speak: React.FC = () => {
           outputAudioTranscription: {},
           systemInstruction: `You are a professional Arabic tutor named "QUL AI". 
           User Name: ${user?.displayName || 'Learner'}
-          User Level: ${selectedLevel?.en} (${selectedLevel?.ar}). ${selectedLevel?.prompt}
+          User Level: ${selectedLevel?.en} (${selectedLevel?.ar}). ${speakingBranch === 'studio' ? '' : selectedLevel?.prompt}
           Topic: ${sessionTopic?.en} (${sessionTopic?.ar}).
           ${practiceGoal ? 'Current practice target: ' + practiceGoal.slice(0, 240) : ''} 
           
           ${proactiveContext}
 
+          ${speakingBranch === 'studio' ? (selectedLevel?.id === 'beginner' ? `FREE CONVERSATION, BEGINNER A0-A1: Begin speaking in ENGLISH about the selected topic. Your first spoken turn must be in English, briefly explain what you will practice, introduce ONE useful Arabic word or tiny phrase with its English meaning, and ask ONE easy English question that invites the learner to say that Arabic word or phrase. Gradually transition from English-led support to short Arabic speaking turns as the learner succeeds. Teach a small set of essential topic-specific words and usable phrases, recycle them naturally, and scaffold a simple personal answer. Do not assume the learner already understands Arabic. By the end, help the learner independently say at least two short Arabic statements or a question and answer about this topic. Never replace the learner's Arabic speaking practice with English-only conversation.` : selectedLevel?.id === 'intermediate' ? `FREE CONVERSATION, INTERMEDIATE A2-B1: Begin in SIMPLE MODERN STANDARD ARABIC, immediately provide a short English explanation of the opening question or key expression. Use short clear Arabic sentences and strategic English translations or clarifications throughout, especially for new vocabulary, without letting English dominate. Introduce essential topic vocabulary and sentence patterns, ask one question at a time, elicit increasingly complete Arabic answers, gently correct and recycle vocabulary. By the end, the learner should be able to hold a short connected exchange in Arabic about this topic, describing, asking, answering and giving a reason.` : `FREE CONVERSATION, ADVANCED B2-C1: Speak ONLY in MODERN STANDARD ARABIC, including the opening, explanations, corrections, examples and follow-up questions. Never switch to English, even when the learner uses English; instead paraphrase or simplify in Arabic. Build a substantive discussion around the selected topic with topic-specific vocabulary, comparisons, opinions, reasons and examples. Prompt the learner to sustain connected Arabic speech, clarify arguments and respond to follow-up questions. By the end, the learner should be able to discuss this topic coherently and independently in Modern Standard Arabic.`) : ''}
+
           ${speakingBranch === 'booth' ? `TELEPHONE ROLEPLAY. You are the fictional agent ${selectedCallContact.agentEn} at ${selectedCallContact.en}. This is a simulated educational call, not a real transaction. Student's mission: ${selectedCallContact.aimEn}. Objectives: ${selectedCallContact.objectivesEn.join('; ')}. Situation twist only after learner begins the request: ${selectedCallContact.complication}. ${getUaePriceGuidance(selectedCallContact)} Answer as a natural person on a telephone, with one short greeting and one simple question. Remain in character. Allow English hints for A1 and when a learner struggles, then model a tiny Arabic phrase. Ask no real identifiers, phone numbers, addresses, or payment details. Never claim a real booking was created. Don't assess pronunciation from transcripts.` : ''}
 
           SPEAKING COACH RULES:
-          Start with one short greeting and one easy question about the topic.
+          For free conversation follow the level-specific opening language and progression above. For telephone roleplay use the telephone opening rules. Do not override these with a generic Arabic greeting.
           Your main purpose is to get the LEARNER to speak, not to deliver a lecture.
           Listen patiently. Ask only one question per turn and gradually adapt difficulty to the learner's actual speech, not just the selected level.
           Give one useful correction at a time after a learner turn, then model the improved phrase and invite a retry when appropriate.
-          Offer English scaffolding naturally when the learner needs it, especially beginners, but return to Arabic practice promptly.
+          In free conversation, use English according to the selected level: English-led beginner, Arabic plus English intermediate, Arabic-only advanced. For telephone roleplay follow its separate guidance.
           Keep feedback encouraging but specific. Avoid falsely claiming a pronunciation score or fluency score.
           Spoken audio transcripts should match what was actually spoken; do not insert silent translations into audio transcription.
           If the learner becomes stuck, simplify the question and provide a tiny model answer rather than repeating it unchanged.`,
@@ -740,7 +742,7 @@ export const Speak: React.FC = () => {
           : '';
         session.sendClientContent({
           turns: [{ role: 'user', parts: [{
-            text: (speakingBranch === 'booth' ? 'Answer the simulated telephone NOW in your role as the selected agent. Give one short natural greeting and one easy question. Do not introduce yourself as AI.' : 'Begin the tutoring session with one short greeting and an easy question about the selected topic. This is an internal startup instruction, not a learner utterance.') + context
+            text: (speakingBranch === 'booth' ? 'Answer the simulated telephone NOW in your role as the selected agent. Give one short natural greeting and one easy question. Do not introduce yourself as AI.' : 'Begin the topic-specific tutoring session NOW using the EXACT opening language prescribed by the learner level: BEGINNER starts in English, INTERMEDIATE starts in simple Modern Standard Arabic with brief English support, ADVANCED starts in Modern Standard Arabic only. Teach toward independent Arabic speaking on this topic. This is an internal startup instruction, not a learner utterance.') + context
           }] }],
           turnComplete: true,
         });
@@ -1073,10 +1075,10 @@ export const Speak: React.FC = () => {
                 </div>
                 <nav className="space-y-2 mb-5" aria-label={lang === 'ar' ? 'فروع التحدث' : 'Speaking sections'}>
                   {([
+                    { id: 'studio' as const, icon: <span className="text-[23px] leading-none" aria-hidden="true">{TOPICS.find(topic => topic.id === 'free')?.icon}</span>, title: lang === 'ar' ? 'المحادثة الحرة' : 'Free Conversation',
+                      sub: lang === 'ar' ? 'تحدث بحرية' : 'FREE SPEAKING' },
                     { id: 'booth' as const, icon: <Phone size={20} />, title: lang === 'ar' ? 'كابينة الاتصال' : 'The Call Booth',
                       sub: lang === 'ar' ? 'الدليل الهجائي' : 'ALPHABETICAL DIRECTORY' },
-                    { id: 'studio' as const, icon: <StudioMicIcon size={22} />, title: lang === 'ar' ? 'المحادثة الحرة' : 'Free Conversation',
-                      sub: lang === 'ar' ? 'تحدث بحرية' : 'FREE SPEAKING' },
                   ]).map(branch => (
                     <button
                       type="button"
