@@ -38,6 +38,86 @@ export const makeSpeakingSampleDialogue = ({ topicAr = 'محادثة يومية'
       a('متى تذهب إلى المدرسة؟','When do you go to school?'),
       u('أذهب إلى المدرسة الساعة السابعة.','I go to school at seven.'),
     ];
+  } else if (/شهور|أشهر|الشهر|السنة|months|month|calendar/.test(text)) {
+    lines = [
+      a('كم شهرًا في السنة؟','How many months are in a year?'),
+      u('في السنة اثنا عشر شهرًا.','There are twelve months in a year.'),
+      a('ما أول شهر وما آخر شهر في السنة؟','What are the first and last months of the year?'),
+      u('أول شهر يناير، وآخر شهر ديسمبر.','The first month is January and the last is December.'),
+      a('ما الأشهر التي تأتي بعد يناير؟','Which months come after January?'),
+      u('فبراير ومارس وأبريل ومايو ويونيو.','February, March, April, May and June.'),
+      a('وما الأشهر التي تأتي بعد يونيو؟','And which months come after June?'),
+      u('يوليو وأغسطس وسبتمبر وأكتوبر ونوفمبر وديسمبر.','July, August, September, October, November and December.'),
+      a('في أي شهر يبدأ العام الدراسي عادةً؟','In which month does the school year usually begin?'),
+      u('يبدأ عادةً في أغسطس أو سبتمبر.','It usually begins in August or September.'),
+      a('ما الشهر الذي يسبق ديسمبر؟','Which month comes before December?'),
+      u('نوفمبر يسبق ديسمبر.','November comes before December.'),
+    ];
+  } else if (/حيوانات|الحيوان|animals|animal/.test(text)) {
+    lines = [
+      a('ما حيوانك المفضل؟','What is your favourite animal?'),
+      u('حيواني المفضل هو الحصان.','My favourite animal is the horse.'),
+      a('هل الحصان حيوان أليف أم بري؟','Is the horse a domestic or wild animal?'),
+      u('الحصان حيوان أليف، أما الأسد فهو حيوان بري.','The horse is a domestic animal, but the lion is wild.'),
+      a('اذكر حيوانات تعيش في المزرعة.','Name animals that live on a farm.'),
+      u('البقرة والخروف والدجاجة والماعز.','A cow, a sheep, a chicken and a goat.'),
+      a('وما الحيوانات التي تعيش في البرية؟','And which animals live in the wild?'),
+      u('الأسد والفيل والزرافة والقرد.','The lion, elephant, giraffe and monkey.'),
+      a('أين يعيش السمك والطائر؟','Where do fish and birds live?'),
+      u('يعيش السمك في الماء، ويطير الطائر في السماء.','Fish live in water, and birds fly in the sky.'),
+    ];
+  } else if (/ملابس|الملابس|الثياب|clothes|clothing/.test(text)) {
+    lines = [
+      a('ماذا ترتدي اليوم؟','What are you wearing today?'),
+      u('أرتدي قميصًا وبنطالًا وحذاءً.','I am wearing a shirt, trousers and shoes.'),
+      a('ما لون قميصك؟','What colour is your shirt?'),
+      u('قميصي أزرق وحذائي أسود.','My shirt is blue and my shoes are black.'),
+      a('ماذا ترتدي في الشتاء؟','What do you wear in winter?'),
+      u('أرتدي معطفًا وسترة ووشاحًا.','I wear a coat, a sweater and a scarf.'),
+      a('وماذا ترتدي في الصيف؟','And what do you wear in summer?'),
+      u('أرتدي ملابس خفيفة وقبعة.','I wear light clothes and a hat.'),
+      a('ماذا تقول عندما تريد شراء حذاء؟','What do you say when you want to buy shoes?'),
+      u('أريد حذاءً بمقاسي، من فضلك.','I would like shoes in my size, please.'),
+    ];
+  } else if (/مشاعر|الشعور|العواطف|feelings|emotions/.test(text)) {
+    lines = [
+      a('كيف تشعر اليوم؟','How do you feel today?'),
+      u('أشعر بالسعادة لأنني مع أصدقائي.','I feel happy because I am with my friends.'),
+      a('متى تشعر بالحزن؟','When do you feel sad?'),
+      u('أشعر بالحزن عندما يمرض صديقي.','I feel sad when my friend is ill.'),
+      a('متى تشعر بالخوف أو القلق؟','When do you feel afraid or worried?'),
+      u('أشعر بالقلق قبل الامتحان.','I feel worried before an exam.'),
+      a('وماذا تفعل عندما تغضب؟','And what do you do when you are angry?'),
+      u('أتنفس بهدوء وأتحدث مع شخص أثق به.','I breathe calmly and talk to someone I trust.'),
+      a('كيف تشعر بعد النجاح؟','How do you feel after succeeding?'),
+      u('أشعر بالفخر والحماس.','I feel proud and excited.'),
+    ];
+  } else if (/فصول السنة|الفصول|seasons/.test(text)) {
+    lines = [
+      a('كم فصلًا في السنة؟','How many seasons are there in a year?'),
+      u('في السنة أربعة فصول.','There are four seasons in a year.'),
+      a('ما أسماء الفصول الأربعة؟','What are the four seasons called?'),
+      u('الربيع والصيف والخريف والشتاء.','Spring, summer, autumn and winter.'),
+      a('كيف يكون الجو في الصيف؟','What is the weather like in summer?'),
+      u('يكون الجو حارًا ومشمسًا.','It is hot and sunny.'),
+      a('ماذا يحدث للأوراق في الخريف؟','What happens to leaves in autumn?'),
+      u('يتغير لونها وتتساقط من الأشجار.','They change colour and fall from trees.'),
+      a('ما فصلك المفضل؟ ولماذا؟','What is your favourite season and why?'),
+      u('أحب الشتاء لأن الجو بارد أحيانًا.','I like winter because the weather is sometimes cold.'),
+    ];
+  } else if (/التعارف|التعريف بالنفس|intro|introduc|greeting/.test(text)) {
+    lines = [
+      a('مرحبًا! ما اسمك؟','Hello! What is your name?'),
+      u('اسمي أحمد. ما اسمك؟','My name is Ahmed. What is your name?'),
+      a('اسمي سالم. من أين أنت؟','My name is Salem. Where are you from?'),
+      u('أنا من الإمارات. وأنت؟','I am from the UAE. And you?'),
+      a('أنا من الإمارات أيضًا. كم عمرك؟','I am from the UAE too. How old are you?'),
+      u('عمري خمس عشرة سنة.','I am fifteen years old.'),
+      a('في أي صف تدرس؟','Which grade are you in?'),
+      u('أدرس في الصف العاشر.','I am in grade ten.'),
+      a('ما هوايتك المفضلة؟','What is your favourite hobby?'),
+      u('أحب القراءة وكرة القدم.','I like reading and football.'),
+    ];
   } else if (/صيدلية|دواء|أدوية|ضمادات|pharmac|medicine|bandage/.test(text)) {
     lines = [
       a('مرحبًا، صيدلية المدينة، كيف أساعدك؟','Hello, City Pharmacy. How can I help?'),
@@ -127,17 +207,15 @@ export const makeSpeakingSampleDialogue = ({ topicAr = 'محادثة يومية'
       u('شكرًا، إلى اللقاء.','Thank you. Goodbye.'),
     ];
   } else {
-    const subjectAr = String(topicAr || 'الخدمة').trim().slice(0,75);
-    const subjectEn = String(topicEn || 'this service').trim().slice(0,75);
+    // Never fabricate a service desk scenario for an unrelated learning topic.
+    // A generic template cannot guarantee the target vocabulary is taught.
     lines = [
-      a('مرحبًا، كيف أساعدك اليوم؟','Hello. How can I help you today?'),
-      u('مرحبًا، أريد السؤال عن ' + subjectAr + '.','Hello. I would like to ask about ' + subjectEn + '.'),
-      a('بالتأكيد. ماذا تريد أن تعرف؟','Certainly. What would you like to know?'),
-      u('هل هذه الخدمة متوفرة اليوم؟','Is this service available today?'),
-      a('ربما، حسب الموعد. متى تريدها؟','Possibly, depending on the time. When would you like it?'),
-      u('أريدها غدًا إن أمكن.','I would like it tomorrow, if possible.'),
-      a('تأكد من التفاصيل مع الجهة المختصة.','Please confirm the details with the provider.'),
-      u('شكرًا لك على المساعدة.','Thank you for your help.'),
+      a('ما موضوع حديثنا اليوم؟','What is our topic today?'),
+      u('موضوعنا اليوم هو ' + String(topicAr || 'موضوع جديد') + '.','Today our topic is ' + String(topicEn || 'a new topic') + '.'),
+      a('ما الكلمات المهمة التي تعرفها عن هذا الموضوع؟','What important words do you know about this topic?'),
+      u('أعرف بعض الكلمات، وأريد أن أتعلم كلمات جديدة.','I know some words and want to learn new ones.'),
+      a('هل تستطيع أن تستخدم كلمة من الموضوع في جملة؟','Can you use a word from the topic in a sentence?'),
+      u('سأختار كلمة وأكوّن بها جملة مفيدة.','I will choose a word and make a useful sentence.'),
     ];
   }
   const levelId=String(level).toLowerCase();
