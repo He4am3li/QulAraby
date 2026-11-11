@@ -819,6 +819,9 @@ export const TeacherToolbar: React.FC = () => {
         },
         lastUpdate: serverTimestamp()
       }, { merge: true });
+      window.dispatchEvent(new CustomEvent('qul_whiteboard_start_activity', {
+        detail: { question: pollQuestion, options: pollOptions },
+      }));
     } catch (err) {
       console.error("Error starting poll:", err);
     }
