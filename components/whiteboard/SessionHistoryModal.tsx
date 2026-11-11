@@ -39,28 +39,7 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
         return JSON.parse(raw);
       } catch (e) {}
     }
-    return [
-      {
-        id: 'rec_1',
-        code: 'QUL-9821',
-        title: 'درس المفردات وتراكيب السفر والمطار',
-        date: '2026-08-28',
-        studentsCount: 6,
-        pagesCount: 3,
-        totalScore: 85,
-        data: currentSession
-      },
-      {
-        id: 'rec_2',
-        code: 'QUL-4412',
-        title: 'حصة تدريب الخط العربي ورسم الحروف',
-        date: '2026-08-25',
-        studentsCount: 4,
-        pagesCount: 2,
-        totalScore: 60,
-        data: currentSession
-      }
-    ];
+    return [];
   });
 
   const [savedSuccess, setSavedSuccess] = useState(false);
