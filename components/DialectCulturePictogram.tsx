@@ -193,6 +193,21 @@ const CulturalArt: React.FC<{ kind: string; name: string }> = ({ kind, name }) =
       art = <><path d="M48 52v32" stroke="#547c54" strokeWidth="5"/>{[0,45,90,135,180,225,270,315].map((r,i)=><ellipse key={i} cx="48" cy="29" rx="11" ry="20" fill={i%2?'#fff0cf':'#f1da9a'} stroke="#d4b477" strokeWidth="1" transform={'rotate('+r+' 48 46)'}/>)}
         <circle cx="48" cy="45" r="11" fill="#e3a54f"/>{leaf(43,75,-35)}{leaf(58,68,48)}</>;
       break;
+    case 'rockart':
+      art = <><path d="M11 81Q8 42 30 17L68 14Q89 35 87 81Z" fill="url(#sand)" stroke="#ad835b" strokeWidth="3"/>
+        <path d="M23 75q14-9 23-5t27 4" stroke="#cc9765" strokeWidth="5" fill="none"/>
+        <circle cx="45" cy="32" r="5" fill="#a36d4b"/><path d="M45 40l-3 21M43 47 30 55M43 47l14 6M42 61l-12 11M42 61l11 12" stroke="#a36d4b" strokeWidth="4" strokeLinecap="round"/>
+        <path d="M63 43q12-10 17 3M61 59q15-8 20 3" stroke="#9c724f" strokeWidth="3" fill="none"/>
+        <path d="M26 28l8-9M69 25l10 11" stroke="#f7d3a3" strokeWidth="3"/></>;
+      break;
+    case 'olives':
+      art = <><path d="M27 79Q39 40 75 17" stroke="#94704d" strokeWidth="5" fill="none" strokeLinecap="round"/>
+        {leaf(54,32,-25)}{leaf(70,49,75)}{leaf(35,52,-44)}{leaf(80,27,50)}
+        <ellipse cx="47" cy="58" rx="10" ry="14" fill="#799554" stroke="#4b7049" strokeWidth="2" transform="rotate(28 47 58)"/>
+        <ellipse cx="66" cy="63" rx="11" ry="15" fill="#4d7461" stroke="#385b4a" strokeWidth="2" transform="rotate(-23 66 63)"/>
+        <ellipse cx="32" cy="71" rx="9" ry="13" fill="#8ca568" stroke="#55774e" strokeWidth="2"/>
+        <ellipse cx="42" cy="51" rx="4" ry="2" fill="white" opacity=".45"/><ellipse cx="62" cy="55" rx="4" ry="2" fill="white" opacity=".36"/></>;
+      break;
     case 'dagger':
       art = <><path d="M57 17Q81 40 56 67Q47 78 31 84Q34 62 47 53Q61 43 51 28Z" fill="url(#pearl)" stroke="#a48964" strokeWidth="2.5"/><path d="M51 23 42 12M43 24 36 14M40 10l18 8M31 31l27-5" stroke="#b38752" strokeWidth="7" strokeLinecap="round"/><path d="M41 35 60 56" stroke="#bb935b" strokeWidth="3"/></>;
       break;
