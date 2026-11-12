@@ -621,7 +621,7 @@ export const COUNTRY_DATA = [
     nameAr: 'ليبيا',
     nameEn: 'Libya',
     flag: '🇱🇾',
-    image: "/images/dialects/local/libya.jpg",
+    image: "/images/dialects/libya-leptis-tourism.avif",
     dialect: 'Libyan (ليبي)',
     characterMale: { 
       nameAr: 'عمر', 

@@ -15,7 +15,6 @@ const SOURCES = {
   "lebanon": "https://commons.wikimedia.org/wiki/Special:FilePath/Pigeon_Rocks_of_Beirut%2C_Rock_of_Raouche%2C_Beirut%2C_Lebanon.jpg?width=640",
   "tunisia": "https://commons.wikimedia.org/wiki/Special:FilePath/Sidi_Bousaid_blue_window.jpg?width=640",
   "algeria": "https://commons.wikimedia.org/wiki/Special:FilePath/Makam_chahid.jpg?width=640",
-  "libya": "https://commons.wikimedia.org/wiki/Special:FilePath/The_Theatre_of_Leptis_Magna.jpg?width=640",
   "sudan": "https://commons.wikimedia.org/wiki/Special:FilePath/Mer%C3%B6e_Pyramids_with_camels_(35119058595).jpg?width=640",
   "oman": "https://commons.wikimedia.org/wiki/Special:FilePath/Wadi_Darbat.jpg?width=640",
   "kuwait": "https://commons.wikimedia.org/wiki/Special:FilePath/Kuwait_Towers_at_night_(4283818686).jpg?width=640",
