@@ -32,6 +32,8 @@ jobs:
           node-version: '22'
           cache: 'npm'
       - run: npm ci
+      - name: Confirm Firebase Admin loads without ESM require interop
+        run: node --no-experimental-require-module -e "require('firebase-admin/auth')"
       - run: npm run lint
       - run: npm run test:gateway
       - run: npm run build
