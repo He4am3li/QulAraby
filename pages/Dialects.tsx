@@ -1,4 +1,7 @@
 import React from 'react';
+import { PREVIEWS_A } from '../data/dialectImagePreviewsA';
+import { PREVIEWS_B } from '../data/dialectImagePreviewsB';
+const DIALECT_IMAGE_PREVIEWS = { ...PREVIEWS_A, ...PREVIEWS_B };
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthProvider';
 import { 
@@ -2380,8 +2383,11 @@ export const Dialects: React.FC = () => {
                   className="group bg-white rounded-[1.8rem] overflow-hidden shadow-md hover:shadow-2xl transition-shadow duration-300 border border-slate-100 flex flex-col h-[320px] sm:h-[340px] relative text-right focus-visible:outline focus-visible:outline-4 focus-visible:outline-amber-400"
                 >
                   {/* The destination photo is the visual focus, about 79% of the card. */}
-                  <div className="relative flex-1 min-h-0 overflow-hidden bg-slate-200">
+                  <div className="relative flex-1 min-h-0 overflow-hidden bg-slate-200"
+                      style={{ backgroundImage: 'url("' + DIALECT_IMAGE_PREVIEWS[country.id] + '")',
+                        backgroundSize: 'cover', backgroundPosition: COUNTRY_PHOTO_FOCUS[country.id] || 'center 50%' }}>
                     <SafeImage
+                      noBg
                       src={country.image}
                       alt={country.nameAr}
                       loading={index < 6 ? 'eager' : 'lazy'}
@@ -2458,7 +2464,10 @@ export const Dialects: React.FC = () => {
                     country={selectedCountry}
                     lang={lang}
                     onPronounce={text => { void playAudio(text); }}
-                    heroImage={<SafeImage src={selectedCountry.image} className="h-full w-full object-cover" alt={selectedCountry.nameAr} loading="eager" decoding="async"/>}
+                    heroImage={<div className="h-full w-full" style={{
+                    backgroundImage: 'url("' + DIALECT_IMAGE_PREVIEWS[selectedCountry.id] + '")',
+                    backgroundSize: 'cover', backgroundPosition: COUNTRY_PHOTO_FOCUS[selectedCountry.id] || 'center'
+                  }}><SafeImage noBg src={selectedCountry.image} className="h-full w-full object-cover" alt={selectedCountry.nameAr} loading="eager" decoding="async"/></div>}
                   />
                 </div>
 
