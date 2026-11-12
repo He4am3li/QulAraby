@@ -3,6 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import { isApprovedGatewayProfile } from './_gatewayApproval.mjs';
 
 // These identifiers are public Firebase configuration, never credentials.
 const FIREBASE_PROJECT_ID = 'gen-lang-client-0558881211';
@@ -81,7 +82,7 @@ export async function requireFirebaseUser(req: GatewayRequest, res: GatewayRespo
   try {
     const snapshot = await services.db.doc('users/' + decoded.uid).get();
     const profile = snapshot.data();
-    if (!snapshot.exists || profile?.approved !== true || profile.email !== decoded.email) {
+    if (!snapshot.exists || !isApprovedGatewayProfile(profile, decoded.email)) {
       res.statusCode = 403;
       res.end(JSON.stringify({ error: 'Account approval required' }));
       return null;
