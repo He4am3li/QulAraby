@@ -28,7 +28,7 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
       className="h-full min-h-0 w-full overflow-hidden rounded-[22px] border border-slate-200/75 bg-white shadow-[0_15px_50px_rgba(15,23,42,0.045)]"
     >
       <div className="grid h-full min-h-0 gap-[clamp(5px,0.75vh,9px)] p-[clamp(7px,1vh,10px)]"
-        style={{ gridTemplateRows: 'minmax(66px,1fr) minmax(98px,1.12fr) minmax(181px,2.27fr) minmax(90px,1.28fr)' }}
+        style={{ gridTemplateRows: 'minmax(66px,.86fr) minmax(123px,1.69fr) minmax(181px,2.26fr) minmax(90px,1.18fr)' }}
       >
         {/* Matching rounded photo header and photographic fact footer. */}
         <section className="relative min-h-0 overflow-hidden rounded-t-[17px] rounded-b-[9px] bg-slate-200">
@@ -48,7 +48,7 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
             <h3 className="font-black text-[13px] text-slate-800 arabic-font">{ar ? 'الثقافة' : 'Culture'}</h3>
             <span className="h-px flex-1 bg-gradient-to-l from-amber-400/50 to-transparent" />
           </div>
-          <div className="grid grid-cols-3 grid-rows-2 flex-1 min-h-0 gap-[5px]">
+          <div className="grid grid-cols-3 grid-rows-2 flex-1 min-h-0 gap-[clamp(4px,.6vh,7px)]">
             {country.culture.items.slice(0, 6).map((item, i) => (
               <button
                 key={i}
@@ -57,11 +57,11 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
                 title={ar ? item.descAr : item.descEn}
                 aria-label={ar ? item.nameAr + ': ' + item.descAr : item.nameEn + ': ' + item.descEn}
                 aria-pressed={chosenCulture === i}
-                className={'group min-w-0 min-h-0 flex flex-col items-center justify-center gap-0.5 rounded-[9px] border px-1 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 ' +
-                  (chosenCulture === i ? 'border-emerald-400 bg-emerald-50' : 'border-slate-100 bg-[#f5f7f7] hover:border-emerald-200 hover:bg-emerald-50/60')}
+                className={'group min-w-0 min-h-0 flex flex-col items-center justify-center gap-[1px] rounded-[13px] border px-1 py-[2px] overflow-hidden transition-[background-color,border-color,transform] hover:-translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 ' +
+                  (chosenCulture === i ? 'border-[#7ba99b] bg-[#e9f1eb]' : (i % 3 === 0 ? 'border-transparent bg-[#edf4ef]' : 'border-transparent bg-[#f5f1e8]') + ' hover:border-[#a7c5b7]')}
               >
                 <DialectCulturePictogram nameAr={item.nameAr} nameEn={item.nameEn} />
-                <span className="w-full truncate text-center text-[clamp(10px,1.15vh,12px)] font-bold text-slate-800 arabic-font">{ar ? item.nameAr : item.nameEn}</span>
+                <span className="w-full truncate text-center text-[clamp(10px,1.15vh,12px)] font-extrabold leading-tight text-[#24332e] arabic-font">{ar ? item.nameAr : item.nameEn}</span>
               </button>
             ))}
           </div>
