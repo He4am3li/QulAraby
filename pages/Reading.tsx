@@ -1568,7 +1568,11 @@ export const Reading: React.FC = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   whileHover={{ scale: 1.02 }}
                   dir="rtl"
-                  className={`relative w-[380px] h-[520px] rounded-l-3xl rounded-r-lg shadow-[0_40px_80px_rgba(0,0,0,0.25)] border-r-[15px] border-[#2c1810] flex flex-col items-center justify-between p-10 text-center cursor-pointer group preserve-3d origin-right transition-all duration-1000 ease-in-out overflow-hidden ${isOpening ? 'rotate-y-[-110deg] opacity-0 scale-95 -translate-x-[360px]' : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={lang === 'ar' ? 'افتح كتاب القراءة' : 'Open reading book'}
+                  onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handleOpenBook(); } }}
+                  className={`relative w-[min(84vw,380px)] h-[min(62dvh,520px)] min-h-[340px] md:w-[380px] md:h-[520px] rounded-l-3xl rounded-r-lg shadow-[0_40px_80px_rgba(0,0,0,0.25)] border-r-[15px] border-[#2c1810] flex flex-col items-center justify-between p-10 text-center cursor-pointer group preserve-3d origin-right transition-all duration-1000 ease-in-out overflow-hidden ${isOpening ? 'rotate-y-[-110deg] opacity-0 scale-95 -translate-x-[360px]' : ''}`}
                   style={{ 
                     background: 'radial-gradient(circle at center, #fdfbf7 0%, #f8f5f0 60%, #e2dcd0 100%)'
                   }}
@@ -1578,11 +1582,11 @@ export const Reading: React.FC = () => {
                   <div className="absolute inset-0 opacity-40 pointer-events-none mix-blend-multiply bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]" />
                   
                   {/* Falling Arabic Letters Background - Scattered "Rain" Pattern */}
-                  <div className="absolute inset-0 opacity-[0.12] pointer-events-none overflow-hidden z-0">
+                  <div className="absolute inset-0 opacity-[0.08] md:opacity-[0.12] pointer-events-none overflow-hidden z-0 motion-reduce:hidden">
                     {[...Array(35)].map((_, i) => (
                       <motion.span
                         key={i}
-                        className="absolute text-4xl font-black text-[#8b5e3c] arabic-font select-none blur-[0.5px]"
+                        className={`absolute text-4xl font-black text-[#8b5e3c] arabic-font select-none blur-[0.5px] ${i >= 10 ? 'hidden md:block' : ''}`}
                         style={{ left: `${Math.random() * 100}%` }}
                         initial={{ 
                           y: -50, 
@@ -1609,7 +1613,7 @@ export const Reading: React.FC = () => {
                   </div>
 
                   {/* Header Area - Shrink and lift higher for better title centering */}
-                  <div className="relative z-20 w-full pt-2 flex flex-col items-center">
+                  <div className="relative z-20 w-full pt-2 flex flex-col items-center scale-[.85] sm:scale-100 origin-top">
                     {/* Compact Balanced Circular Logo */}
                     <div className="w-16 h-16 rounded-full border-2 border-[#8b5e3c]/20 bg-[#fdfbf7] shadow-xl flex items-center justify-center relative mb-1 p-2">
                        <img src="/Logo.png" alt="شعار منصة قُل" className="w-full h-full object-contain" />
