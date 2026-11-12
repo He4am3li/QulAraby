@@ -33,6 +33,11 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
         {/* Matching rounded photo header and photographic fact footer. */}
         <section className="relative min-h-0 overflow-hidden rounded-t-[17px] rounded-b-[9px] bg-slate-200">
           <div className="absolute inset-0">{heroImage}</div>
+          {country.nameEn === 'Lebanon' && (
+            <span className="absolute top-2 left-2 z-10 rounded-md bg-slate-900/55 px-1.5 py-0.5 text-[10px] font-medium text-white" title={ar ? 'رسم مولد بالذكاء الاصطناعي وليس صورة فوتوغرافية' : 'AI-generated artistic rendering, not a photograph'}>
+              {ar ? 'صورة مولّدة' : 'AI illustration'}
+            </span>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/10 to-slate-950/30 pointer-events-none"/>
           <div className="absolute inset-x-3 bottom-2 flex items-end justify-between gap-3 text-slate-900">
             <div className="min-w-0">

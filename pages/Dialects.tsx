@@ -331,7 +331,7 @@ export const COUNTRY_DATA = [
     nameAr: 'لبنان',
     nameEn: 'Lebanon',
     flag: '🇱🇧',
-    image: "/images/dialects/local/lebanon.jpg",
+    image: "/images/dialects/lebanon-raouche-subtle.avif",
     dialect: 'Levantine (لبناني)',
     characterMale: { 
       nameAr: 'جاد', 
@@ -2396,6 +2396,8 @@ export const Dialects: React.FC = () => {
                       style={{ objectPosition: COUNTRY_PHOTO_FOCUS[country.id] || 'center 50%' }}
                       className={country.id === 'egypt'
                         ? "w-full h-full object-cover brightness-[1.07] saturate-[1.12] contrast-[1.04] group-hover:scale-[1.035] transition-transform duration-700 ease-out"
+                        : country.id === 'lebanon'
+                        ? "w-full h-full object-cover group-hover:scale-[1.025] transition-transform duration-700 ease-out"
                         : "w-full h-full object-cover brightness-[1.035] saturate-[1.09] contrast-[1.025] group-hover:scale-[1.045] transition-transform duration-700 ease-out"}
                     />
                     {country.id === 'egypt' && (
@@ -2408,6 +2410,11 @@ export const Dialects: React.FC = () => {
                       />
                     )}
                     <div className="absolute inset-x-0 bottom-0 h-[22%] bg-gradient-to-t from-slate-950/30 to-transparent pointer-events-none" />
+                    {country.id === 'lebanon' && (
+                      <span className="absolute bottom-3 left-3 z-10 rounded-full border border-white/45 bg-slate-900/50 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm" aria-label={lang === 'ar' ? 'هذه صورة مولدة بالذكاء الاصطناعي وليست صورة فوتوغرافية' : 'This is AI-generated artwork, not a documentary photograph'}>
+                        {lang === 'ar' ? 'صورة مولّدة' : 'AI illustration'}
+                      </span>
+                    )}
                     <div className="absolute top-3 right-3 bg-white/85 backdrop-blur-md px-2 py-1 rounded-xl border border-white/70 text-2xl shadow-sm" aria-hidden="true">
                       {country.flag}
                     </div>
