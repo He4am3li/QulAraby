@@ -16,13 +16,6 @@ interface Props {
   heroImage: React.ReactNode;
 }
 
-/** Verified image provenance, so a real tourism photo is never presented as an anonymous AI image. */
-const PHOTOGRAPH_SOURCES: Record<string,{title:string;url:string}> = {
-  Syria:{title:'Dr. Ondřej Havelka, CC BY-SA 4.0',url:'https://commons.wikimedia.org/wiki/File:The_Umayyad_Mosque_in_Damascus_in_the_early_evening.jpg'},
-  Palestine:{title:'Zxc0505, CC BY-SA 3.0',url:'https://commons.wikimedia.org/wiki/File:Dome_of_the_Rock_in_sunset.JPG'},
-  Lebanon:{title:'Vyacheslav Argenberg, CC BY 4.0',url:'https://commons.wikimedia.org/wiki/File:Pigeon_Rocks_at_sunset,_Beirut,_Lebanon.jpg'},
-};
-
 /** Keeps the destination, culture, eight reference words and fact visible at once. */
 export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronounce, heroImage }) => {
   const ar = lang === 'ar';
@@ -40,15 +33,6 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
         {/* Matching rounded photo header and photographic fact footer. */}
         <section className="relative min-h-0 overflow-hidden rounded-t-[17px] rounded-b-[9px] bg-slate-200">
           <div className="absolute inset-0">{heroImage}</div>
-          {PHOTOGRAPH_SOURCES[country.nameEn] && (
-            <a href={PHOTOGRAPH_SOURCES[country.nameEn].url} target="_blank" rel="noopener noreferrer"
-              title={PHOTOGRAPH_SOURCES[country.nameEn].title}
-              aria-label={(ar ? 'مصدر الصورة الفوتوغرافية الحقيقية: ' : 'Original real photograph by ') + PHOTOGRAPH_SOURCES[country.nameEn].title}
-              className="absolute top-2 left-2 z-20 rounded-md bg-slate-950/40 px-1.5 py-0.5 text-[9px] font-semibold text-white/90 backdrop-blur-sm hover:bg-slate-950/70 focus-visible:outline-2 focus-visible:outline-white"
-            >
-              {ar ? 'مصدر الصورة' : 'Photo source'}
-            </a>
-          )}
           <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/10 to-slate-950/30 pointer-events-none"/>
           <div className="absolute inset-x-3 bottom-2 flex items-end justify-between gap-3 text-slate-900">
             <div className="min-w-0">
