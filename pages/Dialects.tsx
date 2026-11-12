@@ -38,7 +38,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الإمارات',
     nameEn: 'UAE',
     flag: '🇦🇪',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Burj_Khalifa_Sunset.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Burj_Khalifa_Sunset.jpg?width=960",
     dialect: 'Gulf (خليجي)',
     characterMale: { 
       nameAr: 'زايد', 
@@ -96,7 +96,7 @@ export const COUNTRY_DATA = [
     nameAr: 'مصر',
     nameEn: 'Egypt',
     flag: '🇪🇬',
-    image: "https://images.pexels.com/photos/15127306/pexels-photo-15127306/free-photo-of-pyramids-and-sphinx-statue-in-desert.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    image: "https://images.pexels.com/photos/15127306/pexels-photo-15127306/free-photo-of-pyramids-and-sphinx-statue-in-desert.jpeg?auto=compress&cs=tinysrgb&w=960",
     dialect: 'Egyptian (مصري)',
     characterMale: { 
       nameAr: 'أحمد', 
@@ -212,7 +212,7 @@ export const COUNTRY_DATA = [
     nameAr: 'المغرب',
     nameEn: 'Morocco',
     flag: '🇲🇦',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Whispers_of_Gold_-_Hassan_II_Mosque_at_Dusk.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Whispers_of_Gold_-_Hassan_II_Mosque_at_Dusk.jpg?width=960",
     dialect: 'Moroccan (مغربي)',
     characterMale: { 
       nameAr: 'ياسين', 
@@ -270,7 +270,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الأردن',
     nameEn: 'Jordan',
     flag: '🇯🇴',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Petra_treasury.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Petra_treasury.jpg?width=960',
     dialect: 'Jordanian (أردني)',
     characterMale: { 
       nameAr: 'نشمي', 
@@ -328,7 +328,7 @@ export const COUNTRY_DATA = [
     nameAr: 'لبنان',
     nameEn: 'Lebanon',
     flag: '🇱🇧',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Pigeon_Rocks_of_Beirut%2C_Rock_of_Raouche%2C_Beirut%2C_Lebanon.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Pigeon_Rocks_of_Beirut%2C_Rock_of_Raouche%2C_Beirut%2C_Lebanon.jpg?width=960",
     dialect: 'Levantine (لبناني)',
     characterMale: { 
       nameAr: 'جاد', 
@@ -386,7 +386,7 @@ export const COUNTRY_DATA = [
     nameAr: 'فلسطين',
     nameEn: 'Palestine',
     flag: '🇵🇸',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Dome_of_the_Rock_in_sunset.JPG?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Dome_of_the_Rock_in_sunset.JPG?width=960',
     dialect: 'Palestinian (فلسطيني)',
     characterMale: { 
       nameAr: 'محمود', 
@@ -444,7 +444,7 @@ export const COUNTRY_DATA = [
     nameAr: 'العراق',
     nameEn: 'Iraq',
     flag: '🇮🇶',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/%D9%85%D8%A3%D8%B0%D9%86%D8%A9_%D8%B3%D8%A7%D9%85%D8%B1%D8%A7%D8%A1_(1).jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/%D9%85%D8%A3%D8%B0%D9%86%D8%A9_%D8%B3%D8%A7%D9%85%D8%B1%D8%A7%D8%A1_(1).jpg?width=960',
     dialect: 'Iraqi (عراقي)',
     characterMale: { 
       nameAr: 'سنان', 
@@ -502,7 +502,7 @@ export const COUNTRY_DATA = [
     nameAr: 'تونس',
     nameEn: 'Tunisia',
     flag: '🇹🇳',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Sidi_Bousaid_blue_window.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Sidi_Bousaid_blue_window.jpg?width=960",
     dialect: 'Tunisian (تونسي)',
     characterMale: { 
       nameAr: 'سامي', 
@@ -560,7 +560,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الجزائر',
     nameEn: 'Algeria',
     flag: '🇩🇿',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Makam_chahid.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Makam_chahid.jpg?width=960",
     dialect: 'Algerian (جزائري)',
     characterMale: { 
       nameAr: 'بلقاسم',
@@ -618,7 +618,7 @@ export const COUNTRY_DATA = [
     nameAr: 'ليبيا',
     nameEn: 'Libya',
     flag: '🇱🇾',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/The_Theatre_of_Leptis_Magna.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/The_Theatre_of_Leptis_Magna.jpg?width=960",
     dialect: 'Libyan (ليبي)',
     characterMale: { 
       nameAr: 'عمر', 
@@ -676,7 +676,7 @@ export const COUNTRY_DATA = [
     nameAr: 'سوريا',
     nameEn: 'Syria',
     flag: '🇸🇾',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/The_Umayyad_Mosque%2C_Courtyard%2C_Damascus%2C_Syria.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/The_Umayyad_Mosque%2C_Courtyard%2C_Damascus%2C_Syria.jpg?width=960",
     dialect: 'Levantine (شامي)',
     characterMale: { 
       nameAr: 'باسل', 
@@ -734,7 +734,7 @@ export const COUNTRY_DATA = [
     nameAr: 'السودان',
     nameEn: 'Sudan',
     flag: '🇸🇩',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Mer%C3%B6e_Pyramids_with_camels_(35119058595).jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Mer%C3%B6e_Pyramids_with_camels_(35119058595).jpg?width=960',
     dialect: 'Sudanese (سوداني)',
     characterMale: { 
       nameAr: 'مازن', 
@@ -792,7 +792,7 @@ export const COUNTRY_DATA = [
     nameAr: 'عمان',
     nameEn: 'Oman',
     flag: '🇴🇲',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Wadi_Darbat.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Wadi_Darbat.jpg?width=960",
     dialect: 'Omani (عماني)',
     characterMale: { 
       nameAr: 'هيثم', 
@@ -850,7 +850,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الكويت',
     nameEn: 'Kuwait',
     flag: '🇰🇼',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Kuwait_Towers_at_night_(4283818686).jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Kuwait_Towers_at_night_(4283818686).jpg?width=960',
     dialect: 'Gulf (كويتي)',
     characterMale: { 
       nameAr: 'فهد', 
@@ -908,7 +908,7 @@ export const COUNTRY_DATA = [
     nameAr: 'قطر',
     nameEn: 'Qatar',
     flag: '🇶🇦',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Doha_-_towards_the_islamic_art_museum.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Doha_-_towards_the_islamic_art_museum.jpg?width=960',
     dialect: 'Gulf (قطري)',
     characterMale: { 
       nameAr: 'جاسم', 
@@ -966,7 +966,7 @@ export const COUNTRY_DATA = [
     nameAr: 'البحرين',
     nameEn: 'Bahrain',
     flag: '🇧🇭',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Manama_Bahrain_Bay_06.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Manama_Bahrain_Bay_06.jpg?width=960',
     dialect: 'Gulf (بحريني)',
     characterMale: { 
       nameAr: 'حمد', 
@@ -1024,7 +1024,7 @@ export const COUNTRY_DATA = [
     nameAr: 'اليمن',
     nameEn: 'Yemen',
     flag: '🇾🇪',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Old_City_Sana%27a_skyline.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Old_City_Sana%27a_skyline.jpg?width=960",
     dialect: 'Yemeni (يمني)',
     characterMale: { 
       nameAr: 'قحطان', 
@@ -1082,7 +1082,7 @@ export const COUNTRY_DATA = [
     nameAr: 'موريتانيا',
     nameEn: 'Mauritania',
     flag: '🇲🇷',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/%D9%85%D8%B3%D8%AC%D8%AF_%D8%B4%D9%86%D9%82%D9%8A%D8%B7_%D8%A7%D9%84%D8%AA%D8%A7%D8%B1%D9%8A%D8%AE%D9%8A.jpg?width=1600',
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/%D9%85%D8%B3%D8%AC%D8%AF_%D8%B4%D9%86%D9%82%D9%8A%D8%B7_%D8%A7%D9%84%D8%AA%D8%A7%D8%B1%D9%8A%D8%AE%D9%8A.jpg?width=960',
     dialect: 'Hassaniya (حساني)',
     characterMale: { 
       nameAr: 'المختار', 
@@ -1140,7 +1140,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الصومال',
     nameEn: 'Somalia',
     flag: '🇸🇴',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Lido_beach_from_the_sea_in_Mogadishu.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Lido_beach_from_the_sea_in_Mogadishu.jpg?width=960",
     dialect: 'Somali Arabic (صومالي)',
     characterMale: { 
       nameAr: 'عبدي', 
@@ -1198,7 +1198,7 @@ export const COUNTRY_DATA = [
     nameAr: 'جيبوتي',
     nameEn: 'Djibouti',
     flag: '🇩🇯',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Overlook_to_Lake_Asal_Crater.JPG?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Overlook_to_Lake_Asal_Crater.JPG?width=960",
     dialect: 'Djiboutian (جيبوتي)',
     characterMale: { 
       nameAr: 'برخاد', 
@@ -1256,7 +1256,7 @@ export const COUNTRY_DATA = [
     nameAr: 'جزر القمر',
     nameEn: 'Comoros',
     flag: '🇰🇲',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Moroni_sunset_palm_trees.jpg?width=1600",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Moroni_sunset_palm_trees.jpg?width=960",
     dialect: 'Comorian (قمري)',
     characterMale: { 
       nameAr: 'سعيد', 
@@ -1311,6 +1311,61 @@ export const COUNTRY_DATA = [
   }
 ];
 
+
+// Keep decoded first-row photographs ready for immediate navigation and return visits.
+const dialectWarmups = new Map<string, Promise<void>>();
+const dialectFirstRow = new Map<string, HTMLImageElement>();
+const warmDialectImage = (url: string, keepDecoded = false): Promise<void> => {
+  if (typeof Image === 'undefined') return Promise.resolve();
+  const existing = dialectWarmups.get(url);
+  if (existing) return existing;
+  const image = new Image();
+  image.decoding = 'async';
+  const promise = new Promise<void>(resolve => {
+    image.onload = () => {
+      if (keepDecoded) dialectFirstRow.set(url, image);
+      if (typeof image.decode === 'function') void image.decode().catch(() => {}).then(() => resolve());
+      else resolve();
+    };
+    image.onerror = () => resolve();
+    image.src = url;
+  });
+  dialectWarmups.set(url, promise);
+  return promise;
+};
+
+/** Use at idle on Home and immediately on /dialects. Never start all 22 images at once. */
+export const warmDialectGallery = (limit = 8): void => {
+  if (typeof window === 'undefined') return;
+  const connection = (navigator as Navigator & {
+    connection?: { saveData?: boolean; effectiveType?: string }
+  }).connection;
+  const count = connection?.saveData || /^(slow-2g|2g)$/.test(connection?.effectiveType || '')
+    ? Math.min(limit, 2) : Math.min(limit, 8);
+  const urls = COUNTRY_DATA.slice(0, count).map(country => country.image);
+  // Only the first four network images compete with the initial page assets.
+  void Promise.all(urls.slice(0, 4).map(url => warmDialectImage(url, true)))
+    .then(() => Promise.all(urls.slice(4).map(url => warmDialectImage(url, true))));
+};
+
+const LAYERED_DIALECT_PORTRAITS: Record<string, readonly string[]> = {
+  uae: ['zayed-stance-v1.webp', 'maitha-stance-v1.webp'],
+  egypt: ['ahmed-stance-v2.webp', 'fatima-stance-v2.webp'],
+  saudi: ['salman-stance-v2.webp', 'sara-stance-v2.webp'],
+  morocco: ['yassine-stance-v1.webp', 'kenza-stance-v1.webp'],
+  lebanon: ['jad-stance-v1.webp', 'layla-stance-v1.webp'],
+  iraq: ['sinan-stance-v1.webp', 'zeina-stance-v1.webp'],
+  tunisia: ['sami-stance-v1.webp', 'ons-stance-v1.webp'],
+  algeria: ['amin-stance-v1.webp', 'meriem-stance-v1.webp'],
+  libya: ['omar-stance-v1.webp', 'fatimaLibya-stance-v1.webp']
+};
+const warmCountryPortraits = (countryId: string): void => {
+  const portraits = LAYERED_DIALECT_PORTRAITS[countryId];
+  const urls = portraits
+    ? portraits.map(file => '/avatars/' + file)
+    : ['male', 'female'].map(gender => '/avatars/original-rigs/' + countryId + '/' + gender + '/cutout.webp');
+  urls.forEach(url => { void warmDialectImage(url); });
+};
 
 // Keep landmark subjects visible when the country cards crop images on phones and tablets.
 const COUNTRY_PHOTO_FOCUS: Record<string, string> = {
@@ -1405,6 +1460,22 @@ export const Dialects: React.FC = () => {
   };
 
   
+  React.useEffect(() => { warmDialectGallery(); }, []);
+  const portraitWarmupTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  React.useEffect(() => () => {
+    if (portraitWarmupTimer.current !== null) clearTimeout(portraitWarmupTimer.current);
+  }, []);
+  const cancelPortraitWarmup = () => {
+    if (portraitWarmupTimer.current !== null) clearTimeout(portraitWarmupTimer.current);
+    portraitWarmupTimer.current = null;
+  };
+  const schedulePortraitWarmup = (countryId: string) => {
+    cancelPortraitWarmup();
+    portraitWarmupTimer.current = setTimeout(() => {
+      warmCountryPortraits(countryId);
+      portraitWarmupTimer.current = null;
+    }, 140);
+  };
   const [selectedCountry, setSelectedCountry] = React.useState<any>(null);
   const selectedCountryRef = React.useRef<any>(null);
   selectedCountryRef.current = selectedCountry;
@@ -2244,7 +2315,7 @@ export const Dialects: React.FC = () => {
   };
 
   return (
-    <div className={`w-full flex flex-col h-full bg-white shadow-[0_15px_50px_rgba(0,0,0,0.08)] rounded-[1.5rem] overflow-hidden border border-slate-100 animate-in fade-in duration-700 ${lang === 'ar' ? 'text-right' : 'text-left'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={`w-full flex flex-col h-full bg-white shadow-[0_15px_50px_rgba(0,0,0,0.08)] rounded-[1.5rem] overflow-hidden border border-slate-100 ${lang === 'ar' ? 'text-right' : 'text-left'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       
       {/* Global Brand Header */}
       <PageHeader 
@@ -2289,18 +2360,21 @@ export const Dialects: React.FC = () => {
           {!selectedCountry ? (
             <motion.div 
               key="country-grid"
-              initial={{ opacity: 0, y: 20 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             >
-              {COUNTRY_DATA.map(country => (
+              {COUNTRY_DATA.map((country, index) => (
                 <motion.button
                   key={country.id}
                   type="button"
                   whileHover={{ y: -4 }}
                   whileTap={{ scale: 0.985 }}
-                  onClick={() => setSelectedCountry(country)}
+                  onPointerEnter={event => { if (event.pointerType !== 'touch') schedulePortraitWarmup(country.id); }}
+                  onPointerLeave={cancelPortraitWarmup}
+                  onFocus={() => warmCountryPortraits(country.id)}
+                  onClick={() => { cancelPortraitWarmup(); warmCountryPortraits(country.id); setSelectedCountry(country); }}
                   aria-label={lang === 'ar' ? `استكشف ${country.nameAr}` : `Explore ${country.nameEn}`}
                   className="group bg-white rounded-[1.8rem] overflow-hidden shadow-md hover:shadow-2xl transition-shadow duration-300 border border-slate-100 flex flex-col h-[320px] sm:h-[340px] relative text-right focus-visible:outline focus-visible:outline-4 focus-visible:outline-amber-400"
                 >
@@ -2309,7 +2383,8 @@ export const Dialects: React.FC = () => {
                     <SafeImage
                       src={country.image}
                       alt={country.nameAr}
-                      loading="lazy"
+                      loading={index < 6 ? 'eager' : 'lazy'}
+                       fetchPriority={index < 4 ? 'high' : 'auto'}
                       decoding="async"
                       style={{ objectPosition: COUNTRY_PHOTO_FOCUS[country.id] || 'center 50%' }}
                       className={country.id === 'egypt'
@@ -2382,7 +2457,7 @@ export const Dialects: React.FC = () => {
                     country={selectedCountry}
                     lang={lang}
                     onPronounce={text => { void playAudio(text); }}
-                    heroImage={<SafeImage src={selectedCountry.image} className="h-full w-full object-cover" alt={selectedCountry.nameAr}/>}
+                    heroImage={<SafeImage src={selectedCountry.image} className="h-full w-full object-cover" alt={selectedCountry.nameAr} loading="eager" decoding="async"/>}
                   />
                 </div>
 
