@@ -679,7 +679,7 @@ export const COUNTRY_DATA = [
     nameAr: 'سوريا',
     nameEn: 'Syria',
     flag: '🇸🇾',
-    image: "/images/dialects/local/syria.jpg",
+    image: "/images/dialects/syria-umayyad-cinematic.avif",
     dialect: 'Levantine (شامي)',
     characterMale: { 
       nameAr: 'باسل', 
