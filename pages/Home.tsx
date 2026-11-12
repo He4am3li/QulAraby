@@ -14,6 +14,7 @@ import { Vocabulary, CertificateData } from '../types';
 import { useAuth } from '../components/AuthProvider';
 import { useSchoolAccess } from '../components/SchoolAccessProvider';
 import { ROUTE_MODULES } from '../config/schoolPlans';
+import { warmDialectGallery } from './Dialects';
 import { RoleActionPanel } from '../components/RoleActionPanel';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
@@ -145,6 +146,26 @@ export const Home: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState<'grammar' | 'letters'>('grammar');
   const [showAchievements, setShowAchievements] = React.useState(false);
   const [showTeacherCenter, setShowTeacherCenter] = React.useState(false);
+  // Warm visible dialect photographs while Home is idle, before students open
+  // the section. Defer it so Home paint and authentication stay first priority.
+  const canPreviewDialects = schoolAccess.canAccess(ROUTE_MODULES['/dialects']);
+  React.useEffect(() => {
+    if (!canPreviewDialects) return;
+    let canceled = false;
+    const run = () => { if (!canceled) warmDialectGallery(); };
+    const timeout = window.setTimeout(() => {
+      if ('requestIdleCallback' in window) {
+        idle = window.requestIdleCallback(run, { timeout: 1400 });
+      } else run();
+    }, 450);
+    let idle: number | null = null;
+    return () => {
+      canceled = true;
+      clearTimeout(timeout);
+      if (idle !== null && 'cancelIdleCallback' in window) window.cancelIdleCallback(idle);
+    };
+  }, [canPreviewDialects]);
+
 
   React.useEffect(() => {
     if (location.pathname === '/achievements') {
@@ -467,7 +488,7 @@ export const Home: React.FC = () => {
                 const moduleId = ROUTE_MODULES[m.id];
                 return !moduleId || schoolAccess.canAccess(moduleId);
               }).map((m) => (
-                <ModuleCard key={m.id} icon={m.icon} title={m.en} arTitle={m.ar} description="" color={m.color} onClick={() => navigate(m.id)} enterLabel={t.enter} lang={lang} />
+                <ModuleCard key={m.id} icon={m.icon} title={m.en} arTitle={m.ar} description="" color={m.color} onClick={() => { if (m.id === '/dialects') warmDialectGallery(); navigate(m.id); }} enterLabel={t.enter} lang={lang} />
               ))}
             </section>
           </>
