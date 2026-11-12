@@ -7,6 +7,7 @@ const proxy = read('api/gemini.ts');
 const auth = read('api/_geminiAuth.ts');
 const live = read('api/gemini-live-token.ts');
 const sources = ['pages/Dialects.tsx','pages/Speak.tsx','pages/Preparation.tsx','pages/Quizzes.tsx'].map(read);
+const missionAssessment = read('services/dialectMissionAssessment.ts');
 
 assert.ok(!vite.includes("'process.env.GEMINI_API_KEY': JSON.stringify(apiKey)"),
   'Never bundle a server credential as a client define');
@@ -17,6 +18,10 @@ assert.ok(vite.includes("import geminiHandler from './api/gemini'"),
 assert.ok(gemini.includes("apiKey: 'server-managed'"), 'Browser client must use a nonsecret placeholder');
 assert.ok(gemini.includes("headers.delete('x-goog-api-key')"), 'Strip placeholder key before sending');
 assert.ok(gemini.includes("currentUser.getIdToken()"), 'Browser should authenticate proxy calls');
+assert.ok(missionAssessment.includes("import { getAI } from './gemini'") &&
+  missionAssessment.includes('const ai = getAI();') &&
+  !missionAssessment.includes('process.env.GEMINI_API_KEY'),
+  'Dialect passport mission assessment must use the secured Gemini gateway');
 assert.ok(gemini.includes("privateGeminiFetch") && gemini.includes('getLiveAI'),
   'HTTP and live calls must have separate secure transports');
 assert.ok(proxy.includes('requireFirebaseUser(req, res)') && proxy.includes('checkGatewayQuota(uid, res)'),
