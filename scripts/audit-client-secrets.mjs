@@ -34,6 +34,9 @@ export function scanSecretSource(file, source) {
     CLIENT_ENV_REFERENCE.lastIndex = 0;
     if (SECRET_CLIENT_NAME.test(line)) errors.push({ file, line: n + 1, issue: 'Browser-exposed secret variable name' });
     if (client && CLIENT_ENV_REFERENCE.test(line)) errors.push({ file, line: n + 1, issue: 'Secret environment variable used in browser source' });
+    if (client && file !== 'services/gemini.ts' && /new\s+GoogleGenAI\s*\(/.test(line)) {
+      errors.push({ file, line: n + 1, issue: 'Direct browser AI SDK client bypasses the protected gateway' });
+    }
     if (file === 'vite.config.ts' &&
         /['"]process\.env\.(?:API_KEY|GEMINI_API_KEY|FIREBASE_SERVICE_ACCOUNT_JSON)['"]\s*:/.test(line)) {
       errors.push({ file, line: n + 1, issue: 'Server credential injected into Vite define' });
