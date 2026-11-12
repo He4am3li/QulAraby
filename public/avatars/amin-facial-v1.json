@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "algeria_male",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/amin-stance-v1.webp",
+  "sourceSha256": "23716728dcbf334993eaed30290a60637fde6af68e1712c4caa69a1196940dfc",
+  "pose": {
+    "bodyFacing": "left",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "right"
+  },
+  "registration": {
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.78,
+    "offset": [
+      343,
+      20
+    ],
+    "eyes": [
+      448,
+      139,
+      115,
+      38
+    ],
+    "brows": [
+      448,
+      120,
+      115,
+      28
+    ],
+    "mouth": [
+      466,
+      201,
+      82,
+      54
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 448,
+      "y": 139,
+      "w": 115,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/amin-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 448,
+      "y": 139,
+      "w": 115,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/amin-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 448,
+      "y": 139,
+      "w": 115,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/amin-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 448,
+      "y": 120,
+      "w": 115,
+      "h": 28,
+      "visible": true,
+      "url": "/avatars/amin-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 448,
+      "y": 120,
+      "w": 115,
+      "h": 28,
+      "visible": true,
+      "url": "/avatars/amin-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 466,
+      "y": 201,
+      "w": 82,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/amin-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 466,
+      "y": 201,
+      "w": 82,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/amin-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 466,
+      "y": 201,
+      "w": 82,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/amin-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 466,
+      "y": 201,
+      "w": 82,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/amin-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 466,
+      "y": 201,
+      "w": 82,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/amin-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 466,
+      "y": 201,
+      "w": 82,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/amin-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}

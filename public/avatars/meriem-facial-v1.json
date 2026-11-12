@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "algeria_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/meriem-stance-v1.webp",
+  "sourceSha256": "0881405a36eb2646b1393c101e7e5b8badf7370d25734e3c06eead7da831006f",
+  "pose": {
+    "bodyFacing": "right",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "left"
+  },
+  "registration": {
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.78,
+    "offset": [
+      363,
+      17
+    ],
+    "eyes": [
+      487,
+      137,
+      121,
+      40
+    ],
+    "brows": [
+      486,
+      117,
+      122,
+      30
+    ],
+    "mouth": [
+      504,
+      193,
+      82,
+      55
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 487,
+      "y": 137,
+      "w": 121,
+      "h": 40,
+      "visible": true,
+      "url": "/avatars/meriem-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 487,
+      "y": 137,
+      "w": 121,
+      "h": 40,
+      "visible": true,
+      "url": "/avatars/meriem-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 487,
+      "y": 137,
+      "w": 121,
+      "h": 40,
+      "visible": true,
+      "url": "/avatars/meriem-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 486,
+      "y": 117,
+      "w": 122,
+      "h": 30,
+      "visible": true,
+      "url": "/avatars/meriem-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 486,
+      "y": 117,
+      "w": 122,
+      "h": 30,
+      "visible": true,
+      "url": "/avatars/meriem-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 504,
+      "y": 193,
+      "w": 82,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/meriem-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 504,
+      "y": 193,
+      "w": 82,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/meriem-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 504,
+      "y": 193,
+      "w": 82,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/meriem-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 504,
+      "y": 193,
+      "w": 82,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/meriem-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 504,
+      "y": 193,
+      "w": 82,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/meriem-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 504,
+      "y": 193,
+      "w": 82,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/meriem-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}
