@@ -23,4 +23,10 @@ assert.ok(scan('services/gemini.ts', "apiKey: 'server-managed'").length === 0,
   'Nonsecret placeholders must remain valid');
 assert.ok(scan('pages/Reading.tsx', 'const publicKey = import.meta.env.VITE_FIREBASE_API_KEY').length === 0,
   'Firebase client keys are deliberately public configuration');
-console.log('Secret exposure policy unit checks passed (9 cases).');
+assert.ok(scan('services/dialectMissionAssessment.ts',
+  "const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })")
+  .includes('Direct browser AI SDK client bypasses the protected gateway'),
+  'Module-specific client initialization must be routed through the authenticated gateway');
+assert.deepEqual(scan('services/gemini.ts', "const ai = new GoogleGenAI({ apiKey: 'server-managed' })"), [],
+  'The reviewed API transport module may initialize the proxy SDK');
+console.log('Secret exposure policy unit checks passed (11 cases).');
