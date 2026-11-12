@@ -563,15 +563,15 @@ export const COUNTRY_DATA = [
     image: "https://commons.wikimedia.org/wiki/Special:FilePath/Makam_chahid.jpg?width=1600",
     dialect: 'Algerian (جزائري)',
     characterMale: { 
-      nameAr: 'أمين', 
-      nameEn: 'Amin', 
+      nameAr: 'بلقاسم',
+      nameEn: 'Belkacem',
       clothingAr: 'البرنوس الجزائري الأبيض.', 
       clothingEn: 'White Algerian Burnous.',
       image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Algeria%20wearing%20traditional%20white%20Burnous%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
     },
     characterFemale: { 
-      nameAr: 'مريم', 
-      nameEn: 'Meriem', 
+      nameAr: 'حليمة',
+      nameEn: 'Halima',
       clothingAr: 'الشدة التلمسانية التقليدية.', 
       clothingEn: 'Traditional Tlemcen Chedda.',
       image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Algeria%20wearing%20traditional%20Chedda%20Tlemcen%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
