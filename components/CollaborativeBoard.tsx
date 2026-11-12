@@ -75,7 +75,9 @@ export const CollaborativeBoard: React.FC<CollaborativeBoardProps> = ({ lang, bo
   const [showSlideshow, setShowSlideshow] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const isTeacher = profile?.role === 'teacher' || profile?.role === 'admin';
+  // Moderation is limited to this board's owner or platform administrators.
+  const isTeacher = profile?.role === 'admin' ||
+    (profile?.role === 'teacher' && board?.teacherId === user?.uid);
 
   useEffect(() => {
     if (!isAuthReady || !user) return;
