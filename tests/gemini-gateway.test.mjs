@@ -33,9 +33,9 @@ assert.ok(auth.includes('FIREBASE_SERVICE_ACCOUNT_JSON') &&
   auth.includes('getFirestore(existing, FIRESTORE_DATABASE_ID)') &&
   auth.includes('getFirestore(app, FIRESTORE_DATABASE_ID)'),
   'Authorization must use the configured private credential and correct Firestore database');
-assert.ok(auth.includes('profile?.approved !== true') &&
-  auth.includes('profile.email !== decoded.email'),
-  'Gateway must reject pending, revoked, and mismatched user profiles');
+assert.ok(auth.includes('isApprovedGatewayProfile(profile, decoded.email)') &&
+  auth.includes("import { isApprovedGatewayProfile } from './_gatewayApproval.mjs'"),
+  'Gateway must call the tested approval policy on every non-owner request');
 assert.ok(auth.includes("error: 'Account approval required'") &&
   auth.includes("error: 'Account authorization unavailable'"),
   'Gateway must fail closed when approval is missing or database access fails');
@@ -49,4 +49,24 @@ for (const source of sources) {
 }
 assert.ok(sources[0].includes('liveAI.live.connect({') &&
   sources[1].includes('await getLiveAI()'), 'Live conversations must use temporary authorization');
+
+const { isApprovedGatewayProfile } = await import('../api/_gatewayApproval.mjs');
+const good = { approved: true, email: 'learner@example.com' };
+assert.equal(isApprovedGatewayProfile(good, 'learner@example.com'), true,
+  'Approved account with matching token email may use Gemini');
+assert.equal(isApprovedGatewayProfile({ ...good, approved: false }, good.email), false,
+  'Pending or revoked account must be rejected');
+assert.equal(isApprovedGatewayProfile({ email: good.email }, good.email), false,
+  'Legacy account without an approval flag must be rejected');
+assert.equal(isApprovedGatewayProfile({ ...good, email: 'someone-else@example.com' }, good.email), false,
+  'Identity spoofing by a mismatched profile email must be rejected');
+assert.equal(isApprovedGatewayProfile(null, good.email), false,
+  'Missing account profile must be rejected');
+assert.equal(isApprovedGatewayProfile(undefined, good.email), false,
+  'Unresolved account profile must be rejected');
+assert.equal(isApprovedGatewayProfile({ ...good, approved: 'true' }, good.email), false,
+  'Truthy nonboolean approval flag must be rejected');
+assert.equal(isApprovedGatewayProfile(good, undefined), false,
+  'Unverified or missing token email must be rejected');
+
 console.log('Gemini security guards OK: server-side key, signed Firebase auth, limited endpoints and ephemeral Live tokens.');
