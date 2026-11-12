@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "libya_male",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/omar-stance-v1.webp",
+  "sourceSha256": "3c91347be9769d50e7d04fc96a91c505245f0f5f94098a2f6dfcd06c3fd1cfb7",
+  "pose": {
+    "bodyFacing": "left",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "right"
+  },
+  "registration": {
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.79,
+    "offset": [
+      343,
+      14
+    ],
+    "eyes": [
+      451,
+      132,
+      116,
+      39
+    ],
+    "brows": [
+      451,
+      114,
+      116,
+      28
+    ],
+    "mouth": [
+      471,
+      194,
+      82,
+      54
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 451,
+      "y": 132,
+      "w": 116,
+      "h": 39,
+      "visible": true,
+      "url": "/avatars/omar-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 451,
+      "y": 132,
+      "w": 116,
+      "h": 39,
+      "visible": true,
+      "url": "/avatars/omar-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 451,
+      "y": 132,
+      "w": 116,
+      "h": 39,
+      "visible": true,
+      "url": "/avatars/omar-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 451,
+      "y": 114,
+      "w": 116,
+      "h": 28,
+      "visible": true,
+      "url": "/avatars/omar-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 451,
+      "y": 114,
+      "w": 116,
+      "h": 28,
+      "visible": true,
+      "url": "/avatars/omar-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 471,
+      "y": 194,
+      "w": 82,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/omar-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 471,
+      "y": 194,
+      "w": 82,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/omar-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 471,
+      "y": 194,
+      "w": 82,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/omar-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 471,
+      "y": 194,
+      "w": 82,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/omar-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 471,
+      "y": 194,
+      "w": 82,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/omar-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 471,
+      "y": 194,
+      "w": 82,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/omar-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}

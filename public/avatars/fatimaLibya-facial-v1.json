@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "libya_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/fatimaLibya-stance-v1.webp",
+  "sourceSha256": "52d786e28d9d952568168cc960cbd5812a4a071a94dfd5dc52e0c7c5c97afce3",
+  "pose": {
+    "bodyFacing": "right",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "left"
+  },
+  "registration": {
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.75,
+    "offset": [
+      356,
+      39
+    ],
+    "eyes": [
+      461,
+      135,
+      116,
+      39
+    ],
+    "brows": [
+      461,
+      119,
+      116,
+      28
+    ],
+    "mouth": [
+      480,
+      189,
+      80,
+      54
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 461,
+      "y": 135,
+      "w": 116,
+      "h": 39,
+      "visible": true,
+      "url": "/avatars/fatimaLibya-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 461,
+      "y": 135,
+      "w": 116,
+      "h": 39,
+      "visible": true,
+      "url": "/avatars/fatimaLibya-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 461,
+      "y": 135,
+      "w": 116,
+      "h": 39,
+      "visible": true,
+      "url": "/avatars/fatimaLibya-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 461,
+      "y": 119,
+      "w": 116,
+      "h": 28,
+      "visible": true,
+      "url": "/avatars/fatimaLibya-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 461,
+      "y": 119,
+      "w": 116,
+      "h": 28,
+      "visible": true,
+      "url": "/avatars/fatimaLibya-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 480,
+      "y": 189,
+      "w": 80,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/fatimaLibya-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 480,
+      "y": 189,
+      "w": 80,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/fatimaLibya-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 480,
+      "y": 189,
+      "w": 80,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/fatimaLibya-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 480,
+      "y": 189,
+      "w": 80,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/fatimaLibya-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 480,
+      "y": 189,
+      "w": 80,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/fatimaLibya-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 480,
+      "y": 189,
+      "w": 80,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/fatimaLibya-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}
