@@ -38,7 +38,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الإمارات',
     nameEn: 'UAE',
     flag: '🇦🇪',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Burj_Khalifa_Sunset.jpg?width=960",
+    image: "/images/dialects/local/uae.jpg",
     dialect: 'Gulf (خليجي)',
     characterMale: { 
       nameAr: 'زايد', 
@@ -96,7 +96,7 @@ export const COUNTRY_DATA = [
     nameAr: 'مصر',
     nameEn: 'Egypt',
     flag: '🇪🇬',
-    image: "https://images.pexels.com/photos/15127306/pexels-photo-15127306/free-photo-of-pyramids-and-sphinx-statue-in-desert.jpeg?auto=compress&cs=tinysrgb&w=960",
+    image: "/images/dialects/local/egypt.jpg",
     dialect: 'Egyptian (مصري)',
     characterMale: { 
       nameAr: 'أحمد', 
@@ -212,7 +212,7 @@ export const COUNTRY_DATA = [
     nameAr: 'المغرب',
     nameEn: 'Morocco',
     flag: '🇲🇦',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Whispers_of_Gold_-_Hassan_II_Mosque_at_Dusk.jpg?width=960",
+    image: "/images/dialects/local/morocco.jpg",
     dialect: 'Moroccan (مغربي)',
     characterMale: { 
       nameAr: 'ياسين', 
@@ -270,7 +270,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الأردن',
     nameEn: 'Jordan',
     flag: '🇯🇴',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Petra_treasury.jpg?width=960',
+    image: '/images/dialects/local/jordan.jpg',
     dialect: 'Jordanian (أردني)',
     characterMale: { 
       nameAr: 'نشمي', 
@@ -328,7 +328,7 @@ export const COUNTRY_DATA = [
     nameAr: 'لبنان',
     nameEn: 'Lebanon',
     flag: '🇱🇧',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Pigeon_Rocks_of_Beirut%2C_Rock_of_Raouche%2C_Beirut%2C_Lebanon.jpg?width=960",
+    image: "/images/dialects/local/lebanon.jpg",
     dialect: 'Levantine (لبناني)',
     characterMale: { 
       nameAr: 'جاد', 
@@ -386,7 +386,7 @@ export const COUNTRY_DATA = [
     nameAr: 'فلسطين',
     nameEn: 'Palestine',
     flag: '🇵🇸',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Dome_of_the_Rock_in_sunset.JPG?width=960',
+    image: '/images/dialects/local/palestine.jpg',
     dialect: 'Palestinian (فلسطيني)',
     characterMale: { 
       nameAr: 'محمود', 
@@ -444,7 +444,7 @@ export const COUNTRY_DATA = [
     nameAr: 'العراق',
     nameEn: 'Iraq',
     flag: '🇮🇶',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/%D9%85%D8%A3%D8%B0%D9%86%D8%A9_%D8%B3%D8%A7%D9%85%D8%B1%D8%A7%D8%A1_(1).jpg?width=960',
+    image: '/images/dialects/local/iraq.jpg',
     dialect: 'Iraqi (عراقي)',
     characterMale: { 
       nameAr: 'سنان', 
@@ -502,7 +502,7 @@ export const COUNTRY_DATA = [
     nameAr: 'تونس',
     nameEn: 'Tunisia',
     flag: '🇹🇳',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Sidi_Bousaid_blue_window.jpg?width=960",
+    image: "/images/dialects/local/tunisia.jpg",
     dialect: 'Tunisian (تونسي)',
     characterMale: { 
       nameAr: 'سامي', 
@@ -560,7 +560,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الجزائر',
     nameEn: 'Algeria',
     flag: '🇩🇿',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Makam_chahid.jpg?width=960",
+    image: "/images/dialects/local/algeria.jpg",
     dialect: 'Algerian (جزائري)',
     characterMale: { 
       nameAr: 'بلقاسم',
@@ -618,7 +618,7 @@ export const COUNTRY_DATA = [
     nameAr: 'ليبيا',
     nameEn: 'Libya',
     flag: '🇱🇾',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/The_Theatre_of_Leptis_Magna.jpg?width=960",
+    image: "/images/dialects/local/libya.jpg",
     dialect: 'Libyan (ليبي)',
     characterMale: { 
       nameAr: 'عمر', 
@@ -676,7 +676,7 @@ export const COUNTRY_DATA = [
     nameAr: 'سوريا',
     nameEn: 'Syria',
     flag: '🇸🇾',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/The_Umayyad_Mosque%2C_Courtyard%2C_Damascus%2C_Syria.jpg?width=960",
+    image: "/images/dialects/local/syria.jpg",
     dialect: 'Levantine (شامي)',
     characterMale: { 
       nameAr: 'باسل', 
@@ -734,7 +734,7 @@ export const COUNTRY_DATA = [
     nameAr: 'السودان',
     nameEn: 'Sudan',
     flag: '🇸🇩',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Mer%C3%B6e_Pyramids_with_camels_(35119058595).jpg?width=960',
+    image: '/images/dialects/local/sudan.jpg',
     dialect: 'Sudanese (سوداني)',
     characterMale: { 
       nameAr: 'مازن', 
@@ -792,7 +792,7 @@ export const COUNTRY_DATA = [
     nameAr: 'عمان',
     nameEn: 'Oman',
     flag: '🇴🇲',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Wadi_Darbat.jpg?width=960",
+    image: "/images/dialects/local/oman.jpg",
     dialect: 'Omani (عماني)',
     characterMale: { 
       nameAr: 'هيثم', 
@@ -850,7 +850,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الكويت',
     nameEn: 'Kuwait',
     flag: '🇰🇼',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Kuwait_Towers_at_night_(4283818686).jpg?width=960',
+    image: '/images/dialects/local/kuwait.jpg',
     dialect: 'Gulf (كويتي)',
     characterMale: { 
       nameAr: 'فهد', 
@@ -908,7 +908,7 @@ export const COUNTRY_DATA = [
     nameAr: 'قطر',
     nameEn: 'Qatar',
     flag: '🇶🇦',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Doha_-_towards_the_islamic_art_museum.jpg?width=960',
+    image: '/images/dialects/local/qatar.jpg',
     dialect: 'Gulf (قطري)',
     characterMale: { 
       nameAr: 'جاسم', 
@@ -966,7 +966,7 @@ export const COUNTRY_DATA = [
     nameAr: 'البحرين',
     nameEn: 'Bahrain',
     flag: '🇧🇭',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Manama_Bahrain_Bay_06.jpg?width=960',
+    image: '/images/dialects/local/bahrain.jpg',
     dialect: 'Gulf (بحريني)',
     characterMale: { 
       nameAr: 'حمد', 
@@ -1024,7 +1024,7 @@ export const COUNTRY_DATA = [
     nameAr: 'اليمن',
     nameEn: 'Yemen',
     flag: '🇾🇪',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Old_City_Sana%27a_skyline.jpg?width=960",
+    image: "/images/dialects/local/yemen.jpg",
     dialect: 'Yemeni (يمني)',
     characterMale: { 
       nameAr: 'قحطان', 
@@ -1082,7 +1082,7 @@ export const COUNTRY_DATA = [
     nameAr: 'موريتانيا',
     nameEn: 'Mauritania',
     flag: '🇲🇷',
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/%D9%85%D8%B3%D8%AC%D8%AF_%D8%B4%D9%86%D9%82%D9%8A%D8%B7_%D8%A7%D9%84%D8%AA%D8%A7%D8%B1%D9%8A%D8%AE%D9%8A.jpg?width=960',
+    image: '/images/dialects/local/mauritania.jpg',
     dialect: 'Hassaniya (حساني)',
     characterMale: { 
       nameAr: 'المختار', 
@@ -1140,7 +1140,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الصومال',
     nameEn: 'Somalia',
     flag: '🇸🇴',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Lido_beach_from_the_sea_in_Mogadishu.jpg?width=960",
+    image: "/images/dialects/local/somalia.jpg",
     dialect: 'Somali Arabic (صومالي)',
     characterMale: { 
       nameAr: 'عبدي', 
@@ -1198,7 +1198,7 @@ export const COUNTRY_DATA = [
     nameAr: 'جيبوتي',
     nameEn: 'Djibouti',
     flag: '🇩🇯',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Overlook_to_Lake_Asal_Crater.JPG?width=960",
+    image: "/images/dialects/local/djibouti.jpg",
     dialect: 'Djiboutian (جيبوتي)',
     characterMale: { 
       nameAr: 'برخاد', 
@@ -1256,7 +1256,7 @@ export const COUNTRY_DATA = [
     nameAr: 'جزر القمر',
     nameEn: 'Comoros',
     flag: '🇰🇲',
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Moroni_sunset_palm_trees.jpg?width=960",
+    image: "/images/dialects/local/comoros.jpg",
     dialect: 'Comorian (قمري)',
     characterMale: { 
       nameAr: 'سعيد', 
@@ -2356,13 +2356,13 @@ export const Dialects: React.FC = () => {
       <div className={`flex-1 ${!selectedCountry ? 'overflow-y-auto custom-scroll p-4 md:p-6' : 'overflow-hidden p-[clamp(5px,.7vh,9px)] flex flex-col'} relative bg-slate-50/30 min-h-0`}>
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 0.8px, transparent 0.8px)', backgroundSize: '24px 24px' }} />
         
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="sync" initial={false}>
           {!selectedCountry ? (
             <motion.div 
               key="country-grid"
               initial={false}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              exit={{ opacity: 0, transition: { duration: 0 } }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             >
               {COUNTRY_DATA.map((country, index) => (
@@ -2425,10 +2425,10 @@ export const Dialects: React.FC = () => {
           ) : (
             <motion.div
               key="country-detail"
-              initial={{ opacity: 0, y: 10 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: .25 }}
+              exit={{ opacity: 0, transition: { duration: 0 } }}
+              transition={{ duration: .12 }}
               className="mx-auto flex h-full min-h-0 w-full max-w-[1680px] flex-1 flex-col overflow-hidden rounded-[20px] border border-slate-100 bg-[#f5f8f7] px-[clamp(6px,.85vh,11px)] pt-[clamp(6px,.85vh,11px)] pb-[clamp(18px,3vh,28px)] shadow-[0_16px_50px_rgba(20,44,52,.11)]"
             >
               {/* On narrow devices, keep the page itself fixed and switch between the scene and reference. */}
