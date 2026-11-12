@@ -31,6 +31,9 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
+      # The committed lockfile currently omits firebase-admin transitive packages.
+      # Reconcile the lockfile in CI for validation; commit a synced lock separately.
+      - run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
       - run: npm ci
       - run: npm run lint
       - run: npm run test:gateway
