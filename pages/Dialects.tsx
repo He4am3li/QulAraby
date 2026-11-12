@@ -389,7 +389,7 @@ export const COUNTRY_DATA = [
     nameAr: 'فلسطين',
     nameEn: 'Palestine',
     flag: '🇵🇸',
-    image: '/images/dialects/palestine-dome-tourism.avif',
+    image: '/images/dialects/local/palestine.jpg',
     dialect: 'Palestinian (فلسطيني)',
     characterMale: { 
       nameAr: 'محمود', 
@@ -679,7 +679,7 @@ export const COUNTRY_DATA = [
     nameAr: 'سوريا',
     nameEn: 'Syria',
     flag: '🇸🇾',
-    image: "/images/dialects/syria-umayyad-cinematic.avif",
+    image: "/images/dialects/local/syria.jpg",
     dialect: 'Levantine (شامي)',
     characterMale: { 
       nameAr: 'باسل', 
