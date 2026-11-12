@@ -10,6 +10,7 @@ const FIREBASE_PROJECT_ID = 'gen-lang-client-0558881211';
 const FIRESTORE_DATABASE_ID = 'ai-studio-d8ed89a2-6662-4aa5-9cc7-1e8d0693722e';
 const OWNER_EMAIL = 'he4amali22@gmail.com';
 const APP_NAME = 'qul-gemini-gateway';
+const minuteCounters = new Map<string, { minute: number; count: number }>();
 
 type AuthRequest = IncomingMessage & { body?: unknown; query?: Record<string, unknown> };
 export type GatewayRequest = AuthRequest;
