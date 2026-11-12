@@ -31,13 +31,9 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-      - run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-      - name: Capture Firebase Admin 13 lockfile resolution
-        run: |
-          echo 'QUL_LOCK_DIFF_BEGIN'
-          git --no-pager diff -- package-lock.json
-          echo 'QUL_LOCK_DIFF_END'
       - run: npm ci
+      - name: Confirm Firebase Admin loads without ESM require interop
+        run: node --no-experimental-require-module -e "require('firebase-admin/auth')"
       - run: npm run lint
       - run: npm run test:gateway
       - run: npm run build
