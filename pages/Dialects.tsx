@@ -72,7 +72,7 @@ export const COUNTRY_DATA = [
       ]
     },
     vocab: [
-      { fusha: 'كيف حالك؟', dialect: 'شلونك؟', roman: 'Shlonak?', en: 'How are you?' },
+      { fusha: 'كيف حالك؟', dialect: 'علومك؟', roman: 'Uloomak?', en: 'How are you?' },
       { fusha: 'كثيراً', dialect: 'وايد', roman: 'Wayed', en: 'A lot' },
       { fusha: 'ماذا تريد؟', dialect: 'شو تبي؟', roman: 'Sho tabi?', en: 'What do you want?' },
       { fusha: 'الآن', dialect: 'الحين', roman: 'Al-heen', en: 'Now' },
