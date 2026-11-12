@@ -519,7 +519,7 @@ export const COUNTRY_DATA = [
       image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Tunisia%20wearing%20traditional%20Fouta%20and%20Blouza%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
     },
     missions: {
-      visitor: { ar: "تعلم (عصبة، لاباس) وتعرف على مدينة قرطاج.", en: "Learn (Aslama, Labas) and identify Carthage." },
+      visitor: { ar: "تعلم (عسلامة، لاباس) وتعرف على مدينة قرطاج.", en: "Learn (Aslama, Labas) and identify Carthage." },
       resident: { ar: "اطلب بريكاً تونسياً واشترط أن يكون حاراً جداً.", en: "Order Tunisian Brik and insist it be very spicy." },
       native: { ar: "فاصل في سعر زربية (سجادة) في المدينة العتيقة.", en: "Haggle for a traditional carpet in the Old Medina." }
     },

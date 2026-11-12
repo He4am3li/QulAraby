@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "tunisia_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/ons-stance-v1.webp",
+  "sourceSha256": "ad3c2a5a83c3cc425ed39388d9f1960a20a942e33d8e8491e605d8f1c2acf68b",
+  "pose": {
+    "bodyFacing": "right",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "left"
+  },
+  "registration": {
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.79,
+    "offset": [
+      338,
+      14
+    ],
+    "eyes": [
+      449,
+      138,
+      123,
+      39
+    ],
+    "brows": [
+      449,
+      119,
+      123,
+      29
+    ],
+    "mouth": [
+      475,
+      195,
+      80,
+      54
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 449,
+      "y": 138,
+      "w": 123,
+      "h": 39,
+      "visible": true,
+      "url": "/avatars/ons-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 449,
+      "y": 138,
+      "w": 123,
+      "h": 39,
+      "visible": true,
+      "url": "/avatars/ons-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 449,
+      "y": 138,
+      "w": 123,
+      "h": 39,
+      "visible": true,
+      "url": "/avatars/ons-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 449,
+      "y": 119,
+      "w": 123,
+      "h": 29,
+      "visible": true,
+      "url": "/avatars/ons-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 449,
+      "y": 119,
+      "w": 123,
+      "h": 29,
+      "visible": true,
+      "url": "/avatars/ons-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 475,
+      "y": 195,
+      "w": 80,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/ons-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 475,
+      "y": 195,
+      "w": 80,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/ons-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 475,
+      "y": 195,
+      "w": 80,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/ons-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 475,
+      "y": 195,
+      "w": 80,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/ons-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 475,
+      "y": 195,
+      "w": 80,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/ons-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 475,
+      "y": 195,
+      "w": 80,
+      "h": 54,
+      "visible": true,
+      "url": "/avatars/ons-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}

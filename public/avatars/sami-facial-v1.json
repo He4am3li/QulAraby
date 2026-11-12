@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "tunisia_male",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/sami-stance-v1.webp",
+  "sourceSha256": "6cd5b2a7396b69f371859c2f805a26dcfe5c827f5b30529dd1d0430b666fa224",
+  "pose": {
+    "bodyFacing": "left",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "right"
+  },
+  "registration": {
+    "flip": true,
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.79,
+    "offset": [
+      363,
+      13
+    ],
+    "eyes": [
+      465,
+      133,
+      110,
+      37
+    ],
+    "brows": [
+      465,
+      115,
+      110,
+      28
+    ],
+    "mouth": [
+      478,
+      196,
+      82,
+      53
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 465,
+      "y": 133,
+      "w": 110,
+      "h": 37,
+      "visible": true,
+      "url": "/avatars/sami-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 465,
+      "y": 133,
+      "w": 110,
+      "h": 37,
+      "visible": true,
+      "url": "/avatars/sami-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 465,
+      "y": 133,
+      "w": 110,
+      "h": 37,
+      "visible": true,
+      "url": "/avatars/sami-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 465,
+      "y": 115,
+      "w": 110,
+      "h": 28,
+      "visible": true,
+      "url": "/avatars/sami-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 465,
+      "y": 115,
+      "w": 110,
+      "h": 28,
+      "visible": true,
+      "url": "/avatars/sami-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 478,
+      "y": 196,
+      "w": 82,
+      "h": 53,
+      "visible": true,
+      "url": "/avatars/sami-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 478,
+      "y": 196,
+      "w": 82,
+      "h": 53,
+      "visible": true,
+      "url": "/avatars/sami-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 478,
+      "y": 196,
+      "w": 82,
+      "h": 53,
+      "visible": true,
+      "url": "/avatars/sami-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 478,
+      "y": 196,
+      "w": 82,
+      "h": 53,
+      "visible": true,
+      "url": "/avatars/sami-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 478,
+      "y": 196,
+      "w": 82,
+      "h": 53,
+      "visible": true,
+      "url": "/avatars/sami-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 478,
+      "y": 196,
+      "w": 82,
+      "h": 53,
+      "visible": true,
+      "url": "/avatars/sami-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}
