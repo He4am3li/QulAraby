@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { getAI } from './gemini';
 
 export interface MissionTurn { role: string; text: string; authored?: boolean }
 export interface MissionAssessment {
@@ -27,7 +27,7 @@ export async function assessDialectMission({
     speaker: t.role === 'user' ? 'student' : 'tutor',
     message: t.text.slice(0, 900)
   }));
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+  const ai = getAI();
   const prompt = [
     'You are a strict educational mastery assessor for a spoken dialect learning activity.',
     'Assess whether the learner actually accomplished the mission, not whether they sent enough messages.',

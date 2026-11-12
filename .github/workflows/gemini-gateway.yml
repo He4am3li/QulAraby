@@ -11,6 +11,9 @@ on:
       - 'pages/Quizzes.tsx'
       - 'vite.config.ts'
       - 'tests/gemini-gateway.test.mjs'
+      - 'tests/secret-exposure.test.mjs'
+      - 'scripts/audit-client-secrets.mjs'
+      - '.gitignore'
       - 'package.json'
       - '.github/workflows/gemini-gateway.yml'
   push:
@@ -32,6 +35,7 @@ jobs:
           node-version: '22'
           cache: 'npm'
       - run: npm ci
+      - run: npm run test:secrets
       - name: Confirm Firebase Admin loads without ESM require interop
         run: node --no-experimental-require-module -e "require('firebase-admin/auth')"
       - run: npm run lint
