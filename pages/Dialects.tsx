@@ -447,7 +447,7 @@ export const COUNTRY_DATA = [
     nameAr: 'العراق',
     nameEn: 'Iraq',
     flag: '🇮🇶',
-    image: '/images/dialects/local/iraq.jpg',
+    image: '/images/dialects/iraq-malwiya-soft-light.avif',
     dialect: 'Iraqi (عراقي)',
     characterMale: { 
       nameAr: 'سنان', 
@@ -1380,7 +1380,7 @@ const COUNTRY_PHOTO_FOCUS: Record<string, string> = {
   jordan: 'center 45%',
   lebanon: 'center 47%',
   palestine: 'center 43%',
-  iraq: 'center 55%',
+  iraq: 'center 44%',
   tunisia: 'center 47%',
   algeria: 'center 48%',
   libya: 'center 44%',

@@ -33,18 +33,7 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
         {/* Matching rounded photo header and photographic fact footer. */}
         <section className="relative min-h-0 overflow-hidden rounded-t-[17px] rounded-b-[9px] bg-slate-200">
           <div className="absolute inset-0">{heroImage}</div>
-          {country.nameEn === 'Iraq' && (
-            <a
-              href="https://commons.wikimedia.org/wiki/File:001124-MalwiyaMosque-Samerra-IMG_7824-2.jpg"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Safa Daneshvar, 2022, CC BY-SA 4.0, photograph resized for QUL"
-              className="absolute top-2 left-2 z-10 rounded-md bg-slate-950/35 px-1.5 py-0.5 text-[9px] font-medium text-white/95 backdrop-blur-sm transition-colors hover:bg-slate-950/60"
-            >
-              {ar ? 'تصوير: Safa Daneshvar' : 'Photo: Safa Daneshvar'}
-            </a>
-          )}
-          {country.nameEn === 'Lebanon' && (
+          {(country.nameEn === 'Lebanon' || country.nameEn === 'Iraq') && (
             <span className="absolute top-2 left-2 z-10 rounded-md bg-slate-900/55 px-1.5 py-0.5 text-[10px] font-medium text-white" title={ar ? 'رسم مولد بالذكاء الاصطناعي وليس صورة فوتوغرافية' : 'AI-generated artistic rendering, not a photograph'}>
               {ar ? 'صورة مولّدة' : 'AI illustration'}
             </span>
