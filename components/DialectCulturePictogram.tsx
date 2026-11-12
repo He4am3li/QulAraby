@@ -10,20 +10,20 @@ interface Props { nameAr: string; nameEn: string; className?: string }
  */
 const subjects: Record<string, string> = {
   'القهوة العربية':'coffee','الصيد بالصقور':'falcon','اللؤلؤ':'pearl','المجلس':'majlis','التمور':'dates','العود':'incense',
-  'الكشري':'rice','الفانوس':'lantern','النيل':'river','الأهرامات':'pyramids','البردي':'manuscript','الفلوكة':'boat',
-  'الكبسة':'rice','النخيل':'palm','البخور':'incense','الدلة':'coffee','الإبل':'camel','العلا':'rock',
+  'الكشري':'koshary','الفانوس':'lantern','النيل':'river','الأهرامات':'pyramids','البردي':'manuscript','الفلوكة':'boat',
+  'الكبسة':'kabsa','النخيل':'palm','البخور':'incense','الدلة':'coffee','الإبل':'camel','العلا':'rock',
   'الطاجين':'tagine','الشاي بالنعناع':'tea','الزليج':'mosaic','القفطان':'dress','زيت الأركان':'oil','الحمام':'bath',
-  'المنسف':'rice','البحر الميت':'water','الشماغ':'headscarf','البتراء':'rock','المدرج الروماني':'columns','المقلوبة':'rice',
+  'المنسف':'mansaf','البحر الميت':'water','الشماغ':'shemagh','البتراء':'rock','المدرج الروماني':'columns','المقلوبة':'maqluba',
   'التبولة':'salad','الأرز':'cedar','الفيروزيات':'music','بعلبك':'columns','الدبكة':'dance','المناقيش':'flatbread',
-  'التطريز':'weave','الزيتون':'olives','قبة الصخرة':'dome','الكوفية':'headscarf','الكنافة النابلسية':'dessert',
+  'التطريز':'weave','الزيتون':'olives','قبة الصخرة':'dome','الكوفية':'keffiyeh','الكنافة النابلسية':'dessert',
   'المسكوف':'grillfish','الشاي العراقي':'tea','بوابة عشتار':'gate','ملوية سامراء':'spiral','الكليجة':'cookies',
   'الكسكسي':'couscous','الياسمين':'flower','الشاشية':'cap','قرطاج':'columns','سيدي بوسعيد':'houses','البريك':'pastry',
   'الرندة':'weave','الصحراء الكبرى':'desert','موسيقى الراي':'record','القصبة':'houses','الكسكسي الجزائري':'couscous','طاسيلي ناجر':'rockart',
-  'البازين':'bazin','الصحراء':'desert','الواحات':'oasis','لبدة الكبرى':'columns','غدامس':'houses','العصيدة':'bazin',
+  'البازين':'bazin','الصحراء':'desert','الواحات':'oasis','لبدة الكبرى':'columns','غدامس':'houses','العصيدة':'asida',
   'الجامع الأموي':'dome','المشاوي':'grill','سوق الحميدية':'market','البروكار':'weave','البوظة الشامية':'icecream',
   'الجبنة':'coffee','النيلين':'river','أهرامات مروي':'pyramids','الثوب السوداني':'dress','الكسرة':'flatbread',
   'الخنجر العماني':'dagger','الحلوى العمانية':'dessert','اللبان':'incense','قلعة نزوى':'fort','الجبل الأخضر':'mountain','السفن التقليدية':'boat',
-  'مجبوس الدجاج':'rice','الديوانية':'majlis','السدو':'weave','أبراج الكويت':'towers','سوق المباركية':'market','الدروازة':'gate',
+  'مجبوس الدجاج':'machboos','الديوانية':'majlis','السدو':'weave','أبراج الكويت':'towers','سوق المباركية':'market','الدروازة':'gate',
   'سوق واقف':'market','المها العربي':'oryx','متحف الفن الإسلامي':'museum','اللؤلؤة':'island','القهوة القطرية':'coffee',
   'اللؤلؤ البحريني':'pearl','حلوى الشويطر':'dessert','باب البحرين':'gate','شجرة الحياة':'tree','الفخار':'pottery','بيت القرآن':'book',
   'الجنبية':'dagger','البن اليمني':'coffee','صنعاء القديمة':'houses','السلتة':'tagine','جزيرة سقطرى':'island','العمارة الطينية':'houses',
@@ -52,6 +52,84 @@ const CulturalArt: React.FC<{ kind: string; name: string }> = ({ kind, name }) =
   const leaf = (x: number, y: number, rotation = 0) => <path transform={'translate('+x+' '+y+') rotate('+rotation+')'} d="M0 0Q-13 -16 2 -27Q14 -17 0 0Z" fill="#4c9474" stroke="#347159" strokeWidth="1.3"/>;
   let art: React.ReactNode;
   switch (kind) {
+
+    case 'mansaf':
+      art = <>
+        {/* Jordan: rice, roasted lamb and a clearly visible white jameed sauce on a large platter. */}
+        <ellipse cx="48" cy="77" rx="43" ry="12" fill="#bd956e" stroke="#876144" strokeWidth="2"/>
+        <ellipse cx="48" cy="73" rx="38" ry="10" fill="#fff2d8"/>
+        <path d="M16 70q10-26 34-24 22-1 32 24-25 17-66 0Z" fill="#f5dfab"/>
+        {Array.from({length:24},(_,i)=><path key={i} d={'M'+(22+i%8*7)+' '+(58+Math.floor(i/8)*5)+'l4-2'} stroke={i%4===0?'#c99a53':'#fef6db'} strokeWidth="2.1" strokeLinecap="round"/>)}
+        <path d="M30 51q0-16 19-20 19 1 22 17l-8 12q-19 8-31-1Z" fill="#9a6242" stroke="#7b4934" strokeWidth="2"/>
+        <path d="M34 44q15-13 31 0M36 53q17 6 29-4" fill="none" stroke="#cb9060" strokeWidth="4.7" strokeLinecap="round"/>
+        <path d="M18 69q21 10 61 0M26 62q7-5 13-2M61 61q7 2 11 0" fill="none" stroke="#fffdfa" strokeWidth="5.3" strokeLinecap="round"/>
+        {[27,41,57,71].map(x=><ellipse key={x} cx={x} cy={69+x%4} rx="4" ry="1.9" fill="#b78952" transform={'rotate(-27 '+x+' 69)'}/>)}
+        <circle cx="22" cy="72" r="2.5" fill="#64936a"/><circle cx="74" cy="74" r="2.5" fill="#64936a"/>
+      </>;
+      break;
+    case 'maqluba':
+      art = <>
+        {/* The inverted mould of maqluba has tall, visible rice/eggplant/vegetable layers, unlike mansaf. */}
+        <ellipse cx="48" cy="78" rx="40" ry="10" fill="#b58a62" stroke="#8f6a4e" strokeWidth="2"/>
+        <ellipse cx="48" cy="76" rx="35" ry="7" fill="#fff0d1"/>
+        <path d="M26 35Q48 22 70 35l6 36q-29 13-56 0Z" fill="#eac77e" stroke="#a5794c" strokeWidth="2.1"/>
+        <path d="M23 60q25 10 50 0l3 11q-30 10-56 0Z" fill="#65483e"/>
+        <path d="M25 53q23 8 47 0l1 9q-23 9-50 0Z" fill="#8fa067"/>
+        <path d="M26 45q22 8 43 0l3 9q-23 9-47 0Z" fill="#e9ce8f"/>
+        <path d="M27 37q20 10 43 0l1 9q-23 10-45 0Z" fill="#67443a"/>
+        <ellipse cx="48" cy="34" rx="22" ry="8" fill="#e9cf8d" stroke="#ad8a56" strokeWidth="1.6"/>
+        <ellipse cx="48" cy="32" rx="12" ry="4" fill="#c77e56"/>
+        {[30,46,63].map(x=><circle key={x} cx={x} cy={67+x%3} r="2.5" fill="#d9a15e"/>)}
+      </>;
+      break;
+    case 'shemagh':
+    case 'keffiyeh':
+      art = <>
+        {/* Jordanian red-and-white shemagh and Palestinian black-and-white keffiyeh have distinct woven checks. */}
+        <path d="M23 18q25-10 49 0l12 59q-13 11-32 0l-5-9q-20 19-34 8Z"
+          fill="#fffbef" stroke="#b4a18b" strokeWidth="2.1" strokeLinejoin="round"/>
+        <path d="M23 18q25-10 49 0l4 18q-28 10-56 0Z" fill="#fff9eb"/>
+        {Array.from({length:8},(_,i)=><g key={i}>
+          <path d={'M'+(18+i*8)+' 29l20 44'} stroke={kind==='shemagh'?'#b84e47':'#3e4545'} strokeWidth="2.1" opacity=".9"/>
+          <path d={'M'+(17+i*8)+' 74l21-43'} stroke={kind==='shemagh'?'#c26459':'#4a4e4d'} strokeWidth="1.8" opacity=".83"/>
+        </g>)}
+        <path d="M26 18q22-9 43 1" stroke={kind==='shemagh'?'#ad4540':'#343b3c'} strokeWidth="4" fill="none" strokeLinecap="round"/>
+        <path d="M19 58q26 7 59-1" stroke={kind==='shemagh'?'#b94d47':'#414a48'} strokeWidth="2.6" fill="none"/>
+        <path d="M18 75l-4 7m12-6-2 9m9-10-1 9m41-9 4 9m-12-8 3 8" stroke="#c4b396" strokeWidth="1.7" strokeLinecap="round"/>
+      </>;
+      break;
+    case 'kabsa':
+    case 'machboos':
+      art = <>
+        {/* Saffron spiced rice with chicken, and dried limes on Kuwaiti machboos. */}
+        <ellipse cx="48" cy="78" rx="43" ry="11" fill="#b99567" stroke="#865f42" strokeWidth="2"/>
+        <ellipse cx="48" cy="72" rx="38" ry="10" fill="#fff3d8"/>
+        <path d="M13 68q16-29 37-24 19-3 34 23-23 17-71 1Z" fill={kind==='kabsa'?'#d89c4b':'#e3b15b'}/>
+        {Array.from({length:21},(_,i)=><path key={i} d={'M'+(18+i%7*9)+' '+(56+Math.floor(i/7)*5)+'l4 -2'} stroke={i%3===0?'#b36d36':'#fff0bc'} strokeWidth="2.3" strokeLinecap="round"/>)}
+        <path d="M32 49q-9-16 8-22 16-4 26 9 11 16-5 24-17 3-29-11Z" fill="#b77549" stroke="#88543c" strokeWidth="2.3"/>
+        <path d="M33 45q10-13 25-4M39 53q15 5 22-5" stroke="#edbd7f" strokeWidth="3.2" fill="none"/>
+        <path d="M30 48l-9-10m11 13-10-6" stroke="#fff4dc" strokeWidth="3" strokeLinecap="round"/>
+        {kind==='machboos'?<><circle cx="19" cy="69" r="5" fill="#4c4433" stroke="#cfbb7d" strokeWidth="1.5"/><circle cx="78" cy="69" r="5" fill="#514436" stroke="#cfbb7d" strokeWidth="1.5"/></>:<><circle cx="22" cy="68" r="3.5" fill="#a64f38"/><path d="M74 66l5 5" stroke="#608e51" strokeWidth="3"/></>}
+      </>;
+      break;
+    case 'koshary':
+      art = <>
+        <path d="M11 53h74q-3 29-36 31Q17 82 11 53Z" fill="url(#clay)" stroke="#96684a" strokeWidth="2.2"/>
+        <ellipse cx="48" cy="53" rx="37" ry="11" fill="#f4d59c"/>
+        {Array.from({length:14},(_,i)=><circle key={i} cx={21+i%7*9} cy={47+Math.floor(i/7)*7} r="3" fill={i%3===0?'#754b37':'#c19a62'}/>)}
+        <path d="M14 50q12 8 23 0t21 1q14 8 26 0" stroke="#bd4e38" strokeWidth="5.7" fill="none"/>
+        <path d="M29 39q-6-9 3-11 8-1 9 8m13 0q-3-9 7-11 8-1 10 6" stroke="#c49659" strokeWidth="4.2" fill="none" strokeLinecap="round"/>
+        <path d="M20 67q29 9 56 0" stroke="#f1d6a6" strokeWidth="3" fill="none"/>
+      </>;
+      break;
+    case 'asida':
+      art = <>
+        <ellipse cx="48" cy="78" rx="42" ry="11" fill="#c0996a" stroke="#946f4c" strokeWidth="2"/>
+        <path d="M17 70q1-26 31-34 29 7 31 34-30 18-62 0Z" fill="#ecd4a5" stroke="#b78e5e" strokeWidth="2"/>
+        <path d="M48 41Q29 59 41 68q9 8 16-2 3-8-9-25Z" fill="#aa6b46" stroke="#87583b" strokeWidth="2"/>
+        <path d="M22 71q26 10 53 0" stroke="#ab7547" strokeWidth="3" fill="none"/>
+      </>;
+      break;
     case 'coffee':
       art = <><ellipse cx="44" cy="79" rx="27" ry="5" fill="#c9b18e" opacity=".6"/>
         <path d="M36 31Q37 23 49 23Q61 23 62 31L63 64Q60 76 49 76Q36 76 34 64Z" fill="url(#gold)" stroke="#9a6a36" strokeWidth="2"/>
@@ -134,7 +212,20 @@ const CulturalArt: React.FC<{ kind: string; name: string }> = ({ kind, name }) =
       art = <><path d="M43 75q8-24 7-46" stroke="#986944" strokeWidth="10" fill="none" strokeLinecap="round"/><path d="M12 80q36-15 73 0" stroke="#81a66f" strokeWidth="7" fill="none"/>{kind==='cedar'?<><path d="M48 14 20 39h56ZM48 23 14 54h68ZM48 34 9 65h78Z" fill="url(#green)" stroke="#376b5a" strokeWidth="2"/></>:<>{[-75,-45,-15,15,45,75].map((r,i)=><path key={i} d="M48 29q-29-31-39 0 17-6 39 0Z" transform={'rotate('+r+' 48 29)'} fill={i%2?'#4b8a60':'#6eaa71'} stroke="#376b55" strokeWidth="1.5"/>)}</>}{kind==='oasis'&&<ellipse cx="37" cy="79" rx="26" ry="4" fill="#69beb9"/>}</>;
       break;
     case 'camel':
-      art = <><path d="M16 54q9-2 13 4 4-20 13-20 8 0 10 18 9-10 16-6l9 9-5 11H25Z" fill="url(#clay)" stroke="#986d4b" strokeWidth="2"/><path d="M15 53q-8-8-11-1L9 61l12 4M27 67v17M47 67v17M68 67v17" fill="none" stroke="#986d4b" strokeWidth="5" strokeLinecap="round"/><circle cx="13" cy="57" r="2.5" fill="#2c3d36"/><path d="M10 64v8" stroke="#986d4b" strokeWidth="3"/></>;
+      art = <>
+        {/* Arabian dromedary: one hump, naturally small eye, four anatomical legs. */}
+        <path d="M24 53Q28 46 34 44Q40 27 47 27Q55 27 59 43Q70 43 76 52L76 62Q70 67 60 65H29Q20 62 24 53Z"
+          fill="url(#clay)" stroke="#936744" strokeWidth="2.3" strokeLinejoin="round"/>
+        <path d="M28 51Q17 49 18 36L18 31Q11 29 12 24Q12 20 17 19l11 1q7 2 5 8l-7 7 1 12Z"
+          fill="#daa66f" stroke="#936744" strokeWidth="2.1"/>
+        <path d="M22 20l3-6q6 2 4 8" fill="#bc8053" stroke="#936744" strokeWidth="1.5"/>
+        <path d="M13 27L6 29q-1 4 7 5l12-2" fill="#c99466" stroke="#946647" strokeWidth="1.8"/>
+        <circle cx="24.5" cy="26.7" r="1.7" fill="#352b26"/><circle cx="24.8" cy="26.2" r=".5" fill="#fff9e6"/>
+        <path d="M11 31q4 2 7 0" stroke="#805742" strokeWidth="1.2" fill="none"/>
+        <path d="M27 63l-1 19h-7l-2-19M38 64l1 19h7l1-18M63 63v19h7l3-21" fill="#ca9365" stroke="#8f6345" strokeWidth="2"/>
+        <path d="M18 82h13M39 83h13M62 82h15" stroke="#765640" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M38 44q6-10 10-12M60 48q10-2 13 6" stroke="#efc48d" strokeWidth="2" fill="none"/>
+      </>;
       break;
     case 'desert':
     case 'mountain':
