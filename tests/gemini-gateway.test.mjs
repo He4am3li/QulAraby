@@ -26,11 +26,19 @@ assert.ok(proxy.includes('allowedModelRequest.test(target.pathname)') &&
   'Proxy must reject arbitrary target hosts and unsupported paths');
 assert.ok(proxy.includes('process.env.GEMINI_API_KEY'), 'Only backend may use production credential');
 assert.ok(!proxy.includes('req.headers[\'x-goog-api-key\']'), 'Never trust client-supplied upstream credentials');
-assert.ok(auth.includes('createVerify(\'RSA-SHA256\')') &&
-  auth.includes('https://securetoken.google.com/'),
-  'Require signature and issuer validation');
-assert.ok(auth.includes('payload.aud !== FIREBASE_PROJECT_ID') &&
-  auth.includes('payload.exp <= now'), 'Require audience and expiry validation');
+assert.ok(auth.includes('firebase-admin/auth') &&
+  auth.includes('verifyIdToken(match[1], true)'),
+  'Firebase Admin must validate ID tokens and check revocation');
+assert.ok(auth.includes('FIREBASE_SERVICE_ACCOUNT_JSON') &&
+  auth.includes('getFirestore(existing, FIRESTORE_DATABASE_ID)') &&
+  auth.includes('getFirestore(app, FIRESTORE_DATABASE_ID)'),
+  'Authorization must use the configured private credential and correct Firestore database');
+assert.ok(auth.includes('profile?.approved !== true') &&
+  auth.includes('profile.email !== decoded.email'),
+  'Gateway must reject pending, revoked, and mismatched user profiles');
+assert.ok(auth.includes("error: 'Account approval required'") &&
+  auth.includes("error: 'Account authorization unavailable'"),
+  'Gateway must fail closed when approval is missing or database access fails');
 assert.ok(live.includes('uses: 1') && live.includes('newSessionExpireTime:'),
   'Live access must use single-use, short-lived tokens');
 assert.ok(live.includes('requireFirebaseUser(req, res)'),
