@@ -12,25 +12,25 @@ const subjects: Record<string, string> = {
   'القهوة العربية':'coffee','الصيد بالصقور':'falcon','اللؤلؤ':'pearl','المجلس':'majlis','التمور':'dates','العود':'incense',
   'الكشري':'koshary','الفانوس':'lantern','النيل':'river','الأهرامات':'pyramids','البردي':'manuscript','الفلوكة':'boat',
   'الكبسة':'kabsa','النخيل':'palm','البخور':'incense','الدلة':'coffee','الإبل':'camel','العلا':'rock',
-  'الطاجين':'tagine','الشاي بالنعناع':'tea','الزليج':'mosaic','القفطان':'dress','زيت الأركان':'oil','الحمام':'bath',
+  'الطاجين':'tagine','الشاي بالنعناع':'tea','الزليج':'mosaic','القفطان':'kaftan','زيت الأركان':'oil','الحمام':'bath',
   'المنسف':'mansaf','البحر الميت':'water','الشماغ':'shemagh','البتراء':'rock','المدرج الروماني':'columns','المقلوبة':'maqluba',
   'التبولة':'salad','الأرز':'cedar','الفيروزيات':'music','بعلبك':'columns','الدبكة':'dance','المناقيش':'flatbread',
   'التطريز':'weave','الزيتون':'olives','قبة الصخرة':'dome','الكوفية':'keffiyeh','الكنافة النابلسية':'dessert',
   'المسكوف':'grillfish','الشاي العراقي':'tea','بوابة عشتار':'gate','ملوية سامراء':'spiral','الكليجة':'cookies',
   'الكسكسي':'couscous','الياسمين':'flower','الشاشية':'cap','قرطاج':'columns','سيدي بوسعيد':'houses','البريك':'pastry',
-  'الرندة':'weave','الصحراء الكبرى':'desert','موسيقى الراي':'record','القصبة':'houses','الكسكسي الجزائري':'couscous','طاسيلي ناجر':'rockart',
+  'الرندة':'randa','الصحراء الكبرى':'desert','موسيقى الراي':'record','القصبة':'houses','الكسكسي الجزائري':'couscous','طاسيلي ناجر':'rockart',
   'البازين':'bazin','الصحراء':'desert','الواحات':'oasis','لبدة الكبرى':'columns','غدامس':'houses','العصيدة':'asida',
-  'الجامع الأموي':'dome','المشاوي':'grill','سوق الحميدية':'market','البروكار':'weave','البوظة الشامية':'icecream',
-  'الجبنة':'coffee','النيلين':'river','أهرامات مروي':'pyramids','الثوب السوداني':'dress','الكسرة':'flatbread',
+  'الجامع الأموي':'dome','المشاوي':'grill','سوق الحميدية':'market','البروكار':'brocade','البوظة الشامية':'icecream',
+  'الجبنة':'jebena','النيلين':'river','أهرامات مروي':'pyramids','الثوب السوداني':'toub','الكسرة':'flatbread',
   'الخنجر العماني':'dagger','الحلوى العمانية':'dessert','اللبان':'incense','قلعة نزوى':'fort','الجبل الأخضر':'mountain','السفن التقليدية':'boat',
-  'مجبوس الدجاج':'machboos','الديوانية':'majlis','السدو':'weave','أبراج الكويت':'towers','سوق المباركية':'market','الدروازة':'gate',
+  'مجبوس الدجاج':'machboos','الديوانية':'majlis','السدو':'sadu','أبراج الكويت':'towers','سوق المباركية':'market','الدروازة':'gate',
   'سوق واقف':'market','المها العربي':'oryx','متحف الفن الإسلامي':'museum','اللؤلؤة':'island','القهوة القطرية':'coffee',
   'اللؤلؤ البحريني':'pearl','حلوى الشويطر':'dessert','باب البحرين':'gate','شجرة الحياة':'tree','الفخار':'pottery','بيت القرآن':'book',
-  'الجنبية':'dagger','البن اليمني':'coffee','صنعاء القديمة':'houses','السلتة':'tagine','جزيرة سقطرى':'island','العمارة الطينية':'houses',
-  'الشاي الموريتاني':'tea','الملحفة':'dress','شنقيط':'fort','الدراعة':'dress','مارو والحوت':'fishrice',
-  'السمبوسة':'pastry','منارة مقديشو':'lighthouse','المعوز':'dress','الشعر الصومالي':'manuscript',
-  'السمك المشوي':'grillfish','الميناء':'ship','التنوع الثقافي':'people','بحيرة عسل':'water','مضيق باب المندب':'water','المعوز الجيبوتي':'dress',
-  'الفانيليا':'vanilla','البركان':'volcano','السلاحف':'turtle','اليلانغ يلانغ':'flower','الكانزو':'dress','الشواطئ الرملية':'beach'
+  'الجنبية':'dagger','البن اليمني':'coffeebeans','صنعاء القديمة':'houses','السلتة':'saltah','جزيرة سقطرى':'island','العمارة الطينية':'houses',
+  'الشاي الموريتاني':'tea','الملحفة':'melhafa','شنقيط':'fort','الدراعة':'daraa','مارو والحوت':'fishrice',
+  'السمبوسة':'pastry','منارة مقديشو':'lighthouse','المعوز':'macawiis','الشعر الصومالي':'manuscript',
+  'السمك المشوي':'grillfish','الميناء':'ship','التنوع الثقافي':'people','بحيرة عسل':'water','مضيق باب المندب':'water','المعوز الجيبوتي':'macawiis',
+  'الفانيليا':'vanilla','البركان':'volcano','السلاحف':'turtle','اليلانغ يلانغ':'flower','الكانزو':'kanzu','الشواطئ الرملية':'beach'
 };
 
 const palette = { ink: '#284940', dark: '#274d48', teal: '#326f66', sage: '#8cae8d', gold: '#edaf52',
@@ -53,6 +53,129 @@ const CulturalArt: React.FC<{ kind: string; name: string }> = ({ kind, name }) =
   let art: React.ReactNode;
   switch (kind) {
 
+
+    case 'randa':
+    case 'sadu':
+    case 'brocade':
+      art = kind==='sadu'?<>
+        {/* Bedouin Sadu weaving: broad woven horizontal stripes with stepped diamonds. */}
+        <path d="M12 16h72v63H12Z" fill="#b64c42" stroke="#926744" strokeWidth="3"/>
+        <path d="M12 28h72M12 66h72" stroke="#252f31" strokeWidth="10"/>
+        <path d="M12 38h72M12 56h72" stroke="#f0d6ab" strokeWidth="6"/>
+        {[23,48,73].map(x=><path key={x} d={'M'+x+' 38l9 9-9 9-9-9Z'} fill="#d59d66" stroke="#493832" strokeWidth="2"/>)}
+        {[16,26,36,46,56,66,76].map(x=><path key={x} d={'M'+x+' 79v8'} stroke="#d7b183" strokeWidth="2.6"/>)} 
+      </>:kind==='randa'?<>
+        {/* Algerian randa: delicate needle-made lace and fine eyelets, not a generic chequered rug. */}
+        <path d="M12 21h72v57H12Z" fill="#edcfb1" stroke="#a57c5a" strokeWidth="2"/>
+        <path d="M19 24V75M77 24V75" stroke="#9e6e53" strokeWidth="2"/>
+        {[30,48,66].map(x=><g key={x}>
+          <path d={'M'+x+' 29l11 16-11 16-11-16Z'} fill="#fff8e9" stroke="#bd8e66" strokeWidth="2"/>
+          <circle cx={x} cy="45" r="4" fill="#d3a778"/><circle cx={x} cy="45" r="1.7" fill="white"/>
+          <path d={'M'+x+' 61v12'} stroke="#c58c66" strokeWidth="2"/>
+        </g>)}
+        <path d="M18 19h60M18 78h60" stroke="#e2b889" strokeWidth="3"/>
+        <path d="M75 12l13 11" stroke="#6d746c" strokeWidth="2.6"/><circle cx="74" cy="11" r="3" fill="#c38a59"/>
+      </>:<>
+        {/* Damascene brocade: rich woven floral silk and gold threads. */}
+        <path d="M17 16Q44 9 78 19l-5 64q-28-9-57 0Z" fill="#784e65" stroke="#8d7359" strokeWidth="3"/>
+        <path d="M21 21Q47 18 73 23M19 76q29-6 53 0" stroke="#e1b978" strokeWidth="2"/>
+        {[35,57].map(x=><g key={x}>
+          <path d={'M'+x+' 29q15 15 0 29-15-14 0-29Z'} fill="#d7aa65" stroke="#f8dca1" strokeWidth="1.6"/>
+          <circle cx={x} cy="43" r="4" fill="#8ea485"/>
+          <path d={'M'+x+' 55l-8 9M'+x+' 55l8 9'} stroke="#afbc8d" strokeWidth="2"/>
+        </g>)}
+        <path d="M26 25v49M47 23v49M68 27v43" stroke="#f2d497" strokeWidth="1" strokeDasharray="2 4"/>
+      </>;
+      break;
+    case 'kaftan':
+    case 'toub':
+    case 'melhafa':
+    case 'daraa':
+    case 'macawiis':
+    case 'kanzu':
+      art = kind==='kaftan'?<>
+        {/* Moroccan kaftan: full-length open-front robe with ornate golden sfifa braid. */}
+        <path d="M30 18h36l9 13 12 14-14 12-8-10 4 35H27l4-35-8 10L9 45l13-15Z"
+          fill="url(#clay)" stroke="#956442" strokeWidth="2.3"/>
+        <path d="M39 17q9 11 18 0M48 21v60" stroke="#f9dc9b" strokeWidth="5" fill="none"/>
+        <path d="M32 58h34M33 65h33M36 74h28" stroke="#e7bb78" strokeWidth="2"/>
+        <path d="M42 34l6-6 6 6-6 6Z" fill="#347e6b"/><circle cx="48" cy="46" r="3.5" fill="#f6dda2"/>
+        <path d="M25 32 15 46l12 10M70 31l12 15-10 9" stroke="#f8d59a" strokeWidth="2.3" fill="none"/>
+      </>:kind==='toub'?<>
+        {/* Sudanese toub: long, colorful wrapped fabric draped over the head and shoulder. */}
+        <path d="M44 15q21-3 28 24l11 43Q48 90 14 81l17-46q-1-17 13-20Z"
+          fill="#7d9c8e" stroke="#537767" strokeWidth="2.3"/>
+        <path d="M43 15q13-4 21 14L53 47l-8-7-9 13Q29 39 33 28q2-10 10-13Z" fill="#e0a979"/>
+        <ellipse cx="48" cy="33" rx="9" ry="12" fill="#c5906f"/>
+        <path d="M28 52q19 14 44 5M23 66q20 16 56 5M31 38q14 16 40 4" stroke="#f2d6b1" strokeWidth="3" fill="none"/>
+        <path d="M16 79q32-7 65 2" stroke="#e5ba7c" strokeWidth="4" fill="none"/>
+      </>:kind==='melhafa'?<>
+        {/* Mauritanian melhafa: an ample voile wrapped around head, chest and shoulders. */}
+        <path d="M42 13q22-4 31 21l12 45Q50 90 12 79L25 34q4-17 17-21Z"
+          fill="#8f80aa" stroke="#73678e" strokeWidth="2.4"/>
+        <path d="M39 17q14-8 24 13L52 49l-10-8-8 9-4-23Z" fill="#bea9d1"/>
+        <ellipse cx="48" cy="30" rx="9" ry="12" fill="#c89870"/>
+        <path d="M17 68q34-15 64 2M25 46q30 12 51-1M33 60q25 12 44 0" stroke="#ded1e7" strokeWidth="3" fill="none"/>
+        {[[28,70],[63,60],[71,76]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r="3" fill="#dfc893"/>)}
+      </>:kind==='daraa'?<>
+        {/* Mauritanian male daraa: exceptionally wide blue boubou with a decorated chest opening. */}
+        <path d="M29 17h38l19 20 6 20-21 8-7-14v31H31V51L18 66 3 56l8-22Z"
+          fill="#77a8c1" stroke="#4a789a" strokeWidth="2.4"/>
+        <path d="M38 18q10 9 20 0M48 22v37" stroke="#f9e9be" strokeWidth="3.5" fill="none"/>
+        <path d="M41 33h14l5 21H36Z" stroke="#d3edf2" strokeWidth="2" fill="none"/>
+        <path d="M14 47l17 10M65 55l19-10M35 72h26" stroke="#a8d5e0" strokeWidth="2.5"/>
+        <path d="M32 83h33" stroke="#dfeadd" strokeWidth="2.5"/>
+      </>:kind==='macawiis'?<>
+        {/* Somali/Djiboutian macawiis: checked wrap skirt folded at the waist, not a dress. */}
+        <path d="M24 17h48v24H24Z" fill="#fff0db" stroke="#bda281" strokeWidth="2"/>
+        <path d="M27 40h42l10 39Q50 87 17 79Z" fill="#5b8e83" stroke="#3d7369" strokeWidth="2.5"/>
+        <path d="M24 42h48" stroke="#ead6a9" strokeWidth="7"/>
+        {[32,43,54,65].map(x=><path key={x} d={'M'+x+' 46l3 32'} stroke="#f2d5ae" strokeWidth="2.6"/>)}
+        {[53,64,73].map(y=><path key={y} d={'M'+(24-(y-53)*.2)+' '+y+'h'+(48+(y-53)*.4)} stroke="#e5ab7b" strokeWidth="2.4"/>)}
+        <path d="M43 40l10 10-6 8" stroke="#336b62" strokeWidth="3" fill="none"/>
+      </>:<>
+        {/* Comorian kanzu: long white straight tunic with an embroidered neckline. */}
+        <path d="M32 15h32l12 19 8 16-13 8-9-15 4 39H29l5-39-9 15-13-8 9-16Z"
+          fill="#faf4df" stroke="#aaa38f" strokeWidth="2.4"/>
+        <path d="M39 17q9 12 18 0M48 25v26" stroke="#bd9c65" strokeWidth="3.5" fill="none"/>
+        <path d="M41 33h14M42 40h12M45 46h6" stroke="#cbb58c" strokeWidth="2"/>
+        <path d="M29 76h37M26 43l8 8M69 51l7-8" stroke="#dbcbae" strokeWidth="2.2"/>
+      </>;
+      break;
+    case 'jebena':
+    case 'coffeebeans':
+      art = kind==='jebena'?<>
+        {/* Sudanese clay jebena, round base and narrow neck, unlike the Arabian metal dallah. */}
+        <ellipse cx="47" cy="76" rx="29" ry="7" fill="#c9a67b"/>
+        <path d="M37 27h21l-3 15q25 13 17 30-11 17-43 6Q18 67 27 52q6-7 10-10Z"
+          fill="url(#clay)" stroke="#8b5e44" strokeWidth="2.4"/>
+        <path d="M58 39q19-8 26 2l-5 6-20 1" fill="#b77a53" stroke="#8b5e44" strokeWidth="2"/>
+        <path d="M26 53q-14 3-10 15 4 10 16 5" stroke="#995f42" strokeWidth="5" fill="none"/>
+        <path d="M32 60q14-4 34 0M35 67q15-4 30 0" stroke="#f1ce9b" strokeWidth="2.6" fill="none"/>
+        <path d="M36 27v-8h22v8M46 19v-7" stroke="#9a704e" strokeWidth="3"/>
+      </>:<>
+        {/* Yemeni coffee: roasted beans and coffee leaves rather than a hospitality pot. */}
+        <path d="M31 78Q44 49 61 23" stroke="#8a6a47" strokeWidth="4.5" strokeLinecap="round"/>
+        {leaf(47,43,-34)}{leaf(64,35,70)}{leaf(77,23,30)}
+        {[[28,65],[45,68],[60,61],[72,77]].map(([x,y],i)=><g key={i}>
+          <ellipse cx={x} cy={y} rx="10" ry="15" fill={i%2?'#9b6946':'#b78353'} stroke="#774b34" strokeWidth="1.8" transform={'rotate('+(-20+i*12)+' '+x+' '+y+')'}/>
+          <path d={'M'+(x-3)+' '+(y-10)+'q7 9 0 20'} stroke="#d7ad75" strokeWidth="2.1" fill="none" transform={'rotate('+(-20+i*12)+' '+x+' '+y+')'}/>
+        </g>)}
+      </>;
+      break;
+    case 'saltah':
+      art = <>
+        {/* Yemeni saltah is served in a deep black stone pot, with green hilbeh froth. */}
+        <ellipse cx="48" cy="80" rx="40" ry="9" fill="#a58b73"/>
+        <path d="M11 44h74q-2 33-37 36Q14 78 11 44Z" fill="#574b46" stroke="#302e2b" strokeWidth="3.2"/>
+        <ellipse cx="48" cy="44" rx="37" ry="11" fill="#704f3e" stroke="#3d3d37" strokeWidth="2"/>
+        <path d="M19 44q23-16 58 0-24 16-58 0Z" fill="#b66c46"/>
+        <path d="M23 41q14-17 26-6 18-10 27 8-26 15-53-2Z" fill="#85a775"/>
+        <path d="M30 42q17 7 35 0M28 48q17 7 37 0" stroke="#c5d5a0" strokeWidth="3" fill="none"/>
+        <circle cx="44" cy="36" r="3" fill="#e6a15d"/><circle cx="57" cy="44" r="3.5" fill="#d18148"/>
+        <path d="M24 64q23 12 50 0" stroke="#76706a" strokeWidth="2"/>
+      </>;
+      break;
     case 'mansaf':
       art = <>
         {/* Jordan: rice, roasted lamb and a clearly visible white jameed sauce on a large platter. */}
