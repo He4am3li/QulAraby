@@ -488,7 +488,11 @@ export const Home: React.FC = () => {
                 const moduleId = ROUTE_MODULES[m.id];
                 return !moduleId || schoolAccess.canAccess(moduleId);
               }).map((m) => (
-                <ModuleCard key={m.id} icon={m.icon} title={m.en} arTitle={m.ar} description="" color={m.color} onClick={() => { if (m.id === '/dialects') warmDialectGallery(); navigate(m.id); }} enterLabel={t.enter} lang={lang} />
+                <ModuleCard key={m.id} icon={m.icon} title={m.en} arTitle={m.ar} description="" color={m.color}
+                  onPointerEnter={m.id === '/dialects' ? () => warmDialectGallery() : undefined}
+                  onFocus={m.id === '/dialects' ? () => warmDialectGallery() : undefined}
+                  onClick={() => { if (m.id === '/dialects') warmDialectGallery(); navigate(m.id); }}
+                  enterLabel={t.enter} lang={lang} />
               ))}
             </section>
           </>
@@ -754,16 +758,20 @@ interface ModuleCardProps {
   description: string;
   color: string;
   onClick: () => void;
+  onPointerEnter?: () => void;
+  onFocus?: () => void;
   enterLabel: string;
   lang: string;
 }
 
-export const ModuleCard: React.FC<ModuleCardProps> = ({ icon, title, arTitle, description, color, onClick, enterLabel, lang }) => (
+export const ModuleCard: React.FC<ModuleCardProps> = ({ icon, title, arTitle, description, color, onClick, onPointerEnter, onFocus, enterLabel, lang }) => (
   <motion.button 
     whileHover={{ y: -8, scale: 1.02, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
     whileTap={{ scale: 0.98 }}
     layout
-    onClick={onClick} 
+    onClick={onClick}
+    onPointerEnter={onPointerEnter}
+    onFocus={onFocus}
     className="relative group p-3 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm hover:border-blue-200 transition-colors"
   >
     <div className={`w-8 h-8 bg-gradient-to-br ${color} rounded-full flex items-center justify-center text-white mb-2 shadow-md ${lang === 'ar' ? 'mr-0 ml-auto' : ''}`}>
