@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "jordan_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/haya-stance-v1.webp",
+  "sourceSha256": "0ad74dd4e3911178fa9c41ae8042cfc9b15d4c6adf189e0c6ca71b4c6e825e7e",
+  "pose": {
+    "bodyFacing": "right",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "left"
+  },
+  "registration": {
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.82,
+    "offset": [
+      335,
+      6
+    ],
+    "eyes": [
+      451,
+      127,
+      120,
+      40
+    ],
+    "brows": [
+      451,
+      107,
+      120,
+      28
+    ],
+    "mouth": [
+      472,
+      184,
+      80,
+      55
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 451,
+      "y": 127,
+      "w": 120,
+      "h": 40,
+      "visible": true,
+      "url": "/avatars/haya-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 451,
+      "y": 127,
+      "w": 120,
+      "h": 40,
+      "visible": true,
+      "url": "/avatars/haya-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 451,
+      "y": 127,
+      "w": 120,
+      "h": 40,
+      "visible": true,
+      "url": "/avatars/haya-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 451,
+      "y": 107,
+      "w": 120,
+      "h": 28,
+      "visible": true,
+      "url": "/avatars/haya-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 451,
+      "y": 107,
+      "w": 120,
+      "h": 28,
+      "visible": true,
+      "url": "/avatars/haya-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 472,
+      "y": 184,
+      "w": 80,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/haya-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 472,
+      "y": 184,
+      "w": 80,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/haya-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 472,
+      "y": 184,
+      "w": 80,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/haya-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 472,
+      "y": 184,
+      "w": 80,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/haya-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 472,
+      "y": 184,
+      "w": 80,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/haya-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 472,
+      "y": 184,
+      "w": 80,
+      "h": 55,
+      "visible": true,
+      "url": "/avatars/haya-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}

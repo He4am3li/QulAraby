@@ -1357,7 +1357,8 @@ const LAYERED_DIALECT_PORTRAITS: Record<string, readonly string[]> = {
   iraq: ['sinan-stance-v1.webp', 'zeina-stance-v1.webp'],
   tunisia: ['sami-stance-v1.webp', 'ons-stance-v1.webp'],
   algeria: ['amin-stance-v1.webp', 'meriem-stance-v1.webp'],
-  libya: ['omar-stance-v1.webp', 'fatimaLibya-stance-v1.webp']
+  libya: ['omar-stance-v1.webp', 'fatimaLibya-stance-v1.webp'],
+  jordan: ['nashmi-stance-v1.webp', 'haya-stance-v1.webp']
 };
 const warmCountryPortraits = (countryId: string): void => {
   const portraits = LAYERED_DIALECT_PORTRAITS[countryId];
