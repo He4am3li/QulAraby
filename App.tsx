@@ -2,6 +2,7 @@ import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Layout } from './components/Layout';
+import { WesalProvider } from './components/Wesal';
 import { Home } from './pages/Home';
 import { Translator } from './pages/Translator';
 import { VocabularyPage } from './pages/Vocabulary';
@@ -104,6 +105,7 @@ const AppContent: React.FC = () => {
   return (
     <div className="animate-app-reveal min-h-screen bg-slate-50">
       <LiveClassroomProvider>
+      <WesalProvider>
       <Layout>
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
@@ -140,6 +142,7 @@ const AppContent: React.FC = () => {
         )} />
       )}
       {isWhiteboard && <ScopedLiveInteractionLayer />}
+      </WesalProvider>
       </LiveClassroomProvider>
       <QuotaWarning />
 

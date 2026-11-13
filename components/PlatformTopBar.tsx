@@ -1,6 +1,7 @@
 import React from 'react';
 import { HelpCircle, LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import { LanguageToggle } from './LanguageToggle';
+import { WesalLauncher } from './Wesal';
 import { BrandSlogan } from './BrandSlogan';
 import { FallingLetters } from './Layout';
 import { useAuth } from './AuthProvider';
@@ -43,9 +44,11 @@ export const PlatformTopBar: React.FC = () => {
       </div>
       <div className="relative z-10 grid grid-cols-1 items-center gap-4 md:grid-cols-3">
         <div className="flex items-center justify-center md:justify-start">
-          <div className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.08] p-1.5 shadow-sm backdrop-blur-md">
+          <div className="flex w-full max-w-[250px] items-center gap-2 rounded-xl border border-white/15 bg-white/[0.08] p-1.5 shadow-sm backdrop-blur-md">
             <LanguageToggle lang={lang} onToggle={toggleLanguage} />
             <span className="h-5 w-px bg-white/15" />
+            <WesalLauncher lang={lang} />
+            <span className="flex-1" />
             <button onClick={restartTour} title={lang === 'ar' ? 'جولة تعريفية' : 'Guided tour'} className="rounded-lg p-2 text-white/75 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/40">
               <HelpCircle size={18}/>
             </button>
@@ -53,7 +56,7 @@ export const PlatformTopBar: React.FC = () => {
         </div>
         <BrandSlogan />
         <div className="flex items-center justify-center md:justify-end">
-          <div className="flex max-w-full items-center gap-2 rounded-xl border border-white/15 bg-white/[0.08] p-2 shadow-sm backdrop-blur-md sm:gap-3">
+          <div className="flex w-full max-w-[250px] items-center gap-2 rounded-xl border border-white/15 bg-white/[0.08] p-2 shadow-sm backdrop-blur-md sm:gap-3">
             {user ? (
               <>
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/20 bg-white/10">
