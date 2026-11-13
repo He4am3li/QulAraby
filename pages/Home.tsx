@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LanguageToggle } from '../components/LanguageToggle';
+import { WesalLauncher } from '../components/Wesal';
 import { BrandSlogan } from '../components/BrandSlogan';
 import { FallingLetters } from '../components/Layout';
 import { 
@@ -346,10 +347,12 @@ export const Home: React.FC = () => {
               <motion.div 
                 initial={{ opacity: 0, x: lang === 'ar' ? 20 : -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-white/10 backdrop-blur-xl border border-white/20 p-1.5 md:p-2 rounded-2xl flex items-center gap-3 shadow-xl border-b-2 border-b-white/5"
+                className="bg-white/10 backdrop-blur-xl border border-white/20 p-1.5 md:p-2 rounded-2xl flex w-full md:w-[250px] items-center gap-2 shadow-xl border-b-2 border-b-white/5"
               >
                 <LanguageToggle lang={lang} onToggle={toggleLang} />
                 <div className="w-px h-4 bg-white/10" />
+                <WesalLauncher lang={lang} />
+                <div className="flex-1" />
                 <button 
                   onClick={() => {
                     localStorage.removeItem('hub_onboarding_seen');
@@ -370,7 +373,7 @@ export const Home: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, x: lang === 'ar' ? -20 : 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-white/10 backdrop-blur-xl border border-white/20 p-2 rounded-2xl flex items-center gap-3 shadow-xl border-b-2 border-b-white/5"
+                className="bg-white/10 backdrop-blur-xl border border-white/20 p-2 rounded-2xl flex w-full md:w-[250px] items-center gap-3 shadow-xl border-b-2 border-b-white/5"
               >
                 {user ? (
                   <div className="flex items-center gap-3">
