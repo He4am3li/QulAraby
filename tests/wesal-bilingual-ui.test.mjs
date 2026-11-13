@@ -6,6 +6,7 @@ const styles = read('components/wesal.css');
 const glass = read('components/topBarGlass.css');
 const home = read('pages/Home.tsx');
 const top = read('components/PlatformTopBar.tsx');
+const layout = read('components/Layout.tsx');
 const toggle = read('components/LanguageToggle.tsx');
 
 assert.match(view, /window\.addEventListener\('langChanged', syncLanguage\)/, 'Wesal must track live language changes');
@@ -28,4 +29,13 @@ assert.match(toggle, /qul-language-action/, 'Existing language switch must blend
 assert.match(home, /<WesalLauncher lang=\{lang\}/, 'Keep launch location beside language control');
 assert.match(top, /<WesalLauncher lang=\{lang\}/, 'Keep launcher on school/admin pages');
 assert.doesNotMatch(view, /\bt\('رسالة غير مقروءة'/, 'Translation function must not be shadowed by thread variable');
-console.log('Wesal RTL/LTR, translation and header glass checks passed (20 checks).');
+
+assert.doesNotMatch(home, /HelpCircle|hub_onboarding_seen|qul-header-guide|Onboarding Tour/, 'No onboarding button in main Home header');
+assert.doesNotMatch(top, /HelpCircle|restartTour|hub_onboarding_seen|qul-header-guide|Guided tour/, 'No onboarding control for admins or managers');
+assert.doesNotMatch(layout, /OnboardingTour/, 'The onboarding tour must never auto-start on platform load');
+assert.doesNotMatch(glass, /qul-header-guide/, 'No unused tour control style in header glass');
+assert.equal((home.match(/<WesalLauncher lang=\{lang\}/g)||[]).length, 1, 'One Wesal button in Home tools');
+assert.equal((top.match(/<WesalLauncher lang=\{lang\}/g)||[]).length, 1, 'One Wesal button in manager/admin tools');
+assert.match(glass, /\.qul-header-glass \.qul-language-action\s*\{[^}]*flex: 1 1 0%;/, 'Language button takes equal space');
+assert.match(glass, /\.qul-header-glass \.wesal-launch\s*\{[^}]*flex: 1 1 0%;/, 'Wesal button takes equal space');
+console.log('Wesal RTL/LTR, translation, tour removal and matched header checks passed.');
