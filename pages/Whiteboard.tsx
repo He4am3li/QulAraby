@@ -633,6 +633,18 @@ export const WhiteboardPage: React.FC = () => {
         lang={lang}
         rightContent={
           <div className="flex items-center gap-2 sm:gap-4">
+            {!isTeacher && sessionId && (
+              <div className="flex gap-1 bg-slate-900/70 rounded-xl border border-white/10 p-1">
+                <button onClick={() => setDraftMode(false)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold ${!draftMode ? 'bg-emerald-500 text-slate-950' : 'text-white/70'}`}>
+                  سبورة المعلم
+                </button>
+                <button onClick={() => setDraftMode(true)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold ${draftMode ? 'bg-amber-400 text-slate-950' : 'text-white/70'}`}>
+                  مساحتي
+                </button>
+              </div>
+            )}
             {/* Server-verified live classroom access, without a global shared session. */}
             {sessionId ? (
               <div className="flex items-center gap-2 bg-slate-900/80 border border-emerald-500/30 px-3 py-1.5 rounded-2xl">
@@ -678,16 +690,24 @@ export const WhiteboardPage: React.FC = () => {
           {classroomError}
         </p>
       )}
+      {sessionId && (!canvasReady || canvasError) && (
+        <p role="status" className="text-center text-[11px] font-bold bg-slate-800 py-1 text-amber-200">
+          {canvasError || 'جارٍ تحميل السبورة المشتركة...'}
+        </p>
+      )}
+      {workError && <p role="alert" className="bg-rose-950/90 text-rose-200 text-xs text-center py-1">{workError}</p>}
       {/* Main Classroom Whiteboard Layout */}
       <div id="qul-whiteboard-canvas-area" className="flex-1 relative overflow-hidden bg-slate-950">
         {/* Live Whiteboard Canvas with Integrated Compact Student Counter & Real-Time Interaction Under Hijri Date */}
         <WhiteboardCanvas
-          elements={currentPage.elements}
+          elements={sessionId && !canvasReady ? [] :
+            (!isTeacher && draftMode ? (draftPack.pages[currentPage.id] || []) : currentPage.elements)}
           onElementsChange={handleElementsChange}
           activeTool={activeTool}
           activeColor={activeColor}
           activeStrokeWidth={activeStrokeWidth}
-          isReadOnly={!isTeacher && session.isLocked}
+          isReadOnly={(!!sessionId && !canvasReady) ||
+            (!isTeacher && (!draftMode || session.isLocked))}
           theme={currentPage.theme || activeTheme}
           background={currentPage.background}
           currentUserId={user?.uid}
@@ -708,7 +728,7 @@ export const WhiteboardPage: React.FC = () => {
         />
 
         {/* Student Response & Interaction Drawer (Visible to Student Only) */}
-        {!isTeacher && (
+        {!isTeacher && !!sessionId && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-xl border border-emerald-500/30 rounded-3xl p-4 shadow-2xl w-full max-w-xl">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -740,20 +760,38 @@ export const WhiteboardPage: React.FC = () => {
                 dir="rtl"
               />
               <button
-                onClick={handleSendStudentAnswer}
-                disabled={!studentAnswerText.trim()}
+                onClick={() => void handleSendStudentAnswer()}
+                disabled={sending || !canvasReady ||
+                  (!studentAnswerText.trim() && !(draftPack.pages[currentPage.id] || []).length)}
                 className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white rounded-xl text-xs font-bold arabic-font flex items-center gap-1.5 shadow-lg transition"
               >
                 <Send size={14} />
-                إرسال الإجابة
+                {sending ? 'جارٍ الإرسال...' : 'إرسال العمل'}
               </button>
             </div>
 
+            <input ref={imageInputRef} type="file" accept="image/*" className="hidden"
+              onChange={e => {
+                handleStudentImage(e.target.files?.[0]);
+                e.target.value = '';
+              }} />
+            {draftMode && (
+              <p className="mt-1 text-[10px] text-amber-200/75">
+                رسوماتك خاصة حتى تضغط «إرسال العمل». لن تُعدّل سبورة المعلم.
+              </p>
+            )}
             {studentAnswerSent && (
-              <div className="text-[11px] text-emerald-400 font-bold mt-1.5 flex items-center gap-1">
+              <div role="status" className="text-[11px] text-emerald-400 font-bold mt-1.5 flex items-center gap-1">
                 <CheckCircle2 size={12} />
-                تم إرسال إجابتك بنجاح إلى المعلم!
+                تم حفظ عملك وإرساله إلى المعلم.
               </div>
+            )}
+            {sendError && <p role="alert" className="text-rose-300 text-[11px] mt-1">{sendError}</p>}
+            {myWork?.feedback && (
+              <p className="text-amber-300 text-[11px] mt-1">
+                ملاحظة المعلم: {myWork.feedback}
+                {typeof myWork.score === 'number' ? `، التقييم: ${myWork.score}/100` : ''}
+              </p>
             )}
           </div>
         )}
@@ -773,6 +811,8 @@ export const WhiteboardPage: React.FC = () => {
           onClose={() => setIsStudentWorksOpen(false)}
           session={session}
           onScoreChange={handleScoreChange}
+          submittedWork={submissions}
+          onGradeSubmission={(id, points, feedback) => void grade(id, points, feedback).catch(() => {})}
         />
 
         {/* 2. Arabic Letters & Vocabulary Modal */}
