@@ -14,6 +14,7 @@ import { WhiteboardTool, WhiteboardBackgroundType, WhiteboardTheme, WhiteboardSe
 import { downloadPlacementTestPDF } from '../../services/placementTestPdf';
 import { generateQuickExercise } from '../../services/gemini';
 import { useAuth } from '../AuthProvider';
+import { useLiveClassroom } from '../LiveClassroomContext';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 
@@ -105,6 +106,7 @@ export const WhiteboardToolbar: React.FC<WhiteboardToolbarProps> = ({
   onInsertElement
 }) => {
   const { user } = useAuth();
+  const { sessionId } = useLiveClassroom();
 
   // Popover submenu tracking
   const [showSubMenu, setShowSubMenu] = useState<string | null>(null);
@@ -326,9 +328,9 @@ export const WhiteboardToolbar: React.FC<WhiteboardToolbarProps> = ({
       });
     }
 
-    if (session && user) {
+    if (session && user && sessionId) {
       try {
-        setDoc(doc(db, 'live_sessions', session.id || user.uid), {
+        setDoc(doc(db, 'live_sessions', sessionId), {
           activeActivity: {
             type: 'poll',
             title: pollQuestion,
