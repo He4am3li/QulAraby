@@ -65,3 +65,25 @@ test('dialect voice button reports connection progress and microphone failures',
   const liveRequest = read('services/liveTokenRequest.mjs');
   assert.match(liveRequest, /LIVE_ACCESS_DENIED/);
 });
+
+test('voice orb renders the approved floating glass sphere without changing its audio behavior', () => {
+  const orb = read('components/DialectVoiceOrb.tsx');
+  const css = read('components/DialectVoiceOrb.css');
+  const halo = read('components/DialectVoiceHalo.tsx');
+  assert.match(orb, /import '\.\/DialectVoiceOrb\.css'/);
+  assert.match(orb, /onClick=\{onToggle\}/);
+  assert.match(orb, /aria-pressed=\{active\}/);
+  assert.match(orb, /aria-busy=\{connecting\}/);
+  assert.match(orb, /disabled=\{disabled\}/);
+  assert.match(orb, /data-phase=\{phase\}/);
+  assert.match(orb, /React\.useId\(\)/);
+  assert.match(orb, /<svg className="dialect-orb__waves"/);
+  assert.doesNotMatch(orb, /<img|backgroundImage:|https?:\/\//);
+  for (const phase of ['connecting', 'listening', 'speaking', 'loading', 'active']) {
+    assert.match(css, new RegExp('data-phase="' + phase + '"'));
+  }
+  assert.match(css, /prefers-reduced-motion:\s*reduce/);
+  assert.match(css, /focus-visible/);
+  assert.match(css, /touch-action:\s*manipulation/);
+  assert.match(halo, /<DialectVoiceOrb/);
+});

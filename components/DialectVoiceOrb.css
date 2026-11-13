@@ -1,0 +1,173 @@
+/*
+ * QUL / Dialects, floating iridescent voice sphere.
+ * Rendered entirely by the browser: no image downloads or animated GIFs.
+ * Keep compositing light for mobile Safari: opacity/transform animations only.
+ */
+.dialect-orb {
+  --orb-energy: .78;
+  position: relative;
+  display: inline-grid;
+  width: clamp(74px, 6.8vw, 86px);
+  height: clamp(74px, 6.8vw, 86px);
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  flex: none;
+  place-items: center;
+  background: transparent;
+  isolation: isolate;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  transition: transform .25s cubic-bezier(.2,.8,.2,1), opacity .25s ease;
+}
+.dialect-orb:not(:disabled):active { transform: scale(.94); }
+.dialect-orb:disabled { opacity: .4; cursor: not-allowed; filter: saturate(.65); }
+.dialect-orb:focus-visible { outline: 3px solid #38bdf8; outline-offset: 5px; }
+@media (hover:hover) {
+  .dialect-orb:not(:disabled):hover { transform: translateY(-2px) scale(1.035); }
+  .dialect-orb:not(:disabled):active { transform: scale(.94); }
+}
+.dialect-orb__floor {
+  position: absolute;
+  bottom: 0;
+  left: 17%;
+  right: 17%;
+  height: 13%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(64,91,203,.55), rgba(84,71,167,.22) 48%, transparent 75%);
+  filter: blur(5px);
+  transform: translateY(6px) scaleX(1.05);
+  pointer-events: none;
+}
+.dialect-orb__aura {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background: conic-gradient(from 30deg, #00d9f4, #425cf2 20%, #ba55ef 42%, #f27ac1 60%, #ffb4a3 72%, #45e9fb 95%, #00d9f4);
+  opacity: calc(var(--orb-energy) * .67);
+  filter: blur(9px);
+  transform: scale(1.06);
+  transition: opacity .45s ease;
+  animation: dialect-orb-breathe 6.8s ease-in-out infinite;
+  pointer-events: none;
+}
+.dialect-orb__sphere {
+  position: absolute;
+  inset: 7%;
+  display: block;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px solid rgba(216,230,255,.85);
+  background:
+    radial-gradient(circle at 35% 16%, rgba(211,223,255,.34), transparent 29%),
+    radial-gradient(ellipse at 85% 32%, rgba(25,152,252,.34), transparent 38%),
+    radial-gradient(ellipse at 36% 86%, rgba(233,57,226,.46), transparent 42%),
+    radial-gradient(ellipse at 48% 60%, #0c183e 22%, #14295f 74%, #547ce3 100%);
+  box-shadow:
+    inset 0 1.5px 3px rgba(255,255,255,.78),
+    inset 0 -8px 12px rgba(15,13,67,.38),
+    0 9px 20px rgba(34,43,103,.20),
+    0 1px 3px rgba(12,24,65,.25);
+  transform: translateZ(0);
+}
+.dialect-orb__atmosphere {
+  position: absolute;
+  inset: -6%;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 20% 46%, rgba(255,159,168,.53), transparent 37%),
+    radial-gradient(ellipse at 74% 51%, rgba(0,224,255,.50), transparent 39%),
+    radial-gradient(ellipse at 51% 89%, rgba(236,59,241,.38), transparent 48%);
+  mix-blend-mode: screen;
+}
+.dialect-orb__waves {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  opacity: var(--orb-energy);
+  filter: saturate(1.16);
+  transition: opacity .3s ease;
+}
+.dialect-orb__ribbon-a {
+  transform-origin: 50% 50%;
+  animation: dialect-orb-shift-a 7.4s ease-in-out infinite alternate;
+}
+.dialect-orb__ribbon-b {
+  transform-origin: 50% 50%;
+  animation: dialect-orb-shift-b 8.1s ease-in-out infinite alternate;
+}
+.dialect-orb__luster {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 26% 14%, rgba(255,255,255,.65), transparent 24%),
+    linear-gradient(135deg, rgba(255,255,255,.26) 0%, transparent 31%, rgba(255,255,255,.04) 52%, transparent 75%);
+  box-shadow: inset 0 3px 4px rgba(255,255,255,.29);
+  pointer-events: none;
+}
+.dialect-orb__contour {
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  border-top: 1px solid rgba(251,251,255,.72);
+  border-left: 1px solid rgba(255,212,229,.32);
+  border-right: 1px solid rgba(81,226,255,.57);
+  border-bottom: 1px solid rgba(239,116,251,.54);
+  pointer-events: none;
+}
+.dialect-orb[data-phase="connecting"] { --orb-energy: .93; }
+.dialect-orb[data-phase="connecting"] .dialect-orb__aura {
+  animation: dialect-orb-turn 2.1s linear infinite;
+}
+.dialect-orb[data-phase="listening"] { --orb-energy: 1; }
+.dialect-orb[data-phase="listening"] .dialect-orb__aura {
+  opacity: .9;
+  animation: dialect-orb-breathe 1.75s ease-in-out infinite;
+}
+.dialect-orb[data-phase="speaking"] { --orb-energy: 1; }
+.dialect-orb[data-phase="speaking"] .dialect-orb__aura {
+  opacity: 1;
+  animation: dialect-orb-breathe 1.05s ease-in-out infinite;
+}
+.dialect-orb[data-phase="speaking"] .dialect-orb__ribbon-a {
+  animation-duration: 2.25s;
+}
+.dialect-orb[data-phase="speaking"] .dialect-orb__ribbon-b {
+  animation-duration: 2.7s;
+}
+.dialect-orb[data-phase="loading"] { --orb-energy: .91; }
+.dialect-orb[data-phase="loading"] .dialect-orb__aura {
+  animation: dialect-orb-turn 3.1s linear infinite;
+}
+.dialect-orb[data-phase="active"] { --orb-energy: .96; }
+@keyframes dialect-orb-breathe {
+  0%, 100% { transform: scale(1.03); opacity: .56; }
+  50% { transform: scale(1.15); opacity: .83; }
+}
+@keyframes dialect-orb-turn {
+  from { transform: rotate(0deg) scale(1.05); }
+  to { transform: rotate(360deg) scale(1.05); }
+}
+@keyframes dialect-orb-shift-a {
+  from { transform: rotate(-8deg) translate(-3px, 0); }
+  to { transform: rotate(9deg) translate(3px, -3px); }
+}
+@keyframes dialect-orb-shift-b {
+  from { transform: rotate(7deg) translate(2px, 2px); }
+  to { transform: rotate(-9deg) translate(-3px, 1px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dialect-orb, .dialect-orb__aura, .dialect-orb__waves,
+  .dialect-orb__ribbon-a, .dialect-orb__ribbon-b {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+@media (forced-colors: active) {
+  .dialect-orb__sphere { border: 2px solid ButtonText; }
+  .dialect-orb:focus-visible { outline-color: Highlight; }
+}
