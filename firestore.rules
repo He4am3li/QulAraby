@@ -689,8 +689,7 @@ service cloud.firestore {
 
     function isLiveSessionMember() {
       let caller = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return isAuthenticated() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         ('participants' in resource.data) &&
         resource.data.participants is map &&
         (request.auth.uid in resource.data.participants) &&
@@ -708,9 +707,7 @@ service cloud.firestore {
     }
 
     function isLiveTeacherEdit() {
-      return isTeacher() &&
-        resource.data.teacherId == request.auth.uid &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'activeTool', 'currentStroke', 'highlights', 'texts', 'stickyNotes',
           'stickers', 'elements', 'timer', 'poll', 'exercise', 'sharedFile',
           'laserPosition', 'reaction', 'students', 'activeActivity',
@@ -726,9 +723,13 @@ service cloud.firestore {
       // memberships, invites, school scope, teacher ownership and lifecycle.
       allow create, delete: if false;
       allow update: if sessionId != 'global' &&
-        canReadOwnClassroom() &&
+        isAuthenticated() &&
+        resource.data.status == 'active' &&
+        resource.data.expiresAt is timestamp &&
+        resource.data.expiresAt > request.time &&
         (
-          isLiveTeacherEdit() ||
+          (resource.data.teacherId == request.auth.uid &&
+           isTeacher() && isLiveTeacherEdit()) ||
           (isLiveSessionMember() && (isOwnPollVote() || isOwnExerciseAnswer()))
         );
     }
