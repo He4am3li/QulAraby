@@ -38,6 +38,13 @@ check('answer map cannot inject unknown question IDs', () => {
 check('chess flag from browser cannot earn points', () => {
   assert.equal(gradeQuestions(q, { q5:'CHESS_MASTERED' }).score, 0);
 });
+check('valid chess move history is scored by the server', () => {
+  const result = gradeQuestions(q, {q5: [{x: 2, y: 1}]});
+  assert.equal(result.score, 5);
+});
+check('fabricated illegal chess path is rejected', () => {
+  assert.equal(gradeQuestions(q, {q5: [{x: 1, y: 0}, {x: 2, y: 1}]}).score, 0);
+});
 check('forged client point bonus and score are ignored', () => {
   assert.throws(() => gradeQuestions(q, {q1:'خطأ', score:1000}), /INVALID_ANSWERS/);
 });
