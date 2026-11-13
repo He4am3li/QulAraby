@@ -505,7 +505,7 @@ export const COUNTRY_DATA = [
     nameAr: 'تونس',
     nameEn: 'Tunisia',
     flag: '🇹🇳',
-    image: "/images/dialects/local/tunisia.jpg",
+    image: "/images/dialects/tunisia-sidi-bou-said-cinematic.avif",
     dialect: 'Tunisian (تونسي)',
     characterMale: { 
       nameAr: 'سامي', 
