@@ -61,7 +61,7 @@ export function WesalProvider({ children }: { children: React.ReactNode }) {
   const activeThread = React.useRef<string | null>(null);
   const activePeer = React.useRef<Contact | null>(null);
 
-  React.useEffect(() => () => { live.current = false; }, []);
+  React.useEffect(() => { live.current = true; return () => { live.current = false; }; }, []);
 
   const refresh = React.useCallback(async (silent = false) => {
     if (!user || !profile) return;
