@@ -33,19 +33,8 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
         {/* Matching rounded photo header and photographic fact footer. */}
         <section className="relative min-h-0 overflow-hidden rounded-t-[17px] rounded-b-[9px] bg-slate-200">
           <div className="absolute inset-0">{heroImage}</div>
-          {country.nameEn === 'Egypt' && (
-            <a
-              href="https://commons.wikimedia.org/wiki/File:Golden_Hour_at_the_Base_of_the_Sphinx_and_Pyramids,_28.12.2022.jpg"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Photograph by Jkordik, 28 Dec 2022, CC BY-SA 4.0. Resized for QUL."
-              className="absolute top-2 left-2 z-10 rounded-md bg-slate-950/40 px-1.5 py-0.5 text-[9px] font-medium text-white/95 backdrop-blur-sm transition-colors hover:bg-slate-950/60"
-            >
-              {ar ? 'تصوير: Jkordik' : 'Photo: Jkordik'}
-            </a>
-          )}
 
-          {(country.nameEn === 'UAE' || country.nameEn === 'Lebanon' || country.nameEn === 'Iraq' || country.nameEn === 'Libya' || country.nameEn === 'Tunisia' || country.nameEn === 'Morocco') && (
+          {(country.nameEn === 'Egypt' || country.nameEn === 'UAE' || country.nameEn === 'Lebanon' || country.nameEn === 'Iraq' || country.nameEn === 'Libya' || country.nameEn === 'Tunisia' || country.nameEn === 'Morocco') && (
             <span className="absolute top-2 left-2 z-10 rounded-md bg-slate-900/55 px-1.5 py-0.5 text-[10px] font-medium text-white" title={ar ? 'رسم مولد بالذكاء الاصطناعي وليس صورة فوتوغرافية' : 'AI-generated artistic rendering, not a photograph'}>
               {ar ? 'صورة مولّدة' : 'AI illustration'}
             </span>

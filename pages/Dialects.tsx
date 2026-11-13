@@ -99,7 +99,7 @@ export const COUNTRY_DATA = [
     nameAr: 'مصر',
     nameEn: 'Egypt',
     flag: '🇪🇬',
-    image: "/images/dialects/local/egypt.jpg",
+    image: "/images/dialects/egypt-giza-golden-sunset.avif",
     dialect: 'Egyptian (مصري)',
     characterMale: { 
       nameAr: 'أحمد', 
