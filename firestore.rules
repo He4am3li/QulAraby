@@ -367,13 +367,12 @@ service cloud.firestore {
       allow delete: if isPlatformOwner() || (isAuthenticated() && isAuthor(resource.data));
 
       match /questions/{questionId} {
-        // Draft answer keys are visible only to the author or platform admin.
-        // Active quizzes still use client-side grading, which requires a separate
-        // server-side assessment redesign before answer keys can be fully hidden.
+        // All answer keys stay private, including those in active assessments.
+        // Students fetch redacted questions through /api/quiz-play instead.
         allow read: if isAuthenticated() &&
           (isAdmin() ||
-           get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid ||
-           get(/databases/$(database)/documents/quizzes/$(quizId)).data.status == 'active');
+           (isTeacher() &&
+            get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid));
         allow create: if isTeacher() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid && isValidQuestion(request.resource.data);
         allow update: if (isAdmin() || (isTeacher() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid)) && isValidQuestion(request.resource.data);
         allow delete: if isPlatformOwner() || (isAuthenticated() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
@@ -381,9 +380,9 @@ service cloud.firestore {
 
       match /results/{resultId} {
         allow read: if isAuthenticated() && (isAdmin() || get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid || isOwner(resource.data.userId));
-        allow create: if isAuthenticated() && isValidResult(request.resource.data) &&
-          request.resource.data.userId == request.auth.uid &&
-          request.resource.data.userEmail == request.auth.token.email;
+        // Trusted scores are created atomically by the authenticated server.
+        // Firebase Admin SDK bypasses these browser security rules by design.
+        allow create, update: if false;
         allow delete: if isPlatformOwner() || (isAuthenticated() && get(/databases/$(database)/documents/quizzes/$(quizId)).data.authorId == request.auth.uid);
       }
     }

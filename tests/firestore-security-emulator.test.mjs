@@ -101,19 +101,29 @@ try {
     await assertSucceeds(getDoc(ref('schoolAdminA', 'users/learnerA')));
     await assertFails(getDoc(ref('schoolAdminA', 'users/learnerB')));
   });
-  test('student can read active quiz questions only', async () => {
-    await assertSucceeds(getDoc(ref('learnerA', 'quizzes/quizActive/questions/q1')));
+  test('students cannot download either active or draft answer keys', async () => {
+    await assertFails(getDoc(ref('learnerA', 'quizzes/quizActive/questions/q1')));
     await assertFails(getDoc(ref('learnerA', 'quizzes/quizDraft/questions/q1')));
+    await assertSucceeds(getDoc(ref('teacherA', 'quizzes/quizActive/questions/q1')));
     await assertSucceeds(getDoc(ref('teacherA', 'quizzes/quizDraft/questions/q1')));
+    await assertFails(getDoc(ref('teacherB', 'quizzes/quizActive/questions/q1')));
   });
   test('teacher cannot transfer authored quiz by editing authorId', () =>
     assertFails(updateDoc(ref('teacherA', 'quizzes/quizActive'), { authorId: 'teacherB' })));
-  test('student cannot forge user email in quiz result', async () => {
+  test('all browser writes of quiz scores are rejected', async () => {
     await assertFails(setDoc(ref('learnerA', 'quizzes/quizActive/results/forged'), {
       ...resultData, userEmail: email.learnerB
     }));
     await assertFails(setDoc(ref('learnerB', 'quizzes/quizActive/results/other'), resultData));
-    await assertSucceeds(setDoc(ref('learnerA', 'quizzes/quizActive/results/valid'), resultData));
+    await assertFails(setDoc(ref('learnerA', 'quizzes/quizActive/results/valid'), resultData));
+    await assertFails(setDoc(ref('teacherA', 'quizzes/quizActive/results/teacher'), resultData));
+    // The server's privileged SDK writes, then the student and author may read.
+    await env.withSecurityRulesDisabled(ctx =>
+      setDoc(doc(ctx.firestore(), 'quizzes/quizActive/results/trusted'), resultData));
+    await assertSucceeds(getDoc(ref('learnerA', 'quizzes/quizActive/results/trusted')));
+    await assertSucceeds(getDoc(ref('teacherA', 'quizzes/quizActive/results/trusted')));
+    await assertFails(getDoc(ref('learnerB', 'quizzes/quizActive/results/trusted')));
+    await assertFails(updateDoc(ref('learnerA', 'quizzes/quizActive/results/trusted'), { score: 999999 }));
   });
   test('student may view public active boards only', async () => {
     await assertSucceeds(getDoc(board('learnerA')));
