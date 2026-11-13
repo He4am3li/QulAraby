@@ -1260,7 +1260,7 @@ export const COUNTRY_DATA = [
     nameAr: 'جزر القمر',
     nameEn: 'Comoros',
     flag: '🇰🇲',
-    image: "/images/dialects/local/comoros.jpg",
+    image: "/images/dialects/comoros-karthala-cinematic.avif",
     dialect: 'Comorian (قمري)',
     characterMale: { 
       nameAr: 'سعيد', 
