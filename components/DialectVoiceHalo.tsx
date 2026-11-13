@@ -106,7 +106,7 @@ export const DialectVoiceHalo: React.FC<Props> = React.memo(({
     <section aria-label={ar ? 'مسجّل الحوار الحي' : 'Live voice recorder'}
       className="pointer-events-none absolute inset-x-0 bottom-[3px] z-30 h-[clamp(128px,19vh,174px)]">
       {/* A barely visible ground arc connects both language tracks to one orb. */}
-      <div aria-hidden="true" className={'absolute inset-x-[9%] bottom-[29px] h-[1px] bg-gradient-to-r from-sky-400/0 via-sky-300/40 to-amber-300/0 transition-opacity duration-500 ' +
+      <div aria-hidden="true" className={'absolute inset-x-[9%] bottom-[39px] h-[1px] bg-gradient-to-r from-sky-400/0 via-sky-300/40 to-amber-300/0 transition-opacity duration-500 ' +
         (visible ? 'opacity-100' : 'opacity-0')} />
       <AnimatePresence mode="wait">
         {visible && (
@@ -114,7 +114,7 @@ export const DialectVoiceHalo: React.FC<Props> = React.memo(({
             key={(historyIndex ?? displayedRecord?.liveTurnKey ?? newestIndex) + ':' + (freshSpeech ? 'spoken' : 'turn')}
             {...motionProps}
             animate={{ opacity: 1, y: 0, scaleX: 1 }}
-            className="absolute inset-x-[2%] bottom-[78px] flex min-h-[48px] items-end justify-between gap-[82px]"
+            className="absolute inset-x-[2%] bottom-[89px] flex min-h-[48px] items-end justify-between gap-[82px]"
             role="status" aria-live="polite" aria-atomic="false" dir="ltr"
           >
             {/* English emerges from the left channel of the central recorder. */}
@@ -149,7 +149,7 @@ export const DialectVoiceHalo: React.FC<Props> = React.memo(({
       {/* Keep feedback beside the original recorder, without adding an extra panel or button. */}
       {error && !active && !connecting && (
         <p role="alert" dir={ar ? 'rtl' : 'ltr'}
-          className="pointer-events-auto absolute inset-x-[9%] bottom-[77px] z-40 mx-auto max-w-[420px] rounded-xl border border-amber-300/60 bg-slate-950/90 px-3 py-2 text-center text-[11px] font-semibold leading-relaxed text-white shadow-lg backdrop-blur-lg">
+          className="pointer-events-auto absolute inset-x-[9%] bottom-[88px] z-40 mx-auto max-w-[420px] rounded-xl border border-amber-300/60 bg-slate-950/90 px-3 py-2 text-center text-[11px] font-semibold leading-relaxed text-white shadow-lg backdrop-blur-lg">
           {error}
         </p>
       )}
@@ -163,7 +163,7 @@ export const DialectVoiceHalo: React.FC<Props> = React.memo(({
 
       {/* A digital memory wheel, not another dialogue screen. */}
       {hasConversation && records.length > 0 && (
-        <div className="pointer-events-auto absolute left-1/2 bottom-[72px] z-30 flex -translate-x-1/2 items-center gap-1 rounded-full border border-emerald-950/10 bg-white/70 px-1 py-[2px] shadow-[0_4px_14px_rgba(12,68,55,.1)] backdrop-blur-xl">
+        <div className="pointer-events-auto absolute left-1/2 bottom-[85px] z-30 flex -translate-x-1/2 items-center gap-1 rounded-full border border-emerald-950/10 bg-white/70 px-1 py-[2px] shadow-[0_4px_14px_rgba(12,68,55,.1)] backdrop-blur-xl">
           <button type="button" onClick={() => navigate(-1)} disabled={index <= 0}
             aria-label={ar ? 'العبارة السابقة' : 'Previous dialogue turn'}
             className="rounded-full p-0.5 text-emerald-900 hover:bg-emerald-50 disabled:opacity-25">
