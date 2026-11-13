@@ -228,6 +228,18 @@ export interface WhiteboardActivity {
   }>;
 }
 
+export interface WhiteboardSubmission {
+  studentId: string;
+  studentName: string;
+  answer: string;
+  pageId: string;
+  elements: WhiteboardElement[];
+  timestamp: number;
+  score?: number;
+  feedback?: string;
+  reviewed?: boolean;
+}
+
 export interface WhiteboardSessionState {
   id: string;
   code: string;

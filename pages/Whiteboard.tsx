@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PenTool, Users, Clock, Sparkles, Plus, ChevronLeft, ChevronRight, 
@@ -9,6 +9,10 @@ import {
 import { PageHeader } from '../components/PageHeader';
 import { useAuth } from '../components/AuthProvider';
 import { useLiveClassroom } from '../components/LiveClassroomContext';
+import { useLiveWhiteboardCanvas } from '../components/useLiveWhiteboardCanvas';
+import { useClassroomStudentWork } from '../components/useClassroomStudentWork';
+import { db } from '../firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { WhiteboardCanvas } from '../components/whiteboard/WhiteboardCanvas';
 import { FortuneWheelModal } from '../components/whiteboard/FortuneWheelModal';
 import { ArabicToolsModal } from '../components/whiteboard/ArabicToolsModal';
@@ -66,6 +70,13 @@ export const WhiteboardPage: React.FC = () => {
   const [studentAnswerSent, setStudentAnswerSent] = useState(false);
   const [handRaised, setHandRaised] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [draftMode, setDraftMode] = useState(true);
+  const [draftPack, setDraftPack] = useState<{key: string; pages: Record<string, WhiteboardElement[]>}>({
+    key: '', pages: {}
+  });
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const rosterSignature = useRef('');
+  const [sendError, setSendError] = useState<string | null>(null);
 
   // Session State
   const [session, setSession] = useState<WhiteboardSessionState>(() => {
@@ -105,38 +116,98 @@ export const WhiteboardPage: React.FC = () => {
         isRunning: false,
         lastUpdated: Date.now()
       },
-      students: {
-        'st_1': { id: 'st_1', name: 'أحمد علي', score: 12, isOnline: true, handRaised: false, lastActive: Date.now() },
-        'st_2': { id: 'st_2', name: 'سارة محمد', score: 15, isOnline: true, handRaised: true, lastActive: Date.now() },
-        'st_3': { id: 'st_3', name: 'عمر خالد', score: 9, isOnline: true, handRaised: false, lastActive: Date.now() },
-        'st_4': { id: 'st_4', name: 'نورة المنصور', score: 14, isOnline: true, handRaised: false, lastActive: Date.now() },
-      },
-      wordBox: ['السفر', 'الوظيفة', 'المستقبل', 'النجاح', 'الطموح', 'اللغة', 'المعرفة'],
-      activeActivity: {
-        id: 'act_1',
-        title: 'نشاط تكوين الجمل السريعة',
-        type: 'qa',
-        question: 'استخدم كلمة (المُسْتَقْبَل) في جملة مفيدة تدل على طموحك المهني:',
-        isActive: true,
-        submissions: {
-          'st_2': {
-            studentId: 'st_2',
-            studentName: 'سارة محمد',
-            answer: 'أُرِيدُ أَنْ أُصْبِحَ طَبِيبَةً نَاجِحَةً فِي المُسْتَقْبَلِ.',
-            score: 5,
-            feedback: 'ممتازة جداً يا سارة! إجابة صحيحة نحوياً وتركيبياً.',
-            timestamp: Date.now(),
-            evaluated: true
-          }
-        }
-      }
+      students: {},
+      wordBox: [],
+      activeActivity: null
     };
   });
 
+  const { canvasReady, canvasError } = useLiveWhiteboardCanvas(
+    sessionId, user?.uid, isTeacher, session, setSession
+  );
+  const { submissions, myWork, sending, error: workError, submit, grade } =
+    useClassroomStudentWork(sessionId, user?.uid, isTeacher);
+  const draftKey = `qul_student_whiteboard_drafts_${user?.uid || 'guest'}_${sessionId || 'offline'}`;
+
+  useEffect(() => {
+    let pages: Record<string, WhiteboardElement[]> = {};
+    try {
+      const saved = localStorage.getItem(draftKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) pages = parsed;
+      }
+    } catch { /* Ignore corrupted local drafts. */ }
+    setDraftPack({ key: draftKey, pages });
+    setDraftMode(!sessionId);
+    setStudentAnswerSent(false);
+    setStudentAnswerText('');
+    setSendError(null);
+  }, [draftKey, sessionId]);
+
+  useEffect(() => {
+    if (draftPack.key !== draftKey) return;
+    try { localStorage.setItem(draftKey, JSON.stringify(draftPack.pages)); }
+    catch (error) { console.warn('Cannot save private learner draft locally', error); }
+  }, [draftPack, draftKey]);
+
+  // Session membership and the active activity come from the server, not the
+  // locally seeded demonstration roster. Submissions are a separate feed.
+  useEffect(() => {
+    rosterSignature.current = '';
+    if (!sessionId || !user) return;
+    return onSnapshot(doc(db, 'live_sessions', sessionId), snapshot => {
+      if (!snapshot.exists()) return;
+      const data = snapshot.data();
+      const members = data.participants && typeof data.participants === 'object'
+        ? Object.keys(data.participants).filter(id => data.participants[id] === true) : [];
+      const relevantSignature = JSON.stringify({ members, activity: data.activeActivity || null });
+      if (rosterSignature.current === relevantSignature) return;
+      rosterSignature.current = relevantSignature;
+      setSession(prev => {
+        const students: Record<string, WhiteboardStudent> = {};
+        members.forEach((id, index) => {
+          students[id] = prev.students[id] || {
+            id, name: `طالب ${index + 1}`, score: 0,
+            isOnline: false, handRaised: false, lastActive: Date.now()
+          };
+        });
+        const live = data.activeActivity;
+        const activeActivity = live && typeof live.question === 'string' ? {
+          id: String(live.id || 'live_activity'),
+          title: String(live.title || 'نشاط الحصة'),
+          type: 'qa' as const,
+          question: live.question,
+          isActive: live.isActive !== false,
+          submissions: {}
+        } : null;
+        return { ...prev, students, activeActivity };
+      });
+    }, error => console.error('Could not read classroom membership', error));
+  }, [sessionId, user?.uid]);
+
+  useEffect(() => {
+    if (!isTeacher || !submissions.length) return;
+    setSession(prev => {
+      const students = { ...prev.students };
+      for (const work of submissions) {
+        const existing = students[work.studentId];
+        students[work.studentId] = {
+          id: work.studentId, name: work.studentName || existing?.name || 'طالب',
+          score: work.reviewed ? (work.score ?? 0) : (existing?.score ?? 0),
+          isOnline: existing?.isOnline ?? false,
+          handRaised: existing?.handRaised ?? false,
+          lastActive: work.timestamp
+        };
+      }
+      return { ...prev, students };
+    });
+  }, [submissions, isTeacher]);
+
   // Save session state locally
   useEffect(() => {
-    if (user?.uid) localStorage.setItem('qul_active_whiteboard_session_' + user.uid, JSON.stringify(session));
-  }, [session]);
+    if (user?.uid) localStorage.setItem('qul_active_whiteboard_session_' + user.uid + '_' + (sessionId || 'offline'), JSON.stringify(session));
+  }, [session, sessionId, user?.uid]);
 
   // Real-time tab visibility & focus tracking: turns student presence green when focused on whiteboard page, dark when switching tab/app
   useEffect(() => {
@@ -324,14 +395,20 @@ export const WhiteboardPage: React.FC = () => {
 
   // Canvas elements update
   const handleElementsChange = (newElements: WhiteboardElement[]) => {
+    if (!isTeacher) {
+      if (!draftMode || draftPack.key !== draftKey) return;
+      setDraftPack(prev => ({
+        ...prev, pages: { ...prev.pages, [currentPage.id]: newElements }
+      }));
+      setStudentAnswerSent(false);
+      return;
+    }
     setHistory(prev => [...prev, currentPage.elements]);
     setRedoStack([]);
-
     setSession(prev => {
       const updatedPages = [...prev.pages];
       updatedPages[prev.currentPageIndex] = {
-        ...updatedPages[prev.currentPageIndex],
-        elements: newElements
+        ...updatedPages[prev.currentPageIndex], elements: newElements
       };
       return { ...prev, pages: updatedPages };
     });
@@ -416,20 +493,11 @@ export const WhiteboardPage: React.FC = () => {
   };
 
   const handleScoreChange = (studentId: string, delta: number) => {
-    setSession(prev => {
-      const student = prev.students[studentId];
-      if (!student) return prev;
-      return {
-        ...prev,
-        students: {
-          ...prev.students,
-          [studentId]: {
-            ...student,
-            score: Math.max(0, student.score + delta)
-          }
-        }
-      };
-    });
+    if (!isTeacher) return;
+    const work = submissions.find(item => item.studentId === studentId);
+    if (!work) return;
+    const nextScore = Math.max(0, Math.min(100, (work.reviewed ? work.score || 0 : 0) + delta));
+    void grade(studentId, nextScore, work.feedback || '').catch(() => {});
   };
 
   const toggleTeacherLock = () => {
@@ -446,31 +514,80 @@ export const WhiteboardPage: React.FC = () => {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const handleSendStudentAnswer = () => {
-    if (!studentAnswerText.trim() || !user) return;
-    const stId = user.uid || 'current_student';
-    const stName = profile?.displayName || user.displayName || 'أنا';
+  const handleSendStudentAnswer = async () => {
+    if (!user || !sessionId || !canvasReady || isTeacher || sending) {
+      setSendError('يجب الانضمام إلى حصة نشطة قبل إرسال العمل.');
+      return;
+    }
+    setStudentAnswerSent(false);
+    setSendError(null);
+    const drawings = draftPack.key === draftKey
+      ? (draftPack.pages[currentPage.id] || []) : [];
+    try {
+      await submit(
+        studentAnswerText, drawings, currentPage.id,
+        profile?.displayName || user.displayName || 'طالب'
+      );
+      setStudentAnswerSent(true);
+    } catch (error) {
+      const key = error instanceof Error ? error.message : '';
+      setSendError(key === 'DRAWING_TOO_LARGE'
+        ? 'الرسمة كبيرة جدًا، قلّل حجم الصور ثم حاول الإرسال.'
+        : key === 'TOO_MANY_ELEMENTS'
+          ? 'الرسمة تحتوي على عناصر كثيرة جدًا، قلّلها ثم حاول الإرسال.'
+          : key === 'EMPTY_SUBMISSION'
+            ? 'اكتب إجابة أو ارسم عملًا أولًا.'
+            : 'تعذّر إرسال العمل. تحقق من الاتصال ثم حاول مجددًا.');
+    }
+  };
 
-    setSession(prev => {
-      if (!prev.activeActivity) return prev;
-      return {
-        ...prev,
-        activeActivity: {
-          ...prev.activeActivity,
-          submissions: {
-            ...prev.activeActivity.submissions,
-            [stId]: {
-              studentId: stId,
-              studentName: stName,
-              answer: studentAnswerText,
-              timestamp: Date.now(),
-              evaluated: false
-            }
-          }
-        }
+  // The floating student toolbar now controls a private sketchbook and a
+  // real submission, rather than silently logging inert button presses.
+  useEffect(() => {
+    if (isTeacher) return;
+    const handleAction = (event: Event) => {
+      const action = (event as CustomEvent<{ action?: string }>).detail?.action;
+      if (action === 'submit') {
+        void handleSendStudentAnswer();
+      } else if (action === 'image') {
+        setDraftMode(true);
+        imageInputRef.current?.click();
+      } else if (action === 'pen' || action === 'text' || action === 'sticky') {
+        setDraftMode(true);
+        setActiveTool(action === 'sticky' ? 'note' : action);
+      }
+    };
+    window.addEventListener('qul_student_toolbar_action', handleAction);
+    return () => window.removeEventListener('qul_student_toolbar_action', handleAction);
+  }, [isTeacher, sessionId, canvasReady, studentAnswerText, draftPack, currentPage.id, sending]);
+
+  const handleStudentImage = (file: File | undefined) => {
+    if (!file || !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setSendError('اختر صورة PNG أو JPEG أو WebP فقط.');
+      return;
+    }
+    if (file.size > 150000) {
+      setSendError('حجم الصورة كبير. استخدم صورة أصغر من 150 كيلوبايت.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string' || draftPack.key !== draftKey) return;
+      const newEl: WhiteboardElement = {
+        id: 'student_image_' + Date.now(),
+        type: 'image', x: 120, y: 90, width: 280, height: 200,
+        color: '#ffffff', strokeWidth: 2, src: reader.result,
+        createdBy: user?.uid,
+        createdByName: profile?.displayName || 'طالب'
       };
-    });
-    setStudentAnswerSent(true);
+      setDraftPack(prev => ({
+        ...prev, pages: {
+          ...prev.pages, [currentPage.id]: [...(prev.pages[currentPage.id] || []), newEl]
+        }
+      }));
+      setDraftMode(true);
+    };
+    reader.readAsDataURL(file);
   };
 
   const toggleHandRaise = () => {
@@ -524,6 +641,24 @@ export const WhiteboardPage: React.FC = () => {
         lang={lang}
         rightContent={
           <div className="flex items-center gap-2 sm:gap-4">
+            {isTeacher && sessionId && (
+              <button onClick={() => setIsStudentWorksOpen(true)}
+                className="rounded-xl border border-cyan-300/25 bg-slate-900/75 px-3 py-2 text-[10px] font-bold text-cyan-200 hover:bg-slate-800">
+                أعمال الطلاب {submissions.length > 0 ? '(' + submissions.length + ')' : ''}
+              </button>
+            )}
+            {!isTeacher && sessionId && (
+              <div className="flex gap-1 bg-slate-900/70 rounded-xl border border-white/10 p-1">
+                <button onClick={() => setDraftMode(false)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold ${!draftMode ? 'bg-emerald-500 text-slate-950' : 'text-white/70'}`}>
+                  سبورة المعلم
+                </button>
+                <button onClick={() => setDraftMode(true)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold ${draftMode ? 'bg-amber-400 text-slate-950' : 'text-white/70'}`}>
+                  مساحتي
+                </button>
+              </div>
+            )}
             {/* Server-verified live classroom access, without a global shared session. */}
             {sessionId ? (
               <div className="flex items-center gap-2 bg-slate-900/80 border border-emerald-500/30 px-3 py-1.5 rounded-2xl">
@@ -569,16 +704,24 @@ export const WhiteboardPage: React.FC = () => {
           {classroomError}
         </p>
       )}
+      {sessionId && (!canvasReady || canvasError) && (
+        <p role="status" className="text-center text-[11px] font-bold bg-slate-800 py-1 text-amber-200">
+          {canvasError || 'جارٍ تحميل السبورة المشتركة...'}
+        </p>
+      )}
+      {workError && <p role="alert" className="bg-rose-950/90 text-rose-200 text-xs text-center py-1">{workError}</p>}
       {/* Main Classroom Whiteboard Layout */}
       <div id="qul-whiteboard-canvas-area" className="flex-1 relative overflow-hidden bg-slate-950">
         {/* Live Whiteboard Canvas with Integrated Compact Student Counter & Real-Time Interaction Under Hijri Date */}
         <WhiteboardCanvas
-          elements={currentPage.elements}
+          elements={sessionId && !canvasReady ? [] :
+            (!isTeacher && draftMode ? (draftPack.key === draftKey ? draftPack.pages[currentPage.id] || [] : []) : currentPage.elements)}
           onElementsChange={handleElementsChange}
           activeTool={activeTool}
           activeColor={activeColor}
           activeStrokeWidth={activeStrokeWidth}
-          isReadOnly={!isTeacher && session.isLocked}
+          isReadOnly={(!!sessionId && !canvasReady) ||
+            (!isTeacher && !draftMode)}
           theme={currentPage.theme || activeTheme}
           background={currentPage.background}
           currentUserId={user?.uid}
@@ -599,7 +742,7 @@ export const WhiteboardPage: React.FC = () => {
         />
 
         {/* Student Response & Interaction Drawer (Visible to Student Only) */}
-        {!isTeacher && (
+        {!isTeacher && !!sessionId && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-xl border border-emerald-500/30 rounded-3xl p-4 shadow-2xl w-full max-w-xl">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -631,20 +774,38 @@ export const WhiteboardPage: React.FC = () => {
                 dir="rtl"
               />
               <button
-                onClick={handleSendStudentAnswer}
-                disabled={!studentAnswerText.trim()}
+                onClick={() => void handleSendStudentAnswer()}
+                disabled={sending || !canvasReady ||
+                  (!studentAnswerText.trim() && !(draftPack.pages[currentPage.id] || []).length)}
                 className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white rounded-xl text-xs font-bold arabic-font flex items-center gap-1.5 shadow-lg transition"
               >
                 <Send size={14} />
-                إرسال الإجابة
+                {sending ? 'جارٍ الإرسال...' : 'إرسال العمل'}
               </button>
             </div>
 
+            <input ref={imageInputRef} type="file" accept="image/*" className="hidden"
+              onChange={e => {
+                handleStudentImage(e.target.files?.[0]);
+                e.target.value = '';
+              }} />
+            {draftMode && (
+              <p className="mt-1 text-[10px] text-amber-200/75">
+                رسوماتك خاصة حتى تضغط «إرسال العمل». لن تُعدّل سبورة المعلم.
+              </p>
+            )}
             {studentAnswerSent && (
-              <div className="text-[11px] text-emerald-400 font-bold mt-1.5 flex items-center gap-1">
+              <div role="status" className="text-[11px] text-emerald-400 font-bold mt-1.5 flex items-center gap-1">
                 <CheckCircle2 size={12} />
-                تم إرسال إجابتك بنجاح إلى المعلم!
+                تم حفظ عملك وإرساله إلى المعلم.
               </div>
+            )}
+            {sendError && <p role="alert" className="text-rose-300 text-[11px] mt-1">{sendError}</p>}
+            {myWork?.reviewed && myWork.feedback && (
+              <p className="text-amber-300 text-[11px] mt-1">
+                ملاحظة المعلم: {myWork.feedback}
+                {typeof myWork.score === 'number' ? `، التقييم: ${myWork.score}/100` : ''}
+              </p>
             )}
           </div>
         )}
@@ -664,6 +825,8 @@ export const WhiteboardPage: React.FC = () => {
           onClose={() => setIsStudentWorksOpen(false)}
           session={session}
           onScoreChange={handleScoreChange}
+          submittedWork={submissions}
+          onGradeSubmission={(id, points, feedback) => void grade(id, points, feedback).catch(() => {})}
         />
 
         {/* 2. Arabic Letters & Vocabulary Modal */}
