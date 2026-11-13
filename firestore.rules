@@ -734,6 +734,111 @@ service cloud.firestore {
         );
     }
 
+    // The canvas and the students' submitted work are separate from the
+    // live control document. Students can view the teacher's canvas, but
+    // cannot modify it. Only a room's actual teacher can review all work.
+    function liveRoomTeacher(sessionId) {
+      let room = get(/databases/$(database)/documents/live_sessions/$(sessionId)).data;
+      return isTeacher() &&
+        room.teacherId == request.auth.uid &&
+        room.status == 'active' &&
+        room.expiresAt > request.time;
+    }
+
+    function liveRoomStudent(sessionId) {
+      let room = get(/databases/$(database)/documents/live_sessions/$(sessionId)).data;
+      let caller = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return isAuthenticated() &&
+        room.status == 'active' &&
+        room.expiresAt > request.time &&
+        ('participants' in room) &&
+        room.participants is map &&
+        (request.auth.uid in room.participants) &&
+        room.participants[request.auth.uid] == true &&
+        (
+          (('schoolId' in caller) && caller.schoolId == room.schoolId) ||
+          (!('schoolId' in caller) && room.schoolId == 'independent')
+        ) &&
+        (
+          room.classId == '' ||
+          (('classId' in caller) && caller.classId == room.classId)
+        );
+    }
+
+    match /live_sessions/{sessionId}/canvas/{canvasId} {
+      allow get: if canvasId == 'main' &&
+        (liveRoomTeacher(sessionId) || liveRoomStudent(sessionId));
+      allow list, delete: if false;
+      allow create: if canvasId == 'main' &&
+        liveRoomTeacher(sessionId) &&
+        request.resource.data.teacherId == request.auth.uid &&
+        request.resource.data.keys().hasOnly([
+          'teacherId', 'pages', 'currentPageIndex', 'isLocked',
+          'wordBox', 'title', 'updatedAt'
+        ]) &&
+        request.resource.data.pages is list &&
+        request.resource.data.pages.size() <= 25 &&
+        request.resource.data.currentPageIndex is int;
+      allow update: if canvasId == 'main' &&
+        liveRoomTeacher(sessionId) &&
+        request.resource.data.teacherId == resource.data.teacherId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'pages', 'currentPageIndex', 'isLocked', 'wordBox', 'title', 'updatedAt'
+        ]) &&
+        request.resource.data.pages is list &&
+        request.resource.data.pages.size() <= 25 &&
+        request.resource.data.currentPageIndex is int &&
+        request.resource.data.currentPageIndex >= 0 &&
+        request.resource.data.currentPageIndex < request.resource.data.pages.size();
+    }
+
+    function validStudentWork(data) {
+      return data.keys().hasAll([
+          'authorId', 'studentName', 'answer', 'elements', 'pageId', 'submittedAt'
+        ]) &&
+        data.authorId == request.auth.uid &&
+        data.studentName is string && data.studentName.size() <= 80 &&
+        data.answer is string && data.answer.size() <= 2000 &&
+        data.elements is list && data.elements.size() <= 150 &&
+        data.pageId is string && data.pageId.size() <= 80 &&
+        data.submittedAt is timestamp;
+    }
+
+    match /live_sessions/{sessionId}/student_work/{workId} {
+      allow get: if liveRoomTeacher(sessionId) ||
+        (workId == request.auth.uid && liveRoomStudent(sessionId));
+      allow list: if liveRoomTeacher(sessionId);
+      allow create: if workId == request.auth.uid &&
+        liveRoomStudent(sessionId) &&
+        request.resource.data.keys().hasOnly([
+          'authorId', 'studentName', 'answer', 'elements', 'pageId', 'submittedAt'
+        ]) &&
+        validStudentWork(request.resource.data) &&
+        request.resource.data.submittedAt == request.time;
+      allow update: if (
+        workId == request.auth.uid &&
+        liveRoomStudent(sessionId) &&
+        validStudentWork(request.resource.data) &&
+        request.resource.data.authorId == resource.data.authorId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'studentName', 'answer', 'elements', 'pageId', 'submittedAt'
+        ]) &&
+        request.resource.data.submittedAt == request.time
+      ) || (
+        liveRoomTeacher(sessionId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'score', 'feedback', 'reviewedAt'
+        ]) &&
+        (!('score' in request.resource.data) ||
+          (request.resource.data.score is int &&
+           request.resource.data.score >= 0 && request.resource.data.score <= 100)) &&
+        (!('feedback' in request.resource.data) ||
+          (request.resource.data.feedback is string &&
+           request.resource.data.feedback.size() <= 800))
+      );
+      allow delete: if false;
+    }
+
     // Invite codes map to sessions, but must not be enumerable by clients.
     // The server checks them using Admin SDK with verified Firebase identity.
     match /live_session_invites/{code} {

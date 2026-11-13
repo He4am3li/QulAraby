@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, query, where, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, query, where, Timestamp, serverTimestamp } from 'firebase/firestore';
 
 const PROJECT = 'demo-qul-security-rules';
 const rules = readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8');
@@ -88,6 +88,12 @@ try {
       participants: { learnerA: true },
       poll: { isActive: true, question: 'حسنًا؟', options: ['نعم', 'لا'], votes: {} },
       exercise: { isActive: true, question_ar: 'ما الكلمة؟', correctAnswer: 'نعم', answers: {} }
+    });
+    await setDoc(doc(db, 'live_sessions/roomA/canvas/main'), {
+      teacherId: 'teacherA',
+      pages: [{ id:'page_1', title:'الحصة', elements:[], background:'blank' }],
+      currentPageIndex: 0, isLocked: false, title:'لوحة المعلم', wordBox: [],
+      updatedAt: Timestamp.now()
     });
     await setDoc(doc(db, 'live_sessions/roomB'), {
       teacherId: 'teacherB', schoolId: 'schoolB', classId: 'grade10B',
@@ -279,6 +285,101 @@ try {
     })));
   test('teacher may update live session teaching content', () =>
     assertSucceeds(updateDoc(session('teacherA'), { 'poll.question': 'سؤال جديد' })));
+  test('teacher canvas is visible to enrolled students only', async () => {
+    await assertSucceeds(getDoc(ref('teacherA','live_sessions/roomA/canvas/main')));
+    await assertSucceeds(getDoc(ref('learnerA','live_sessions/roomA/canvas/main')));
+    await assertFails(getDoc(ref('learnerB','live_sessions/roomA/canvas/main')));
+    await assertFails(getDoc(ref('learnerC','live_sessions/roomA/canvas/main')));
+    await assertFails(getDoc(ref('teacherB','live_sessions/roomA/canvas/main')));
+    await assertFails(getDoc(ref('learnerA','live_sessions/roomOther/canvas/main')));
+  });
+  test('teacher can synchronize canvas but cannot change canvas ownership', async () => {
+    await assertSucceeds(updateDoc(ref('teacherA','live_sessions/roomA/canvas/main'), {
+      currentPageIndex: 0, updatedAt: serverTimestamp()
+    }));
+    await assertFails(updateDoc(ref('teacherA','live_sessions/roomA/canvas/main'), {
+      teacherId: 'learnerA'
+    }));
+    await assertFails(updateDoc(ref('learnerA','live_sessions/roomA/canvas/main'), {
+      pages: [{id:'fake',elements:[]}]
+    }));
+    await assertFails(updateDoc(ref('teacherB','live_sessions/roomA/canvas/main'), {
+      isLocked: true
+    }));
+  });
+  test('only a room teacher can initialize canvas for an active room', async () => {
+    await assertSucceeds(setDoc(ref('teacherA','live_sessions/roomOther/canvas/main'), {
+      teacherId:'teacherA', pages:[{id:'page_1',elements:[]}], currentPageIndex:0,
+      isLocked:false, title:'درس', wordBox:[], updatedAt:serverTimestamp()
+    }));
+    await assertFails(setDoc(ref('learnerA','live_sessions/roomOther/canvas/forged'), {
+      teacherId:'learnerA', pages:[], currentPageIndex:0
+    }));
+    await assertFails(deleteDoc(ref('teacherA','live_sessions/roomA/canvas/main')));
+  });
+  test('student submits own written and drawn work for review', async () => {
+    const work = ref('learnerA','live_sessions/roomA/student_work/learnerA');
+    await assertSucceeds(setDoc(work,{
+      authorId:'learnerA', studentName:'Learner A', answer:'هذه إجابتي',
+      elements:[{id:'a1',type:'text',text:'مرحبا',x:12,y:25}],
+      pageId:'page_1', submittedAt:serverTimestamp()
+    }));
+    await assertSucceeds(getDoc(work));
+    await assertSucceeds(getDoc(ref('teacherA','live_sessions/roomA/student_work/learnerA')));
+    await assertFails(getDoc(ref('learnerB','live_sessions/roomA/student_work/learnerA')));
+    await assertFails(getDoc(ref('learnerC','live_sessions/roomA/student_work/learnerA')));
+    await assertFails(getDoc(ref('teacherB','live_sessions/roomA/student_work/learnerA')));
+  });
+  test('students can never submit as another identity or bypass membership', async () => {
+    await assertFails(setDoc(ref('learnerA','live_sessions/roomA/student_work/learnerB'),{
+      authorId:'learnerB',studentName:'Other',answer:'Fake',elements:[],pageId:'page_1',
+      submittedAt:serverTimestamp()
+    }));
+    await assertFails(setDoc(ref('learnerB','live_sessions/roomA/student_work/learnerB'),{
+      authorId:'learnerB',studentName:'Other',answer:'Fake',elements:[],pageId:'page_1',
+      submittedAt:serverTimestamp()
+    }));
+    await assertFails(setDoc(ref('learnerC','live_sessions/roomA/student_work/learnerC'),{
+      authorId:'learnerC',studentName:'Other',answer:'Fake',elements:[],pageId:'page_1',
+      submittedAt:serverTimestamp()
+    }));
+  });
+  test('teacher can list classroom work while other users cannot enumerate it', async () => {
+    const works = uid => collection(firestore(uid), 'live_sessions/roomA/student_work');
+    const list = await assertSucceeds(getDocs(works('teacherA')));
+    assert.equal(list.size, 1);
+    await assertFails(getDocs(works('learnerA')));
+    await assertFails(getDocs(works('teacherB')));
+  });
+  test('teacher feedback is visible to its author but not forgeable by student', async () => {
+    const student = ref('learnerA','live_sessions/roomA/student_work/learnerA');
+    const teacher = ref('teacherA','live_sessions/roomA/student_work/learnerA');
+    await assertSucceeds(updateDoc(teacher,{
+      feedback:'أحسنت', score:5, reviewedAt:serverTimestamp()
+    }));
+    await assertSucceeds(getDoc(student));
+    await assertFails(updateDoc(student,{score:100}));
+    await assertFails(updateDoc(student,{feedback:'ممتاز'}));
+    await assertFails(updateDoc(student,{authorId:'teacherA'}));
+    await assertSucceeds(updateDoc(student,{
+      answer:'إجابتي المنقحة', submittedAt:serverTimestamp()
+    }));
+    const updated=await assertSucceeds(getDoc(teacher));
+    assert.equal(updated.data().score,5);
+    await assertFails(updateDoc(teacher,{answer:'تلاعب'}));
+    await assertFails(deleteDoc(student));
+  });
+  test('student submission must remain bounded', async () => {
+    await assertFails(setDoc(ref('learnerA','live_sessions/roomA/student_work/fake'),{
+      authorId:'learnerA',studentName:'Learner A',answer:'x'.repeat(2001),
+      elements:[],pageId:'page_1',submittedAt:serverTimestamp()
+    }));
+    await assertFails(setDoc(ref('learnerA','live_sessions/roomA/student_work/learnerA'),{
+      authorId:'learnerA', studentName:'Learner A', answer:'x'.repeat(2001),
+      elements:[],pageId:'page_1',submittedAt:serverTimestamp()
+    }));
+  });
+
   test('teacher sees own school placement record only', async () => {
     await assertSucceeds(getDoc(ref('teacherA', 'placement_results/schoolA-result')));
     await assertFails(getDoc(ref('teacherB', 'placement_results/schoolA-result')));
