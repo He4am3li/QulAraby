@@ -1,0 +1,185 @@
+/* Shared QUL top-bar instruments. Scoped to the home and dashboard header only. */
+.qul-header-glass {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 258px;
+  max-width: 100%;
+  height: 58px;
+  min-height: 58px;
+  padding: 7px;
+  overflow: visible;
+  border-radius: 19px;
+  border: 1px solid rgba(229, 255, 251, .27);
+  background:
+    radial-gradient(ellipse at 14% 0%, rgba(223, 255, 249, .20), transparent 62%),
+    linear-gradient(149deg, rgba(218, 254, 246, .12), rgba(80, 155, 144, .085) 55%, rgba(5, 26, 38, .19));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .24),
+    inset 0 -1px 0 rgba(188, 250, 237, .07),
+    0 10px 28px rgba(0, 13, 26, .16);
+  backdrop-filter: blur(25px) saturate(150%);
+  -webkit-backdrop-filter: blur(25px) saturate(150%);
+}
+.qul-header-glass::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 1px;
+  border-radius: 17px;
+  pointer-events: none;
+  background: linear-gradient(171deg, rgba(255, 255, 255, .10), transparent 38%);
+}
+.qul-header-glass > * {
+  position: relative;
+  z-index: 1;
+}
+.qul-header-glass .qul-language-action {
+  display: inline-flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 41px;
+  padding: 0 7px;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: rgba(246, 255, 252, .92);
+  background: transparent;
+  box-shadow: none;
+  white-space: nowrap;
+  transition: border-color .2s, background .2s, color .2s;
+}
+.qul-header-glass .qul-language-action:hover {
+  background: rgba(232, 255, 249, .11);
+  border-color: rgba(241, 255, 253, .12);
+}
+.qul-header-glass .qul-language-action span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .005em;
+}
+.qul-header-glass .qul-language-action svg { width: 15px; height: 15px; opacity:.81; }
+.qul-header-glass .wesal-launch {
+  display: inline-flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 42px;
+  min-height: 42px;
+  padding: 0 7px;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(177, 255, 228, .19);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(62, 187, 155, .19), rgba(7, 77, 84, .15));
+  box-shadow: inset 0 1px rgba(248, 255, 251, .13), 0 4px 10px rgba(3, 25, 32, .09);
+  transition: border-color .2s, background .2s, box-shadow .2s;
+}
+.qul-header-glass .wesal-launch:hover {
+  transform: none;
+  border-color: rgba(193, 255, 232, .38);
+  background: linear-gradient(145deg, rgba(84, 203, 173, .28), rgba(13, 93, 104, .22));
+}
+.qul-header-glass .wesal-launch span:not(.wesal-unread) {
+  font-weight: 850;
+  font-size: 12px;
+}
+.qul-header-glass .wesal-launch svg { width: 17px; height: 17px; }
+.qul-header-divider {
+  flex: 0 0 1px;
+  align-self: center;
+  width: 1px;
+  height: 22px;
+  margin: 0 1px;
+  background: linear-gradient(to bottom, transparent, rgba(244, 255, 252, .25), transparent);
+}
+.qul-header-guide,
+.qul-header-signout {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 40px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: rgba(234, 255, 248, .76);
+  transition: background .2s, border-color .2s, color .2s;
+}
+.qul-header-guide:hover,
+.qul-header-signout:hover {
+  background: rgba(255, 255, 255, .12);
+  border-color: rgba(255, 255, 255, .13);
+  color: white;
+}
+.qul-header-signout {color:rgba(255, 206, 211, .81)}
+.qul-header-signout:hover{background:rgba(255,118,137,.11);color:#ffdce1}
+.qul-header-account {
+  gap: 9px;
+}
+.qul-header-avatar {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(228,255,247,.23);
+  border-radius: 13px;
+  color: #e5fff5;
+  background: linear-gradient(141deg, rgba(173,247,223,.22), rgba(60,132,136,.17));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16);
+}
+.qul-header-avatar img {width:100%;height:100%;object-fit:cover}
+.qul-header-identity {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1 1 0%;
+  min-width: 0;
+  text-align: start;
+}
+.qul-header-identity strong {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.qul-header-identity small {
+  color: rgba(208, 239, 229, .64);
+  font-size: 10px;
+  line-height: 1.25;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.qul-header-glass .qul-header-signin {
+  border: 1px solid rgba(177, 255, 226, .22);
+  background: rgba(160, 249, 206, .14);
+  border-radius: 11px;
+  width: 100%;
+  min-height: 42px;
+  color: #f5fff9;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 900;
+}
+.qul-header-glass .qul-header-signin:hover{background:rgba(150,249,206,.24)}
+.qul-header-glass .wesal-unread{z-index:3}
+@media (max-width:767px) {
+  .qul-header-glass {width:min(100%, 258px);height:54px;min-height:54px;padding:5px;border-radius:17px}
+  .qul-header-glass .qul-language-action,.qul-header-glass .wesal-launch{height:41px;min-height:41px}
+  .qul-header-guide,.qul-header-signout{height:40px}
+}
+@media (prefers-reduced-motion:reduce) {
+  .qul-header-glass *{transition:none}
+}
