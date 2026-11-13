@@ -135,7 +135,9 @@ const AppContent: React.FC = () => {
         </AnimatePresence>
       </Layout>
       {isWhiteboard && (
-        isTeacher ? <ScopedTeacherToolbar /> : <StudentToolbar onAction={(action) => console.log('Student action:', action)} />
+        isTeacher ? <ScopedTeacherToolbar /> : <StudentToolbar onAction={(action) => window.dispatchEvent(
+          new CustomEvent('qul_student_toolbar_action', { detail: { action } })
+        )} />
       )}
       {isWhiteboard && <ScopedLiveInteractionLayer />}
       </LiveClassroomProvider>
