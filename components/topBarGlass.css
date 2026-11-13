@@ -38,7 +38,7 @@
 }
 .qul-header-glass .qul-language-action {
   display: inline-flex;
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-width: 0;
   height: 41px;
   padding: 0 7px;
@@ -64,7 +64,7 @@
 .qul-header-glass .qul-language-action svg { width: 15px; height: 15px; opacity:.81; }
 .qul-header-glass .wesal-launch {
   display: inline-flex;
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-width: 0;
   height: 42px;
   min-height: 42px;
@@ -95,7 +95,6 @@
   margin: 0 1px;
   background: linear-gradient(to bottom, transparent, rgba(244, 255, 252, .25), transparent);
 }
-.qul-header-guide,
 .qul-header-signout {
   flex: 0 0 36px;
   width: 36px;
@@ -108,7 +107,6 @@
   color: rgba(234, 255, 248, .76);
   transition: background .2s, border-color .2s, color .2s;
 }
-.qul-header-guide:hover,
 .qul-header-signout:hover {
   background: rgba(255, 255, 255, .12);
   border-color: rgba(255, 255, 255, .13);
@@ -178,7 +176,7 @@
 @media (max-width:767px) {
   .qul-header-glass {width:min(100%, 258px);height:54px;min-height:54px;padding:5px;border-radius:17px}
   .qul-header-glass .qul-language-action,.qul-header-glass .wesal-launch{height:41px;min-height:41px}
-  .qul-header-guide,.qul-header-signout{height:40px}
+  .qul-header-signout{height:40px}
 }
 @media (prefers-reduced-motion:reduce) {
   .qul-header-glass *{transition:none}

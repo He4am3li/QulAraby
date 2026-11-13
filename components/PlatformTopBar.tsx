@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle, LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import { LanguageToggle } from './LanguageToggle';
 import { WesalLauncher } from './Wesal';
 import './topBarGlass.css';
@@ -32,11 +32,6 @@ export const PlatformTopBar: React.FC = () => {
     document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr';
   };
 
-  const restartTour = () => {
-    localStorage.removeItem('hub_onboarding_seen');
-    window.location.reload();
-  };
-
   return (
     <header dir={lang === 'ar' ? 'rtl' : 'ltr'} className="relative isolate shrink-0 overflow-hidden border-b border-white/15 bg-gradient-to-l from-[#0f172a]/95 to-[#064e3b]/95 px-4 py-4 text-white shadow-lg sm:px-6 md:px-8 md:py-5">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -49,10 +44,6 @@ export const PlatformTopBar: React.FC = () => {
             <LanguageToggle lang={lang} onToggle={toggleLanguage} />
             <span className="qul-header-divider" aria-hidden="true" />
             <WesalLauncher lang={lang} />
-            <span className="qul-header-divider" aria-hidden="true" />
-            <button onClick={restartTour} title={lang === 'ar' ? 'جولة تعريفية' : 'Guided tour'} className="qul-header-guide">
-              <HelpCircle size={18}/>
-            </button>
           </div>
         </div>
         <BrandSlogan />

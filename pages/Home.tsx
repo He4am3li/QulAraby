@@ -9,7 +9,7 @@ import { FallingLetters } from '../components/Layout';
 import { 
   Trophy, CheckCircle2, Award, Star, X, Download, 
   BookOpen, BookOpenCheck, Languages, Library, BookText, ArrowUpRight, 
-  Zap, LayoutDashboard, Sparkles, Globe, ChevronRight, ChevronLeft, Type, Mic, Ear, PenTool, Rocket, Gamepad2, HelpCircle,
+  Zap, LayoutDashboard, Sparkles, Globe, ChevronRight, ChevronLeft, Type, Mic, Ear, PenTool, Rocket, Gamepad2,
   LogOut, LogIn, User as UserIcon, Brain, FileText, ClipboardList, ClipboardCheck, GraduationCap, TrendingUp, Presentation, Feather
 } from 'lucide-react';
 import { Vocabulary, CertificateData } from '../types';
@@ -353,17 +353,6 @@ export const Home: React.FC = () => {
                 <LanguageToggle lang={lang} onToggle={toggleLang} />
                 <span className="qul-header-divider" aria-hidden="true" />
                 <WesalLauncher lang={lang} />
-                <span className="qul-header-divider" aria-hidden="true" />
-                <button 
-                  onClick={() => {
-                    localStorage.removeItem('hub_onboarding_seen');
-                    window.location.reload();
-                  }} 
-                  className="qul-header-guide group"
-                  title={lang === 'ar' ? 'جولة تعليمية' : 'Onboarding Tour'}
-                >
-                  <HelpCircle size={18} className="text-white/70 group-hover:text-white" />
-                </button>
               </motion.div>
             </div>
 
