@@ -402,7 +402,7 @@ export const Home: React.FC = () => {
                 ) : (
                   <button 
                     onClick={() => signIn()}
-                    className="bg-white text-blue-600 px-5 py-2 rounded-xl font-black text-xs shadow-lg hover:bg-blue-50 transition-all active:scale-95 flex items-center gap-3"
+                    className="qul-header-signin"
                   >
                     <LogIn size={14} />
                     {lang === 'ar' ? 'تسجيل الدخول' : 'SIGN IN'}
