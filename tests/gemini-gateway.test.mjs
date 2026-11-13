@@ -75,3 +75,48 @@ assert.equal(isApprovedGatewayProfile(good, undefined), false,
   'Unverified or missing token email must be rejected');
 
 console.log('Gemini security guards OK: server-side key, signed Firebase auth, limited endpoints and ephemeral Live tokens.');
+
+const { classifyFirebaseAuthFailure } = await import('../api/_firebaseAuthFailure.mjs');
+const { requestLiveToken } = await import('../services/liveTokenRequest.mjs');
+const { getDialectLiveError } = await import('../services/dialectLiveErrors.mjs');
+
+// Regressions: IAM errors must not masquerade as expired user sessions.
+assert.deepEqual(classifyFirebaseAuthFailure({ code: 'auth/id-token-expired' }), {
+  statusCode: 401, code: 'AUTH_SESSION_INVALID', error: 'Invalid or expired session'
+});
+assert.equal(classifyFirebaseAuthFailure({ code: 'auth/id-token-revoked' }).statusCode, 401);
+assert.equal(classifyFirebaseAuthFailure({ code: 'auth/user-disabled' }).statusCode, 401);
+assert.equal(classifyFirebaseAuthFailure({ code: 'auth/insufficient-permission' }).statusCode, 503);
+assert.equal(classifyFirebaseAuthFailure({ code: 'auth/insufficient-permission' }).code, 'AUTH_SERVICE_PERMISSION');
+assert.equal(classifyFirebaseAuthFailure(new Error('secret key')).statusCode, 503);
+assert.match(getDialectLiveError({ code: 'LIVE_AUTH_SERVICE_PERMISSION' }), /صلاحية Firebase Authentication/);
+assert.doesNotMatch(getDialectLiveError({ code: 'LIVE_AUTH_SERVICE_UNAVAILABLE' }, 'en'), /expired/);
+
+// Cached ID tokens get precisely one forced refresh after a 401, never an
+// unauthenticated retry, and service/approval failures are not retried.
+const issued = [];
+const fakeUser = { getIdToken: async refresh => {
+  issued.push(refresh);
+  return refresh ? 'new-jwt' : 'cached-jwt';
+}};
+const statuses = [];
+const liveToken = await requestLiveToken(fakeUser, async (_url, opts) => {
+  statuses.push(opts.headers.authorization);
+  return statuses.length === 1
+    ? { status: 401, ok: false }
+    : { status: 200, ok: true, json: async () => ({ token: 'auth_tokens/ephemeral' }) };
+});
+assert.equal(liveToken, 'auth_tokens/ephemeral');
+assert.deepEqual(issued, [false, true]);
+assert.deepEqual(statuses, ['Bearer cached-jwt', 'Bearer new-jwt']);
+let deniedAttempts = 0;
+await assert.rejects(
+  requestLiveToken(fakeUser, async () => {
+    deniedAttempts++;
+    return { status: 503, ok: false, json: async () => ({ code: 'AUTH_SERVICE_PERMISSION' }) };
+  }),
+  error => error.code === 'LIVE_AUTH_SERVICE_PERMISSION'
+);
+assert.equal(deniedAttempts, 1);
+assert.ok(auth.includes('verifyIdToken(match[1], true)'), 'Never bypass revocation checks');
+console.log('Live gateway auth recovery and backend permission classification OK.');

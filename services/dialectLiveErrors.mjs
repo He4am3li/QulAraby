@@ -11,7 +11,9 @@ export const getDialectLiveError = (error, lang = 'ar') => {
     busy: ['تعذر تشغيل الميكروفون. أغلق التطبيقات الأخرى التي تستخدمه ثم أعد المحاولة.', 'Could not start the microphone. Close other apps using it and try again.'],
     unsupported: ['لا يمكن تشغيل الميكروفون في هذا المتصفح. استخدم اتصال HTTPS ومتصفحًا يدعم تسجيل الصوت.', 'The microphone is unavailable in this browser. Use HTTPS and a browser that supports audio recording.'],
     audio: ['تعذر تهيئة الصوت في هذا المتصفح. حدّث الصفحة أو جرّب متصفحًا آخر.', 'Audio could not be initialized. Refresh the page or try another browser.'],
-    auth: ['انتهت جلسة تسجيل الدخول. سجّل الدخول مجددًا لتشغيل المحادثة.', 'Your sign-in session has expired. Sign in again to start speaking.'],
+    auth: ['تعذر تجديد جلسة تسجيل الدخول. سجّل الدخول مجددًا لتشغيل المحادثة.', 'Your sign-in session could not be renewed. Sign in again to start speaking.'],
+    authServicePermission: ['يتعذر التحقق من حسابك لأن حساب الخدمة على الخادم يفتقر إلى صلاحية Firebase Authentication. يُرجى مراجعة مسؤول المنصة.', 'The server service account lacks Firebase Authentication permission. Please contact the platform administrator.'],
+    authService: ['خدمة التحقق من الحساب غير متاحة حاليًا. حاول مرة أخرى لاحقًا.', 'Account verification is temporarily unavailable. Please try again later.'],
     access: ['لا يملك هذا الحساب صلاحية استخدام المحادثة الصوتية. تحقق من اعتماد الحساب.', 'This account cannot access voice conversations. Check account approval.'],
     quota: ['تم تجاوز عدد محاولات الاتصال مؤقتًا. حاول مرة أخرى بعد دقيقة.', 'Too many connection attempts. Please try again in one minute.'],
     service: ['خدمة المحادثة الصوتية غير متاحة الآن. حاول مرة أخرى بعد قليل.', 'The voice service is temporarily unavailable. Please try again shortly.'],
@@ -24,6 +26,8 @@ export const getDialectLiveError = (error, lang = 'ar') => {
     : code === 'MIC_UNAVAILABLE' ? 'unsupported'
     : code === 'AUDIO_UNAVAILABLE' ? 'audio'
     : code === 'LIVE_AUTH_REQUIRED' ? 'auth'
+    : code === 'LIVE_AUTH_SERVICE_PERMISSION' ? 'authServicePermission'
+    : code === 'LIVE_AUTH_SERVICE_UNAVAILABLE' ? 'authService'
     : code === 'LIVE_ACCESS_DENIED' ? 'access'
     : code === 'LIVE_QUOTA_REACHED' ? 'quota'
     : code === 'LIVE_SERVICE_UNAVAILABLE' ? 'service'
