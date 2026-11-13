@@ -853,7 +853,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الكويت',
     nameEn: 'Kuwait',
     flag: '🇰🇼',
-    image: '/images/dialects/local/kuwait.jpg',
+    image: '/images/dialects/kuwait-towers-cinematic.avif',
     dialect: 'Gulf (كويتي)',
     characterMale: { 
       nameAr: 'فهد', 
