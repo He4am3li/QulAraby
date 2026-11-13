@@ -562,7 +562,10 @@ export const WhiteboardPage: React.FC = () => {
   }, [isTeacher, sessionId, canvasReady, studentAnswerText, draftPack, currentPage.id, sending]);
 
   const handleStudentImage = (file: File | undefined) => {
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file || !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setSendError('اختر صورة PNG أو JPEG أو WebP فقط.');
+      return;
+    }
     if (file.size > 150000) {
       setSendError('حجم الصورة كبير. استخدم صورة أصغر من 150 كيلوبايت.');
       return;
