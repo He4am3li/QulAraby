@@ -3,13 +3,10 @@ import { getApps } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 import { checkGatewayQuota, readGatewayBody, requireFirebaseUser, type GatewayRequest, type GatewayResponse } from './_geminiAuth.js';
+import { ROOM_TTL_MS, ROOM_CAP, ROOM_ID_RE, ROOM_CODE_RE, roomScope, canResumeRoom, canJoinRoom } from './_classroomAccess.mjs';
 
 const DB_ID = 'ai-studio-d8ed89a2-6662-4aa5-9cc7-1e8d0693722e';
 const OWNER_EMAIL = 'he4amali22@gmail.com';
-const SESSION_ID = /^[a-f0-9]{32}$/;
-const JOIN_CODE = /^[A-F0-9]{8}$/;
-const TTL_MS = 3 * 60 * 60 * 1000;
-const MAX_PARTICIPANTS = 80;
 type Profile = { role?: string; schoolId?: string; classId?: string; approved?: boolean; email?: string };
 type Body = { action?: string; sessionId?: string; code?: string };
 
@@ -22,23 +19,6 @@ function getDb() {
   const app = getApps().find(a => a.name === 'qul-gemini-gateway');
   if (!app) throw Error('SESSION_AUTH_UNAVAILABLE');
   return getFirestore(app, DB_ID);
-}
-function scopeOf(profile: Profile) {
-  return {
-    schoolId: typeof profile.schoolId === 'string' && profile.schoolId.length ? profile.schoolId : 'independent',
-    classId: typeof profile.classId === 'string' ? profile.classId : ''
-  };
-}
-function isSameScope(student: ReturnType<typeof scopeOf>, lesson: Record<string, unknown>) {
-  return student.schoolId === lesson.schoolId &&
-    (!lesson.classId || lesson.classId === student.classId);
-}
-function canAccess(lesson: Record<string, any>, uid: string, profile: Profile) {
-  const scope = scopeOf(profile);
-  const now = Date.now();
-  return lesson.status === 'active' && lesson.expiresAt?.toMillis?.() > now &&
-    (lesson.teacherId === uid ||
-     ((lesson.participants || {})[uid] === true && isSameScope(scope, lesson)));
 }
 
 export default async function handler(req: GatewayRequest, res: GatewayResponse): Promise<void> {
@@ -101,10 +81,10 @@ export default async function handler(req: GatewayRequest, res: GatewayResponse)
       const id = randomBytes(16).toString('hex');
       const code = randomBytes(4).toString('hex').toUpperCase();
       const now = Timestamp.now();
-      const expiry = Timestamp.fromMillis(now.toMillis() + TTL_MS);
+      const expiry = Timestamp.fromMillis(now.toMillis() + ROOM_TTL_MS);
       const sessionRef = db.doc('live_sessions/' + id);
       const inviteRef = db.doc('live_session_invites/' + code);
-      const scope = scopeOf(profile);
+      const scope = roomScope(profile);
       await db.runTransaction(async tx => {
         const duplicate = await tx.get(inviteRef);
         if (duplicate.exists && duplicate.data()?.expiresAt?.toMillis?.() > Date.now()) {
@@ -132,7 +112,7 @@ export default async function handler(req: GatewayRequest, res: GatewayResponse)
 
     if (body.action === 'join') {
       const code = String(body.code || '').trim().toUpperCase();
-      if (!JOIN_CODE.test(code)) {
+      if (!ROOM_CODE_RE.test(code)) {
         send(res, 400, { error: 'Invalid classroom code' });
         return;
       }
@@ -148,12 +128,8 @@ export default async function handler(req: GatewayRequest, res: GatewayResponse)
         const session = await tx.get(sessionRef);
         const data = session.data();
         if (!data || data.status !== 'active' || data.expiresAt?.toMillis?.() <= Date.now() ||
-            !isSameScope(scopeOf(profile), data)) {
+            !canJoinRoom(data, uid, profile)) {
           throw Error('INVALID_INVITATION');
-        }
-        if (Object.keys(data.participants || {}).length >= MAX_PARTICIPANTS &&
-            data.participants?.[uid] !== true) {
-          throw Error('SESSION_FULL');
         }
         tx.update(sessionRef, { ['participants.' + uid]: true });
         sessionId = sessionRef.id;
@@ -162,7 +138,7 @@ export default async function handler(req: GatewayRequest, res: GatewayResponse)
       return;
     }
 
-    if (typeof body.sessionId !== 'string' || !SESSION_ID.test(body.sessionId)) {
+    if (typeof body.sessionId !== 'string' || !ROOM_ID_RE.test(body.sessionId)) {
       send(res, 400, { error: 'Invalid classroom session' });
       return;
     }
@@ -170,7 +146,7 @@ export default async function handler(req: GatewayRequest, res: GatewayResponse)
     if (body.action === 'resume') {
       const doc = await sessionRef.get();
       const data = doc.data();
-      if (!data || !canAccess(data, uid, profile)) {
+      if (!data || !canResumeRoom(data, uid, profile)) {
         send(res, 403, { error: 'Classroom session unavailable' });
         return;
       }
@@ -180,7 +156,7 @@ export default async function handler(req: GatewayRequest, res: GatewayResponse)
     await db.runTransaction(async tx => {
       const doc = await tx.get(sessionRef);
       const data = doc.data();
-      if (!data || !canAccess(data, uid, profile)) throw Error('SESSION_UNAVAILABLE');
+      if (!data || !canResumeRoom(data, uid, profile)) throw Error('SESSION_UNAVAILABLE');
       if (body.action === 'end') {
         if (data.teacherId !== uid || !teacher) throw Error('NOT_TEACHER');
         tx.update(sessionRef, { status: 'ended', endedAt: Timestamp.now() });
