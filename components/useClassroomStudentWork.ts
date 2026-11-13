@@ -16,7 +16,10 @@ function asSubmission(id: string, data: any): WhiteboardSubmission {
     timestamp: typeof data.submittedAt?.toMillis === 'function'
       ? data.submittedAt.toMillis() : Date.now(),
     score: typeof data.score === 'number' ? data.score : undefined,
-    feedback: typeof data.feedback === 'string' ? data.feedback : undefined
+    feedback: typeof data.feedback === 'string' ? data.feedback : undefined,
+    reviewed: typeof data.reviewedAt?.toMillis === 'function' &&
+      typeof data.submittedAt?.toMillis === 'function' &&
+      data.reviewedAt.toMillis() >= data.submittedAt.toMillis()
   };
 }
 
