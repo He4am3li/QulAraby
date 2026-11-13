@@ -37,8 +37,9 @@
     "test:calligraphy": "node tests/calligraphy-regression.test.mjs",
     "test:penalty-broadcast": "node tests/penalty-broadcast.test.mjs",
     "test:translation-pedagogy": "node --test tests/translation-pedagogy.test.mjs",
-    "test:security": "node tests/access-approval.test.mjs && node tests/quiz-server-scoring.test.mjs && node tests/live-classroom-isolation.test.mjs && node tests/whiteboard-live-sync.test.mjs",
-    "prepare:dialects": "node scripts/prepare-dialect-landmark-photos.mjs"
+    "test:security": "node tests/access-approval.test.mjs && node tests/quiz-server-scoring.test.mjs && node tests/live-classroom-isolation.test.mjs && node tests/whiteboard-live-sync.test.mjs && node tests/wesal-policy.test.mjs",
+    "prepare:dialects": "node scripts/prepare-dialect-landmark-photos.mjs",
+    "test:wesal": "node tests/wesal-policy.test.mjs"
   },
   "dependencies": {
     "@google/genai": "2.31.0",
