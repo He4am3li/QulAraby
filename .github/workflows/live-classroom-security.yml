@@ -1,0 +1,37 @@
+name: Isolated classroom security
+
+on:
+  pull_request:
+    paths:
+      - 'api/live-classroom.ts'
+      - 'api/_classroomAccess.mjs'
+      - 'components/LiveClassroomContext.tsx'
+      - 'components/TeacherToolbar.tsx'
+      - 'components/LiveInteractionLayer.tsx'
+      - 'components/whiteboard/WhiteboardToolbar.tsx'
+      - 'pages/Whiteboard.tsx'
+      - 'App.tsx'
+      - 'tests/live-classroom-isolation.test.mjs'
+      - 'package.json'
+      - '.github/workflows/live-classroom-security.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  classroom:
+    name: Validate classroom membership and application
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install locked production dependencies
+        run: npm ci
+      - name: Test classroom isolation and score security
+        run: npm run test:security
+      - name: Typecheck and build application
+        run: npm run lint && npm run build
