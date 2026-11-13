@@ -1,0 +1,34 @@
+name: Quiz server grading security
+
+on:
+  pull_request:
+    paths:
+      - 'api/quiz-play.ts'
+      - 'api/_quizGrading.mjs'
+      - 'components/QuizPlayer.tsx'
+      - 'components/WordChessGame.tsx'
+      - 'pages/Quizzes.tsx'
+      - 'tests/quiz-server-scoring.test.mjs'
+      - 'package.json'
+      - '.github/workflows/quiz-server-grading.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  secure-quiz:
+    name: Check server-side quiz grading
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Use locked production dependencies
+        run: npm ci
+      - name: Test grade authenticity and quiz gateway wiring
+        run: npm run test:security
+      - name: Type-check and build QUL application
+        run: npm run lint && npm run build
