@@ -7,7 +7,7 @@ import {
   File as FileIcon, Play, ChevronLeft
 } from 'lucide-react';
 import { 
-  collection, query, orderBy, onSnapshot, 
+  collection, query, where, onSnapshot, 
   addDoc, updateDoc, deleteDoc, doc, serverTimestamp 
 } from 'firebase/firestore';
 import { GoogleGenAI } from "@google/genai";
@@ -81,38 +81,62 @@ export const CollaborativeBoard: React.FC<CollaborativeBoardProps> = ({ lang, bo
 
   useEffect(() => {
     if (!isAuthReady || !user) return;
-
-    // Fetch Board Settings
+    let unsubscribePosts = () => {};
     const boardRef = doc(db, 'writing_boards', boardId);
-    const unsubscribeBoard = onSnapshot(boardRef, (doc) => {
-      if (doc.exists()) {
-        setBoard({ id: doc.id, ...doc.data() } as Board);
-      }
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, `writing_boards/${boardId}`);
-    });
-
-    // Fetch Posts
     const postsRef = collection(db, 'writing_boards', boardId, 'posts');
-    const q = query(postsRef, orderBy('createdAt', 'desc'));
-
-    const unsubscribePosts = onSnapshot(q, (snapshot) => {
-      const postsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Post[];
-      setPosts(postsData);
-      setLoading(false);
-    }, (error) => {
+    const reportError = (error: any) => {
       handleFirestoreError(error, OperationType.LIST, `writing_boards/${boardId}/posts`);
       setLoading(false);
-    });
-
-    return () => {
-      unsubscribeBoard();
-      unsubscribePosts();
     };
-  }, [boardId, isAuthReady, user]);
+    const unsubscribeBoard = onSnapshot(boardRef, (snapshot) => {
+      unsubscribePosts();
+      if (!snapshot.exists()) {
+        setBoard(null);
+        setPosts([]);
+        setLoading(false);
+        return;
+      }
+      const currentBoard = { id: snapshot.id, ...snapshot.data() } as Board;
+      setBoard(currentBoard);
+      setLoading(true);
+
+      const moderator = profile?.role === 'admin' ||
+        (profile?.role === 'teacher' && currentBoard.teacherId === user.uid);
+      const mergePosts = (records: Post[]) => {
+        setPosts(records.sort((a, b) =>
+          (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)));
+        setLoading(false);
+      };
+      if (moderator) {
+        unsubscribePosts = onSnapshot(postsRef, (postsSnapshot) =>
+          mergePosts(postsSnapshot.docs.map(item => ({
+            id: item.id, ...item.data()
+          } as Post))), reportError);
+        return;
+      }
+      const published = new Map<string, Post>();
+      const own = new Map<string, Post>();
+      const track = (target: Map<string, Post>, q: ReturnType<typeof query>) =>
+        onSnapshot(q, (postsSnapshot) => {
+          target.clear();
+          postsSnapshot.docs.forEach(item => target.set(item.id, {
+            id: item.id, ...item.data()
+          } as Post));
+          mergePosts([...new Map([...published, ...own]).values()]);
+        }, reportError);
+      const stopPublic = track(published,
+        query(postsRef, where('isApproved', '==', true)));
+      const stopOwn = track(own,
+        query(postsRef, where('authorId', '==', user.uid)));
+      unsubscribePosts = () => { stopPublic(); stopOwn(); };
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, `writing_boards/${boardId}`);
+      setBoard(null);
+      setPosts([]);
+      setLoading(false);
+    });
+    return () => { unsubscribeBoard(); unsubscribePosts(); };
+  }, [boardId, isAuthReady, user?.uid, profile?.role]);
 
   const handleAddPost = async () => {
     if (!newPostContent.trim() || isSubmitting) return;
