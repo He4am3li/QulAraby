@@ -522,7 +522,7 @@ export const Games: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full bg-black overflow-hidden relative">
+    <div className="w-full h-full min-h-0 min-w-0 bg-black overflow-hidden relative">
       
       <AnimatePresence>
         {isBooting && <BootSequence onComplete={() => setIsBooting(false)} />}
@@ -532,7 +532,7 @@ export const Games: React.FC = () => {
 
       {/* Console Dashboard */}
       {!activeGame && !isBooting && (
-        <div className="h-full flex flex-col bg-black relative overflow-hidden">
+        <div className="h-full min-h-0 min-w-0 flex flex-col bg-black relative overflow-hidden">
           {/* Dynamic Hero Background */}
           <AnimatePresence mode="wait">
             <motion.div 
@@ -568,15 +568,15 @@ export const Games: React.FC = () => {
       />
 
           {/* Main Content Area */}
-          <div className="flex-1 flex flex-col justify-end pb-8 relative z-10">
+          <div className="flex-1 min-h-0 flex flex-col justify-end pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-8 relative z-10">
             {/* Hero Info */}
-            <div className="px-12 mb-6">
+            <div className="px-5 sm:px-8 lg:px-12 mb-3 sm:mb-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 key={`info-${selectedIdx}`}
               >
-                <h2 className="text-white text-5xl font-black tracking-tighter italic uppercase leading-none">
+                <h2 className="text-white text-[clamp(1.65rem,5.8vw,3rem)] font-black tracking-tighter italic uppercase leading-tight break-words">
                   {lang === 'ar' ? CONSOLE_GAMES[selectedIdx].titleAr : CONSOLE_GAMES[selectedIdx].titleEn}
                 </h2>
               </motion.div>
@@ -584,14 +584,14 @@ export const Games: React.FC = () => {
 
             {/* Game Shelf */}
             <div className="relative">
-              <div className="flex gap-6 px-12 overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-4 pt-4">
+              <div className="flex gap-3 sm:gap-5 lg:gap-6 px-5 sm:px-8 lg:px-12 overflow-x-auto overscroll-x-contain snap-x snap-mandatory touch-pan-x no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-5 pt-4 scroll-px-5">
                 {CONSOLE_GAMES.map((game, idx) => (
                   <motion.button
                     key={game.id}
                     onMouseEnter={() => { setSelectedIdx(idx); playSound('nav'); }}
                     onClick={() => { setSelectedIdx(idx); handleGameSelect(game.id); }}
                     whileHover={{ y: -10 }}
-                    className={`relative shrink-0 w-52 h-72 rounded-[1.75rem] overflow-hidden border-4 transition-all duration-500 group shadow-2xl
+                    className={`relative shrink-0 w-[clamp(8.5rem,34vw,13rem)] h-[clamp(11.5rem,43vw,18rem)] snap-start rounded-[1.25rem] sm:rounded-[1.75rem] overflow-hidden border-2 sm:border-4 transition-all duration-500 group shadow-2xl
                       ${selectedIdx === idx 
                         ? 'border-blue-500 shadow-[0_0_50px_rgba(59,130,246,0.6)] scale-105 z-20 opacity-100 ring-2 ring-white/30' 
                         : 'border-white/10 opacity-75 hover:opacity-100 hover:scale-[1.02]'}
@@ -628,7 +628,7 @@ export const Games: React.FC = () => {
 
       {/* Active Game View */}
       {activeGame && (
-        <div className="fixed inset-0 z-[200] bg-[#020617] flex flex-col">
+        <div className="fixed inset-0 z-[200] bg-[#020617] flex flex-col min-h-0 min-w-0 overflow-hidden">
           {/* Floating Back Button (Hidden for Knowledge Supermarket to avoid duplicate conflicting arrows) */}
           {activeGame !== 'knowledge-supermarket' && activeGame !== 'detective-mystery' && activeGame !== 'arcade-corridor' && (
             <motion.button 
@@ -636,13 +636,13 @@ export const Games: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               onClick={closeGame}
               whileHover={{ scale: 1.1, x: 5 }}
-              className="absolute top-6 left-6 z-[150] w-12 h-12 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all border border-white/10"
+              className="absolute top-[max(0.75rem,env(safe-area-inset-top))] left-[max(0.75rem,env(safe-area-inset-left))] md:top-6 md:left-6 z-[150] w-11 h-11 md:w-12 md:h-12 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all border border-white/10"
             >
               <ArrowLeft size={24} />
             </motion.button>
           )}
 
-          <div className="flex-1 relative">
+          <div className="flex-1 min-h-0 min-w-0 relative overflow-hidden">
             {activeGame === 'arcade-corridor' && (
               <ArcadeCorridor lang={lang} onBack={closeGame} onLaunch={(gameId) => {
                 if (CONSOLE_GAMES.some(game => game.id === gameId && !game.locked)) setActiveGame(gameId);
@@ -676,6 +676,7 @@ export const Games: React.FC = () => {
             )}
             {activeGame === 'snakes-ladders' && (
               <SnakesAndLadders 
+                onBack={closeGame}
                 onWin={() => {
                   setIsWon(true);
                   setScore(s => s + 100);
