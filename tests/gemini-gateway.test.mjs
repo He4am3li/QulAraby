@@ -163,3 +163,11 @@ assert.match(auth, /verifyFirebaseRevocationViaLookup/);
 assert.match(auth, /verifyIdToken\(match\[1\], true\)/);
 assert.ok(auth.includes('isApprovedGatewayProfile(profile, decoded.email)'));
 console.log('Secure fallback verified: signed JWT, current Firebase account, revocation, disabled user, fail-closed.');
+
+const { execFileSync } = await import('node:child_process');
+assert.ok(auth.includes("import firebaseConfig from '../firebase-applet-config.json' with { type: 'json' };"),
+  'Vercel Node 24 ESM requires an explicit import type attribute for JSON modules');
+execFileSync(process.execPath, ['--input-type=module', '-e',
+  "import config from './firebase-applet-config.json' with { type: 'json' }; if (!config.projectId || !config.apiKey) process.exit(1);"
+], { cwd: new URL('..', import.meta.url), stdio: 'pipe' });
+console.log('Firebase JSON import attribute is valid in Node ESM runtime.');
