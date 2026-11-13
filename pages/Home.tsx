@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LanguageToggle } from '../components/LanguageToggle';
 import { WesalLauncher } from '../components/Wesal';
+import '../components/topBarGlass.css';
 import { BrandSlogan } from '../components/BrandSlogan';
 import { FallingLetters } from '../components/Layout';
 import { 
@@ -347,18 +348,18 @@ export const Home: React.FC = () => {
               <motion.div 
                 initial={{ opacity: 0, x: lang === 'ar' ? 20 : -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-white/10 backdrop-blur-xl border border-white/20 p-1.5 md:p-2 rounded-2xl flex w-full md:w-[250px] items-center gap-2 shadow-xl border-b-2 border-b-white/5"
+                className="qul-header-glass qul-header-tools flex w-full md:w-[258px] items-center"
               >
                 <LanguageToggle lang={lang} onToggle={toggleLang} />
-                <div className="w-px h-4 bg-white/10" />
+                <span className="qul-header-divider" aria-hidden="true" />
                 <WesalLauncher lang={lang} />
-                <div className="flex-1" />
+                <span className="qul-header-divider" aria-hidden="true" />
                 <button 
                   onClick={() => {
                     localStorage.removeItem('hub_onboarding_seen');
                     window.location.reload();
                   }} 
-                  className="bg-white/5 hover:bg-white/20 text-white p-2 rounded-xl transition-all active:scale-90 group relative"
+                  className="qul-header-guide group"
                   title={lang === 'ar' ? 'جولة تعليمية' : 'Onboarding Tour'}
                 >
                   <HelpCircle size={18} className="text-white/70 group-hover:text-white" />
@@ -373,32 +374,26 @@ export const Home: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, x: lang === 'ar' ? -20 : 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-white/10 backdrop-blur-xl border border-white/20 p-2 rounded-2xl flex w-full md:w-[250px] items-center gap-3 shadow-xl border-b-2 border-b-white/5"
+                className="qul-header-glass qul-header-account flex w-full md:w-[258px] items-center"
               >
                 {user ? (
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-10 h-10">
-                      <div className="absolute inset-0 bg-blue-500 rounded-xl blur-lg opacity-20" />
-                      <div className="relative w-full h-full bg-white/10 rounded-xl border border-white/20 flex items-center justify-center overflow-hidden">
-                        {user.photoURL ? (
-                          <img src={user.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                        ) : (
-                          <UserIcon size={18} className="text-white/60" />
-                        )}
-                      </div>
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <div className="qul-header-avatar">
+                      {user.photoURL
+                        ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" />
+                        : <UserIcon size={18} className="text-white/85" />}
                     </div>
 
-                    <div className="flex flex-col items-start">
-                      <p className="text-xs font-bold text-white leading-none mt-1">
-                        {user.displayName?.split(' ').slice(0, 2).join(' ') || user.email?.split('@')[0]}
-                      </p>
+                    <div className="qul-header-identity">
+                      <strong>{user.displayName?.split(' ').slice(0, 2).join(' ') || user.email?.split('@')[0] || (lang === 'ar' ? 'مستخدم قُل' : 'QUL user')}</strong>
+                      <small>{profile?.role === 'admin' ? (lang === 'ar' ? 'مالك المنصة' : 'Platform owner') : profile?.role === 'schoolAdmin' ? (lang === 'ar' ? 'مدير المدرسة' : 'School manager') : profile?.role === 'teacher' ? (lang === 'ar' ? 'المعلم' : 'Teacher') : (lang === 'ar' ? 'الطالب' : 'Student')}</small>
                     </div>
 
-                    <div className="w-px h-6 bg-white/10 mx-1" />
+                    <span className="qul-header-divider" aria-hidden="true" />
 
                     <button 
                       onClick={() => signOut()}
-                      className="p-2 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 rounded-xl transition-all active:scale-90"
+                      className="qul-header-signout"
                       title={lang === 'ar' ? 'تسجيل الخروج' : 'Logout'}
                     >
                       <LogOut size={18} />
@@ -407,7 +402,7 @@ export const Home: React.FC = () => {
                 ) : (
                   <button 
                     onClick={() => signIn()}
-                    className="bg-white text-blue-600 px-5 py-2 rounded-xl font-black text-xs shadow-lg hover:bg-blue-50 transition-all active:scale-95 flex items-center gap-3"
+                    className="qul-header-signin"
                   >
                     <LogIn size={14} />
                     {lang === 'ar' ? 'تسجيل الدخول' : 'SIGN IN'}
