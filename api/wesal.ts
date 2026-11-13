@@ -111,10 +111,10 @@ export default async function handler(req: GatewayRequest, res: GatewayResponse)
       output(res, 403, { error: 'Verified, approved account required' }); return;
     }
     const schoolId = typeof me.schoolId === 'string' && me.schoolId !== '__demo__' ? me.schoolId : '';
-    const classes = new Map<string, { id: string; teacherId: string }>();
+    const classes = new Map<string, { id: string; teacherId: string; name: string }>();
     if (schoolId && !isOwner(me)) {
       const snapshots = await db.collection('schools').doc(schoolId).collection('classes').limit(160).get();
-      for (const doc of snapshots.docs) classes.set(doc.id, { id: doc.id, teacherId: String(doc.data().teacherId || '') });
+      for (const doc of snapshots.docs) classes.set(doc.id, { id: doc.id, teacherId: String(doc.data().teacherId || ''), name: String(doc.data().name || doc.id).slice(0, 75) });
     }
 
     const action = body.action;
@@ -178,6 +178,7 @@ export default async function handler(req: GatewayRequest, res: GatewayResponse)
       announcements.sort((a, b) => Number(b.createdAt) - Number(a.createdAt));
       output(res, 200, {
         me: compactProfile(me), contacts, threads, announcements,
+        classes: Array.from(classes.values()).filter(item => item.teacherId === uid).map(item => ({ id: item.id, name: item.name })),
         unreadCount: threads.filter(t => t.unread).length,
         guardianAvailable: false,
         schoolLinked: !!schoolId || isOwner(me),
