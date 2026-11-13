@@ -10,7 +10,6 @@ import { join } from 'node:path';
 const SOURCES = {
   "uae": "https://commons.wikimedia.org/wiki/Special:FilePath/Burj_Khalifa_Sunset.jpg?width=640",
   "egypt": "https://images.pexels.com/photos/15127306/pexels-photo-15127306/free-photo-of-pyramids-and-sphinx-statue-in-desert.jpeg?auto=compress&cs=tinysrgb&w=640",
-  "morocco": "https://commons.wikimedia.org/wiki/Special:FilePath/Whispers_of_Gold_-_Hassan_II_Mosque_at_Dusk.jpg?width=640",
   "jordan": "https://commons.wikimedia.org/wiki/Special:FilePath/Petra_treasury.jpg?width=640",
   "lebanon": "https://commons.wikimedia.org/wiki/Special:FilePath/Pigeon_Rocks_of_Beirut%2C_Rock_of_Raouche%2C_Beirut%2C_Lebanon.jpg?width=640",
   "algeria": "https://commons.wikimedia.org/wiki/Special:FilePath/Makam_chahid.jpg?width=640",

@@ -215,7 +215,7 @@ export const COUNTRY_DATA = [
     nameAr: 'المغرب',
     nameEn: 'Morocco',
     flag: '🇲🇦',
-    image: "/images/dialects/local/morocco.jpg",
+    image: "/images/dialects/morocco-koutoubia-cinematic.avif",
     dialect: 'Moroccan (مغربي)',
     characterMale: { 
       nameAr: 'ياسين', 
