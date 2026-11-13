@@ -41,7 +41,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الإمارات',
     nameEn: 'UAE',
     flag: '🇦🇪',
-    image: "/images/dialects/local/uae.jpg",
+    image: "/images/dialects/uae-dubai-downtown-cinematic.avif",
     dialect: 'Gulf (خليجي)',
     characterMale: { 
       nameAr: 'زايد', 

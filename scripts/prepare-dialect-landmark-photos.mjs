@@ -8,7 +8,6 @@ import { mkdir, writeFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const SOURCES = {
-  "uae": "https://commons.wikimedia.org/wiki/Special:FilePath/Burj_Khalifa_Sunset.jpg?width=640",
   "egypt": "https://images.pexels.com/photos/15127306/pexels-photo-15127306/free-photo-of-pyramids-and-sphinx-statue-in-desert.jpeg?auto=compress&cs=tinysrgb&w=640",
   "jordan": "https://commons.wikimedia.org/wiki/Special:FilePath/Petra_treasury.jpg?width=640",
   "lebanon": "https://commons.wikimedia.org/wiki/Special:FilePath/Pigeon_Rocks_of_Beirut%2C_Rock_of_Raouche%2C_Beirut%2C_Lebanon.jpg?width=640",
