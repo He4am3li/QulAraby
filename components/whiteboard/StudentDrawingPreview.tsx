@@ -22,7 +22,7 @@ export const StudentDrawingPreview: React.FC<{ elements: WhiteboardElement[] }> 
             fill="none" stroke={color} opacity={el.type === 'highlighter' ? 0.45 : 1}
             strokeWidth={el.strokeWidth || 3} strokeLinecap="round" strokeLinejoin="round" />;
         }
-        if (el.type === 'image' && el.src) {
+        if (el.type === 'image' && el.src && /^data:image\/(png|jpeg|webp);base64,/.test(el.src)) {
           return <image key={el.id} href={el.src} x={el.x || 0} y={el.y || 0}
             width={el.width || 220} height={el.height || 160} />;
         }
