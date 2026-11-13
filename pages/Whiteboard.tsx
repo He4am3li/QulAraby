@@ -798,7 +798,7 @@ export const WhiteboardPage: React.FC = () => {
               </div>
             )}
             {sendError && <p role="alert" className="text-rose-300 text-[11px] mt-1">{sendError}</p>}
-            {myWork?.feedback && (
+            {myWork?.reviewed && myWork.feedback && (
               <p className="text-amber-300 text-[11px] mt-1">
                 ملاحظة المعلم: {myWork.feedback}
                 {typeof myWork.score === 'number' ? `، التقييم: ${myWork.score}/100` : ''}
