@@ -637,7 +637,12 @@ service cloud.firestore {
 
       // Posts Subcollection
       match /posts/{postId} {
-        allow read: if canAccessWritingBoard(boardId);
+        // Moderators can review drafts. Learners may read only published work
+        // and their own submissions, even when querying Firestore directly.
+        allow get, list: if canAccessWritingBoard(boardId) &&
+          (isWritingBoardModerator(boardId) ||
+           resource.data.authorId == request.auth.uid ||
+           (('isApproved' in resource.data) && resource.data.isApproved == true));
         allow create: if canAccessWritingBoard(boardId) &&
           isValidPost(request.resource.data) &&
           request.resource.data.authorId == request.auth.uid &&
@@ -656,6 +661,7 @@ service cloud.firestore {
              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'title', 'imageUrl'])) ||
             // Members can like posts, but cannot change other post fields.
             (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy']) &&
+             ('isApproved' in resource.data) && resource.data.isApproved == true &&
              request.resource.data.likedBy is list)
           );
         allow delete: if canAccessWritingBoard(boardId) &&

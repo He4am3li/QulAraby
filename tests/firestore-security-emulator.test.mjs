@@ -73,6 +73,7 @@ try {
       ...teacherBoard, title: 'Closed board', isActive: false
     });
     await setDoc(doc(db, 'writing_boards/board_public/posts/post0'), postData);
+    await setDoc(doc(db, 'writing_boards/board_public/posts/postApproved'), { ...postData, isApproved: true });
     await setDoc(doc(db, 'live_sessions/global'), {
       teacherId: 'teacherA',
       poll: { isActive: true, question: 'حسنًا؟', options: ['نعم', 'لا'], votes: {} },
@@ -153,6 +154,20 @@ try {
     await env.withSecurityRulesDisabled(ctx =>
       updateDoc(doc(ctx.firestore(), 'writing_boards/board_public'), { requireApproval: true }));
   });
+  test('students cannot fetch another learner pending submission', async () => {
+    await assertFails(getDoc(post('learnerB', 'newpending')));
+    await assertSucceeds(getDoc(post('learnerA', 'newpending')));
+    await assertSucceeds(getDoc(post('teacherA', 'newpending')));
+    await assertFails(getDoc(post('teacherB', 'newpending')));
+  });
+  test('student public feed is approved only, and own draft query works', async () => {
+    const posts = collection(firestore('learnerB'), 'writing_boards/board_public/posts');
+    await assertFails(getDocs(posts));
+    const published = await assertSucceeds(getDocs(query(posts, where('isApproved', '==', true))));
+    assert.ok(published.docs.every(item => item.data().isApproved === true));
+    const own = await assertSucceeds(getDocs(query(posts, where('authorId', '==', 'learnerB'))));
+    assert.equal(own.size, 0);
+  });
   test('student cannot change author, createdAt or approval of a post', async () => {
     await assertFails(updateDoc(post('learnerA'), { authorId: 'teacherA' }));
     await assertFails(updateDoc(post('learnerA'), { createdAt: Timestamp.now() }));
@@ -164,9 +179,12 @@ try {
     await assertFails(deleteDoc(post('teacherB')));
     await assertSucceeds(updateDoc(post('teacherA'), { isApproved: true }));
   });
-  test('student may modify likedBy alone', async () => {
-    await assertSucceeds(updateDoc(post('learnerB'), { likedBy: ['learnerB'] }));
-    await assertFails(updateDoc(post('learnerB'), { likedBy: [], feedback: 'Fake teacher feedback' }));
+  test('student may like published posts but not unpublished work', async () => {
+    await assertSucceeds(updateDoc(post('learnerB', 'postApproved'), { likedBy: ['learnerB'] }));
+    await assertFails(updateDoc(post('learnerB', 'postApproved'), {
+      likedBy: [], feedback: 'Fake teacher feedback'
+    }));
+    await assertFails(updateDoc(post('learnerB', 'newpending'), { likedBy: ['learnerB'] }));
   });
   test('student can submit own poll vote', () =>
     assertSucceeds(updateDoc(session('learnerA'), {
