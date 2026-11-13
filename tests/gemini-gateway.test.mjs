@@ -120,3 +120,46 @@ await assert.rejects(
 assert.equal(deniedAttempts, 1);
 assert.ok(auth.includes('verifyIdToken(match[1], true)'), 'Never bypass revocation checks');
 console.log('Live gateway auth recovery and backend permission classification OK.');
+
+const { verifyFirebaseRevocationViaLookup, assertFirebaseRestAccount } =
+  await import('../api/_firebaseAuthRevocationFallback.mjs');
+const signed = { uid: 'uid1', email: 'approved@example.com', auth_time: 1800000000, email_verified: true };
+const active = { localId: 'uid1', email: 'approved@example.com', emailVerified: true, validSince: '1799999999', disabled: false };
+const verifierCalls = [];
+const fakeAdminAuth = { verifyIdToken: async (_token, checkRevoked) => {
+  verifierCalls.push(checkRevoked);
+  if (checkRevoked !== false) throw new Error('Should not skip signature verification');
+  return signed;
+}};
+const lookupCalls = [];
+const fakeLookup = async (_url, init) => {
+  lookupCalls.push({ method: init.method, token: JSON.parse(init.body).idToken });
+  return { ok: true, json: async () => ({ users: [active] }) };
+};
+assert.deepEqual(await verifyFirebaseRevocationViaLookup('valid-user-token', fakeAdminAuth, 'public-api-key', fakeLookup), signed);
+assert.deepEqual(verifierCalls, [false], 'Fallback must verify token signature in Firebase Admin');
+assert.deepEqual(lookupCalls, [{ method: 'POST', token: 'valid-user-token' }]);
+for (const record of [
+  { ...active, disabled: true },
+  { ...active, validSince: '1800000001' },
+  { ...active, localId: 'different-user' },
+  { ...active, email: 'someone-else@example.com' },
+  { ...active, emailVerified: false },
+]) {
+  assert.throws(() => assertFirebaseRestAccount(signed, record));
+}
+for (const badTime of [undefined, '', '-1', 'nan', '1800000000.5']) {
+  assert.throws(() => assertFirebaseRestAccount(signed, { ...active, validSince: badTime }));
+}
+await assert.rejects(
+  verifyFirebaseRevocationViaLookup('valid', fakeAdminAuth, 'public-key', async () => ({ok:false,status:403})),
+  e => e.code === 'AUTH_REVOCATION_UNAVAILABLE',
+);
+await assert.rejects(
+  verifyFirebaseRevocationViaLookup('valid', fakeAdminAuth, 'public-key', async () => ({ok:true,json:async()=>({users:[]})})),
+  e => e.code === 'auth/user-not-found',
+);
+assert.match(auth, /verifyFirebaseRevocationViaLookup/);
+assert.match(auth, /verifyIdToken\(match\[1\], true\)/);
+assert.ok(auth.includes('isApprovedGatewayProfile(profile, decoded.email)'));
+console.log('Secure fallback verified: signed JWT, current Firebase account, revocation, disabled user, fail-closed.');
