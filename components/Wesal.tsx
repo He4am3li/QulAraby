@@ -212,27 +212,30 @@ export function WesalProvider({ children }: { children: React.ReactNode }) {
           <section className="wesal-panel" style={{ top: panelTop }} role="dialog" aria-modal="true" aria-label="وِصال، مراسلات قُل">
             <header className="wesal-header">
               <div className="wesal-monogram" aria-hidden="true">و</div>
-              <div className="wesal-name"><strong>وِصال</strong><span>QUL CONNECT</span></div>
-              <button className="wesal-icon-button" type="button" onClick={() => setOpen(false)} aria-label="إغلاق وِصال"><X size={20}/></button>
+              <div className="wesal-name">
+                <strong>وِصال</strong>
+                <span>QUL CONNECT · {data.me?.role === 'schoolAdmin' ? 'إدارة المدرسة' : data.me?.role === 'admin' ? 'مالك قُل' : data.me?.role === 'teacher' ? 'المعلم' : 'الطالب'}</span>
+              </div>
+              <div className="wesal-header-actions">
+                <button className="wesal-icon-button" type="button" onClick={() => void refresh()} title="تحديث الرسائل" aria-label="تحديث الرسائل"><RefreshCw size={17}/></button>
+                <button className={'wesal-icon-button ' + (tab === 'settings' ? 'wesal-icon-selected' : '')} type="button" onClick={() => changeTab('settings')} title="الإعدادات" aria-label="إعدادات وِصال"><Settings2 size={17}/></button>
+                <button className="wesal-icon-button" type="button" onClick={() => setOpen(false)} aria-label="إغلاق وِصال"><X size={18}/></button>
+              </div>
             </header>
-            <div className="wesal-context">
-              <div><strong>{data.me?.name || profile?.displayName || 'حساب قُل'}</strong><br/><small>{data.me?.role === 'schoolAdmin' ? 'إدارة المدرسة' : data.me?.role === 'admin' ? 'مالك قُل' : data.me?.role === 'teacher' ? 'المعلم' : 'الطالب'}</small></div>
-              <span className="wesal-pill"><ShieldCheck size={12} style={{display:'inline',verticalAlign:'middle'}}/> تواصل مدرسي</span>
-            </div>
+            <nav className="wesal-segments" aria-label="أقسام وِصال">
+              {([
+                ['chats', 'المحادثات'],
+                ['contacts', 'الجهات'],
+                ['announcements', 'التعميمات'],
+                ['support', 'الدعم'],
+              ] as const).map(([key, label]) => (
+                <button key={key} className={'wesal-segment ' + (tab === key ? 'wesal-selected' : '')} type="button" onClick={() => changeTab(key)} aria-current={tab === key ? 'page' : undefined}>
+                  {label}
+                  {key === 'chats' && data.unreadCount > 0 && <span className="wesal-segment-count">{data.unreadCount > 9 ? '9+' : data.unreadCount}</span>}
+                </button>
+              ))}
+            </nav>
             <div className="wesal-main">
-              <nav className="wesal-rail" aria-label="قائمة وِصال">
-                {([
-                  ['chats', MessageCircle, 'المحادثات'],
-                  ['contacts', UsersRound, 'الجهات'],
-                  ['announcements', Megaphone, 'التعميمات'],
-                  ['support', Headset, 'الدعم'],
-                  ['settings', Settings2, 'الإعدادات'],
-                ] as const).map(([key, Icon, label]) => (
-                  <button key={key} type="button" title={label} className={'wesal-tab ' + (tab === key ? 'wesal-selected ' : '') + (key === 'settings' ? 'wesal-tab-settings' : '')} onClick={() => changeTab(key)} aria-current={tab === key ? 'page' : undefined}>
-                    <Icon size={20}/><span>{label}</span>
-                  </button>
-                ))}
-              </nav>
               <div className="wesal-view">
                 {peer ? (
                   <>
@@ -255,8 +258,8 @@ export function WesalProvider({ children }: { children: React.ReactNode }) {
                 ) : (
                   <>
                     <div className="wesal-view-header">
-                      <h2>{tabName[tab]}</h2>
-                      <button type="button" className="wesal-icon-button" onClick={() => void refresh()} aria-label="تحديث"><RefreshCw size={16}/></button>
+                      <h2>{tab === 'chats' ? 'الرسائل الأخيرة' : tab === 'contacts' ? 'جهات التواصل' : tab === 'announcements' ? 'الإعلانات المدرسية' : tab === 'support' ? 'التواصل والدعم' : 'تفضيلات وِصال'}</h2>
+                      {tab === 'chats' && data.unreadCount > 0 && <span className="wesal-pill">{data.unreadCount} غير مقروءة</span>}
                     </div>
                     {loading && <p className="wesal-note">جاري تحديث وِصال...</p>}
                     {error && <p className="wesal-alert" role="alert">{error}</p>}
@@ -268,13 +271,18 @@ export function WesalProvider({ children }: { children: React.ReactNode }) {
                           {(tab === 'support' && manager) && <p className="wesal-note">قناة مباشرة بين إدارة المدرسة ومالك قُل.</p>}
                           {matchingThreads.map(t => (
                             <button key={t.id} className="wesal-item" type="button" onClick={() => openContact({uid:t.peerUid,name:t.peerName,role:t.peerRole,kind:t.kind})}>
-                              <div className="wesal-avatar">{initial(t.peerName)}</div>
-                              <div className="wesal-item-text"><strong>{t.peerName}</strong><p>{t.lastText}</p></div>
-                              <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}><small style={{color:'#8baea5',fontSize:10}}>{when(t.lastAt)}</small>{t.unread && <span className="wesal-dot" aria-label="غير مقروء"/>}</div>
+                              <div className="wesal-avatar-wrap">
+                                <div className="wesal-avatar">{initial(t.peerName)}</div>
+                                {t.unread && <span className="wesal-dot" aria-label="رسالة غير مقروءة"/>}
+                              </div>
+                              <div className="wesal-item-text">
+                                <div className="wesal-item-heading"><strong>{t.peerName}</strong><time>{when(t.lastAt)}</time></div>
+                                <div className="wesal-message-preview">{t.lastText || 'افتح المحادثة لقراءة الرسائل'}</div>
+                              </div>
                             </button>
                           ))}
                           {tab === 'support' && contactList.filter(c => !threadList.some(t => t.peerUid === c.uid)).map(c => (
-                            <button className="wesal-item" key={c.uid} onClick={() => openContact(c)} type="button"><div className="wesal-avatar">{initial(c.name)}</div><div className="wesal-item-text"><strong>{c.name}</strong><p>فتح محادثة الدعم</p></div></button>
+                            <button className="wesal-item" key={c.uid} onClick={() => openContact(c)} type="button"><div className="wesal-avatar-wrap"><div className="wesal-avatar">{initial(c.name)}</div></div><div className="wesal-item-text"><div className="wesal-item-heading"><strong>{c.name}</strong><ChevronRight size={15}/></div><div className="wesal-message-preview">فتح محادثة الدعم</div></div></button>
                           ))}
                           {tab === 'chats' && matchingThreads.length === 0 && <div className="wesal-empty">لا توجد محادثات بعد.<br/> ابدأ من «جهات الاتصال».</div>}
                           {tab === 'support' && matchingThreads.length === 0 && contactList.length === 0 && <div className="wesal-empty">قناة الدعم المباشر متاحة لإدارة المدرسة ومالك قُل.<br/> ويمكن لبقية المستخدمين الاستعانة بإدارة مدرستهم.</div>}
@@ -283,7 +291,7 @@ export function WesalProvider({ children }: { children: React.ReactNode }) {
                       {tab === 'contacts' && (
                         <>
                           <p className="wesal-note">تظهر فقط الحسابات المرتبطة بك عبر المدرسة والصف وفق الصلاحيات.</p>
-                          {matchingContacts.map(c => <button key={c.uid} type="button" className="wesal-item" onClick={() => openContact(c)}><div className="wesal-avatar">{initial(c.name)}</div><div className="wesal-item-text"><strong>{c.name}</strong><small>{c.role === 'student' ? 'طالب' : c.role === 'teacher' ? 'معلم' : 'إدارة المدرسة'}</small></div><ChevronRight size={17}/></button>)}
+                          {matchingContacts.map(c => <button key={c.uid} type="button" className="wesal-item" onClick={() => openContact(c)}><div className="wesal-avatar-wrap"><div className="wesal-avatar">{initial(c.name)}</div></div><div className="wesal-item-text"><div className="wesal-item-heading"><strong>{c.name}</strong><ChevronRight size={15}/></div><div className="wesal-contact-subtitle">{c.role === 'student' ? 'طالب' : c.role === 'teacher' ? 'معلم' : 'إدارة المدرسة'}</div></div></button>)}
                           {matchingContacts.length === 0 && <p className="wesal-empty">لا توجد جهات متاحة بعد. تأكد من ربط الطلاب بفصولهم وإسناد معلم لكل فصل.</p>}
                           <p className="wesal-note">التواصل مع ولي الأمر غير متاح إلى أن يتم توثيق حسابه وربطه بابنه.</p>
                         </>
