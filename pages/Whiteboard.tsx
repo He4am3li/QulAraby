@@ -75,6 +75,7 @@ export const WhiteboardPage: React.FC = () => {
     key: '', pages: {}
   });
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const rosterSignature = useRef('');
   const [sendError, setSendError] = useState<string | null>(null);
 
   // Session State
@@ -153,12 +154,16 @@ export const WhiteboardPage: React.FC = () => {
   // Session membership and the active activity come from the server, not the
   // locally seeded demonstration roster. Submissions are a separate feed.
   useEffect(() => {
+    rosterSignature.current = '';
     if (!sessionId || !user) return;
     return onSnapshot(doc(db, 'live_sessions', sessionId), snapshot => {
       if (!snapshot.exists()) return;
       const data = snapshot.data();
       const members = data.participants && typeof data.participants === 'object'
         ? Object.keys(data.participants).filter(id => data.participants[id] === true) : [];
+      const relevantSignature = JSON.stringify({ members, activity: data.activeActivity || null });
+      if (rosterSignature.current === relevantSignature) return;
+      rosterSignature.current = relevantSignature;
       setSession(prev => {
         const students: Record<string, WhiteboardStudent> = {};
         members.forEach((id, index) => {
@@ -633,6 +638,12 @@ export const WhiteboardPage: React.FC = () => {
         lang={lang}
         rightContent={
           <div className="flex items-center gap-2 sm:gap-4">
+            {isTeacher && sessionId && (
+              <button onClick={() => setIsStudentWorksOpen(true)}
+                className="rounded-xl border border-cyan-300/25 bg-slate-900/75 px-3 py-2 text-[10px] font-bold text-cyan-200 hover:bg-slate-800">
+                أعمال الطلاب {submissions.length > 0 ? '(' + submissions.length + ')' : ''}
+              </button>
+            )}
             {!isTeacher && sessionId && (
               <div className="flex gap-1 bg-slate-900/70 rounded-xl border border-white/10 p-1">
                 <button onClick={() => setDraftMode(false)}
@@ -701,13 +712,13 @@ export const WhiteboardPage: React.FC = () => {
         {/* Live Whiteboard Canvas with Integrated Compact Student Counter & Real-Time Interaction Under Hijri Date */}
         <WhiteboardCanvas
           elements={sessionId && !canvasReady ? [] :
-            (!isTeacher && draftMode ? (draftPack.pages[currentPage.id] || []) : currentPage.elements)}
+            (!isTeacher && draftMode ? (draftPack.key === draftKey ? draftPack.pages[currentPage.id] || [] : []) : currentPage.elements)}
           onElementsChange={handleElementsChange}
           activeTool={activeTool}
           activeColor={activeColor}
           activeStrokeWidth={activeStrokeWidth}
           isReadOnly={(!!sessionId && !canvasReady) ||
-            (!isTeacher && (!draftMode || session.isLocked))}
+            (!isTeacher && !draftMode)}
           theme={currentPage.theme || activeTheme}
           background={currentPage.background}
           currentUserId={user?.uid}
