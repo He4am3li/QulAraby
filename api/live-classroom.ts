@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { getApps } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 import { checkGatewayQuota, readGatewayBody, requireFirebaseUser, type GatewayRequest, type GatewayResponse } from './_geminiAuth.js';
 
@@ -84,12 +85,12 @@ export default async function handler(req: GatewayRequest, res: GatewayResponse)
     const db = getDb();
     const snapshot = await db.doc('users/' + uid).get();
     const profile: Profile = snapshot.exists ? (snapshot.data() || {}) : {};
-    // The platform owner can operate without a mirrored Firestore profile.
-    const owner = profile.email === OWNER_EMAIL || (!snapshot.exists && uid === (await (async () => {
-      // Owner without Firestore user profile is already approved in requireFirebaseUser.
-      return uid;
-    })()) && req.headers['x-qul-owner'] === '__never__');
-    // The regular owner account always has a mirrored approved profile in current deployments.
+    // Verify owner identity from the signed Firebase token, never request headers.
+    const adminApp = getApps().find(app => app.name === 'qul-gemini-gateway');
+    if (!adminApp) throw Error('SESSION_AUTH_UNAVAILABLE');
+    const token = String(req.headers.authorization || '').replace(/^Bearer /, '');
+    const claims = await getAuth(adminApp).verifyIdToken(token, true);
+    const owner = claims.uid === uid && claims.email_verified === true && claims.email === OWNER_EMAIL;
     const teacher = profile.role === 'teacher' || profile.role === 'admin' || owner;
 
     if (body.action === 'start') {
