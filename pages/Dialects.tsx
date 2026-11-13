@@ -682,8 +682,8 @@ export const COUNTRY_DATA = [
     image: "/images/dialects/syria-umayyad-cinematic.avif",
     dialect: 'Levantine (شامي)',
     characterMale: { 
-      nameAr: 'باسل', 
-      nameEn: 'Bassel', 
+      nameAr: 'أوس', 
+      nameEn: 'Aws', 
       clothingAr: 'القمباز السوري مع الطربوش.', 
       clothingEn: 'Syrian Qumbaz with Fez.',
       image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Syria%20wearing%20traditional%20Qumbaz%20and%20Fez%20hat%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
@@ -1565,7 +1565,7 @@ export const Dialects: React.FC = () => {
       case 'syria':
         return isFemale
           ? `أهلاً وسهلاً يا مية هلا! أنا شام، يسعد أوقاتك يا رب، شو بتحب نحكي اليوم؟`
-          : `يا مية أهلاً وسهلاً! أنا طارق، كيفك وشو أخبارك اليوم يا غالي؟`;
+          : `يا مية أهلاً وسهلاً! أنا أوس، كيفك وشو أخبارك اليوم يا غالي؟`;
       case 'iraq':
         return isFemale
           ? `كل الهلا بيك عيوني! أنا مريم، شلونك وأحوالك؟ مشتاقين.`
