@@ -1,0 +1,37 @@
+name: Live whiteboard synchronization
+
+on:
+  pull_request:
+    paths:
+      - 'components/useLiveWhiteboardCanvas.ts'
+      - 'components/useClassroomStudentWork.ts'
+      - 'components/whiteboard/StudentWorksModal.tsx'
+      - 'components/whiteboard/StudentDrawingPreview.tsx'
+      - 'pages/Whiteboard.tsx'
+      - 'App.tsx'
+      - 'services/liveWhiteboardState.mjs'
+      - 'tests/whiteboard-live-sync.test.mjs'
+      - 'types/whiteboard.ts'
+      - 'package.json'
+      - '.github/workflows/whiteboard-live-sync.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  whiteboard:
+    name: Validate shared canvas and private student submissions
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Use locked dependencies
+        run: npm ci
+      - name: Validate all security and realtime collaboration tests
+        run: npm run test:security
+      - name: Check application types and production build
+        run: npm run lint && npm run build
