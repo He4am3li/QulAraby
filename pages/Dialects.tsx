@@ -854,7 +854,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الكويت',
     nameEn: 'Kuwait',
     flag: '🇰🇼',
-    image: '/images/dialects/kuwait-towers-cinematic.avif',
+    image: '/images/dialects/kuwait-distinctive-cinematic.avif',
     dialect: 'Gulf (كويتي)',
     characterMale: { 
       nameAr: 'فهد', 
@@ -912,7 +912,7 @@ export const COUNTRY_DATA = [
     nameAr: 'قطر',
     nameEn: 'Qatar',
     flag: '🇶🇦',
-    image: '/images/dialects/qatar-doha-cinematic.avif',
+    image: '/images/dialects/qatar-distinctive-cinematic.avif',
     dialect: 'Gulf (قطري)',
     characterMale: { 
       nameAr: 'جاسم', 
@@ -970,7 +970,7 @@ export const COUNTRY_DATA = [
     nameAr: 'البحرين',
     nameEn: 'Bahrain',
     flag: '🇧🇭',
-    image: '/images/dialects/local/bahrain.jpg',
+    image: '/images/dialects/bahrain-distinctive-cinematic.avif',
     dialect: 'Gulf (بحريني)',
     characterMale: { 
       nameAr: 'حمد', 
