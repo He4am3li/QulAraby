@@ -5,6 +5,7 @@ import { getCachedAsset, setCachedAsset } from "./cache";
 import { validateSpeakingMissionEvidence } from './speakingLearning.mjs';
 import { auth } from '../firebase';
 import type { RadioCorpusText } from '../src/data/radioTextCorpus';
+import { requestLiveToken } from './liveTokenRequest.mjs';
 
 // Google API credentials stay server-side. The browser uses authenticated
 // same-origin endpoints and never receives the long-lived Gemini API key.
@@ -43,22 +44,8 @@ export const getAI = () => new GoogleGenAI({
 export const getLiveAI = async (): Promise<GoogleGenAI> => {
   const currentUser = auth.currentUser;
   if (!currentUser) throw new Error('Sign in to start a live conversation');
-  const response = await fetch('/api/gemini-live-token', {
-    method: 'POST',
-    headers: { authorization: 'Bearer ' + await currentUser.getIdToken() },
-  });
-  if (!response.ok) {
-    const code = response.status === 401 ? 'LIVE_AUTH_REQUIRED'
-      : response.status === 403 ? 'LIVE_ACCESS_DENIED'
-      : response.status === 429 ? 'LIVE_QUOTA_REACHED'
-      : response.status >= 500 ? 'LIVE_SERVICE_UNAVAILABLE' : 'LIVE_TOKEN_ERROR';
-    throw Object.assign(new Error('Could not authorize live conversation'), { code });
-  }
-  const result = await response.json() as { token?: string };
-  if (!result.token?.startsWith('auth_tokens/')) {
-    throw Object.assign(new Error('Invalid live session authorization'), { code: 'LIVE_TOKEN_ERROR' });
-  }
-  return new GoogleGenAI({ apiKey: result.token, httpOptions: { apiVersion: 'v1alpha' } });
+  const liveToken = await requestLiveToken(currentUser);
+  return new GoogleGenAI({ apiKey: liveToken, httpOptions: { apiVersion: 'v1alpha' } });
 };
 
 /**

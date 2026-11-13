@@ -4,6 +4,7 @@ import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { isApprovedGatewayProfile } from './_gatewayApproval.mjs';
+import { classifyFirebaseAuthFailure } from './_firebaseAuthFailure.mjs';
 
 // These identifiers are public Firebase configuration, never credentials.
 const FIREBASE_PROJECT_ID = 'gen-lang-client-0558881211';
@@ -67,9 +68,14 @@ export async function requireFirebaseUser(req: GatewayRequest, res: GatewayRespo
   try {
     // checkRevoked=true also checks for disabled/deleted Firebase users.
     decoded = await services.auth.verifyIdToken(match[1], true);
-  } catch {
-    res.statusCode = 401;
-    res.end(JSON.stringify({ error: 'Invalid or expired session' }));
+  } catch (error) {
+    const failure = classifyFirebaseAuthFailure(error);
+    // A missing Firebase Auth user-read IAM permission is a server setup
+    // problem, not proof that a student's browser session has expired.
+    // Log only a stable code, never ID tokens, user IDs, or credentials.
+    if (failure.statusCode === 503) console.error('Firebase Admin verification:', failure.code);
+    res.statusCode = failure.statusCode;
+    res.end(JSON.stringify({ error: failure.error, code: failure.code }));
     return null;
   }
 
