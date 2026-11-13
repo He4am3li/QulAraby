@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PenTool, Users, Clock, Sparkles, Plus, ChevronLeft, ChevronRight, 
@@ -9,6 +9,10 @@ import {
 import { PageHeader } from '../components/PageHeader';
 import { useAuth } from '../components/AuthProvider';
 import { useLiveClassroom } from '../components/LiveClassroomContext';
+import { useLiveWhiteboardCanvas } from '../components/useLiveWhiteboardCanvas';
+import { useClassroomStudentWork } from '../components/useClassroomStudentWork';
+import { db } from '../firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { WhiteboardCanvas } from '../components/whiteboard/WhiteboardCanvas';
 import { FortuneWheelModal } from '../components/whiteboard/FortuneWheelModal';
 import { ArabicToolsModal } from '../components/whiteboard/ArabicToolsModal';
@@ -66,6 +70,12 @@ export const WhiteboardPage: React.FC = () => {
   const [studentAnswerSent, setStudentAnswerSent] = useState(false);
   const [handRaised, setHandRaised] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [draftMode, setDraftMode] = useState(true);
+  const [draftPack, setDraftPack] = useState<{key: string; pages: Record<string, WhiteboardElement[]>}>({
+    key: '', pages: {}
+  });
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   // Session State
   const [session, setSession] = useState<WhiteboardSessionState>(() => {
@@ -105,38 +115,94 @@ export const WhiteboardPage: React.FC = () => {
         isRunning: false,
         lastUpdated: Date.now()
       },
-      students: {
-        'st_1': { id: 'st_1', name: 'أحمد علي', score: 12, isOnline: true, handRaised: false, lastActive: Date.now() },
-        'st_2': { id: 'st_2', name: 'سارة محمد', score: 15, isOnline: true, handRaised: true, lastActive: Date.now() },
-        'st_3': { id: 'st_3', name: 'عمر خالد', score: 9, isOnline: true, handRaised: false, lastActive: Date.now() },
-        'st_4': { id: 'st_4', name: 'نورة المنصور', score: 14, isOnline: true, handRaised: false, lastActive: Date.now() },
-      },
-      wordBox: ['السفر', 'الوظيفة', 'المستقبل', 'النجاح', 'الطموح', 'اللغة', 'المعرفة'],
-      activeActivity: {
-        id: 'act_1',
-        title: 'نشاط تكوين الجمل السريعة',
-        type: 'qa',
-        question: 'استخدم كلمة (المُسْتَقْبَل) في جملة مفيدة تدل على طموحك المهني:',
-        isActive: true,
-        submissions: {
-          'st_2': {
-            studentId: 'st_2',
-            studentName: 'سارة محمد',
-            answer: 'أُرِيدُ أَنْ أُصْبِحَ طَبِيبَةً نَاجِحَةً فِي المُسْتَقْبَلِ.',
-            score: 5,
-            feedback: 'ممتازة جداً يا سارة! إجابة صحيحة نحوياً وتركيبياً.',
-            timestamp: Date.now(),
-            evaluated: true
-          }
-        }
-      }
+      students: {},
+      wordBox: [],
+      activeActivity: null
     };
   });
 
+  const { canvasReady, canvasError } = useLiveWhiteboardCanvas(
+    sessionId, user?.uid, isTeacher, session, setSession
+  );
+  const { submissions, myWork, sending, error: workError, submit, grade } =
+    useClassroomStudentWork(sessionId, user?.uid, isTeacher);
+  const draftKey = `qul_student_whiteboard_drafts_${user?.uid || 'guest'}_${sessionId || 'offline'}`;
+
+  useEffect(() => {
+    let pages: Record<string, WhiteboardElement[]> = {};
+    try {
+      const saved = localStorage.getItem(draftKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) pages = parsed;
+      }
+    } catch { /* Ignore corrupted local drafts. */ }
+    setDraftPack({ key: draftKey, pages });
+    setDraftMode(!sessionId);
+    setStudentAnswerSent(false);
+    setStudentAnswerText('');
+    setSendError(null);
+  }, [draftKey, sessionId]);
+
+  useEffect(() => {
+    if (draftPack.key !== draftKey) return;
+    try { localStorage.setItem(draftKey, JSON.stringify(draftPack.pages)); }
+    catch (error) { console.warn('Cannot save private learner draft locally', error); }
+  }, [draftPack, draftKey]);
+
+  // Session membership and the active activity come from the server, not the
+  // locally seeded demonstration roster. Submissions are a separate feed.
+  useEffect(() => {
+    if (!sessionId || !user) return;
+    return onSnapshot(doc(db, 'live_sessions', sessionId), snapshot => {
+      if (!snapshot.exists()) return;
+      const data = snapshot.data();
+      const members = data.participants && typeof data.participants === 'object'
+        ? Object.keys(data.participants).filter(id => data.participants[id] === true) : [];
+      setSession(prev => {
+        const students: Record<string, WhiteboardStudent> = {};
+        members.forEach((id, index) => {
+          students[id] = prev.students[id] || {
+            id, name: `طالب ${index + 1}`, score: 0,
+            isOnline: false, handRaised: false, lastActive: Date.now()
+          };
+        });
+        const live = data.activeActivity;
+        const activeActivity = live && typeof live.question === 'string' ? {
+          id: String(live.id || 'live_activity'),
+          title: String(live.title || 'نشاط الحصة'),
+          type: 'qa' as const,
+          question: live.question,
+          isActive: live.isActive !== false,
+          submissions: {}
+        } : null;
+        return { ...prev, students, activeActivity };
+      });
+    }, error => console.error('Could not read classroom membership', error));
+  }, [sessionId, user?.uid]);
+
+  useEffect(() => {
+    if (!isTeacher || !submissions.length) return;
+    setSession(prev => {
+      const students = { ...prev.students };
+      for (const work of submissions) {
+        const existing = students[work.studentId];
+        students[work.studentId] = {
+          id: work.studentId, name: work.studentName || existing?.name || 'طالب',
+          score: work.score ?? existing?.score ?? 0,
+          isOnline: existing?.isOnline ?? false,
+          handRaised: existing?.handRaised ?? false,
+          lastActive: work.timestamp
+        };
+      }
+      return { ...prev, students };
+    });
+  }, [submissions, isTeacher]);
+
   // Save session state locally
   useEffect(() => {
-    if (user?.uid) localStorage.setItem('qul_active_whiteboard_session_' + user.uid, JSON.stringify(session));
-  }, [session]);
+    if (user?.uid) localStorage.setItem('qul_active_whiteboard_session_' + user.uid + '_' + (sessionId || 'offline'), JSON.stringify(session));
+  }, [session, sessionId, user?.uid]);
 
   // Real-time tab visibility & focus tracking: turns student presence green when focused on whiteboard page, dark when switching tab/app
   useEffect(() => {
