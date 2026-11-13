@@ -1028,7 +1028,7 @@ export const COUNTRY_DATA = [
     nameAr: 'اليمن',
     nameEn: 'Yemen',
     flag: '🇾🇪',
-    image: "/images/dialects/local/yemen.jpg",
+    image: "/images/dialects/yemen-sanaa-cinematic.avif",
     dialect: 'Yemeni (يمني)',
     characterMale: { 
       nameAr: 'قحطان', 
