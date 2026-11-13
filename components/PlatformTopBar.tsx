@@ -2,6 +2,7 @@ import React from 'react';
 import { HelpCircle, LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import { LanguageToggle } from './LanguageToggle';
 import { WesalLauncher } from './Wesal';
+import './topBarGlass.css';
 import { BrandSlogan } from './BrandSlogan';
 import { FallingLetters } from './Layout';
 import { useAuth } from './AuthProvider';
@@ -44,35 +45,35 @@ export const PlatformTopBar: React.FC = () => {
       </div>
       <div className="relative z-10 grid grid-cols-1 items-center gap-4 md:grid-cols-3">
         <div className="flex items-center justify-center md:justify-start">
-          <div className="flex w-full max-w-[250px] items-center gap-2 rounded-xl border border-white/15 bg-white/[0.08] p-1.5 shadow-sm backdrop-blur-md">
+          <div className="qul-header-glass qul-header-tools flex w-full max-w-[258px] items-center">
             <LanguageToggle lang={lang} onToggle={toggleLanguage} />
-            <span className="h-5 w-px bg-white/15" />
+            <span className="qul-header-divider" aria-hidden="true" />
             <WesalLauncher lang={lang} />
-            <span className="flex-1" />
-            <button onClick={restartTour} title={lang === 'ar' ? 'جولة تعريفية' : 'Guided tour'} className="rounded-lg p-2 text-white/75 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/40">
+            <span className="qul-header-divider" aria-hidden="true" />
+            <button onClick={restartTour} title={lang === 'ar' ? 'جولة تعريفية' : 'Guided tour'} className="qul-header-guide">
               <HelpCircle size={18}/>
             </button>
           </div>
         </div>
         <BrandSlogan />
         <div className="flex items-center justify-center md:justify-end">
-          <div className="flex w-full max-w-[250px] items-center gap-2 rounded-xl border border-white/15 bg-white/[0.08] p-2 shadow-sm backdrop-blur-md sm:gap-3">
+          <div className="qul-header-glass qul-header-account flex w-full max-w-[258px] items-center">
             {user ? (
               <>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/20 bg-white/10">
+                <div className="qul-header-avatar">
                   {user.photoURL
                     ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover"/>
                     : <UserIcon size={18} className="text-white/75"/>}
                 </div>
-                <div className="min-w-0">
-                  <p className="max-w-[160px] truncate text-xs font-bold text-white sm:text-sm">{user.displayName?.split(' ').slice(0, 2).join(' ') || user.email?.split('@')[0] || (lang === 'ar' ? 'مستخدم قُل' : 'QUL user')}</p>
-                  <p className="mt-1 text-[10px] text-white/60">{profile?.role === 'admin' ? (lang === 'ar' ? 'الأدمن العام' : 'Platform admin') : profile?.role === 'schoolAdmin' ? (lang === 'ar' ? 'مدير المدرسة' : 'School admin') : profile?.role === 'teacher' ? (lang === 'ar' ? 'المعلم' : 'Teacher') : (lang === 'ar' ? 'الطالب' : 'Student')}</p>
+                <div className="qul-header-identity">
+                  <strong>{user.displayName?.split(' ').slice(0, 2).join(' ') || user.email?.split('@')[0] || (lang === 'ar' ? 'مستخدم قُل' : 'QUL user')}</strong>
+                  <small>{profile?.role === 'admin' ? (lang === 'ar' ? 'الأدمن العام' : 'Platform admin') : profile?.role === 'schoolAdmin' ? (lang === 'ar' ? 'مدير المدرسة' : 'School admin') : profile?.role === 'teacher' ? (lang === 'ar' ? 'المعلم' : 'Teacher') : (lang === 'ar' ? 'الطالب' : 'Student')}</small>
                 </div>
-                <span className="mx-1 h-6 w-px bg-white/15"/>
-                <button onClick={() => void signOut()} title={lang === 'ar' ? 'تسجيل الخروج' : 'Sign out'} className="rounded-lg p-2 text-rose-200 transition hover:bg-rose-400/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/40"><LogOut size={17}/></button>
+                <span className="qul-header-divider" aria-hidden="true"/>
+                <button onClick={() => void signOut()} title={lang === 'ar' ? 'تسجيل الخروج' : 'Sign out'} className="qul-header-signout"><LogOut size={17}/></button>
               </>
             ) : (
-              <button onClick={() => void signIn()} className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-xs font-black text-emerald-900 transition hover:bg-emerald-50"><LogIn size={15}/>{lang === 'ar' ? 'تسجيل الدخول' : 'Sign in'}</button>
+              <button onClick={() => void signIn()} className="qul-header-signin"><LogIn size={15}/>{lang === 'ar' ? 'تسجيل الدخول' : 'Sign in'}</button>
             )}
           </div>
         </div>
