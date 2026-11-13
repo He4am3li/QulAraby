@@ -147,7 +147,7 @@ export const StudentWorksModal: React.FC<StudentWorksModalProps> = ({
                     </div>
                   )}
 
-                  {sub.feedback && (
+                  {sub.feedback && (!('reviewed' in sub) || sub.reviewed) && (
                     <div className="text-[11px] text-amber-300 font-bold bg-amber-500/10 p-1.5 rounded-lg border border-amber-500/20">
                       ملاحظة المعلم: {sub.feedback}
                     </div>
