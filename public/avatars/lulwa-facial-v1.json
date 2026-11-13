@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "kuwait_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/lulwa-stance-v1.webp",
+  "sourceSha256": "d2fc67f2a73cbe5b06963fdfc303818fe0891936147c75f26523347de5341eb9",
+  "pose": {
+    "bodyFacing": "right",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "left"
+  },
+  "registration": {
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.82,
+    "offset": [
+      342,
+      11
+    ],
+    "eyes": [
+      472,
+      131,
+      111,
+      40
+    ],
+    "brows": [
+      472,
+      116,
+      111,
+      27
+    ],
+    "mouth": [
+      489,
+      188,
+      79,
+      60
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 472,
+      "y": 131,
+      "w": 111,
+      "h": 40,
+      "visible": true,
+      "url": "/avatars/lulwa-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 472,
+      "y": 131,
+      "w": 111,
+      "h": 40,
+      "visible": true,
+      "url": "/avatars/lulwa-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 472,
+      "y": 131,
+      "w": 111,
+      "h": 40,
+      "visible": true,
+      "url": "/avatars/lulwa-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 472,
+      "y": 116,
+      "w": 111,
+      "h": 27,
+      "visible": true,
+      "url": "/avatars/lulwa-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 472,
+      "y": 116,
+      "w": 111,
+      "h": 27,
+      "visible": true,
+      "url": "/avatars/lulwa-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 489,
+      "y": 188,
+      "w": 79,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/lulwa-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 489,
+      "y": 188,
+      "w": 79,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/lulwa-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 489,
+      "y": 188,
+      "w": 79,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/lulwa-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 489,
+      "y": 188,
+      "w": 79,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/lulwa-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 489,
+      "y": 188,
+      "w": 79,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/lulwa-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 489,
+      "y": 188,
+      "w": 79,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/lulwa-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}

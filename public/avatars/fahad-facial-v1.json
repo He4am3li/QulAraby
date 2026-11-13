@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "kuwait_male",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/fahad-stance-v1.webp",
+  "sourceSha256": "2462753567265a7dfae08d9d95ef8321082dc8dccfe5bc3220db0b973d0713e4",
+  "pose": {
+    "bodyFacing": "left",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "right"
+  },
+  "registration": {
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.78,
+    "offset": [
+      345,
+      14
+    ],
+    "eyes": [
+      449,
+      123,
+      110,
+      38
+    ],
+    "brows": [
+      449,
+      109,
+      110,
+      26
+    ],
+    "mouth": [
+      464,
+      186,
+      78,
+      60
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 449,
+      "y": 123,
+      "w": 110,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/fahad-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 449,
+      "y": 123,
+      "w": 110,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/fahad-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 449,
+      "y": 123,
+      "w": 110,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/fahad-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 449,
+      "y": 109,
+      "w": 110,
+      "h": 26,
+      "visible": true,
+      "url": "/avatars/fahad-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 449,
+      "y": 109,
+      "w": 110,
+      "h": 26,
+      "visible": true,
+      "url": "/avatars/fahad-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 464,
+      "y": 186,
+      "w": 78,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/fahad-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 464,
+      "y": 186,
+      "w": 78,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/fahad-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 464,
+      "y": 186,
+      "w": 78,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/fahad-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 464,
+      "y": 186,
+      "w": 78,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/fahad-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 464,
+      "y": 186,
+      "w": 78,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/fahad-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 464,
+      "y": 186,
+      "w": 78,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/fahad-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}
