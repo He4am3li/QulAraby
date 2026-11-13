@@ -9,7 +9,6 @@
 .wesal-panel:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,#ffffff10,transparent 38%);z-index:0}
 .wesal-panel>*{position:relative;z-index:1}
 .wesal-header{height:80px;min-height:80px;display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid #ffffff12;background:linear-gradient(135deg,#ffffff0b,transparent 70%)}
-.wesal-monogram{height:42px;width:42px;flex-shrink:0;display:grid;place-items:center;border:1px solid #b2f7d459;background:#75d4b020;color:#c6fce0;border-radius:13px;font-size:25px;font-weight:900}
 .wesal-name{flex:1;min-width:0}.wesal-name strong{display:block;font-size:23px;line-height:1.15;font-weight:900}.wesal-name span{font:700 10px Arial,sans-serif;letter-spacing:.06em;color:#a8c8bf;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px}.wesal-header-actions{display:flex;align-items:center;gap:5px;flex-shrink:0}
 .wesal-icon-button{border:1px solid #ffffff16;border-radius:10px;color:#dae9e3;background:#ffffff0b;height:33px;width:33px;display:grid;place-items:center;flex-shrink:0;transition:background .2s}
 .wesal-icon-button:hover,.wesal-icon-selected{background:#ffffff25;color:#f0fff9}
@@ -66,3 +65,40 @@
 @keyframes wesal-fade{from{opacity:0}to{opacity:1}}
 @media(max-width:640px){.wesal-panel{bottom:0;left:0;width:100vw;height:auto;border:0;border-radius:0}.wesal-header{height:72px;min-height:72px;padding:10px 13px}.wesal-header-actions{gap:3px}.wesal-icon-button{width:31px;height:31px}.wesal-segments{margin:10px 12px 4px}.wesal-segment{font-size:10px}.wesal-scroll{padding-left:13px;padding-right:13px}.wesal-view-header{padding:12px 15px 10px}}
 @media(prefers-reduced-motion:reduce){.wesal-panel,.wesal-overlay{animation:none}}
+
+/* Full mirror symmetry for the English interface. The AR panel remains unchanged. */
+.wesal-panel[dir="ltr"]{
+  right:14px;
+  left:auto;
+  direction:ltr;
+  animation-name:wesal-open-english;
+  font-family:Inter,system-ui,'Segoe UI',sans-serif;
+}
+.wesal-panel[dir="ltr"] .wesal-main,
+.wesal-panel[dir="ltr"] .wesal-view{
+  direction:ltr;
+}
+.wesal-panel[dir="ltr"] .wesal-item,
+.wesal-panel[dir="ltr"] .wesal-search input,
+.wesal-panel[dir="ltr"] .wesal-field,
+.wesal-panel[dir="ltr"] .wesal-compose textarea{
+  text-align:left;
+}
+.wesal-panel[dir="ltr"] .wesal-dot{left:auto;right:-2px}
+.wesal-panel[dir="ltr"] .wesal-back-arrow{transform:rotate(180deg)}
+.wesal-panel[dir="ltr"] .wesal-segment{font-size:11px}
+.wesal-panel[dir="ltr"] .wesal-name span{letter-spacing:.06em}
+.wesal-panel[dir="ltr"] .wesal-bubble small{text-align:right}
+.wesal-panel[dir="ltr"] .wesal-avatar{font-family:inherit}
+.wesal-panel[dir="ltr"] .wesal-card h3,
+.wesal-panel[dir="ltr"] .wesal-contact-subtitle,
+.wesal-panel[dir="ltr"] .wesal-message-preview{text-align:start}
+.wesal-empty-subline{display:block;margin-top:8px}
+@keyframes wesal-open-english{from{opacity:.3;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@media(max-width:640px){
+  .wesal-panel[dir="ltr"]{left:0;right:0;width:100vw}
+  .wesal-panel[dir="ltr"] .wesal-segment{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .wesal-panel[dir="ltr"]{animation:none}
+}
