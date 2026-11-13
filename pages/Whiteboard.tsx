@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 import { useAuth } from '../components/AuthProvider';
+import { useLiveClassroom } from '../components/LiveClassroomContext';
 import { WhiteboardCanvas } from '../components/whiteboard/WhiteboardCanvas';
 import { FortuneWheelModal } from '../components/whiteboard/FortuneWheelModal';
 import { ArabicToolsModal } from '../components/whiteboard/ArabicToolsModal';
@@ -30,6 +31,8 @@ import {
 
 export const WhiteboardPage: React.FC = () => {
   const { user, profile } = useAuth();
+  const { sessionId, joinCode, busy: classroomBusy, error: classroomError, start, join, leave, end } = useLiveClassroom();
+  const [enteredClassroomCode, setEnteredClassroomCode] = useState('');
   const [lang, setLang] = useState<'ar' | 'en'>(
     (localStorage.getItem('hub_lang') as 'ar' | 'en') || 'ar'
   );
@@ -66,7 +69,7 @@ export const WhiteboardPage: React.FC = () => {
 
   // Session State
   const [session, setSession] = useState<WhiteboardSessionState>(() => {
-    const saved = localStorage.getItem('qul_active_whiteboard_session');
+    const saved = localStorage.getItem('qul_active_whiteboard_session_' + (user?.uid || 'guest'));
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -132,7 +135,7 @@ export const WhiteboardPage: React.FC = () => {
 
   // Save session state locally
   useEffect(() => {
-    localStorage.setItem('qul_active_whiteboard_session', JSON.stringify(session));
+    if (user?.uid) localStorage.setItem('qul_active_whiteboard_session_' + user.uid, JSON.stringify(session));
   }, [session]);
 
   // Real-time tab visibility & focus tracking: turns student presence green when focused on whiteboard page, dark when switching tab/app
@@ -437,7 +440,8 @@ export const WhiteboardPage: React.FC = () => {
   };
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(session.code);
+    if (!joinCode) return;
+    navigator.clipboard.writeText(joinCode);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
   };
@@ -520,22 +524,51 @@ export const WhiteboardPage: React.FC = () => {
         lang={lang}
         rightContent={
           <div className="flex items-center gap-2 sm:gap-4">
-            {/* Session Code Badge */}
-            <div className="flex items-center gap-1.5 bg-slate-900/80 border border-emerald-500/30 px-3 py-1.5 rounded-2xl">
-              <span className="text-xs text-slate-400 font-bold hidden sm:inline">رمز الحصة:</span>
-              <span className="font-mono font-black text-emerald-400 tracking-wider text-sm">{session.code}</span>
-              <button
-                onClick={handleCopyCode}
-                className="p-1 text-slate-400 hover:text-emerald-400 rounded-lg transition"
-                title="نسخ رمز الحصة"
-              >
-                {copiedCode ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+            {/* Server-verified live classroom access, without a global shared session. */}
+            {sessionId ? (
+              <div className="flex items-center gap-2 bg-slate-900/80 border border-emerald-500/30 px-3 py-1.5 rounded-2xl">
+                <span className="text-[10px] text-emerald-400 font-bold">
+                  {isTeacher ? 'رمز الحصة:' : 'متصل بالحصة'}
+                </span>
+                {isTeacher && joinCode && (
+                  <>
+                    <span className="font-mono font-black text-emerald-400 tracking-wider text-sm" dir="ltr">{joinCode}</span>
+                    <button onClick={handleCopyCode} title="نسخ رمز الحصة" className="p-1 text-white/70 hover:text-white">
+                      {copiedCode ? <Check size={14} /> : <Copy size={14} />}
+                    </button>
+                  </>
+                )}
+                <button disabled={classroomBusy} onClick={() => void (isTeacher ? end() : leave())}
+                  className="text-[9px] font-bold text-rose-300 hover:text-rose-100 border-s border-white/10 ps-2">
+                  {isTeacher ? 'إنهاء الحصة' : 'مغادرة'}
+                </button>
+              </div>
+            ) : isTeacher ? (
+              <button disabled={classroomBusy} onClick={() => void start()}
+                className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-black px-4 py-2 rounded-xl">
+                {classroomBusy ? 'جارٍ الاتصال...' : 'بدء حصة مباشرة'}
               </button>
-            </div>
+            ) : (
+              <div className="flex items-center gap-1 bg-slate-900/80 border border-emerald-500/30 px-2 py-1 rounded-xl">
+                <input value={enteredClassroomCode} onChange={e => setEnteredClassroomCode(e.target.value.toUpperCase().slice(0, 8))}
+                  maxLength={8} placeholder="رمز الحصة" aria-label="رمز انضمام الحصة"
+                  className="w-28 bg-transparent outline-none font-mono text-emerald-200 text-xs px-1" dir="ltr"/>
+                <button disabled={classroomBusy || !/^[A-F0-9]{8}$/.test(enteredClassroomCode)}
+                  onClick={() => void join(enteredClassroomCode)}
+                  className="bg-emerald-600 px-3 py-1.5 rounded-lg disabled:opacity-40 text-[10px] font-bold">
+                  انضمام
+                </button>
+              </div>
+            )}
           </div>
         }
       />
 
+      {classroomError && (
+        <p role="alert" className="bg-rose-950/80 text-rose-200 text-xs font-bold text-center py-1">
+          {classroomError}
+        </p>
+      )}
       {/* Main Classroom Whiteboard Layout */}
       <div id="qul-whiteboard-canvas-area" className="flex-1 relative overflow-hidden bg-slate-950">
         {/* Live Whiteboard Canvas with Integrated Compact Student Counter & Real-Time Interaction Under Hijri Date */}

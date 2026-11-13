@@ -26,6 +26,7 @@ import { AuthProvider } from './components/AuthProvider';
 import { TeacherToolbar } from './components/TeacherToolbar';
 import { StudentToolbar } from './components/StudentToolbar';
 import { LiveInteractionLayer } from './components/LiveInteractionLayer';
+import { LiveClassroomProvider, useLiveClassroom } from './components/LiveClassroomContext';
 import { QuotaWarning } from './components/QuotaWarning';
 import { Landing } from './pages/Landing';
 import { useAuth } from './components/AuthProvider';
@@ -102,6 +103,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="animate-app-reveal min-h-screen bg-slate-50">
+      <LiveClassroomProvider>
       <Layout>
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
@@ -133,9 +135,10 @@ const AppContent: React.FC = () => {
         </AnimatePresence>
       </Layout>
       {isWhiteboard && (
-        isTeacher ? <TeacherToolbar /> : <StudentToolbar onAction={(action) => console.log('Student action:', action)} />
+        isTeacher ? <ScopedTeacherToolbar /> : <StudentToolbar onAction={(action) => console.log('Student action:', action)} />
       )}
-      <LiveInteractionLayer />
+      {isWhiteboard && <ScopedLiveInteractionLayer />}
+      </LiveClassroomProvider>
       <QuotaWarning />
 
       <style>{`
@@ -157,6 +160,15 @@ const AppContent: React.FC = () => {
       `}</style>
     </div>
   );
+};
+
+const ScopedTeacherToolbar: React.FC = () => {
+  const { sessionId } = useLiveClassroom();
+  return sessionId ? <TeacherToolbar /> : null;
+};
+const ScopedLiveInteractionLayer: React.FC = () => {
+  const { sessionId } = useLiveClassroom();
+  return sessionId ? <LiveInteractionLayer /> : null;
 };
 
 const App: React.FC = () => {
