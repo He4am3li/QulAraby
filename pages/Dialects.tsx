@@ -212,180 +212,6 @@ export const COUNTRY_DATA = [
     }
   },
   {
-    id: 'morocco',
-    nameAr: 'المغرب',
-    nameEn: 'Morocco',
-    flag: '🇲🇦',
-    image: "/images/dialects/morocco-koutoubia-cinematic.avif",
-    dialect: 'Moroccan (مغربي)',
-    characterMale: { 
-      nameAr: 'ياسين', 
-      nameEn: 'Yassine', 
-      clothingAr: 'الجلابة المغربية مع الطربوش الفاسي.', 
-      clothingEn: 'Moroccan Djellaba with Fez hat.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Morocco%20wearing%20traditional%20Djellaba%20and%20red%20Fez%20hat%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    characterFemale: { 
-      nameAr: 'كنزة', 
-      nameEn: 'Kenza', 
-      clothingAr: 'القفطان المغربي (التكشيطة) الفاخر.', 
-      clothingEn: 'Luxury Moroccan Kaftan (Takchita).',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Morocco%20wearing%20traditional%20colorful%20Kaftan%20Takchita%20with%20belt%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    missions: {
-      visitor: { ar: "سحر مراكش: تعلم كيف ترحب بالناس بلهجة مغربية دافئة واكتشف جمال ساحة جامع الفنا.", en: "Marrakech Magic: Learn how to greet people with a warm Moroccan dialect and discover the beauty of Jemaa el-Fnaa." },
-      resident: { ar: "مذاق الطاجين: توجه إلى مطعم تقليدي واطلب طاجين مغربي أصيل بلهجة واثقة.", en: "Taste of Tagine: Head to a traditional restaurant and order an authentic Moroccan Tagine with confidence." },
-      native: { ar: "فن الفصال: انغمس في زحام أسواق مراكش، وفاوض البائع بذكاء للحصول على خصم 20% على التوابل.", en: "The Art of Haggling: Immerse yourself in the bustle of Marrakech markets, and negotiate smartly for a 20% discount on spices." }
-    },
-    culture: {
-      factAr: 'جامع القرويين في المغرب هو أقدم جامعة في العالم لا تزال تعمل.',
-      factEn: 'Al-Qarawiyyin Mosque in Morocco is the oldest continuously operating university in the world.',
-      items: [
-        { nameAr: 'الطاجين', nameEn: 'Tagine', icon: '🥘', descAr: 'إناء فخاري تقليدي يطهى فيه الطعام ببطء.', descEn: 'A traditional clay pot in which food is cooked slowly.' },
-        { nameAr: 'الشاي بالنعناع', nameEn: 'Mint Tea', icon: '🍵', descAr: 'يسمى "أتاي" وهو رمز للترحيب والضيافة المغربية.', descEn: 'Called "Atay," it is a symbol of Moroccan welcome and hospitality.' },
-        { nameAr: 'الزليج', nameEn: 'Zellige', icon: '🧱', descAr: 'فن الفسيفساء المغربي التقليدي الملون.', descEn: 'Traditional Moroccan colorful mosaic art.' },
-        { nameAr: 'القفطان', nameEn: 'Kaftan', icon: '👗', descAr: 'زي تقليدي مغربي فاخر يلبس في المناسبات.', descEn: 'A luxury traditional Moroccan attire worn on occasions.' },
-        { nameAr: 'زيت الأركان', nameEn: 'Argan Oil', icon: '🧴', descAr: 'زيت نادر يستخرج من شجر الأركان الموجود فقط في المغرب.', descEn: 'A rare oil extracted from Argan trees found only in Morocco.' },
-        { nameAr: 'الحمام', nameEn: 'Hammam', icon: '🧖', descAr: 'جزء أساسي من الثقافة المغربية للاسترخاء والتنظيف.', descEn: 'An essential part of Moroccan culture for relaxation and cleansing.' }
-      ]
-    },
-    vocab: [
-      { fusha: 'كيف حالك؟', dialect: 'لاباس؟', roman: 'Labas?', en: 'How are you?' },
-      { fusha: 'كثيراً', dialect: 'بزّاف', roman: 'Bezzaf', en: 'A lot' },
-      { fusha: 'جميل', dialect: 'غزال', roman: 'Ghazal', en: 'Beautiful' },
-      { fusha: 'الآن', dialect: 'دابا', roman: 'Daba', en: 'Now' },
-      { fusha: 'ماذا؟', dialect: 'شنو؟', roman: 'Shno?', en: 'What?' },
-      { fusha: 'أين؟', dialect: 'فين؟', roman: 'Fein?', en: 'Where?' },
-      { fusha: 'نعم', dialect: 'آه / إيه', roman: 'Ah / Iyeh', en: 'Yes' },
-      { fusha: 'لا', dialect: 'لا / لا والو', roman: 'La / La walou', en: 'No' },
-      { fusha: 'بسرعة', dialect: 'دغيا', roman: 'Deghya', en: 'Fast' },
-      { fusha: 'جيد', dialect: 'مزيان', roman: 'Mezyan', en: 'Good' }
-    ],
-    dialogue: {
-      title: 'السؤال عن الطريق',
-      lines: [
-        { role: 'Tourist', ar: 'أين ساحة جامع الفناء؟', dialect: 'فين جات ساحة جامع الفنا عفاك؟', en: 'Where is Jemaa el-Fnaa square please?' },
-        { role: 'Local', ar: 'اذهب مباشرة ثم يساراً.', dialect: 'سير نيشان ومن بعد دور على ليسر.', en: 'Go straight then turn left.' }
-      ]
-    }
-  },
-  {
-    id: 'jordan',
-    nameAr: 'الأردن',
-    nameEn: 'Jordan',
-    flag: '🇯🇴',
-    image: '/images/dialects/local/jordan.jpg',
-    dialect: 'Jordanian (أردني)',
-    characterMale: { 
-      nameAr: 'نشمي', 
-      nameEn: 'Nashmi', 
-      clothingAr: 'الثوب الأردني مع الشماغ الأحمر المهدب.', 
-      clothingEn: 'Jordanian Thobe with fringed red Shemagh.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Jordan%20wearing%20traditional%20Thobe%20and%20red%20Shemagh%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    characterFemale: { 
-      nameAr: 'هيا', 
-      nameEn: 'Haya', 
-      clothingAr: 'الثوب الأردني التقليدي المطرز يدوياً.', 
-      clothingEn: 'Hand-embroidered traditional Jordanian dress.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Jordan%20wearing%20traditional%20black%20embroidered%20dress%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    missions: {
-      visitor: { ar: "عبق التاريخ: ابدأ رحلتك بتبادل التحايا الأردنية الودودة واكتشف عظمة مدينة البتراء الوردية.", en: "Scent of History: Start your journey by exchanging friendly Jordanian greetings and discover the greatness of the Rose City, Petra." },
-      resident: { ar: "وليمة المنسف: انضم إلى مائدة أردنية واطلب طبق المنسف الأصيل معبراً عن تقديرك بلهجة محلية.", en: "Mansaf Feast: Join a Jordanian table and order an authentic Mansaf dish, expressing your appreciation in the local dialect." },
-      native: { ar: "حكايات البادية: انطلق في رحلة إلى وادي رم، وناقش تاريخ الأنباط بلهجة بدوية أصيلة.", en: "Tales of the Badia: Embark on a trip to Wadi Rum, and discuss the history of the Nabataeans with an authentic Bedouin dialect." }
-    },
-    culture: {
-      factAr: 'مدينة البتراء الوردية هي إحدى عجائب الدنيا السبع الجديدة.',
-      factEn: 'The rose-red city of Petra is one of the new seven wonders.',
-      items: [
-        { nameAr: 'المنسف', nameEn: 'Mansaf', icon: '🍚', descAr: 'الأكلة الوطنية الأردنية المكونة من اللحم والجميد والأرز.', descEn: 'The Jordanian national dish consisting of meat, Jameed, and rice.' },
-        { nameAr: 'البحر الميت', nameEn: 'Dead Sea', icon: '🌊', descAr: 'أخفض نقطة على سطح الأرض وتتميز بمياهها المالحة العلاجية.', descEn: 'The lowest point on Earth, characterized by its therapeutic salty waters.' },
-        { nameAr: 'الشماغ', nameEn: 'Shemagh', icon: '🧣', descAr: 'غطاء الرأس التقليدي باللونين الأحمر والأبيض.', descEn: 'The traditional red and white headcover.' },
-        { nameAr: 'البتراء', nameEn: 'Petra', icon: '🏛️', descAr: 'المدينة الوردية المنحوتة في الصخر من قبل الأنباط.', descEn: 'The rose city carved in rock by the Nabataeans.' },
-        { nameAr: 'المدرج الروماني', nameEn: 'Roman Theater', icon: '🏟️', descAr: 'معلم تاريخي في قلب العاصمة عمان يعود للعصر الروماني.', descEn: 'A historical landmark in the heart of Amman dating back to the Roman era.' },
-        { nameAr: 'المقلوبة', nameEn: 'Maqluba', icon: '🥘', descAr: 'أكلة شعبية شهيرة تقلب عند تقديمها.', descEn: 'A famous popular dish that is flipped when served.' }
-      ]
-    },
-    vocab: [
-      { fusha: 'كيف حالك؟', dialect: 'شو أخبارك؟', roman: 'Sho akhbarak?', en: 'How are you?' },
-      { fusha: 'شكراً', dialect: 'يسلمو', roman: 'Yislamo', en: 'Thank you' },
-      { fusha: 'حسناً', dialect: 'ماشي', roman: 'Mashi', en: 'Okay' },
-      { fusha: 'الآن', dialect: 'هسا', roman: 'Hassa', en: 'Now' },
-      { fusha: 'ماذا؟', dialect: 'شو؟', roman: 'Sho?', en: 'What?' },
-      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
-      { fusha: 'هنا', dialect: 'هون', roman: 'Hon', en: 'Here' },
-      { fusha: 'كثيراً', dialect: 'كتير', roman: 'Kteer', en: 'A lot' },
-      { fusha: 'بسرعة', dialect: 'بسرعة / قوام', roman: 'B-sur\'a / Awam', en: 'Fast' },
-      { fusha: 'جميل', dialect: 'حلو / بجنن', roman: 'Helou / Bijannin', en: 'Beautiful' }
-    ],
-    dialogue: {
-      title: 'لقاء صديق',
-      lines: [
-        { role: 'Friend A', ar: 'كيف حالك يا صديقي؟', dialect: 'كيفك يا غالي؟ شو الأخبار؟', en: 'How are you my dear friend?' },
-        { role: 'Friend B', ar: 'بخير والحمد لله.', dialect: 'تمام التمام، الحمد لله.', en: 'Great, thank God.' }
-      ]
-    }
-  },
-  {
-    id: 'lebanon',
-    nameAr: 'لبنان',
-    nameEn: 'Lebanon',
-    flag: '🇱🇧',
-    image: "/images/dialects/lebanon-raouche-subtle.avif",
-    dialect: 'Levantine (لبناني)',
-    characterMale: { 
-      nameAr: 'جاد', 
-      nameEn: 'Jad', 
-      clothingAr: 'الشروال اللبناني مع اللبادة.', 
-      clothingEn: 'Lebanese Shirwal with Labadeh hat.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Lebanon%20wearing%20traditional%20Shirwal%20and%20Labadeh%20hat%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    characterFemale: { 
-      nameAr: 'ليلى', 
-      nameEn: 'Layla', 
-      clothingAr: 'التنورة اللبنانية مع الطنطور التاريخي.', 
-      clothingEn: 'Lebanese dress with Tantour headpiece.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Lebanon%20wearing%20traditional%20dress%20and%20Tantour%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    missions: {
-      visitor: { ar: "أرز لبنان: تعلم كيف ترحب بالناس بلهجة لبنانية رقيقة واكتشف جمال غابات الأرز الخالدة.", en: "Lebanon's Cedars: Learn how to greet people with a gentle Lebanese dialect and discover the beauty of the eternal Cedar forests." },
-      resident: { ar: "مذاق بيروت: توجه إلى مطعم على الروشة واطلب تشكيلة من المازة اللبنانية بلهجة واثقة.", en: "Taste of Beirut: Head to a restaurant in Raouche and order a selection of Lebanese Mezze with confidence." },
-      native: { ar: "سحر بعلبك: انطلق في رحلة إلى آثار بعلبك، وناقش عظمة الرومان بلهجة لبنانية فصيحة.", en: "Baalbek's Magic: Embark on a trip to the ruins of Baalbek, and discuss Roman greatness with a fluent Lebanese dialect." }
-    },
-    culture: {
-      factAr: 'تعتبر غابة أرز الرب في لبنان رمزاً وطنياً وتضم أشجاراً عمرها آلاف السنين.',
-      factEn: 'The Cedars of God forest in Lebanon is a national symbol and home to trees thousands of years old.',
-      items: [
-        { nameAr: 'التبولة', nameEn: 'Tabbouleh', icon: '🥗', descAr: 'سلطة لبنانية شهيرة مكونة من البقدونس والبرغل والطماطم.', descEn: 'A famous Lebanese salad consisting of parsley, bulgur, and tomatoes.' },
-        { nameAr: 'الأرز', nameEn: 'Cedars', icon: '🌲', descAr: 'شجرة الأرز الخالدة التي تتوسط العلم اللبناني.', descEn: 'The eternal cedar tree that sits in the middle of the Lebanese flag.' },
-        { nameAr: 'الفيروزيات', nameEn: 'Fairuz Music', icon: '🎶', descAr: 'أغاني السيدة فيروز التي تعتبر جزءاً من صباح كل لبناني.', descEn: 'Songs of Fairuz, considered part of every Lebanese person\'s morning.' },
-        { nameAr: 'بعلبك', nameEn: 'Baalbek', icon: '🏛️', descAr: 'مدينة الشمس التي تضم أضخم المعابد الرومانية في العالم.', descEn: 'The City of the Sun, home to the largest Roman temples in the world.' },
-        { nameAr: 'الدبكة', nameEn: 'Dabke', icon: '💃', descAr: 'الرقصة الفلكلورية التقليدية التي تعبر عن الفرح والوحدة.', descEn: 'The traditional folklore dance expressing joy and unity.' },
-        { nameAr: 'المناقيش', nameEn: 'Manakish', icon: '🍕', descAr: 'فطائر الزعتر والجبن التي تعتبر الفطور الشعبي الأول.', descEn: 'Thyme and cheese pies, the most popular breakfast.' }
-      ]
-    },
-    vocab: [
-      { fusha: 'كيف حالك؟', dialect: 'كيفك؟', roman: 'Kifak?', en: 'How are you?' },
-      { fusha: 'الآن', dialect: 'هلق', roman: 'Halla\'', en: 'Now' },
-      { fusha: 'انظر', dialect: 'شِوف', roman: 'Shoof', en: 'Look' },
-      { fusha: 'ماذا؟', dialect: 'شو؟', roman: 'Sho?', en: 'What?' },
-      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
-      { fusha: 'هنا', dialect: 'هون', roman: 'Hon', en: 'Here' },
-      { fusha: 'كثيراً', dialect: 'كتير', roman: 'Kteer', en: 'A lot' },
-      { fusha: 'بسرعة', dialect: 'بسرعة / قوام', roman: 'B-sur\'a / Awam', en: 'Fast' },
-      { fusha: 'جميل', dialect: 'حلو / مهضوم', roman: 'Helou / Mahdoum', en: 'Beautiful / Cute' },
-      { fusha: 'نعم', dialect: 'إيه', roman: 'Iyeh', en: 'Yes' }
-    ],
-    dialogue: {
-      title: 'في المطعم',
-      lines: [
-        { role: 'Customer', ar: 'أريد طاولة لشخصين.', dialect: 'بدي طاولة لشخصين لو سمحت.', en: 'I want a table for two please.' },
-        { role: 'Waiter', ar: 'تفضل، هذا هو المنيو.', dialect: 'تفضل، هيدا المنيو.', en: 'Welcome, here is the menu.' }
-      ]
-    }
-  },
-  {
     id: 'palestine',
     nameAr: 'فلسطين',
     nameEn: 'Palestine',
@@ -440,238 +266,6 @@ export const COUNTRY_DATA = [
       lines: [
         { role: 'Grandma', ar: 'تفضلوا الطعام يا أبنائي.', dialect: 'تفضلوا يما الأكل جاهز.', en: 'Come children, the food is ready.' },
         { role: 'Son', ar: 'سلمت يداكِ يا أمي.', dialect: 'يسلمو ايديكي يما، ريحته بتجنن.', en: 'Bless your hands mom, it smells amazing.' }
-      ]
-    }
-  },
-  {
-    id: 'iraq',
-    nameAr: 'العراق',
-    nameEn: 'Iraq',
-    flag: '🇮🇶',
-    image: '/images/dialects/iraq-malwiya-soft-light.avif',
-    dialect: 'Iraqi (عراقي)',
-    characterMale: { 
-      nameAr: 'سنان', 
-      nameEn: 'Sinan', 
-      clothingAr: 'الدشداشة العراقية مع اليشماغ.', 
-      clothingEn: 'Iraqi Dishdasha with Yeshmagh.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Iraq%20wearing%20traditional%20Dishdasha%20and%20Yeshmagh%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    characterFemale: { 
-      nameAr: 'زينة', 
-      nameEn: 'Zaina', 
-      clothingAr: 'الهاشمي العراقي المطرز بالذهب.', 
-      clothingEn: 'Iraqi Hashimi gold-embroidered dress.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Iraq%20wearing%20traditional%20Hashimi%20dress%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    missions: {
-      visitor: { ar: "بلاد الرافدين: تعلم كيف ترحب بالناس بلهجة عراقية مهذبة واكتشف عظمة آثار بابل.", en: "Land of the Two Rivers: Learn how to greet people with a polite Iraqi dialect and discover the greatness of Babylon's ruins." },
-      resident: { ar: "مذاق دجلة: توجه إلى مطعم على ضفاف دجلة واطلب سمك المسكوف بلهجة واثقة.", en: "Taste of the Tigris: Head to a restaurant on the banks of the Tigris and order Masgouf fish with confidence." },
-      native: { ar: "سحر بغداد: انغمس في زحام شارع المتنبي، وناقش الأدب والشعر بلهجة عراقية فصيحة.", en: "Baghdad's Magic: Immerse yourself in the bustle of Al-Mutanabbi Street, and discuss literature and poetry with a fluent Iraqi dialect." }
-    },
-    culture: {
-      factAr: 'نهر دجلة هو أحد أكبر الأنهار في الشرق الأوسط ويرتبط بتاريخ بلاد الرافدين العريق.',
-      factEn: 'The Tigris River is one of the largest rivers in the Middle East, deeply linked to the ancient history of Mesopotamia.',
-      items: [
-        { nameAr: 'المسكوف', nameEn: 'Masgouf', icon: '🐟', descAr: 'السمك المشوي على الطريقة العراقية التقليدية.', descEn: 'Traditional Iraqi style grilled fish.' },
-        { nameAr: 'النخيل', nameEn: 'Date Palms', icon: '🌴', descAr: 'العراق بلد المليون نخلة وأجود أنواع التمور.', descEn: 'Iraq is the land of a million palms and the finest dates.' },
-        { nameAr: 'الشاي العراقي', nameEn: 'Iraqi Tea', icon: '☕', descAr: 'يقدم في "الاستكان" ويعتبر جزءاً لا يتجزأ من اليوم العراقي.', descEn: 'Served in an "Istikan" and is an integral part of the Iraqi day.' },
-        { nameAr: 'بوابة عشتار', nameEn: 'Ishtar Gate', icon: '🏰', descAr: 'البوابة الثامنة لمدينة بابل الداخلية بناها نبوخذ نصر.', descEn: 'The eighth gate to the inner city of Babylon built by Nebuchadnezzar.' },
-        { nameAr: 'ملوية سامراء', nameEn: 'Samarra Minaret', icon: '🗼', descAr: 'مئذنة المسجد الجامع في سامراء بشكلها الحلزوني الفريد.', descEn: 'The minaret of the Great Mosque of Samarra with its unique spiral shape.' },
-        { nameAr: 'الكليجة', nameEn: 'Kleicha', icon: '🍪', descAr: 'حلوى عراقية تقليدية محشوة بالتمر تقدم في الأعياد.', descEn: 'Traditional Iraqi dessert stuffed with dates served during holidays.' }
-      ]
-    },
-    vocab: [
-      { fusha: 'كيف حالك؟', dialect: 'شلونك؟', roman: 'Shlonak?', en: 'How are you?' },
-      { fusha: 'كثيراً', dialect: 'هواية', roman: 'Hwaya', en: 'A lot' },
-      { fusha: 'ليس جيداً', dialect: 'مو زين', roman: 'Mo zein', en: 'Not good' },
-      { fusha: 'الآن', dialect: 'هسّة', roman: 'Hassa', en: 'Now' },
-      { fusha: 'ماذا؟', dialect: 'شنو؟', roman: 'Shno?', en: 'What?' },
-      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
-      { fusha: 'هنا', dialect: 'هنا / اهنا', roman: 'Hena / Ihena', en: 'Here' },
-      { fusha: 'بسرعة', dialect: 'بسرعة / ركض', roman: 'B-sur\'a / Rakadh', en: 'Fast' },
-      { fusha: 'جميل', dialect: 'حلو / يخبل', roman: 'Helou / Yikhabbul', en: 'Beautiful' },
-      { fusha: 'نعم', dialect: 'إي / بلي', roman: 'Ee / Bali', en: 'Yes' }
-    ],
-    dialogue: {
-      title: 'شرب الشاي',
-      lines: [
-        { role: 'Host', ar: 'هل تشرب الشاي؟', dialect: 'تشرب چاي عيني؟', en: 'Would you like some tea, dear?' },
-        { role: 'Guest', ar: 'نعم، شكراً لك.', dialect: 'اي والله، ياريت.', en: 'Yes please, I would love to.' }
-      ]
-    }
-  },
-  {
-    id: 'tunisia',
-    nameAr: 'تونس',
-    nameEn: 'Tunisia',
-    flag: '🇹🇳',
-    image: "/images/dialects/tunisia-sidi-bou-said-cinematic.avif",
-    dialect: 'Tunisian (تونسي)',
-    characterMale: { 
-      nameAr: 'سامي', 
-      nameEn: 'Sami', 
-      clothingAr: 'الجبة التونسية مع الشاشية.', 
-      clothingEn: 'Tunisian Jebba with Chechia hat.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Tunisia%20wearing%20traditional%20Jebba%20and%20red%20Chechia%20hat%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    characterFemale: { 
-      nameAr: 'أنس', 
-      nameEn: 'Ons', 
-      clothingAr: 'الفوطة والبلوزة التونسية.', 
-      clothingEn: 'Traditional Tunisian Fouta and Blouza.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Tunisia%20wearing%20traditional%20Fouta%20and%20Blouza%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    missions: {
-      visitor: { ar: "تعلم (عسلامة، لاباس) وتعرف على مدينة قرطاج.", en: "Learn (Aslama, Labas) and identify Carthage." },
-      resident: { ar: "اطلب بريكاً تونسياً واشترط أن يكون حاراً جداً.", en: "Order Tunisian Brik and insist it be very spicy." },
-      native: { ar: "فاصل في سعر زربية (سجادة) في المدينة العتيقة.", en: "Haggle for a traditional carpet in the Old Medina." }
-    },
-    culture: {
-      factAr: 'تعتبر مدينة قرطاج في تونس من أهم المواقع الأثرية في حوض البحر الأبيض المتوسط.',
-      factEn: 'Carthage in Tunisia is one of the most important archaeological sites in the Mediterranean basin.',
-      items: [
-        { nameAr: 'الكسكسي', nameEn: 'Couscous', icon: '🥣', descAr: 'الوجبة الأساسية في تونس وتتميز بتنوع طرق تحضيرها.', descEn: 'The staple meal in Tunisia, characterized by diverse preparation methods.' },
-        { nameAr: 'الياسمين', nameEn: 'Jasmine', icon: '🌼', descAr: 'رمز تونس وجمالها وتنتشر رائحته في كل مكان.', descEn: 'The symbol of Tunisia and its beauty, its scent spreads everywhere.' },
-        { nameAr: 'الشاشية', nameEn: 'Chechia', icon: '🎩', descAr: 'غطاء الرأس التقليدي التونسي باللون الأحمر.', descEn: 'The traditional red Tunisian headcover.' },
-        { nameAr: 'قرطاج', nameEn: 'Carthage', icon: '🏛️', descAr: 'مدينة تاريخية عريقة كانت مركزاً لإمبراطورية عظيمة.', descEn: 'An ancient historical city that was the center of a great empire.' },
-        { nameAr: 'سيدي بوسعيد', nameEn: 'Sidi Bou Said', icon: '🏘️', descAr: 'قرية سياحية شهيرة بألوانها الزرقاء والبيضاء.', descEn: 'A famous tourist village known for its blue and white colors.' },
-        { nameAr: 'البريك', nameEn: 'Brik', icon: '🥟', descAr: 'فطائر رقيقة محشوة بالبيض والتونة تقلى في الزيت.', descEn: 'Thin pastries stuffed with eggs and tuna, fried in oil.' }
-      ]
-    },
-    vocab: [
-      { fusha: 'كيف حالك؟', dialect: 'شحوالك؟', roman: 'Ch-hwalek?', en: 'How are you?' },
-      { fusha: 'كثيراً', dialect: 'برشة', roman: 'Barcha', en: 'A lot' },
-      { fusha: 'أنا', dialect: 'آني', roman: 'Ani', en: 'I am' },
-      { fusha: 'الآن', dialect: 'توّة', roman: 'Tawwa', en: 'Now' },
-      { fusha: 'ماذا؟', dialect: 'شنوّة؟', roman: 'Chnowwa?', en: 'What?' },
-      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
-      { fusha: 'نعم', dialect: 'إيه / وي', roman: 'Iyeh / Oui', en: 'Yes' },
-      { fusha: 'لا', dialect: 'لا / لا والو', roman: 'La / La walou', en: 'No' },
-      { fusha: 'بسرعة', dialect: 'فيسع', roman: 'Fisaa', en: 'Fast' },
-      { fusha: 'جميل', dialect: 'مزيان', roman: 'Mezyan', en: 'Beautiful' }
-    ],
-    dialogue: {
-      title: 'طلب الطعام',
-      lines: [
-        { role: 'Customer', ar: 'أريد صحن كسكسي بالخضار.', dialect: 'نحب صحن كسكسي بالخضرة عيشك.', en: 'I want a plate of couscous with vegetables please.' },
-        { role: 'Waiter', ar: 'حاضر، هل تريد شطة؟', dialect: 'باهي، تحب الهريسة معاه؟', en: 'Sure, do you want Harissa with it?' }
-      ]
-    }
-  },
-  {
-    id: 'algeria',
-    nameAr: 'الجزائر',
-    nameEn: 'Algeria',
-    flag: '🇩🇿',
-    image: "/images/dialects/local/algeria.jpg",
-    dialect: 'Algerian (جزائري)',
-    characterMale: { 
-      nameAr: 'بلقاسم',
-      nameEn: 'Belkacem',
-      clothingAr: 'البرنوس الجزائري الأبيض.', 
-      clothingEn: 'White Algerian Burnous.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Algeria%20wearing%20traditional%20white%20Burnous%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    characterFemale: { 
-      nameAr: 'حليمة',
-      nameEn: 'Halima',
-      clothingAr: 'الشدة التلمسانية التقليدية.', 
-      clothingEn: 'Traditional Tlemcen Chedda.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Algeria%20wearing%20traditional%20Chedda%20Tlemcen%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    missions: {
-      visitor: { ar: "تعلم (صحة، واش راك) وتعرف على مقام الشهيد.", en: "Learn (Saha, Wash Rak) and identify Martyrs' Memorial." },
-      resident: { ar: "اطلب كسكسياً جزائرياً واسأل عن أنواعه الإقليمية.", en: "Order Algerian Couscous and ask about regional styles." },
-      native: { ar: "ناقش تاريخ ثورة المليون ونصف المليون شهيد.", en: "Discuss the history of the 1.5 Million Martyrs Revolution." }
-    },
-    culture: {
-      factAr: 'تغطي الصحراء الكبرى مساحة شاسعة من الجزائر وتتميز بتنوع تضاريسها المذهل.',
-      factEn: 'The Sahara Desert covers a vast area of Algeria and is characterized by its stunningly diverse terrain.',
-      items: [
-        { nameAr: 'الرندة', nameEn: 'Randa', icon: '🧶', descAr: 'فن التطريز اليدوي التقليدي في الجزائر.', descEn: 'Traditional hand embroidery art in Algeria.' },
-        { nameAr: 'الصحراء الكبرى', nameEn: 'Sahara', icon: '🏜️', descAr: 'تضم جبال الهقار والطاسيلي ومناظر طبيعية خلابة.', descEn: 'Includes the Hoggar and Tassili mountains and stunning landscapes.' },
-        { nameAr: 'موسيقى الراي', nameEn: 'Rai Music', icon: '🎸', descAr: 'نوع موسيقي عالمي نشأ في مدينة وهران الجزائرية.', descEn: 'A global music genre that originated in the Algerian city of Oran.' },
-        { nameAr: 'القصبة', nameEn: 'Casbah', icon: '🏘️', descAr: 'الحي التاريخي القديم في العاصمة الجزائر والمدرج ضمن اليونسكو.', descEn: 'The old historical neighborhood in Algiers, listed under UNESCO.' },
-        { nameAr: 'الكسكسي الجزائري', nameEn: 'Algerian Couscous', icon: '🥣', descAr: 'طبق تقليدي يتنوع حسب المناطق (قبائلي، شاوي، صحراوي).', descEn: 'A traditional dish that varies by region (Kabyle, Chaoui, Saharan).' },
-        { nameAr: 'طاسيلي ناجر', nameEn: 'Tassili n\'Ajjer', icon: '🎨', descAr: 'موقع يضم آلاف النقوش والرسوم الصخرية من عصور ما قبل التاريخ.', descEn: 'A site featuring thousands of prehistoric rock engravings and paintings.' }
-      ]
-    },
-    vocab: [
-      { fusha: 'كيف حالك؟', dialect: 'واش راك؟', roman: 'Wash rak?', en: 'How are you?' },
-      { fusha: 'جيد', dialect: 'مليح', roman: 'Mlih', en: 'Good' },
-      { fusha: 'تكلم', dialect: 'هدر', roman: 'Hdar', en: 'Speak' },
-      { fusha: 'الآن', dialect: 'دوكا', roman: 'Douka', en: 'Now' },
-      { fusha: 'ماذا؟', dialect: 'وشنو؟', roman: 'Washno?', en: 'What?' },
-      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
-      { fusha: 'نعم', dialect: 'إيه', roman: 'Iyeh', en: 'Yes' },
-      { fusha: 'لا', dialect: 'لا / لالا', roman: 'La / Lala', en: 'No' },
-      { fusha: 'بسرعة', dialect: 'بسرعة / خف', roman: 'B-sur\'a / Khaf', en: 'Fast' },
-      { fusha: 'كثيراً', dialect: 'بزاف', roman: 'Bezzaf', en: 'A lot' }
-    ],
-    dialogue: {
-      title: 'التحية الصباحية',
-      lines: [
-        { role: 'Neighbor A', ar: 'صباح الخير، كيف حالك؟', dialect: 'صباح الخير، واش راك خويا؟', en: 'Good morning, how are you brother?' },
-        { role: 'Neighbor B', ar: 'بخير، شكراً لك.', dialect: 'لاباس، يسلمك.', en: 'I am fine, thank you.' }
-      ]
-    }
-  },
-  {
-    id: 'libya',
-    nameAr: 'ليبيا',
-    nameEn: 'Libya',
-    flag: '🇱🇾',
-    image: "/images/dialects/libya-leptis-tourism.avif",
-    dialect: 'Libyan (ليبي)',
-    characterMale: { 
-      nameAr: 'عمر', 
-      nameEn: 'Omar', 
-      clothingAr: 'الزبون الليبي مع الفرملة.', 
-      clothingEn: 'Libyan Zabout with Farmala.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Libya%20wearing%20traditional%20Zabout%20and%20Farmala%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    characterFemale: { 
-      nameAr: 'فاطمة', 
-      nameEn: 'Fatima', 
-      clothingAr: 'الرداء الليبي التقليدي.', 
-      clothingEn: 'Traditional Libyan Rida.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Libya%20wearing%20traditional%20colorful%20Rida%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    missions: {
-      visitor: { ar: "تعلم (شن جوك، كيف حالك) وتعرف على لبدة الكبرى.", en: "Learn (Shen Jowak, Marhaba) and identify Leptis Magna." },
-      resident: { ar: "اطلب عصيدة ليبية وتعرف على أهميتها في المناسبات.", en: "Order Libyan Asida and learn its cultural significance." },
-      native: { ar: "ناقش حياة الصحراء وثقافة الواحات الليبية.", en: "Discuss desert life and Libyan oasis culture." }
-    },
-    culture: {
-      factAr: 'تعتبر صحراء ليبيا جزءاً من الصحراء الكبرى وتضم واحات طبيعية وتكوينات صخرية فريدة.',
-      factEn: 'The Libyan Desert is part of the Sahara and features natural oases and unique rock formations.',
-      items: [
-        { nameAr: 'البازين', nameEn: 'Bazin', icon: '🥣', descAr: 'أكلة ليبية تقليدية تصنع من دقيق الشعير وتقدم مع المرق.', descEn: 'A traditional Libyan dish made from barley flour and served with broth.' },
-        { nameAr: 'الصحراء', nameEn: 'Sahara', icon: '🏜️', descAr: 'تتميز بالكثبان الرملية الشاسعة والواحات الخضراء.', descEn: 'Characterized by vast sand dunes and green oases.' },
-        { nameAr: 'الواحات', nameEn: 'Oasis', icon: '🌴', descAr: 'مثل واحة غدامس "لؤلؤة الصحراء" التاريخية.', descEn: 'Like the historical Ghadames Oasis, the "Pearl of the Desert."' },
-        { nameAr: 'لبدة الكبرى', nameEn: 'Leptis Magna', icon: '🏛️', descAr: 'واحدة من أجمل المدن الرومانية المحفوظة في العالم.', descEn: 'One of the most beautiful preserved Roman cities in the world.' },
-        { nameAr: 'غدامس', nameEn: 'Ghadames', icon: '🏘️', descAr: 'مدينة قديمة تتميز بعمارتها الفريدة المتأقلمة مع الصحراء.', descEn: 'An ancient city known for its unique desert-adapted architecture.' },
-        { nameAr: 'العصيدة', nameEn: 'Asida', icon: '🍯', descAr: 'حلوى تقليدية تقدم في المناسبات الاجتماعية والمولد النبوي.', descEn: 'A traditional dessert served on social occasions and Mawlid.' }
-      ]
-    },
-    vocab: [
-      { fusha: 'كيف حالك؟', dialect: 'شخبارك؟', roman: 'Shakhbarak?', en: 'How are you?' },
-      { fusha: 'كثيراً', dialect: 'هلبة', roman: 'Halba', en: 'A lot' },
-      { fusha: 'بسرعة', dialect: 'بسرعة', roman: 'B-sur\'a', en: 'Fast' },
-      { fusha: 'الآن', dialect: 'توا', roman: 'Tawwa', en: 'Now' },
-      { fusha: 'ماذا؟', dialect: 'شنو؟', roman: 'Shno?', en: 'What?' },
-      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
-      { fusha: 'نعم', dialect: 'إيه', roman: 'Iyeh', en: 'Yes' },
-      { fusha: 'لا', dialect: 'لا / لالا', roman: 'La / Lala', en: 'No' },
-      { fusha: 'جميل', dialect: 'سمح / باهي', roman: 'Samah / Bahi', en: 'Beautiful / Good' },
-      { fusha: 'جيد', dialect: 'كويس', roman: 'Kwayyes', en: 'Good' }
-    ],
-    dialogue: {
-      title: 'الترحيب',
-      lines: [
-        { role: 'Local', ar: 'أهلاً بك في ليبيا.', dialect: 'مرحبتين بيك في ليبيا، نورتنا.', en: 'Welcome to Libya, you honored us.' },
-        { role: 'Visitor', ar: 'شكراً، البلد جميل جداً.', dialect: 'سلمك، البلاد هلبة سمحة.', en: 'Thanks, the country is very beautiful.' }
       ]
     }
   },
@@ -734,60 +328,408 @@ export const COUNTRY_DATA = [
     }
   },
   {
-    id: 'sudan',
-    nameAr: 'السودان',
-    nameEn: 'Sudan',
-    flag: '🇸🇩',
-    image: '/images/dialects/sudan-meroe-golden.avif',
-    dialect: 'Sudanese (سوداني)',
+    id: 'jordan',
+    nameAr: 'الأردن',
+    nameEn: 'Jordan',
+    flag: '🇯🇴',
+    image: '/images/dialects/jordan-petra-lighting.avif',
+    dialect: 'Jordanian (أردني)',
     characterMale: { 
-      nameAr: 'مازن', 
-      nameEn: 'Mazin', 
-      clothingAr: 'الجلابية السودانية مع العمامة.', 
-      clothingEn: 'Sudanese Galabeya with turban.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Sudan%20wearing%20traditional%20white%20Galabeya%20and%20large%20turban%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+      nameAr: 'نشمي', 
+      nameEn: 'Nashmi', 
+      clothingAr: 'الثوب الأردني مع الشماغ الأحمر المهدب.', 
+      clothingEn: 'Jordanian Thobe with fringed red Shemagh.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Jordan%20wearing%20traditional%20Thobe%20and%20red%20Shemagh%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
     },
     characterFemale: { 
-      nameAr: 'آمنة', 
-      nameEn: 'Amna', 
-      clothingAr: 'الثوب السوداني التقليدي الملون.', 
-      clothingEn: 'Traditional colorful Sudanese Toub.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Sudan%20wearing%20traditional%20colorful%20Toub%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+      nameAr: 'هيا', 
+      nameEn: 'Haya', 
+      clothingAr: 'الثوب الأردني التقليدي المطرز يدوياً.', 
+      clothingEn: 'Hand-embroidered traditional Jordanian dress.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Jordan%20wearing%20traditional%20black%20embroidered%20dress%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
     },
     missions: {
-      visitor: { ar: "تعلم (حبابك، كيفك) وتعرف على أهرامات مروي.", en: "Learn (Hababak, Keifak) and identify the Pyramids of Meroe." },
-      resident: { ar: "اطلب طبق كسرة واسأل عن طريقة تخميرها التقليدية.", en: "Order Kisra and ask about the traditional fermentation process." },
-      native: { ar: "ناقش أهمية ملتقى النيلين في الخرطوم بلهجة سودانية.", en: "Discuss the Nile confluence in Khartoum in Sudanese dialect." }
+      visitor: { ar: "عبق التاريخ: ابدأ رحلتك بتبادل التحايا الأردنية الودودة واكتشف عظمة مدينة البتراء الوردية.", en: "Scent of History: Start your journey by exchanging friendly Jordanian greetings and discover the greatness of the Rose City, Petra." },
+      resident: { ar: "وليمة المنسف: انضم إلى مائدة أردنية واطلب طبق المنسف الأصيل معبراً عن تقديرك بلهجة محلية.", en: "Mansaf Feast: Join a Jordanian table and order an authentic Mansaf dish, expressing your appreciation in the local dialect." },
+      native: { ar: "حكايات البادية: انطلق في رحلة إلى وادي رم، وناقش تاريخ الأنباط بلهجة بدوية أصيلة.", en: "Tales of the Badia: Embark on a trip to Wadi Rum, and discuss the history of the Nabataeans with an authentic Bedouin dialect." }
     },
     culture: {
-      factAr: 'السودان يضم أهرامات أكثر من مصر (أهرامات مروي).',
-      factEn: 'Sudan has more pyramids than Egypt (Meroe Pyramids).',
+      factAr: 'مدينة البتراء الوردية هي إحدى عجائب الدنيا السبع الجديدة.',
+      factEn: 'The rose-red city of Petra is one of the new seven wonders.',
       items: [
-        { nameAr: 'العصيدة', nameEn: 'Asida', icon: '🥣', descAr: 'طبق تقليدي أساسي في المائدة السودانية خاصة في رمضان.', descEn: 'A staple traditional dish on the Sudanese table, especially in Ramadan.' },
-        { nameAr: 'الجبنة', nameEn: 'Sudanese Coffee', icon: '☕', descAr: 'طريقة تحضير القهوة السودانية التقليدية ببهاراتها الخاصة.', descEn: 'Traditional Sudanese coffee preparation with its special spices.' },
-        { nameAr: 'النيلين', nameEn: 'Two Niles', icon: '🌊', descAr: 'ملتقى النيل الأزرق والنيل الأبيض في الخرطوم.', descEn: 'The confluence of the Blue Nile and the White Nile in Khartoum.' },
-        { nameAr: 'أهرامات مروي', nameEn: 'Meroe Pyramids', icon: '📐', descAr: 'أهرامات كوشية قديمة تعتبر إرثاً تاريخياً عالمياً.', descEn: 'Ancient Kushite pyramids considered a global historical heritage.' },
-        { nameAr: 'الثوب السوداني', nameEn: 'Sudanese Toub', icon: '👗', descAr: 'الزي التقليدي للمرأة السودانية بألوانه وأشكاله المتنوعة.', descEn: 'The traditional attire for Sudanese women in various colors and styles.' },
-        { nameAr: 'الكسرة', nameEn: 'Kisra', icon: '🥞', descAr: 'خبز رقيق يصنع من الذرة المتخمرة وهو ركن أساسي في الوجبات.', descEn: 'Thin bread made from fermented corn, a staple in meals.' }
+        { nameAr: 'المنسف', nameEn: 'Mansaf', icon: '🍚', descAr: 'الأكلة الوطنية الأردنية المكونة من اللحم والجميد والأرز.', descEn: 'The Jordanian national dish consisting of meat, Jameed, and rice.' },
+        { nameAr: 'البحر الميت', nameEn: 'Dead Sea', icon: '🌊', descAr: 'أخفض نقطة على سطح الأرض وتتميز بمياهها المالحة العلاجية.', descEn: 'The lowest point on Earth, characterized by its therapeutic salty waters.' },
+        { nameAr: 'الشماغ', nameEn: 'Shemagh', icon: '🧣', descAr: 'غطاء الرأس التقليدي باللونين الأحمر والأبيض.', descEn: 'The traditional red and white headcover.' },
+        { nameAr: 'البتراء', nameEn: 'Petra', icon: '🏛️', descAr: 'المدينة الوردية المنحوتة في الصخر من قبل الأنباط.', descEn: 'The rose city carved in rock by the Nabataeans.' },
+        { nameAr: 'المدرج الروماني', nameEn: 'Roman Theater', icon: '🏟️', descAr: 'معلم تاريخي في قلب العاصمة عمان يعود للعصر الروماني.', descEn: 'A historical landmark in the heart of Amman dating back to the Roman era.' },
+        { nameAr: 'المقلوبة', nameEn: 'Maqluba', icon: '🥘', descAr: 'أكلة شعبية شهيرة تقلب عند تقديمها.', descEn: 'A famous popular dish that is flipped when served.' }
       ]
     },
     vocab: [
-      { fusha: 'كيف حالك؟', dialect: 'كيفنك؟ / شديد؟', roman: 'Kifannak? / Shadid?', en: 'How are you?' },
-      { fusha: 'جيد جداً', dialect: 'تمام التمام', roman: 'Tamam al-tamam', en: 'Very good' },
-      { fusha: 'يا رجل', dialect: 'يا زول', roman: 'Ya zol', en: 'Hey man' },
-      { fusha: 'الآن', dialect: 'هسّع', roman: 'Hassa\'', en: 'Now' },
-      { fusha: 'ماذا؟', dialect: 'شنو؟', roman: 'Shno?', en: 'What?' },
+      { fusha: 'كيف حالك؟', dialect: 'شو أخبارك؟', roman: 'Sho akhbarak?', en: 'How are you?' },
+      { fusha: 'شكراً', dialect: 'يسلمو', roman: 'Yislamo', en: 'Thank you' },
+      { fusha: 'حسناً', dialect: 'ماشي', roman: 'Mashi', en: 'Okay' },
+      { fusha: 'الآن', dialect: 'هسا', roman: 'Hassa', en: 'Now' },
+      { fusha: 'ماذا؟', dialect: 'شو؟', roman: 'Sho?', en: 'What?' },
       { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
-      { fusha: 'نعم', dialect: 'أيوه', roman: 'Aywa', en: 'Yes' },
-      { fusha: 'لا', dialect: 'لا / لالا', roman: 'La / Lala', en: 'No' },
-      { fusha: 'بسرعة', dialect: 'بسرعة / جري', roman: 'B-sur\'a / Jari', en: 'Fast' },
-      { fusha: 'جميل', dialect: 'سمح / جميل', roman: 'Samah / Jamil', en: 'Beautiful' }
+      { fusha: 'هنا', dialect: 'هون', roman: 'Hon', en: 'Here' },
+      { fusha: 'كثيراً', dialect: 'كتير', roman: 'Kteer', en: 'A lot' },
+      { fusha: 'بسرعة', dialect: 'بسرعة / قوام', roman: 'B-sur\'a / Awam', en: 'Fast' },
+      { fusha: 'جميل', dialect: 'حلو / بجنن', roman: 'Helou / Bijannin', en: 'Beautiful' }
     ],
     dialogue: {
-      title: 'لقاء في الشارع',
+      title: 'لقاء صديق',
       lines: [
-        { role: 'Person A', ar: 'كيف حالك اليوم؟', dialect: 'يا زول كيفنك؟ شديد؟', en: 'Hey man, how are you? Good?' },
-        { role: 'Person B', ar: 'أنا بخير والحمد لله.', dialect: 'والله مية مية، الحمد لله.', en: 'I am 100%, thank God.' }
+        { role: 'Friend A', ar: 'كيف حالك يا صديقي؟', dialect: 'كيفك يا غالي؟ شو الأخبار؟', en: 'How are you my dear friend?' },
+        { role: 'Friend B', ar: 'بخير والحمد لله.', dialect: 'تمام التمام، الحمد لله.', en: 'Great, thank God.' }
+      ]
+    }
+  },
+  {
+    id: 'lebanon',
+    nameAr: 'لبنان',
+    nameEn: 'Lebanon',
+    flag: '🇱🇧',
+    image: '/images/dialects/lebanon-raouche-lighting.avif',
+    dialect: 'Levantine (لبناني)',
+    characterMale: { 
+      nameAr: 'جاد', 
+      nameEn: 'Jad', 
+      clothingAr: 'الشروال اللبناني مع اللبادة.', 
+      clothingEn: 'Lebanese Shirwal with Labadeh hat.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Lebanon%20wearing%20traditional%20Shirwal%20and%20Labadeh%20hat%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    characterFemale: { 
+      nameAr: 'ليلى', 
+      nameEn: 'Layla', 
+      clothingAr: 'التنورة اللبنانية مع الطنطور التاريخي.', 
+      clothingEn: 'Lebanese dress with Tantour headpiece.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Lebanon%20wearing%20traditional%20dress%20and%20Tantour%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    missions: {
+      visitor: { ar: "أرز لبنان: تعلم كيف ترحب بالناس بلهجة لبنانية رقيقة واكتشف جمال غابات الأرز الخالدة.", en: "Lebanon's Cedars: Learn how to greet people with a gentle Lebanese dialect and discover the beauty of the eternal Cedar forests." },
+      resident: { ar: "مذاق بيروت: توجه إلى مطعم على الروشة واطلب تشكيلة من المازة اللبنانية بلهجة واثقة.", en: "Taste of Beirut: Head to a restaurant in Raouche and order a selection of Lebanese Mezze with confidence." },
+      native: { ar: "سحر بعلبك: انطلق في رحلة إلى آثار بعلبك، وناقش عظمة الرومان بلهجة لبنانية فصيحة.", en: "Baalbek's Magic: Embark on a trip to the ruins of Baalbek, and discuss Roman greatness with a fluent Lebanese dialect." }
+    },
+    culture: {
+      factAr: 'تعتبر غابة أرز الرب في لبنان رمزاً وطنياً وتضم أشجاراً عمرها آلاف السنين.',
+      factEn: 'The Cedars of God forest in Lebanon is a national symbol and home to trees thousands of years old.',
+      items: [
+        { nameAr: 'التبولة', nameEn: 'Tabbouleh', icon: '🥗', descAr: 'سلطة لبنانية شهيرة مكونة من البقدونس والبرغل والطماطم.', descEn: 'A famous Lebanese salad consisting of parsley, bulgur, and tomatoes.' },
+        { nameAr: 'الأرز', nameEn: 'Cedars', icon: '🌲', descAr: 'شجرة الأرز الخالدة التي تتوسط العلم اللبناني.', descEn: 'The eternal cedar tree that sits in the middle of the Lebanese flag.' },
+        { nameAr: 'الفيروزيات', nameEn: 'Fairuz Music', icon: '🎶', descAr: 'أغاني السيدة فيروز التي تعتبر جزءاً من صباح كل لبناني.', descEn: 'Songs of Fairuz, considered part of every Lebanese person\'s morning.' },
+        { nameAr: 'بعلبك', nameEn: 'Baalbek', icon: '🏛️', descAr: 'مدينة الشمس التي تضم أضخم المعابد الرومانية في العالم.', descEn: 'The City of the Sun, home to the largest Roman temples in the world.' },
+        { nameAr: 'الدبكة', nameEn: 'Dabke', icon: '💃', descAr: 'الرقصة الفلكلورية التقليدية التي تعبر عن الفرح والوحدة.', descEn: 'The traditional folklore dance expressing joy and unity.' },
+        { nameAr: 'المناقيش', nameEn: 'Manakish', icon: '🍕', descAr: 'فطائر الزعتر والجبن التي تعتبر الفطور الشعبي الأول.', descEn: 'Thyme and cheese pies, the most popular breakfast.' }
+      ]
+    },
+    vocab: [
+      { fusha: 'كيف حالك؟', dialect: 'كيفك؟', roman: 'Kifak?', en: 'How are you?' },
+      { fusha: 'الآن', dialect: 'هلق', roman: 'Halla\'', en: 'Now' },
+      { fusha: 'انظر', dialect: 'شِوف', roman: 'Shoof', en: 'Look' },
+      { fusha: 'ماذا؟', dialect: 'شو؟', roman: 'Sho?', en: 'What?' },
+      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
+      { fusha: 'هنا', dialect: 'هون', roman: 'Hon', en: 'Here' },
+      { fusha: 'كثيراً', dialect: 'كتير', roman: 'Kteer', en: 'A lot' },
+      { fusha: 'بسرعة', dialect: 'بسرعة / قوام', roman: 'B-sur\'a / Awam', en: 'Fast' },
+      { fusha: 'جميل', dialect: 'حلو / مهضوم', roman: 'Helou / Mahdoum', en: 'Beautiful / Cute' },
+      { fusha: 'نعم', dialect: 'إيه', roman: 'Iyeh', en: 'Yes' }
+    ],
+    dialogue: {
+      title: 'في المطعم',
+      lines: [
+        { role: 'Customer', ar: 'أريد طاولة لشخصين.', dialect: 'بدي طاولة لشخصين لو سمحت.', en: 'I want a table for two please.' },
+        { role: 'Waiter', ar: 'تفضل، هذا هو المنيو.', dialect: 'تفضل، هيدا المنيو.', en: 'Welcome, here is the menu.' }
+      ]
+    }
+  },
+  {
+    id: 'iraq',
+    nameAr: 'العراق',
+    nameEn: 'Iraq',
+    flag: '🇮🇶',
+    image: '/images/dialects/iraq-malwiya-soft-light.avif',
+    dialect: 'Iraqi (عراقي)',
+    characterMale: { 
+      nameAr: 'سنان', 
+      nameEn: 'Sinan', 
+      clothingAr: 'الدشداشة العراقية مع اليشماغ.', 
+      clothingEn: 'Iraqi Dishdasha with Yeshmagh.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Iraq%20wearing%20traditional%20Dishdasha%20and%20Yeshmagh%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    characterFemale: { 
+      nameAr: 'زينة', 
+      nameEn: 'Zaina', 
+      clothingAr: 'الهاشمي العراقي المطرز بالذهب.', 
+      clothingEn: 'Iraqi Hashimi gold-embroidered dress.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Iraq%20wearing%20traditional%20Hashimi%20dress%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    missions: {
+      visitor: { ar: "بلاد الرافدين: تعلم كيف ترحب بالناس بلهجة عراقية مهذبة واكتشف عظمة آثار بابل.", en: "Land of the Two Rivers: Learn how to greet people with a polite Iraqi dialect and discover the greatness of Babylon's ruins." },
+      resident: { ar: "مذاق دجلة: توجه إلى مطعم على ضفاف دجلة واطلب سمك المسكوف بلهجة واثقة.", en: "Taste of the Tigris: Head to a restaurant on the banks of the Tigris and order Masgouf fish with confidence." },
+      native: { ar: "سحر بغداد: انغمس في زحام شارع المتنبي، وناقش الأدب والشعر بلهجة عراقية فصيحة.", en: "Baghdad's Magic: Immerse yourself in the bustle of Al-Mutanabbi Street, and discuss literature and poetry with a fluent Iraqi dialect." }
+    },
+    culture: {
+      factAr: 'نهر دجلة هو أحد أكبر الأنهار في الشرق الأوسط ويرتبط بتاريخ بلاد الرافدين العريق.',
+      factEn: 'The Tigris River is one of the largest rivers in the Middle East, deeply linked to the ancient history of Mesopotamia.',
+      items: [
+        { nameAr: 'المسكوف', nameEn: 'Masgouf', icon: '🐟', descAr: 'السمك المشوي على الطريقة العراقية التقليدية.', descEn: 'Traditional Iraqi style grilled fish.' },
+        { nameAr: 'النخيل', nameEn: 'Date Palms', icon: '🌴', descAr: 'العراق بلد المليون نخلة وأجود أنواع التمور.', descEn: 'Iraq is the land of a million palms and the finest dates.' },
+        { nameAr: 'الشاي العراقي', nameEn: 'Iraqi Tea', icon: '☕', descAr: 'يقدم في "الاستكان" ويعتبر جزءاً لا يتجزأ من اليوم العراقي.', descEn: 'Served in an "Istikan" and is an integral part of the Iraqi day.' },
+        { nameAr: 'بوابة عشتار', nameEn: 'Ishtar Gate', icon: '🏰', descAr: 'البوابة الثامنة لمدينة بابل الداخلية بناها نبوخذ نصر.', descEn: 'The eighth gate to the inner city of Babylon built by Nebuchadnezzar.' },
+        { nameAr: 'ملوية سامراء', nameEn: 'Samarra Minaret', icon: '🗼', descAr: 'مئذنة المسجد الجامع في سامراء بشكلها الحلزوني الفريد.', descEn: 'The minaret of the Great Mosque of Samarra with its unique spiral shape.' },
+        { nameAr: 'الكليجة', nameEn: 'Kleicha', icon: '🍪', descAr: 'حلوى عراقية تقليدية محشوة بالتمر تقدم في الأعياد.', descEn: 'Traditional Iraqi dessert stuffed with dates served during holidays.' }
+      ]
+    },
+    vocab: [
+      { fusha: 'كيف حالك؟', dialect: 'شلونك؟', roman: 'Shlonak?', en: 'How are you?' },
+      { fusha: 'كثيراً', dialect: 'هواية', roman: 'Hwaya', en: 'A lot' },
+      { fusha: 'ليس جيداً', dialect: 'مو زين', roman: 'Mo zein', en: 'Not good' },
+      { fusha: 'الآن', dialect: 'هسّة', roman: 'Hassa', en: 'Now' },
+      { fusha: 'ماذا؟', dialect: 'شنو؟', roman: 'Shno?', en: 'What?' },
+      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
+      { fusha: 'هنا', dialect: 'هنا / اهنا', roman: 'Hena / Ihena', en: 'Here' },
+      { fusha: 'بسرعة', dialect: 'بسرعة / ركض', roman: 'B-sur\'a / Rakadh', en: 'Fast' },
+      { fusha: 'جميل', dialect: 'حلو / يخبل', roman: 'Helou / Yikhabbul', en: 'Beautiful' },
+      { fusha: 'نعم', dialect: 'إي / بلي', roman: 'Ee / Bali', en: 'Yes' }
+    ],
+    dialogue: {
+      title: 'شرب الشاي',
+      lines: [
+        { role: 'Host', ar: 'هل تشرب الشاي؟', dialect: 'تشرب چاي عيني؟', en: 'Would you like some tea, dear?' },
+        { role: 'Guest', ar: 'نعم، شكراً لك.', dialect: 'اي والله، ياريت.', en: 'Yes please, I would love to.' }
+      ]
+    }
+  },
+  {
+    id: 'libya',
+    nameAr: 'ليبيا',
+    nameEn: 'Libya',
+    flag: '🇱🇾',
+    image: "/images/dialects/libya-leptis-tourism.avif",
+    dialect: 'Libyan (ليبي)',
+    characterMale: { 
+      nameAr: 'عمر', 
+      nameEn: 'Omar', 
+      clothingAr: 'الزبون الليبي مع الفرملة.', 
+      clothingEn: 'Libyan Zabout with Farmala.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Libya%20wearing%20traditional%20Zabout%20and%20Farmala%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    characterFemale: { 
+      nameAr: 'فاطمة', 
+      nameEn: 'Fatima', 
+      clothingAr: 'الرداء الليبي التقليدي.', 
+      clothingEn: 'Traditional Libyan Rida.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Libya%20wearing%20traditional%20colorful%20Rida%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    missions: {
+      visitor: { ar: "تعلم (شن جوك، كيف حالك) وتعرف على لبدة الكبرى.", en: "Learn (Shen Jowak, Marhaba) and identify Leptis Magna." },
+      resident: { ar: "اطلب عصيدة ليبية وتعرف على أهميتها في المناسبات.", en: "Order Libyan Asida and learn its cultural significance." },
+      native: { ar: "ناقش حياة الصحراء وثقافة الواحات الليبية.", en: "Discuss desert life and Libyan oasis culture." }
+    },
+    culture: {
+      factAr: 'تعتبر صحراء ليبيا جزءاً من الصحراء الكبرى وتضم واحات طبيعية وتكوينات صخرية فريدة.',
+      factEn: 'The Libyan Desert is part of the Sahara and features natural oases and unique rock formations.',
+      items: [
+        { nameAr: 'البازين', nameEn: 'Bazin', icon: '🥣', descAr: 'أكلة ليبية تقليدية تصنع من دقيق الشعير وتقدم مع المرق.', descEn: 'A traditional Libyan dish made from barley flour and served with broth.' },
+        { nameAr: 'الصحراء', nameEn: 'Sahara', icon: '🏜️', descAr: 'تتميز بالكثبان الرملية الشاسعة والواحات الخضراء.', descEn: 'Characterized by vast sand dunes and green oases.' },
+        { nameAr: 'الواحات', nameEn: 'Oasis', icon: '🌴', descAr: 'مثل واحة غدامس "لؤلؤة الصحراء" التاريخية.', descEn: 'Like the historical Ghadames Oasis, the "Pearl of the Desert."' },
+        { nameAr: 'لبدة الكبرى', nameEn: 'Leptis Magna', icon: '🏛️', descAr: 'واحدة من أجمل المدن الرومانية المحفوظة في العالم.', descEn: 'One of the most beautiful preserved Roman cities in the world.' },
+        { nameAr: 'غدامس', nameEn: 'Ghadames', icon: '🏘️', descAr: 'مدينة قديمة تتميز بعمارتها الفريدة المتأقلمة مع الصحراء.', descEn: 'An ancient city known for its unique desert-adapted architecture.' },
+        { nameAr: 'العصيدة', nameEn: 'Asida', icon: '🍯', descAr: 'حلوى تقليدية تقدم في المناسبات الاجتماعية والمولد النبوي.', descEn: 'A traditional dessert served on social occasions and Mawlid.' }
+      ]
+    },
+    vocab: [
+      { fusha: 'كيف حالك؟', dialect: 'شخبارك؟', roman: 'Shakhbarak?', en: 'How are you?' },
+      { fusha: 'كثيراً', dialect: 'هلبة', roman: 'Halba', en: 'A lot' },
+      { fusha: 'بسرعة', dialect: 'بسرعة', roman: 'B-sur\'a', en: 'Fast' },
+      { fusha: 'الآن', dialect: 'توا', roman: 'Tawwa', en: 'Now' },
+      { fusha: 'ماذا؟', dialect: 'شنو؟', roman: 'Shno?', en: 'What?' },
+      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
+      { fusha: 'نعم', dialect: 'إيه', roman: 'Iyeh', en: 'Yes' },
+      { fusha: 'لا', dialect: 'لا / لالا', roman: 'La / Lala', en: 'No' },
+      { fusha: 'جميل', dialect: 'سمح / باهي', roman: 'Samah / Bahi', en: 'Beautiful / Good' },
+      { fusha: 'جيد', dialect: 'كويس', roman: 'Kwayyes', en: 'Good' }
+    ],
+    dialogue: {
+      title: 'الترحيب',
+      lines: [
+        { role: 'Local', ar: 'أهلاً بك في ليبيا.', dialect: 'مرحبتين بيك في ليبيا، نورتنا.', en: 'Welcome to Libya, you honored us.' },
+        { role: 'Visitor', ar: 'شكراً، البلد جميل جداً.', dialect: 'سلمك، البلاد هلبة سمحة.', en: 'Thanks, the country is very beautiful.' }
+      ]
+    }
+  },
+  {
+    id: 'tunisia',
+    nameAr: 'تونس',
+    nameEn: 'Tunisia',
+    flag: '🇹🇳',
+    image: "/images/dialects/tunisia-sidi-bou-said-cinematic.avif",
+    dialect: 'Tunisian (تونسي)',
+    characterMale: { 
+      nameAr: 'سامي', 
+      nameEn: 'Sami', 
+      clothingAr: 'الجبة التونسية مع الشاشية.', 
+      clothingEn: 'Tunisian Jebba with Chechia hat.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Tunisia%20wearing%20traditional%20Jebba%20and%20red%20Chechia%20hat%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    characterFemale: { 
+      nameAr: 'أنس', 
+      nameEn: 'Ons', 
+      clothingAr: 'الفوطة والبلوزة التونسية.', 
+      clothingEn: 'Traditional Tunisian Fouta and Blouza.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Tunisia%20wearing%20traditional%20Fouta%20and%20Blouza%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    missions: {
+      visitor: { ar: "تعلم (عسلامة، لاباس) وتعرف على مدينة قرطاج.", en: "Learn (Aslama, Labas) and identify Carthage." },
+      resident: { ar: "اطلب بريكاً تونسياً واشترط أن يكون حاراً جداً.", en: "Order Tunisian Brik and insist it be very spicy." },
+      native: { ar: "فاصل في سعر زربية (سجادة) في المدينة العتيقة.", en: "Haggle for a traditional carpet in the Old Medina." }
+    },
+    culture: {
+      factAr: 'تعتبر مدينة قرطاج في تونس من أهم المواقع الأثرية في حوض البحر الأبيض المتوسط.',
+      factEn: 'Carthage in Tunisia is one of the most important archaeological sites in the Mediterranean basin.',
+      items: [
+        { nameAr: 'الكسكسي', nameEn: 'Couscous', icon: '🥣', descAr: 'الوجبة الأساسية في تونس وتتميز بتنوع طرق تحضيرها.', descEn: 'The staple meal in Tunisia, characterized by diverse preparation methods.' },
+        { nameAr: 'الياسمين', nameEn: 'Jasmine', icon: '🌼', descAr: 'رمز تونس وجمالها وتنتشر رائحته في كل مكان.', descEn: 'The symbol of Tunisia and its beauty, its scent spreads everywhere.' },
+        { nameAr: 'الشاشية', nameEn: 'Chechia', icon: '🎩', descAr: 'غطاء الرأس التقليدي التونسي باللون الأحمر.', descEn: 'The traditional red Tunisian headcover.' },
+        { nameAr: 'قرطاج', nameEn: 'Carthage', icon: '🏛️', descAr: 'مدينة تاريخية عريقة كانت مركزاً لإمبراطورية عظيمة.', descEn: 'An ancient historical city that was the center of a great empire.' },
+        { nameAr: 'سيدي بوسعيد', nameEn: 'Sidi Bou Said', icon: '🏘️', descAr: 'قرية سياحية شهيرة بألوانها الزرقاء والبيضاء.', descEn: 'A famous tourist village known for its blue and white colors.' },
+        { nameAr: 'البريك', nameEn: 'Brik', icon: '🥟', descAr: 'فطائر رقيقة محشوة بالبيض والتونة تقلى في الزيت.', descEn: 'Thin pastries stuffed with eggs and tuna, fried in oil.' }
+      ]
+    },
+    vocab: [
+      { fusha: 'كيف حالك؟', dialect: 'شحوالك؟', roman: 'Ch-hwalek?', en: 'How are you?' },
+      { fusha: 'كثيراً', dialect: 'برشة', roman: 'Barcha', en: 'A lot' },
+      { fusha: 'أنا', dialect: 'آني', roman: 'Ani', en: 'I am' },
+      { fusha: 'الآن', dialect: 'توّة', roman: 'Tawwa', en: 'Now' },
+      { fusha: 'ماذا؟', dialect: 'شنوّة؟', roman: 'Chnowwa?', en: 'What?' },
+      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
+      { fusha: 'نعم', dialect: 'إيه / وي', roman: 'Iyeh / Oui', en: 'Yes' },
+      { fusha: 'لا', dialect: 'لا / لا والو', roman: 'La / La walou', en: 'No' },
+      { fusha: 'بسرعة', dialect: 'فيسع', roman: 'Fisaa', en: 'Fast' },
+      { fusha: 'جميل', dialect: 'مزيان', roman: 'Mezyan', en: 'Beautiful' }
+    ],
+    dialogue: {
+      title: 'طلب الطعام',
+      lines: [
+        { role: 'Customer', ar: 'أريد صحن كسكسي بالخضار.', dialect: 'نحب صحن كسكسي بالخضرة عيشك.', en: 'I want a plate of couscous with vegetables please.' },
+        { role: 'Waiter', ar: 'حاضر، هل تريد شطة؟', dialect: 'باهي، تحب الهريسة معاه؟', en: 'Sure, do you want Harissa with it?' }
+      ]
+    }
+  },
+  {
+    id: 'morocco',
+    nameAr: 'المغرب',
+    nameEn: 'Morocco',
+    flag: '🇲🇦',
+    image: "/images/dialects/morocco-koutoubia-cinematic.avif",
+    dialect: 'Moroccan (مغربي)',
+    characterMale: { 
+      nameAr: 'ياسين', 
+      nameEn: 'Yassine', 
+      clothingAr: 'الجلابة المغربية مع الطربوش الفاسي.', 
+      clothingEn: 'Moroccan Djellaba with Fez hat.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Morocco%20wearing%20traditional%20Djellaba%20and%20red%20Fez%20hat%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    characterFemale: { 
+      nameAr: 'كنزة', 
+      nameEn: 'Kenza', 
+      clothingAr: 'القفطان المغربي (التكشيطة) الفاخر.', 
+      clothingEn: 'Luxury Moroccan Kaftan (Takchita).',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Morocco%20wearing%20traditional%20colorful%20Kaftan%20Takchita%20with%20belt%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    missions: {
+      visitor: { ar: "سحر مراكش: تعلم كيف ترحب بالناس بلهجة مغربية دافئة واكتشف جمال ساحة جامع الفنا.", en: "Marrakech Magic: Learn how to greet people with a warm Moroccan dialect and discover the beauty of Jemaa el-Fnaa." },
+      resident: { ar: "مذاق الطاجين: توجه إلى مطعم تقليدي واطلب طاجين مغربي أصيل بلهجة واثقة.", en: "Taste of Tagine: Head to a traditional restaurant and order an authentic Moroccan Tagine with confidence." },
+      native: { ar: "فن الفصال: انغمس في زحام أسواق مراكش، وفاوض البائع بذكاء للحصول على خصم 20% على التوابل.", en: "The Art of Haggling: Immerse yourself in the bustle of Marrakech markets, and negotiate smartly for a 20% discount on spices." }
+    },
+    culture: {
+      factAr: 'جامع القرويين في المغرب هو أقدم جامعة في العالم لا تزال تعمل.',
+      factEn: 'Al-Qarawiyyin Mosque in Morocco is the oldest continuously operating university in the world.',
+      items: [
+        { nameAr: 'الطاجين', nameEn: 'Tagine', icon: '🥘', descAr: 'إناء فخاري تقليدي يطهى فيه الطعام ببطء.', descEn: 'A traditional clay pot in which food is cooked slowly.' },
+        { nameAr: 'الشاي بالنعناع', nameEn: 'Mint Tea', icon: '🍵', descAr: 'يسمى "أتاي" وهو رمز للترحيب والضيافة المغربية.', descEn: 'Called "Atay," it is a symbol of Moroccan welcome and hospitality.' },
+        { nameAr: 'الزليج', nameEn: 'Zellige', icon: '🧱', descAr: 'فن الفسيفساء المغربي التقليدي الملون.', descEn: 'Traditional Moroccan colorful mosaic art.' },
+        { nameAr: 'القفطان', nameEn: 'Kaftan', icon: '👗', descAr: 'زي تقليدي مغربي فاخر يلبس في المناسبات.', descEn: 'A luxury traditional Moroccan attire worn on occasions.' },
+        { nameAr: 'زيت الأركان', nameEn: 'Argan Oil', icon: '🧴', descAr: 'زيت نادر يستخرج من شجر الأركان الموجود فقط في المغرب.', descEn: 'A rare oil extracted from Argan trees found only in Morocco.' },
+        { nameAr: 'الحمام', nameEn: 'Hammam', icon: '🧖', descAr: 'جزء أساسي من الثقافة المغربية للاسترخاء والتنظيف.', descEn: 'An essential part of Moroccan culture for relaxation and cleansing.' }
+      ]
+    },
+    vocab: [
+      { fusha: 'كيف حالك؟', dialect: 'لاباس؟', roman: 'Labas?', en: 'How are you?' },
+      { fusha: 'كثيراً', dialect: 'بزّاف', roman: 'Bezzaf', en: 'A lot' },
+      { fusha: 'جميل', dialect: 'غزال', roman: 'Ghazal', en: 'Beautiful' },
+      { fusha: 'الآن', dialect: 'دابا', roman: 'Daba', en: 'Now' },
+      { fusha: 'ماذا؟', dialect: 'شنو؟', roman: 'Shno?', en: 'What?' },
+      { fusha: 'أين؟', dialect: 'فين؟', roman: 'Fein?', en: 'Where?' },
+      { fusha: 'نعم', dialect: 'آه / إيه', roman: 'Ah / Iyeh', en: 'Yes' },
+      { fusha: 'لا', dialect: 'لا / لا والو', roman: 'La / La walou', en: 'No' },
+      { fusha: 'بسرعة', dialect: 'دغيا', roman: 'Deghya', en: 'Fast' },
+      { fusha: 'جيد', dialect: 'مزيان', roman: 'Mezyan', en: 'Good' }
+    ],
+    dialogue: {
+      title: 'السؤال عن الطريق',
+      lines: [
+        { role: 'Tourist', ar: 'أين ساحة جامع الفناء؟', dialect: 'فين جات ساحة جامع الفنا عفاك؟', en: 'Where is Jemaa el-Fnaa square please?' },
+        { role: 'Local', ar: 'اذهب مباشرة ثم يساراً.', dialect: 'سير نيشان ومن بعد دور على ليسر.', en: 'Go straight then turn left.' }
+      ]
+    }
+  },
+  {
+    id: 'algeria',
+    nameAr: 'الجزائر',
+    nameEn: 'Algeria',
+    flag: '🇩🇿',
+    image: "/images/dialects/local/algeria.jpg",
+    dialect: 'Algerian (جزائري)',
+    characterMale: { 
+      nameAr: 'بلقاسم',
+      nameEn: 'Belkacem',
+      clothingAr: 'البرنوس الجزائري الأبيض.', 
+      clothingEn: 'White Algerian Burnous.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Algeria%20wearing%20traditional%20white%20Burnous%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    characterFemale: { 
+      nameAr: 'حليمة',
+      nameEn: 'Halima',
+      clothingAr: 'الشدة التلمسانية التقليدية.', 
+      clothingEn: 'Traditional Tlemcen Chedda.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Algeria%20wearing%20traditional%20Chedda%20Tlemcen%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    missions: {
+      visitor: { ar: "تعلم (صحة، واش راك) وتعرف على مقام الشهيد.", en: "Learn (Saha, Wash Rak) and identify Martyrs' Memorial." },
+      resident: { ar: "اطلب كسكسياً جزائرياً واسأل عن أنواعه الإقليمية.", en: "Order Algerian Couscous and ask about regional styles." },
+      native: { ar: "ناقش تاريخ ثورة المليون ونصف المليون شهيد.", en: "Discuss the history of the 1.5 Million Martyrs Revolution." }
+    },
+    culture: {
+      factAr: 'تغطي الصحراء الكبرى مساحة شاسعة من الجزائر وتتميز بتنوع تضاريسها المذهل.',
+      factEn: 'The Sahara Desert covers a vast area of Algeria and is characterized by its stunningly diverse terrain.',
+      items: [
+        { nameAr: 'الرندة', nameEn: 'Randa', icon: '🧶', descAr: 'فن التطريز اليدوي التقليدي في الجزائر.', descEn: 'Traditional hand embroidery art in Algeria.' },
+        { nameAr: 'الصحراء الكبرى', nameEn: 'Sahara', icon: '🏜️', descAr: 'تضم جبال الهقار والطاسيلي ومناظر طبيعية خلابة.', descEn: 'Includes the Hoggar and Tassili mountains and stunning landscapes.' },
+        { nameAr: 'موسيقى الراي', nameEn: 'Rai Music', icon: '🎸', descAr: 'نوع موسيقي عالمي نشأ في مدينة وهران الجزائرية.', descEn: 'A global music genre that originated in the Algerian city of Oran.' },
+        { nameAr: 'القصبة', nameEn: 'Casbah', icon: '🏘️', descAr: 'الحي التاريخي القديم في العاصمة الجزائر والمدرج ضمن اليونسكو.', descEn: 'The old historical neighborhood in Algiers, listed under UNESCO.' },
+        { nameAr: 'الكسكسي الجزائري', nameEn: 'Algerian Couscous', icon: '🥣', descAr: 'طبق تقليدي يتنوع حسب المناطق (قبائلي، شاوي، صحراوي).', descEn: 'A traditional dish that varies by region (Kabyle, Chaoui, Saharan).' },
+        { nameAr: 'طاسيلي ناجر', nameEn: 'Tassili n\'Ajjer', icon: '🎨', descAr: 'موقع يضم آلاف النقوش والرسوم الصخرية من عصور ما قبل التاريخ.', descEn: 'A site featuring thousands of prehistoric rock engravings and paintings.' }
+      ]
+    },
+    vocab: [
+      { fusha: 'كيف حالك؟', dialect: 'واش راك؟', roman: 'Wash rak?', en: 'How are you?' },
+      { fusha: 'جيد', dialect: 'مليح', roman: 'Mlih', en: 'Good' },
+      { fusha: 'تكلم', dialect: 'هدر', roman: 'Hdar', en: 'Speak' },
+      { fusha: 'الآن', dialect: 'دوكا', roman: 'Douka', en: 'Now' },
+      { fusha: 'ماذا؟', dialect: 'وشنو؟', roman: 'Washno?', en: 'What?' },
+      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
+      { fusha: 'نعم', dialect: 'إيه', roman: 'Iyeh', en: 'Yes' },
+      { fusha: 'لا', dialect: 'لا / لالا', roman: 'La / Lala', en: 'No' },
+      { fusha: 'بسرعة', dialect: 'بسرعة / خف', roman: 'B-sur\'a / Khaf', en: 'Fast' },
+      { fusha: 'كثيراً', dialect: 'بزاف', roman: 'Bezzaf', en: 'A lot' }
+    ],
+    dialogue: {
+      title: 'التحية الصباحية',
+      lines: [
+        { role: 'Neighbor A', ar: 'صباح الخير، كيف حالك؟', dialect: 'صباح الخير، واش راك خويا؟', en: 'Good morning, how are you brother?' },
+        { role: 'Neighbor B', ar: 'بخير، شكراً لك.', dialect: 'لاباس، يسلمك.', en: 'I am fine, thank you.' }
       ]
     }
   },
@@ -850,60 +792,60 @@ export const COUNTRY_DATA = [
     }
   },
   {
-    id: 'kuwait',
-    nameAr: 'الكويت',
-    nameEn: 'Kuwait',
-    flag: '🇰🇼',
-    image: '/images/dialects/kuwait-distinctive-cinematic.avif',
-    dialect: 'Gulf (كويتي)',
+    id: 'bahrain',
+    nameAr: 'البحرين',
+    nameEn: 'Bahrain',
+    flag: '🇧🇭',
+    image: '/images/dialects/bahrain-distinctive-cinematic.avif',
+    dialect: 'Gulf (بحريني)',
     characterMale: { 
-      nameAr: 'فهد', 
-      nameEn: 'Fahad', 
-      clothingAr: 'الدشداشة الكويتية مع الغترة.', 
-      clothingEn: 'Kuwaiti Dishdasha with Ghutra.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Kuwait%20wearing%20traditional%20white%20Dishdasha%20and%20Ghutra%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+      nameAr: 'حمد', 
+      nameEn: 'Hamad', 
+      clothingAr: 'الثوب البحريني مع الغترة.', 
+      clothingEn: 'Bahraini Thobe with Ghutra.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Bahrain%20wearing%20traditional%20white%20Thobe%20and%20Ghutra%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
     },
     characterFemale: { 
-      nameAr: 'لولوة', 
-      nameEn: 'Lulwa', 
-      clothingAr: 'الدراعة الكويتية المطرزة.', 
-      clothingEn: 'Embroidered Kuwaiti Dara\'a.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Kuwait%20wearing%20traditional%20Daraa%20dress%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+      nameAr: 'شيخة', 
+      nameEn: 'Shaikha', 
+      clothingAr: 'الثوب النشل البحريني المطرز.', 
+      clothingEn: 'Traditional Bahraini Thobe Nashal.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Bahrain%20wearing%20traditional%20Nashal%20dress%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
     },
     missions: {
-      visitor: { ar: "تعلم (هلا، شلونك) وتعرف على أبراج الكويت.", en: "Learn (Hala, Shlounak) and identify the Kuwait Towers." },
-      resident: { ar: "اطلب مجبوساً واسأل عن طريقة تحضير الدقوس.", en: "Order Machboos and ask about the Daqoos preparation." },
-      native: { ar: "ناقش تراث الغوص على اللؤلؤ وحياة الأجداد.", en: "Discuss the pearl diving heritage and ancestors' life." }
+      visitor: { ar: "تعلم (هلا، شلونك) وتعرف على قلعة البحرين.", en: "Learn (Hala, Shlounak) and identify Bahrain Fort." },
+      resident: { ar: "اطلب محمر (أرز محلى) واسأل عن سر هذه الأكلة.", en: "Order Muhammar and ask about this unique sweet rice dish." },
+      native: { ar: "ناقش تاريخ شجرة الحياة ولغز بقائها في الصحراء.", en: "Discuss the Tree of Life history and its desert mystery." }
     },
     culture: {
-      factAr: 'أبراج الكويت هي المعلم الأكثر شهرة في البلاد وتعتبر رمزاً للنهضة الحديثة.',
-      factEn: 'Kuwait Towers are the most famous landmark in the country and a symbol of modern renaissance.',
+      factAr: 'تعد قلعة البحرين موقعاً للتراث العالمي لليونسكو وكانت عاصمة حضارة دلمون.',
+      factEn: 'Bahrain Fort is a UNESCO World Heritage site and was the capital of the Dilmun civilization.',
       items: [
-        { nameAr: 'مجبوس الدجاج', nameEn: 'Chicken Machboos', icon: '🍛', descAr: 'الطبق الوطني الكويتي المكون من الأرز والدجاج المتبل.', descEn: 'The Kuwaiti national dish consisting of rice and seasoned chicken.' },
-        { nameAr: 'الديوانية', nameEn: 'Diwaniya', icon: '🏠', descAr: 'مجلس اجتماعي تقليدي يلتقي فيه الرجال لمناقشة الأمور العامة.', descEn: 'A traditional social gathering place where men meet to discuss public affairs.' },
-        { nameAr: 'السدو', nameEn: 'Sadu Weaving', icon: '🧶', descAr: 'فن حياكة الصوف التقليدي الذي يمارسه البدو.', descEn: 'Traditional wool weaving art practiced by Bedouins.' },
-        { nameAr: 'أبراج الكويت', nameEn: 'Kuwait Towers', icon: '🗼', descAr: 'ثلاثة أبراج شاهقة تطل على الخليج العربي.', descEn: 'Three towering towers overlooking the Arabian Gulf.' },
-        { nameAr: 'سوق المباركية', nameEn: 'Mubarakiya Market', icon: '🛍️', descAr: 'أقدم سوق تراثي في الكويت يفوح بعبق الماضي.', descEn: 'The oldest heritage market in Kuwait, smelling of the past.' },
-        { nameAr: 'الدروازة', nameEn: 'Darwaza', icon: '🚪', descAr: 'البوابات القديمة التي كانت تحمي مدينة الكويت قديماً.', descEn: 'The old gates that used to protect Kuwait City in the past.' }
+        { nameAr: 'اللؤلؤ البحريني', nameEn: 'Bahraini Pearls', icon: '🦪', descAr: 'تشتهر البحرين بأجود أنواع اللؤلؤ الطبيعي في العالم.', descEn: 'Bahrain is famous for the finest natural pearls in the world.' },
+        { nameAr: 'حلوى الشويطر', nameEn: 'Showaiter Halwa', icon: '🍮', descAr: 'حلوى بحرينية تقليدية شهيرة يحرص السياح على اقتنائها.', descEn: 'Famous traditional Bahraini dessert that tourists are keen to buy.' },
+        { nameAr: 'باب البحرين', nameEn: 'Bab Al Bahrain', icon: '🏛️', descAr: 'مدخل سوق المنامة التاريخي ورمز تجاري قديم.', descEn: 'The entrance to the historical Manama Souq and an old commercial symbol.' },
+        { nameAr: 'شجرة الحياة', nameEn: 'Tree of Life', icon: '🌳', descAr: 'شجرة وحيدة في قلب الصحراء بقيت خضراء لمئات السنين.', descEn: 'A lone tree in the heart of the desert that has remained green for hundreds of years.' },
+        { nameAr: 'الفخار', nameEn: 'Pottery', icon: '🏺', descAr: 'صناعة يدوية عريقة تشتهر بها قرية عالي في البحرين.', descEn: 'An ancient handicraft famous in A\'ali village in Bahrain.' },
+        { nameAr: 'بيت القرآن', nameEn: 'Beit Al Quran', icon: '📖', descAr: 'متحف إسلامي يضم مخطوطات نادرة للقرآن الكريم.', descEn: 'An Islamic museum housing rare manuscripts of the Holy Quran.' }
       ]
     },
     vocab: [
-      { fusha: 'كيف حالك؟', dialect: 'شلونك؟', roman: 'Shlonak?', en: 'How are you?' },
-      { fusha: 'ماذا تريد؟', dialect: 'شتبِي؟', roman: 'Shatabi?', en: 'What do you want?' },
-      { fusha: 'الآن', dialect: 'الحِين', roman: 'Al-heen', en: 'Now' },
+      { fusha: 'كيف حالك؟', dialect: 'شخبارك؟', roman: 'Shakhbarak?', en: 'How are you?' },
+      { fusha: 'نعم', dialect: 'إي نعم', roman: 'Ee naam', en: 'Yes' },
+      { fusha: 'انظر', dialect: 'طالع', roman: 'Talae', en: 'Look' },
+      { fusha: 'الآن', dialect: 'الحين', roman: 'Al-heen', en: 'Now' },
+      { fusha: 'ماذا؟', dialect: 'شنو؟', roman: 'Shno?', en: 'What?' },
       { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
-      { fusha: 'نعم', dialect: 'إي / نعم', roman: 'Ee / Naam', en: 'Yes' },
       { fusha: 'لا', dialect: 'لا / لالا', roman: 'La / Lala', en: 'No' },
       { fusha: 'بسرعة', dialect: 'بسرعة', roman: 'B-sur\'a', en: 'Fast' },
       { fusha: 'كثيراً', dialect: 'وايد / حيل', roman: 'Wayed / Heil', en: 'A lot' },
-      { fusha: 'جميل', dialect: 'حلو / زين', roman: 'Helou / Zein', en: 'Beautiful' },
-      { fusha: 'انظر', dialect: 'طالع', roman: 'Talae', en: 'Look' }
+      { fusha: 'جميل', dialect: 'حلو / زين', roman: 'Helou / Zein', en: 'Beautiful' }
     ],
     dialogue: {
-      title: 'في الديوانية',
+      title: 'الترحيب بالزائر',
       lines: [
-        { role: 'Friend', ar: 'متى ستأتي إلينا؟', dialect: 'متى بتسير علينا بالديوانية؟', en: 'When will you visit us at the Diwaniya?' },
-        { role: 'You', ar: 'سآتي الليلة إن شاء الله.', dialect: 'بجيك الليلة إن شاء الله.', en: 'I will come tonight, God willing.' }
+        { role: 'Local', ar: 'أهلاً بك في البحرين.', dialect: 'يا هلا بيك في البحرين، نورتنا.', en: 'Welcome to Bahrain, you honored us.' },
+        { role: 'Visitor', ar: 'شكراً، أهلها طيبون جداً.', dialect: 'مشكور، أهل البحرين وايد طيبين.', en: 'Thanks, Bahraini people are very kind.' }
       ]
     }
   },
@@ -966,60 +908,60 @@ export const COUNTRY_DATA = [
     }
   },
   {
-    id: 'bahrain',
-    nameAr: 'البحرين',
-    nameEn: 'Bahrain',
-    flag: '🇧🇭',
-    image: '/images/dialects/bahrain-distinctive-cinematic.avif',
-    dialect: 'Gulf (بحريني)',
+    id: 'kuwait',
+    nameAr: 'الكويت',
+    nameEn: 'Kuwait',
+    flag: '🇰🇼',
+    image: '/images/dialects/kuwait-distinctive-cinematic.avif',
+    dialect: 'Gulf (كويتي)',
     characterMale: { 
-      nameAr: 'حمد', 
-      nameEn: 'Hamad', 
-      clothingAr: 'الثوب البحريني مع الغترة.', 
-      clothingEn: 'Bahraini Thobe with Ghutra.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Bahrain%20wearing%20traditional%20white%20Thobe%20and%20Ghutra%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+      nameAr: 'فهد', 
+      nameEn: 'Fahad', 
+      clothingAr: 'الدشداشة الكويتية مع الغترة.', 
+      clothingEn: 'Kuwaiti Dishdasha with Ghutra.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Kuwait%20wearing%20traditional%20white%20Dishdasha%20and%20Ghutra%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
     },
     characterFemale: { 
-      nameAr: 'شيخة', 
-      nameEn: 'Shaikha', 
-      clothingAr: 'الثوب النشل البحريني المطرز.', 
-      clothingEn: 'Traditional Bahraini Thobe Nashal.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Bahrain%20wearing%20traditional%20Nashal%20dress%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+      nameAr: 'لولوة', 
+      nameEn: 'Lulwa', 
+      clothingAr: 'الدراعة الكويتية المطرزة.', 
+      clothingEn: 'Embroidered Kuwaiti Dara\'a.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Kuwait%20wearing%20traditional%20Daraa%20dress%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
     },
     missions: {
-      visitor: { ar: "تعلم (هلا، شلونك) وتعرف على قلعة البحرين.", en: "Learn (Hala, Shlounak) and identify Bahrain Fort." },
-      resident: { ar: "اطلب محمر (أرز محلى) واسأل عن سر هذه الأكلة.", en: "Order Muhammar and ask about this unique sweet rice dish." },
-      native: { ar: "ناقش تاريخ شجرة الحياة ولغز بقائها في الصحراء.", en: "Discuss the Tree of Life history and its desert mystery." }
+      visitor: { ar: "تعلم (هلا، شلونك) وتعرف على أبراج الكويت.", en: "Learn (Hala, Shlounak) and identify the Kuwait Towers." },
+      resident: { ar: "اطلب مجبوساً واسأل عن طريقة تحضير الدقوس.", en: "Order Machboos and ask about the Daqoos preparation." },
+      native: { ar: "ناقش تراث الغوص على اللؤلؤ وحياة الأجداد.", en: "Discuss the pearl diving heritage and ancestors' life." }
     },
     culture: {
-      factAr: 'تعد قلعة البحرين موقعاً للتراث العالمي لليونسكو وكانت عاصمة حضارة دلمون.',
-      factEn: 'Bahrain Fort is a UNESCO World Heritage site and was the capital of the Dilmun civilization.',
+      factAr: 'أبراج الكويت هي المعلم الأكثر شهرة في البلاد وتعتبر رمزاً للنهضة الحديثة.',
+      factEn: 'Kuwait Towers are the most famous landmark in the country and a symbol of modern renaissance.',
       items: [
-        { nameAr: 'اللؤلؤ البحريني', nameEn: 'Bahraini Pearls', icon: '🦪', descAr: 'تشتهر البحرين بأجود أنواع اللؤلؤ الطبيعي في العالم.', descEn: 'Bahrain is famous for the finest natural pearls in the world.' },
-        { nameAr: 'حلوى الشويطر', nameEn: 'Showaiter Halwa', icon: '🍮', descAr: 'حلوى بحرينية تقليدية شهيرة يحرص السياح على اقتنائها.', descEn: 'Famous traditional Bahraini dessert that tourists are keen to buy.' },
-        { nameAr: 'باب البحرين', nameEn: 'Bab Al Bahrain', icon: '🏛️', descAr: 'مدخل سوق المنامة التاريخي ورمز تجاري قديم.', descEn: 'The entrance to the historical Manama Souq and an old commercial symbol.' },
-        { nameAr: 'شجرة الحياة', nameEn: 'Tree of Life', icon: '🌳', descAr: 'شجرة وحيدة في قلب الصحراء بقيت خضراء لمئات السنين.', descEn: 'A lone tree in the heart of the desert that has remained green for hundreds of years.' },
-        { nameAr: 'الفخار', nameEn: 'Pottery', icon: '🏺', descAr: 'صناعة يدوية عريقة تشتهر بها قرية عالي في البحرين.', descEn: 'An ancient handicraft famous in A\'ali village in Bahrain.' },
-        { nameAr: 'بيت القرآن', nameEn: 'Beit Al Quran', icon: '📖', descAr: 'متحف إسلامي يضم مخطوطات نادرة للقرآن الكريم.', descEn: 'An Islamic museum housing rare manuscripts of the Holy Quran.' }
+        { nameAr: 'مجبوس الدجاج', nameEn: 'Chicken Machboos', icon: '🍛', descAr: 'الطبق الوطني الكويتي المكون من الأرز والدجاج المتبل.', descEn: 'The Kuwaiti national dish consisting of rice and seasoned chicken.' },
+        { nameAr: 'الديوانية', nameEn: 'Diwaniya', icon: '🏠', descAr: 'مجلس اجتماعي تقليدي يلتقي فيه الرجال لمناقشة الأمور العامة.', descEn: 'A traditional social gathering place where men meet to discuss public affairs.' },
+        { nameAr: 'السدو', nameEn: 'Sadu Weaving', icon: '🧶', descAr: 'فن حياكة الصوف التقليدي الذي يمارسه البدو.', descEn: 'Traditional wool weaving art practiced by Bedouins.' },
+        { nameAr: 'أبراج الكويت', nameEn: 'Kuwait Towers', icon: '🗼', descAr: 'ثلاثة أبراج شاهقة تطل على الخليج العربي.', descEn: 'Three towering towers overlooking the Arabian Gulf.' },
+        { nameAr: 'سوق المباركية', nameEn: 'Mubarakiya Market', icon: '🛍️', descAr: 'أقدم سوق تراثي في الكويت يفوح بعبق الماضي.', descEn: 'The oldest heritage market in Kuwait, smelling of the past.' },
+        { nameAr: 'الدروازة', nameEn: 'Darwaza', icon: '🚪', descAr: 'البوابات القديمة التي كانت تحمي مدينة الكويت قديماً.', descEn: 'The old gates that used to protect Kuwait City in the past.' }
       ]
     },
     vocab: [
-      { fusha: 'كيف حالك؟', dialect: 'شخبارك؟', roman: 'Shakhbarak?', en: 'How are you?' },
-      { fusha: 'نعم', dialect: 'إي نعم', roman: 'Ee naam', en: 'Yes' },
-      { fusha: 'انظر', dialect: 'طالع', roman: 'Talae', en: 'Look' },
-      { fusha: 'الآن', dialect: 'الحين', roman: 'Al-heen', en: 'Now' },
-      { fusha: 'ماذا؟', dialect: 'شنو؟', roman: 'Shno?', en: 'What?' },
+      { fusha: 'كيف حالك؟', dialect: 'شلونك؟', roman: 'Shlonak?', en: 'How are you?' },
+      { fusha: 'ماذا تريد؟', dialect: 'شتبِي؟', roman: 'Shatabi?', en: 'What do you want?' },
+      { fusha: 'الآن', dialect: 'الحِين', roman: 'Al-heen', en: 'Now' },
       { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
+      { fusha: 'نعم', dialect: 'إي / نعم', roman: 'Ee / Naam', en: 'Yes' },
       { fusha: 'لا', dialect: 'لا / لالا', roman: 'La / Lala', en: 'No' },
       { fusha: 'بسرعة', dialect: 'بسرعة', roman: 'B-sur\'a', en: 'Fast' },
       { fusha: 'كثيراً', dialect: 'وايد / حيل', roman: 'Wayed / Heil', en: 'A lot' },
-      { fusha: 'جميل', dialect: 'حلو / زين', roman: 'Helou / Zein', en: 'Beautiful' }
+      { fusha: 'جميل', dialect: 'حلو / زين', roman: 'Helou / Zein', en: 'Beautiful' },
+      { fusha: 'انظر', dialect: 'طالع', roman: 'Talae', en: 'Look' }
     ],
     dialogue: {
-      title: 'الترحيب بالزائر',
+      title: 'في الديوانية',
       lines: [
-        { role: 'Local', ar: 'أهلاً بك في البحرين.', dialect: 'يا هلا بيك في البحرين، نورتنا.', en: 'Welcome to Bahrain, you honored us.' },
-        { role: 'Visitor', ar: 'شكراً، أهلها طيبون جداً.', dialect: 'مشكور، أهل البحرين وايد طيبين.', en: 'Thanks, Bahraini people are very kind.' }
+        { role: 'Friend', ar: 'متى ستأتي إلينا؟', dialect: 'متى بتسير علينا بالديوانية؟', en: 'When will you visit us at the Diwaniya?' },
+        { role: 'You', ar: 'سآتي الليلة إن شاء الله.', dialect: 'بجيك الليلة إن شاء الله.', en: 'I will come tonight, God willing.' }
       ]
     }
   },
@@ -1078,6 +1020,64 @@ export const COUNTRY_DATA = [
       lines: [
         { role: 'Customer', ar: 'أريد أفضل أنواع البن.', dialect: 'أشتي أحسن نوع بن يمني.', en: 'I want the best type of Yemeni coffee.' },
         { role: 'Seller', ar: 'هذا البن المطري هو الأفضل.', dialect: 'هذا البن المطري حالي قوي، جربه.', en: 'This Matari coffee is very good, try it.' }
+      ]
+    }
+  },
+  {
+    id: 'sudan',
+    nameAr: 'السودان',
+    nameEn: 'Sudan',
+    flag: '🇸🇩',
+    image: '/images/dialects/sudan-meroe-golden.avif',
+    dialect: 'Sudanese (سوداني)',
+    characterMale: { 
+      nameAr: 'مازن', 
+      nameEn: 'Mazin', 
+      clothingAr: 'الجلابية السودانية مع العمامة.', 
+      clothingEn: 'Sudanese Galabeya with turban.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Sudan%20wearing%20traditional%20white%20Galabeya%20and%20large%20turban%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    characterFemale: { 
+      nameAr: 'آمنة', 
+      nameEn: 'Amna', 
+      clothingAr: 'الثوب السوداني التقليدي الملون.', 
+      clothingEn: 'Traditional colorful Sudanese Toub.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Sudan%20wearing%20traditional%20colorful%20Toub%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    missions: {
+      visitor: { ar: "تعلم (حبابك، كيفك) وتعرف على أهرامات مروي.", en: "Learn (Hababak, Keifak) and identify the Pyramids of Meroe." },
+      resident: { ar: "اطلب طبق كسرة واسأل عن طريقة تخميرها التقليدية.", en: "Order Kisra and ask about the traditional fermentation process." },
+      native: { ar: "ناقش أهمية ملتقى النيلين في الخرطوم بلهجة سودانية.", en: "Discuss the Nile confluence in Khartoum in Sudanese dialect." }
+    },
+    culture: {
+      factAr: 'السودان يضم أهرامات أكثر من مصر (أهرامات مروي).',
+      factEn: 'Sudan has more pyramids than Egypt (Meroe Pyramids).',
+      items: [
+        { nameAr: 'العصيدة', nameEn: 'Asida', icon: '🥣', descAr: 'طبق تقليدي أساسي في المائدة السودانية خاصة في رمضان.', descEn: 'A staple traditional dish on the Sudanese table, especially in Ramadan.' },
+        { nameAr: 'الجبنة', nameEn: 'Sudanese Coffee', icon: '☕', descAr: 'طريقة تحضير القهوة السودانية التقليدية ببهاراتها الخاصة.', descEn: 'Traditional Sudanese coffee preparation with its special spices.' },
+        { nameAr: 'النيلين', nameEn: 'Two Niles', icon: '🌊', descAr: 'ملتقى النيل الأزرق والنيل الأبيض في الخرطوم.', descEn: 'The confluence of the Blue Nile and the White Nile in Khartoum.' },
+        { nameAr: 'أهرامات مروي', nameEn: 'Meroe Pyramids', icon: '📐', descAr: 'أهرامات كوشية قديمة تعتبر إرثاً تاريخياً عالمياً.', descEn: 'Ancient Kushite pyramids considered a global historical heritage.' },
+        { nameAr: 'الثوب السوداني', nameEn: 'Sudanese Toub', icon: '👗', descAr: 'الزي التقليدي للمرأة السودانية بألوانه وأشكاله المتنوعة.', descEn: 'The traditional attire for Sudanese women in various colors and styles.' },
+        { nameAr: 'الكسرة', nameEn: 'Kisra', icon: '🥞', descAr: 'خبز رقيق يصنع من الذرة المتخمرة وهو ركن أساسي في الوجبات.', descEn: 'Thin bread made from fermented corn, a staple in meals.' }
+      ]
+    },
+    vocab: [
+      { fusha: 'كيف حالك؟', dialect: 'كيفنك؟ / شديد؟', roman: 'Kifannak? / Shadid?', en: 'How are you?' },
+      { fusha: 'جيد جداً', dialect: 'تمام التمام', roman: 'Tamam al-tamam', en: 'Very good' },
+      { fusha: 'يا رجل', dialect: 'يا زول', roman: 'Ya zol', en: 'Hey man' },
+      { fusha: 'الآن', dialect: 'هسّع', roman: 'Hassa\'', en: 'Now' },
+      { fusha: 'ماذا؟', dialect: 'شنو؟', roman: 'Shno?', en: 'What?' },
+      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
+      { fusha: 'نعم', dialect: 'أيوه', roman: 'Aywa', en: 'Yes' },
+      { fusha: 'لا', dialect: 'لا / لالا', roman: 'La / Lala', en: 'No' },
+      { fusha: 'بسرعة', dialect: 'بسرعة / جري', roman: 'B-sur\'a / Jari', en: 'Fast' },
+      { fusha: 'جميل', dialect: 'سمح / جميل', roman: 'Samah / Jamil', en: 'Beautiful' }
+    ],
+    dialogue: {
+      title: 'لقاء في الشارع',
+      lines: [
+        { role: 'Person A', ar: 'كيف حالك اليوم؟', dialect: 'يا زول كيفنك؟ شديد؟', en: 'Hey man, how are you? Good?' },
+        { role: 'Person B', ar: 'أنا بخير والحمد لله.', dialect: 'والله مية مية، الحمد لله.', en: 'I am 100%, thank God.' }
       ]
     }
   },
@@ -1144,7 +1144,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الصومال',
     nameEn: 'Somalia',
     flag: '🇸🇴',
-    image: "/images/dialects/somalia-lido-sunset.avif",
+    image: '/images/dialects/somalia-laas-geel-cinematic.avif',
     dialect: 'Somali Arabic (صومالي)',
     characterMale: { 
       nameAr: 'عبدي', 
@@ -1194,64 +1194,6 @@ export const COUNTRY_DATA = [
       lines: [
         { role: 'Local', ar: 'أهلاً بك في مقديشو.', dialect: 'سوكوداو مقديشو، نورتنا.', en: 'Welcome to Mogadishu, you honored us.' },
         { role: 'Visitor', ar: 'شكراً، أنا سعيد بزيارتي.', dialect: 'ماهادسانيد، أنا فرحان وايد.', en: 'Thank you, I am very happy.' }
-      ]
-    }
-  },
-  {
-    id: 'djibouti',
-    nameAr: 'جيبوتي',
-    nameEn: 'Djibouti',
-    flag: '🇩🇯',
-    image: "/images/dialects/djibouti-lake-abbe.avif",
-    dialect: 'Djiboutian (جيبوتي)',
-    characterMale: { 
-      nameAr: 'برخاد', 
-      nameEn: 'Barkhad', 
-      clothingAr: 'المعوز الجيبوتي التقليدي.', 
-      clothingEn: 'Traditional Djiboutian Macawiis.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Djibouti%20wearing%20traditional%20Macawiis%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    characterFemale: { 
-      nameAr: 'خضراء', 
-      nameEn: 'Khadra', 
-      clothingAr: 'الديرع الجيبوتي الملون.', 
-      clothingEn: 'Colorful Djiboutian Dirac.',
-      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Djibouti%20wearing%20traditional%20Dirac%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
-    },
-    missions: {
-      visitor: { ar: "تعلم (إسكا وارن، مرحبا) وتعرف على بحيرة عسل.", en: "Learn (Iska warran, Marhaba) and identify Lake Assal." },
-      resident: { ar: "اطلب طبق سكوديهكاريس واسأل عن طريقة تحضير اللحم.", en: "Order Skoudehkaris and ask about meat preparation." },
-      native: { ar: "ناقش الأهمية الاستراتيجية لمضيق باب المندب.", en: "Discuss the strategic importance of Bab-el-Mandeb strait." }
-    },
-    culture: {
-      factAr: 'جيبوتي تضم بحيرة عسل، وهي أخفض نقطة في أفريقيا وتتميز بملوحتها العالية جداً.',
-      factEn: 'Djibouti hosts Lake Assal, the lowest point in Africa, known for its extremely high salinity.',
-      items: [
-        { nameAr: 'السمك المشوي', nameEn: 'Grilled Fish', icon: '🐟', descAr: 'يشتهر المطبخ الجيبوتي بالسمك الطازج المشوي على الفحم.', descEn: 'Djiboutian cuisine is famous for fresh charcoal-grilled fish.' },
-        { nameAr: 'الميناء', nameEn: 'The Port', icon: '🚢', descAr: 'ميناء جيبوتي هو بوابة تجارية هامة تربط أفريقيا بالعالم.', descEn: 'Djibouti Port is an important trade gateway connecting Africa to the world.' },
-        { nameAr: 'التنوع الثقافي', nameEn: 'Diversity', icon: '🌍', descAr: 'مزيج فريد من الثقافات العربية والأفريقية والفرنسية.', descEn: 'A unique blend of Arabic, African, and French cultures.' },
-        { nameAr: 'بحيرة عسل', nameEn: 'Lake Assal', icon: '🌊', descAr: 'بحيرة بركانية مالحة تحيط بها مناظر طبيعية خلابة.', descEn: 'A salty volcanic lake surrounded by stunning natural landscapes.' },
-        { nameAr: 'مضيق باب المندب', nameEn: 'Bab-el-Mandeb', icon: '🗺️', descAr: 'ممر مائي استراتيجي عالمي يقع قبالة سواحل جيبوتي.', descEn: 'A global strategic waterway located off the coast of Djibouti.' },
-        { nameAr: 'المعوز الجيبوتي', nameEn: 'Djiboutian Macawiis', icon: '👕', descAr: 'الزي التقليدي المريح الذي يرتديه الرجال في جيبوتي.', descEn: 'The comfortable traditional attire worn by men in Djibouti.' }
-      ]
-    },
-    vocab: [
-      { fusha: 'كيف حالك؟', dialect: 'واش راك؟', roman: 'Wash rak?', en: 'How are you?' },
-      { fusha: 'بخير', dialect: 'لاباس', roman: 'Labas', en: 'Fine' },
-      { fusha: 'شكراً', dialect: 'يسلمك', roman: 'Yisallimak', en: 'Thank you' },
-      { fusha: 'نعم', dialect: 'إيه', roman: 'Iyeh', en: 'Yes' },
-      { fusha: 'لا', dialect: 'لا / لالا', roman: 'La / Lala', en: 'No' },
-      { fusha: 'الآن', dialect: 'دوكا', roman: 'Douka', en: 'Now' },
-      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
-      { fusha: 'ماذا؟', dialect: 'وشنو؟', roman: 'Washno?', en: 'What?' },
-      { fusha: 'بسرعة', dialect: 'بسرعة', roman: 'B-sur\'a', en: 'Fast' },
-      { fusha: 'كثيراً', dialect: 'بزاف', roman: 'Bezzaf', en: 'A lot' }
-    ],
-    dialogue: {
-      title: 'في الميناء',
-      lines: [
-        { role: 'Worker', ar: 'هل تحتاج مساعدة؟', dialect: 'تحتاج معاونة خويا؟', en: 'Do you need help brother?' },
-        { role: 'Tourist', ar: 'نعم، أين أجد التاكسي؟', dialect: 'إيه، وين نلقى الطاكسي؟', en: 'Yes, where can I find a taxi?' }
       ]
     }
   },
@@ -1310,6 +1252,64 @@ export const COUNTRY_DATA = [
       lines: [
         { role: 'Friend A', ar: 'صباح الخير، كيف حالك؟', dialect: 'هباري زاسوبو؟ ندجيزا؟', en: 'Good morning, how are you? Good?' },
         { role: 'Friend B', ar: 'بخير والحمد لله.', dialect: 'ندجيزا، ماراحابا.', en: 'Fine, thank you.' }
+      ]
+    }
+  },
+  {
+    id: 'djibouti',
+    nameAr: 'جيبوتي',
+    nameEn: 'Djibouti',
+    flag: '🇩🇯',
+    image: "/images/dialects/djibouti-lake-abbe.avif",
+    dialect: 'Djiboutian (جيبوتي)',
+    characterMale: { 
+      nameAr: 'برخاد', 
+      nameEn: 'Barkhad', 
+      clothingAr: 'المعوز الجيبوتي التقليدي.', 
+      clothingEn: 'Traditional Djiboutian Macawiis.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20male%20character%20from%20Djibouti%20wearing%20traditional%20Macawiis%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    characterFemale: { 
+      nameAr: 'خضراء', 
+      nameEn: 'Khadra', 
+      clothingAr: 'الديرع الجيبوتي الملون.', 
+      clothingEn: 'Colorful Djiboutian Dirac.',
+      image: 'https://image.pollinations.ai/prompt/3d%20cartoon%20style%20full%20body%20female%20character%20from%20Djibouti%20wearing%20traditional%20Dirac%20smiling%20friendly%20white%20background?width=800&height=1200&nologo=true' 
+    },
+    missions: {
+      visitor: { ar: "تعلم (إسكا وارن، مرحبا) وتعرف على بحيرة عسل.", en: "Learn (Iska warran, Marhaba) and identify Lake Assal." },
+      resident: { ar: "اطلب طبق سكوديهكاريس واسأل عن طريقة تحضير اللحم.", en: "Order Skoudehkaris and ask about meat preparation." },
+      native: { ar: "ناقش الأهمية الاستراتيجية لمضيق باب المندب.", en: "Discuss the strategic importance of Bab-el-Mandeb strait." }
+    },
+    culture: {
+      factAr: 'جيبوتي تضم بحيرة عسل، وهي أخفض نقطة في أفريقيا وتتميز بملوحتها العالية جداً.',
+      factEn: 'Djibouti hosts Lake Assal, the lowest point in Africa, known for its extremely high salinity.',
+      items: [
+        { nameAr: 'السمك المشوي', nameEn: 'Grilled Fish', icon: '🐟', descAr: 'يشتهر المطبخ الجيبوتي بالسمك الطازج المشوي على الفحم.', descEn: 'Djiboutian cuisine is famous for fresh charcoal-grilled fish.' },
+        { nameAr: 'الميناء', nameEn: 'The Port', icon: '🚢', descAr: 'ميناء جيبوتي هو بوابة تجارية هامة تربط أفريقيا بالعالم.', descEn: 'Djibouti Port is an important trade gateway connecting Africa to the world.' },
+        { nameAr: 'التنوع الثقافي', nameEn: 'Diversity', icon: '🌍', descAr: 'مزيج فريد من الثقافات العربية والأفريقية والفرنسية.', descEn: 'A unique blend of Arabic, African, and French cultures.' },
+        { nameAr: 'بحيرة عسل', nameEn: 'Lake Assal', icon: '🌊', descAr: 'بحيرة بركانية مالحة تحيط بها مناظر طبيعية خلابة.', descEn: 'A salty volcanic lake surrounded by stunning natural landscapes.' },
+        { nameAr: 'مضيق باب المندب', nameEn: 'Bab-el-Mandeb', icon: '🗺️', descAr: 'ممر مائي استراتيجي عالمي يقع قبالة سواحل جيبوتي.', descEn: 'A global strategic waterway located off the coast of Djibouti.' },
+        { nameAr: 'المعوز الجيبوتي', nameEn: 'Djiboutian Macawiis', icon: '👕', descAr: 'الزي التقليدي المريح الذي يرتديه الرجال في جيبوتي.', descEn: 'The comfortable traditional attire worn by men in Djibouti.' }
+      ]
+    },
+    vocab: [
+      { fusha: 'كيف حالك؟', dialect: 'واش راك؟', roman: 'Wash rak?', en: 'How are you?' },
+      { fusha: 'بخير', dialect: 'لاباس', roman: 'Labas', en: 'Fine' },
+      { fusha: 'شكراً', dialect: 'يسلمك', roman: 'Yisallimak', en: 'Thank you' },
+      { fusha: 'نعم', dialect: 'إيه', roman: 'Iyeh', en: 'Yes' },
+      { fusha: 'لا', dialect: 'لا / لالا', roman: 'La / Lala', en: 'No' },
+      { fusha: 'الآن', dialect: 'دوكا', roman: 'Douka', en: 'Now' },
+      { fusha: 'أين؟', dialect: 'وين؟', roman: 'Wein?', en: 'Where?' },
+      { fusha: 'ماذا؟', dialect: 'وشنو؟', roman: 'Washno?', en: 'What?' },
+      { fusha: 'بسرعة', dialect: 'بسرعة', roman: 'B-sur\'a', en: 'Fast' },
+      { fusha: 'كثيراً', dialect: 'بزاف', roman: 'Bezzaf', en: 'A lot' }
+    ],
+    dialogue: {
+      title: 'في الميناء',
+      lines: [
+        { role: 'Worker', ar: 'هل تحتاج مساعدة؟', dialect: 'تحتاج معاونة خويا؟', en: 'Do you need help brother?' },
+        { role: 'Tourist', ar: 'نعم، أين أجد التاكسي؟', dialect: 'إيه، وين نلقى الطاكسي؟', en: 'Yes, where can I find a taxi?' }
       ]
     }
   }
