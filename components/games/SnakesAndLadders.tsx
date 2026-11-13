@@ -18,6 +18,7 @@ interface Question {
 
 interface SnakesAndLaddersProps {
   onWin: (score: number) => void;
+  onBack?: () => void;
   lang: 'ar' | 'en';
   customVocab?: Vocabulary[];
 }
@@ -253,7 +254,7 @@ const Dice3D: React.FC<{ value: number; isRolling: boolean }> = ({ value, isRoll
 
 // --- Main Component ---
 
-export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({ onWin, lang, customVocab }) => {
+export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({ onWin, onBack, lang, customVocab }) => {
   const [currentLang, setCurrentLang] = useState<'ar' | 'en'>(lang);
   const [customQuestions, setCustomQuestions] = useState<Question[] | null>(null);
   const [player1Pos, setPlayer1Pos] = useState(1);
@@ -590,7 +591,7 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({ onWin, lang,
       </div>
 
       <div className="absolute left-12 top-12 bottom-12 w-64 flex flex-col gap-4 justify-center pointer-events-none">
-        <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-6 rounded-[2.5rem] flex flex-col gap-5 shadow-2xl pointer-events-auto min-h-[400px] justify-center">
+        <div className="bg-slate-950/75 backdrop-blur-xl border border-white/10 p-2.5 sm:p-4 lg:p-6 rounded-2xl lg:rounded-[2.5rem] flex flex-col gap-2 sm:gap-3 lg:gap-5 shadow-2xl pointer-events-auto max-h-[min(78dvh,650px)] overflow-y-auto overscroll-contain justify-center">
           <motion.div animate={turn === 1 ? { scale: 1.05, opacity: 1 } : { scale: 0.9, opacity: 0.4 }} className={`relative p-4 rounded-2xl transition-all duration-500 ${turn === 1 ? 'bg-white/10 border border-white/20 shadow-xl' : 'bg-white/5 border border-white/5'}`}>
             <div className="flex flex-col items-center gap-3">
               <div className="relative">
@@ -629,7 +630,7 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({ onWin, lang,
         </motion.div>
       </motion.div>
 
-      <div className="absolute right-12 top-12 bottom-12 w-64 flex flex-col gap-4 justify-center pointer-events-none">
+      <div className="absolute right-2 sm:right-4 lg:right-12 top-2 sm:top-4 lg:top-12 bottom-auto lg:bottom-12 w-[min(11rem,42vw)] sm:w-52 lg:w-64 flex flex-col gap-3 justify-center pointer-events-none z-20">
         <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-6 rounded-[2.5rem] flex flex-col gap-5 shadow-2xl pointer-events-auto min-h-[400px] justify-center">
           <div className="flex flex-col gap-2">
             <p className="text-white/40 text-[8px] font-black uppercase tracking-widest px-2">{t.mode}</p>
@@ -655,18 +656,18 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({ onWin, lang,
         </div>
       </div>
 
-      <button onClick={() => onWin(0)} className="absolute bottom-4 left-4 p-4 bg-white/20 hover:bg-white/40 rounded-2xl text-white backdrop-blur-md transition-all z-50"><Home size={28} /></button>
+      <button onClick={() => onBack?.()} aria-label={currentLang === 'ar' ? 'العودة للألعاب' : 'Back to games'} className="absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-[max(0.75rem,env(safe-area-inset-left))] p-3 sm:p-4 bg-white/20 hover:bg-white/40 rounded-2xl text-white backdrop-blur-md transition-all z-50"><Home size={24} /></button>
 
       <AnimatePresence>
         {activeQuestion && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[100] bg-black/40 backdrop-blur-xl flex items-center justify-center p-8">
-            <motion.div initial={{ scale: 0.8, opacity: 0, y: 50 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.8, opacity: 0, y: 50 }} className="relative w-full max-w-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/20 rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.5)] overflow-hidden backdrop-blur-3xl">
-              <div className="p-16 flex flex-col items-center text-center">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto overscroll-contain">
+            <motion.div initial={{ scale: 0.8, opacity: 0, y: 50 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.8, opacity: 0, y: 50 }} className="relative w-full max-w-2xl max-h-[92dvh] overflow-y-auto bg-gradient-to-b from-white/10 to-white/5 border border-white/20 rounded-2xl sm:rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.5)] backdrop-blur-3xl">
+              <div className="p-4 sm:p-8 lg:p-16 flex flex-col items-center text-center">
                 <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="px-10 py-3 bg-white/5 border border-white/10 rounded-full mb-12"><span className="text-[10px] font-black text-white/40 tracking-[0.5em] uppercase">{currentLang === 'ar' ? 'تحدي اللغة العربية' : 'ARABIC CHALLENGE'}</span></motion.div>
-                <motion.h2 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-5xl sm:text-6xl font-black text-white mb-16 leading-tight tracking-tight" style={{ fontFamily: currentLang === 'ar' ? 'serif' : 'inherit' }}>{activeQuestion.q}</motion.h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 w-full">
+                <motion.h2 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-xl sm:text-3xl lg:text-5xl font-black text-white mb-5 sm:mb-10 lg:mb-16 leading-snug tracking-tight" style={{ fontFamily: currentLang === 'ar' ? 'serif' : 'inherit' }}>{activeQuestion.q}</motion.h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 lg:gap-8 w-full">
                   {activeQuestion.options.map((opt, idx) => (
-                    <motion.button key={idx} onClick={() => handleAnswer(idx)} whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.08)' }} whileTap={{ scale: 0.98 }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + idx * 0.1 }} className={`group relative p-8 rounded-2xl text-xl font-bold border transition-all flex items-center justify-center min-h-[100px] ${feedback === 'correct' && idx === activeQuestion.correct ? 'bg-green-500/20 border-green-400/50 text-white' : feedback === 'wrong' && idx === activeQuestion.correct ? 'bg-green-500/10 border-green-400/20 text-white/30' : feedback === 'wrong' && idx !== activeQuestion.correct ? 'bg-red-500/20 border-red-400/50 text-white' : 'bg-white/5 border-white/10 text-white/80 hover:text-white hover:border-white/30'}`}><span className="relative z-10">{opt}</span></motion.button>
+                    <motion.button key={idx} onClick={() => handleAnswer(idx)} whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.08)' }} whileTap={{ scale: 0.98 }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + idx * 0.1 }} className={`group relative p-3 sm:p-5 lg:p-8 rounded-xl sm:rounded-2xl text-base sm:text-lg lg:text-xl font-bold border transition-all flex items-center justify-center min-h-[48px] sm:min-h-[72px] lg:min-h-[100px] ${feedback === 'correct' && idx === activeQuestion.correct ? 'bg-green-500/20 border-green-400/50 text-white' : feedback === 'wrong' && idx === activeQuestion.correct ? 'bg-green-500/10 border-green-400/20 text-white/30' : feedback === 'wrong' && idx !== activeQuestion.correct ? 'bg-red-500/20 border-red-400/50 text-white' : 'bg-white/5 border-white/10 text-white/80 hover:text-white hover:border-white/30'}`}><span className="relative z-10">{opt}</span></motion.button>
                   ))}
                 </div>
               </div>
