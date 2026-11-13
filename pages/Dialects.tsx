@@ -1086,7 +1086,7 @@ export const COUNTRY_DATA = [
     nameAr: 'موريتانيا',
     nameEn: 'Mauritania',
     flag: '🇲🇷',
-    image: '/images/dialects/local/mauritania.jpg',
+    image: '/images/dialects/mauritania-richat-cinematic.avif',
     dialect: 'Hassaniya (حساني)',
     characterMale: { 
       nameAr: 'المختار', 
