@@ -69,7 +69,7 @@ export const WhiteboardPage: React.FC = () => {
 
   // Session State
   const [session, setSession] = useState<WhiteboardSessionState>(() => {
-    const saved = localStorage.getItem('qul_active_whiteboard_session');
+    const saved = localStorage.getItem('qul_active_whiteboard_session_' + (user?.uid || 'guest'));
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -135,7 +135,7 @@ export const WhiteboardPage: React.FC = () => {
 
   // Save session state locally
   useEffect(() => {
-    localStorage.setItem('qul_active_whiteboard_session', JSON.stringify(session));
+    if (user?.uid) localStorage.setItem('qul_active_whiteboard_session_' + user.uid, JSON.stringify(session));
   }, [session]);
 
   // Real-time tab visibility & focus tracking: turns student presence green when focused on whiteboard page, dark when switching tab/app
