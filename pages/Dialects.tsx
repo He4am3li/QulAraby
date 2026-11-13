@@ -738,7 +738,7 @@ export const COUNTRY_DATA = [
     nameAr: 'السودان',
     nameEn: 'Sudan',
     flag: '🇸🇩',
-    image: '/images/dialects/local/sudan.jpg',
+    image: '/images/dialects/sudan-meroe-golden.avif',
     dialect: 'Sudanese (سوداني)',
     characterMale: { 
       nameAr: 'مازن', 
