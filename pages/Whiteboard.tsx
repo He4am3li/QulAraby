@@ -390,14 +390,20 @@ export const WhiteboardPage: React.FC = () => {
 
   // Canvas elements update
   const handleElementsChange = (newElements: WhiteboardElement[]) => {
+    if (!isTeacher) {
+      if (!draftMode || draftPack.key !== draftKey) return;
+      setDraftPack(prev => ({
+        ...prev, pages: { ...prev.pages, [currentPage.id]: newElements }
+      }));
+      setStudentAnswerSent(false);
+      return;
+    }
     setHistory(prev => [...prev, currentPage.elements]);
     setRedoStack([]);
-
     setSession(prev => {
       const updatedPages = [...prev.pages];
       updatedPages[prev.currentPageIndex] = {
-        ...updatedPages[prev.currentPageIndex],
-        elements: newElements
+        ...updatedPages[prev.currentPageIndex], elements: newElements
       };
       return { ...prev, pages: updatedPages };
     });
@@ -482,20 +488,11 @@ export const WhiteboardPage: React.FC = () => {
   };
 
   const handleScoreChange = (studentId: string, delta: number) => {
-    setSession(prev => {
-      const student = prev.students[studentId];
-      if (!student) return prev;
-      return {
-        ...prev,
-        students: {
-          ...prev.students,
-          [studentId]: {
-            ...student,
-            score: Math.max(0, student.score + delta)
-          }
-        }
-      };
-    });
+    if (!isTeacher) return;
+    const work = submissions.find(item => item.studentId === studentId);
+    if (!work) return;
+    const nextScore = Math.max(0, Math.min(100, (work.score || 0) + delta));
+    void grade(studentId, nextScore, work.feedback || '').catch(() => {});
   };
 
   const toggleTeacherLock = () => {
@@ -512,31 +509,77 @@ export const WhiteboardPage: React.FC = () => {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const handleSendStudentAnswer = () => {
-    if (!studentAnswerText.trim() || !user) return;
-    const stId = user.uid || 'current_student';
-    const stName = profile?.displayName || user.displayName || 'أنا';
+  const handleSendStudentAnswer = async () => {
+    if (!user || !sessionId || !canvasReady || isTeacher || sending) {
+      setSendError('يجب الانضمام إلى حصة نشطة قبل إرسال العمل.');
+      return;
+    }
+    setStudentAnswerSent(false);
+    setSendError(null);
+    const drawings = draftPack.key === draftKey
+      ? (draftPack.pages[currentPage.id] || []) : [];
+    try {
+      await submit(
+        studentAnswerText, drawings, currentPage.id,
+        profile?.displayName || user.displayName || 'طالب'
+      );
+      setStudentAnswerSent(true);
+    } catch (error) {
+      const key = error instanceof Error ? error.message : '';
+      setSendError(key === 'DRAWING_TOO_LARGE'
+        ? 'الرسمة كبيرة جدًا، قلّل حجم الصور ثم حاول الإرسال.'
+        : key === 'TOO_MANY_ELEMENTS'
+          ? 'الرسمة تحتوي على عناصر كثيرة جدًا، قلّلها ثم حاول الإرسال.'
+          : key === 'EMPTY_SUBMISSION'
+            ? 'اكتب إجابة أو ارسم عملًا أولًا.'
+            : 'تعذّر إرسال العمل. تحقق من الاتصال ثم حاول مجددًا.');
+    }
+  };
 
-    setSession(prev => {
-      if (!prev.activeActivity) return prev;
-      return {
-        ...prev,
-        activeActivity: {
-          ...prev.activeActivity,
-          submissions: {
-            ...prev.activeActivity.submissions,
-            [stId]: {
-              studentId: stId,
-              studentName: stName,
-              answer: studentAnswerText,
-              timestamp: Date.now(),
-              evaluated: false
-            }
-          }
-        }
+  // The floating student toolbar now controls a private sketchbook and a
+  // real submission, rather than silently logging inert button presses.
+  useEffect(() => {
+    if (isTeacher) return;
+    const handleAction = (event: Event) => {
+      const action = (event as CustomEvent<{ action?: string }>).detail?.action;
+      if (action === 'submit') {
+        void handleSendStudentAnswer();
+      } else if (action === 'image') {
+        setDraftMode(true);
+        imageInputRef.current?.click();
+      } else if (action === 'pen' || action === 'text' || action === 'sticky') {
+        setDraftMode(true);
+        setActiveTool(action === 'sticky' ? 'note' : action);
+      }
+    };
+    window.addEventListener('qul_student_toolbar_action', handleAction);
+    return () => window.removeEventListener('qul_student_toolbar_action', handleAction);
+  }, [isTeacher, sessionId, canvasReady, studentAnswerText, draftPack, currentPage.id, sending]);
+
+  const handleStudentImage = (file: File | undefined) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    if (file.size > 150000) {
+      setSendError('حجم الصورة كبير. استخدم صورة أصغر من 150 كيلوبايت.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string' || draftPack.key !== draftKey) return;
+      const newEl: WhiteboardElement = {
+        id: 'student_image_' + Date.now(),
+        type: 'image', x: 120, y: 90, width: 280, height: 200,
+        color: '#ffffff', strokeWidth: 2, src: reader.result,
+        createdBy: user?.uid,
+        createdByName: profile?.displayName || 'طالب'
       };
-    });
-    setStudentAnswerSent(true);
+      setDraftPack(prev => ({
+        ...prev, pages: {
+          ...prev.pages, [currentPage.id]: [...(prev.pages[currentPage.id] || []), newEl]
+        }
+      }));
+      setDraftMode(true);
+    };
+    reader.readAsDataURL(file);
   };
 
   const toggleHandRaise = () => {
