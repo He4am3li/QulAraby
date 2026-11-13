@@ -12,6 +12,7 @@ const env = await initializeTestEnvironment({
 const email = {
   learnerA: 'learnera@example.com',
   learnerB: 'learnerb@example.com',
+  learnerC: 'learnerc@example.com',
   teacherA: 'teachera@example.com',
   teacherB: 'teacherb@example.com',
   schoolAdminA: 'adminschoola@example.com',
@@ -26,7 +27,7 @@ const firestore = uid => actors[uid].firestore();
 const ref = (uid, path) => doc(firestore(uid), path);
 const board = (uid, id = 'board_public') => ref(uid, 'writing_boards/' + id);
 const post = (uid, id = 'post0') => ref(uid, 'writing_boards/board_public/posts/' + id);
-const session = uid => ref(uid, 'live_sessions/global');
+const session = uid => ref(uid, 'live_sessions/roomA');
 const teacherBoard = {
   title: 'Public Arabic practice',
   teacherId: 'teacherA',
@@ -56,7 +57,8 @@ try {
         role: uid === 'owner' ? 'admin' :
           uid === 'schoolAdminA' ? 'schoolAdmin' :
           uid.startsWith('teacher') ? 'teacher' : 'student',
-        schoolId: ['learnerA', 'teacherA', 'schoolAdminA'].includes(uid) ? 'schoolA' : 'schoolB',
+        schoolId: ['learnerA', 'learnerC', 'teacherA', 'schoolAdminA'].includes(uid) ? 'schoolA' : 'schoolB',
+        classId: ['learnerA', 'teacherA'].includes(uid) ? 'grade10A' : 'grade10B',
         createdAt: Timestamp.now()
       });
     }
@@ -79,8 +81,26 @@ try {
       poll: { isActive: true, question: 'حسنًا؟', options: ['نعم', 'لا'], votes: {} },
       exercise: { isActive: true, question_ar: 'ما الكلمة؟', answers: {} }
     });
-    await setDoc(doc(db, 'live_sessions/another'), {
-      poll: { isActive: true, question: 'x', options: ['yes', 'no'], votes: {} }
+    const expiry = Timestamp.fromMillis(Date.now() + 3600000);
+    await setDoc(doc(db, 'live_sessions/roomA'), {
+      teacherId: 'teacherA', schoolId: 'schoolA', classId: 'grade10A',
+      status: 'active', expiresAt: expiry, joinCode: 'AABBCCDD',
+      participants: { learnerA: true },
+      poll: { isActive: true, question: 'حسنًا؟', options: ['نعم', 'لا'], votes: {} },
+      exercise: { isActive: true, question_ar: 'ما الكلمة؟', correctAnswer: 'نعم', answers: {} }
+    });
+    await setDoc(doc(db, 'live_sessions/roomB'), {
+      teacherId: 'teacherB', schoolId: 'schoolB', classId: 'grade10B',
+      status: 'active', expiresAt: expiry, joinCode: 'EEFF0000',
+      participants: { learnerB: true },
+      poll: { isActive: true, question: 'School B', options: ['x', 'y'], votes: {} }
+    });
+    await setDoc(doc(db, 'live_sessions/roomOther'), {
+      teacherId: 'teacherA', schoolId: 'schoolA', classId: 'grade10A',
+      status: 'active', expiresAt: expiry, participants: {}
+    });
+    await setDoc(doc(db, 'live_session_invites/AABBCCDD'), {
+      sessionId: 'roomA', teacherId: 'teacherA', expiresAt: expiry
     });
     await setDoc(doc(db, 'placement_results/schoolA-result'), {
       userId: 'learnerA', schoolId: 'schoolA', score: 45
@@ -186,6 +206,53 @@ try {
     }));
     await assertFails(updateDoc(post('learnerB', 'newpending'), { likedBy: ['learnerB'] }));
   });
+  test('global classroom is denied even to teachers', async () => {
+    await assertFails(getDoc(ref('teacherA', 'live_sessions/global')));
+    await assertFails(getDoc(ref('learnerA', 'live_sessions/global')));
+    await assertFails(updateDoc(ref('teacherA', 'live_sessions/global'), { 'poll.question': 'Nope' }));
+  });
+  test('only enrolled learners can read their room', async () => {
+    await assertSucceeds(getDoc(session('learnerA')));
+    await assertFails(getDoc(session('learnerB')));
+    await assertFails(getDoc(session('learnerC')));
+    await assertFails(getDoc(ref('learnerA', 'live_sessions/roomB')));
+    await assertFails(getDoc(ref('teacherB', 'live_sessions/roomA')));
+    await assertSucceeds(getDoc(session('teacherA')));
+    await assertSucceeds(getDoc(ref('teacherB', 'live_sessions/roomB')));
+  });
+  test('a guessed room ID never grants membership within the same class', () =>
+    assertFails(getDoc(ref('learnerA', 'live_sessions/roomOther'))));
+  test('teacher cannot alter members, school, class, status, or expiration directly', async () => {
+    await assertFails(updateDoc(session('teacherA'), { 'participants.learnerC': true }));
+    await assertFails(updateDoc(session('teacherA'), { schoolId: 'schoolB' }));
+    await assertFails(updateDoc(session('teacherA'), { classId: 'grade10B' }));
+    await assertFails(updateDoc(session('teacherA'), { teacherId: 'teacherB' }));
+    await assertFails(updateDoc(session('teacherA'), { status: 'ended' }));
+    await assertFails(updateDoc(session('teacherA'), { expiresAt: Timestamp.fromMillis(Date.now() + 9999999) }));
+  });
+  test('no browser can create or delete a classroom document', async () => {
+    await assertFails(setDoc(ref('teacherA', 'live_sessions/forged'), {
+      teacherId: 'teacherA', participants:{}, schoolId:'schoolA', status:'active'
+    }));
+    await assertFails(deleteDoc(session('teacherA')));
+    await assertFails(getDocs(collection(firestore('teacherA'), 'live_sessions')));
+  });
+  test('invite records are never readable by browser users', async () => {
+    await assertFails(getDoc(ref('learnerA', 'live_session_invites/AABBCCDD')));
+    await assertFails(getDoc(ref('teacherA', 'live_session_invites/AABBCCDD')));
+    await assertFails(setDoc(ref('teacherA', 'live_session_invites/FAKE0000'), { sessionId:'roomB' }));
+  });
+  test('another teacher cannot modify a private lesson', () =>
+    assertFails(updateDoc(ref('teacherB', 'live_sessions/roomA'), { 'poll.question': 'Hijack' })));
+  test('a learner cannot impersonate teacher or manipulate classroom membership', async () => {
+    await assertFails(updateDoc(session('learnerA'), { reaction: { emoji: 'fake' } }));
+    await assertFails(updateDoc(session('learnerA'), { 'participants.learnerC': true }));
+  });
+  test('learner cannot falsify exercise correctness flag', () =>
+    assertFails(updateDoc(session('learnerA'), {
+      'exercise.answers.learnerA': {answer:'خطأ',isCorrect:true,name:'A'}
+    })));
+
   test('student can submit own poll vote', () =>
     assertSucceeds(updateDoc(session('learnerA'), {
       'poll.votes.learnerA': { option: 1, name: 'Learner A', photo: '' }
@@ -207,7 +274,7 @@ try {
       'exercise.answers.learnerA': { answer: 'لا', isCorrect: false, name: 'B' }
     })));
   test('student cannot update arbitrary other live sessions', () =>
-    assertFails(updateDoc(ref('learnerA', 'live_sessions/another'), {
+    assertFails(updateDoc(ref('learnerA', 'live_sessions/roomB'), {
       'poll.votes.learnerA': { option: 0, name: 'A' }
     })));
   test('teacher may update live session teaching content', () =>
