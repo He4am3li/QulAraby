@@ -14,7 +14,7 @@ export function resolveTutorAttention({ isSpeaking = false, isListening = false,
 
 /** Authored inward-facing pairs retain their physical order in both languages. */
 export function getTutorStageDirection(countryId, lang) {
-  return countryId === 'egypt' || countryId === 'saudi' || countryId === 'uae' || countryId === 'morocco' || countryId === 'iraq' || countryId === 'lebanon' || countryId === 'tunisia' || countryId === 'algeria' || countryId === 'libya' || countryId === 'jordan' || countryId === 'syria' || countryId === 'qatar' || countryId === 'kuwait' || lang === 'ar' ? 'rtl' : 'ltr';
+  return countryId === 'egypt' || countryId === 'saudi' || countryId === 'uae' || countryId === 'morocco' || countryId === 'iraq' || countryId === 'lebanon' || countryId === 'tunisia' || countryId === 'algeria' || countryId === 'libya' || countryId === 'jordan' || countryId === 'syria' || countryId === 'qatar' || countryId === 'kuwait' || countryId === 'oman' || lang === 'ar' ? 'rtl' : 'ltr';
 }
 
 export function getTutorPartnerDirection(countryId, gender, lang) {

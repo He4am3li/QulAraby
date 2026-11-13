@@ -43,7 +43,7 @@ test('Saudi turn-taking faces the partner then returns to the student in both la
     }
   }
   assert.deepEqual(TUTOR_BODY_VIEWPORT, { x: 100, y: 0, w: 824, h: 1536 });
-  assert.equal(getTutorStageDirection('oman', 'en'), 'ltr');
+  assert.equal(getTutorStageDirection('bahrain', 'en'), 'ltr');
 });
 test('pupil movement is clipped and full blinks suppress open eyes without moving body or covering', () => {
   for (const manifest of Object.values(manifests)) {

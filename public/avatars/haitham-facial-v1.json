@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "oman_male",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/haitham-stance-v1.webp",
+  "sourceSha256": "6f9b907b85de9f4b6e4069a0e3075b1f70b3d41ebbc8d3709b19149969472209",
+  "pose": {
+    "bodyFacing": "left",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "right"
+  },
+  "registration": {
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.76,
+    "offset": [
+      351,
+      17
+    ],
+    "eyes": [
+      455,
+      138,
+      111,
+      38
+    ],
+    "brows": [
+      455,
+      121,
+      111,
+      28
+    ],
+    "mouth": [
+      468,
+      201,
+      82,
+      64
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 455,
+      "y": 138,
+      "w": 111,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/haitham-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 455,
+      "y": 138,
+      "w": 111,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/haitham-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 455,
+      "y": 138,
+      "w": 111,
+      "h": 38,
+      "visible": true,
+      "url": "/avatars/haitham-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 455,
+      "y": 121,
+      "w": 111,
+      "h": 28,
+      "visible": true,
+      "url": "/avatars/haitham-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 455,
+      "y": 121,
+      "w": 111,
+      "h": 28,
+      "visible": true,
+      "url": "/avatars/haitham-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 468,
+      "y": 201,
+      "w": 82,
+      "h": 64,
+      "visible": true,
+      "url": "/avatars/haitham-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 468,
+      "y": 201,
+      "w": 82,
+      "h": 64,
+      "visible": true,
+      "url": "/avatars/haitham-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 468,
+      "y": 201,
+      "w": 82,
+      "h": 64,
+      "visible": true,
+      "url": "/avatars/haitham-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 468,
+      "y": 201,
+      "w": 82,
+      "h": 64,
+      "visible": true,
+      "url": "/avatars/haitham-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 468,
+      "y": 201,
+      "w": 82,
+      "h": 64,
+      "visible": true,
+      "url": "/avatars/haitham-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 468,
+      "y": 201,
+      "w": 82,
+      "h": 64,
+      "visible": true,
+      "url": "/avatars/haitham-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}
