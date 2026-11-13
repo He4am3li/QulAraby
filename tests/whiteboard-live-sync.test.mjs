@@ -91,7 +91,7 @@ check('teacher broadcasts canvas changes, students do not write canvas', () => {
 check('no learner drawing directly modifies teacher shared pages', () => {
   assert.match(page,/if \(!isTeacher\) \{/);
   assert.match(page,/setDraftPack\(prev =>/);
-  assert.match(page,/draftMode \? \(draftPack.pages\[currentPage.id\]/);
+  assert.match(page,/draftMode \? \(draftPack.key === draftKey/);
 });
 check('fake teacher roster and fictional learner submissions removed from live default', () => {
   assert.doesNotMatch(page,/st_1.*أحمد علي/);
