@@ -113,7 +113,7 @@ export const CollaborativeBoard: React.FC<CollaborativeBoardProps> = ({ lang, bo
       if (moderator) {
         unsubscribePosts = onSnapshot(postsRef, (postsSnapshot) =>
           mergePosts(postsSnapshot.docs.map(item => ({
-            id: item.id, ...item.data()
+            id: item.id, ...(item.data() as Record<string, unknown>)
           } as Post))), reportError);
         return;
       }
@@ -123,7 +123,7 @@ export const CollaborativeBoard: React.FC<CollaborativeBoardProps> = ({ lang, bo
         onSnapshot(q, (postsSnapshot) => {
           target.clear();
           postsSnapshot.docs.forEach(item => target.set(item.id, {
-            id: item.id, ...item.data()
+            id: item.id, ...(item.data() as Record<string, unknown>)
           } as Post));
           mergePosts([...new Map([...published, ...own]).values()]);
         }, reportError);
