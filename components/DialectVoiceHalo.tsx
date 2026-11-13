@@ -10,6 +10,8 @@ interface Props {
   tutorName?: string;
   turns: Turn[];
   active: boolean;
+  connecting: boolean;
+  error?: string | null;
   listening: boolean;
   speaking: boolean;
   loading: boolean;
@@ -33,7 +35,7 @@ const enText = (s: string) => /[A-Za-z]/.test(s);
  * Word practice and text composition remain in their own permanent rail.
  */
 export const DialectVoiceHalo: React.FC<Props> = React.memo(({
-  countryId, lang, tutorName, turns, active, listening, speaking, loading,
+  countryId, lang, tutorName, turns, active, connecting, error, listening, speaking, loading,
   disabled, currentSpeechText, onToggle, onPronounce
 }) => {
   const ar = lang === 'ar';
@@ -144,10 +146,17 @@ export const DialectVoiceHalo: React.FC<Props> = React.memo(({
         )}
       </AnimatePresence>
 
+      {/* Keep feedback beside the original recorder, without adding an extra panel or button. */}
+      {error && !active && !connecting && (
+        <p role="alert" dir={ar ? 'rtl' : 'ltr'}
+          className="pointer-events-auto absolute inset-x-[9%] bottom-[77px] z-40 mx-auto max-w-[420px] rounded-xl border border-amber-300/60 bg-slate-950/90 px-3 py-2 text-center text-[11px] font-semibold leading-relaxed text-white shadow-lg backdrop-blur-lg">
+          {error}
+        </p>
+      )}
       {/* The audio control never moves. It remains the anchor of the entire experience. */}
       <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-30 flex items-center justify-center">
         <DialectVoiceOrb
-          active={active} listening={listening} speaking={speaking} loading={loading}
+          active={active} connecting={connecting} listening={listening} speaking={speaking} loading={loading}
           disabled={disabled} lang={lang} onToggle={onToggle}
         />
       </div>
