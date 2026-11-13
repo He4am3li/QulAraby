@@ -912,7 +912,7 @@ export const COUNTRY_DATA = [
     nameAr: 'قطر',
     nameEn: 'Qatar',
     flag: '🇶🇦',
-    image: '/images/dialects/local/qatar.jpg',
+    image: '/images/dialects/qatar-doha-cinematic.avif',
     dialect: 'Gulf (قطري)',
     characterMale: { 
       nameAr: 'جاسم', 

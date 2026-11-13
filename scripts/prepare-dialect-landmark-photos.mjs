@@ -15,7 +15,7 @@ const SOURCES = {
   "sudan": "https://commons.wikimedia.org/wiki/Special:FilePath/Mer%C3%B6e_Pyramids_with_camels_(35119058595).jpg?width=640",
   "oman": "https://commons.wikimedia.org/wiki/Special:FilePath/Wadi_Darbat.jpg?width=640",
   "kuwait": "https://commons.wikimedia.org/wiki/Special:FilePath/Kuwait_Towers_at_night_(4283818686).jpg?width=640",
-  "qatar": "https://commons.wikimedia.org/wiki/Special:FilePath/Doha_-_towards_the_islamic_art_museum.jpg?width=640",
+
   "bahrain": "https://commons.wikimedia.org/wiki/Special:FilePath/Manama_Bahrain_Bay_06.jpg?width=640",
   "yemen": "https://commons.wikimedia.org/wiki/Special:FilePath/Old_City_Sana%27a_skyline.jpg?width=640",
   "mauritania": "https://commons.wikimedia.org/wiki/Special:FilePath/%D9%85%D8%B3%D8%AC%D8%AF_%D8%B4%D9%86%D9%82%D9%8A%D8%B7_%D8%A7%D9%84%D8%AA%D8%A7%D8%B1%D9%8A%D8%AE%D9%8A.jpg?width=640",
