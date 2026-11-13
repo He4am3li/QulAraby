@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "qatar_male",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/jassem-stance-v1.webp",
+  "sourceSha256": "92d2ecc32b6a8267407b992a9de5e962933792f5f6c3b4ef21f261bd416581be",
+  "pose": {
+    "bodyFacing": "left",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "right"
+  },
+  "registration": {
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.83,
+    "offset": [
+      342,
+      22
+    ],
+    "eyes": [
+      464,
+      121,
+      106,
+      36
+    ],
+    "brows": [
+      464,
+      108,
+      106,
+      25
+    ],
+    "mouth": [
+      480,
+      184,
+      76,
+      57
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 464,
+      "y": 121,
+      "w": 106,
+      "h": 36,
+      "visible": true,
+      "url": "/avatars/jassem-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 464,
+      "y": 121,
+      "w": 106,
+      "h": 36,
+      "visible": true,
+      "url": "/avatars/jassem-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 464,
+      "y": 121,
+      "w": 106,
+      "h": 36,
+      "visible": true,
+      "url": "/avatars/jassem-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 464,
+      "y": 108,
+      "w": 106,
+      "h": 25,
+      "visible": true,
+      "url": "/avatars/jassem-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 464,
+      "y": 108,
+      "w": 106,
+      "h": 25,
+      "visible": true,
+      "url": "/avatars/jassem-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 480,
+      "y": 184,
+      "w": 76,
+      "h": 57,
+      "visible": true,
+      "url": "/avatars/jassem-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 480,
+      "y": 184,
+      "w": 76,
+      "h": 57,
+      "visible": true,
+      "url": "/avatars/jassem-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 480,
+      "y": 184,
+      "w": 76,
+      "h": 57,
+      "visible": true,
+      "url": "/avatars/jassem-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 480,
+      "y": 184,
+      "w": 76,
+      "h": 57,
+      "visible": true,
+      "url": "/avatars/jassem-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 480,
+      "y": 184,
+      "w": 76,
+      "h": 57,
+      "visible": true,
+      "url": "/avatars/jassem-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 480,
+      "y": 184,
+      "w": 76,
+      "h": 57,
+      "visible": true,
+      "url": "/avatars/jassem-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}

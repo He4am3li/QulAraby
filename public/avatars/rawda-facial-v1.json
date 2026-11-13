@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "qatar_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/rawda-stance-v1.webp",
+  "sourceSha256": "396d4a4814e1a0858e6114d22eb990aeb178ed852ef486c98be6a3b1d485af7f",
+  "pose": {
+    "bodyFacing": "right",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "left"
+  },
+  "registration": {
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.8,
+    "offset": [
+      363,
+      23
+    ],
+    "eyes": [
+      485,
+      132,
+      112,
+      40
+    ],
+    "brows": [
+      486,
+      117,
+      111,
+      27
+    ],
+    "mouth": [
+      506,
+      186,
+      78,
+      59
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 485,
+      "y": 132,
+      "w": 112,
+      "h": 40,
+      "visible": true,
+      "url": "/avatars/rawda-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 485,
+      "y": 132,
+      "w": 112,
+      "h": 40,
+      "visible": true,
+      "url": "/avatars/rawda-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 485,
+      "y": 132,
+      "w": 112,
+      "h": 40,
+      "visible": true,
+      "url": "/avatars/rawda-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 486,
+      "y": 117,
+      "w": 111,
+      "h": 27,
+      "visible": true,
+      "url": "/avatars/rawda-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 486,
+      "y": 117,
+      "w": 111,
+      "h": 27,
+      "visible": true,
+      "url": "/avatars/rawda-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 506,
+      "y": 186,
+      "w": 78,
+      "h": 59,
+      "visible": true,
+      "url": "/avatars/rawda-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 506,
+      "y": 186,
+      "w": 78,
+      "h": 59,
+      "visible": true,
+      "url": "/avatars/rawda-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 506,
+      "y": 186,
+      "w": 78,
+      "h": 59,
+      "visible": true,
+      "url": "/avatars/rawda-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 506,
+      "y": 186,
+      "w": 78,
+      "h": 59,
+      "visible": true,
+      "url": "/avatars/rawda-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 506,
+      "y": 186,
+      "w": 78,
+      "h": 59,
+      "visible": true,
+      "url": "/avatars/rawda-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 506,
+      "y": 186,
+      "w": 78,
+      "h": 59,
+      "visible": true,
+      "url": "/avatars/rawda-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}
