@@ -126,7 +126,7 @@ export const StudentWorksModal: React.FC<StudentWorksModalProps> = ({
                     <div className="grid grid-cols-[75px_1fr_auto] items-center gap-2 mb-2">
                       <input type="number" min={0} max={100}
                         aria-label="تقييم الطالب"
-                        value={gradeDraft[sub.studentId] ?? sub.score ?? 0}
+                        value={gradeDraft[sub.studentId] ?? (('reviewed' in sub && !sub.reviewed) ? 0 : (sub.score ?? 0))}
                         onChange={e => setGradeDraft(prev => ({
                           ...prev, [sub.studentId]: Math.max(0, Math.min(100, Number(e.target.value) || 0))
                         }))}
@@ -139,7 +139,7 @@ export const StudentWorksModal: React.FC<StudentWorksModalProps> = ({
                         className="min-w-0 rounded-lg bg-slate-800 border border-white/10 px-2 py-1.5 text-xs text-white"
                       />
                       <button onClick={() => onGradeSubmission(sub.studentId,
-                        gradeDraft[sub.studentId] ?? sub.score ?? 0,
+                        gradeDraft[sub.studentId] ?? (('reviewed' in sub && !sub.reviewed) ? 0 : (sub.score ?? 0)),
                         feedbackDraft[sub.studentId] ?? sub.feedback ?? '')}
                         className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-[10px] font-bold">
                         حفظ التقييم
