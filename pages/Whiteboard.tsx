@@ -496,7 +496,7 @@ export const WhiteboardPage: React.FC = () => {
     if (!isTeacher) return;
     const work = submissions.find(item => item.studentId === studentId);
     if (!work) return;
-    const nextScore = Math.max(0, Math.min(100, (work.score || 0) + delta));
+    const nextScore = Math.max(0, Math.min(100, (work.reviewed ? work.score || 0 : 0) + delta));
     void grade(studentId, nextScore, work.feedback || '').catch(() => {});
   };
 
