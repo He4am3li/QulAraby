@@ -62,5 +62,6 @@ test('dialect voice button reports connection progress and microphone failures',
   assert.match(dialect, /console\.error\("Microphone Error:", err\);\s+throw err;/);
   assert.match(halo, /role="alert"/);
   assert.match(orb, /aria-busy=\{connecting\}/);
-  assert.match(gateway, /LIVE_ACCESS_DENIED/);
+  const liveRequest = read('services/liveTokenRequest.mjs');
+  assert.match(liveRequest, /LIVE_ACCESS_DENIED/);
 });
