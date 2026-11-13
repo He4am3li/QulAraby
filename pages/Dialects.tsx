@@ -1202,7 +1202,7 @@ export const COUNTRY_DATA = [
     nameAr: 'جيبوتي',
     nameEn: 'Djibouti',
     flag: '🇩🇯',
-    image: "/images/dialects/local/djibouti.jpg",
+    image: "/images/dialects/djibouti-lake-abbe.avif",
     dialect: 'Djiboutian (جيبوتي)',
     characterMale: { 
       nameAr: 'برخاد', 
