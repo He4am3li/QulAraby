@@ -81,6 +81,9 @@ export const CollaborativeBoard: React.FC<CollaborativeBoardProps> = ({ lang, bo
 
   useEffect(() => {
     if (!isAuthReady || !user) return;
+    setPosts([]);
+    setBoard(null);
+    setLoading(true);
     let unsubscribePosts = () => {};
     const boardRef = doc(db, 'writing_boards', boardId);
     const postsRef = collection(db, 'writing_boards', boardId, 'posts');
