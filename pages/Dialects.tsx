@@ -1144,7 +1144,7 @@ export const COUNTRY_DATA = [
     nameAr: 'الصومال',
     nameEn: 'Somalia',
     flag: '🇸🇴',
-    image: "/images/dialects/local/somalia.jpg",
+    image: "/images/dialects/somalia-lido-sunset.avif",
     dialect: 'Somali Arabic (صومالي)',
     characterMale: { 
       nameAr: 'عبدي', 
