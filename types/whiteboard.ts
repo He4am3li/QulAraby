@@ -237,6 +237,7 @@ export interface WhiteboardSubmission {
   timestamp: number;
   score?: number;
   feedback?: string;
+  reviewed?: boolean;
 }
 
 export interface WhiteboardSessionState {
