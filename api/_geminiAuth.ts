@@ -5,6 +5,8 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { isApprovedGatewayProfile } from './_gatewayApproval.mjs';
 import { classifyFirebaseAuthFailure } from './_firebaseAuthFailure.mjs';
+import { verifyFirebaseRevocationViaLookup } from './_firebaseAuthRevocationFallback.mjs';
+import firebaseConfig from '../firebase-applet-config.json';
 
 // These identifiers are public Firebase configuration, never credentials.
 const FIREBASE_PROJECT_ID = 'gen-lang-client-0558881211';
@@ -69,14 +71,30 @@ export async function requireFirebaseUser(req: GatewayRequest, res: GatewayRespo
     // checkRevoked=true also checks for disabled/deleted Firebase users.
     decoded = await services.auth.verifyIdToken(match[1], true);
   } catch (error) {
-    const failure = classifyFirebaseAuthFailure(error);
-    // A missing Firebase Auth user-read IAM permission is a server setup
-    // problem, not proof that a student's browser session has expired.
-    // Log only a stable code, never ID tokens, user IDs, or credentials.
-    if (failure.statusCode === 503) console.error('Firebase Admin verification:', failure.code);
-    res.statusCode = failure.statusCode;
-    res.end(JSON.stringify({ error: failure.error, code: failure.code }));
-    return null;
+    if ((error as { code?: string })?.code === 'auth/insufficient-permission') {
+      // Use Google's own account lookup to check disabled/deleted/revoked
+      // status when the service credential cannot call Admin getUser().
+      // Firebase Admin STILL validates the token's signature and claims.
+      // The fallback fails closed if the lookup cannot prove session status.
+      try {
+        decoded = await verifyFirebaseRevocationViaLookup(
+          match[1], services.auth, firebaseConfig.apiKey,
+        );
+        console.info('Firebase Auth: secure REST revocation fallback succeeded');
+      } catch (fallbackError) {
+        const failure = classifyFirebaseAuthFailure(fallbackError);
+        if (failure.statusCode === 503) console.error('Firebase Auth REST fallback:', failure.code);
+        res.statusCode = failure.statusCode;
+        res.end(JSON.stringify({ error: failure.error, code: failure.code }));
+        return null;
+      }
+    } else {
+      const failure = classifyFirebaseAuthFailure(error);
+      if (failure.statusCode === 503) console.error('Firebase Admin verification:', failure.code);
+      res.statusCode = failure.statusCode;
+      res.end(JSON.stringify({ error: failure.error, code: failure.code }));
+      return null;
+    }
   }
 
   if (decoded.email_verified !== true || typeof decoded.email !== 'string') {
