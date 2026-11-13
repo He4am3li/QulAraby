@@ -39,3 +39,28 @@ test('Gemini TTS cache isolates voices and WAV decoding is not mistaken for raw 
   assert.match(gateway, /ctx\.decodeAudioData\(bufferArray\)/);
   assert.match(gateway, /data\[0\] === 82 && data\[1\] === 73 && data\[2\] === 70 && data\[3\] === 70/);
 });
+
+import { getDialectLiveError } from '../services/dialectLiveErrors.mjs';
+
+test('dialect voice failures give specific safe Arabic and English guidance', () => {
+  assert.match(getDialectLiveError({ name: 'NotAllowedError' }), /الميكروفون/);
+  assert.match(getDialectLiveError({ name: 'NotFoundError' }, 'en'), /No microphone/);
+  assert.match(getDialectLiveError({ code: 'LIVE_AUTH_REQUIRED' }, 'en'), /Sign in again/);
+  assert.match(getDialectLiveError({ code: 'LIVE_ACCESS_DENIED' }), /صلاحية/);
+  assert.match(getDialectLiveError({ code: 'LIVE_CLOSED' }), /انقطع الاتصال/);
+  assert.doesNotMatch(getDialectLiveError(new Error('api key is secret')), /secret/);
+});
+
+test('dialect voice button reports connection progress and microphone failures', () => {
+  const halo = read('components/DialectVoiceHalo.tsx');
+  const orb = read('components/DialectVoiceOrb.tsx');
+  assert.match(dialect, /setIsLiveConnecting\(true\)/);
+  assert.match(dialect, /context\.resume\(\)/);
+  assert.match(dialect, /\.catch\(failLiveConversation\)/);
+  assert.match(dialect, /setLiveVoiceError\(getDialectLiveError\(error, lang\)\)/);
+  assert.match(dialect, /setIsListening\(true\)/);
+  assert.match(dialect, /console\.error\("Microphone Error:", err\);\s+throw err;/);
+  assert.match(halo, /role="alert"/);
+  assert.match(orb, /aria-busy=\{connecting\}/);
+  assert.match(gateway, /LIVE_ACCESS_DENIED/);
+});

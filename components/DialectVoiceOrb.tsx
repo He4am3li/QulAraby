@@ -3,6 +3,7 @@ import { AudioLines } from 'lucide-react';
 
 interface Props {
   active: boolean;
+  connecting?: boolean;
   listening: boolean;
   speaking: boolean;
   loading?: boolean;
@@ -12,9 +13,10 @@ interface Props {
 }
 
 /** A compact, accessible Siri-inspired audio orb. No separate voice-stage screen. */
-export const DialectVoiceOrb: React.FC<Props> = ({ active, listening, speaking, loading, disabled, lang, onToggle }) => {
+export const DialectVoiceOrb: React.FC<Props> = ({ active, connecting, listening, speaking, loading, disabled, lang, onToggle }) => {
   const ar = lang === 'ar';
-  const status = !active ? (ar ? 'بدء التحدث' : 'Start speaking')
+  const status = connecting ? (ar ? 'جار الاتصال، اضغط للإلغاء' : 'Connecting, tap to cancel')
+    : !active ? (ar ? 'بدء التحدث' : 'Start speaking')
     : speaking ? (ar ? 'الشخصية تتحدث' : 'Tutor speaking')
       : loading ? (ar ? 'جار تجهيز الرد' : 'Preparing a reply')
         : listening ? (ar ? 'جار الاستماع' : 'Listening')
@@ -25,7 +27,8 @@ export const DialectVoiceOrb: React.FC<Props> = ({ active, listening, speaking, 
       onClick={onToggle}
       disabled={disabled}
       aria-pressed={active}
-      aria-label={active ? (ar ? 'إنهاء المحادثة الصوتية' : 'End voice conversation') : (ar ? 'تشغيل المحادثة الصوتية مع الشخصية المختارة' : 'Start live voice with selected tutor')}
+      aria-busy={connecting}
+      aria-label={connecting ? (ar ? 'إلغاء بدء المحادثة' : 'Cancel connecting') : active ? (ar ? 'إنهاء المحادثة الصوتية' : 'End voice conversation') : (ar ? 'تشغيل المحادثة الصوتية مع الشخصية المختارة' : 'Start live voice with selected tutor')}
       title={status}
       className="group relative inline-flex h-[66px] w-[76px] shrink-0 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
     >
@@ -40,7 +43,7 @@ export const DialectVoiceOrb: React.FC<Props> = ({ active, listening, speaking, 
             : 'conic-gradient(from 35deg, #d5dde8, #a7b9cc, #e6ebef, #b3b9d5, #d5dde8)'
         }} />
       <span aria-hidden="true" className="absolute inset-[20px] rounded-full bg-white/35 blur-[5px]" />
-      <AudioLines size={21} strokeWidth={2.2} aria-hidden="true" className={'relative z-10 transition-colors ' + (active ? 'text-white drop-shadow-md' : 'text-slate-600')} />
+      <AudioLines size={21} strokeWidth={2.2} aria-hidden="true" className={'relative z-10 transition-colors ' + (connecting ? 'animate-pulse text-sky-700' : active ? 'text-white drop-shadow-md' : 'text-slate-600')} />
       {active && (
         <span aria-hidden="true" className="absolute bottom-0 h-[2px] w-8 rounded-full bg-cyan-300 shadow-[0_0_12px_#22d3ee] motion-safe:animate-pulse"/>
       )}

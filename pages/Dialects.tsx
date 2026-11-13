@@ -26,6 +26,7 @@ import { SpeechLipSync, analyzeSpeechBuffer, startLipSyncedSource } from '../ser
 import { getTutorStageDirection, getTutorPartnerDirection } from '../services/tutorAttention.mjs';
 import { buildDialectTutorPolicy, inferLearnerLanguage } from '../services/dialectTutorPolicy';
 import { publishedVoice, useDialectVoiceProfiles } from '../services/dialectVoiceProfiles';
+import { getDialectLiveError } from '../services/dialectLiveErrors.mjs';
 
 declare global {
   interface Window {
@@ -1516,6 +1517,8 @@ export const Dialects: React.FC = () => {
   const [currentSpeechText, setCurrentSpeechText] = React.useState<string>('');
   const [isListening, setIsListening] = React.useState(false);
   const [isLiveActive, setIsLiveActive] = React.useState(false);
+  const [isLiveConnecting, setIsLiveConnecting] = React.useState(false);
+  const [liveVoiceError, setLiveVoiceError] = React.useState<string | null>(null);
   const [audioLevel, setAudioLevel] = React.useState(0);
   const liveSessionRef = React.useRef<any>(null);
   // V2 passports are awarded by assessed mission mastery. Old message-count
@@ -1649,6 +1652,7 @@ export const Dialects: React.FC = () => {
     clearLiveAudio();
     stopOneShotAudio();
     setIsLiveActive(false);
+    setIsLiveConnecting(false);
     setIsListening(false);
     setAudioLevel(0);
   }, [clearLiveAudio, stopOneShotAudio]);
@@ -1686,6 +1690,7 @@ export const Dialects: React.FC = () => {
   React.useEffect(() => {
     // Reset state and auto-select default tutor when country opens
     setChatInput('');
+    setLiveVoiceError(null);
     setMobileCountryPanel('stage');
     if (selectedCountry) {
       const defaultChar = selectedCountry.characterMale;
@@ -1925,6 +1930,20 @@ export const Dialects: React.FC = () => {
       stopLiveConversation();
       return;
     }
+    setLiveVoiceError(null);
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setLiveVoiceError(getDialectLiveError({ code: 'MIC_UNAVAILABLE' }, lang));
+      return;
+    }
+    // Unlock browser audio during the actual click, before token and WebSocket awaits.
+    // Safari and mobile browsers can otherwise block playback after the gesture ends.
+    try {
+      const context = getAudioContext();
+      if (context.state === 'suspended') void context.resume().catch(() => {});
+    } catch (error) {
+      setLiveVoiceError(getDialectLiveError({ code: 'AUDIO_UNAVAILABLE' }, lang));
+      return;
+    }
     stopOneShotAudio();
     clearLiveAudio();
     if (recognitionRef.current) {
@@ -1932,8 +1951,15 @@ export const Dialects: React.FC = () => {
       recognitionRef.current = null;
     }
     liveConnectingRef.current = true;
+    setIsLiveConnecting(true);
     const generation = ++liveGenerationRef.current;
     const stillCurrent = () => generation === liveGenerationRef.current;
+    const failLiveConversation = (error: unknown) => {
+      if (!stillCurrent()) return;
+      console.error('Dialect live conversation failed:', error);
+      stopLiveConversation();
+      setLiveVoiceError(getDialectLiveError(error, lang));
+    };
     try {
       const { Modality } = await import("@google/genai");
       if (!stillCurrent()) return;
@@ -2045,17 +2071,21 @@ export const Dialects: React.FC = () => {
           onopen: () => {
             if (!stillCurrent()) return;
             liveConnectingRef.current = false;
+            setIsLiveConnecting(false);
             isLiveActiveRef.current = true;
             setIsLiveActive(true);
-            setIsListening(true);
+            // Report listening only after permission is granted and recording starts.
+            setIsListening(false);
             void sessionPromise.then(async session => {
               if (!stillCurrent()) return;
               const cleanup = await setupMicrophone(session);
-              if (cleanup) {
-                if (stillCurrent()) micCleanupRef.current = cleanup;
-                else cleanup();
+              if (stillCurrent()) {
+                micCleanupRef.current = cleanup;
+                setIsListening(true);
+              } else {
+                cleanup();
               }
-            }).catch(console.error);
+            }).catch(failLiveConversation);
           },
           onmessage: (message: any) => {
             if (!stillCurrent()) return;
@@ -2116,29 +2146,19 @@ export const Dialects: React.FC = () => {
           onclose: () => {
             if (!stillCurrent()) return;
             flushLiveInput();
-            stopLiveConversation();
+            failLiveConversation({ code: 'LIVE_CLOSED' });
           },
-          onerror: (e: any) => {
-            if (!stillCurrent()) return;
-            console.error("Live conversation audio error:", e);
-            stopLiveConversation();
+          onerror: (error: any) => {
+            failLiveConversation(error?.code ? error : { code: 'LIVE_CONNECTION_FAILED' });
           }
         }
       });
       void sessionPromise.then(session => {
         if (stillCurrent()) liveSessionRef.current = session;
         else { try { session.close(); } catch (_) {} }
-      }).catch(e => {
-        if (stillCurrent()) {
-          console.error('Live connection failed:', e);
-          stopLiveConversation();
-        }
-      });
-    } catch (err) {
-      if (stillCurrent()) {
-        console.error("Live connection error:", err);
-        stopLiveConversation();
-      }
+      }).catch(failLiveConversation);
+    } catch (error) {
+      failLiveConversation(error);
     }
   };
 
@@ -2208,6 +2228,7 @@ export const Dialects: React.FC = () => {
       return cleanup;
     } catch (err) {
       console.error("Microphone Error:", err);
+      throw err;
     }
   };
 
@@ -2588,9 +2609,11 @@ export const Dialects: React.FC = () => {
                       tutorName={selectedPersona?.nameAr}
                       turns={chatMessages}
                       active={isLiveActive}
+                      connecting={isLiveConnecting}
+                      error={liveVoiceError}
                       listening={isListening}
                       speaking={isSpeaking}
-                      loading={isChatLoading}
+                      loading={isChatLoading || isLiveConnecting}
                       disabled={!selectedPersona}
                       currentSpeechText={currentSpeechText}
                       onToggle={() => { void startLiveConversation(); }}

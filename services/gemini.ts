@@ -47,9 +47,17 @@ export const getLiveAI = async (): Promise<GoogleGenAI> => {
     method: 'POST',
     headers: { authorization: 'Bearer ' + await currentUser.getIdToken() },
   });
-  if (!response.ok) throw new Error('Could not authorize a live conversation');
+  if (!response.ok) {
+    const code = response.status === 401 ? 'LIVE_AUTH_REQUIRED'
+      : response.status === 403 ? 'LIVE_ACCESS_DENIED'
+      : response.status === 429 ? 'LIVE_QUOTA_REACHED'
+      : response.status >= 500 ? 'LIVE_SERVICE_UNAVAILABLE' : 'LIVE_TOKEN_ERROR';
+    throw Object.assign(new Error('Could not authorize live conversation'), { code });
+  }
   const result = await response.json() as { token?: string };
-  if (!result.token?.startsWith('auth_tokens/')) throw new Error('Invalid live session authorization');
+  if (!result.token?.startsWith('auth_tokens/')) {
+    throw Object.assign(new Error('Invalid live session authorization'), { code: 'LIVE_TOKEN_ERROR' });
+  }
   return new GoogleGenAI({ apiKey: result.token, httpOptions: { apiVersion: 'v1alpha' } });
 };
 
