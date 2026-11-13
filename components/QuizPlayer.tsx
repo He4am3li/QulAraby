@@ -777,7 +777,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
                       pieceType={q.chessConfig.pieceType}
                       gridData={q.chessConfig.gridData}
                       lang={lang}
-                      onWin={() => handleAnswerChange(q.id, 'CHESS_MASTERED', true)}
+                      onWin={(path) => handleAnswerChange(q.id, path, true)}
                     />
                   )}
                 </div>
