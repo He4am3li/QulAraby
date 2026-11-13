@@ -6,7 +6,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { isApprovedGatewayProfile } from './_gatewayApproval.mjs';
 import { classifyFirebaseAuthFailure } from './_firebaseAuthFailure.mjs';
 import { verifyFirebaseRevocationViaLookup } from './_firebaseAuthRevocationFallback.mjs';
-import firebaseConfig from '../firebase-applet-config.json';
+import firebaseConfig from '../firebase-applet-config.json' with { type: 'json' };
 
 // These identifiers are public Firebase configuration, never credentials.
 const FIREBASE_PROJECT_ID = 'gen-lang-client-0558881211';
