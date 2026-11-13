@@ -34,7 +34,7 @@ export const DialectReferencePanel: React.FC<Props> = ({ country, lang, onPronou
         <section className="relative min-h-0 overflow-hidden rounded-t-[17px] rounded-b-[9px] bg-slate-200">
           <div className="absolute inset-0">{heroImage}</div>
 
-          {(country.nameEn === 'Egypt' || country.nameEn === 'UAE' || country.nameEn === 'Lebanon' || country.nameEn === 'Iraq' || country.nameEn === 'Libya' || country.nameEn === 'Tunisia' || country.nameEn === 'Morocco' || country.nameEn === 'Kuwait' || country.nameEn === 'Qatar') && (
+          {(country.nameEn === 'Egypt' || country.nameEn === 'UAE' || country.nameEn === 'Lebanon' || country.nameEn === 'Iraq' || country.nameEn === 'Libya' || country.nameEn === 'Tunisia' || country.nameEn === 'Morocco' || country.nameEn === 'Kuwait' || country.nameEn === 'Qatar' || country.nameEn === 'Oman') && (
             <span className="absolute top-2 left-2 z-10 rounded-md bg-slate-900/55 px-1.5 py-0.5 text-[10px] font-medium text-white" title={ar ? 'رسم مولد بالذكاء الاصطناعي وليس صورة فوتوغرافية' : 'AI-generated artistic rendering, not a photograph'}>
               {ar ? 'صورة مولّدة' : 'AI illustration'}
             </span>

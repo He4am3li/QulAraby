@@ -796,7 +796,7 @@ export const COUNTRY_DATA = [
     nameAr: 'عمان',
     nameEn: 'Oman',
     flag: '🇴🇲',
-    image: "/images/dialects/local/oman.jpg",
+    image: "/images/dialects/oman-salalah-cinematic.avif",
     dialect: 'Omani (عماني)',
     characterMale: { 
       nameAr: 'هيثم', 
