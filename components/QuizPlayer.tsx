@@ -5,11 +5,6 @@ import {
   Trophy, RotateCcw, Brain, Check, X, Move, GripVertical, Sparkles, PenTool,
   Shield, Volume2, Mic, Music, Type, PlayCircle, StopCircle, Save, Keyboard
 } from 'lucide-react';
-import { 
-  collection, query, orderBy, onSnapshot, addDoc, doc, 
-  getDoc, updateDoc, serverTimestamp, getDocs, where
-} from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType, safeStringify } from '../firebase';
 import { useAuth } from './AuthProvider';
 import { WordChessGame } from './WordChessGame';
 
@@ -18,7 +13,6 @@ interface Question {
   text: string;
   type: 'mcq' | 'true_false' | 'short_answer' | 'fill_blank' | 'ordering' | 'drag_drop' | 'matching' | 'chess_puzzle';
   options: string[];
-  correctAnswer: string;
   points: number;
   chessConfig?: {
     boardSize: number;
@@ -177,6 +171,10 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
   const [loading, setLoading] = useState(true);
   const [startTime] = useState(Date.now());
   const [score, setScore] = useState<number | null>(null);
+  const [scoredTotalPoints, setScoredTotalPoints] = useState<number | null>(null);
+  const [attemptToken, setAttemptToken] = useState<string | null>(null);
+  const [submissionPending, setSubmissionPending] = useState(false);
+  const [quizError, setQuizError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [combo, setCombo] = useState(0);
@@ -230,109 +228,61 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
     setAbilities(prev => prev.filter(a => a.type !== type));
   };
 
-  const handleAnswerChange = (qId: string, val: any, autoNext: boolean = false, skipFeedback: boolean = false) => {
-    const q = questions.find(q => q.id === qId);
-    if (!q) return;
-
-    let isCorrect = false;
-    if (q.type === 'mcq' || q.type === 'true_false' || q.type === 'short_answer' || q.type === 'fill_blank') {
-      isCorrect = val?.toString().trim().toLowerCase() === q.correctAnswer.toString().trim().toLowerCase();
-    } else if (q.type === 'ordering' || q.type === 'drag_drop' || q.type === 'matching') {
-      isCorrect = safeStringify(val) === safeStringify(q.options);
-    }
-
-    if (isCorrect) {
-      if (!skipFeedback) {
-        setStreak(prev => prev + 1);
-        setCorrectCount(prev => prev + 1);
-        setCombo(prev => Math.min(prev + 1, 5));
-        setMaxCombo(prev => Math.max(prev, streak + 1));
-        setFeedbackType('success');
-      }
-
-      // Crypto mode logic: get abilities for difficult questions
-      if (playMode === 'crypto') {
-        const isDifficult = q.type === 'short_answer' || q.type === 'fill_blank' || q.type === 'chess_puzzle';
-        if (isDifficult && Math.random() > 0.3) {
-          const newAbilities: Ability[] = [
-            { id: Math.random().toString(), type: 'shield', nameAr: 'درع الحماية', nameEn: '30s Shield', icon: <Shield size={14} /> },
-            { id: Math.random().toString(), type: 'multiplier', nameAr: 'مضاعف النقاط', nameEn: '2x Points', icon: <Sparkles size={14} /> },
-          ];
-          const randomAbility = newAbilities[Math.floor(Math.random() * newAbilities.length)];
-          if (!abilities.find(a => a.type === randomAbility.type)) {
-            setAbilities(prev => [...prev.slice(-2), randomAbility]);
-          }
-        }
-      }
-    } else {
-      if (isShieldActive) {
-        setIsShieldActive(false);
-        if (!skipFeedback) setFeedbackType('success'); // Shield saves you
-        return;
-      }
-      
-      if (!skipFeedback) {
-        setStreak(0);
-        setErrorCount(prev => prev + 1);
-        setCombo(0);
-        setFeedbackType('error');
-      }
-    }
-
-    if (!skipFeedback) setTimeout(() => setFeedbackType(null), 1000);
-
+  // Do not determine correctness in the browser. Feedback and points are
+  // calculated by the authenticated server only after final submission.
+  const handleAnswerChange = (qId: string, val: any, autoNext: boolean = false, _skipFeedback: boolean = false) => {
+    if (!questions.some(q => q.id === qId) || submissionPending) return;
     setAnswers(prev => ({ ...prev, [qId]: val }));
     setIsAnswered(true);
-    
     if (autoNext && currentIndex < questions.length - 1) {
       setTimeout(() => setCurrentIndex(prev => prev + 1), 600);
     }
   };
 
   useEffect(() => {
-    if (!quizId) return;
+    if (!quizId || !user) return;
+    let mounted = true;
     const fetchData = async () => {
+      setLoading(true);
+      setQuizError(null);
       try {
-        const qDoc = await getDoc(doc(db, 'quizzes', quizId));
-        if (qDoc.exists()) {
-          const data = qDoc.data();
-          setQuizData(data);
-          if (data.duration) {
-            setTimeLeft(data.duration * 60);
-          }
-
-          // Check attempts logic
-          if (user && data.maxAttempts > 0) {
-            const resultsRef = collection(db, 'quizzes', quizId, 'results');
-            const qAttempts = query(resultsRef, where('userId', '==', user.uid));
-            const attemptsSnap = await getDocs(qAttempts);
-            setPreviousAttempts(attemptsSnap.size);
-            if (attemptsSnap.size >= data.maxAttempts) {
-              setAttemptsExceeded(true);
-              setLoading(false);
-              return;
-            }
-          }
-        }
-
-        const qSnap = await getDocs(query(collection(db, 'quizzes', quizId, 'questions'), orderBy('order', 'asc')));
-        const qList = qSnap.docs.map(doc => {
-          const data = doc.data() as Question;
-          let shuffledOptions = [...data.options];
-          if (data.type === 'mcq' || data.type === 'ordering' || data.type === 'drag_drop') {
-            shuffledOptions = shuffledOptions.sort(() => Math.random() - 0.5);
-          }
-          return { id: doc.id, ...data, options: shuffledOptions } as Question;
+        const response = await fetch('/api/quiz-play', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${await user.getIdToken()}`
+          },
+          body: JSON.stringify({ action: 'start', quizId })
         });
-        setQuestions(qList);
+        const data = await response.json();
+        if (!mounted) return;
+        if (!response.ok) {
+          if (data.attemptsExceeded) {
+            setPreviousAttempts(Number(data.previousAttempts) || 0);
+            setAttemptsExceeded(true);
+            return;
+          }
+          throw Error(data.error || 'Could not open quiz');
+        }
+        setAttemptToken(data.attemptToken);
+        setPreviousAttempts(data.previousAttempts || 0);
+        setQuizData(data.quiz);
+        if (data.quiz?.duration) setTimeLeft(data.quiz.duration * 60);
+        setQuestions(data.questions);
       } catch (err) {
-        handleFirestoreError(err, OperationType.LIST, `quizzes/${quizId}/questions`);
+        if (mounted) {
+          console.error('Secure quiz start failed:', err);
+          setQuizError(lang === 'ar'
+            ? 'تعذّر فتح الاختبار بشكل آمن. تحقّق من الاتصال ثم حاول مجددًا.'
+            : 'Could not securely start this quiz. Please try again.');
+        }
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
-    fetchData();
-  }, [quizId]);
+    void fetchData();
+    return () => { mounted = false; };
+  }, [quizId, user?.uid]);
 
   useEffect(() => {
     if (timeLeft === null || timeLeft <= 0 || score !== null) return;
@@ -347,52 +297,30 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
     setIsAnswered(!!answers[questions[currentIndex]?.id]);
   }, [currentIndex, questions, answers]);
 
-  const calculateScore = () => {
-    let totalScore = 0;
-    questions.forEach(q => {
-      const userAnswer = answers[q.id];
-      let isCorrect = false;
-      if (q.type === 'mcq' || q.type === 'true_false' || q.type === 'short_answer' || q.type === 'fill_blank') {
-        isCorrect = userAnswer?.toString().trim().toLowerCase() === q.correctAnswer.toString().trim().toLowerCase();
-      } else if (q.type === 'ordering' || q.type === 'drag_drop' || q.type === 'matching') {
-        isCorrect = safeStringify(userAnswer) === safeStringify(q.options);
-      } else if (q.type === 'chess_puzzle') {
-        isCorrect = userAnswer === 'CHESS_MASTERED';
-      }
-
-      if (isCorrect) {
-        let points = q.points;
-        
-        if (playMode === 'race') {
-          // Time Race: Points based on speed
-          const speedFactor = (questionTimeLeft || 0) / 15;
-          points = Math.floor(points * (1 + speedFactor));
-        } else if (playMode === 'crypto') {
-          // Crypto Hack: Points for speed + multiplier
-          if (isMultiplierActive) {
-            points *= 2;
-            setIsMultiplierActive(false);
-          }
-          const speedBonus = questionTimeLeft ? (questionTimeLeft / 15) * 50 : 0;
-          points += Math.floor(speedBonus);
-        }
-
-        const multiplier = (playMode === 'race' || playMode === 'crypto') ? (1 + (combo * 0.1)) : 1;
-        totalScore += Math.floor(points * multiplier);
-      }
-    });
-
-    setScore(totalScore);
-
-    if (user) {
-      addDoc(collection(db, 'quizzes', quizId, 'results'), {
-        userId: user.uid,
-        userEmail: user.email,
-        score: totalScore,
-        totalPoints: questions.reduce((acc, q) => acc + q.points, 0),
-        timeTaken: Math.floor((Date.now() - startTime) / 1000),
-        completedAt: serverTimestamp()
+  const calculateScore = async () => {
+    if (!user || !attemptToken || submissionPending) return;
+    setSubmissionPending(true);
+    setQuizError(null);
+    try {
+      const response = await fetch('/api/quiz-play', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await user.getIdToken()}`
+        },
+        body: JSON.stringify({ action: 'submit', quizId, attemptToken, answers })
       });
+      const data = await response.json();
+      if (!response.ok || data.submitted !== true) throw Error(data.error || 'Submission rejected');
+      setScore(data.score);
+      setScoredTotalPoints(data.totalPoints);
+    } catch (error) {
+      console.error('Trusted quiz assessment failed:', error);
+      setQuizError(lang === 'ar'
+        ? 'تعذّر اعتماد النتيجة. لم تُسجَّل درجة غير مؤكدة، حاول الإرسال مجددًا.'
+        : 'Could not verify and save your score. Please retry submission.');
+    } finally {
+      setSubmissionPending(false);
     }
   };
 
@@ -428,6 +356,18 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
     );
   }
 
+  if (quizError && !loading && questions.length === 0) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-50 flex flex-col items-center justify-center p-6" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+        <AlertCircle className="text-rose-500 mb-5" size={40} />
+        <p className="text-center font-bold text-slate-700 mb-6">{quizError}</p>
+        <button onClick={onExit} className="px-8 py-3 bg-slate-900 text-white rounded-xl">
+          {lang === 'ar' ? 'العودة للاختبارات' : 'Return to quizzes'}
+        </button>
+      </div>
+    );
+  }
+
   if (loading || (questions.length === 0 && score === null)) {
     return (
       <div className="fixed inset-0 z-50 bg-[#F8FAFC] flex flex-col items-center justify-center font-['Tajawal']">
@@ -453,8 +393,8 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
   }
 
   if (score !== null) {
-    const totalPoints = questions.reduce((acc, q) => acc + q.points, 0);
-    const percentage = Math.round((score / totalPoints) * 100);
+    const totalPoints = scoredTotalPoints ?? questions.reduce((acc, q) => acc + q.points, 0);
+    const percentage = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : 0;
 
     return (
       <div className="fixed inset-0 z-50 bg-[#F8FAFC] flex flex-col items-center justify-center p-6 overflow-hidden font-['Tajawal']" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -837,7 +777,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
                       pieceType={q.chessConfig.pieceType}
                       gridData={q.chessConfig.gridData}
                       lang={lang}
-                      onWin={() => handleAnswerChange(q.id, 'CHESS_MASTERED', true)}
+                      onWin={(path) => handleAnswerChange(q.id, path, true)}
                     />
                   )}
                 </div>
@@ -878,13 +818,17 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
         <div className="mt-20 flex gap-16 text-[10px] font-black uppercase tracking-[0.3em]">
            <div className="flex items-center gap-3 text-emerald-600 bg-emerald-50 px-6 py-3 rounded-2xl border border-emerald-100 shadow-sm">
              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]" />
-             {lang === 'ar' ? 'إجابات صحيحة' : 'Mastery'}: {correctCount}
+             {lang === 'ar' ? 'تمت الإجابة' : 'Answered'}: {Object.values(answers).filter(value => value !== null && value !== '').length}
            </div>
            <div className="flex items-center gap-3 text-rose-600 bg-rose-50 px-6 py-3 rounded-2xl border border-rose-100 shadow-sm">
              <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_10px_#f43f5e]" />
-             {lang === 'ar' ? 'أخطاء علمية' : 'Learning Gaps'}: {errorCount}
+             {lang === 'ar' ? 'المتبقي' : 'Remaining'}: {Math.max(0, questions.length - Object.values(answers).filter(value => value !== null && value !== '').length)}
            </div>
         </div>
+
+        {quizError && (
+          <p role="alert" className="mt-4 text-center text-sm font-bold text-rose-600">{quizError}</p>
+        )}
 
         {/* Navigation Dot Indicators */}
         <div className="mt-12 flex justify-center gap-2.5">
@@ -907,9 +851,10 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({ quizId, lang, onComplete
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={calculateScore}
+                disabled={submissionPending}
                 className={`w-full py-5 rounded-[1.8rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl transition-all ${isAnswered ? 'bg-blue-600 text-white shadow-blue-500/20' : 'bg-slate-100 text-slate-300 pointer-events-none'}`}
               >
-                {lang === 'ar' ? 'إرسال الإجابات' : 'Submit Assessment'}
+                {submissionPending ? (lang === 'ar' ? 'جارٍ اعتماد النتيجة...' : 'Verifying score...') : (lang === 'ar' ? 'إرسال الإجابات' : 'Submit Assessment')}
               </motion.button>
            ) : (
               <button 

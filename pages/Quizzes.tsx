@@ -384,46 +384,34 @@ export default function Quizzes() {
   };
 
   const handleStartSolving = async () => {
-    if (!studentCode) return;
+    if (!studentCode || !user) return;
     setIsSaving(true);
     try {
-      // Find quiz where joinCode matches studentCode (case insensitive normalized)
-      const q = query(collection(db, 'quizzes'), where('joinCode', '==', studentCode.toUpperCase()));
-      const snapshot = await getDocs(q);
-      
-      let foundQuizId = '';
-      let targetQuiz: any = null;
-
-      if (!snapshot.empty) {
-        foundQuizId = snapshot.docs[0].id;
-        targetQuiz = snapshot.docs[0].data();
-      } else {
-        // Fallback or try by legacy 'code' or ID
-        const qLegacy = query(collection(db, 'quizzes'), where('code', '==', studentCode));
-        const legacySnap = await getDocs(qLegacy);
-        if (!legacySnap.empty) {
-          foundQuizId = legacySnap.docs[0].id;
-          targetQuiz = legacySnap.docs[0].data();
-        }
+      // Firestore collection searches disclose quiz metadata and fail the
+      // author-scoped list rule. Only the server resolves student join codes.
+      const response = await fetch('/api/quiz-play', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await user.getIdToken()}`
+        },
+        body: JSON.stringify({ action: 'lookup', code: studentCode.trim() })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.quizId) {
+        alert(lang === 'ar' ? 'رمز الاختبار غير صحيح أو أن الاختبار غير نشط' : 'Quiz code is invalid or inactive');
+        return;
       }
-
-      if (foundQuizId && targetQuiz) {
-        if (targetQuiz.status !== 'active') {
-          alert(lang === 'ar' ? 'هذا الاختبار غير نشط حالياً (قد يكون في حالة مسودة)' : 'This quiz is not active currently (might be in draft)');
-          return;
-        }
-        setSelectedQuizId(foundQuizId);
-        setPortal('player');
-      } else {
-        alert(lang === 'ar' ? 'رمز الاختبار غير صحيح أو غير موجود' : 'Invalid Quiz Code or not found');
-      }
+      setSelectedQuizId(data.quizId);
+      setPortal('player');
     } catch (error) {
-      console.error("Error finding quiz:", error);
-      handleFirestoreError(error, OperationType.GET, `quizzes/${studentCode}`);
+      console.error('Secure quiz code lookup failed:', error);
+      alert(lang === 'ar' ? 'تعذّر التحقق من رمز الاختبار، حاول مجددًا' : 'Could not verify quiz code. Please retry.');
     } finally {
       setIsSaving(false);
     }
   };
+
   const [filter, setFilter] = useState<'all' | 'active' | 'draft'>('all');
   const [quizResults, setQuizResults] = useState<any[]>([]);
   const [globalResults, setGlobalResults] = useState<any[]>([]);
