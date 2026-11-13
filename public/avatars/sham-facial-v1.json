@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "syria_female",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/sham-stance-v1.webp",
+  "sourceSha256": "943d322bf362644c37a88f8555c422627360424e678bbf5ec31eec7a815f9e35",
+  "pose": {
+    "bodyFacing": "right",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "left"
+  },
+  "registration": {
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.84,
+    "offset": [
+      346,
+      3
+    ],
+    "eyes": [
+      471,
+      120,
+      119,
+      45
+    ],
+    "brows": [
+      470,
+      102,
+      120,
+      30
+    ],
+    "mouth": [
+      493,
+      180,
+      77,
+      60
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 471,
+      "y": 120,
+      "w": 119,
+      "h": 45,
+      "visible": true,
+      "url": "/avatars/sham-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 471,
+      "y": 120,
+      "w": 119,
+      "h": 45,
+      "visible": true,
+      "url": "/avatars/sham-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 471,
+      "y": 120,
+      "w": 119,
+      "h": 45,
+      "visible": true,
+      "url": "/avatars/sham-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 470,
+      "y": 102,
+      "w": 120,
+      "h": 30,
+      "visible": true,
+      "url": "/avatars/sham-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 470,
+      "y": 102,
+      "w": 120,
+      "h": 30,
+      "visible": true,
+      "url": "/avatars/sham-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 493,
+      "y": 180,
+      "w": 77,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/sham-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 493,
+      "y": 180,
+      "w": 77,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/sham-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 493,
+      "y": 180,
+      "w": 77,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/sham-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 493,
+      "y": 180,
+      "w": 77,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/sham-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 493,
+      "y": 180,
+      "w": 77,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/sham-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 493,
+      "y": 180,
+      "w": 77,
+      "h": 60,
+      "visible": true,
+      "url": "/avatars/sham-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}

@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "status": "reviewed",
+  "characterId": "syria_male",
+  "width": 1024,
+  "height": 1536,
+  "source": "/avatars/bassel-stance-v1.webp",
+  "sourceSha256": "7ed44ea48b4d12e917bcc0e99572a6b28a35bc290b8f41f813329c4ecfc97aba",
+  "pose": {
+    "bodyFacing": "left",
+    "bodyTurnDegrees": 18,
+    "headFacing": "student",
+    "stageSide": "right"
+  },
+  "registration": {
+    "shift": 0,
+    "shiftY": 0,
+    "scale": 0.87,
+    "offset": [
+      342,
+      9
+    ],
+    "eyes": [
+      450,
+      161,
+      120,
+      43
+    ],
+    "brows": [
+      450,
+      142,
+      120,
+      31
+    ],
+    "mouth": [
+      470,
+      226,
+      86,
+      67
+    ],
+    "mouthSampleDy": 0
+  },
+  "layers": {
+    "Eyes_Closed": {
+      "x": 450,
+      "y": 161,
+      "w": 120,
+      "h": 43,
+      "visible": true,
+      "url": "/avatars/bassel-stance-v1/Eyes_Closed.png"
+    },
+    "Eyes_Left": {
+      "x": 450,
+      "y": 161,
+      "w": 120,
+      "h": 43,
+      "visible": true,
+      "url": "/avatars/bassel-stance-v1/Eyes_Left.png"
+    },
+    "Eyes_Right": {
+      "x": 450,
+      "y": 161,
+      "w": 120,
+      "h": 43,
+      "visible": true,
+      "url": "/avatars/bassel-stance-v1/Eyes_Right.png"
+    },
+    "Brows_Attentive": {
+      "x": 450,
+      "y": 142,
+      "w": 120,
+      "h": 31,
+      "visible": true,
+      "url": "/avatars/bassel-stance-v1/Brows_Attentive.png"
+    },
+    "Brows_Thinking": {
+      "x": 450,
+      "y": 142,
+      "w": 120,
+      "h": 31,
+      "visible": true,
+      "url": "/avatars/bassel-stance-v1/Brows_Thinking.png"
+    },
+    "Mouth_Closed": {
+      "x": 470,
+      "y": 226,
+      "w": 86,
+      "h": 67,
+      "visible": true,
+      "url": "/avatars/bassel-stance-v1/Mouth_Closed.png"
+    },
+    "Mouth_A": {
+      "x": 470,
+      "y": 226,
+      "w": 86,
+      "h": 67,
+      "visible": true,
+      "url": "/avatars/bassel-stance-v1/Mouth_A.png"
+    },
+    "Mouth_E": {
+      "x": 470,
+      "y": 226,
+      "w": 86,
+      "h": 67,
+      "visible": true,
+      "url": "/avatars/bassel-stance-v1/Mouth_E.png"
+    },
+    "Mouth_O": {
+      "x": 470,
+      "y": 226,
+      "w": 86,
+      "h": 67,
+      "visible": true,
+      "url": "/avatars/bassel-stance-v1/Mouth_O.png"
+    },
+    "Mouth_FV": {
+      "x": 470,
+      "y": 226,
+      "w": 86,
+      "h": 67,
+      "visible": true,
+      "url": "/avatars/bassel-stance-v1/Mouth_FV.png"
+    },
+    "Mouth_Smile": {
+      "x": 470,
+      "y": 226,
+      "w": 86,
+      "h": 67,
+      "visible": true,
+      "url": "/avatars/bassel-stance-v1/Mouth_Smile.png"
+    }
+  },
+  "coverings": []
+}
