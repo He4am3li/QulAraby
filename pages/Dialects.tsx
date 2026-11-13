@@ -796,7 +796,7 @@ export const COUNTRY_DATA = [
     nameAr: 'عمان',
     nameEn: 'Oman',
     flag: '🇴🇲',
-    image: "/images/dialects/oman-salalah-cinematic.avif",
+    image: "/images/dialects/local/oman.jpg",
     dialect: 'Omani (عماني)',
     characterMale: { 
       nameAr: 'هيثم', 
@@ -2409,6 +2409,10 @@ export const Dialects: React.FC = () => {
                   <div className="relative flex-1 min-h-0 overflow-hidden bg-slate-200"
                       style={{ backgroundImage: 'url("' + DIALECT_IMAGE_PREVIEWS[country.id] + '")',
                         backgroundSize: 'cover', backgroundPosition: COUNTRY_PHOTO_FOCUS[country.id] || 'center 50%' }}>
+                    {country.id === 'oman' && (
+                      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[1]"
+                        style={{background:'linear-gradient(116deg,rgba(255,213,154,.12) 0%,transparent 44%,rgba(17,62,55,.055) 100%)'}}/>
+                    )}
                     <SafeImage
                       noBg
                       src={country.image}
@@ -2416,7 +2420,8 @@ export const Dialects: React.FC = () => {
                       loading={index < 6 ? 'eager' : 'lazy'}
                        fetchPriority={index < 4 ? 'high' : 'auto'}
                       decoding="async"
-                      style={{ objectPosition: COUNTRY_PHOTO_FOCUS[country.id] || 'center 50%' }}
+                      style={{ objectPosition: COUNTRY_PHOTO_FOCUS[country.id] || 'center 50%',
+                        ...(country.id === 'oman' ? { filter: 'brightness(1.065) contrast(1.11) saturate(1.13) sepia(0.025)' } : {}) }}
                       className={country.id === 'egypt'
                         ? "w-full h-full object-cover brightness-[1.07] saturate-[1.12] contrast-[1.04] group-hover:scale-[1.035] transition-transform duration-700 ease-out"
                         : country.id === 'lebanon'
@@ -2497,7 +2502,11 @@ export const Dialects: React.FC = () => {
                     heroImage={<div className="h-full w-full" style={{
                     backgroundImage: 'url("' + DIALECT_IMAGE_PREVIEWS[selectedCountry.id] + '")',
                     backgroundSize: 'cover', backgroundPosition: COUNTRY_PHOTO_FOCUS[selectedCountry.id] || 'center'
-                  }}><SafeImage noBg src={selectedCountry.image} className="h-full w-full object-cover" alt={selectedCountry.nameAr} loading="eager" decoding="async"/></div>}
+                  }}><SafeImage noBg src={selectedCountry.image} className="h-full w-full object-cover"
+                    style={selectedCountry.id === 'oman' ? { filter: 'brightness(1.065) contrast(1.11) saturate(1.13) sepia(0.025)' } : undefined}
+                    alt={selectedCountry.nameAr} loading="eager" decoding="async"/>
+                    {selectedCountry.id === 'oman' && <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
+                      style={{background:'linear-gradient(116deg,rgba(255,213,154,.12) 0%,transparent 44%,rgba(17,62,55,.055) 100%)'}}/>}</div>}
                   />
                 </div>
 
