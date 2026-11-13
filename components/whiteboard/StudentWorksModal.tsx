@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Star, Award, CheckCircle2, MessageSquare, Hand, Layers, X, Plus, Minus } from 'lucide-react';
-import { WhiteboardStudent, WhiteboardSessionState } from '../../types/whiteboard';
+import { WhiteboardStudent, WhiteboardSessionState, WhiteboardSubmission } from '../../types/whiteboard';
+import { StudentDrawingPreview } from './StudentDrawingPreview';
 
 interface StudentWorksModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface StudentWorksModalProps {
   session: WhiteboardSessionState;
   onScoreChange: (studentId: string, delta: number) => void;
   onGradeSubmission?: (studentId: string, score: number, feedback: string) => void;
+  submittedWork?: WhiteboardSubmission[];
 }
 
 export const StudentWorksModal: React.FC<StudentWorksModalProps> = ({
@@ -16,13 +18,17 @@ export const StudentWorksModal: React.FC<StudentWorksModalProps> = ({
   onClose,
   session,
   onScoreChange,
-  onGradeSubmission
+  onGradeSubmission,
+  submittedWork
 }) => {
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [feedbackDraft, setFeedbackDraft] = useState<Record<string, string>>({});
+  const [gradeDraft, setGradeDraft] = useState<Record<string, number>>({});
   if (!isOpen) return null;
 
   const studentsList = Object.values(session.students || {});
   const activity = session.activeActivity;
-  const submissions = activity?.submissions ? Object.values(activity.submissions) : [];
+  const submissions = submittedWork || (activity?.submissions ? Object.values(activity.submissions) : []);
 
   return (
     <AnimatePresence>
@@ -105,8 +111,41 @@ export const StudentWorksModal: React.FC<StudentWorksModalProps> = ({
                   </div>
 
                   <div className="p-2.5 bg-slate-950/60 rounded-xl border border-white/5 text-xs text-emerald-200 arabic-font font-medium mb-2">
-                    {sub.answer}
+                    {sub.answer || 'عمل مرسوم مرفق دون إجابة مكتوبة'}
                   </div>
+                  {'elements' in sub && Array.isArray(sub.elements) && sub.elements.length > 0 && (
+                    <div className="mb-2">
+                      <button onClick={() => setPreviewId(previewId === sub.studentId ? null : sub.studentId)}
+                        className="text-[11px] text-cyan-300 underline underline-offset-4">
+                        {previewId === sub.studentId ? 'إخفاء الرسم' : 'معاينة رسم الطالب (' + sub.elements.length + ' عنصر)'}
+                      </button>
+                      {previewId === sub.studentId && <StudentDrawingPreview elements={sub.elements} />}
+                    </div>
+                  )}
+                  {onGradeSubmission && (
+                    <div className="grid grid-cols-[75px_1fr_auto] items-center gap-2 mb-2">
+                      <input type="number" min={0} max={100}
+                        aria-label="تقييم الطالب"
+                        value={gradeDraft[sub.studentId] ?? sub.score ?? 0}
+                        onChange={e => setGradeDraft(prev => ({
+                          ...prev, [sub.studentId]: Math.max(0, Math.min(100, Number(e.target.value) || 0))
+                        }))}
+                        className="w-full rounded-lg bg-slate-800 border border-white/10 px-2 py-1.5 text-xs text-amber-200"
+                      />
+                      <input type="text" maxLength={800} placeholder="ملاحظة للطالب"
+                        aria-label="ملاحظة التقييم"
+                        value={feedbackDraft[sub.studentId] ?? sub.feedback ?? ''}
+                        onChange={e => setFeedbackDraft(prev => ({ ...prev, [sub.studentId]: e.target.value }))}
+                        className="min-w-0 rounded-lg bg-slate-800 border border-white/10 px-2 py-1.5 text-xs text-white"
+                      />
+                      <button onClick={() => onGradeSubmission(sub.studentId,
+                        gradeDraft[sub.studentId] ?? sub.score ?? 0,
+                        feedbackDraft[sub.studentId] ?? sub.feedback ?? '')}
+                        className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-[10px] font-bold">
+                        حفظ التقييم
+                      </button>
+                    </div>
+                  )
 
                   {sub.feedback && (
                     <div className="text-[11px] text-amber-300 font-bold bg-amber-500/10 p-1.5 rounded-lg border border-amber-500/20">
