@@ -18,7 +18,7 @@ interface WordChessProps {
   targetPos: Position;
   pieceType: 'rook' | 'bishop' | 'knight';
   gridData: string[][];
-  onWin: () => void;
+  onWin: (moves: Position[]) => void;
   lang?: 'ar' | 'en';
 }
 
@@ -33,6 +33,7 @@ export const WordChessGame = ({
 }: WordChessProps) => {
   const [currentPos, setCurrentPos] = useState<Position>(initialPos);
   const [moves, setMoves] = useState(0);
+  const [movePath, setMovePath] = useState<Position[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const isValidMove = (from: Position, to: Position, type: string) => {
@@ -55,12 +56,14 @@ export const WordChessGame = ({
     if (x === currentPos.x && y === currentPos.y) return;
 
     if (isValidMove(currentPos, { x, y }, pieceType)) {
+      const verifiedPath = [...movePath, { x, y }];
       setCurrentPos({ x, y });
+      setMovePath(verifiedPath);
       setMoves(prev => prev + 1);
       setError(null);
       
       if (x === targetPos.x && y === targetPos.y) {
-        setTimeout(onWin, 600);
+        setTimeout(() => onWin(verifiedPath), 600);
       }
     } else {
       setError(lang === 'ar' ? 'حركة غير مسموح بها لهذه القطعة!' : 'Invalid move for this piece type!');
