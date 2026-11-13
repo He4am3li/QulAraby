@@ -12,6 +12,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useAuth } from './AuthProvider';
+import { useLiveClassroom } from './LiveClassroomContext';
 import { db } from '../firebase';
 import { doc, updateDoc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 import { generateQuickExercise } from '../services/gemini';
@@ -81,6 +82,7 @@ const BOARD_SURFACES: BoardSurfaceOption[] = [
 
 export const TeacherToolbar: React.FC = () => {
   const { profile, user, isAuthReady } = useAuth();
+  const { sessionId } = useLiveClassroom();
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [isMinimized, setIsMinimized] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -233,7 +235,7 @@ export const TeacherToolbar: React.FC = () => {
     const nextLocked = !isLocked;
     setIsLocked(nextLocked);
     try {
-      await updateDoc(doc(db, 'live_sessions', 'global'), {
+      await updateDoc(doc(db, 'live_sessions', sessionId!), {
         isLocked: nextLocked,
         lastUpdate: serverTimestamp()
       });
@@ -274,7 +276,7 @@ export const TeacherToolbar: React.FC = () => {
   useEffect(() => {
     if (!isAuthReady || !user) return;
     
-    const unsubscribe = onSnapshot(doc(db, 'live_sessions', 'global'), (docSnapshot) => {
+    const unsubscribe = onSnapshot(doc(db, 'live_sessions', sessionId!), (docSnapshot) => {
       if (docSnapshot.exists()) {
         const data = docSnapshot.data();
         setSessionData(data);
@@ -286,7 +288,7 @@ export const TeacherToolbar: React.FC = () => {
       console.error("Teacher toolbar session error:", error);
     });
     return () => unsubscribe();
-  }, [isAuthReady, user]);
+  }, [isAuthReady, user, sessionId]);
 
   // Interactive Laser Pointer Handler
   useEffect(() => {
@@ -314,7 +316,7 @@ export const TeacherToolbar: React.FC = () => {
       const now = Date.now();
       if (now - lastBroadcastTime > 80) {
         lastBroadcastTime = now;
-        setDoc(doc(db, 'live_sessions', 'global'), {
+        setDoc(doc(db, 'live_sessions', sessionId!), {
           laserPosition: { x, y, timestamp: now },
           teacherId: user?.uid,
           lastUpdate: serverTimestamp()
@@ -349,7 +351,7 @@ export const TeacherToolbar: React.FC = () => {
       window.removeEventListener('mousedown', handlePointerDown);
       window.removeEventListener('touchstart', handlePointerDown);
     };
-  }, [activeTool, user]);
+  }, [activeTool, user, sessionId]);
 
   const handleResetAll = async () => {
     try {
@@ -360,7 +362,7 @@ export const TeacherToolbar: React.FC = () => {
       window.dispatchEvent(new CustomEvent('qul_set_whiteboard_tool', { detail: { tool: 'select' } }));
 
       // 2. Clear Firestore live session document
-      await updateDoc(doc(db, 'live_sessions', 'global'), {
+      await updateDoc(doc(db, 'live_sessions', sessionId!), {
         activeTool: null,
         currentStroke: null,
         highlights: [],
@@ -404,7 +406,7 @@ export const TeacherToolbar: React.FC = () => {
     if (sessionDataRef.current?.highlights && sessionDataRef.current.highlights.length > 0) {
       const remaining = sessionDataRef.current.highlights.slice(0, -1);
       try {
-        await updateDoc(doc(db, 'live_sessions', 'global'), {
+        await updateDoc(doc(db, 'live_sessions', sessionId!), {
           highlights: remaining,
           lastUpdate: serverTimestamp()
         });
@@ -625,7 +627,7 @@ export const TeacherToolbar: React.FC = () => {
       origin: { y: 0.8 }
     });
     try {
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', sessionId!), {
         reaction: { emoji, timestamp: Date.now(), teacher: profile?.displayName || 'المعلم' },
         lastUpdate: serverTimestamp()
       }, { merge: true });
@@ -640,7 +642,7 @@ export const TeacherToolbar: React.FC = () => {
       const curScore = currentStudents[studentId]?.score || 0;
       const newScore = Math.max(0, curScore + delta);
 
-      await updateDoc(doc(db, 'live_sessions', 'global'), {
+      await updateDoc(doc(db, 'live_sessions', sessionId!), {
         [`students.${studentId}.score`]: newScore,
         lastUpdate: serverTimestamp()
       });
@@ -742,7 +744,7 @@ export const TeacherToolbar: React.FC = () => {
     if (toolId === 'select') {
       setActiveTool(null);
       setShowSubMenu(null);
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', sessionId!), {
         activeTool: null,
         teacherId: user?.uid,
         lastUpdate: serverTimestamp()
@@ -757,7 +759,7 @@ export const TeacherToolbar: React.FC = () => {
       setShowSubMenu(null);
       window.dispatchEvent(new CustomEvent('qul_set_whiteboard_tool', { detail: { tool: newTool ? 'laser' : 'select' } }));
       try {
-        await setDoc(doc(db, 'live_sessions', 'global'), {
+        await setDoc(doc(db, 'live_sessions', sessionId!), {
           activeTool: newTool,
           teacherId: user?.uid,
           lastUpdate: serverTimestamp()
@@ -785,7 +787,7 @@ export const TeacherToolbar: React.FC = () => {
     }
 
     try {
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', sessionId!), {
         activeTool: newTool,
         teacherId: user?.uid,
         lastUpdate: serverTimestamp()
@@ -797,7 +799,7 @@ export const TeacherToolbar: React.FC = () => {
 
   const startTimer = async () => {
     try {
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', sessionId!), {
         timer: {
           endTime: Date.now() + (timerDuration * 1000),
           duration: timerDuration,
@@ -812,7 +814,7 @@ export const TeacherToolbar: React.FC = () => {
 
   const startPoll = async () => {
     try {
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', sessionId!), {
         poll: {
           question: pollQuestion,
           options: pollOptions,
@@ -830,7 +832,7 @@ export const TeacherToolbar: React.FC = () => {
     setIsGenerating(true);
     try {
       const exercise = await generateQuickExercise(wandContext);
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', sessionId!), {
         exercise: { ...exercise, isActive: true, timestamp: Date.now() },
         lastUpdate: serverTimestamp()
       }, { merge: true });
@@ -868,7 +870,7 @@ export const TeacherToolbar: React.FC = () => {
         mode: drawMode,
         timestamp: Date.now()
       }];
-      await updateDoc(doc(db, 'live_sessions', 'global'), {
+      await updateDoc(doc(db, 'live_sessions', sessionId!), {
         highlights: newHighlights,
         currentStroke: null
       });
@@ -909,7 +911,7 @@ export const TeacherToolbar: React.FC = () => {
             return !h.points.some((p: any) => Math.abs(p.x - x) < 3 && Math.abs(p.y - y) * (window.innerHeight/window.innerWidth) < 3);
           });
           if (remainingHighlights.length !== (sessionDataRef.current?.highlights || []).length) {
-            await updateDoc(doc(db, 'live_sessions', 'global'), { highlights: remainingHighlights });
+            await updateDoc(doc(db, 'live_sessions', sessionId!), { highlights: remainingHighlights });
           }
           return;
         }
@@ -928,13 +930,13 @@ export const TeacherToolbar: React.FC = () => {
             return !h.points.some((p: any) => Math.abs(p.x - x) < 3 && Math.abs(p.y - y) * (window.innerHeight/window.innerWidth) < 3);
           });
           if (remainingHighlights.length !== (sessionDataRef.current?.highlights || []).length) {
-            await updateDoc(doc(db, 'live_sessions', 'global'), { highlights: remainingHighlights });
+            await updateDoc(doc(db, 'live_sessions', sessionId!), { highlights: remainingHighlights });
           }
         } else {
           const newStroke = [...currentStrokeRef.current, {x, y}];
           setCurrentStroke(newStroke);
           if (newStroke.length % 5 === 0) {
-            await updateDoc(doc(db, 'live_sessions', 'global'), { 
+            await updateDoc(doc(db, 'live_sessions', sessionId!), { 
               currentStroke: { points: newStroke, color: highlightColorRef.current, width: drawMode === 'pen' ? 4 : highlightWidthRef.current, mode: drawMode }
             });
           }
@@ -1058,7 +1060,7 @@ export const TeacherToolbar: React.FC = () => {
   const shareFile = async () => {
     if (!fileData) return;
     try {
-      await setDoc(doc(db, 'live_sessions', 'global'), {
+      await setDoc(doc(db, 'live_sessions', sessionId!), {
         sharedFile: { url: fileData, isActive: true },
         lastUpdate: serverTimestamp()
       }, { merge: true });
