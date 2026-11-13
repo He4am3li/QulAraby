@@ -8,7 +8,7 @@ import { mkdir, writeFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const SOURCES = {
-  "egypt": "https://images.pexels.com/photos/15127306/pexels-photo-15127306/free-photo-of-pyramids-and-sphinx-statue-in-desert.jpeg?auto=compress&cs=tinysrgb&w=640",
+  "egypt": "https://commons.wikimedia.org/wiki/Special:FilePath/Golden_Hour_at_the_Base_of_the_Sphinx_and_Pyramids%2C_28.12.2022.jpg?width=960",
   "jordan": "https://commons.wikimedia.org/wiki/Special:FilePath/Petra_treasury.jpg?width=640",
   "lebanon": "https://commons.wikimedia.org/wiki/Special:FilePath/Pigeon_Rocks_of_Beirut%2C_Rock_of_Raouche%2C_Beirut%2C_Lebanon.jpg?width=640",
   "algeria": "https://commons.wikimedia.org/wiki/Special:FilePath/Makam_chahid.jpg?width=640",
