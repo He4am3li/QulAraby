@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { LiveSession } from '../types';
 import { useAuth } from './AuthProvider';
+import { useLiveClassroom } from './LiveClassroomContext';
 import { Timer as TimerIcon, BarChart3, X, CheckCircle2, AlertCircle, HelpCircle, Copy, Scissors, Clipboard, Layers, Lock, Unlock, Pencil, Trash2 } from 'lucide-react';
 
 const ContextMenu: React.FC<{
@@ -62,6 +63,7 @@ const ContextMenu: React.FC<{
 
 export const LiveInteractionLayer: React.FC = () => {
   const { user, profile, isAuthReady } = useAuth();
+  const { sessionId } = useLiveClassroom();
   const [session, setSession] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [exerciseAnswer, setExerciseAnswer] = useState<string | null>(null);
@@ -108,7 +110,7 @@ export const LiveInteractionLayer: React.FC = () => {
     setRedoStack(prev => [...prev, currentState]);
     setHistory(prev => prev.slice(0, -1));
 
-    await updateDoc(doc(db, 'live_sessions', 'global'), {
+    await updateDoc(doc(db, 'live_sessions', sessionId!), {
       ...prevState,
       lastUpdate: new Date()
     });
@@ -127,7 +129,7 @@ export const LiveInteractionLayer: React.FC = () => {
     setHistory(prev => [...prev, currentState]);
     setRedoStack(prev => prev.slice(0, -1));
 
-    await updateDoc(doc(db, 'live_sessions', 'global'), {
+    await updateDoc(doc(db, 'live_sessions', sessionId!), {
       ...nextState,
       lastUpdate: new Date()
     });
@@ -159,7 +161,7 @@ export const LiveInteractionLayer: React.FC = () => {
       updates[key] = updates[key].filter((el: any) => el.id !== sel.id);
     });
 
-    await updateDoc(doc(db, 'live_sessions', 'global'), updates);
+    await updateDoc(doc(db, 'live_sessions', sessionId!), updates);
     setSelectedElements([]);
   };
 
@@ -199,7 +201,7 @@ export const LiveInteractionLayer: React.FC = () => {
 
     const targetKey = clipboard.type === 'text' ? 'texts' : clipboard.type === 'sticky' ? 'stickyNotes' : clipboard.type === 'sticker' ? 'stickers' : 'highlights';
     
-    await updateDoc(doc(db, 'live_sessions', 'global'), { 
+    await updateDoc(doc(db, 'live_sessions', sessionId!), { 
       [targetKey]: [...(session[targetKey] || []), newElement] 
     });
   };
@@ -263,7 +265,7 @@ export const LiveInteractionLayer: React.FC = () => {
   useEffect(() => {
     if (!isAuthReady || !user) return;
 
-    const unsubscribe = onSnapshot(doc(db, 'live_sessions', 'global'), (doc) => {
+    const unsubscribe = onSnapshot(doc(db, 'live_sessions', sessionId!), (doc) => {
       if (doc.exists()) {
         setSession({ id: doc.id, ...doc.data() });
       }
@@ -272,13 +274,13 @@ export const LiveInteractionLayer: React.FC = () => {
       console.error("Session snapshot error:", error);
     });
     return () => unsubscribe();
-  }, [isAuthReady, user]);
+  }, [isAuthReady, user, sessionId]);
 
   const handleVote = async (optionIdx: number) => {
     if (!user || !session?.poll?.isActive) return;
     try {
       playSound('pop');
-      await updateDoc(doc(db, 'live_sessions', 'global'), {
+      await updateDoc(doc(db, 'live_sessions', sessionId!), {
         [`poll.votes.${user.uid}`]: {
           option: optionIdx,
           name: profile?.displayName || user.email?.split('@')[0] || 'Student',
@@ -296,7 +298,7 @@ export const LiveInteractionLayer: React.FC = () => {
     
     if (user && session?.exercise?.isActive) {
       try {
-        await updateDoc(doc(db, 'live_sessions', 'global'), {
+        await updateDoc(doc(db, 'live_sessions', sessionId!), {
           [`exercise.answers.${user.uid}`]: {
             answer,
             isCorrect: answer === session.exercise.correctAnswer,
@@ -339,7 +341,7 @@ export const LiveInteractionLayer: React.FC = () => {
       el.id === id ? { ...el, ...updates } : el
     );
     try {
-      await updateDoc(doc(db, 'live_sessions', 'global'), { [arrayKey]: updatedArray });
+      await updateDoc(doc(db, 'live_sessions', sessionId!), { [arrayKey]: updatedArray });
     } catch (err) {
       console.error("Error updating element:", err);
     }
@@ -374,7 +376,7 @@ export const LiveInteractionLayer: React.FC = () => {
         pushToHistory();
         setClipboard({ ...element, type });
         const filtered = (session[arrayKey] || []).filter((el: any) => el.id !== elementId);
-        await updateDoc(doc(db, 'live_sessions', 'global'), { [arrayKey]: filtered });
+        await updateDoc(doc(db, 'live_sessions', sessionId!), { [arrayKey]: filtered });
       } else if (action === 'duplicate') {
         pushToHistory();
         let newElement: any;
@@ -387,7 +389,7 @@ export const LiveInteractionLayer: React.FC = () => {
         } else {
           newElement = { ...element, id: generateLayerId(type || 'el'), x: (element.x || 0) + 2, y: (element.y || 0) + 2 };
         }
-        await updateDoc(doc(db, 'live_sessions', 'global'), { [arrayKey]: [...(session[arrayKey] || []), newElement] });
+        await updateDoc(doc(db, 'live_sessions', sessionId!), { [arrayKey]: [...(session[arrayKey] || []), newElement] });
       } else if (action === 'freeze') {
         await updateElement(type, elementId, { isFrozen: !element.isFrozen });
       } else if (action === 'edit') {
@@ -395,7 +397,7 @@ export const LiveInteractionLayer: React.FC = () => {
       } else if (action === 'delete') {
         pushToHistory();
         const filtered = (session[arrayKey] || []).filter((el: any) => el.id !== elementId);
-        await updateDoc(doc(db, 'live_sessions', 'global'), { [arrayKey]: filtered });
+        await updateDoc(doc(db, 'live_sessions', sessionId!), { [arrayKey]: filtered });
       }
     } catch (err) {
       console.error(`Error performing action ${action}:`, err);
@@ -410,7 +412,7 @@ export const LiveInteractionLayer: React.FC = () => {
     const arrayKey = type === 'text' ? 'texts' : type === 'sticky' ? 'stickyNotes' : type === 'sticker' ? 'stickers' : 'highlights';
     const filtered = (session[arrayKey] || []).filter((el: any) => el.id !== elementId);
     try {
-      await updateDoc(doc(db, 'live_sessions', 'global'), { [arrayKey]: filtered });
+      await updateDoc(doc(db, 'live_sessions', sessionId!), { [arrayKey]: filtered });
     } catch (err) {
       console.error("Error deleting element:", err);
     }
@@ -495,7 +497,7 @@ export const LiveInteractionLayer: React.FC = () => {
                 </span>
                 {profile?.role === 'teacher' && (
                   <button 
-                    onClick={() => updateDoc(doc(db, 'live_sessions', 'global'), { 'sharedFile.isActive': false })}
+                    onClick={() => updateDoc(doc(db, 'live_sessions', sessionId!), { 'sharedFile.isActive': false })}
                     className="px-3 py-1 bg-white/10 hover:bg-rose-500 text-white text-xs font-bold rounded-lg transition-all"
                   >
                     إنهاء العرض
@@ -876,7 +878,7 @@ export const LiveInteractionLayer: React.FC = () => {
                 </div>
                 {profile?.role === 'teacher' && (
                   <button 
-                    onClick={() => updateDoc(doc(db, 'live_sessions', 'global'), { 'poll.isActive': false })}
+                    onClick={() => updateDoc(doc(db, 'live_sessions', sessionId!), { 'poll.isActive': false })}
                     className="p-1.5 rounded-full bg-white/10 hover:bg-rose-500 text-white/90 hover:text-white transition-all shadow border border-white/10 flex items-center justify-center"
                     title="إغلاق التصويت"
                   >
@@ -969,7 +971,7 @@ export const LiveInteractionLayer: React.FC = () => {
                 </div>
                 {profile?.role === 'teacher' && (
                   <button 
-                    onClick={() => updateDoc(doc(db, 'live_sessions', 'global'), { 'exercise.isActive': false })}
+                    onClick={() => updateDoc(doc(db, 'live_sessions', sessionId!), { 'exercise.isActive': false })}
                     className="text-white/10 hover:text-white transition-colors"
                   >
                     <X size={16} />
