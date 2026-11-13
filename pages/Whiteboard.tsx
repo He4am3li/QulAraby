@@ -194,7 +194,7 @@ export const WhiteboardPage: React.FC = () => {
         const existing = students[work.studentId];
         students[work.studentId] = {
           id: work.studentId, name: work.studentName || existing?.name || 'طالب',
-          score: work.score ?? existing?.score ?? 0,
+          score: work.reviewed ? (work.score ?? 0) : (existing?.score ?? 0),
           isOnline: existing?.isOnline ?? false,
           handRaised: existing?.handRaised ?? false,
           lastActive: work.timestamp
