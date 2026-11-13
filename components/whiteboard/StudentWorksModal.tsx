@@ -145,7 +145,7 @@ export const StudentWorksModal: React.FC<StudentWorksModalProps> = ({
                         حفظ التقييم
                       </button>
                     </div>
-                  )
+                  )}
 
                   {sub.feedback && (
                     <div className="text-[11px] text-amber-300 font-bold bg-amber-500/10 p-1.5 rounded-lg border border-amber-500/20">
