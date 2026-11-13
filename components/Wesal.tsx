@@ -42,6 +42,7 @@ function when(time: number): string { return time ? new Date(time).toLocaleTimeS
 export function WesalProvider({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuth();
   const [open, setOpen] = React.useState(false);
+  const [panelTop, setPanelTop] = React.useState(14);
   const [tab, setTab] = React.useState<WesalTab>('chats');
   const [data, setData] = React.useState<WesalData>(EMPTY);
   const [search, setSearch] = React.useState('');
@@ -118,7 +119,31 @@ export function WesalProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('keydown', key);
   }, [open]);
 
-  const openWesal = React.useCallback(() => { setOpen(true); setError(''); }, []);
+  const measureTopBarBottom = React.useCallback(() => {
+    // Anchor the drawer to the actual header, even when QUL uses a different header on mobile.
+    const topBar = document.querySelector('.wesal-launch')?.closest('header');
+    if (!topBar) return 14;
+    const bottom = Math.round(topBar.getBoundingClientRect().bottom) + 2;
+    // Preserve enough room for usable conversations on unusually short viewports.
+    return Math.max(0, Math.min(bottom, Math.max(0, window.innerHeight - 280)));
+  }, []);
+
+  const openWesal = React.useCallback(() => {
+    setPanelTop(measureTopBarBottom());
+    setOpen(true);
+    setError('');
+  }, [measureTopBarBottom]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const updatePosition = () => setPanelTop(measureTopBarBottom());
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('orientationchange', updatePosition);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('orientationchange', updatePosition);
+    };
+  }, [open, measureTopBarBottom]);
   const leaveConversation = () => {
     setPeer(null); activePeer.current = null; activeThread.current = null;
     setThreadId(null); setMessages([]); setDraft(''); setError('');
@@ -184,7 +209,7 @@ export function WesalProvider({ children }: { children: React.ReactNode }) {
       {open && typeof document !== 'undefined' && createPortal(
         <>
           <div className="wesal-overlay" onClick={() => setOpen(false)} aria-hidden="true" />
-          <section className="wesal-panel" role="dialog" aria-modal="true" aria-label="وِصال، مراسلات قُل">
+          <section className="wesal-panel" style={{ top: panelTop }} role="dialog" aria-modal="true" aria-label="وِصال، مراسلات قُل">
             <header className="wesal-header">
               <div className="wesal-monogram" aria-hidden="true">و</div>
               <div className="wesal-name"><strong>وِصال</strong><span>QUL CONNECT</span></div>
