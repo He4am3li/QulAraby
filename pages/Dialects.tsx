@@ -2701,7 +2701,7 @@ export const Dialects: React.FC = () => {
                   </div>
 
                   {/* A compact teaching control rail continues the stage; no transcript box. */}
-                  <div className="h-[clamp(89px,12vh,102px)] min-h-0 shrink-0">
+                  <div className="h-[clamp(58px,8vh,70px)] min-h-0 shrink-0">
                     <DialectChatDock
                       lang={lang}
                       countryId={selectedCountry.id}
