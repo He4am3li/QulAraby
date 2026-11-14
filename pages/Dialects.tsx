@@ -1516,6 +1516,8 @@ export const Dialects: React.FC = () => {
   };
   const [chatInput, setChatInput] = React.useState('');
   const [isChatLoading, setIsChatLoading] = React.useState(false);
+  // Invalidates a pending typed tutor response when the onstage speaker changes.
+  const typedTurnVersionRef = React.useRef(0);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
   const [currentSpeechText, setCurrentSpeechText] = React.useState<string>('');
   const [isListening, setIsListening] = React.useState(false);
@@ -1675,7 +1677,9 @@ export const Dialects: React.FC = () => {
       setChatMessages([]);
     }
     // Switching destinations or languages cancels the previous tutor's
-    // pending speech and live session, including audio still being generated.
+    // pending speech, typed response and live session.
+    typedTurnVersionRef.current++;
+    setIsChatLoading(false);
     stopLiveConversation();
   }, [selectedCountry, lang, stopLiveConversation]);
 
@@ -1797,6 +1801,9 @@ export const Dialects: React.FC = () => {
     stopOneShotAudio();
     if (namedTutor) setSelectedPersona(namedTutor);
     const userMsg = input;
+    const typedTurnVersion = ++typedTurnVersionRef.current;
+    const typedTurnIsCurrent = () => typedTurnVersion === typedTurnVersionRef.current
+      && selectedCountryRef.current?.id === countryForTurn.id;
     if (!overrideInput) setChatInput('');
     setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     updateJourney(countryForTurn.id, { role: 'user', text: userMsg });
@@ -1866,6 +1873,9 @@ export const Dialects: React.FC = () => {
         ],
         config: { responseMimeType: 'application/json', temperature: 0.5 }
       });
+      // A delayed male answer must not arrive once the learner has moved
+      // to the female tutor (or the other way round).
+      if (!typedTurnIsCurrent()) return;
 
       let modelText = 'أعتذر، حدث خطأ ما.';
       let translationEn = '';
@@ -1883,9 +1893,9 @@ export const Dialects: React.FC = () => {
       void checkMissionCompletion(countryForTurn, rank);
       void playAudio(modelText, currentPersona);
     } catch (error) {
-      console.error("AI Chat Error:", error);
+      if (typedTurnIsCurrent()) console.error("AI Chat Error:", error);
     } finally {
-      setIsChatLoading(false);
+      if (typedTurnIsCurrent()) setIsChatLoading(false);
     }
   };
 
@@ -2647,6 +2657,9 @@ export const Dialects: React.FC = () => {
                             lang={lang}
                             onSelect={() => {
                               if (chosen) return;
+                              typedTurnVersionRef.current++;
+                              setIsChatLoading(false);
+                              stopOneShotAudio();
                               const continueLive = isLiveActiveRef.current || liveConnectingRef.current;
                               stopLiveConversation();
                               setSelectedPersona(char);
