@@ -17,6 +17,9 @@ const expected=[
   ['Crowd scene cleanup',/humanCrowd\?\.dispose\(\)/],
   ['LED signage for the game',/QUL  PENALTY  ELITE/],
   ['Textured pitch mowing lanes',/laneMaterial\.map=laneTexture/],
+  ['Licensed real crowd photograph',/images\\.unsplash\\.com\\/photo-1693517382976/],
+  ['Photographic crowd fallback',/crowdMuralMaterial\\.map=tex/],
+  ['Broadcast floodlight light banks',/const floodTexture=new THREE\\.CanvasTexture/],
   ['Colour contrasted from warm rim and cool floodlights',/const cinemaRim = new THREE\.DirectionalLight/],
   ['Soft stadium depth fog',/scene\.fog = new THREE\.FogExp2\(0x071e22, 0\.0039\)/]
 ];
@@ -25,4 +28,5 @@ assert.doesNotMatch(arena,/kitUV=vec2\(\.5\+qulGarmentPosition\.x\*44\./,'Legacy
 assert.match(game,/from-\[#020b18\]\/35/,'Avoid dark overlay that hides the new turf');
 assert.match(arena,/onReady\?\.\(\{rigged:true/,'Maintain rig readiness and do not show temporary mannequins');
 assert.match(arena,/catch\(crowdError\)/,'A spectator model error must not disable penalty gameplay');
+assert.match(game,/crowdPhoto=/,'Real crowd must start loading during team selection');
 console.log('QUL cinematic stadium: normal-orientation jersey lettering, filmic turf & lighting, GLB humanoid supporters PASS');
