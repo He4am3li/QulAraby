@@ -24,7 +24,7 @@ import { assessDialectMission, type MissionTurn } from '../services/dialectMissi
 import { getAI, getLiveAI, generateSpeech, decodeAudioData } from '../services/gemini';
 import { SpeechLipSync, analyzeSpeechBuffer, startLipSyncedSource } from '../services/speechLipSync.mjs';
 import { getTutorStageDirection, getTutorPartnerDirection } from '../services/tutorAttention.mjs';
-import { buildDialectTutorPolicy, inferLearnerLanguage } from '../services/dialectTutorPolicy';
+import { buildDialectTutorPolicy, getDialectTutorIdentity, inferLearnerLanguage } from '../services/dialectTutorPolicy';
 import { publishedVoice, useDialectVoiceProfiles } from '../services/dialectVoiceProfiles';
 import { getDialectLiveError } from '../services/dialectLiveErrors.mjs';
 
@@ -1543,50 +1543,6 @@ export const Dialects: React.FC = () => {
   const [mobileCountryPanel, setMobileCountryPanel] = React.useState<'stage' | 'reference'>('stage');
   const [tutorSuccess, setTutorSuccess] = React.useState<{ countryId: string; personaName: string; count: number } | null>(null);
 
-  const getTutorGreeting = (countryId: string, char: any, isFemale: boolean, language: 'ar' | 'en') => {
-    if (language === 'en') {
-      return `Hello! I'm ${char.nameEn}, your virtual tutor. Ask me anything in our dialect!`;
-    }
-    switch (countryId) {
-      case 'egypt':
-        return isFemale
-          ? `أهلاً وسهلاً بيك يا فنان! أنا مريم، إزيك النهاردة؟ جاهز نتكلم مصري؟`
-          : `يا هلا بيك يا باشا! أنا أحمد، منور مصر. عايز تتعلم إيه النهاردة؟`;
-      case 'saudi':
-        return isFemale
-          ? `يا هلا والله ومسهلا! أنا سارة، وش علومك اليوم؟ جاهز نتعلم لهجتنا؟`
-          : `حياك الله يا هلا! أنا سلمان، نورتنا والله، وش ودك نسولف فيه اليوم؟`;
-      case 'uae':
-        return isFemale
-          ? `يا مرحبا ومسهلا فيك! أنا ميثاء، شحالك وعساك بخير؟`
-          : `مرحبا الساع يا مرحبا! أنا زايد، يسعدني أسولف وياك بالرمسة الإماراتية.`;
-      case 'kuwait':
-        return isFemale
-          ? `يا هلا وغلا فيك! أنا دلال، شلونك وشخبارك؟ حياك الله.`
-          : `هلا بالحبيب! أنا عبدالله، شلونك اليوم؟ جاهز نسولف كويتي؟`;
-      case 'morocco':
-        return isFemale
-          ? `مرحبا بيك أ خويا! أنا فاطمة، كيداير لاباس عليك؟ كولشي مزيان؟`
-          : `أهلاً وسهلاً بيك! أنا يوسف، مرحبا بيك في المغرب، كيداير مع الصحة؟`;
-      case 'syria':
-        return isFemale
-          ? `أهلاً وسهلاً يا مية هلا! أنا شام، يسعد أوقاتك يا رب، شو بتحب نحكي اليوم؟`
-          : `يا مية أهلاً وسهلاً! أنا أوس، كيفك وشو أخبارك اليوم يا غالي؟`;
-      case 'iraq':
-        return isFemale
-          ? `كل الهلا بيك عيوني! أنا مريم، شلونك وأحوالك؟ مشتاقين.`
-          : `يا هلا بيك وكل الهلا! أنا علي، شلون صحتك وأحوالك؟ نورتنا.`;
-      case 'lebanon':
-        return isFemale
-          ? `هاي كيفك؟ أنا ياسمين، شو أخبارك اليوم؟ كتير مبسوطة إني عم احكي معك.`
-          : `أهلاً بالحبيب! أنا رامي، كيفك اليوم؟ شو عبالك نحكي؟`;
-      default:
-        return isFemale
-          ? `أهلاً وسهلاً بك! أنا ${char.nameAr}، يسعدني جداً أن أكون معلمتك الافتراضية للتحدث والتفاعل معك.`
-          : `مرحباً بك يا صديقي! أنا ${char.nameAr}، معلمك الافتراضي، جاهز للتحدث والتفاعل معك في أي وقت!`;
-    }
-  };
-
   const audioContextRef = React.useRef<AudioContext | null>(null);
   const lipSyncRef = React.useRef<SpeechLipSync | null>(null);
   if (!lipSyncRef.current) lipSyncRef.current = new SpeechLipSync();
@@ -1697,10 +1653,6 @@ export const Dialects: React.FC = () => {
     if (selectedCountry) {
       const defaultChar = selectedCountry.characterMale;
       setSelectedPersona(defaultChar);
-      const greetingText = lang === 'ar'
-        ? `مرحباً بك في ${selectedCountry.nameAr}! أنا ${defaultChar.nameAr}، يسعدني التحدث معك بلهجتنا.`
-        : `Welcome to ${selectedCountry.nameEn}! I'm ${defaultChar.nameEn}, happy to chat in our dialect.`;
-      // Greeting remains available as speech from the selected tutor, not as a duplicate chat tile.
       const previousJourney = learningJourneysRef.current[selectedCountry.id];
       setChatMessages(previousJourney?.turns || []);
       setLearningJourneys(previous => ({
@@ -1848,14 +1800,14 @@ export const Dialects: React.FC = () => {
       const journey = learningJourneysRef.current[countryForTurn.id];
       const priorTurns = journey?.turns || [];
       const returning = (journey?.visits || 0) > 1 && priorTurns.length > 0;
-      const countryPolicy = buildDialectTutorPolicy({ countryName: countryForTurn.nameEn, dialect: countryForTurn.dialect, tutorName: currentPersona.nameEn, history: priorTurns, learnerLanguage: inferLearnerLanguage(userMsg), culture: countryForTurn.culture, vocabulary: countryForTurn.vocab });
-      const systemPrompt = `LEARNER CONTINUITY: ${returning ? 'RETURNING LEARNER. Do not introduce yourself again. Continue from previous practice, briefly acknowledge their return, and offer the next small step.' : 'New learner: respond to their first question naturally, without assuming proficiency or forcing greetings.'}
+      const countryPolicy = buildDialectTutorPolicy({ ...getDialectTutorIdentity(countryForTurn, currentPersona), countryName: countryForTurn.nameEn, dialect: countryForTurn.dialect, history: priorTurns, learnerLanguage: inferLearnerLanguage(userMsg), culture: countryForTurn.culture, vocabulary: countryForTurn.vocab });
+      const systemPrompt = `LEARNER CONTINUITY: ${returning ? 'RETURNING LEARNER. Do not introduce yourself again. Continue the learner's previous topic without reintroducing yourself or unsolicited teaching prompts.' : 'New learner: respond to their first question naturally, without assuming proficiency or forcing greetings.'}
       Last practice: ${journey?.lastPracticed || 'not recorded'}.
       Recent learner history: ${JSON.stringify(priorTurns.slice(-12))}.
       LANGUAGE SELECTION IS AUTOMATIC AND MANDATORY: Determine the language of the student's CURRENT utterance, not the website UI or the chosen country. If the learner says Hi, Hello, How are you, or speaks primarily English, immediately respond in clear spoken ENGLISH, even if no explicit request for English was made. Briefly model ONE local Arabic expression with its English meaning. If the learner speaks primarily Arabic, reply in simple local Arabic, not English by default. If they stop, hesitate, say they do not understand, repeatedly give one-word responses, or explicitly switch to English, immediately provide English explanation without waiting for them to insist. Reassess language at EACH turn and allow switching back and forth. The tutor must never assume Arabic fluency after a memorized phrase.
-      LEARNER LEVEL: A single correct dialect greeting NEVER proves fluency. Treat prior known phrases as isolated knowledge. If they greet you in Arabic, answer naturally in the local dialect with ONE short phrase and its easy English meaning, then ask a very simple question. If they hesitate, switch immediately to supportive English, model one phrase and ask them to repeat it. Never shame the learner or restart the whole lesson. Match the language of their most recent message; English-language questions get English guidance with small Arabic examples.
+      LEARNER LEVEL: A single correct dialect greeting NEVER proves fluency. Treat prior known phrases as isolated knowledge. If they greet you in Arabic, answer naturally in the local dialect with ONE short phrase and its easy English meaning, without a compulsory follow-up question. If they hesitate, switch immediately to supportive English and offer one helpful phrase without demanding repetition. Never shame the learner or restart the whole lesson. Match the language of their most recent message; English-language questions get English guidance with small Arabic examples.
       DISTINGUISH PASSPORT STAMPS FROM LANGUAGE PROFICIENCY. The passport stage is not a CEFR grade; keep scaffolding even after earning stamps.
-      Teach one item per turn, check comprehension, and remember what was already practiced.
+      During requested practice, teach one item per turn, check comprehension only when necessary, and remember what was already practiced. Otherwise, answer the learner naturally without turning every topic into an exercise.
       You are ${currentPersona.nameEn} from ${selectedCountry.nameEn}, acting as a helpful and patient language teacher.
       Your FIRST goal is to let a complete beginner discover and practice the selected country's dialect. Only AFTER the learner understands and tries basic expressions should you naturally introduce the passport mission. Learning the dialect is the purpose; the mission is a motivating application, never the opening topic.
       
@@ -1869,15 +1821,15 @@ export const Dialects: React.FC = () => {
          - Detect when the learner asks in English, says "I don't understand", goes off track, or struggles repeatedly.
          - Understand the student's English fully. Do not punish a learner for using English to seek help.
          - Teach authentic, age-appropriate ${selectedCountry.dialect} phrases; allow a simple English explanation in dialectText when the learner needs English support. Provide an accurate translationEn for each Arabic example.
-         - When confused, explain the next step in plain English first, then model the simplest possible local Arabic expression and ask ONE manageable question.
-         - After English assistance, invite the learner to try the local Arabic phrase, without pretending the learner has completed the mission.
+         - When confused, explain in plain English first and model the simplest possible local Arabic expression. Ask a clarification only if their request is genuinely unclear.
+         - After English assistance, let the learner choose whether to try the local Arabic phrase; do not automatically append a practice invitation.
          - Do not give long lectures, complex expressions, or several questions at once. Do not promote to a travel mission merely because a fixed number of chat messages has been exchanged.
       4. VISITOR GUIDELINES (Rank 0):
          - Goal: visitor passport stamp. Greet someone appropriately and engage with the specific place/landmark in the mission.
-         - Use A1 vocabulary: one short instruction or question, no more than 10 simple Arabic words per sentence.
-         - Model a helpful answer if the student struggles; ask them to produce their own meaningful reply.
+         - Use A1 vocabulary with no more than 10 simple Arabic words per sentence, and avoid turning a greeting into a question by default.
+         - Model a helpful answer if the student struggles, then give them room to respond voluntarily unless they have explicitly chosen a practice exercise.
       5. RESIDENT GUIDELINES (Rank 1):
-         - Explain the NEW resident mission explicitly in very simple local dialect before asking the student to complete its practical scenario.
+         - Explain the resident mission in very simple local dialect only when the student chooses that challenge; do not interrupt their conversation with a mission prompt.
          - Do not assume the student is more proficient simply because they earned a visitor stamp. Scaffold in small steps with examples.
       6. ADVANCED GUIDELINES (Rank 2):
          - Explain the current mission and progressively build independent conversation without overwhelming the learner.
@@ -1888,8 +1840,9 @@ export const Dialects: React.FC = () => {
          - Use the selected country's dialect, not a generic Gulf or Modern Standard Arabic accent.
          - If a phrase varies across regions, prefer a common intelligible variant and avoid invented regional claims.
 
-      For a new learner, respond to their actual question first, without demanding introductions or a greeting exercise. Let them explore local food, customs, history, clothing or daily life whenever they wish. Introduce a mission only if the learner asks or is ready. If the learner switches from the other tutor, continue their last topic without reintroducing yourself.
-      OUTPUT: Return valid JSON with keys \"dialectText\" and \"translationEn\". For English-speaking beginners, dialectText can start with ONE short English reassurance/instruction followed by ONE local Arabic phrase; translationEn must explain the meaning of that phrase in plain English. For Arabic-ready students, dialectText contains simple local Arabic and translationEn is its accurate English translation. Do not translate the student message as if it were your reply.`;
+      For a new learner, respond to their actual question first, without demanding introductions or a greeting exercise. Let them explore local food, customs, history, clothing or daily life whenever they wish. Introduce a mission only if the learner asks or is ready. If the learner switches from the other tutor, continue their last topic without reintroducing yourself. If asked who is standing beside you, use their exact name from THE OTHER PERSON BESIDE YOU policy. Most turns should end with a natural statement, never a routine invitation or question.
+      CONVERSATION RHYTHM OVERRIDES EXERCISE PROMPTS: Reply directly and naturally. Do not append a routine question, ask what topic the learner wants next, or keep offering lessons. Ask one short question only when the learner requested practice or clarification is genuinely necessary. If asked about the person beside you, give the exact colleague name and describe them as your colleague, using the appropriate gender.
+       OUTPUT: Return valid JSON with keys \"dialectText\" and \"translationEn\". For English-speaking beginners, dialectText can start with ONE short English reassurance/instruction followed by ONE local Arabic phrase; translationEn must explain the meaning of that phrase in plain English. For Arabic-ready students, dialectText contains simple local Arabic and translationEn is its accurate English translation. Do not translate the student message as if it were your reply.`;
 
       const response = await ai.models.generateContent({
         model: "gemini-3.8-flash",
@@ -1973,7 +1926,7 @@ export const Dialects: React.FC = () => {
       const returningLearner = (journey?.visits || 0) > 1 && (journey?.turns?.length || 0) > 0;
       const recentContext = (journey?.turns || []).slice(-10).map(t => t.role + ': ' + t.text.slice(0, 180)).join(' | ');
       const liveProfile = publishedVoice(tutorVoices, country.id, persona.nameEn === country.characterFemale.nameEn ? 'female' : 'male');
-      const livePolicy = buildDialectTutorPolicy({ countryName: country.nameEn, dialect: country.dialect, tutorName: persona.nameEn, history: journey?.turns || [], learnerLanguage: inferLearnerLanguage((journey?.turns || []).filter(t => t.role === 'user').slice(-1)[0]?.text || '', 'en'), culture: country.culture, vocabulary: country.vocab });
+      const livePolicy = buildDialectTutorPolicy({ ...getDialectTutorIdentity(country, persona), countryName: country.nameEn, dialect: country.dialect, history: journey?.turns || [], learnerLanguage: inferLearnerLanguage((journey?.turns || []).filter(t => t.role === 'user').slice(-1)[0]?.text || '', 'en'), culture: country.culture, vocabulary: country.vocab });
       liveInputBufferRef.current = '';
       let liveTutorText = '';
       // Throttled progressive translation of live transcription snapshots.
@@ -2067,7 +2020,8 @@ export const Dialects: React.FC = () => {
           systemInstruction: livePolicy + '\nSpeaking delivery: ' + liveProfile.delivery + ', conversational, warm, and natural. Never change the local speaker identity when switching languages.\nCurrent optional practice mission (never rush or force it): ' + currentMission + '\n' +
             'A new audio session is NOT a new conversation. Continue the conversation in SHARED CHAT HISTORY even when the other tutor was speaking. ' +
             'Use only the active country dialect in Arabic, or intelligible English with the authentic local speaker accent when the student uses English. ' +
-            'Reply to the learner naturally, and never force a greeting exercise or move to the mission before learner readiness.',
+            'Reply to the learner naturally, and never force a greeting exercise or move to the mission before learner readiness. ' +
+             'The colleague is physically beside you. Give their exact name if asked, and do not finish replies with automatic questions or topic suggestions.',
         },
         callbacks: {
           onopen: () => {
