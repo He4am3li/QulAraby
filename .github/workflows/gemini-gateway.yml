@@ -6,6 +6,7 @@ on:
       - 'api/**'
       - 'services/gemini.ts'
       - 'services/dialectFlagOrbPalette.mjs'
+      - 'services/dialectOrbGlassIdentity.mjs'
       - 'components/DialectVoiceOrb.tsx'
       - 'components/DialectVoiceOrb.css'
       - 'components/DialectFlagGlassArt.tsx'
