@@ -488,7 +488,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
   return <main dir="rtl" className={'relative w-full h-full min-h-0 rounded-xl sm:rounded-3xl overflow-x-hidden overflow-y-auto overscroll-contain flex flex-col justify-between bg-[#07131f] text-white '+(screenShake?'scale-[1.008]':'')}>
     <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={attackingClub.primary} kit={stadiumKit} aimX={aimX} aimY={aimY} shotPower={shotPower} scored={shotScored} onStageReady={()=>setStadiumReady(true)}/>
     <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#020b18]/35 via-transparent to-[#051720]/60"/>
-    <header className="relative z-20 p-2 sm:p-3 md:p-5 w-full flex flex-col gap-2 sm:gap-3 items-center shrink-0">
+    <header className="relative z-20 p-2 sm:p-3 md:p-4 w-full flex flex-col gap-2 items-center shrink-0 pointer-events-none [&_button]:pointer-events-auto">
       <div className="flex items-center justify-between gap-2 w-full max-w-5xl">
         <button type="button" onClick={toggleSound} title={isMuted?'تشغيل الصوت':'كتم الصوت'} className={'p-2.5 text-amber-300 '+outStyle}>
           {isMuted?<VolumeX size={19}/>:<Volume2 size={19}/>}
@@ -517,11 +517,11 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
         <h2 className="mt-1 font-black text-base md:text-xl text-white leading-relaxed">{currentQuestion.prompt}</h2>
       </div>}
     </header>
-    <div className="relative z-20 w-full max-w-3xl mx-auto px-2 sm:px-3 md:px-6 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-7 flex flex-col items-center gap-2 sm:gap-3 shrink-0">
-      {status==='question'&&side==='home'&&<div className="w-full rounded-2xl border border-amber-300/35 bg-[#061824]/95 px-3 py-2.5 shadow-2xl backdrop-blur-xl">
+    <div className="relative z-20 w-full md:w-[min(405px,34vw)] md:mr-5 lg:mr-9 md:ml-auto px-2 sm:px-3 md:px-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-5 flex flex-col items-center gap-2 shrink-0">
+      {status==='question'&&side==='home'&&<div className="w-full rounded-2xl border border-amber-300/35 bg-[#061824]/88 px-3 py-2.5 shadow-2xl backdrop-blur-xl">
         <div className="flex items-center justify-between gap-3 mb-2"><strong className="text-xs sm:text-sm text-amber-200">وجّه الكرة وحدد قوة التصويب</strong><span className="text-[10px] text-slate-300">المكان والقوة من اختيارك</span></div>
-        <div className="flex flex-col sm:flex-row gap-3 items-center">
-          <div role="group" aria-label="مكان التصويب" className="relative w-full sm:w-48 h-[76px] sm:h-[92px] shrink-0 rounded-t-[45%] border-[3px] border-white/75 bg-gradient-to-b from-[#194837] to-[#0a2a22] shadow-[inset_0_0_25px_rgba(0,0,0,.7)] touch-none"
+        <div className="flex flex-col sm:flex-row md:flex-col gap-3 items-center">
+          <div role="group" aria-label="مكان التصويب" className="relative w-full sm:w-48 md:w-full h-[76px] sm:h-[92px] md:h-[72px] shrink-0 rounded-t-[45%] border-[3px] border-white/75 bg-gradient-to-b from-[#194837] to-[#0a2a22] shadow-[inset_0_0_25px_rgba(0,0,0,.7)] touch-none"
             onPointerDown={event=>{const rect=event.currentTarget.getBoundingClientRect();setAimX(Math.max(-1,Math.min(1,((event.clientX-rect.left)/rect.width)*2-1)));setAimY(Math.max(0,Math.min(1,1-(event.clientY-rect.top)/rect.height)));}}
             onPointerMove={event=>{if(event.buttons!==1)return;const rect=event.currentTarget.getBoundingClientRect();setAimX(Math.max(-1,Math.min(1,((event.clientX-rect.left)/rect.width)*2-1)));setAimY(Math.max(0,Math.min(1,1-(event.clientY-rect.top)/rect.height)));}}>
             <div className="absolute inset-x-0 top-1/3 border-t border-white/20"/>
@@ -536,9 +536,9 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
           </div>
         </div>
       </div>}
-      {status==='question'&&<div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+      {status==='question'&&<div className="w-full grid grid-cols-1 sm:grid-cols-3 md:grid-cols-1 gap-2">
         {currentQuestion.answers.map((option,index)=><button type="button" key={index} onClick={()=>answer(option)}
-          className="flex justify-between items-center gap-2 py-3.5 px-4 rounded-xl bg-[#071f2c]/95 border border-white/30 text-white hover:border-amber-300 hover:bg-[#193947] shadow-xl text-sm font-black transition-colors">
+          className="flex justify-between items-center gap-2 py-2.5 md:py-2 px-4 rounded-xl bg-[#071f2c]/95 border border-white/30 text-white hover:border-amber-300 hover:bg-[#193947] shadow-xl text-sm font-black transition-colors">
           <span className="text-right">{option.text}</span><span className="w-7 h-7 rounded-lg bg-amber-300/15 text-amber-300 border border-amber-300/30 grid place-items-center">{option.letter}</span>
         </button>)}
       </div>}
