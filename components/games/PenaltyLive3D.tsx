@@ -24,11 +24,13 @@ interface Props {
   kitColor?:string;
   kit?:Penalty3DKit;
   onStageReady?:()=>void;
+  stadiumBackdrop?:string;
 }
 interface Arena {
   setPhase:(p:ShotPhase,s:'left'|'right')=>void;
   setAim:(x:number,y:number,power:number)=>void;
   setOutcome:(scored:boolean)=>void;
+  setSkyBackdrop:(url:string)=>void;
   setKitColor:(color:string)=>void;
   setKit:(kit:Partial<Penalty3DKit>)=>void;
   dispose:()=>void;
@@ -38,7 +40,7 @@ interface Arena {
  * visible while GLTFLoader prepares the rigged footballers.
  */
 export const PenaltyLive3D:React.FC<Props>=({
- phase='idle',diveSide='left',className='',kitColor='#1366b2',kit,aimX=0,aimY=0.5,shotPower=0.75,scored=true,onStageReady
+ phase='idle',diveSide='left',className='',kitColor='#1366b2',kit,aimX=0,aimY=0.5,shotPower=0.75,scored=true,onStageReady,stadiumBackdrop=''
 })=>{
  const hostRef=useRef<HTMLDivElement>(null);
  const arenaRef=useRef<Arena|null>(null);
@@ -46,8 +48,8 @@ export const PenaltyLive3D:React.FC<Props>=({
  const [failed,setFailed]=useState(false);
  const readyCallback=useRef(onStageReady);
  readyCallback.current=onStageReady;
- const latest=useRef({phase,diveSide,kitColor,kit,aimX,aimY,shotPower,scored});
- latest.current={phase,diveSide,kitColor,kit,aimX,aimY,shotPower,scored};
+ const latest=useRef({phase,diveSide,kitColor,kit,aimX,aimY,shotPower,scored,stadiumBackdrop});
+ latest.current={phase,diveSide,kitColor,kit,aimX,aimY,shotPower,scored,stadiumBackdrop};
  useEffect(()=>{
    let cancelled=false;
    let stageAudioTimer:ReturnType<typeof setTimeout>|null=null;
@@ -76,11 +78,13 @@ export const PenaltyLive3D:React.FC<Props>=({
      else arena.setKitColor(latest.current.kitColor);
      arena.setAim(latest.current.aimX,latest.current.aimY,latest.current.shotPower);
      arena.setOutcome(latest.current.scored);
+     arena.setSkyBackdrop(latest.current.stadiumBackdrop);
      arena.setPhase(latest.current.phase,latest.current.diveSide);
    }).catch(reason=>{if(!cancelled){console.error('[PenaltyLive3D] Scene failed',reason);setFailed(true);}});
    return ()=>{cancelled=true;if(stageAudioTimer)clearTimeout(stageAudioTimer);arenaRef.current?.dispose();arenaRef.current=null;};
  },[]);
  useEffect(()=>arenaRef.current?.setOutcome(scored),[scored]);
+ useEffect(()=>{if(stadiumBackdrop)arenaRef.current?.setSkyBackdrop(stadiumBackdrop);},[stadiumBackdrop]);
  useEffect(()=>arenaRef.current?.setPhase(phase,diveSide),[phase,diveSide]);
  useEffect(()=>arenaRef.current?.setAim(aimX,aimY,shotPower),[aimX,aimY,shotPower]);
  useEffect(()=>{
