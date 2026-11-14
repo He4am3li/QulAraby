@@ -4,6 +4,23 @@
  * https://github.com/kendrekaran/striker-3d/tree/main/assets
  * Original rig is externally hosted by its public GitHub repository.
  */
+let warmedFootballer=null;
+/**
+ * Parse the rig while students choose teams; reuse the GLTF for striker, keeper
+ * and crowd instead of requesting and parsing it again after match entry.
+ */
+export function warmPenaltyAthlete(GLTFLoader){
+  if(!warmedFootballer){
+    warmedFootballer=new Promise((resolve,reject)=>{
+      const loader=new GLTFLoader();
+      loader.load('/penalty-models/player.glb',resolve,undefined,()=>{
+        loader.load('https://cdn.jsdelivr.net/gh/kendrekaran/striker-3d@main/assets/player.glb',resolve,undefined,reject);
+      });
+    }).catch(err=>{warmedFootballer=null;throw err;});
+  }
+  return warmedFootballer;
+}
+
 export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onReady, onError }) {
   if (!host) throw new Error('The 3D arena needs a host element');
   let disposed = false, frame = 0, last = 0;
@@ -687,8 +704,8 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   // No primitive mannequins are constructed or drawn.
   const MODEL_URL='/penalty-models/player.glb';
   const CDN_MODEL='https://cdn.jsdelivr.net/gh/kendrekaran/striker-3d@main/assets/player.glb';
-  function fetchAthlete(url,canRetry) {
-    new GLTFLoader().load(url, (gltf)=>{
+  function fetchAthlete() {
+    warmPenaltyAthlete(GLTFLoader).then((gltf)=>{
       if(disposed)return;
       const base=gltf.scene,skinnedBox=new THREE.Box3(),tmp=new THREE.Box3();
       base.updateMatrixWorld(true);
@@ -788,16 +805,13 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
         console.warn('[QUL Arena] detailed crowd unavailable, using distant stands',crowdError);
       }
       onReady?.({rigged:true, animations:gltf.animations.length});
-    },undefined,(err)=>{
-      if(canRetry){fetchAthlete(CDN_MODEL,false);return;}
+    }).catch((err)=>{
       // Do not show a primitive replacement when the licensed rig fails.
       onReady?.({rigged:false,animations:0});
       onError?.(err);
     });
   }
-  try{fetchAthlete(MODEL_URL,true);}catch(err){
-    try{fetchAthlete(CDN_MODEL,false);}catch(second){onReady?.({rigged:false,animations:0});onError?.(second);}
-  }
+  fetchAthlete();
 
   function setAction(a, actionName) {
     if(a.active===actionName)return;
