@@ -99,14 +99,12 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   const steel = material(0x8195a6, 0.55, 0.38);
   const grass = new THREE.Mesh(new THREE.PlaneGeometry(130, 110), turf);
   grass.rotation.x = -Math.PI/2; grass.receiveShadow = true; scene.add(grass);
-  // Actual individual 3D turf lanes, not an image/texture.
+  // Share one repeated grass albedo across all mowing stripes to avoid GPU uploads.
+  const laneTexture=turfTexture?.clone();
+  if(laneTexture){laneTexture.repeat.set(18,2);laneTexture.needsUpdate=true;}
   for (let i = 0; i < 17; i++) {
     const laneMaterial=material(i % 2 ? 0xa1c49d : 0x8eb58c, 0, .96);
-    if(turfTexture){
-      laneMaterial.map=turfTexture.clone();
-      laneMaterial.map.repeat.set(18,2);
-      laneMaterial.map.needsUpdate=true;
-    }
+    if(laneTexture)laneMaterial.map=laneTexture;
     const lane = new THREE.Mesh(new THREE.PlaneGeometry(94, 3.8),laneMaterial);
     lane.rotation.x = -Math.PI/2; lane.position.set(0, 0.008 + i*0.0001, -30 + i*3.8);
     lane.receiveShadow=true; scene.add(lane);
