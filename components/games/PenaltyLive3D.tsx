@@ -23,6 +23,7 @@ interface Props {
   aimX?:number;aimY?:number;shotPower?:number;scored?:boolean;
   kitColor?:string;
   kit?:Penalty3DKit;
+  onStageReady?:()=>void;
 }
 interface Arena {
   setPhase:(p:ShotPhase,s:'left'|'right')=>void;
@@ -37,12 +38,14 @@ interface Arena {
  * visible while GLTFLoader prepares the rigged footballers.
  */
 export const PenaltyLive3D:React.FC<Props>=({
- phase='idle',diveSide='left',className='',kitColor='#1366b2',kit,aimX=0,aimY=0.5,shotPower=0.75,scored=true
+ phase='idle',diveSide='left',className='',kitColor='#1366b2',kit,aimX=0,aimY=0.5,shotPower=0.75,scored=true,onStageReady
 })=>{
  const hostRef=useRef<HTMLDivElement>(null);
  const arenaRef=useRef<Arena|null>(null);
  const [ready,setReady]=useState(false);
  const [failed,setFailed]=useState(false);
+ const readyCallback=useRef(onStageReady);
+ readyCallback.current=onStageReady;
  const latest=useRef({phase,diveSide,kitColor,kit,aimX,aimY,shotPower,scored});
  latest.current={phase,diveSide,kitColor,kit,aimX,aimY,shotPower,scored};
  useEffect(()=>{
@@ -54,7 +57,7 @@ export const PenaltyLive3D:React.FC<Props>=({
        host:hostRef.current,THREE,GLTFLoader,SkeletonUtils,
        onReady:(status:{rigged:boolean})=>{
          if(cancelled)return;
-         if(status.rigged){setReady(true);setFailed(false);}
+         if(status.rigged){setReady(true);setFailed(false);readyCallback.current?.();}
          else{setFailed(true);setReady(false);}
        },
        onError:(reason:unknown)=>{

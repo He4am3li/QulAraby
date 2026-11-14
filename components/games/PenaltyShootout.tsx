@@ -329,6 +329,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
   const [aimY,setAimY]=useState(0.65);
   const [shotPower,setShotPower]=useState(0.75);
   const [shotScored,setShotScored]=useState(true);
+  const [stadiumReady,setStadiumReady]=useState(false);
   const soundRef=useRef<PenaltySoundEngine>(new PenaltySoundEngine());
   const timersRef=useRef<ReturnType<typeof setTimeout>[]>([]);
   const later=(fn:()=>void,delay:number)=>{
@@ -339,10 +340,10 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
     timersRef.current=[];
   };
   useEffect(()=>{
-    if(screen==='match')soundRef.current.startAmbience();
+    if(screen==='match'&&stadiumReady)soundRef.current.startAmbience();
     else soundRef.current.stopAmbience();
     return ()=>{soundRef.current.stopAmbience();};
-  },[screen]);
+  },[screen,stadiumReady]);
   useEffect(()=>()=>{cancelTimeline();soundRef.current.stopAmbience();},[]);
   const toggleSound=()=>{
     setIsMuted(prev=>{soundRef.current.setMuted(!prev);return !prev;});
@@ -352,8 +353,8 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
     setMatch({home,away,kickers});setHomeShots([]);setAwayShots([]);
     setWinner(null);setRound(0);setSide('home');setRivalScored(null);
     setAimX(0);setAimY(0.65);setShotPower(0.75);setShotScored(true);
+    setStadiumReady(false);
     setPhase('focus');setStatus('question');setScreen('match');
-    soundRef.current.playWhistle();soundRef.current.playCue('countdown');
   };
   const finish=(outcome:'home'|'away',home:boolean[])=>{
     cancelTimeline();setWinner(outcome);setScreen('victory');
@@ -485,7 +486,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
     </div>;
   }
   return <main dir="rtl" className={'relative w-full h-full min-h-0 rounded-xl sm:rounded-3xl overflow-x-hidden overflow-y-auto overscroll-contain flex flex-col justify-between bg-[#07131f] text-white '+(screenShake?'scale-[1.008]':'')}>
-    <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={attackingClub.primary} kit={stadiumKit} aimX={aimX} aimY={aimY} shotPower={shotPower} scored={shotScored}/>
+    <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={attackingClub.primary} kit={stadiumKit} aimX={aimX} aimY={aimY} shotPower={shotPower} scored={shotScored} onStageReady={()=>setStadiumReady(true)}/>
     <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#020b18]/35 via-transparent to-[#051720]/60"/>
     <header className="relative z-20 p-2 sm:p-3 md:p-5 w-full flex flex-col gap-2 sm:gap-3 items-center shrink-0">
       <div className="flex items-center justify-between gap-2 w-full max-w-5xl">
