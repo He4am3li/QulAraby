@@ -2001,6 +2001,7 @@ export const Dialects: React.FC = () => {
         if (!queue.busy) queue.timer = setTimeout(run, immediate ? 0 : 350);
       };
       let awaitingHandoffEcho = handoffUtterance?.trim() || '';
+      let addressedHandoffTimer: ReturnType<typeof setTimeout> | null = null;
       const flushLiveInput = (): boolean => {
         if (!stillCurrent()) return false;
         const speech = liveInputBufferRef.current.replace(/\s+/g, ' ').trim();
@@ -2083,6 +2084,32 @@ export const Dialects: React.FC = () => {
             const spokenText = message.serverContent?.inputTranscription?.text;
             if (typeof spokenText === 'string' && spokenText.trim()) {
               liveInputBufferRef.current += ' ' + spokenText.trim();
+            }
+            // Live input transcripts can stream in multiple chunks. Defer the
+            // handoff briefly to preserve the entire spoken question, but do
+            // not render any old-tutor speech after identifying a vocative.
+            const addressed = resolveAddressedDialectTutor(liveInputBufferRef.current, country);
+            const otherTutorIsAddressed = addressed === 'male'
+              ? persona.nameEn !== country.characterMale.nameEn
+              : addressed === 'female' ? persona.nameEn !== country.characterFemale.nameEn : false;
+            if (otherTutorIsAddressed) {
+              if (typeof spokenText === 'string' && spokenText.trim()) {
+                if (addressedHandoffTimer) clearTimeout(addressedHandoffTimer);
+                addressedHandoffTimer = setTimeout(() => {
+                  addressedHandoffTimer = null;
+                  if (stillCurrent()) flushLiveInput();
+                }, 180);
+              }
+              if (message.serverContent?.turnComplete) {
+                if (addressedHandoffTimer) clearTimeout(addressedHandoffTimer);
+                addressedHandoffTimer = null;
+                if (flushLiveInput()) return;
+              } else {
+                return; // Never play the previous tutor's response.
+              }
+            } else if (addressedHandoffTimer) {
+              clearTimeout(addressedHandoffTimer);
+              addressedHandoffTimer = null;
             }
             const tutorFragment = message.serverContent?.outputTranscription?.text;
             if (typeof tutorFragment === 'string' && tutorFragment.trim()) {
