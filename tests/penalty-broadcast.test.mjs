@@ -16,7 +16,7 @@ const expected=[
   ['Goal and missed-kick reaction',/humanCrowd\.update\(elapsed,crowdEmotion\)/],
   ['Crowd scene cleanup',/humanCrowd\?\.dispose\(\)/],
   ['LED signage for the game',/QUL  PENALTY  ELITE/],
-  ['Authentic saturated pitch lanes',/0x277b3b\s*:\s*0x1f7135/],
+  ['Textured pitch mowing lanes',/laneMaterial\.map=laneTexture/],
   ['Colour contrasted from warm rim and cool floodlights',/const cinemaRim = new THREE\.DirectionalLight/],
   ['Soft stadium depth fog',/scene\.fog = new THREE\.FogExp2\(0x071e22, 0\.0039\)/]
 ];
