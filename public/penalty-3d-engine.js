@@ -71,7 +71,29 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
 
   const material = (hex, metalness=0, roughness=0.78) =>
     new THREE.MeshStandardMaterial({color:hex, metalness, roughness});
-  const turf = material(0x176a32, 0, 0.91);
+  // Small deterministic grass-fibre albedo texture avoids large flat polygons.
+  const turfCanvas=document.createElement('canvas');
+  turfCanvas.width=256;turfCanvas.height=256;
+  const turfCtx=turfCanvas.getContext('2d');
+  let turfTexture=null;
+  if(turfCtx){
+    turfCtx.fillStyle='#205f30';turfCtx.fillRect(0,0,256,256);
+    let seed=41397;
+    const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)|0;return(seed>>>0)/4294967296;};
+    for(let i=0;i<12500;i++){
+      const x=rand()*256,y=rand()*256;
+      turfCtx.strokeStyle=rand()>.55?'rgba(100,159,77,.27)':'rgba(9,47,25,.30)';
+      turfCtx.lineWidth=.4+rand()*.7;
+      turfCtx.beginPath();turfCtx.moveTo(x,y);turfCtx.lineTo(x+(rand()-.5)*2,y+2+rand()*4);turfCtx.stroke();
+    }
+    turfTexture=new THREE.CanvasTexture(turfCanvas);
+    turfTexture.wrapS=turfTexture.wrapT=THREE.RepeatWrapping;
+    turfTexture.repeat.set(18,24);
+    turfTexture.colorSpace=THREE.SRGBColorSpace;
+    turfTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+  }
+  const turf = material(0xbed9b6, 0, 0.95);
+  if(turfTexture)turf.map=turfTexture;
   const white = material(0xeef4ef, 0.22, 0.34);
   const black = material(0x18232b, 0.1, 0.68);
   const steel = material(0x8195a6, 0.55, 0.38);
@@ -93,7 +115,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   ],3));
   turfBladeGeometry.computeVertexNormals();
   const turfBladeMaterial=new THREE.MeshLambertMaterial({color:0xffffff,side:THREE.DoubleSide});
-  const turfBladeCount=mobile?5200:14500;
+  const turfBladeCount=mobile?2400:6500;
   const turfBlades=new THREE.InstancedMesh(turfBladeGeometry,turfBladeMaterial,turfBladeCount);
   const grassDummy=new THREE.Object3D();
   const turfColor=new THREE.Color();
@@ -104,7 +126,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     const x=(turfRandom()-.5)*51,z=(turfRandom()-.5)*76;
     grassDummy.position.set(x,0.015,z);
     grassDummy.rotation.set((turfRandom()-.5)*.22,turfRandom()*Math.PI*2,(turfRandom()-.5)*.24);
-    grassDummy.scale.set(.38+turfRandom()*.35,.17+turfRandom()*.25,.38+turfRandom()*.35);
+    grassDummy.scale.set(.20+turfRandom()*.20,.12+turfRandom()*.18,.20+turfRandom()*.20);
     grassDummy.updateMatrix();
     turfBlades.setMatrixAt(i,grassDummy.matrix);
     turfColor.setHex(bladePalette[Math.floor(turfRandom()*bladePalette.length)]);
