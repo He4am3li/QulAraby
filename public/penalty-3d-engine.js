@@ -1001,6 +1001,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       actors.forEach(a=>a.mixer?.stopAllAction());
       shirtLettering.forEach(d=>d.texture.dispose());
       ledTexture.dispose();
+      turfTexture?.dispose();laneTexture?.dispose();
       humanCrowd?.dispose();
       scene.traverse(o=>{
         if(o.geometry && o.geometry.dispose)o.geometry.dispose();
