@@ -309,6 +309,32 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     sideStand.rotation.y=-side*Math.PI/2;
     scene.add(sideStand);
   }
+  // Stadium night-match light banks: visible diffusion, not just invisible lights.
+  const floodCanvas=document.createElement('canvas');
+  floodCanvas.width=floodCanvas.height=96;
+  const floodCtx=floodCanvas.getContext('2d');
+  if(floodCtx){
+    const glow=floodCtx.createRadialGradient(48,48,3,48,48,47);
+    glow.addColorStop(0,'rgba(255,255,255,1)');
+    glow.addColorStop(.14,'rgba(228,246,255,.85)');
+    glow.addColorStop(.42,'rgba(132,197,255,.22)');
+    glow.addColorStop(1,'rgba(95,161,245,0)');
+    floodCtx.fillStyle=glow;floodCtx.fillRect(0,0,96,96);
+  }
+  const floodTexture=new THREE.CanvasTexture(floodCanvas);
+  const lightBody=new THREE.MeshBasicMaterial({color:0xccecff,toneMapped:false});
+  const lightGlowMaterial=new THREE.SpriteMaterial({
+    map:floodTexture,color:0xd4f0ff,transparent:true,
+    blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true
+  });
+  for(const x of [-25,-20,-15,-10,-5,0,5,10,15,20,25]){
+    const lamp=new THREE.Mesh(new THREE.BoxGeometry(1.7,.24,.12),lightBody);
+    lamp.position.set(x,19.1,-26.8);
+    scene.add(lamp);
+    const halo=new THREE.Sprite(lightGlowMaterial);
+    halo.position.set(x,19.1,-26.5);halo.scale.set(5.4,3.8,1);
+    scene.add(halo);
+  }
   // The near stands reuse the locally bundled, rigged CC0 human model instead of
   // capsules or head-and-box silhouettes. Two animations are baked to instanced
   // *human geometry* once, leaving ordinary WebGL draw calls during gameplay.
@@ -1065,7 +1091,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       actors.forEach(a=>a.mixer?.stopAllAction());
       shirtLettering.forEach(d=>d.texture.dispose());
       ledTexture.dispose();
-      turfTexture?.dispose();laneTexture?.dispose();crowdMuralTexture.dispose();realCrowdTexture?.dispose();
+      turfTexture?.dispose();laneTexture?.dispose();crowdMuralTexture.dispose();realCrowdTexture?.dispose();floodTexture.dispose();
       humanCrowd?.dispose();
       scene.traverse(o=>{
         if(o.geometry && o.geometry.dispose)o.geometry.dispose();
