@@ -20,13 +20,14 @@ export interface Penalty3DKit {
 }
 interface Props {
   phase?:ShotPhase;diveSide?:'left'|'right';className?:string;
-  aimX?:number;aimY?:number;shotPower?:number;
+  aimX?:number;aimY?:number;shotPower?:number;scored?:boolean;
   kitColor?:string;
   kit?:Penalty3DKit;
 }
 interface Arena {
   setPhase:(p:ShotPhase,s:'left'|'right')=>void;
   setAim:(x:number,y:number,power:number)=>void;
+  setOutcome:(scored:boolean)=>void;
   setKitColor:(color:string)=>void;
   setKit:(kit:Partial<Penalty3DKit>)=>void;
   dispose:()=>void;
@@ -36,14 +37,14 @@ interface Arena {
  * visible while GLTFLoader prepares the rigged footballers.
  */
 export const PenaltyLive3D:React.FC<Props>=({
- phase='idle',diveSide='left',className='',kitColor='#1366b2',kit,aimX=0,aimY=0.5,shotPower=0.75
+ phase='idle',diveSide='left',className='',kitColor='#1366b2',kit,aimX=0,aimY=0.5,shotPower=0.75,scored=true
 })=>{
  const hostRef=useRef<HTMLDivElement>(null);
  const arenaRef=useRef<Arena|null>(null);
  const [ready,setReady]=useState(false);
  const [failed,setFailed]=useState(false);
- const latest=useRef({phase,diveSide,kitColor,kit,aimX,aimY,shotPower});
- latest.current={phase,diveSide,kitColor,kit,aimX,aimY,shotPower};
+ const latest=useRef({phase,diveSide,kitColor,kit,aimX,aimY,shotPower,scored});
+ latest.current={phase,diveSide,kitColor,kit,aimX,aimY,shotPower,scored};
  useEffect(()=>{
    let cancelled=false;
    const path='/penalty-3d-engine.js';
@@ -66,10 +67,12 @@ export const PenaltyLive3D:React.FC<Props>=({
      if(latest.current.kit)arena.setKit(latest.current.kit);
      else arena.setKitColor(latest.current.kitColor);
      arena.setAim(latest.current.aimX,latest.current.aimY,latest.current.shotPower);
+     arena.setOutcome(latest.current.scored);
      arena.setPhase(latest.current.phase,latest.current.diveSide);
    }).catch(reason=>{if(!cancelled){console.error('[PenaltyLive3D] Scene failed',reason);setFailed(true);}});
    return ()=>{cancelled=true;arenaRef.current?.dispose();arenaRef.current=null;};
  },[]);
+ useEffect(()=>arenaRef.current?.setOutcome(scored),[scored]);
  useEffect(()=>arenaRef.current?.setPhase(phase,diveSide),[phase,diveSide]);
  useEffect(()=>arenaRef.current?.setAim(aimX,aimY,shotPower),[aimX,aimY,shotPower]);
  useEffect(()=>{
