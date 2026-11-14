@@ -372,16 +372,18 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       if(tick===lastTick&&mode===lastMode)return;
       lastTick=tick;lastMode=mode;
       for(let v=0;v<variants.length;v++){
-        const visible=v===mode;
+        // A save or goal does not make all supporters perform the same animation.
+        const visible=cheering||v===0;
         for(const entry of variants[v])entry.mesh.visible=visible;
         if(!visible)continue;
         for(let i=0;i<supporters.length;i++){
           const p=supporters[i];
-          const personalCheer=cheering&&Math.sin(elapsed*2.4+p.phase)>-.55;
-           const bounce=personalCheer?(Math.sin(elapsed*(7.5+p.scale)+p.phase)*.5+.5)*.19:(Math.sin(elapsed*1.3+p.phase)*.5+.5)*.014;
+          const personalCheer=cheering&&Math.sin(elapsed*2.4+p.phase)>-.38;
+          const bounce=personalCheer?(Math.sin(elapsed*(7.5+p.scale)+p.phase)*.5+.5)*.17:(Math.sin(elapsed*1.3+p.phase)*.5+.5)*.014;
           scratch.position.set(p.x,p.y+bounce,p.z);
-          scratch.rotation.set(0,p.yaw,personalCheer?Math.sin(elapsed*4+p.phase)*.085:0);
-          scratch.scale.setScalar(p.scale);
+          scratch.rotation.set(0,p.yaw,personalCheer?Math.sin(elapsed*4+p.phase)*.09:0);
+          // Hide the non-selected pose of each individual without extra geometry.
+          scratch.scale.setScalar((personalCheer?1:0)===v?p.scale:0.00001);
           scratch.updateMatrix();
           for(const entry of variants[v])entry.mesh.setMatrixAt(i,scratch.matrix);
         }
