@@ -15,7 +15,7 @@ const normalize = value => String(value || '')
 
 const words = value => normalize(value).match(/[a-z]+|[\u0621-\u064a]+/g) || [];
 
-const callWords = new Set(['يا', 'hey', 'hi', 'hello', 'yo']);
+const callWords = new Set(['يا', 'ويا', 'hey', 'hi', 'hello', 'yo']);
 const replyCues = new Set([
   'انت', 'انتي', 'انتو', 'وانت', 'وانتي', 'رايك', 'ايه', 'وش', 'شو',
   'كيف', 'كيفك', 'اخبارك', 'شلونك', 'شخبارك', 'علومك', 'قولي', 'قول',
