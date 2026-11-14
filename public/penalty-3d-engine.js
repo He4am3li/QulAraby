@@ -208,7 +208,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   // *human geometry* once, leaving ordinary WebGL draw calls during gameplay.
   let humanCrowd=null;
   function installHumanCrowd(gltf){
-    const columns=mobile?25:40, rows=mobile?7:9;
+    const columns=mobile?27:48, rows=mobile?8:11;
     const supporters=[];
     let random=15262107;
     const jitter=()=>{random^=random<<13;random^=random>>>17;random^=random<<5;return(random>>>0)/4294967296;};
@@ -338,9 +338,10 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
         if(!visible)continue;
         for(let i=0;i<supporters.length;i++){
           const p=supporters[i];
-          const bounce=cheering?(Math.sin(elapsed*9.4+p.phase)*.5+.5)*.15:(Math.sin(elapsed*1.3+p.phase)*.5+.5)*.014;
+          const personalCheer=cheering&&Math.sin(elapsed*2.4+p.phase)>-.55;
+           const bounce=personalCheer?(Math.sin(elapsed*(7.5+p.scale)+p.phase)*.5+.5)*.19:(Math.sin(elapsed*1.3+p.phase)*.5+.5)*.014;
           scratch.position.set(p.x,p.y+bounce,p.z);
-          scratch.rotation.set(0,p.yaw,cheering?Math.sin(elapsed*3+p.phase)*.03:0);
+          scratch.rotation.set(0,p.yaw,personalCheer?Math.sin(elapsed*4+p.phase)*.085:0);
           scratch.scale.setScalar(p.scale);
           scratch.updateMatrix();
           for(const entry of variants[v])entry.mesh.setMatrixAt(i,scratch.matrix);
@@ -901,16 +902,16 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     else animateSupporters(elapsed,crowdEmotion);
     // Always a true perspective camera, lightly tracking the foot-to-ball action.
     camera.position.x=mix(camera.position.x,Math.sin(cameraYaw)*19.8,0.08);
-    camera.position.y=mix(camera.position.y,shot.phase==='focus'?2.8:shot.phase==='kick'?2.2:3.45,0.065);
-    const cinemaDistance=shot.phase==='focus'?14.4:shot.phase==='runup'?16.8:shot.phase==='kick'?14.1:18.1;
+    camera.position.y=mix(camera.position.y,shot.phase==='focus'?4.1:shot.phase==='kick'?3.55:4.2,0.065);
+    const cinemaDistance=shot.phase==='focus'?23.2:shot.phase==='runup'?23.8:shot.phase==='kick'?22.4:24.0;
     camera.position.z=mix(camera.position.z,Math.cos(cameraYaw)*cinemaDistance,0.07);
-    camera.lookAt(0,1.42,shot.phase==='focus'?3.7:shot.phase==='kick'?1.8:-0.3);
+    camera.lookAt(0,1.35,shot.phase==='focus'?4.25:shot.phase==='kick'?3.5:3.0);
   }
   function resize(){
     if(disposed)return;
     const w=Math.max(200,host.clientWidth||innerWidth),h=Math.max(180,host.clientHeight||innerHeight);
     camera.aspect=w/h;
-    camera.fov=w<620?63:52;
+    camera.fov=w<620?67:57;
     camera.updateProjectionMatrix();renderer.setSize(w,h,false);
   }
   let observer=null;
