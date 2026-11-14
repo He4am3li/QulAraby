@@ -50,6 +50,7 @@ export const PenaltyLive3D:React.FC<Props>=({
  latest.current={phase,diveSide,kitColor,kit,aimX,aimY,shotPower,scored};
  useEffect(()=>{
    let cancelled=false;
+   let stageAudioTimer:ReturnType<typeof setTimeout>|null=null;
    const path='/penalty-3d-engine.js';
    void import(/* @vite-ignore */ path).then(mod=>{
      if(cancelled||!hostRef.current)return;
@@ -57,7 +58,11 @@ export const PenaltyLive3D:React.FC<Props>=({
        host:hostRef.current,THREE,GLTFLoader,SkeletonUtils,
        onReady:(status:{rigged:boolean})=>{
          if(cancelled)return;
-         if(status.rigged){setReady(true);setFailed(false);readyCallback.current?.();}
+         if(status.rigged){
+           setReady(true);setFailed(false);
+           // Let the visual curtain clear before starting crowd sound.
+           stageAudioTimer=setTimeout(()=>{if(!cancelled)readyCallback.current?.();},370);
+         }
          else{setFailed(true);setReady(false);}
        },
        onError:(reason:unknown)=>{
@@ -73,7 +78,7 @@ export const PenaltyLive3D:React.FC<Props>=({
      arena.setOutcome(latest.current.scored);
      arena.setPhase(latest.current.phase,latest.current.diveSide);
    }).catch(reason=>{if(!cancelled){console.error('[PenaltyLive3D] Scene failed',reason);setFailed(true);}});
-   return ()=>{cancelled=true;arenaRef.current?.dispose();arenaRef.current=null;};
+   return ()=>{cancelled=true;if(stageAudioTimer)clearTimeout(stageAudioTimer);arenaRef.current?.dispose();arenaRef.current=null;};
  },[]);
  useEffect(()=>arenaRef.current?.setOutcome(scored),[scored]);
  useEffect(()=>arenaRef.current?.setPhase(phase,diveSide),[phase,diveSide]);
@@ -84,7 +89,7 @@ export const PenaltyLive3D:React.FC<Props>=({
  },[kit,kitColor]);
  return <div className={'absolute inset-0 overflow-hidden bg-[#071a20] '+className}>
    <div ref={hostRef} className="absolute inset-0" role="img" aria-label="ملعب ركلات ترجيح ثلاثي الأبعاد مع لاعب وحارس بملابس وأرقام الفريق المختار"/>
-   <div aria-live="polite" className={'pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-[radial-gradient(ellipse_at_center,#1b3441_0%,#071520_65%,#020910_100%)] transition-opacity duration-700 '+(ready?'opacity-0':'opacity-100')}>
+   <div aria-live="polite" className={'pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-[radial-gradient(ellipse_at_center,#1b3441_0%,#071520_65%,#020910_100%)] transition-opacity duration-300 '+(ready?'opacity-0':'opacity-100')}>
      <div className="flex flex-col items-center gap-4 text-center px-5">
        <div className={'h-14 w-14 rounded-full border border-[#eac982]/25 border-t-[#eac982] '+(!failed?'animate-spin':'')}/>
        <span className="text-xs tracking-[.24em] font-black text-[#eac982]" dir="ltr">QUL PENALTY ELITE</span>
