@@ -1,6 +1,7 @@
 /**
  * Restrained flag palettes for the 22 Arab-country dialect stages.
- * Flag colours are light sources INSIDE glass, not literal flag stripes.
+ * Flag colours drive the external glow. Actual national flag shapes are
+ * refracted through the same sphere by DialectFlagGlassArt.tsx.
  * Every country has an explicit identity; a neutral fallback guards future
  * new countries without introducing arbitrary Siri pink/blue accents.
  *

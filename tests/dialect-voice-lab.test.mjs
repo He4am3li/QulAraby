@@ -127,3 +127,28 @@ test('flag colour follows the chosen dialect stage without changing voice contro
   assert.match(css, /prefers-reduced-motion: reduce/);
   assert.doesNotMatch(css, /#e358f5|#00d9f4|#f27ac1/i, 'Do not retain default Siri neon accents');
 });
+
+
+test('national flag is integrated into curved glass rather than reduced to swirling colours', () => {
+  const orb = read('components/DialectVoiceOrb.tsx');
+  const flags = read('components/DialectFlagGlassArt.tsx');
+  const css = read('components/DialectVoiceOrb.css');
+  assert.match(orb, /<DialectFlagGlassArt countryId=\{countryId\}/);
+  assert.match(orb, /clipPath=\{'url\(#' \+ clipId \+ '\)'\}/);
+  assert.match(orb, /radialGradient id=\{edgeId\}/);
+  assert.doesNotMatch(orb, /dialect-orb__ribbon-[ab]/);
+  assert.doesNotMatch(flags, /<image\b|<img\b|flagcdn|twemoji/);
+  assert.match(css, /dialect-orb__flag-surface/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  const countries = [
+    'uae','egypt','saudi','palestine','syria','jordan','lebanon',
+    'iraq','libya','tunisia','morocco','algeria','oman','bahrain',
+    'qatar','kuwait','yemen','sudan','mauritania','somalia','comoros','djibouti'
+  ];
+  for (const id of countries) assert.ok(flags.includes("case '" + id + "':"), 'Missing exact flag geometry for ' + id);
+  // Symbols must remain visible where plain tricolour bands are ambiguous.
+  for (const emblem of ['Eagle','Cedar','Crescent','Star','fivePointOutline','OmaniEmblem']) {
+    assert.ok(flags.includes(emblem), 'Missing national-flag emblem ' + emblem);
+  }
+  assert.match(flags, /case 'syria':[\s\S]*?<Star x=\{32\}/);
+});

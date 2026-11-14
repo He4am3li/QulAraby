@@ -65,10 +65,9 @@
   border-radius: 50%;
   border: 1px solid rgba(216,230,255,.85);
   background:
-    radial-gradient(circle at 35% 16%, color-mix(in srgb, var(--orb-accent) 34%, transparent), transparent 29%),
-    radial-gradient(ellipse at 85% 32%, color-mix(in srgb, var(--orb-primary) 54%, transparent), transparent 38%),
-    radial-gradient(ellipse at 36% 86%, color-mix(in srgb, var(--orb-secondary) 48%, transparent), transparent 42%),
-    radial-gradient(ellipse at 48% 60%, var(--orb-core) 22%, color-mix(in srgb, var(--orb-primary) 22%, var(--orb-core)) 74%, var(--orb-primary) 100%);
+    radial-gradient(circle at 30% 18%, rgba(255,255,255,.48), transparent 36%),
+    radial-gradient(circle at 51% 43%, rgba(230,250,255,.2), transparent 61%),
+    radial-gradient(circle at 50% 50%, #D8F0F4 15%, var(--orb-core) 100%);
   box-shadow:
     inset 0 1.5px 3px rgba(255,255,255,.78),
     inset 0 -8px 12px rgba(15,13,67,.38),
@@ -80,11 +79,13 @@
   position: absolute;
   inset: -6%;
   border-radius: 50%;
+  z-index: 2;
   background:
-    radial-gradient(ellipse at 20% 46%, color-mix(in srgb, var(--orb-secondary) 53%, transparent), transparent 37%),
-    radial-gradient(ellipse at 74% 51%, color-mix(in srgb, var(--orb-primary) 52%, transparent), transparent 39%),
-    radial-gradient(ellipse at 51% 89%, color-mix(in srgb, var(--orb-accent) 40%, transparent), transparent 48%);
+    radial-gradient(ellipse at 19% 23%, rgba(255,255,255,.31), transparent 31%),
+    radial-gradient(ellipse at 79% 85%, color-mix(in srgb, var(--orb-accent) 20%, transparent), transparent 48%);
+  opacity: .85;
   mix-blend-mode: screen;
+  pointer-events: none;
 }
 .dialect-orb__waves {
   position: absolute;
@@ -92,29 +93,28 @@
   width: 100%;
   height: 100%;
   overflow: visible;
-  opacity: var(--orb-energy);
-  filter: saturate(1.16);
+  z-index: 1;
+  opacity: .98;
+  filter: saturate(1.05);
   transition: opacity .3s ease;
 }
-.dialect-orb__ribbon-a {
+.dialect-orb__flag-surface {
   transform-origin: 50% 50%;
-  animation: dialect-orb-shift-a 7.4s ease-in-out infinite alternate;
-}
-.dialect-orb__ribbon-b {
-  transform-origin: 50% 50%;
-  animation: dialect-orb-shift-b 8.1s ease-in-out infinite alternate;
+  transform: scale(1.02);
 }
 .dialect-orb__luster {
   position: absolute;
   inset: 0;
   border-radius: inherit;
+  z-index: 3;
   background:
-    radial-gradient(ellipse at 26% 14%, rgba(255,255,255,.65), transparent 24%),
-    linear-gradient(135deg, rgba(255,255,255,.26) 0%, transparent 31%, rgba(255,255,255,.04) 52%, transparent 75%);
+    radial-gradient(ellipse at 28% 11%, rgba(255,255,255,.58), transparent 27%),
+    linear-gradient(135deg, rgba(255,255,255,.21) 0%, transparent 35%, rgba(255,255,255,.03) 57%, transparent 76%);
   box-shadow: inset 0 3px 4px rgba(255,255,255,.29);
   pointer-events: none;
 }
 .dialect-orb__contour {
+  z-index: 4;
   position: absolute;
   inset: 1px;
   border-radius: inherit;
@@ -138,11 +138,9 @@
   opacity: 1;
   animation: dialect-orb-breathe 1.05s ease-in-out infinite;
 }
-.dialect-orb[data-phase="speaking"] .dialect-orb__ribbon-a {
-  animation-duration: 2.25s;
-}
-.dialect-orb[data-phase="speaking"] .dialect-orb__ribbon-b {
-  animation-duration: 2.7s;
+.dialect-orb[data-phase="speaking"] .dialect-orb__flag-surface,
+.dialect-orb[data-phase="listening"] .dialect-orb__flag-surface {
+  animation: dialect-orb-flag-refraction 2.8s ease-in-out infinite alternate;
 }
 .dialect-orb[data-phase="loading"] { --orb-energy: .91; }
 .dialect-orb[data-phase="loading"] .dialect-orb__aura {
@@ -157,17 +155,13 @@
   from { transform: rotate(0deg) scale(1.05); }
   to { transform: rotate(360deg) scale(1.05); }
 }
-@keyframes dialect-orb-shift-a {
-  from { transform: rotate(-8deg) translate(-3px, 0); }
-  to { transform: rotate(9deg) translate(3px, -3px); }
-}
-@keyframes dialect-orb-shift-b {
-  from { transform: rotate(7deg) translate(2px, 2px); }
-  to { transform: rotate(-9deg) translate(-3px, 1px); }
+@keyframes dialect-orb-flag-refraction {
+  from { transform: translateX(-.65px) scale(1.025); }
+  to { transform: translateX(.65px) scale(1.025); }
 }
 @media (prefers-reduced-motion: reduce) {
   .dialect-orb, .dialect-orb__aura, .dialect-orb__waves,
-  .dialect-orb__ribbon-a, .dialect-orb__ribbon-b {
+  .dialect-orb__flag-surface {
     animation: none !important;
     transition: none !important;
   }
