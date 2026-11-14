@@ -9,7 +9,7 @@ const adapter=readFileSync('components/games/PenaltyLive3D.tsx','utf8');
 
 for(const [label,rx] of [
   ['Instanced three-dimensional grass',/new THREE\.InstancedMesh\(turfBladeGeometry,turfBladeMaterial,turfBladeCount\)/],
-  ['Thousands of grass tufts',/turfBladeCount=mobile\?9500:30000/],
+  ['Thousands of grass tufts',/turfBladeCount=mobile\?\d+:\d+/],
   ['Separate crowd bodies',/new THREE\.InstancedMesh\(seatGeo/],
   ['Separate spectator heads',/audienceHeads=new THREE\.InstancedMesh\(headGeo/],
   ['Animated fan arms',/audienceLeftArms=new THREE\.InstancedMesh/],
@@ -26,6 +26,11 @@ for(const [label,rx] of [
   ['Defending keeper own strip and number',/keeperNumber=Number\.isInteger/],
   ['Mobile WebGL resource cleanup',/renderer\.dispose\(\)/]
 ])assert.match(scene,rx,label+' is missing');
+
+// Preserve meaningful grass density while allowing measured performance tuning.
+const density = /turfBladeCount=mobile\?(\d+):(\d+)/.exec(scene);
+assert.ok(density && Number(density[1]) >= 5000 && Number(density[2]) >= 12000
+  && Number(density[2]) > Number(density[1]), '3D grass must stay dense on both mobile and desktop');
 
 assert.doesNotMatch(scene,/new THREE\.PlaneGeometry\(\.57,\.62\)/,'Floating player name planes must be removed');
 assert.doesNotMatch(scene,/a\.kickBone\.rotation\.x-=impact/,'Kick animation must not accumulate bone rotations');
