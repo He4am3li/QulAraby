@@ -337,6 +337,15 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
       const link=document.createElement('link');link.rel='preload';link.as='fetch';link.crossOrigin='anonymous';link.href=href;
       link.dataset.penaltyAthlete='true';document.head.appendChild(link);
     }
+    // Prefetch the licensed real crowd photograph on the selection screen.
+    // Background stands use the procedural fallback when the CDN is unavailable.
+    const crowdPhoto='https://images.unsplash.com/photo-1693517382976-20ef824a9c7c?auto=format&fit=crop&w=2048&q=80';
+    if(!document.querySelector('link[data-penalty-real-crowd]')){
+      const crowdLink=document.createElement('link');
+      crowdLink.rel='preload';crowdLink.as='image';crowdLink.crossOrigin='anonymous';
+      crowdLink.href=crowdPhoto;crowdLink.dataset.penaltyRealCrowd='true';
+      document.head.appendChild(crowdLink);
+    }
     const arenaModulePath='/penalty-3d-engine.js';
     void import(/* @vite-ignore */ arenaModulePath)
       .then(mod=>mod.warmPenaltyAthlete(GLTFLoader))
