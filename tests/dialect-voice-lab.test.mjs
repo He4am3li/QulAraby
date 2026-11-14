@@ -119,7 +119,7 @@ test('flag colour follows the chosen dialect stage without changing voice contro
   assert.match(orb, /getDialectFlagOrbPalette\(countryId\)/);
   assert.match(orb, /data-country=\{countryId\}/);
   assert.match(orb, /'--orb-primary': palette\.primary/);
-  assert.match(orb, /stopColor=\{palette\.secondary\}/);
+  assert.match(orb, /<DialectFlagGlassArt countryId=\{countryId\}/, 'Actual flag geometry must be part of the glass sphere');
   assert.match(orb, /onClick=\{onToggle\}/);
   assert.match(orb, /aria-busy=\{connecting\}/);
   assert.match(orb, /disabled=\{disabled\}/);
