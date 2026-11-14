@@ -63,15 +63,15 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   const lamp2 = new THREE.DirectionalLight(0x5bbefd, 2.25);
   lamp2.position.set(18, 25, -18); scene.add(lamp2);
   // The rear amber key light contrasts with the cool broadcast floodlights.
-  const cinemaRim = new THREE.DirectionalLight(0xffd492,1.45);
+  const cinemaRim = new THREE.DirectionalLight(0xffd492,2.1);
   cinemaRim.position.set(4,15,-16);scene.add(cinemaRim);
   // Give dark, muted scenes a touch of warm stadium light without flattening skin tones.
-  const fieldFill = new THREE.DirectionalLight(0xe5ffdf,.62);
+  const fieldFill = new THREE.DirectionalLight(0xe5ffdf,.85);
   fieldFill.position.set(0,18,7);scene.add(fieldFill);
 
   const material = (hex, metalness=0, roughness=0.78) =>
     new THREE.MeshStandardMaterial({color:hex, metalness, roughness});
-  const turf = material(0x21753a, 0, 0.97);
+  const turf = material(0x176a32, 0, 0.91);
   const white = material(0xeef4ef, 0.22, 0.34);
   const black = material(0x18232b, 0.1, 0.68);
   const steel = material(0x8195a6, 0.55, 0.38);
@@ -900,9 +900,9 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     // Always a true perspective camera, lightly tracking the foot-to-ball action.
     camera.position.x=mix(camera.position.x,Math.sin(cameraYaw)*19.8,0.08);
     camera.position.y=mix(camera.position.y,shot.phase==='focus'?2.8:shot.phase==='kick'?2.2:3.45,0.065);
-    const cinemaDistance=shot.phase==='focus'?15.0:shot.phase==='runup'?17.7:shot.phase==='kick'?14.8:19.1;
+    const cinemaDistance=shot.phase==='focus'?14.4:shot.phase==='runup'?16.8:shot.phase==='kick'?14.1:18.1;
     camera.position.z=mix(camera.position.z,Math.cos(cameraYaw)*cinemaDistance,0.07);
-    camera.lookAt(0,1.42,shot.phase==='focus'?4.3:shot.phase==='kick'?2.2:-0.3);
+    camera.lookAt(0,1.42,shot.phase==='focus'?3.7:shot.phase==='kick'?1.8:-0.3);
   }
   function resize(){
     if(disposed)return;
