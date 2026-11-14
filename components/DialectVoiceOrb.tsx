@@ -1,6 +1,7 @@
 import React from 'react';
 import './DialectVoiceOrb.css';
 import { getDialectFlagOrbPalette } from '../services/dialectFlagOrbPalette.mjs';
+import { DialectFlagGlassArt } from './DialectFlagGlassArt';
 
 interface Props {
   countryId: string;
@@ -30,9 +31,8 @@ export const DialectVoiceOrb: React.FC<Props> = ({
   const palette = getDialectFlagOrbPalette(countryId);
   const uniqueId = React.useId().replace(/:/g, '');
   const clipId = `qul-voice-clip-${uniqueId}`;
-  const warmId = `qul-voice-warm-${uniqueId}`;
-  const coolId = `qul-voice-cool-${uniqueId}`;
-  const sheenId = `qul-voice-sheen-${uniqueId}`;
+  const lensId = `qul-voice-lens-${uniqueId}`;
+  const edgeId = `qul-voice-edge-${uniqueId}`;
 
   const phase: OrbPhase = connecting ? 'connecting'
     : speaking ? 'speaking'
@@ -77,50 +77,32 @@ export const DialectVoiceOrb: React.FC<Props> = ({
         <span className="dialect-orb__atmosphere" />
         <svg className="dialect-orb__waves" viewBox="0 0 100 100" focusable="false">
           <defs>
-            <clipPath id={clipId}><circle cx="50" cy="50" r="48" /></clipPath>
-            <linearGradient id={warmId} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor={palette.accent} />
-              <stop offset="22%" stopColor={palette.secondary} />
-              <stop offset="50%" stopColor={palette.primary} />
-              <stop offset="78%" stopColor={palette.secondary} />
-              <stop offset="100%" stopColor={palette.accent} />
+            <clipPath id={clipId}><circle cx="50" cy="50" r="48.2" /></clipPath>
+            <linearGradient id={lensId} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity=".39"/>
+              <stop offset="24%" stopColor="#FFFFFF" stopOpacity=".03"/>
+              <stop offset="62%" stopColor="#FFFFFF" stopOpacity="0"/>
+              <stop offset="100%" stopColor="#D3F4FF" stopOpacity=".17"/>
             </linearGradient>
-            <linearGradient id={coolId} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor={palette.primary} />
-              <stop offset="31%" stopColor={palette.accent} />
-              <stop offset="67%" stopColor={palette.secondary} />
-              <stop offset="100%" stopColor={palette.primary} />
-            </linearGradient>
-            <linearGradient id={sheenId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity=".88" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-            </linearGradient>
+            <radialGradient id={edgeId} cx="46%" cy="43%" r="68%">
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0"/>
+              <stop offset="53%" stopColor="#DDF5FF" stopOpacity="0"/>
+              <stop offset="78%" stopColor="#123246" stopOpacity=".13"/>
+              <stop offset="100%" stopColor="#081824" stopOpacity=".68"/>
+            </radialGradient>
           </defs>
-          <g clipPath={`url(#${clipId})`}>
-            <g className="dialect-orb__ribbon-a">
-              <path
-                d="M-14 67 C16 56 19 21 43 26 C67 31 78 75 114 33"
-                fill="none" stroke={`url(#${warmId})`} strokeWidth="24"
-                strokeLinecap="round" opacity=".89"
-              />
-              <path
-                d="M-12 54 C18 44 23 14 46 24 C69 35 81 73 112 29"
-                fill="none" stroke={`url(#${sheenId})`} strokeWidth="1.8"
-                strokeLinecap="round" opacity=".85"
-              />
+          <g clipPath={'url(#' + clipId + ')'}>
+            {/* The flag IS the optical surface, never a rectangular badge. */}
+            <g className="dialect-orb__flag-surface">
+              <DialectFlagGlassArt countryId={countryId} />
             </g>
-            <g className="dialect-orb__ribbon-b">
-              <path
-                d="M-14 39 C15 58 24 90 50 77 C76 64 80 24 114 44"
-                fill="none" stroke={`url(#${coolId})`} strokeWidth="22"
-                strokeLinecap="round" opacity=".86"
-              />
-              <path
-                d="M-12 30 C17 48 26 81 52 68 C78 53 87 16 114 36"
-                fill="none" stroke={palette.accent} strokeWidth="1.6"
-                strokeLinecap="round" opacity=".75"
-              />
-            </g>
+            {/* Refraction follows the curved glass boundary, not the flag edges. */}
+            <circle cx="50" cy="50" r="49" fill={'url(#' + edgeId + ')'} />
+            <circle cx="50" cy="50" r="49" fill={'url(#' + lensId + ')'} />
+            <path d="M8 39 C15 15 37 5 55 8"
+              fill="none" stroke="#FFFFFF" strokeWidth="2.7" strokeLinecap="round" opacity=".5"/>
+            <path d="M89 46 C96 60 90 78 78 88"
+              fill="none" stroke="#E2FAFF" strokeWidth="1.9" strokeLinecap="round" opacity=".33"/>
           </g>
         </svg>
         <span className="dialect-orb__luster" />

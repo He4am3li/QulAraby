@@ -5,6 +5,11 @@ on:
     paths:
       - 'api/**'
       - 'services/gemini.ts'
+      - 'services/dialectFlagOrbPalette.mjs'
+      - 'components/DialectVoiceOrb.tsx'
+      - 'components/DialectVoiceOrb.css'
+      - 'components/DialectFlagGlassArt.tsx'
+      - 'tests/dialect-voice-lab.test.mjs'
       - 'pages/Dialects.tsx'
       - 'pages/Speak.tsx'
       - 'pages/Preparation.tsx'
