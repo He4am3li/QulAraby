@@ -329,6 +329,15 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
   const [aimY,setAimY]=useState(0.65);
   const [shotPower,setShotPower]=useState(0.75);
   const [shotScored,setShotScored]=useState(true);
+  useEffect(()=>{
+    // Begin downloading the athlete before the player enters the stadium.
+    const href='/penalty-models/player.glb';
+    if(!document.querySelector('link[data-penalty-athlete]')){
+      const link=document.createElement('link');link.rel='preload';link.as='fetch';link.crossOrigin='anonymous';link.href=href;
+      link.dataset.penaltyAthlete='true';document.head.appendChild(link);
+    }
+    void import(/* @vite-ignore */ '/penalty-3d-engine.js').catch(()=>{});
+  },[]);
   const [stadiumReady,setStadiumReady]=useState(false);
   const soundRef=useRef<PenaltySoundEngine>(new PenaltySoundEngine());
   const timersRef=useRef<ReturnType<typeof setTimeout>[]>([]);
