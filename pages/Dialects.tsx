@@ -25,6 +25,7 @@ import { getAI, getLiveAI, generateSpeech, decodeAudioData } from '../services/g
 import { SpeechLipSync, analyzeSpeechBuffer, startLipSyncedSource } from '../services/speechLipSync.mjs';
 import { getTutorStageDirection, getTutorPartnerDirection } from '../services/tutorAttention.mjs';
 import { buildDialectTutorPolicy, getDialectTutorIdentity, inferLearnerLanguage } from '../services/dialectTutorPolicy';
+import { resolveAddressedDialectTutor } from '../services/dialectSpeakerRouter.mjs';
 import { publishedVoice, useDialectVoiceProfiles } from '../services/dialectVoiceProfiles';
 import { getDialectLiveError } from '../services/dialectLiveErrors.mjs';
 
@@ -1777,13 +1778,19 @@ export const Dialects: React.FC = () => {
     const input = overrideInput || chatInput;
     if (!input.trim() || isChatLoading) return;
     
-    const currentPersona = persona || selectedPersona;
+    const countryForTurn = selectedCountryRef.current;
+    if (!countryForTurn) return;
+    // Direct name-based address overrides the currently selected speaker.
+    const namedGender = resolveAddressedDialectTutor(input, countryForTurn);
+    const namedTutor = namedGender === 'male' ? countryForTurn.characterMale
+      : namedGender === 'female' ? countryForTurn.characterFemale : null;
+    const currentPersona = namedTutor || persona || selectedPersona;
     if (!currentPersona) return;
 
     if (isLiveActiveRef.current || liveConnectingRef.current) stopLiveConversation();
     stopOneShotAudio();
+    if (namedTutor) setSelectedPersona(namedTutor);
     const userMsg = input;
-    const countryForTurn = selectedCountry;
     if (!overrideInput) setChatInput('');
     setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     updateJourney(countryForTurn.id, { role: 'user', text: userMsg });
@@ -1868,7 +1875,7 @@ export const Dialects: React.FC = () => {
       captureMissionTurn(countryForTurn.id, { role: 'model', text: modelText });
       // Only authentic student work can unlock a passport. Never count prompts or replies.
       void checkMissionCompletion(countryForTurn, rank);
-      void playAudio(modelText);
+      void playAudio(modelText, currentPersona);
     } catch (error) {
       console.error("AI Chat Error:", error);
     } finally {
@@ -1876,15 +1883,17 @@ export const Dialects: React.FC = () => {
     }
   };
 
-  const startLiveConversation = async (personaOverride?: any) => {
+  const startLiveConversation = async (personaOverride?: any, handoffUtterance?: string) => {
     const persona = personaOverride || selectedPersona;
     const country = selectedCountryRef.current;
     if (!persona || !country) return;
-    // Rapid double-clicks must toggle even while the connection opens.
+    // Manual taps toggle. Automatic name handoff reconnects with the
+    // other tutor's published voice and keeps the student's spoken question.
     if (isLiveActiveRef.current || liveConnectingRef.current) {
       stopLiveConversation();
-      return;
+      if (!handoffUtterance) return;
     }
+    if (handoffUtterance) setSelectedPersona(persona);
     setLiveVoiceError(null);
     if (!navigator.mediaDevices?.getUserMedia) {
       setLiveVoiceError(getDialectLiveError({ code: 'MIC_UNAVAILABLE' }, lang));
@@ -1991,11 +2000,19 @@ export const Dialects: React.FC = () => {
         };
         if (!queue.busy) queue.timer = setTimeout(run, immediate ? 0 : 350);
       };
-      const flushLiveInput = () => {
-        if (!stillCurrent()) return;
+      let awaitingHandoffEcho = handoffUtterance?.trim() || '';
+      const flushLiveInput = (): boolean => {
+        if (!stillCurrent()) return false;
         const speech = liveInputBufferRef.current.replace(/\s+/g, ' ').trim();
         liveInputBufferRef.current = '';
-        if (speech.length < 3) return;
+        if (speech.length < 3) return false;
+        // Client content can echo in the new session as a transcription.
+        if (awaitingHandoffEcho &&
+            speech.replace(/[\s.,!?؟،]/g, '').toLowerCase() ===
+            awaitingHandoffEcho.replace(/[\s.,!?؟،]/g, '').toLowerCase()) {
+          awaitingHandoffEcho = '';
+          return false;
+        }
         captureMissionTurn(country.id, { role: 'user', text: speech, authored: true });
         updateJourney(country.id, { role: 'user', text: speech });
         if (selectedCountryRef.current?.id === country.id) {
@@ -2005,6 +2022,17 @@ export const Dialects: React.FC = () => {
           studentTurnId++;
         }
         void checkMissionCompletion(country, passportLevelsRef.current[country.id] || 0);
+        const addressedGender = resolveAddressedDialectTutor(speech, country);
+        const target = addressedGender === 'male' ? country.characterMale
+          : addressedGender === 'female' ? country.characterFemale : null;
+        if (target && target.nameEn !== persona.nameEn) {
+          stopLiveConversation();
+          setSelectedPersona(target);
+          // New tutor answers the existing turn, without learner repetition.
+          void startLiveConversation(target, speech);
+          return true;
+        }
+        return false;
       };
       const liveAI = await getLiveAI();
       if (!stillCurrent()) return;
@@ -2034,6 +2062,13 @@ export const Dialects: React.FC = () => {
             setIsListening(false);
             void sessionPromise.then(async session => {
               if (!stillCurrent()) return;
+              // Replay only the handoff question in the new tutor's voice.
+              if (handoffUtterance) {
+                session.sendClientContent({
+                  turns: [{ role: 'user', parts: [{ text: handoffUtterance }] }],
+                  turnComplete: true
+                });
+              }
               const cleanup = await setupMicrophone(session);
               if (stillCurrent()) {
                 micCleanupRef.current = cleanup;
@@ -2071,8 +2106,14 @@ export const Dialects: React.FC = () => {
                 });
               }
             }
+            // New speaker must be resolved before playing old speaker audio.
+            const outgoing = !!(message.serverContent?.outputTranscription?.text ||
+              message.serverContent?.modelTurn?.parts?.length);
+            if (liveInputBufferRef.current.trim() &&
+                (message.serverContent?.turnComplete || outgoing)) {
+              if (flushLiveInput()) return;
+            }
             if (message.serverContent?.turnComplete) {
-              if (liveInputBufferRef.current.trim()) flushLiveInput();
               const completedTutorReply = liveTutorText.trim();
               if (completedTutorReply) {
                 requestTranslation('tutor', completedTutorReply, tutorTurnId, true);
@@ -2226,7 +2267,7 @@ export const Dialects: React.FC = () => {
     }
   };
 
-  const playAudio = async (text: string) => {
+  const playAudio = async (text: string, personaOverride?: any) => {
     if (!text.trim() || isLiveActiveRef.current || liveConnectingRef.current) return;
     // Latest-request-wins for synthesis, decoding and playback.
     stopOneShotAudio();
@@ -2236,7 +2277,7 @@ export const Dialects: React.FC = () => {
     setCurrentSpeechText(text);
     try {
       const speechCountry = selectedCountryRef.current;
-      const speechGender = speechCountry?.characterFemale?.nameEn === selectedPersona?.nameEn ? 'female' : 'male';
+      const speechGender = speechCountry?.characterFemale?.nameEn === (personaOverride || selectedPersona)?.nameEn ? 'female' : 'male';
       const speechVoice = speechCountry ? publishedVoice(tutorVoices, speechCountry.id, speechGender).voiceName : undefined;
       const audioBytes = await generateSpeech(text, inferLearnerLanguage(text, 'ar'), speechVoice);
       if (!current()) return;
