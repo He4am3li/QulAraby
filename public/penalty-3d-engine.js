@@ -775,7 +775,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     a.active=actionName;a.current=next;
   }
 
-  const shot={phase:'idle',side:'left',started:0,targetX:2.1,targetY:1.65,power:0.75,scored:true};
+  const shot={phase:'idle',side:'left',started:0,targetX:2.1,targetY:1.65,power:0.75,scored:true,flightStart:0,flightOutcome:true};
   function reset(){
     strikerRoot.position.set(-0.72,0,10.75);strikerRoot.rotation.set(0,Math.PI,0);
     keeperRoot.position.set(0,0,0.36);keeperRoot.rotation.set(0,0,0);
@@ -790,6 +790,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     shot.targetY=0.55+Math.max(0,Math.min(1,y))*1.95;
     shot.power=Math.max(0.25,Math.min(1,power));
   }
+  function setOutcome(scored=true){shot.flightOutcome=Boolean(scored);}
   function setPhase(phase='idle',side='left') {
     shot.phase=phase;shot.side=side;shot.started=clock.getElapsedTime();
     if(phase==='idle')reset();
@@ -801,10 +802,11 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     if(phase==='kick'){
       shot.started=clock.getElapsedTime();
       setAction(actors[0],'kick');
+      shot.flightStart=shot.started;
       setAction(actors[1],'dive');
     }
-    if(phase==='goal'){shot.started=clock.getElapsedTime();shot.scored=true;setAction(actors[0],'celebrate');}
-    if(phase==='miss'){shot.started=clock.getElapsedTime();shot.scored=false;setAction(actors[1],'celebrate');}
+    if(phase==='goal'){shot.started=clock.getElapsedTime();shot.scored=true;shot.flightOutcome=true;setAction(actors[0],'celebrate');}
+    if(phase==='miss'){shot.started=clock.getElapsedTime();shot.scored=false;shot.flightOutcome=false;setAction(actors[1],'celebrate');}
   }
   function clamp(x){return Math.max(0,Math.min(1,x));}
   function mix(a,b,t){return a+(b-a)*t;}
@@ -828,20 +830,20 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       keeperRoot.position.x=Math.sin(elapsed*5.5)*0.15;
     }
     if(shot.phase==='kick' || shot.phase==='goal' || shot.phase==='miss'){
-      const t=clamp((shot.phase==='kick'?time:time+0.94)/(1.25-shot.power*0.3));
+      const t=clamp((elapsed-shot.flightStart)/(1.25-shot.power*0.3));
       // Shooting at the top corner of the goal, a proper airborne curve.
-      const save=shot.phase==='miss';
+      const save=!shot.flightOutcome;
       const ballT=save?Math.min(t,0.79):t;
       const targetZ=save?0.75:-1.45;
       ball.position.set(mix(0,shot.targetX,ballT),mix(0.22,shot.targetY,ballT)+Math.sin(ballT*Math.PI)*(.25+shot.power*.35),mix(8.3,targetZ,ballT));
       ball.rotation.set(10*t,8*t,4*t);
       ballShadow.position.set(ball.position.x,0.052,ball.position.z);
       ballShadow.material.opacity=0.25*(1-t*0.78);
-      const dive=clamp((t-0.34)/0.48);
-      keeperRoot.position.x=mix(0,shot.phase==='miss'?shot.targetX*.82:shot.targetX>0?-1.45:1.45,ease(dive));
-      keeperRoot.position.y=mix(0,0.48,Math.sin(dive*Math.PI));
+      const dive=clamp((t-0.12)/0.65);
+      keeperRoot.position.x=mix(0,save?shot.targetX*.79:shot.targetX>0?-1.55:1.55,ease(dive));
+      keeperRoot.position.y=0.58*Math.sin(dive*Math.PI);
       keeperRoot.rotation.z=(shot.targetX>0?-1:1)*1.2*ease(dive);
-      if(shot.phase==='miss'){
+      if(save){
         // The saved ball never crosses the goal line: it hits the keeper and rebounds into the field.
         if(t>0.79){
           const rebound=(t-0.79)/0.21;
@@ -871,7 +873,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       if(!b)continue;
       const get=name=>b[name]?.bone;
       const rest=name=>b[name];
-      const clipTime=shot.phase==='kick'?time:(shot.phase==='goal'||shot.phase==='miss'?time+0.94:0);
+      const clipTime=shot.phase==='kick'||shot.phase==='goal'||shot.phase==='miss'?elapsed-shot.flightStart:0;
       const power=Math.sin(Math.PI*clamp(clipTime/.68));
       if(!a.keeper){
         const thigh=get('UpperLeg.R'),shin=get('LowerLeg.R'),torso=get('Torso');
@@ -882,7 +884,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
         }
       }else{
         const diving=shot.phase==='kick'||shot.phase==='goal'||shot.phase==='miss';
-        const extension=diving?ease((clipTime-.1)/.47):0;
+        const extension=diving?ease((clipTime-.08)/.45):0;
         for(const sign of ['L','R']){
           const arm=get('UpperArm.'+sign),forearm=get('LowerArm.'+sign);
           if(arm)arm.rotation.z=rest('UpperArm.'+sign).z+(sign==='L'?-1:1)*.78*extension;
@@ -928,6 +930,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   return {
     setPhase,
     setAim,
+    setOutcome,
     setKitColor(value){setKit({shooterPrimary:value});},
     setKit,
     reset,
