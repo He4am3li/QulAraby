@@ -266,7 +266,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
         const y=cy+(rnd()-.5)*2.2;
         const jersey=jerseys[Math.floor(rnd()*jerseys.length)];
         crowdCtx.fillStyle=jersey;
-        crowdCtx.beginPath();crowdCtx.roundRect(x-2.7,y+3,5.4,5.8,1.3);crowdCtx.fill();
+        crowdCtx.fillRect(x-2.7,y+3,5.4,5.8);
         crowdCtx.fillStyle=skinTones[Math.floor(rnd()*skinTones.length)];
         crowdCtx.beginPath();crowdCtx.ellipse(x,y+1.3,1.95,2.35,0,0,Math.PI*2);crowdCtx.fill();
         if(rnd()>.91){
