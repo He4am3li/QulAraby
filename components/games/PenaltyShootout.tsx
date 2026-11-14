@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 
 import { PenaltyLive3D } from './PenaltyLive3D';
+import stadiumPanorama from '../../src/assets/images/champions_stadium_panorama_1790675976521.jpg';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // ========================================================
@@ -339,6 +340,8 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
     }
     // Prefetch the licensed real crowd photograph on the selection screen.
     // Background stands use the procedural fallback when the CDN is unavailable.
+    const premiumStadiumPreload=new Image();
+    premiumStadiumPreload.src=stadiumPanorama;
     const crowdPhoto='https://images.unsplash.com/photo-1693517382976-20ef824a9c7c?auto=format&fit=crop&w=2048&q=80';
     if(!document.querySelector('link[data-penalty-real-crowd]')){
       const crowdLink=document.createElement('link');
@@ -508,7 +511,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
     </div>;
   }
   return <main dir="rtl" className={'relative w-full h-full min-h-0 rounded-xl sm:rounded-3xl overflow-x-hidden overflow-y-auto overscroll-contain flex flex-col justify-between bg-[#07131f] text-white '+(screenShake?'scale-[1.008]':'')}>
-    <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={attackingClub.primary} kit={stadiumKit} aimX={aimX} aimY={aimY} shotPower={shotPower} scored={shotScored} onStageReady={()=>setStadiumReady(true)}/>
+    <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={attackingClub.primary} kit={stadiumKit} aimX={aimX} aimY={aimY} shotPower={shotPower} scored={shotScored} stadiumBackdrop={stadiumPanorama} onStageReady={()=>setStadiumReady(true)}/>
     <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#020b18]/35 via-transparent to-[#051720]/60"/>
     <header className="relative z-20 p-2 sm:p-3 md:p-4 w-full flex flex-col gap-2 items-center shrink-0 pointer-events-none [&_button]:pointer-events-auto">
       <div className="flex items-center justify-between gap-2 w-full max-w-5xl">
