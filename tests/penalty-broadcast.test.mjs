@@ -17,9 +17,9 @@ const expected=[
   ['Crowd scene cleanup',/humanCrowd\?\.dispose\(\)/],
   ['LED signage for the game',/QUL  PENALTY  ELITE/],
   ['Textured pitch mowing lanes',/laneMaterial\.map=laneTexture/],
-  ['Licensed real crowd photograph',/images\\.unsplash\\.com\\/photo-1693517382976/],
-  ['Photographic crowd fallback',/crowdMuralMaterial\\.map=tex/],
-  ['Broadcast floodlight light banks',/const floodTexture=new THREE\\.CanvasTexture/],
+  ['Licensed real crowd photograph',/REAL_CROWD_PHOTO/],
+  ['Photographic crowd fallback',/crowdMuralMaterial[.]map=tex/],
+  ['Broadcast floodlight light banks',/const floodTexture=new THREE[.]CanvasTexture/],
   ['Colour contrasted from warm rim and cool floodlights',/const cinemaRim = new THREE\.DirectionalLight/],
   ['Soft stadium depth fog',/scene\.fog = new THREE\.FogExp2\(0x071e22, 0\.0039\)/]
 ];
