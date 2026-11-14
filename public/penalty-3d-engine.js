@@ -352,6 +352,8 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     loader.load(url,tex=>{
       if(disposed||token!==skylineRequest){tex.dispose();return;}
       tex.colorSpace=THREE.SRGBColorSpace;
+      // The skyline uses the grandstand and roof portion, never a duplicated field.
+      tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(1,.66);tex.offset.set(0,.31);
       tex.anisotropy=Math.min(6,renderer.capabilities.getMaxAnisotropy());
       skylineTexture?.dispose();
       skylineTexture=tex;
