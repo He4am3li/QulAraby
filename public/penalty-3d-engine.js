@@ -245,6 +245,52 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   let lastSpectatorTick=-1;
   animateSupporters(0,0);
 
+  // Densely populated far stands: a one-time baked human crowd mural fills the
+  // gaps between the actual animated 3D supporters. The mural is only used at
+  // a distance and never replaces the players, keeper or near spectators.
+  const crowdCanvas=document.createElement('canvas');
+  crowdCanvas.width=1024;crowdCanvas.height=512;
+  const crowdCtx=crowdCanvas.getContext('2d');
+  if(crowdCtx){
+    crowdCtx.fillStyle='#142438';crowdCtx.fillRect(0,0,1024,512);
+    let crowdSeed=8247021;
+    const rnd=()=>{crowdSeed=(Math.imul(crowdSeed,1664525)+1013904223)|0;return(crowdSeed>>>0)/4294967296;};
+    const jerseys=['#e2e7e4','#f8d36d','#b53f55','#2585a7','#227047','#8c99bc','#f1aa69','#c8d7da','#344f87'];
+    const skinTones=['#edc8a2','#d0a27c','#ad7659','#875338','#e4bb93'];
+    for(let row=0;row<38;row++){
+      const cy=10+row*13.05;
+      crowdCtx.fillStyle=row%2?'#172b43':'#203349';
+      crowdCtx.fillRect(0,cy+8,1024,4);
+      for(let col=0;col<126;col++){
+        const x=(col+.46)*8.16+(rnd()-.5)*1.65;
+        const y=cy+(rnd()-.5)*2.2;
+        const jersey=jerseys[Math.floor(rnd()*jerseys.length)];
+        crowdCtx.fillStyle=jersey;
+        crowdCtx.beginPath();crowdCtx.roundRect(x-2.7,y+3,5.4,5.8,1.3);crowdCtx.fill();
+        crowdCtx.fillStyle=skinTones[Math.floor(rnd()*skinTones.length)];
+        crowdCtx.beginPath();crowdCtx.ellipse(x,y+1.3,1.95,2.35,0,0,Math.PI*2);crowdCtx.fill();
+        if(rnd()>.91){
+          crowdCtx.strokeStyle=jersey;crowdCtx.lineWidth=1.65;
+          crowdCtx.beginPath();crowdCtx.moveTo(x-2,y+4);crowdCtx.lineTo(x-4.4,y-.6);
+          crowdCtx.moveTo(x+2,y+4);crowdCtx.lineTo(x+4.2,y-.6);crowdCtx.stroke();
+        }
+      }
+    }
+  }
+  const crowdMuralTexture=new THREE.CanvasTexture(crowdCanvas);
+  crowdMuralTexture.colorSpace=THREE.SRGBColorSpace;
+  crowdMuralTexture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+  const crowdMuralMaterial=new THREE.MeshBasicMaterial({
+    map:crowdMuralTexture,side:THREE.DoubleSide,toneMapped:false
+  });
+  const endStand=new THREE.Mesh(new THREE.PlaneGeometry(56,14),crowdMuralMaterial);
+  endStand.position.set(0,10.6,-25.2);scene.add(endStand);
+  for(const side of [-1,1]){
+    const sideStand=new THREE.Mesh(new THREE.PlaneGeometry(34,12),crowdMuralMaterial);
+    sideStand.position.set(side*29.3,9.4,2.6);
+    sideStand.rotation.y=-side*Math.PI/2;
+    scene.add(sideStand);
+  }
   // The near stands reuse the locally bundled, rigged CC0 human model instead of
   // capsules or head-and-box silhouettes. Two animations are baked to instanced
   // *human geometry* once, leaving ordinary WebGL draw calls during gameplay.
@@ -1001,7 +1047,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       actors.forEach(a=>a.mixer?.stopAllAction());
       shirtLettering.forEach(d=>d.texture.dispose());
       ledTexture.dispose();
-      turfTexture?.dispose();laneTexture?.dispose();
+      turfTexture?.dispose();laneTexture?.dispose();crowdMuralTexture.dispose();
       humanCrowd?.dispose();
       scene.traverse(o=>{
         if(o.geometry && o.geometry.dispose)o.geometry.dispose();
