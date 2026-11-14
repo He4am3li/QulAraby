@@ -1,7 +1,9 @@
 import React from 'react';
 import './DialectVoiceOrb.css';
+import { getDialectFlagOrbPalette } from '../services/dialectFlagOrbPalette.mjs';
 
 interface Props {
+  countryId: string;
   active: boolean;
   connecting?: boolean;
   listening: boolean;
@@ -22,9 +24,10 @@ type OrbPhase = 'idle' | 'connecting' | 'listening' | 'speaking' | 'loading' | '
  * semantics are intentionally unchanged. The button never moves its anchor.
  */
 export const DialectVoiceOrb: React.FC<Props> = ({
-  active, connecting = false, listening, speaking, loading = false, disabled = false, lang, onToggle
+  countryId, active, connecting = false, listening, speaking, loading = false, disabled = false, lang, onToggle
 }) => {
   const ar = lang === 'ar';
+  const palette = getDialectFlagOrbPalette(countryId);
   const uniqueId = React.useId().replace(/:/g, '');
   const clipId = `qul-voice-clip-${uniqueId}`;
   const warmId = `qul-voice-warm-${uniqueId}`;
@@ -53,6 +56,14 @@ export const DialectVoiceOrb: React.FC<Props> = ({
       type="button"
       className="dialect-orb"
       data-phase={phase}
+      data-country={countryId}
+      style={{
+        '--orb-primary': palette.primary,
+        '--orb-secondary': palette.secondary,
+        '--orb-accent': palette.accent,
+        '--orb-core': palette.core,
+        '--orb-glow': palette.glow,
+      } as React.CSSProperties}
       onClick={onToggle}
       disabled={disabled}
       aria-pressed={active}
@@ -68,17 +79,17 @@ export const DialectVoiceOrb: React.FC<Props> = ({
           <defs>
             <clipPath id={clipId}><circle cx="50" cy="50" r="48" /></clipPath>
             <linearGradient id={warmId} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#ffe5ba" />
-              <stop offset="22%" stopColor="#ff9a97" />
-              <stop offset="47%" stopColor="#ec44c7" />
-              <stop offset="76%" stopColor="#806eff" />
-              <stop offset="100%" stopColor="#25deff" />
+              <stop offset="0%" stopColor={palette.accent} />
+              <stop offset="22%" stopColor={palette.secondary} />
+              <stop offset="50%" stopColor={palette.primary} />
+              <stop offset="78%" stopColor={palette.secondary} />
+              <stop offset="100%" stopColor={palette.accent} />
             </linearGradient>
             <linearGradient id={coolId} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#35f3f5" />
-              <stop offset="32%" stopColor="#00bdf2" />
-              <stop offset="66%" stopColor="#6b8dff" />
-              <stop offset="100%" stopColor="#e358f5" />
+              <stop offset="0%" stopColor={palette.primary} />
+              <stop offset="31%" stopColor={palette.accent} />
+              <stop offset="67%" stopColor={palette.secondary} />
+              <stop offset="100%" stopColor={palette.primary} />
             </linearGradient>
             <linearGradient id={sheenId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#ffffff" stopOpacity=".88" />
@@ -106,7 +117,7 @@ export const DialectVoiceOrb: React.FC<Props> = ({
               />
               <path
                 d="M-12 30 C17 48 26 81 52 68 C78 53 87 16 114 36"
-                fill="none" stroke="#bafaff" strokeWidth="1.6"
+                fill="none" stroke={palette.accent} strokeWidth="1.6"
                 strokeLinecap="round" opacity=".75"
               />
             </g>

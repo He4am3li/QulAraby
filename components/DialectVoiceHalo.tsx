@@ -156,6 +156,7 @@ export const DialectVoiceHalo: React.FC<Props> = React.memo(({
       {/* The audio control never moves. It remains the anchor of the entire experience. */}
       <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-30 flex items-center justify-center">
         <DialectVoiceOrb
+          countryId={countryId}
           active={active} connecting={connecting} listening={listening} speaking={speaking} loading={loading}
           disabled={disabled} lang={lang} onToggle={onToggle}
         />

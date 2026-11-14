@@ -5,6 +5,11 @@
  */
 .dialect-orb {
   --orb-energy: .78;
+  --orb-primary: #71869d;
+  --orb-secondary: #c8d7df;
+  --orb-accent: #f5fafc;
+  --orb-core: #1c2a3c;
+  --orb-glow: #728ea1;
   position: relative;
   display: inline-grid;
   width: clamp(74px, 6.8vw, 86px);
@@ -35,7 +40,7 @@
   right: 17%;
   height: 13%;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(64,91,203,.55), rgba(84,71,167,.22) 48%, transparent 75%);
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--orb-glow) 56%, transparent), color-mix(in srgb, var(--orb-glow) 16%, transparent) 48%, transparent 75%);
   filter: blur(5px);
   transform: translateY(6px) scaleX(1.05);
   pointer-events: none;
@@ -44,7 +49,7 @@
   position: absolute;
   inset: 8%;
   border-radius: 50%;
-  background: conic-gradient(from 30deg, #00d9f4, #425cf2 20%, #ba55ef 42%, #f27ac1 60%, #ffb4a3 72%, #45e9fb 95%, #00d9f4);
+  background: conic-gradient(from 30deg, var(--orb-accent), var(--orb-primary) 23%, var(--orb-secondary) 43%, var(--orb-primary) 62%, var(--orb-accent) 81%, var(--orb-secondary));
   opacity: calc(var(--orb-energy) * .67);
   filter: blur(9px);
   transform: scale(1.06);
@@ -60,10 +65,10 @@
   border-radius: 50%;
   border: 1px solid rgba(216,230,255,.85);
   background:
-    radial-gradient(circle at 35% 16%, rgba(211,223,255,.34), transparent 29%),
-    radial-gradient(ellipse at 85% 32%, rgba(25,152,252,.34), transparent 38%),
-    radial-gradient(ellipse at 36% 86%, rgba(233,57,226,.46), transparent 42%),
-    radial-gradient(ellipse at 48% 60%, #0c183e 22%, #14295f 74%, #547ce3 100%);
+    radial-gradient(circle at 35% 16%, color-mix(in srgb, var(--orb-accent) 34%, transparent), transparent 29%),
+    radial-gradient(ellipse at 85% 32%, color-mix(in srgb, var(--orb-primary) 54%, transparent), transparent 38%),
+    radial-gradient(ellipse at 36% 86%, color-mix(in srgb, var(--orb-secondary) 48%, transparent), transparent 42%),
+    radial-gradient(ellipse at 48% 60%, var(--orb-core) 22%, color-mix(in srgb, var(--orb-primary) 22%, var(--orb-core)) 74%, var(--orb-primary) 100%);
   box-shadow:
     inset 0 1.5px 3px rgba(255,255,255,.78),
     inset 0 -8px 12px rgba(15,13,67,.38),
@@ -76,9 +81,9 @@
   inset: -6%;
   border-radius: 50%;
   background:
-    radial-gradient(ellipse at 20% 46%, rgba(255,159,168,.53), transparent 37%),
-    radial-gradient(ellipse at 74% 51%, rgba(0,224,255,.50), transparent 39%),
-    radial-gradient(ellipse at 51% 89%, rgba(236,59,241,.38), transparent 48%);
+    radial-gradient(ellipse at 20% 46%, color-mix(in srgb, var(--orb-secondary) 53%, transparent), transparent 37%),
+    radial-gradient(ellipse at 74% 51%, color-mix(in srgb, var(--orb-primary) 52%, transparent), transparent 39%),
+    radial-gradient(ellipse at 51% 89%, color-mix(in srgb, var(--orb-accent) 40%, transparent), transparent 48%);
   mix-blend-mode: screen;
 }
 .dialect-orb__waves {
@@ -114,9 +119,9 @@
   inset: 1px;
   border-radius: inherit;
   border-top: 1px solid rgba(251,251,255,.72);
-  border-left: 1px solid rgba(255,212,229,.32);
-  border-right: 1px solid rgba(81,226,255,.57);
-  border-bottom: 1px solid rgba(239,116,251,.54);
+  border-left: 1px solid color-mix(in srgb, var(--orb-secondary) 40%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--orb-primary) 65%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--orb-accent) 55%, transparent);
   pointer-events: none;
 }
 .dialect-orb[data-phase="connecting"] { --orb-energy: .93; }

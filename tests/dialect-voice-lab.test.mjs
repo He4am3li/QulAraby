@@ -87,3 +87,43 @@ test('voice orb renders the approved floating glass sphere without changing its 
   assert.match(css, /touch-action:\s*manipulation/);
   assert.match(halo, /<DialectVoiceOrb/);
 });
+
+test('all 22 dialect voice orbs use their national colours with a neutral fallback', async () => {
+  const { DIALECT_FLAG_ORB_PALETTES, getDialectFlagOrbPalette } = await import('../services/dialectFlagOrbPalette.mjs');
+  const ids = [...dialect.slice(dialect.indexOf('export const COUNTRY_DATA = [')).matchAll(/^\s+id: '([a-z]+)',/gm)].map(match => match[1]);
+  const countries = ids.slice(0, 22);
+  assert.equal(countries.length, 22, 'The dialect catalogue has 22 countries');
+  assert.equal(new Set(countries).size, 22, 'Country IDs are unique');
+  assert.deepEqual(Object.keys(DIALECT_FLAG_ORB_PALETTES).sort(), countries.sort(), 'Every country needs a distinct national palette');
+  for (const countryId of countries) {
+    const palette = getDialectFlagOrbPalette(countryId);
+    assert.ok(Object.isFrozen(palette) === false || Object.keys(palette).length === 5);
+    assert.equal(Object.keys(palette).length, 5);
+    for (const key of ['primary','secondary','accent','core','glow']) {
+      assert.match(palette[key], /^#[0-9A-Fa-f]{6}$/, countryId + ' / ' + key);
+    }
+  }
+  assert.notDeepEqual(getDialectFlagOrbPalette('uae'), getDialectFlagOrbPalette('jordan'));
+  assert.notDeepEqual(getDialectFlagOrbPalette('egypt'), getDialectFlagOrbPalette('saudi'));
+  assert.notDeepEqual(getDialectFlagOrbPalette('sudan'), getDialectFlagOrbPalette('somalia'));
+  assert.notDeepEqual(getDialectFlagOrbPalette('nonexistent-country'), getDialectFlagOrbPalette('uae'), 'Unknown countries do not impersonate a flag');
+});
+
+test('flag colour follows the chosen dialect stage without changing voice control behaviour', () => {
+  const halo = read('components/DialectVoiceHalo.tsx');
+  const orb = read('components/DialectVoiceOrb.tsx');
+  const css = read('components/DialectVoiceOrb.css');
+  assert.match(dialect, /<DialectVoiceHalo/);
+  assert.match(dialect, /countryId=\{selectedCountry\.id\}/);
+  assert.match(halo, /<DialectVoiceOrb\s+countryId=\{countryId\}/);
+  assert.match(orb, /getDialectFlagOrbPalette\(countryId\)/);
+  assert.match(orb, /data-country=\{countryId\}/);
+  assert.match(orb, /'--orb-primary': palette\.primary/);
+  assert.match(orb, /stopColor=\{palette\.secondary\}/);
+  assert.match(orb, /onClick=\{onToggle\}/);
+  assert.match(orb, /aria-busy=\{connecting\}/);
+  assert.match(orb, /disabled=\{disabled\}/);
+  assert.match(css, /color-mix\(in srgb, var\(--orb-primary\)/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  assert.doesNotMatch(css, /#e358f5|#00d9f4|#f27ac1/i, 'Do not retain default Siri neon accents');
+});
