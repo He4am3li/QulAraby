@@ -26,7 +26,7 @@ import { SpeechLipSync, analyzeSpeechBuffer, startLipSyncedSource } from '../ser
 import { getTutorStageDirection, getTutorPartnerDirection } from '../services/tutorAttention.mjs';
 import { buildDialectTutorPolicy, getDialectTutorIdentity, inferLearnerLanguage } from '../services/dialectTutorPolicy';
 import { resolveAddressedDialectTutor } from '../services/dialectSpeakerRouter.mjs';
-import { publishedVoice, useDialectVoiceProfiles } from '../services/dialectVoiceProfiles';
+import { VOICE_PALETTE, publishedVoice, useDialectVoiceProfiles } from '../services/dialectVoiceProfiles';
 import { getDialectLiveError } from '../services/dialectLiveErrors.mjs';
 
 declare global {
@@ -1524,6 +1524,11 @@ export const Dialects: React.FC = () => {
   const [liveVoiceError, setLiveVoiceError] = React.useState<string | null>(null);
   const [audioLevel, setAudioLevel] = React.useState(0);
   const liveSessionRef = React.useRef<any>(null);
+  // Every WebSocket generation has one immutable country, speaker and voice.
+  const liveSpeakerIdentityRef = React.useRef<{
+    generation: number; countryId: string; nameEn: string;
+    gender: 'male' | 'female'; voiceName: string;
+  } | null>(null);
   // V2 passports are awarded by assessed mission mastery. Old message-count
   // rankings remain untouched in legacy storage but do not unlock new passports.
   const [passportLevels, setPassportLevels] = React.useState<Record<string, number>>(() => {
@@ -1597,6 +1602,7 @@ export const Dialects: React.FC = () => {
 
   const stopLiveConversation = React.useCallback(() => {
     liveGenerationRef.current++;
+    liveSpeakerIdentityRef.current = null;
     isLiveActiveRef.current = false;
     liveConnectingRef.current = false;
     const session = liveSessionRef.current;
@@ -1894,6 +1900,16 @@ export const Dialects: React.FC = () => {
       if (!handoffUtterance) return;
     }
     if (handoffUtterance) setSelectedPersona(persona);
+    const tutorIdentity = getDialectTutorIdentity(country, persona);
+    const liveGender = tutorIdentity.tutorGender;
+    const liveProfile = publishedVoice(tutorVoices, country.id, liveGender);
+    // Fail closed if a profile ever contradicts the chosen tutor's gender.
+    if (!VOICE_PALETTE[liveGender].includes(liveProfile.voiceName)) {
+      setLiveVoiceError(lang === 'ar'
+        ? 'تعذر تأكيد صوت الشخصية، أعد بدء المحادثة.'
+        : 'Tutor voice identity could not be verified. Restart the conversation.');
+      return;
+    }
     setLiveVoiceError(null);
     if (!navigator.mediaDevices?.getUserMedia) {
       setLiveVoiceError(getDialectLiveError({ code: 'MIC_UNAVAILABLE' }, lang));
@@ -1917,7 +1933,16 @@ export const Dialects: React.FC = () => {
     liveConnectingRef.current = true;
     setIsLiveConnecting(true);
     const generation = ++liveGenerationRef.current;
-    const stillCurrent = () => generation === liveGenerationRef.current;
+    liveSpeakerIdentityRef.current = {
+      generation, countryId: country.id, nameEn: persona.nameEn,
+      gender: liveGender, voiceName: liveProfile.voiceName
+    };
+    const stillCurrent = () => generation === liveGenerationRef.current
+      && liveSpeakerIdentityRef.current?.generation === generation
+      && liveSpeakerIdentityRef.current?.countryId === country.id
+      && liveSpeakerIdentityRef.current?.nameEn === persona.nameEn
+      && liveSpeakerIdentityRef.current?.gender === liveGender
+      && liveSpeakerIdentityRef.current?.voiceName === liveProfile.voiceName;
     const failLiveConversation = (error: unknown) => {
       if (!stillCurrent()) return;
       console.error('Dialect live conversation failed:', error);
@@ -1934,7 +1959,6 @@ export const Dialects: React.FC = () => {
       const journey = learningJourneysRef.current[country.id];
       const returningLearner = (journey?.visits || 0) > 1 && (journey?.turns?.length || 0) > 0;
       const recentContext = (journey?.turns || []).slice(-10).map(t => t.role + ': ' + t.text.slice(0, 180)).join(' | ');
-      const liveProfile = publishedVoice(tutorVoices, country.id, persona.nameEn === country.characterFemale.nameEn ? 'female' : 'male');
       const livePolicy = buildDialectTutorPolicy({ ...getDialectTutorIdentity(country, persona), countryName: country.nameEn, dialect: country.dialect, history: journey?.turns || [], learnerLanguage: inferLearnerLanguage((journey?.turns || []).filter(t => t.role === 'user').slice(-1)[0]?.text || '', 'en'), culture: country.culture, vocabulary: country.vocab });
       liveInputBufferRef.current = '';
       let liveTutorText = '';
@@ -2044,13 +2068,15 @@ export const Dialects: React.FC = () => {
           inputAudioTranscription: {},
           outputAudioTranscription: {},
           speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: publishedVoice(tutorVoices, country.id, persona.nameEn === country.characterFemale.nameEn ? "female" : "male").voiceName } },
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: liveProfile.voiceName } },
           },
           systemInstruction: livePolicy + '\nSpeaking delivery: ' + liveProfile.delivery + ', conversational, warm, and natural. Never change the local speaker identity when switching languages.\nCurrent optional practice mission (never rush or force it): ' + currentMission + '\n' +
             'A new audio session is NOT a new conversation. Continue the conversation in SHARED CHAT HISTORY even when the other tutor was speaking. ' +
             'Use only the active country dialect in Arabic, or intelligible English with the authentic local speaker accent when the student uses English. ' +
             'Reply to the learner naturally, and never force a greeting exercise or move to the mission before learner readiness. ' +
-             'The colleague is physically beside you. Give their exact name if asked, and do not finish replies with automatic questions or topic suggestions.',
+             'The colleague is physically beside you. Give their exact name if asked, and do not finish replies with automatic questions or topic suggestions. ' +
+             'VOICE IDENTITY: You are ' + tutorIdentity.tutorNameAr + ' (' + liveGender + '). Speak only with your session voice ' + liveProfile.voiceName + '. ' +
+             'Never imitate your colleague, switch gender or speak for the other tutor. The application routes directly addressed questions to a separate session.',
         },
         callbacks: {
           onopen: () => {
@@ -2070,7 +2096,7 @@ export const Dialects: React.FC = () => {
                   turnComplete: true
                 });
               }
-              const cleanup = await setupMicrophone(session);
+              const cleanup = await setupMicrophone(session, generation);
               if (stillCurrent()) {
                 micCleanupRef.current = cleanup;
                 setIsListening(true);
@@ -2186,7 +2212,7 @@ export const Dialects: React.FC = () => {
     }
   };
 
-  const setupMicrophone = async (session: any) => {
+  const setupMicrophone = async (session: any, generation: number) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const audioContext = getAudioContext();
@@ -2208,7 +2234,8 @@ export const Dialects: React.FC = () => {
       processor.onaudioprocess = (e) => {
         // Read the current session state through a ref. A captured React state
         // value here can remain false even after the live connection opens.
-        if (!isLiveActiveRef.current) return;
+        if (!isLiveActiveRef.current || generation !== liveGenerationRef.current
+          || liveSpeakerIdentityRef.current?.generation !== generation) return;
 
         const inputData = e.inputBuffer.getChannelData(0);
         let sum = 0;
@@ -2304,7 +2331,10 @@ export const Dialects: React.FC = () => {
     setCurrentSpeechText(text);
     try {
       const speechCountry = selectedCountryRef.current;
-      const speechGender = speechCountry?.characterFemale?.nameEn === (personaOverride || selectedPersona)?.nameEn ? 'female' : 'male';
+      const speechTutor = personaOverride || selectedPersona;
+      const speechGender = speechCountry && speechTutor
+        ? getDialectTutorIdentity(speechCountry, speechTutor).tutorGender
+        : 'male';
       const speechVoice = speechCountry ? publishedVoice(tutorVoices, speechCountry.id, speechGender).voiceName : undefined;
       const audioBytes = await generateSpeech(text, inferLearnerLanguage(text, 'ar'), speechVoice);
       if (!current()) return;
@@ -2642,7 +2672,18 @@ export const Dialects: React.FC = () => {
                       disabled={!selectedPersona}
                       currentSpeechText={currentSpeechText}
                       onToggle={() => { void startLiveConversation(); }}
-                      onPronounce={text => { void playAudio(text); }}
+                      onPronounce={(text, speakerName) => {
+                        // Replaying history restores the ORIGINAL speaking voice,
+                        // not the voice of the currently selected tutor.
+                        const originalTutor = speakerName === selectedCountry.characterMale.nameAr
+                          || speakerName === selectedCountry.characterMale.nameEn
+                          ? selectedCountry.characterMale
+                          : speakerName === selectedCountry.characterFemale.nameAr
+                          || speakerName === selectedCountry.characterFemale.nameEn
+                          ? selectedCountry.characterFemale : selectedPersona;
+                        if (originalTutor && originalTutor !== selectedPersona) setSelectedPersona(originalTutor);
+                        void playAudio(text, originalTutor);
+                      }}
                     />
                   </div>
 
