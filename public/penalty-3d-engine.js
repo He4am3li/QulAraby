@@ -93,7 +93,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   ],3));
   turfBladeGeometry.computeVertexNormals();
   const turfBladeMaterial=new THREE.MeshLambertMaterial({color:0xffffff,side:THREE.DoubleSide});
-  const turfBladeCount=mobile?9500:30000;
+  const turfBladeCount=mobile?5200:14500;
   const turfBlades=new THREE.InstancedMesh(turfBladeGeometry,turfBladeMaterial,turfBladeCount);
   const grassDummy=new THREE.Object3D();
   const turfColor=new THREE.Color();
@@ -104,7 +104,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     const x=(turfRandom()-.5)*51,z=(turfRandom()-.5)*76;
     grassDummy.position.set(x,0.015,z);
     grassDummy.rotation.set((turfRandom()-.5)*.22,turfRandom()*Math.PI*2,(turfRandom()-.5)*.24);
-    grassDummy.scale.set(.62+turfRandom()*.65,.4+turfRandom()*.64,.62+turfRandom()*.65);
+    grassDummy.scale.set(.38+turfRandom()*.35,.17+turfRandom()*.25,.38+turfRandom()*.35);
     grassDummy.updateMatrix();
     turfBlades.setMatrixAt(i,grassDummy.matrix);
     turfColor.setHex(bladePalette[Math.floor(turfRandom()*bladePalette.length)]);
@@ -225,6 +225,20 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
           hair:Math.floor(jitter()*6)
         });
       }
+    }
+    // Side terraces put full humanoid spectators in view instead of distant dots.
+    for(const side of [-1,1])for(let row=0;row<(mobile?5:7);row++){
+      const sideZ=1.0+row*1.2;
+      const step=new THREE.Mesh(new THREE.BoxGeometry(1.5,.46,31),material(0x182c42,.03,.9));
+      step.position.set(side*(15.6+row*1.25),2.75+row*.75,sideZ);scene.add(step);
+      for(let col=0;col<25;col++)supporters.push({
+        x:side*(15.6+row*1.25)+(jitter()-.5)*.15,
+        y:3.12+row*.75+(jitter()-.5)*.06,
+        z:-11+col*1.12+(jitter()-.5)*.2,
+        yaw:side>0?-Math.PI/2:Math.PI/2,
+        scale:.91+jitter()*.16,phase:jitter()*Math.PI*2,
+        shirt:Math.floor(jitter()*10),skin:Math.floor(jitter()*6),hair:Math.floor(jitter()*6)
+      });
     }
     const crowdShirts=[0x245b93,0xdbc29a,0xe6e6e2,0xa83b49,0x1a7d68,0x364c7e,0x756793,0xc99247,0x26364c,0x9d565d];
     const crowdSkins=[0xe6bf98,0xc6976e,0xa66f4b,0x764e36,0xe8c7a9,0x5a3928];
@@ -905,7 +919,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     camera.position.y=mix(camera.position.y,shot.phase==='focus'?4.1:shot.phase==='kick'?3.55:4.2,0.065);
     const cinemaDistance=shot.phase==='focus'?23.2:shot.phase==='runup'?23.8:shot.phase==='kick'?22.4:24.0;
     camera.position.z=mix(camera.position.z,Math.cos(cameraYaw)*cinemaDistance,0.07);
-    camera.lookAt(0,1.35,shot.phase==='focus'?4.25:shot.phase==='kick'?3.5:3.0);
+    camera.lookAt(-0.65,1.35,shot.phase==='focus'?4.25:shot.phase==='kick'?3.5:3.0);
   }
   function resize(){
     if(disposed)return;
