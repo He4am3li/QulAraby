@@ -336,7 +336,8 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
       const link=document.createElement('link');link.rel='preload';link.as='fetch';link.crossOrigin='anonymous';link.href=href;
       link.dataset.penaltyAthlete='true';document.head.appendChild(link);
     }
-    void import(/* @vite-ignore */ '/penalty-3d-engine.js').catch(()=>{});
+    const arenaModulePath='/penalty-3d-engine.js';
+    void import(/* @vite-ignore */ arenaModulePath).catch(()=>{});
   },[]);
   const [stadiumReady,setStadiumReady]=useState(false);
   const soundRef=useRef<PenaltySoundEngine>(new PenaltySoundEngine());
