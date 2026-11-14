@@ -18,7 +18,7 @@ interface Props {
   disabled: boolean;
   currentSpeechText?: string;
   onToggle: () => void;
-  onPronounce: (text: string) => void;
+  onPronounce: (text: string, speakerName?: string) => void;
 }
 
 const arabicText = (s: string) => /[\u0600-\u06ff]/.test(s);
@@ -180,7 +180,7 @@ export const DialectVoiceHalo: React.FC<Props> = React.memo(({
             <ChevronLeft size={13}/>
           </button>
           {isTutor && !active && hasWords &&
-            <button type="button" onClick={() => onPronounce(source)}
+            <button type="button" onClick={() => onPronounce(source, displayedRecord?.speakerName)}
               aria-label={ar ? 'إعادة تشغيل العبارة' : 'Replay this phrase'}
               className="rounded-full p-1 text-emerald-900 hover:bg-emerald-50">
               <Volume2 size={12}/>
