@@ -328,6 +328,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
   const [aimX,setAimX]=useState(0);
   const [aimY,setAimY]=useState(0.65);
   const [shotPower,setShotPower]=useState(0.75);
+  const [shotScored,setShotScored]=useState(true);
   const soundRef=useRef<PenaltySoundEngine>(new PenaltySoundEngine());
   const timersRef=useRef<ReturnType<typeof setTimeout>[]>([]);
   const later=(fn:()=>void,delay:number)=>{
@@ -350,7 +351,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
     cancelTimeline();soundRef.current.init();
     setMatch({home,away,kickers});setHomeShots([]);setAwayShots([]);
     setWinner(null);setRound(0);setSide('home');setRivalScored(null);
-    setAimX(0);setAimY(0.65);setShotPower(0.75);
+    setAimX(0);setAimY(0.65);setShotPower(0.75);setShotScored(true);
     setPhase('focus');setStatus('question');setScreen('match');
     soundRef.current.playWhistle();soundRef.current.playCue('countdown');
   };
@@ -366,6 +367,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
   const rivalShot=(home:boolean[],away:boolean[])=>{
     setSide('away');setStatus('opponent');setPhase('idle');setRivalScored(null);
     const scored=Math.random()<0.66;
+    setShotScored(scored);
     setDiveSide(Math.random()<0.5?'left':'right');
     setAimX((Math.random()-.5)*1.65);setAimY(0.35+Math.random()*.5);setShotPower(0.55+Math.random()*.4);
     later(()=>setPhase('focus'),80);
@@ -390,6 +392,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
   const answer=(choice:{letter:string;text:string;correct:boolean})=>{
     if(screen!=='match'||side!=='home'||status!=='question'||phase!=='focus')return;
     soundRef.current.playCue('select');
+    setShotScored(choice.correct);
     setStatus('running');setPhase('runup');
     setDiveSide(aimX>=0?'left':'right');
     later(()=>{setPhase('kick');soundRef.current.playPowerfulKick();},1100);
@@ -482,7 +485,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
     </div>;
   }
   return <main dir="rtl" className={'relative w-full h-full min-h-0 rounded-xl sm:rounded-3xl overflow-x-hidden overflow-y-auto overscroll-contain flex flex-col justify-between bg-[#07131f] text-white '+(screenShake?'scale-[1.008]':'')}>
-    <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={attackingClub.primary} kit={stadiumKit} aimX={aimX} aimY={aimY} shotPower={shotPower}/>
+    <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={attackingClub.primary} kit={stadiumKit} aimX={aimX} aimY={aimY} shotPower={shotPower} scored={shotScored}/>
     <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#020b18]/35 via-transparent to-[#051720]/60"/>
     <header className="relative z-20 p-2 sm:p-3 md:p-5 w-full flex flex-col gap-2 sm:gap-3 items-center shrink-0">
       <div className="flex items-center justify-between gap-2 w-full max-w-5xl">
