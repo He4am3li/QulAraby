@@ -216,7 +216,7 @@ const CONSOLE_GAMES: GameDef[] = [
     samples: [],
     cover: stadiumPanorama,
     hero: stadiumPanorama,
-    color: 'from-amber-600 via-orange-700 to-slate-950',
+    color: 'from-amber-500 via-emerald-700 to-slate-950',
     icon: <Trophy size={32} />
   },
   { 
@@ -556,6 +556,7 @@ export const Games: React.FC = () => {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]" />
               {/* Color accent */}
               <div className={`absolute inset-0 bg-gradient-to-tr ${CONSOLE_GAMES[selectedIdx].color} opacity-25 mix-blend-color-dodge`} />
+              {CONSOLE_GAMES[selectedIdx].id === 'penalty-shootout' && <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_70%,rgba(251,191,36,.15),transparent_45%),linear-gradient(110deg,rgba(2,12,22,.75),transparent_55%,rgba(2,12,22,.55))]" />}
             </motion.div>
           </AnimatePresence>
 
@@ -606,6 +607,7 @@ export const Games: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent transition-opacity duration-300" />
                     <div className={`absolute inset-0 bg-gradient-to-tr ${game.color} opacity-25 mix-blend-color-dodge transition-opacity duration-300`} />
                     
+                    {game.id === 'penalty-shootout' && <><div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_50%_40%,transparent_10%,rgba(1,12,20,.85)_100%)]"/><div className="absolute top-3 left-3 right-3 flex justify-between items-center"><span className="rounded-full border border-amber-200/70 bg-[#091e23]/85 px-2 py-1 text-[9px] font-black tracking-wider text-amber-200 shadow-[0_0_20px_rgba(251,191,36,.3)]" dir="ltr">PENALTY ELITE</span><span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_16px_#34d399]"/></div><div className="absolute bottom-12 inset-x-5 h-px bg-gradient-to-r from-transparent via-amber-200/80 to-transparent"/></>}
                     {/* Game Title */}
                     <div className="absolute bottom-4 inset-x-3 text-center transition-transform duration-300 group-hover:-translate-y-1">
                       <p className="text-white font-black text-sm tracking-wide drop-shadow-md truncate">

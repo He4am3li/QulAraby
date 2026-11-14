@@ -325,6 +325,9 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
   const [diveSide,setDiveSide]=useState<'left'|'right'>('left');
   const [isMuted,setIsMuted]=useState(false);
   const [screenShake,setScreenShake]=useState(false);
+  const [aimX,setAimX]=useState(0);
+  const [aimY,setAimY]=useState(0.65);
+  const [shotPower,setShotPower]=useState(0.75);
   const soundRef=useRef<PenaltySoundEngine>(new PenaltySoundEngine());
   const timersRef=useRef<ReturnType<typeof setTimeout>[]>([]);
   const later=(fn:()=>void,delay:number)=>{
@@ -347,6 +350,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
     cancelTimeline();soundRef.current.init();
     setMatch({home,away,kickers});setHomeShots([]);setAwayShots([]);
     setWinner(null);setRound(0);setSide('home');setRivalScored(null);
+    setAimX(0);setAimY(0.65);setShotPower(0.75);
     setPhase('focus');setStatus('question');setScreen('match');
     soundRef.current.playWhistle();soundRef.current.playCue('countdown');
   };
@@ -363,6 +367,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
     setSide('away');setStatus('opponent');setPhase('idle');setRivalScored(null);
     const scored=Math.random()<0.66;
     setDiveSide(Math.random()<0.5?'left':'right');
+    setAimX((Math.random()-.5)*1.65);setAimY(0.35+Math.random()*.5);setShotPower(0.55+Math.random()*.4);
     later(()=>setPhase('focus'),80);
     later(()=>setPhase('runup'),850);
     later(()=>{setPhase('kick');soundRef.current.playPowerfulKick();},1950);
@@ -386,7 +391,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
     if(screen!=='match'||side!=='home'||status!=='question'||phase!=='focus')return;
     soundRef.current.playCue('select');
     setStatus('running');setPhase('runup');
-    setDiveSide(Math.random()<0.5?'left':'right');
+    setDiveSide(aimX>=0?'left':'right');
     later(()=>{setPhase('kick');soundRef.current.playPowerfulKick();},1100);
     later(()=>{
       setPhase(choice.correct?'goal':'miss');setStatus(choice.correct?'goal':'miss');
@@ -477,7 +482,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
     </div>;
   }
   return <main dir="rtl" className={'relative w-full h-full min-h-0 rounded-xl sm:rounded-3xl overflow-x-hidden overflow-y-auto overscroll-contain flex flex-col justify-between bg-[#07131f] text-white '+(screenShake?'scale-[1.008]':'')}>
-    <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={attackingClub.primary} kit={stadiumKit}/>
+    <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={attackingClub.primary} kit={stadiumKit} aimX={aimX} aimY={aimY} shotPower={shotPower}/>
     <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#020b18]/35 via-transparent to-[#051720]/60"/>
     <header className="relative z-20 p-2 sm:p-3 md:p-5 w-full flex flex-col gap-2 sm:gap-3 items-center shrink-0">
       <div className="flex items-center justify-between gap-2 w-full max-w-5xl">
@@ -509,6 +514,24 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
       </div>}
     </header>
     <div className="relative z-20 w-full max-w-3xl mx-auto px-2 sm:px-3 md:px-6 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-7 flex flex-col items-center gap-2 sm:gap-3 shrink-0">
+      {status==='question'&&side==='home'&&<div className="w-full rounded-2xl border border-amber-300/35 bg-[#061824]/95 px-3 py-2.5 shadow-2xl backdrop-blur-xl">
+        <div className="flex items-center justify-between gap-3 mb-2"><strong className="text-xs sm:text-sm text-amber-200">وجّه الكرة وحدد قوة التصويب</strong><span className="text-[10px] text-slate-300">المكان والقوة من اختيارك</span></div>
+        <div className="flex flex-col sm:flex-row gap-3 items-center">
+          <div role="group" aria-label="مكان التصويب" className="relative w-full sm:w-48 h-[76px] sm:h-[92px] shrink-0 rounded-t-[45%] border-[3px] border-white/75 bg-gradient-to-b from-[#194837] to-[#0a2a22] shadow-[inset_0_0_25px_rgba(0,0,0,.7)] touch-none"
+            onPointerDown={event=>{const rect=event.currentTarget.getBoundingClientRect();setAimX(Math.max(-1,Math.min(1,((event.clientX-rect.left)/rect.width)*2-1)));setAimY(Math.max(0,Math.min(1,1-(event.clientY-rect.top)/rect.height)));}}
+            onPointerMove={event=>{if(event.buttons!==1)return;const rect=event.currentTarget.getBoundingClientRect();setAimX(Math.max(-1,Math.min(1,((event.clientX-rect.left)/rect.width)*2-1)));setAimY(Math.max(0,Math.min(1,1-(event.clientY-rect.top)/rect.height)));}}>
+            <div className="absolute inset-x-0 top-1/3 border-t border-white/20"/>
+            <div className="absolute inset-y-0 left-1/3 border-l border-white/20"/>
+            <div className="absolute inset-y-0 right-1/3 border-r border-white/20"/>
+            <span className="absolute h-5 w-5 rounded-full border-2 border-white bg-amber-400 shadow-[0_0_18px_#fbbf24] -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{left:(aimX+1)*50+'%',top:(1-aimY)*100+'%'}}/>
+          </div>
+          <div className="flex-1 w-full min-w-0">
+            <div className="flex justify-between text-xs text-slate-200 mb-2"><label htmlFor="qul-penalty-power">قوة الركلة</label><strong dir="ltr" className="text-amber-300">{Math.round(shotPower*100)}%</strong></div>
+            <input id="qul-penalty-power" type="range" min="25" max="100" step="5" value={Math.round(shotPower*100)} onChange={event=>setShotPower(Number(event.target.value)/100)} className="w-full accent-amber-400 cursor-pointer min-h-10" aria-label="قوة التصويب"/>
+            <p className="text-[10px] text-slate-400">المس أو اسحب المؤشر داخل المرمى، ثم اختر الإجابة لتسدد</p>
+          </div>
+        </div>
+      </div>}
       {status==='question'&&<div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         {currentQuestion.answers.map((option,index)=><button type="button" key={index} onClick={()=>answer(option)}
           className="flex justify-between items-center gap-2 py-3.5 px-4 rounded-xl bg-[#071f2c]/95 border border-white/30 text-white hover:border-amber-300 hover:bg-[#193947] shadow-xl text-sm font-black transition-colors">

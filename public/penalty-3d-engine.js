@@ -63,15 +63,15 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   const lamp2 = new THREE.DirectionalLight(0x5bbefd, 2.25);
   lamp2.position.set(18, 25, -18); scene.add(lamp2);
   // The rear amber key light contrasts with the cool broadcast floodlights.
-  const cinemaRim = new THREE.DirectionalLight(0xffd492,1.45);
+  const cinemaRim = new THREE.DirectionalLight(0xffd492,2.1);
   cinemaRim.position.set(4,15,-16);scene.add(cinemaRim);
   // Give dark, muted scenes a touch of warm stadium light without flattening skin tones.
-  const fieldFill = new THREE.DirectionalLight(0xe5ffdf,.62);
+  const fieldFill = new THREE.DirectionalLight(0xe5ffdf,.85);
   fieldFill.position.set(0,18,7);scene.add(fieldFill);
 
   const material = (hex, metalness=0, roughness=0.78) =>
     new THREE.MeshStandardMaterial({color:hex, metalness, roughness});
-  const turf = material(0x21753a, 0, 0.97);
+  const turf = material(0x176a32, 0, 0.91);
   const white = material(0xeef4ef, 0.22, 0.34);
   const black = material(0x18232b, 0.1, 0.68);
   const steel = material(0x8195a6, 0.55, 0.38);
@@ -775,7 +775,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     a.active=actionName;a.current=next;
   }
 
-  const shot={phase:'idle',side:'left',started:0,targetX:2.1};
+  const shot={phase:'idle',side:'left',started:0,targetX:2.1,targetY:1.65,power:0.75,scored:true};
   function reset(){
     strikerRoot.position.set(-0.72,0,10.75);strikerRoot.rotation.set(0,Math.PI,0);
     keeperRoot.position.set(0,0,0.36);keeperRoot.rotation.set(0,0,0);
@@ -785,12 +785,17 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     net.geometry.attributes.position.needsUpdate=true;
     actors.forEach(a=>{a.active='';setAction(a,'idle');});
   }
+  function setAim(x=0,y=0.5,power=0.75){
+    shot.targetX=Math.max(-2.9,Math.min(2.9,x*2.9));
+    shot.targetY=0.55+Math.max(0,Math.min(1,y))*1.95;
+    shot.power=Math.max(0.25,Math.min(1,power));
+  }
   function setPhase(phase='idle',side='left') {
     shot.phase=phase;shot.side=side;shot.started=clock.getElapsedTime();
     if(phase==='idle')reset();
     if(phase==='runup'){
       reset();shot.started=clock.getElapsedTime();
-      shot.targetX=(side==='left'?-2.15:2.15);
+      if(shot.autoAim)shot.targetX=(side==='left'?-2.15:2.15);
       setAction(actors[0],'run');
     }
     if(phase==='kick'){
@@ -798,8 +803,8 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       setAction(actors[0],'kick');
       setAction(actors[1],'dive');
     }
-    if(phase==='goal'){shot.started=clock.getElapsedTime();setAction(actors[0],'celebrate');}
-    if(phase==='miss'){shot.started=clock.getElapsedTime();setAction(actors[1],'celebrate');}
+    if(phase==='goal'){shot.started=clock.getElapsedTime();shot.scored=true;setAction(actors[0],'celebrate');}
+    if(phase==='miss'){shot.started=clock.getElapsedTime();shot.scored=false;setAction(actors[1],'celebrate');}
   }
   function clamp(x){return Math.max(0,Math.min(1,x));}
   function mix(a,b,t){return a+(b-a)*t;}
@@ -823,19 +828,27 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       keeperRoot.position.x=Math.sin(elapsed*5.5)*0.15;
     }
     if(shot.phase==='kick' || shot.phase==='goal' || shot.phase==='miss'){
-      const t=clamp((shot.phase==='kick'?time:time+0.94)/1.05);
+      const t=clamp((shot.phase==='kick'?time:time+0.94)/(1.25-shot.power*0.3));
       // Shooting at the top corner of the goal, a proper airborne curve.
-      ball.position.set(mix(0,shot.targetX,t),0.22+1.48*t+Math.sin(t*Math.PI)*0.64,mix(8.3,-1.45,t));
+      const save=shot.phase==='miss';
+      const ballT=save?Math.min(t,0.79):t;
+      const targetZ=save?0.75:-1.45;
+      ball.position.set(mix(0,shot.targetX,ballT),mix(0.22,shot.targetY,ballT)+Math.sin(ballT*Math.PI)*(.25+shot.power*.35),mix(8.3,targetZ,ballT));
       ball.rotation.set(10*t,8*t,4*t);
       ballShadow.position.set(ball.position.x,0.052,ball.position.z);
       ballShadow.material.opacity=0.25*(1-t*0.78);
       const dive=clamp((t-0.34)/0.48);
-      keeperRoot.position.x=mix(0,shot.phase==='miss'?shot.targetX:shot.targetX>0?-1.45:1.45,ease(dive));
+      keeperRoot.position.x=mix(0,shot.phase==='miss'?shot.targetX*.82:shot.targetX>0?-1.45:1.45,ease(dive));
       keeperRoot.position.y=mix(0,0.48,Math.sin(dive*Math.PI));
       keeperRoot.rotation.z=(shot.targetX>0?-1:1)*1.2*ease(dive);
       if(shot.phase==='miss'){
-        ball.position.z=Math.max(ball.position.z,0.15);
-        if(t>0.85){ball.position.y=1.4+(t-0.85)*2.2;ball.position.x=shot.targetX*0.8;}
+        // The saved ball never crosses the goal line: it hits the keeper and rebounds into the field.
+        if(t>0.79){
+          const rebound=(t-0.79)/0.21;
+          ball.position.z=0.75+rebound*2.9;
+          ball.position.y=Math.max(0.22,shot.targetY*.79-rebound*.65);
+          ball.position.x=shot.targetX*.79+rebound*.48;
+        }
       }
       if(shot.phase==='goal'){
         const p=net.geometry.attributes.position;
@@ -887,9 +900,9 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     // Always a true perspective camera, lightly tracking the foot-to-ball action.
     camera.position.x=mix(camera.position.x,Math.sin(cameraYaw)*19.8,0.08);
     camera.position.y=mix(camera.position.y,shot.phase==='focus'?2.8:shot.phase==='kick'?2.2:3.45,0.065);
-    const cinemaDistance=shot.phase==='focus'?15.0:shot.phase==='runup'?17.7:shot.phase==='kick'?14.8:19.1;
+    const cinemaDistance=shot.phase==='focus'?14.4:shot.phase==='runup'?16.8:shot.phase==='kick'?14.1:18.1;
     camera.position.z=mix(camera.position.z,Math.cos(cameraYaw)*cinemaDistance,0.07);
-    camera.lookAt(0,1.42,shot.phase==='focus'?4.3:shot.phase==='kick'?2.2:-0.3);
+    camera.lookAt(0,1.42,shot.phase==='focus'?3.7:shot.phase==='kick'?1.8:-0.3);
   }
   function resize(){
     if(disposed)return;
@@ -914,6 +927,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   frame=requestAnimationFrame(animate);
   return {
     setPhase,
+    setAim,
     setKitColor(value){setKit({shooterPrimary:value});},
     setKit,
     reset,
