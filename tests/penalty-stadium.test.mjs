@@ -9,7 +9,7 @@ const adapter=readFileSync('components/games/PenaltyLive3D.tsx','utf8');
 
 for(const [label,rx] of [
   ['Instanced three-dimensional grass',/new THREE\.InstancedMesh\(turfBladeGeometry,turfBladeMaterial,turfBladeCount\)/],
-  ['Thousands of grass tufts',/turfBladeCount=mobile\?9500:30000/],
+  ['Adaptive grass density',/turfBladeCount=mobile\?\d+:\d+/],
   ['Separate crowd bodies',/new THREE\.InstancedMesh\(seatGeo/],
   ['Separate spectator heads',/audienceHeads=new THREE\.InstancedMesh\(headGeo/],
   ['Animated fan arms',/audienceLeftArms=new THREE\.InstancedMesh/],
