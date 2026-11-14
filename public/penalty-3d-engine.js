@@ -283,6 +283,24 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   const crowdMuralMaterial=new THREE.MeshBasicMaterial({
     map:crowdMuralTexture,side:THREE.DoubleSide,toneMapped:false
   });
+  // Real photographic spectators behind the moving 3D crowd. Source:
+  // https://unsplash.com/photos/ (photo 1693517382976, Unsplash License).
+  // Keep the generated texture as an offline fallback when image loading fails.
+  const REAL_CROWD_PHOTO='https://images.unsplash.com/photo-1693517382976-20ef824a9c7c?auto=format&fit=crop&w=2048&q=80';
+  let realCrowdTexture=null;
+  const crowdImageLoader=new THREE.TextureLoader();
+  crowdImageLoader.setCrossOrigin('anonymous');
+  crowdImageLoader.load(REAL_CROWD_PHOTO,(tex)=>{
+    if(disposed){tex.dispose();return;}
+    tex.colorSpace=THREE.SRGBColorSpace;
+    tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    tex.repeat.set(1,0.38);
+    tex.offset.set(0,0.30);
+    realCrowdTexture=tex;
+    crowdMuralMaterial.map=tex;
+    crowdMuralMaterial.needsUpdate=true;
+  },undefined,()=>{console.warn('[Penalty Arena] Photographic crowd offline, procedural distant crowd retained');});
   const endStand=new THREE.Mesh(new THREE.PlaneGeometry(56,14),crowdMuralMaterial);
   endStand.position.set(0,10.6,-25.2);scene.add(endStand);
   for(const side of [-1,1]){
@@ -335,7 +353,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     const stepLights=new THREE.MeshBasicMaterial({color:0x33778c,toneMapped:false});
     for(let row=0;row<rows;row++){
       const baseZ=-8.8-row*.95;
-      const steps=new THREE.Mesh(new THREE.BoxGeometry(columns*1.23,.40,1.55),stepMat);
+      const steps=new THREE.Mesh(new THREE.BoxGeometry(columns*1.23,.18,1.15),stepMat);
       steps.position.set(0,2.72+row*.72,baseZ);scene.add(steps);
       if(row%3===0){
         const lightStrip=new THREE.Mesh(new THREE.BoxGeometry(columns*1.23,.065,.085),stepLights);
@@ -1047,7 +1065,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       actors.forEach(a=>a.mixer?.stopAllAction());
       shirtLettering.forEach(d=>d.texture.dispose());
       ledTexture.dispose();
-      turfTexture?.dispose();laneTexture?.dispose();crowdMuralTexture.dispose();
+      turfTexture?.dispose();laneTexture?.dispose();crowdMuralTexture.dispose();realCrowdTexture?.dispose();
       humanCrowd?.dispose();
       scene.traverse(o=>{
         if(o.geometry && o.geometry.dispose)o.geometry.dispose();
