@@ -92,7 +92,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     turfTexture.colorSpace=THREE.SRGBColorSpace;
     turfTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
   }
-  const turf = material(0xbed9b6, 0, 0.95);
+  const turf = material(0x94bb91, 0, 0.95);
   if(turfTexture)turf.map=turfTexture;
   const white = material(0xeef4ef, 0.22, 0.34);
   const black = material(0x18232b, 0.1, 0.68);
@@ -101,8 +101,13 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
   grass.rotation.x = -Math.PI/2; grass.receiveShadow = true; scene.add(grass);
   // Actual individual 3D turf lanes, not an image/texture.
   for (let i = 0; i < 17; i++) {
-    const lane = new THREE.Mesh(new THREE.PlaneGeometry(94, 3.8),
-      material(i % 2 ? 0x277b3b : 0x1f7135, 0, .96));
+    const laneMaterial=material(i % 2 ? 0xa1c49d : 0x8eb58c, 0, .96);
+    if(turfTexture){
+      laneMaterial.map=turfTexture.clone();
+      laneMaterial.map.repeat.set(18,2);
+      laneMaterial.map.needsUpdate=true;
+    }
+    const lane = new THREE.Mesh(new THREE.PlaneGeometry(94, 3.8),laneMaterial);
     lane.rotation.x = -Math.PI/2; lane.position.set(0, 0.008 + i*0.0001, -30 + i*3.8);
     lane.receiveShadow=true; scene.add(lane);
   }
@@ -252,9 +257,9 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     for(const side of [-1,1])for(let row=0;row<(mobile?5:7);row++){
       const sideZ=1.0+row*1.2;
       const step=new THREE.Mesh(new THREE.BoxGeometry(1.5,.46,31),material(0x182c42,.03,.9));
-      step.position.set(side*(15.6+row*1.25),2.75+row*.75,sideZ);scene.add(step);
+      step.position.set(side*(26.2+row*1.25),2.75+row*.75,sideZ);scene.add(step);
       for(let col=0;col<25;col++)supporters.push({
-        x:side*(15.6+row*1.25)+(jitter()-.5)*.15,
+        x:side*(26.2+row*1.25)+(jitter()-.5)*.15,
         y:3.12+row*.75+(jitter()-.5)*.06,
         z:-11+col*1.12+(jitter()-.5)*.2,
         yaw:side>0?-Math.PI/2:Math.PI/2,
@@ -938,10 +943,10 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     else animateSupporters(elapsed,crowdEmotion);
     // Always a true perspective camera, lightly tracking the foot-to-ball action.
     camera.position.x=mix(camera.position.x,Math.sin(cameraYaw)*19.8,0.08);
-    camera.position.y=mix(camera.position.y,shot.phase==='focus'?4.1:shot.phase==='kick'?3.55:4.2,0.065);
-    const cinemaDistance=shot.phase==='focus'?23.2:shot.phase==='runup'?23.8:shot.phase==='kick'?22.4:24.0;
+    camera.position.y=mix(camera.position.y,shot.phase==='focus'?3.4:shot.phase==='kick'?3.0:3.55,0.065);
+    const cinemaDistance=shot.phase==='focus'?18.7:shot.phase==='runup'?19.4:shot.phase==='kick'?18.2:20.2;
     camera.position.z=mix(camera.position.z,Math.cos(cameraYaw)*cinemaDistance,0.07);
-    camera.lookAt(-0.65,1.35,shot.phase==='focus'?4.25:shot.phase==='kick'?3.5:3.0);
+    camera.lookAt(-0.3,1.4,shot.phase==='focus'?4.25:shot.phase==='kick'?3.5:3.0);
   }
   function resize(){
     if(disposed)return;
