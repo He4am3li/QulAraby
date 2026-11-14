@@ -455,7 +455,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
   );
   if(screen==='victory'){
     const isWinner=winner==='home';
-    return <div dir="rtl" className="relative w-full h-full min-h-[620px] rounded-3xl bg-slate-950 overflow-hidden flex flex-col justify-center items-center p-5">
+    return <div dir="rtl" className="relative w-full h-full min-h-0 rounded-xl sm:rounded-3xl bg-slate-950 overflow-y-auto flex flex-col justify-center items-center p-5">
       <PenaltyLive3D phase="idle" kitColor={match.home.primary}/>
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#031220]/95 via-[#031220]/80 to-[#031220]/30"/>
       <div className={'relative z-10 w-full max-w-lg text-center rounded-3xl border p-6 md:p-10 '+(isWinner?'border-amber-300/50 bg-[#122c31]/90':'border-slate-500/40 bg-[#0a1d2c]/90')}>
@@ -476,10 +476,10 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
       </div>
     </div>;
   }
-  return <main dir="rtl" className={'relative w-full h-full min-h-[640px] rounded-3xl overflow-hidden flex flex-col justify-between bg-[#07131f] text-white '+(screenShake?'scale-[1.008]':'')}>
+  return <main dir="rtl" className={'relative w-full h-full min-h-0 rounded-xl sm:rounded-3xl overflow-x-hidden overflow-y-auto overscroll-contain flex flex-col justify-between bg-[#07131f] text-white '+(screenShake?'scale-[1.008]':'')}>
     <PenaltyLive3D phase={phase} diveSide={diveSide} kitColor={attackingClub.primary} kit={stadiumKit}/>
     <div aria-hidden="true" className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#020b18]/35 via-transparent to-[#051720]/60"/>
-    <header className="relative z-20 p-3 md:p-5 w-full flex flex-col gap-3 items-center">
+    <header className="relative z-20 p-2 sm:p-3 md:p-5 w-full flex flex-col gap-2 sm:gap-3 items-center shrink-0">
       <div className="flex items-center justify-between gap-2 w-full max-w-5xl">
         <button type="button" onClick={toggleSound} title={isMuted?'تشغيل الصوت':'كتم الصوت'} className={'p-2.5 text-amber-300 '+outStyle}>
           {isMuted?<VolumeX size={19}/>:<Volume2 size={19}/>}
@@ -508,7 +508,7 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
         <h2 className="mt-1 font-black text-base md:text-xl text-white leading-relaxed">{currentQuestion.prompt}</h2>
       </div>}
     </header>
-    <div className="relative z-20 w-full max-w-3xl mx-auto px-3 md:px-6 pb-4 md:pb-7 flex flex-col items-center gap-3">
+    <div className="relative z-20 w-full max-w-3xl mx-auto px-2 sm:px-3 md:px-6 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-7 flex flex-col items-center gap-2 sm:gap-3 shrink-0">
       {status==='question'&&<div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         {currentQuestion.answers.map((option,index)=><button type="button" key={index} onClick={()=>answer(option)}
           className="flex justify-between items-center gap-2 py-3.5 px-4 rounded-xl bg-[#071f2c]/95 border border-white/30 text-white hover:border-amber-300 hover:bg-[#193947] shadow-xl text-sm font-black transition-colors">

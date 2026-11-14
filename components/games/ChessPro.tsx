@@ -589,15 +589,15 @@ export const ChessPro: React.FC<ChessProProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-b from-[#0f172a] to-[#064e3b] flex flex-col items-center justify-center overflow-hidden font-sans select-none">
+    <div className="fixed inset-0 bg-gradient-to-b from-[#0f172a] to-[#064e3b] flex flex-col items-center justify-start lg:justify-center overflow-x-hidden overflow-y-auto overscroll-contain font-sans select-none py-4 lg:py-0">
       {/* Cinematic Background */}
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1586165368502-1bad197a6461?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-10 blur-sm" />
       <div className="absolute inset-0 bg-radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)" />
 
       {/* Main Game Layout */}
-      <div className="relative flex gap-12 items-center justify-center z-10 -translate-x-48">
+      <div className="relative flex flex-col lg:flex-row gap-3 lg:gap-8 items-center justify-center z-10 w-full max-w-[1100px] px-3 lg:px-6">
         {/* Left Sidebar - Captured Black Pieces */}
-        <div className="flex flex-col gap-6 w-32">
+        <div className="flex flex-row lg:flex-col gap-2 lg:gap-6 w-full max-w-[min(92vw,600px)] lg:w-32">
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-[2.5rem] flex flex-col items-center gap-6 shadow-2xl">
             <div className="w-16 h-16 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center shadow-inner">
               <Cpu size={32} className="text-slate-400" />
@@ -639,7 +639,7 @@ export const ChessPro: React.FC<ChessProProps> = ({ onBack }) => {
                opacity: 1 
              }}
              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-             className="relative p-6 bg-gradient-to-br from-[#1c1815] to-[#120f0d] rounded-[36px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.95),0_0_0_2px_rgba(255,255,255,0.06)] border-[14px] border-[#2a221b] perspective-[1200px]"
+             className="relative p-2 sm:p-3 lg:p-6 bg-gradient-to-br from-[#1c1815] to-[#120f0d] rounded-xl sm:rounded-[36px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.95),0_0_0_2px_rgba(255,255,255,0.06)] border-[5px] sm:border-[9px] lg:border-[14px] border-[#2a221b] perspective-[1200px]"
              style={{ transformStyle: 'preserve-3d' }}
            >
              {/* Board Bevel Thickness (3D Edge Slab) */}
@@ -651,7 +651,7 @@ export const ChessPro: React.FC<ChessProProps> = ({ onBack }) => {
              )}
 
              {/* Inner Board - Preserves 3D and allows standing pieces to project vertically */}
-             <div ref={boardRef} className="grid grid-cols-8 grid-rows-8 w-[600px] h-[600px] rounded-xl relative border-4 border-black/80 shadow-[inset_0_0_35px_rgba(0,0,0,0.85)]" style={{ transformStyle: 'preserve-3d' }}>
+             <div ref={boardRef} className="grid grid-cols-8 grid-rows-8 w-[min(78vw,66dvh,600px)] h-[min(78vw,66dvh,600px)] lg:w-[min(56vw,600px)] lg:h-[min(56vw,600px)] rounded-xl relative border-4 border-black/80 shadow-[inset_0_0_35px_rgba(0,0,0,0.85)]" style={{ transformStyle: 'preserve-3d' }}>
                {renderBoard()}
              </div>
  
@@ -861,7 +861,7 @@ export const ChessPro: React.FC<ChessProProps> = ({ onBack }) => {
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
-            className="absolute right-12 top-12 bottom-12 w-80 bg-[#1a1a1a]/80 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-8 flex flex-col gap-6 z-50 shadow-[0_50px_100px_rgba(0,0,0,0.5)]"
+            className="fixed right-2 sm:right-5 top-[max(0.75rem,env(safe-area-inset-top))] bottom-[max(0.75rem,env(safe-area-inset-bottom))] w-[min(20rem,calc(100vw-1rem))] overflow-y-auto bg-[#1a1a1a]/80 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-8 flex flex-col gap-6 z-50 shadow-[0_50px_100px_rgba(0,0,0,0.5)]"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">

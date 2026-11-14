@@ -563,7 +563,7 @@ export const SentenceTrain: React.FC<SentenceTrainProps> = ({ onWin, onBack, lan
 
   return (
     <div 
-      className="w-full h-full min-h-screen bg-[#0a1526] text-slate-100 font-['Tajawal',sans-serif] flex flex-col select-none overflow-x-hidden relative"
+      className="w-full h-full min-h-0 bg-[#0a1526] text-slate-100 font-['Tajawal',sans-serif] flex flex-col select-none overflow-x-hidden relative"
       dir={lang === 'en' ? 'ltr' : 'rtl'}
     >
       {/* =========================================================================
@@ -644,7 +644,7 @@ export const SentenceTrain: React.FC<SentenceTrainProps> = ({ onWin, onBack, lan
       {/* =========================================================================
           2. MAIN GAME VIEWPORT
          ========================================================================= */}
-      <main className="flex-1 relative flex flex-col justify-between overflow-hidden">
+      <main className="flex-1 min-h-0 relative flex flex-col justify-between overflow-x-hidden overflow-y-auto overscroll-contain">
         {/* =====================================================================
             SCREEN 0: CENTRAL GRAMMAR STATION TERMINAL (5 Arched Platforms)
            ===================================================================== */}
