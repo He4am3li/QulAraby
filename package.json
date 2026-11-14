@@ -20,7 +20,7 @@
     "test:lip-sync": "node --test tests/speech-lip-sync.test.mjs tests/sara-facial-rig.test.mjs tests/ahmed-facial-rig.test.mjs tests/fatima-facial-rig.test.mjs tests/saudi-facial-rig.test.mjs tests/emirati-facial-rig.test.mjs tests/moroccan-facial-rig.test.mjs tests/iraqi-facial-rig.test.mjs tests/lebanese-facial-rig.test.mjs tests/tunisian-facial-rig.test.mjs tests/algerian-facial-rig.test.mjs tests/libyan-facial-rig.test.mjs tests/jordanian-facial-rig.test.mjs tests/syrian-facial-rig.test.mjs tests/qatari-facial-rig.test.mjs tests/kuwaiti-facial-rig.test.mjs tests/omani-facial-rig.test.mjs",
     "test:letter-glass": "node tests/letters-glass.test.mjs",
     "test:letter-content": "node tests/letters-content.test.mjs",
-    "test:voice-lab": "node --test tests/dialect-voice-lab.test.mjs",
+    "test:voice-lab": "node --test tests/dialect-voice-lab.test.mjs tests/dialect-conversation-policy.test.mjs",
     "test:letter-listening": "node tests/letters-listening.test.mjs",
     "test:letter-mastery": "node tests/letters-mastery.test.mjs",
     "assets:detective": "node scripts/install-beginner-detective-assets.mjs && node scripts/install-advanced-detective-assets.mjs",
