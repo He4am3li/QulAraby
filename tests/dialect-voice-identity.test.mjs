@@ -68,3 +68,11 @@ test('TTS dialogue and archive replay use the original speaker even if another i
   assert.match(page, /speakerName === selectedCountry\.characterMale\.nameAr/);
   assert.match(page, /void playAudio\(text, originalTutor\)/);
 });
+
+test('a delayed text response cannot speak with the previous tutor after switching', () => {
+  assert.match(page, /const typedTurnVersionRef = React\.useRef\(0\)/);
+  assert.match(page, /const typedTurnVersion = \+\+typedTurnVersionRef\.current/);
+  assert.match(page, /if \(!typedTurnIsCurrent\(\)\) return/);
+  assert.match(page, /typedTurnVersionRef\.current\+\+;\s+setIsChatLoading\(false\);\s+stopOneShotAudio\(\)/);
+  assert.match(page, /if \(typedTurnIsCurrent\(\)\) setIsChatLoading\(false\)/);
+});
