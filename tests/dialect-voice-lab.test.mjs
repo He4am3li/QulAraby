@@ -119,7 +119,8 @@ test('flag colour follows the chosen dialect stage without changing voice contro
   assert.match(orb, /getDialectFlagOrbPalette\(countryId\)/);
   assert.match(orb, /data-country=\{countryId\}/);
   assert.match(orb, /'--orb-primary': palette\.primary/);
-  assert.match(orb, /<DialectFlagGlassArt countryId=\{countryId\}/, 'Actual flag geometry must be part of the glass sphere');
+  assert.match(orb, /getDialectGlassFlagLights\(countryId\)/, 'National optical colours must follow selected country');
+  assert.match(orb, /className="dialect-orb__microphone"/, 'The microphone remains visibly on top of the glass');
   assert.match(orb, /onClick=\{onToggle\}/);
   assert.match(orb, /aria-busy=\{connecting\}/);
   assert.match(orb, /disabled=\{disabled\}/);
@@ -129,26 +130,68 @@ test('flag colour follows the chosen dialect stage without changing voice contro
 });
 
 
-test('national flag is integrated into curved glass rather than reduced to swirling colours', () => {
+test('the crystal orb remains a microphone with subtle national flag pigments, not a pasted flag', async () => {
   const orb = read('components/DialectVoiceOrb.tsx');
-  const flags = read('components/DialectFlagGlassArt.tsx');
   const css = read('components/DialectVoiceOrb.css');
-  assert.match(orb, /<DialectFlagGlassArt countryId=\{countryId\}/);
-  assert.match(orb, /clipPath=\{'url\(#' \+ clipId \+ '\)'\}/);
-  assert.match(orb, /radialGradient id=\{edgeId\}/);
-  assert.doesNotMatch(orb, /dialect-orb__ribbon-[ab]/);
-  assert.doesNotMatch(flags, /<image\b|<img\b|flagcdn|twemoji/);
-  assert.match(css, /dialect-orb__flag-surface/);
-  assert.match(css, /prefers-reduced-motion: reduce/);
+  const oldLiteralFlags = read('components/DialectFlagGlassArt.tsx');
+  const { DIALECT_GLASS_FLAG_LIGHTS, getDialectGlassFlagLights } =
+    await import('../services/dialectOrbGlassIdentity.mjs');
+
   const countries = [
-    'uae','egypt','saudi','palestine','syria','jordan','lebanon',
-    'iraq','libya','tunisia','morocco','algeria','oman','bahrain',
-    'qatar','kuwait','yemen','sudan','mauritania','somalia','comoros','djibouti'
+    'uae', 'egypt', 'saudi', 'palestine', 'syria', 'jordan', 'lebanon',
+    'iraq', 'libya', 'tunisia', 'morocco', 'algeria', 'oman', 'bahrain',
+    'qatar', 'kuwait', 'yemen', 'sudan', 'mauritania', 'somalia', 'comoros', 'djibouti'
   ];
-  for (const id of countries) assert.ok(flags.includes("case '" + id + "':"), 'Missing exact flag geometry for ' + id);
-  // Symbols must remain visible where plain tricolour bands are ambiguous.
-  for (const emblem of ['Eagle','Cedar','Crescent','Star','fivePointOutline','OmaniEmblem']) {
-    assert.ok(flags.includes(emblem), 'Missing national-flag emblem ' + emblem);
+  assert.deepEqual(Object.keys(DIALECT_GLASS_FLAG_LIGHTS).sort(), countries.sort());
+  for (const id of countries) {
+    const identity = getDialectGlassFlagLights(id);
+    assert.deepEqual(Object.keys(identity).sort(), ['bottom','edge','middle','top']);
+    for (const colour of Object.values(identity)) {
+      assert.match(colour, /^#[A-Fa-f0-9]{6}$/, id + ' light map should use CSS hex colours');
+    }
   }
-  assert.match(flags, /case 'syria':[\s\S]*?<Star x=\{32\}/);
+  assert.notDeepEqual(getDialectGlassFlagLights('uae'), getDialectGlassFlagLights('egypt'));
+  assert.notDeepEqual(getDialectGlassFlagLights('uae'), getDialectGlassFlagLights('nonexistent'));
+  assert.equal(getDialectGlassFlagLights('uae').top, '#00843D');
+  assert.equal(getDialectGlassFlagLights('uae').edge, '#CE1126');
+  assert.equal(getDialectGlassFlagLights('uae').bottom, '#101820');
+
+  assert.match(orb, /className="dialect-orb__microphone"/);
+  assert.match(orb, /viewBox="0 0 48 48"/);
+  assert.match(css, /\.dialect-orb__microphone/);
+  assert.match(css, /z-index: 5/);
+  assert.match(orb, /<svg className="dialect-orb__waves"/);
+  assert.match(orb, /clipPath=\{'url\(#' \+ clipId \+ '\)'\}/);
+  assert.doesNotMatch(orb, /<DialectFlagGlassArt|<rect[^>]*width="100"[^>]*height="100"/,
+    'Flat literal flags must not render inside the voice orb');
+  assert.ok(oldLiteralFlags.includes('export const DialectFlagGlassArt'),
+    'The former emblem artwork may remain as a source file but is not rendered as the voice control');
+  assert.match(orb, /dialect-orb__fabric--top/);
+  assert.match(orb, /dialect-orb__fabric--middle/);
+  assert.match(orb, /dialect-orb__fabric--bottom/);
+  assert.match(orb, /dialect-orb__fabric--side/);
+  assert.doesNotMatch(orb, /<image\b|<img\b|flagcdn|twemoji/);
+});
+
+test('clicking the voice control flutters only the inner light and emits outer audio ripples', () => {
+  const orb = read('components/DialectVoiceOrb.tsx');
+  const css = read('components/DialectVoiceOrb.css');
+  for (const ring of ['one', 'two', 'three']) {
+    assert.match(orb, new RegExp('dialect-orb__pulse--' + ring));
+  }
+  assert.match(css, /@keyframes dialect-orb-outer-ripple/);
+  assert.match(css, /@keyframes dialect-orb-flag-flutter-a/);
+  assert.match(css, /@keyframes dialect-orb-flag-flutter-b/);
+  assert.match(css, /@keyframes dialect-orb-flag-flutter-c/);
+  for (const phase of ['connecting', 'listening', 'speaking', 'loading', 'active']) {
+    assert.ok(css.includes('[data-phase="' + phase + '"]'),
+      'Animation must be active in phase ' + phase);
+  }
+  assert.match(css, /\.dialect-orb__pulse \{/);
+  assert.match(css, /\.dialect-orb__fabric--top \{/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  assert.match(css, /\.dialect-orb__pulse \{ opacity: 0 !important; \}/);
+  assert.match(orb, /aria-label=\{actionLabel\}/);
+  assert.match(orb, /onClick=\{onToggle\}/);
+  assert.match(orb, /disabled=\{disabled\}/);
 });
