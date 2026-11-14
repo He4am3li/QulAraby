@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 
 import { PenaltyLive3D } from './PenaltyLive3D';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // ========================================================
 // 1. أسئلة لغوية دقيقة بثلاثة خيارات فقط (إجابة واحدة صحيحة واثنتان خاطئتان)
@@ -337,7 +338,9 @@ export const PenaltyShootout:React.FC<PenaltyShootoutProps>=({onBack,onWin})=>{
       link.dataset.penaltyAthlete='true';document.head.appendChild(link);
     }
     const arenaModulePath='/penalty-3d-engine.js';
-    void import(/* @vite-ignore */ arenaModulePath).catch(()=>{});
+    void import(/* @vite-ignore */ arenaModulePath)
+      .then(mod=>mod.warmPenaltyAthlete(GLTFLoader))
+      .catch(err=>console.warn('[Penalty Arena] background athlete prewarm failed',err));
   },[]);
   const [stadiumReady,setStadiumReady]=useState(false);
   const soundRef=useRef<PenaltySoundEngine>(new PenaltySoundEngine());
