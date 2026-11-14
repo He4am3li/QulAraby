@@ -38,7 +38,7 @@ export const PenaltyEliteSetup:React.FC<Props>=({onBack,onStart})=>{
  const choose=()=>{setClub(displayed);setRival(chooseOpponent(displayed.id));setSelectedKickers([]);setRosterPage(0);setStep('lineup')};
  const toggle=(p:ElitePlayer)=>setSelectedKickers(old=>old.some(x=>x.number===p.number)?old.filter(x=>x.number!==p.number):old.length>=5?old:[...old,p]);
  const badge=(team:EliteClub,large=false)=><PenaltyClubCrest club={team} className={large?'h-24 w-24 md:h-[150px] md:w-[150px] rounded-[28px]':'h-12 w-12 md:h-16 md:w-16'}/>;
- return <main dir="rtl" className="relative isolate flex h-full min-h-[620px] w-full flex-col overflow-hidden rounded-[26px] bg-[#020914] text-white select-none">
+ return <main dir="rtl" className="relative isolate flex h-full min-h-0 w-full flex-col overflow-x-hidden overflow-y-auto overscroll-contain rounded-xl sm:rounded-[26px] bg-[#020914] text-white select-none">
   <style>{css}</style>
   <div className="elite-stadium pointer-events-none absolute inset-0"><div className="elite-spot elite-spot-a"/><div className="elite-spot elite-spot-b"/><div className="elite-stand"/><div className="absolute bottom-[14%] w-full h-[5px] bg-gradient-to-r from-[#9b8a70] via-[#e4cc91] to-[#5cabb1] opacity-65"/></div>
   <header className="relative z-20 flex shrink-0 items-center justify-between gap-2 px-4 py-3 md:px-8 md:py-5">
@@ -47,9 +47,9 @@ export const PenaltyEliteSetup:React.FC<Props>=({onBack,onStart})=>{
    <span className="grid h-10 w-10 md:h-12 md:w-12 place-items-center rounded-full border border-[#e3c077]/35 bg-[#e3c077]/10"><Trophy size={21} className="text-[#e5c481]"/></span>
   </header>
   <AnimatePresence mode="wait" initial={false}>
-  {step==='clubs'?<motion.section key="clubs" initial={reduced?false:{opacity:0,x:70}} animate={{opacity:1,x:0}} exit={reduced?{}:{opacity:0,x:-70}} transition={{duration:.42}} className="relative z-10 flex flex-1 min-h-0 flex-col justify-between px-4 pb-3 md:px-8 md:pb-6">
+  {step==='clubs'?<motion.section key="clubs" initial={reduced?false:{opacity:0,x:70}} animate={{opacity:1,x:0}} exit={reduced?{}:{opacity:0,x:-70}} transition={{duration:.42}} className="relative z-10 flex flex-1 min-h-0 flex-col justify-between gap-2 px-3 sm:px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-8 md:pb-6">
    <p className="text-center text-[11px] md:text-sm text-slate-400">اختر النادي الذي ستمثله في تحدي ركلات الترجيح</p>
-   <div className="relative flex flex-1 min-h-[305px] items-center justify-center">
+   <div className="relative flex flex-1 min-h-[180px] sm:min-h-[240px] lg:min-h-[305px] items-center justify-center">
     <button type="button" aria-label="النادي السابق" onClick={()=>browse(-1)} className="absolute z-20 right-0 md:right-[6%] grid h-12 w-12 md:h-16 md:w-16 place-items-center rounded-full border border-white/25 bg-black/45 hover:border-[#e7c681]"><ChevronRight size={29}/></button>
     <button type="button" aria-label="النادي التالي" onClick={()=>browse(1)} className="absolute z-20 left-0 md:left-[6%] grid h-12 w-12 md:h-16 md:w-16 place-items-center rounded-full border border-white/25 bg-black/45 hover:border-[#e7c681]"><ChevronLeft size={29}/></button>
     <AnimatePresence mode="wait" initial={false}>
@@ -62,13 +62,13 @@ export const PenaltyEliteSetup:React.FC<Props>=({onBack,onStart})=>{
        <span dir="ltr" className="text-xs md:text-lg tracking-[.2em] text-slate-300 font-semibold">{displayed.english.toUpperCase()}</span>
        <div className="flex gap-2 pt-1"><span className="h-1.5 w-14 rounded-full" style={{background:displayed.primary}}/><span className="h-1.5 w-14 rounded-full" style={{background:displayed.secondary}}/></div>
       </div>
-      <motion.div animate={reduced?{}:{y:[0,-6,0]}} transition={{duration:4,repeat:Infinity,ease:'easeInOut'}} className="relative z-10 flex h-[200px] md:h-[360px] w-[220px] md:w-[330px] items-center justify-center">
+      <motion.div animate={reduced?{}:{y:[0,-6,0]}} transition={{duration:4,repeat:Infinity,ease:'easeInOut'}} className="relative z-10 flex h-[clamp(110px,23dvh,200px)] md:h-[min(34dvh,360px)] w-[min(55vw,220px)] md:w-[330px] items-center justify-center">
        <PenaltyJersey club={displayed} showNumber={false} className="h-full w-full drop-shadow-[0_20px_28px_rgba(0,0,0,.8)]"/>
       </motion.div>
      </motion.div>
     </AnimatePresence>
    </div>
-   <div className="flex flex-col items-center gap-3">
+   <div className="sticky bottom-0 z-30 flex flex-col items-center gap-2 sm:gap-3 rounded-xl bg-[#020914]/90 py-2 backdrop-blur-xl">
     <motion.button type="button" whileHover={reduced?{}:{scale:1.045}} whileTap={{scale:.975}} onClick={choose} className="elite-raised flex min-w-[220px] md:min-w-[310px] items-center justify-center gap-3 rounded-full bg-[#e7c681] px-8 py-3 md:py-4 text-sm md:text-lg font-black text-[#0d1b29] hover:bg-[#fff0c4]">اعتمد هذا النادي <ChevronLeft size={22}/></motion.button>
     <div className="elite-raised flex w-full max-w-[1030px] items-center justify-center gap-0.5 md:gap-2 rounded-2xl border border-white/15 bg-black/45 p-1 md:p-2 backdrop-blur-xl">
      {ELITE_CLUBS.map((team,i)=><button type="button" key={team.id} onClick={()=>setIndex(i)} aria-label={'عرض '+team.name} aria-pressed={index===i} title={team.name}
@@ -80,7 +80,7 @@ export const PenaltyEliteSetup:React.FC<Props>=({onBack,onStart})=>{
     <p className="text-center text-[9px] md:text-[10px] text-slate-400">تنقل بين الأندية بواسطة الأسهم أو الشعارات. الشعارات للتعريف وليست رعاية رسمية.</p>
    </div>
   </motion.section>
-  :<motion.section key="lineup" initial={reduced?false:{opacity:0,x:-35}} animate={{opacity:1,x:0}} exit={{opacity:0}} transition={{duration:.34}} className="relative z-10 flex flex-1 min-h-0 flex-col gap-2 md:gap-3 px-3 md:px-7 pb-3 md:pb-5">
+  :<motion.section key="lineup" initial={reduced?false:{opacity:0,x:-35}} animate={{opacity:1,x:0}} exit={{opacity:0}} transition={{duration:.34}} className="relative z-10 flex flex-1 min-h-0 flex-col gap-2 md:gap-3 px-3 md:px-7 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-5">
    <div className="elite-raised flex shrink-0 items-center justify-between gap-2 rounded-2xl border border-white/15 bg-black/45 py-2 px-3 md:px-6">
     <div className="flex items-center gap-2 md:gap-4">{badge(club)}<div><span className="text-[9px] text-[#e4c782]">فريقك</span><h2 className="font-black text-xs md:text-lg">{club.name}</h2></div></div>
     <div className="text-center"><span dir="ltr" className="text-2xl font-black text-white/80">VS</span><button onClick={()=>setRival(chooseOpponent(club.id,rival.id))} type="button" className="flex items-center gap-1 text-[10px] text-[#e7c681] hover:underline"><RotateCcw size={11}/> خصم آخر</button></div>
@@ -88,18 +88,18 @@ export const PenaltyEliteSetup:React.FC<Props>=({onBack,onStart})=>{
    </div>
    <div className="flex shrink-0 items-center justify-between gap-2"><div><span className="text-[10px] font-black text-[#e7c681]">اختر خمسة لاعبين بالترتيب</span><h3 className="text-lg md:text-2xl font-black">المسددون</h3></div><span dir="ltr" className="rounded-xl border border-[#e6bf78]/45 bg-[#e6bf78]/10 px-3 py-2 text-base md:text-xl font-black text-[#f7dfae]">{selectedKickers.length} / 5</span></div>
    <div className="flex lg:hidden shrink-0 items-center justify-between text-[10px] text-slate-300"><span>المجموعة {rosterPage+1} من 2</span><div className="flex gap-1">{[0,1].map(page=><button type="button" key={page} onClick={()=>setRosterPage(page)} className={'rounded-lg border px-3 py-1.5 '+(rosterPage===page?'border-[#e6bf78] text-[#e6bf78]':'border-white/20')}>{page===0?'1 إلى 6':'7 إلى 11'}</button>)}</div></div>
-   <div className="grid flex-1 min-h-0 grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-1.5 md:gap-2.5">
+   <div className="grid flex-1 min-h-[160px] grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-1.5 md:gap-2.5">
     {club.players.map((player,i)=>{const place=selectedKickers.findIndex(p=>p.number===player.number),active=place>=0;return <button key={player.number} type="button" onClick={()=>toggle(player)} disabled={!active&&selectedKickers.length>=5} aria-pressed={active}
-      className={'group relative flex min-h-[130px] md:min-h-[178px] flex-col items-center justify-end overflow-hidden rounded-xl md:rounded-2xl border bg-gradient-to-b from-[#1d3039]/95 to-[#071421]/95 pb-2 pt-1 transition-all hover:-translate-y-1 disabled:opacity-40 '+(active?'border-[#f0c77a] shadow-[inset_0_0_0_1px_rgba(240,199,122,.6),0_0_25px_rgba(229,172,83,.18)]':'border-white/15 hover:border-white/60')+(i>=rosterPage*6&&i<(rosterPage+1)*6?'':' hidden lg:flex')}>
+      className={'group relative flex min-h-[90px] sm:min-h-[115px] lg:min-h-[178px] flex-col items-center justify-end overflow-hidden rounded-xl md:rounded-2xl border bg-gradient-to-b from-[#1d3039]/95 to-[#071421]/95 pb-2 pt-1 transition-all hover:-translate-y-1 disabled:opacity-40 '+(active?'border-[#f0c77a] shadow-[inset_0_0_0_1px_rgba(240,199,122,.6),0_0_25px_rgba(229,172,83,.18)]':'border-white/15 hover:border-white/60')+(i>=rosterPage*6&&i<(rosterPage+1)*6?'':' hidden lg:flex')}>
       <div className="absolute inset-x-0 bottom-0 h-1/2 opacity-15" style={{background:'linear-gradient(to top,'+club.primary+',transparent)'}}/>
       {active&&<span className="absolute z-10 top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#e6c47f] text-[#101922] text-xs font-black">{place+1}</span>}
-      <PenaltyJersey club={club} number={player.number} className="relative h-[88px] md:h-[124px] w-full drop-shadow-[0_8px_8px_rgba(0,0,0,.5)] group-hover:scale-[1.055] transition-transform duration-300"/>
+      <PenaltyJersey club={club} number={player.number} className="relative h-[55px] sm:h-[80px] lg:h-[124px] w-full drop-shadow-[0_8px_8px_rgba(0,0,0,.5)] group-hover:scale-[1.055] transition-transform duration-300"/>
       <div className="relative w-full px-1 text-center mt-1"><strong dir="ltr" className="block text-[10px] md:text-sm font-black truncate">{player.name}</strong><span className="text-[9px] md:text-[10px] text-slate-400">{roles[player.role]}</span></div>
     </button>})}
    </div>
-   <div className="elite-raised flex shrink-0 items-center gap-2 rounded-xl border border-[#e5c17b]/20 bg-[#061724]/90 px-2.5 md:px-5 py-2">
+   <div className="elite-raised sticky bottom-0 z-30 flex shrink-0 flex-wrap sm:flex-nowrap items-center gap-2 rounded-xl border border-[#e5c17b]/20 bg-[#061724]/95 px-2.5 md:px-5 py-2 backdrop-blur-xl">
     <div className="flex flex-1 min-w-0 justify-end gap-1 md:gap-2 overflow-hidden">{Array.from({length:5},(_,i)=><div key={i} className="flex min-w-0 w-1/5 max-w-[130px] flex-col items-center rounded-lg border border-white/15 bg-black/25 px-1 py-1.5"><span className="text-[9px] text-[#e5c17b]">{i+1}</span><span dir="ltr" className="truncate max-w-full text-[9px] md:text-xs font-black">{selectedKickers[i]?.name||'...'}</span></div>)}</div>
-    <button type="button" disabled={selectedKickers.length!==5} onClick={()=>onStart(club,rival,selectedKickers)} className="flex shrink-0 items-center gap-1.5 rounded-xl bg-[#e5c17b] px-3 md:px-7 py-3 md:py-4 text-xs md:text-lg font-black text-[#101c29] hover:bg-[#ffdf9c] disabled:opacity-35">ابدأ الركلات <ChevronLeft size={19}/></button>
+    <button type="button" disabled={selectedKickers.length!==5} onClick={()=>onStart(club,rival,selectedKickers)} className="flex w-full sm:w-auto shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#e5c17b] px-3 md:px-7 py-3 md:py-4 text-xs md:text-lg font-black text-[#101c29] hover:bg-[#ffdf9c] disabled:opacity-35">ابدأ الركلات <ChevronLeft size={19}/></button>
    </div>
   </motion.section>}
   </AnimatePresence>
