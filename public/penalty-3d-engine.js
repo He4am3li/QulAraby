@@ -335,6 +335,30 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     halo.position.set(x,19.1,-26.5);halo.scale.set(5.4,3.8,1);
     scene.add(halo);
   }
+  // Keep the premium cover's stadium identity behind the distant stands.
+  // Its upper architecture adds depth without replacing the interactive pitch.
+  const skylineMaterial=new THREE.MeshBasicMaterial({
+    color:0x203449,side:THREE.DoubleSide,depthWrite:false,toneMapped:false
+  });
+  const skylinePanel=new THREE.Mesh(new THREE.PlaneGeometry(96,38),skylineMaterial);
+  skylinePanel.position.set(0,23,-44);
+  skylinePanel.renderOrder=-1;
+  scene.add(skylinePanel);
+  let skylineTexture=null,skylineRequest=0;
+  function setSkyBackdrop(url){
+    if(!url || disposed)return;
+    const token=++skylineRequest;
+    const loader=new THREE.TextureLoader();
+    loader.load(url,tex=>{
+      if(disposed||token!==skylineRequest){tex.dispose();return;}
+      tex.colorSpace=THREE.SRGBColorSpace;
+      tex.anisotropy=Math.min(6,renderer.capabilities.getMaxAnisotropy());
+      skylineTexture?.dispose();
+      skylineTexture=tex;
+      skylineMaterial.map=tex;skylineMaterial.color.set(0xffffff);
+      skylineMaterial.needsUpdate=true;
+    },undefined,err=>console.warn('[Penalty Arena] Cover panorama not ready',err));
+  }
   // The near stands reuse the locally bundled, rigged CC0 human model instead of
   // capsules or head-and-box silhouettes. Two animations are baked to instanced
   // *human geometry* once, leaving ordinary WebGL draw calls during gameplay.
@@ -1077,6 +1101,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
     setPhase,
     setAim,
     setOutcome,
+    setSkyBackdrop,
     setKitColor(value){setKit({shooterPrimary:value});},
     setKit,
     reset,
@@ -1091,7 +1116,7 @@ export function createPenalty3D({ host, THREE, GLTFLoader, SkeletonUtils, onRead
       actors.forEach(a=>a.mixer?.stopAllAction());
       shirtLettering.forEach(d=>d.texture.dispose());
       ledTexture.dispose();
-      turfTexture?.dispose();laneTexture?.dispose();crowdMuralTexture.dispose();realCrowdTexture?.dispose();floodTexture.dispose();
+      turfTexture?.dispose();laneTexture?.dispose();crowdMuralTexture.dispose();realCrowdTexture?.dispose();floodTexture.dispose();skylineTexture?.dispose();
       humanCrowd?.dispose();
       scene.traverse(o=>{
         if(o.geometry && o.geometry.dispose)o.geometry.dispose();
