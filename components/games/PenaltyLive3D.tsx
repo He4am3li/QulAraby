@@ -20,7 +20,7 @@ export interface Penalty3DKit {
 }
 interface Props {
   phase?:ShotPhase;diveSide?:'left'|'right';className?:string;
-  aimX?:number;aimY?:number;shotPower?:number;scored?:boolean;
+  aimX?:number;aimY?:number;shotPower?:number;scored?:boolean;onReadyChange?:(ready:boolean)=>void;
   kitColor?:string;
   kit?:Penalty3DKit;
 }
@@ -37,7 +37,7 @@ interface Arena {
  * visible while GLTFLoader prepares the rigged footballers.
  */
 export const PenaltyLive3D:React.FC<Props>=({
- phase='idle',diveSide='left',className='',kitColor='#1366b2',kit,aimX=0,aimY=0.5,shotPower=0.75,scored=true
+ phase='idle',diveSide='left',className='',kitColor='#1366b2',kit,aimX=0,aimY=0.5,shotPower=0.75,scored=true,onReadyChange
 })=>{
  const hostRef=useRef<HTMLDivElement>(null);
  const arenaRef=useRef<Arena|null>(null);
